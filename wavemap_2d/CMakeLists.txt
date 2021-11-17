@@ -45,4 +45,4 @@ target_link_libraries(wavemap_carmen_processor ${PROJECT_NAME})
 # EXPORT #
 ##########
 cs_install()
-cs_export(INCLUDE_DIRS ${CATKIN_DEVEL_PREFIX}/include)
+#cs_export(INCLUDE_DIRS ${CATKIN_DEVEL_PREFIX}/include)

@@ -8,6 +8,7 @@
 
 namespace wavemap_2d {
 using FloatingPoint = float;
+FloatingPoint kEpsilon = 1e-6;
 
 using Point = Eigen::Matrix<FloatingPoint, 2, 1>;
 using Transformation = kindr::minimal::Transformation2DTemplate<FloatingPoint>;
