@@ -7,25 +7,35 @@
 
 #include "wavemap_2d/pointcloud_integrator.h"
 
+DEFINE_string(carmen_log_file_path, "",
+              "Path to the carmen log file to get the input data from.");
+DEFINE_string(output_log_dir, "",
+              "Path to the directory where the logs should be stored. Leave "
+              "blank to disable logging.");
+DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
+
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
 
+  // Load and check the input arguments
+  const std::string carmen_log_file_path = FLAGS_carmen_log_file_path;
+  CHECK(!carmen_log_file_path.empty())
+      << "The carmen_log_file_path flag must be set to a non-empty string.";
+  const std::string output_log_dir = FLAGS_output_log_dir;
+  const auto map_resolution =
+      static_cast<wavemap_2d::FloatingPoint>(FLAGS_map_resolution);
+  CHECK_GT(map_resolution, 0.f)
+      << "The map_resolution flag must be set to a positive number.";
+
   // Setup the mapper
-  constexpr float kResolution = 0.01f;
-  auto occupancy_map = std::make_shared<wavemap_2d::OccupancyMap>(kResolution);
+  auto occupancy_map =
+      std::make_shared<wavemap_2d::OccupancyMap>(map_resolution);
   wavemap_2d::PointcloudIntegrator pointcloud_integrator(occupancy_map);
 
   // Open the log file
-  std::string log_file_path = std::string("/home/victor/data/2d_datasets/") +
-                              "fr-campus-20040714.carmen.gfs.log";
-  //  "fr079-complete.gfs.log";
-  //  "mexico.gfs.log";
-  //  "csail.corrected.log";
-  //  "intel.gfs.log";
-  //  "orebro.gfs.log";
-  std::ifstream log_file(log_file_path);
+  std::ifstream log_file(carmen_log_file_path);
 
   // Setup progress reporting
   size_t line_idx = 0u;
@@ -95,11 +105,9 @@ int main(int argc, char** argv) {
   }
 
   // Save images of the map
-  std::ostringstream image_path_oss;
-  image_path_oss << log_file_path + " - res " + "" << kResolution;
   for (const bool use_color : {false, true}) {
-    std::string image_path = image_path_oss.str() +
-                             std::string(use_color ? "color" : "raw") + ".png";
+    std::string image_path =
+        output_log_dir + std::string(use_color ? "color.png" : "raw.exr");
     occupancy_map->saveImage(image_path, /*use_color*/ use_color);
   }
 
@@ -108,7 +116,7 @@ int main(int argc, char** argv) {
   pointcloud_integrator.printAabbBounds();
   occupancy_map->printSize();
   occupancy_map->showImage(/*use_color*/ true);
-  cv::waitKey();
+  cv::waitKey(1000 /*ms*/);
 
   // Exit cleanly
   return 0;
