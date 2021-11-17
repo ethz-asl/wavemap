@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ======== Settings ========
-home_dir="/home/victor/"
+home_dir="/home/victor"
 dataset_dir="${home_dir}/data/2d_carmen_datasets"
 
 url_common_prefixes="http://www2.informatik.uni-freiburg.de/~stachnis/datasets/datasets/"
