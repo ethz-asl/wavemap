@@ -14,17 +14,15 @@ function run_all_combinations() {
       done
 
       # Create the log dir and set the log file path
-      run_log_dir="${output_log_dir}/${carmen_log_file_name}"
+      run_log_dir="${output_log_dir}/${experiment_date}/${carmen_log_file_name}"
       mkdir -p "${run_log_dir}"
-      run_log_file_prefix="${run_log_dir}/${experiment_date}_commit_${git_commit_id}_res_${map_resolution}_"
+      run_log_file_prefix="${run_log_dir}/commit_${git_commit_id}_res_${map_resolution}_"
 
       # Run the experiments
       carmen_log_file_path="${carmen_log_dir}/${carmen_log_file_name}"
       "${executable}" -alsologtostderr -map_resolution ${map_resolution} -carmen-log-file-path "${carmen_log_file_path}" -output_log_dir "${run_log_file_prefix}" &
     done
   done
-  # Wait for everything to finish before proceding
-  wait -n
 }
 
 # ========== Settings ==========
@@ -32,8 +30,8 @@ home_dir="/home/victor"
 catkin_ws_dir="${home_dir}/catkin_ws"
 carmen_log_dir="${home_dir}/data/2d_carmen_datasets"
 output_log_dir="${home_dir}/data/2d_carmen_datasets/output"
-
-executable="${catkin_ws_dir}/devel/lib/wavemap_2d/wavemap_carmen_processor"
+package_name="wavemap_2d"
+executable="${catkin_ws_dir}/devel/lib/${package_name}/wavemap_carmen_processor"
 
 declare -a carmen_log_file_names=(
   "aces_publicb.gfs"
@@ -55,10 +53,16 @@ experiment_date=$(date '+%Y-%m-%d-%H-%M-%S')
 num_jobs="\j" # The prompt escape to get the number of currently running jobs
 
 # ============ Run =============
-declare -a map_resolutions=(0.20 0.1 0.05 0.02)
+# Make sure the code is compiled
+pushd "${catkin_ws_dir}" || exit
+catkin build "${package_name}"
+popd || exit
+
+# Run the batches
+declare -a map_resolutions=(0.20 0.1 0.05 0.02 0.01)
 max_num_jobs=8
 run_all_combinations
 
-declare -a map_resolutions=(0.01)
-max_num_jobs=2
+max_num_jobs=4
+declare -a map_resolutions=(0.005 0.002 0.001)
 run_all_combinations
