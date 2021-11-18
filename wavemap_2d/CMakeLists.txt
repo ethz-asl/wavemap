@@ -22,7 +22,9 @@ add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INIT
 #    ${PROTO_SRCS})
 
 cs_add_library(${PROJECT_NAME}
-    src/pointcloud_integrator.cc)
+    src/pointcloud_integrator.cc
+    src/beam_model.cc
+    src/occupancy_map.cc)
 target_link_libraries(${PROJECT_NAME}) # ${PROJECT_NAME}_proto)
 
 ############
