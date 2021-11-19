@@ -1,7 +1,7 @@
-#include "wavemap_2d/occupancy_map.h"
+#include "wavemap_2d/map.h"
 
 namespace wavemap_2d {
-void OccupancyMap::updateCell(const Index& index, const FloatingPoint update) {
+void GridMap::updateCell(const Index& index, const FloatingPoint update) {
   if (empty()) {
     grid_map_min_index_ = index;
   }
@@ -24,8 +24,8 @@ void OccupancyMap::updateCell(const Index& index, const FloatingPoint update) {
     const Index new_grid_map_size =
         new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
 
-    GridMapType new_grid_map =
-        GridMapType::Zero(new_grid_map_size.x(), new_grid_map_size.y());
+    GridDataStructure new_grid_map =
+        GridDataStructure::Zero(new_grid_map_size.x(), new_grid_map_size.y());
 
     new_grid_map.block(min_index_diff.x(), min_index_diff.y(),
                        grid_map_size.x(), grid_map_size.y()) = grid_map_;
@@ -38,14 +38,14 @@ void OccupancyMap::updateCell(const Index& index, const FloatingPoint update) {
   grid_map_.coeffRef(relative_index.x(), relative_index.y()) += update;
 }
 
-cv::Mat OccupancyMap::getImage(bool use_color) const {
+cv::Mat GridMap::getImage(bool use_color) const {
   cv::Mat image;
   if (use_color) {
     constexpr FloatingPoint kLogOddsMin = -1e2;  //  -100.f;
     constexpr FloatingPoint kLogOddsMax = 2e2;   //   200.f;
     const FloatingPoint min = std::max(grid_map_.minCoeff(), kLogOddsMin);
     const FloatingPoint max = std::min(grid_map_.maxCoeff(), kLogOddsMax);
-    GridMapType grid_map_clamped =
+    GridDataStructure grid_map_clamped =
         grid_map_.cwiseMin(kLogOddsMax).cwiseMax(kLogOddsMin);
 
     cv::eigen2cv(grid_map_clamped, image);
@@ -58,15 +58,14 @@ cv::Mat OccupancyMap::getImage(bool use_color) const {
   return image;
 }
 
-void OccupancyMap::showImage(bool use_color) const {
+void GridMap::showImage(bool use_color) const {
   cv::namedWindow("Grid map", cv::WINDOW_NORMAL);
   cv::setWindowProperty("Grid map", CV_WND_PROP_FULLSCREEN,
                         CV_WINDOW_FULLSCREEN);
   cv::imshow("Grid map", getImage(use_color));
   cv::waitKey(1 /* ms */);
 }
-void OccupancyMap::saveImage(const std::string& file_path,
-                             bool use_color) const {
+void GridMap::saveImage(const std::string& file_path, bool use_color) const {
   cv::imwrite(file_path, getImage(use_color));
 }
 }  // namespace wavemap_2d

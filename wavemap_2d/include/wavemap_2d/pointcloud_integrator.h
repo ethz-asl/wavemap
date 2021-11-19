@@ -6,14 +6,14 @@
 
 #include "wavemap_2d/beam_model.h"
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/occupancy_map.h"
+#include "wavemap_2d/map.h"
 #include "wavemap_2d/pointcloud.h"
 
 namespace wavemap_2d {
 class PointcloudIntegrator {
  public:
   PointcloudIntegrator() = delete;
-  explicit PointcloudIntegrator(OccupancyMap::Ptr occupancy_map)
+  explicit PointcloudIntegrator(GridMap::Ptr occupancy_map)
       : occupancy_map_(CHECK_NOTNULL(occupancy_map)),
         beam_model_(occupancy_map->getResolution()) {}
 
@@ -28,7 +28,7 @@ class PointcloudIntegrator {
   Point aabb_max_ =
       Point::Constant(std::numeric_limits<FloatingPoint>::lowest());
 
-  OccupancyMap::Ptr occupancy_map_;
+  GridMap::Ptr occupancy_map_;
 
   BeamModel beam_model_;
 };

@@ -10,8 +10,8 @@ namespace wavemap_2d {
 using FloatingPoint = float;
 constexpr FloatingPoint kEpsilon = 1e-6;
 
-using Point = Eigen::Matrix<FloatingPoint, 2, 1>;
 using Transformation = kindr::minimal::Transformation2DTemplate<FloatingPoint>;
+using Point = Transformation::Position;
 using Translation = Transformation::Position;
 using Rotation = Transformation::Rotation;
 

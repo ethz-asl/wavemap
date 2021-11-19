@@ -9,7 +9,7 @@ add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INIT
 ############
 # PROTOBUF #
 ############
-#set(PROTO_DEFNS proto/wavemap/OccupancyMap.proto)
+#set(PROTO_DEFNS proto/wavemap/GridMap.proto)
 #set(BASE_PATH "proto")
 ##set(PROTOBUF_COMPILE_PYTHON true)
 
@@ -24,7 +24,7 @@ add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INIT
 cs_add_library(${PROJECT_NAME}
     src/pointcloud_integrator.cc
     src/beam_model.cc
-    src/occupancy_map.cc)
+    src/map.cc)
 target_link_libraries(${PROJECT_NAME}) # ${PROJECT_NAME}_proto)
 
 ############
@@ -37,14 +37,27 @@ target_link_libraries(wavemap_carmen_processor ${PROJECT_NAME})
 #########
 # TESTS #
 #########
-#add_definitions(-DVISUALIZE_UNIT_TEST_RESULTS)
+# TODO: Check what the best way is to build and run the tests without the clutter of
+#       catkin run_tests --no-deps --this # or
+#       catkin build wavemap_2d --no-deps --verbose --catkin-make-args run_tests
+if (CATKIN_ENABLE_TESTING)
+  cs_add_library(testing_main test/gtest_main.cc)
 
-#catkin_add_gtest(test_something
-#    test/test_something.cc)
-#target_link_libraries(test_something ${PROJECT_NAME})
+  #  catkin_add_gtest(test_map
+  #      test/test_map.cc)
+  #  target_link_libraries(test_map ${PROJECT_NAME} testing_main)
+  #
+  #  catkin_add_gtest(test_measurement_model
+  #      test/test_measurement_model.cc)
+  #  target_link_libraries(test_measurement_model ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_pointcloud_containers
+      test/test_pointcloud_containers.cc)
+  target_link_libraries(test_pointcloud_containers ${PROJECT_NAME} testing_main)
+endif ()
 
 ##########
 # EXPORT #
 ##########
 cs_install()
-#cs_export(INCLUDE_DIRS ${CATKIN_DEVEL_PREFIX}/include)
+cs_export()

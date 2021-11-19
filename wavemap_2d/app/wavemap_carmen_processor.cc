@@ -30,8 +30,7 @@ int main(int argc, char** argv) {
       << "The map_resolution flag must be set to a positive number.";
 
   // Setup the mapper
-  auto occupancy_map =
-      std::make_shared<wavemap_2d::OccupancyMap>(map_resolution);
+  auto occupancy_map = std::make_shared<wavemap_2d::GridMap>(map_resolution);
   wavemap_2d::PointcloudIntegrator pointcloud_integrator(occupancy_map);
 
   // Open the log file
@@ -63,7 +62,7 @@ int main(int argc, char** argv) {
       if (iss >> n_beams) {
         // Parse the pointcloud
         wavemap_2d::Pointcloud pointcloud;
-        pointcloud.resize(2, n_beams);
+        pointcloud.resize(n_beams);
         {
           bool success = true;
           constexpr auto PI = static_cast<float>(M_PI);
@@ -80,7 +79,7 @@ int main(int argc, char** argv) {
                 static_cast<float>(beam_idx) * angle_increment + (PI / 2.f);
             float x = distance * std::cos(angle);
             float y = distance * std::sin(angle);
-            pointcloud.col(beam_idx) << x, y;
+            pointcloud[beam_idx] << x, y;
           }
           if (!success) {
             LOG(WARNING) << "Could not parse pointcloud... skipping.";

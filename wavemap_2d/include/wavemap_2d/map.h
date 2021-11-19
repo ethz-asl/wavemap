@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_OCCUPANCY_MAP_H_
-#define WAVEMAP_2D_OCCUPANCY_MAP_H_
+#ifndef WAVEMAP_2D_MAP_H_
+#define WAVEMAP_2D_MAP_H_
 
 #include <algorithm>
 #include <memory>
@@ -12,12 +12,11 @@
 #include "wavemap_2d/common.h"
 
 namespace wavemap_2d {
-class OccupancyMap {
+class GridMap {
  public:
-  using Ptr = std::shared_ptr<OccupancyMap>;
+  using Ptr = std::shared_ptr<GridMap>;
 
-  explicit OccupancyMap(const FloatingPoint resolution)
-      : resolution_(resolution) {}
+  explicit GridMap(const FloatingPoint resolution) : resolution_(resolution) {}
 
   bool empty() const { return !grid_map_.size(); }
   Index size() const { return Index{grid_map_.rows(), grid_map_.cols()}; }
@@ -35,10 +34,10 @@ class OccupancyMap {
   const FloatingPoint resolution_;
 
   Index grid_map_min_index_;
-  using GridMapType =
+  using GridDataStructure =
       Eigen::Matrix<FloatingPoint, Eigen::Dynamic, Eigen::Dynamic>;
-  GridMapType grid_map_;
+  GridDataStructure grid_map_;
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_OCCUPANCY_MAP_H_
+#endif  // WAVEMAP_2D_MAP_H_
