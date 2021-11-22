@@ -10,6 +10,24 @@ class MapTest : public ::testing::Test {
     random_number_generator_ = std::make_unique<RandomNumberGenerator>();
   }
 
+  static void compare(const GridMap& map_reference,
+                      const GridMap& map_to_test) {
+    ASSERT_EQ(map_reference.empty(), map_to_test.empty());
+    ASSERT_EQ(map_reference.size(), map_to_test.size());
+    ASSERT_EQ(map_reference.getMinIndex(), map_to_test.getMinIndex());
+    ASSERT_EQ(map_reference.getMaxIndex(), map_to_test.getMaxIndex());
+    ASSERT_EQ(map_reference.getResolution(), map_to_test.getResolution());
+
+    const Index min_index = map_reference.getMinIndex();
+    const Index max_index = map_reference.getMaxIndex();
+    for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
+      for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
+        EXPECT_EQ(map_reference.getCellValue(index),
+                  map_to_test.getCellValue(index));
+      }
+    }
+  }
+
   FloatingPoint getRandomResolution() const {
     constexpr FloatingPoint kMinResolution = 1e-3;
     constexpr FloatingPoint kMaxResolution = 1e2;
@@ -52,6 +70,19 @@ class MapTest : public ::testing::Test {
     std::generate(random_updates.begin(), random_updates.end(),
                   [this]() { return getRandomUpdate(); });
     return random_updates;
+  }
+  GridMap getRandomMap() {
+    GridMap random_map(getRandomResolution());
+    const Index min_index = -getRandomIndex().cwiseAbs();
+    const Index max_index = getRandomIndex().cwiseAbs();
+    random_map.updateCell(min_index, 0.f);
+    random_map.updateCell(max_index, 0.f);
+    for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
+      for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
+        random_map.updateCell(index, getRandomUpdate());
+      }
+    }
+    return random_map;
   }
 
  private:
@@ -119,5 +150,16 @@ TEST_F(MapTest, InsertionTest) {
     }
     EXPECT_FLOAT_EQ(map.getCellValue(random_index), expected_value);
   }
+}
+
+TEST_F(MapTest, Serialization) {
+  const std::string kTempFilePath = "/tmp/map";
+  GridMap map = getRandomMap();
+  ASSERT_TRUE(map.saveMap(kTempFilePath));
+
+  GridMap loaded_map(map.getResolution());
+  ASSERT_TRUE(loaded_map.loadMap(kTempFilePath));
+
+  compare(loaded_map, map);
 }
 }  // namespace wavemap_2d

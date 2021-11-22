@@ -42,6 +42,8 @@ class GridMap {
   cv::Mat getImage(bool use_color = false) const;
   void showImage(bool use_color = false) const;
   void saveImage(const std::string& file_path, bool use_color = false) const;
+  bool saveMap(const std::string& file_path_prefix) const;
+  bool loadMap(const std::string& file_path_prefix);
 
  protected:
   const FloatingPoint resolution_;
@@ -58,6 +60,15 @@ class GridMap {
   using GridDataStructure =
       Eigen::Matrix<FloatingPoint, Eigen::Dynamic, Eigen::Dynamic>;
   GridDataStructure data_;
+
+  static std::string getHeaderFilePathFromPrefix(
+      const std::string& file_path_prefix) {
+    return file_path_prefix + "header";
+  }
+  static std::string getDataFilePathFromPrefix(
+      const std::string& file_path_prefix) {
+    return file_path_prefix + "_data.exr";
+  }
 };
 }  // namespace wavemap_2d
 

@@ -72,7 +72,70 @@ void GridMap::showImage(bool use_color) const {
   cv::waitKey(1 /* ms */);
 }
 
-void GridMap::saveImage(const std::string& file_path, bool use_color) const {
-  cv::imwrite(file_path, getImage(use_color));
+void GridMap::saveImage(const std::string& file_path,
+                        const bool use_color) const {
+  cv::imwrite(file_path, getImage(/*use_color*/ true));
+}
+
+bool GridMap::saveMap(const std::string& file_path_prefix) const {
+  const std::string header_file_path =
+      getHeaderFilePathFromPrefix(file_path_prefix);
+  const std::string data_file_path =
+      getDataFilePathFromPrefix(file_path_prefix);
+
+  std::ofstream header_file;
+  header_file.open(header_file_path);
+  if (!header_file.is_open()) {
+    LOG(ERROR) << "Could not open header file \"" << header_file_path
+               << "\" for writing.";
+    return false;
+  }
+  header_file << resolution_ << "\n"
+              << grid_map_min_index_ << "\n"
+              << grid_map_max_index_;
+  header_file.close();
+
+  cv::Mat image;
+  cv::eigen2cv(data_, image);
+  cv::imwrite(data_file_path, image);
+
+  return true;
+}
+
+bool GridMap::loadMap(const std::string& file_path_prefix) {
+  const std::string header_file_path =
+      getHeaderFilePathFromPrefix(file_path_prefix);
+  const std::string data_file_path =
+      getDataFilePathFromPrefix(file_path_prefix);
+
+  std::ifstream header_file;
+  header_file.open(header_file_path);
+  if (!header_file.is_open()) {
+    LOG(ERROR) << "Could not open header file \"" << header_file_path
+               << "\" for reading.";
+    return false;
+  }
+
+  FloatingPoint resolution;
+  header_file >> resolution;
+  if (1e-3 < std::abs(resolution - resolution_)) {
+    LOG(ERROR) << "Tried to load a map whose resolution (" << resolution
+               << ") does not match the configured resolution (" << resolution_
+               << ").";
+    return false;
+  }
+  header_file >> grid_map_min_index_.x() >> grid_map_min_index_.y();
+  header_file >> grid_map_max_index_.x() >> grid_map_max_index_.y();
+  header_file.close();
+
+  cv::Mat image =
+      cv::imread(data_file_path, cv::IMREAD_ANYCOLOR | cv::IMREAD_ANYDEPTH);
+  if (image.empty()) {
+    LOG(ERROR) << "Could not read map data file \"" << data_file_path << "\".";
+    return false;
+  }
+  cv::cv2eigen(image, data_);
+
+  return true;
 }
 }  // namespace wavemap_2d
