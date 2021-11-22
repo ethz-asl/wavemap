@@ -12,6 +12,7 @@ class PointcloudTest : public ::testing::Test {
 
   static void compare(const std::vector<Point>& point_vector,
                       const Pointcloud& pointcloud) {
+    ASSERT_EQ(point_vector.empty(), pointcloud.empty());
     ASSERT_EQ(point_vector.size(), pointcloud.size());
     size_t point_idx = 0u;
     for (const Point& point : point_vector) {
@@ -20,6 +21,7 @@ class PointcloudTest : public ::testing::Test {
   }
   static void compare(const PointcloudData& point_matrix,
                       const Pointcloud& pointcloud) {
+    ASSERT_EQ(point_matrix.size() == 0, pointcloud.empty());
     ASSERT_EQ(point_matrix.cols(), pointcloud.size());
     for (Eigen::Index point_idx = 0; point_idx < point_matrix.cols();
          ++point_idx) {
@@ -28,6 +30,7 @@ class PointcloudTest : public ::testing::Test {
   }
   static void compare(const Pointcloud& pointcloud_reference,
                       const Pointcloud& pointcloud_to_test) {
+    ASSERT_EQ(pointcloud_reference.empty(), pointcloud_to_test.empty());
     ASSERT_EQ(pointcloud_reference.size(), pointcloud_to_test.size());
     for (size_t point_idx = 0u; point_idx < pointcloud_reference.size();
          ++point_idx) {
@@ -35,24 +38,23 @@ class PointcloudTest : public ::testing::Test {
     }
   }
 
-  unsigned int getRandomPointcloudLength() {
+  unsigned int getRandomPointcloudLength() const {
     constexpr unsigned int kMinSize = 1u;
-    constexpr unsigned int kMaxSize = 10u;
+    constexpr unsigned int kMaxSize = 1000u;
     return random_number_generator_->getRandomInteger(kMinSize, kMaxSize);
   }
-  FloatingPoint getRandomAngle() {
+  FloatingPoint getRandomAngle() const {
     constexpr FloatingPoint kMinAngle = -M_PI;
     constexpr FloatingPoint kMaxAngle = M_PI;
     return random_number_generator_->getRandomRealNumber(kMinAngle, kMaxAngle);
   }
-  std::vector<Point> getRandomPointVector() {
+  std::vector<Point> getRandomPointVector() const {
     std::vector<Point> random_point_vector(getRandomPointcloudLength());
-    for (Point& point : random_point_vector) {
-      point.setRandom();
-    }
+    std::generate(random_point_vector.begin(), random_point_vector.end(),
+                  []() { return Point::Random(); });
     return random_point_vector;
   }
-  PointcloudData getRandomPointMatrix() {
+  PointcloudData getRandomPointMatrix() const {
     const Eigen::Index random_length = getRandomPointcloudLength();
     PointcloudData random_point_matrix;
     random_point_matrix.resize(kPointcloudPointDim, random_length);
@@ -66,6 +68,7 @@ class PointcloudTest : public ::testing::Test {
 
 TEST_F(PointcloudTest, DefaultInitialize) {
   Pointcloud default_pointcloud;
+  EXPECT_TRUE(default_pointcloud.empty());
   EXPECT_EQ(default_pointcloud.size(), 0u);
   for (auto it = default_pointcloud.begin(); it != default_pointcloud.end();
        ++it) {
@@ -73,10 +76,25 @@ TEST_F(PointcloudTest, DefaultInitialize) {
   }
 }
 
+TEST_F(PointcloudTest, GetAndSetSize) {
+  Pointcloud pointcloud;
+  ASSERT_TRUE(pointcloud.empty());
+  ASSERT_EQ(pointcloud.size(), 0u);
+
+  unsigned int random_new_size = getRandomPointcloudLength();
+  pointcloud.resize(random_new_size);
+  EXPECT_FALSE(pointcloud.empty());
+  EXPECT_EQ(pointcloud.size(), random_new_size);
+
+  pointcloud.clear();
+  EXPECT_TRUE(pointcloud.empty());
+  EXPECT_EQ(pointcloud.size(), 0u);
+}
+
 TEST_F(PointcloudTest, InitializeFromStl) {
   std::vector<Point> empty_point_vector;
   Pointcloud empty_pointcloud(empty_point_vector);
-  EXPECT_EQ(empty_pointcloud.size(), 0u);
+  EXPECT_TRUE(empty_pointcloud.empty());
 
   std::vector<Point> random_point_vector = getRandomPointVector();
   Pointcloud random_pointcloud(random_point_vector);
@@ -86,7 +104,7 @@ TEST_F(PointcloudTest, InitializeFromStl) {
 TEST_F(PointcloudTest, InitializeFromEigen) {
   PointcloudData empty_point_matrix;
   Pointcloud empty_pointcloud(empty_point_matrix);
-  EXPECT_EQ(empty_pointcloud.size(), 0u);
+  EXPECT_TRUE(empty_pointcloud.empty());
 
   PointcloudData random_point_matrix = getRandomPointMatrix();
   Pointcloud random_pointcloud(random_point_matrix);
@@ -102,18 +120,6 @@ TEST_F(PointcloudTest, CopyInitializationAndAssignment) {
   Pointcloud copy_assigned_random_pointcloud;
   copy_assigned_random_pointcloud = random_pointcloud;
   compare(random_pointcloud, copy_assigned_random_pointcloud);
-}
-
-TEST_F(PointcloudTest, ResizeAndClear) {
-  Pointcloud pointcloud;
-  ASSERT_EQ(pointcloud.size(), 0u);
-
-  unsigned int random_new_size = getRandomPointcloudLength();
-  pointcloud.resize(random_new_size);
-  EXPECT_EQ(pointcloud.size(), random_new_size);
-
-  pointcloud.clear();
-  EXPECT_EQ(pointcloud.size(), 0u);
 }
 
 TEST_F(PointcloudTest, Iterators) {
