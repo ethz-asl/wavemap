@@ -104,6 +104,18 @@ TEST_F(PointcloudTest, CopyInitializationAndAssignment) {
   compare(random_pointcloud, copy_assigned_random_pointcloud);
 }
 
+TEST_F(PointcloudTest, ResizeAndClear) {
+  Pointcloud pointcloud;
+  ASSERT_EQ(pointcloud.size(), 0u);
+
+  unsigned int random_new_size = getRandomPointcloudLength();
+  pointcloud.resize(random_new_size);
+  EXPECT_EQ(pointcloud.size(), random_new_size);
+
+  pointcloud.clear();
+  EXPECT_EQ(pointcloud.size(), 0u);
+}
+
 TEST_F(PointcloudTest, Iterators) {
   std::vector<Point> random_point_vector = getRandomPointVector();
 

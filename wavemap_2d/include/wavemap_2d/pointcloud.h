@@ -80,7 +80,10 @@ class Pointcloud {
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
 
-  void resize(int64_t n_points) { data_.resize(kPointcloudPointDim, n_points); }
+  void clear() { data_.resize(0, 0); }
+  void resize(const unsigned int n_points) {
+    data_.resize(wavemap_2d::kPointcloudPointDim, n_points);
+  }
 
   PointcloudData& data() { return data_; }
   const PointcloudData& data() const { return data_; }
