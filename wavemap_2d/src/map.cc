@@ -1,6 +1,12 @@
 #include "wavemap_2d/map.h"
 
 namespace wavemap_2d {
+void GridMap::clear() {
+  data_.resize(0, 0);
+  grid_map_min_index_ = Index::Constant(NAN);
+  grid_map_max_index_ = Index::Constant(NAN);
+}
+
 void GridMap::updateCell(const Index& index, const FloatingPoint update) {
   if (empty()) {
     grid_map_min_index_ = index;
@@ -65,6 +71,7 @@ void GridMap::showImage(bool use_color) const {
   cv::imshow("Grid map", getImage(use_color));
   cv::waitKey(1 /* ms */);
 }
+
 void GridMap::saveImage(const std::string& file_path, bool use_color) const {
   cv::imwrite(file_path, getImage(use_color));
 }

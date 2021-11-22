@@ -23,6 +23,8 @@ class GridMap {
 
   bool empty() const { return !data_.size(); }
   Index size() const { return {data_.rows(), data_.cols()}; }
+  void clear();
+
   Index getMinIndex() const { return grid_map_min_index_; }
   Index getMaxIndex() const { return grid_map_max_index_; }
   bool mapContains(const Index& index) const {

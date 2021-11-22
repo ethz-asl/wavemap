@@ -68,7 +68,7 @@ TEST_F(MapTest, Initialization) {
   EXPECT_EQ(map.getMaxIndex(), Index::Constant(NAN));
 }
 
-TEST_F(MapTest, AutoResize) {
+TEST_F(MapTest, Resizing) {
   GridMap map(getRandomResolution());
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), Index(0, 0));
@@ -76,7 +76,7 @@ TEST_F(MapTest, AutoResize) {
   const std::vector<Index> random_indices = getRandomIndexVector();
 
   const Index& first_random_index = random_indices[0];
-  map.updateCell(first_random_index, getRandomUpdate());
+  map.updateCell(first_random_index, 0.f);
   EXPECT_FALSE(map.empty());
   EXPECT_EQ(map.size(), Index(1, 1));
   EXPECT_EQ(map.getMinIndex(), first_random_index);
@@ -88,12 +88,24 @@ TEST_F(MapTest, AutoResize) {
        index_it != random_indices.end(); ++index_it) {
     min_index = min_index.cwiseMin(*index_it);
     max_index = max_index.cwiseMax(*index_it);
-    map.updateCell(*index_it, getRandomUpdate());
+    map.updateCell(*index_it, 0.f);
   }
   Index min_map_size = max_index - min_index + Index::Ones();
   EXPECT_EQ(map.size(), min_map_size);
   EXPECT_EQ(map.getMinIndex(), min_index);
   EXPECT_EQ(map.getMaxIndex(), max_index);
+
+  for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
+    for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
+      EXPECT_FLOAT_EQ(map.getCellValue(index), 0.f);
+    }
+  }
+
+  map.clear();
+  EXPECT_TRUE(map.empty());
+  EXPECT_EQ(map.size(), Index(0, 0));
+  EXPECT_EQ(map.getMinIndex(), Index::Constant(NAN));
+  EXPECT_EQ(map.getMaxIndex(), Index::Constant(NAN));
 }
 
 TEST_F(MapTest, InsertionTest) {
