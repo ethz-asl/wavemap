@@ -43,10 +43,10 @@ target_link_libraries(wavemap_carmen_processor ${PROJECT_NAME})
 if (CATKIN_ENABLE_TESTING)
   cs_add_library(testing_main test/gtest_main.cc)
 
-  #  catkin_add_gtest(test_map
-  #      test/test_map.cc)
-  #  target_link_libraries(test_map ${PROJECT_NAME} testing_main)
-  #
+  catkin_add_gtest(test_map
+      test/test_map.cc)
+  target_link_libraries(test_map ${PROJECT_NAME} testing_main)
+
   #  catkin_add_gtest(test_measurement_model
   #      test/test_measurement_model.cc)
   #  target_link_libraries(test_measurement_model ${PROJECT_NAME} testing_main)

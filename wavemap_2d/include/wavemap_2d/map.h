@@ -16,13 +16,24 @@ class GridMap {
  public:
   using Ptr = std::shared_ptr<GridMap>;
 
-  explicit GridMap(const FloatingPoint resolution) : resolution_(resolution) {}
+  explicit GridMap(const FloatingPoint resolution)
+      : resolution_(resolution),
+        grid_map_min_index_(Index::Constant(NAN)),
+        grid_map_max_index_(Index::Constant(NAN)) {}
 
-  bool empty() const { return !grid_map_.size(); }
-  Index size() const { return Index{grid_map_.rows(), grid_map_.cols()}; }
+  bool empty() const { return !data_.size(); }
+  Index size() const { return {data_.rows(), data_.cols()}; }
+  Index getMinIndex() const { return grid_map_min_index_; }
+  Index getMaxIndex() const { return grid_map_max_index_; }
+  bool mapContains(const Index& index) const {
+    return (grid_map_min_index_.array() <= index.array() &&
+            index.array() <= grid_map_max_index_.array())
+        .all();
+  }
   FloatingPoint getResolution() const { return resolution_; }
 
   void updateCell(const Index& index, const FloatingPoint update);
+  FloatingPoint getCellValue(const Index& index) const;
 
   void printSize() const { LOG(INFO) << "Size:\n" << size(); }
 
@@ -34,9 +45,17 @@ class GridMap {
   const FloatingPoint resolution_;
 
   Index grid_map_min_index_;
+  Index grid_map_max_index_;
+  Index getDataIndex(const Index& index) const {
+    // TODO(victorr): Add check for overflows
+    // TODO(victorr): Consider making a separate DataIndex type s.t. mixing up
+    //                relative/absolute indices throws a compiler error
+    return index - grid_map_min_index_;
+  }
+
   using GridDataStructure =
       Eigen::Matrix<FloatingPoint, Eigen::Dynamic, Eigen::Dynamic>;
-  GridDataStructure grid_map_;
+  GridDataStructure data_;
 };
 }  // namespace wavemap_2d
 

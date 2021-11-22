@@ -4,55 +4,55 @@ namespace wavemap_2d {
 void GridMap::updateCell(const Index& index, const FloatingPoint update) {
   if (empty()) {
     grid_map_min_index_ = index;
+    grid_map_max_index_ = index;
+    data_ = GridDataStructure::Zero(1, 1);
   }
 
-  // TODO(victorr): Add check for overflows
-  Index relative_index = index - grid_map_min_index_;
-
-  // TODO(victorr): Clean up this section
-  if ((relative_index.array() < 0).any() ||
-      grid_map_.rows() < relative_index.x() + 1 ||
-      grid_map_.cols() < relative_index.y() + 1) {
-    const Index grid_map_size{grid_map_.rows(), grid_map_.cols()};
-    const Index grid_map_max_index =
-        grid_map_min_index_ + grid_map_size - Index::Ones();
-
-    const Index new_grid_map_max_index = grid_map_max_index.cwiseMax(index);
+  if (!mapContains(index)) {
+    const Index new_grid_map_max_index = grid_map_max_index_.cwiseMax(index);
     const Index new_grid_map_min_index = grid_map_min_index_.cwiseMin(index);
     const Index min_index_diff = grid_map_min_index_ - new_grid_map_min_index;
 
     const Index new_grid_map_size =
         new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
-
     GridDataStructure new_grid_map =
         GridDataStructure::Zero(new_grid_map_size.x(), new_grid_map_size.y());
 
-    new_grid_map.block(min_index_diff.x(), min_index_diff.y(),
-                       grid_map_size.x(), grid_map_size.y()) = grid_map_;
+    new_grid_map.block(min_index_diff.x(), min_index_diff.y(), size().x(),
+                       size().y()) = data_;
 
-    grid_map_.swap(new_grid_map);
+    data_.swap(new_grid_map);
     grid_map_min_index_ = new_grid_map_min_index;
-    relative_index = index - new_grid_map_min_index;
+    grid_map_max_index_ = new_grid_map_max_index;
   }
 
-  grid_map_.coeffRef(relative_index.x(), relative_index.y()) += update;
+  const Index data_index = index - grid_map_min_index_;
+  data_.coeffRef(data_index.x(), data_index.y()) += update;
+}
+
+FloatingPoint GridMap::getCellValue(const Index& index) const {
+  if (mapContains(index)) {
+    const Index data_index = getDataIndex(index);
+    return data_(data_index.x(), data_index.y());
+  } else {
+    return 0.f;
+  }
 }
 
 cv::Mat GridMap::getImage(bool use_color) const {
   cv::Mat image;
   if (use_color) {
-    constexpr FloatingPoint kLogOddsMin = -1e2;  //  -100.f;
-    constexpr FloatingPoint kLogOddsMax = 2e2;   //   200.f;
-    const FloatingPoint min = std::max(grid_map_.minCoeff(), kLogOddsMin);
-    const FloatingPoint max = std::min(grid_map_.maxCoeff(), kLogOddsMax);
+    constexpr FloatingPoint kLogOddsMin = -4.f;
+    constexpr FloatingPoint kLogOddsMax = 4.f;
     GridDataStructure grid_map_clamped =
-        grid_map_.cwiseMin(kLogOddsMax).cwiseMax(kLogOddsMin);
+        data_.cwiseMin(kLogOddsMax).cwiseMax(kLogOddsMin);
 
     cv::eigen2cv(grid_map_clamped, image);
-    image.convertTo(image, CV_8UC1, 255 / (max - min), -min);
+    image.convertTo(image, CV_8UC1, 255 / (kLogOddsMax - kLogOddsMin),
+                    -kLogOddsMin);
     cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_JET);
   } else {
-    cv::eigen2cv(grid_map_, image);
+    cv::eigen2cv(data_, image);
   }
 
   return image;
