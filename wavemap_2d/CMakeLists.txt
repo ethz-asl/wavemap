@@ -22,8 +22,8 @@ add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INIT
 #    ${PROTO_SRCS})
 
 cs_add_library(${PROJECT_NAME}
-    src/pointcloud_integrator.cc
-    src/beam_model.cc
+    src/integrator/pointcloud_integrator.cc
+    src/integrator/beam_model.cc
     src/map.cc)
 target_link_libraries(${PROJECT_NAME}) # ${PROJECT_NAME}_proto)
 
@@ -47,9 +47,9 @@ if (CATKIN_ENABLE_TESTING)
       test/test_map.cc)
   target_link_libraries(test_map ${PROJECT_NAME} testing_main)
 
-  #  catkin_add_gtest(test_measurement_model
-  #      test/test_measurement_model.cc)
-  #  target_link_libraries(test_measurement_model ${PROJECT_NAME} testing_main)
+  catkin_add_gtest(test_measurement_integrator
+      test/test_measurement_integrator.cc)
+  target_link_libraries(test_measurement_integrator ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_pointcloud_containers
       test/test_pointcloud_containers.cc)

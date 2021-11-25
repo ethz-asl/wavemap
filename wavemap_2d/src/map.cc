@@ -3,8 +3,8 @@
 namespace wavemap_2d {
 void GridMap::clear() {
   data_.resize(0, 0);
-  grid_map_min_index_ = Index::Constant(NAN);
-  grid_map_max_index_ = Index::Constant(NAN);
+  grid_map_min_index_ = Index::Zero();
+  grid_map_max_index_ = Index::Zero();
 }
 
 void GridMap::updateCell(const Index& index, const FloatingPoint update) {
@@ -74,7 +74,7 @@ void GridMap::showImage(bool use_color) const {
 
 void GridMap::saveImage(const std::string& file_path,
                         const bool use_color) const {
-  cv::imwrite(file_path, getImage(/*use_color*/ true));
+  cv::imwrite(file_path, getImage(use_color));
 }
 
 bool GridMap::saveMap(const std::string& file_path_prefix) const {

@@ -95,8 +95,8 @@ TEST_F(MapTest, Initialization) {
   EXPECT_EQ(map.getResolution(), random_resolution);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), Index(0, 0));
-  EXPECT_EQ(map.getMinIndex(), Index::Constant(NAN));
-  EXPECT_EQ(map.getMaxIndex(), Index::Constant(NAN));
+  EXPECT_EQ(map.getMinIndex(), Index::Zero());
+  EXPECT_EQ(map.getMaxIndex(), Index::Zero());
 }
 
 TEST_F(MapTest, Resizing) {
@@ -135,8 +135,8 @@ TEST_F(MapTest, Resizing) {
   map.clear();
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), Index(0, 0));
-  EXPECT_EQ(map.getMinIndex(), Index::Constant(NAN));
-  EXPECT_EQ(map.getMaxIndex(), Index::Constant(NAN));
+  EXPECT_EQ(map.getMinIndex(), Index::Zero());
+  EXPECT_EQ(map.getMaxIndex(), Index::Zero());
 }
 
 TEST_F(MapTest, InsertionTest) {

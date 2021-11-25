@@ -25,7 +25,10 @@ class PointcloudIterator {
   // NOTE: This iterator does not expose pointers to its values (only
   //       references) since pointers wouldn't play nice with Eigen
 
-  explicit PointcloudIterator(PointcloudType* pointcloud,
+  // TODO(victorr): Modify the linter to adhere to the new google style guide,
+  //                which recommends passing by non-const reference instead of
+  //                by pointer
+  explicit PointcloudIterator(PointcloudType& pointcloud,  // NOLINT
                               Index index = std::ptrdiff_t(0))
       : pointcloud_(pointcloud), index_(index) {}
 
@@ -41,17 +44,17 @@ class PointcloudIterator {
 
   friend bool operator==(const PointcloudIterator& lhs,
                          const PointcloudIterator& rhs) {
-    return (lhs.pointcloud_ == rhs.pointcloud_) && (lhs.index_ == rhs.index_);
+    return (&lhs.pointcloud_ == &rhs.pointcloud_) && (lhs.index_ == rhs.index_);
   }
   friend bool operator!=(const PointcloudIterator& lhs,
                          const PointcloudIterator& rhs) {
     return !(lhs == rhs);  // NOLINT
   }
 
-  reference operator*() const { return pointcloud_->operator[](index_); }
+  reference operator*() const { return pointcloud_.operator[](index_); }
 
  protected:
-  PointcloudType* pointcloud_;
+  PointcloudType& pointcloud_;
   Index index_;
 };
 
@@ -90,12 +93,12 @@ class Pointcloud {
 
   using iterator = PointcloudIterator<Pointcloud>;
   using const_iterator = PointcloudIterator<const Pointcloud>;
-  iterator begin() { return iterator(this); }
-  iterator end() { return iterator(this, data_.cols()); }
+  iterator begin() { return iterator(*this); }
+  iterator end() { return iterator(*this, data_.cols()); }
   const_iterator begin() const { return cbegin(); }
   const_iterator end() const { return cend(); }
-  const_iterator cbegin() const { return const_iterator(this); }
-  const_iterator cend() const { return const_iterator(this, data_.cols()); }
+  const_iterator cbegin() const { return const_iterator(*this); }
+  const_iterator cend() const { return const_iterator(*this, data_.cols()); }
 
  protected:
   PointcloudData data_;

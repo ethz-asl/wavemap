@@ -14,9 +14,9 @@ function run_all_combinations() {
       done
 
       # Create the log dir and set the log file path
-      run_log_dir="${output_log_dir}/${experiment_date}/${carmen_log_file_name}"
+      run_log_dir="${output_log_dir}/${experiment_date}"
       mkdir -p "${run_log_dir}"
-      run_log_file_prefix="${run_log_dir}/commit_${git_commit_id}_res_${map_resolution}_"
+      run_log_file_prefix="${run_log_dir}/${carmen_log_file_name}_commit_${git_commit_id}_res_${map_resolution}_"
 
       # Run the experiments
       carmen_log_file_path="${carmen_log_dir}/${carmen_log_file_name}"

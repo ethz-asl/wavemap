@@ -1,4 +1,4 @@
-#include "wavemap_2d/beam_model.h"
+#include "wavemap_2d/integrator/beam_model.h"
 
 namespace wavemap_2d {
 Index BeamModel::getBottomLeftUpdateIndex() {

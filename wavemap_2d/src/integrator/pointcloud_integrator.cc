@@ -1,4 +1,6 @@
-#include "wavemap_2d/pointcloud_integrator.h"
+#include "wavemap_2d/integrator/pointcloud_integrator.h"
+
+#include "wavemap_2d/integrator/grid_iterator.h"
 
 namespace wavemap_2d {
 void PointcloudIntegrator::integratePointcloud(
@@ -15,13 +17,10 @@ void PointcloudIntegrator::integratePointcloud(
 
     const Index bottom_left_idx = beam_model_.getBottomLeftUpdateIndex();
     const Index top_right_idx = beam_model_.getTopRightUpdateIndex();
-    for (Index index = bottom_left_idx; index.x() <= top_right_idx.x();
-         ++index.x()) {
-      for (index.y() = bottom_left_idx.y(); index.y() <= top_right_idx.y();
-           ++index.y()) {
-        const FloatingPoint update = beam_model_.computeUpdateAt(index);
-        occupancy_map_->updateCell(index, update);
-      }
+    const Grid grid(bottom_left_idx, top_right_idx);
+    for (const auto& index : grid) {
+      const FloatingPoint update = beam_model_.computeUpdateAt(index);
+      occupancy_map_->updateCell(index, update);
     }
   }
 }

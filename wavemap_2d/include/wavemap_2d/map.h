@@ -18,8 +18,8 @@ class GridMap {
 
   explicit GridMap(const FloatingPoint resolution)
       : resolution_(resolution),
-        grid_map_min_index_(Index::Constant(NAN)),
-        grid_map_max_index_(Index::Constant(NAN)) {}
+        grid_map_min_index_(Index::Zero()),
+        grid_map_max_index_(Index::Zero()) {}
 
   bool empty() const { return !data_.size(); }
   Index size() const { return {data_.rows(), data_.cols()}; }

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_BEAM_MODEL_H_
-#define WAVEMAP_2D_BEAM_MODEL_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_BEAM_MODEL_H_
+#define WAVEMAP_2D_INTEGRATOR_BEAM_MODEL_H_
 
 #include "wavemap_2d/common.h"
 
@@ -54,4 +54,4 @@ class BeamModel {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_BEAM_MODEL_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_BEAM_MODEL_H_

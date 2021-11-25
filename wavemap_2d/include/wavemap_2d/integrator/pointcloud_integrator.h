@@ -1,11 +1,11 @@
-#ifndef WAVEMAP_2D_POINTCLOUD_INTEGRATOR_H_
-#define WAVEMAP_2D_POINTCLOUD_INTEGRATOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
+#define WAVEMAP_2D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
 
 #include <limits>
 #include <utility>
 
-#include "wavemap_2d/beam_model.h"
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/integrator/beam_model.h"
 #include "wavemap_2d/map.h"
 #include "wavemap_2d/pointcloud.h"
 
@@ -34,4 +34,4 @@ class PointcloudIntegrator {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_POINTCLOUD_INTEGRATOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
