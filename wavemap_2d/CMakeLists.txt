@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_2d)
 
 find_package(catkin_simple REQUIRED)
+find_package(benchmark REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN)
@@ -30,9 +31,9 @@ target_link_libraries(${PROJECT_NAME}) # ${PROJECT_NAME}_proto)
 ############
 # BINARIES #
 ############
-add_executable(wavemap_carmen_processor
-    app/wavemap_carmen_processor.cc)
-target_link_libraries(wavemap_carmen_processor ${PROJECT_NAME})
+add_executable(carmen_processor
+    app/carmen_processor.cc)
+target_link_libraries(carmen_processor ${PROJECT_NAME})
 
 #########
 # TESTS #
@@ -54,6 +55,18 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_pointcloud_containers
       test/test_pointcloud_containers.cc)
   target_link_libraries(test_pointcloud_containers ${PROJECT_NAME} testing_main)
+endif ()
+
+##############
+# BENCHMARKS #
+##############
+if (ENABLE_BENCHMARKING)
+  cs_add_library(benchmarking_main benchmark/google_benchmark_main.cc)
+  target_link_libraries(benchmarking_main benchmark::benchmark)
+
+  add_executable(benchmark_measurement_integrator
+      benchmark/benchmark_measurement_integrator.cc)
+  target_link_libraries(benchmark_measurement_integrator ${PROJECT_NAME} benchmarking_main)
 endif ()
 
 ##########

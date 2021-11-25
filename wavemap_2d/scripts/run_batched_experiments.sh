@@ -31,7 +31,7 @@ catkin_ws_dir="${home_dir}/catkin_ws"
 carmen_log_dir="${home_dir}/data/2d_carmen_datasets"
 output_log_dir="${home_dir}/data/2d_carmen_datasets/output"
 package_name="wavemap_2d"
-executable="${catkin_ws_dir}/devel/lib/${package_name}/wavemap_carmen_processor"
+executable="${catkin_ws_dir}/devel/lib/${package_name}/carmen_processor"
 
 declare -a carmen_log_file_names=(
   "aces_publicb.gfs"

@@ -35,7 +35,7 @@ class Grid {
       return retval;
     }
     friend bool operator==(const Iterator& lhs, const Iterator& rhs) {
-      return lhs.current_index_ == rhs.current_index_;
+      return (lhs.current_index_.array() == rhs.current_index_.array()).all();
     }
     friend bool operator!=(const Iterator& lhs, const Iterator& rhs) {
       return !(lhs == rhs);  // NOLINT
