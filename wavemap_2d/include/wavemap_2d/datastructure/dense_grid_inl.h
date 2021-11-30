@@ -6,9 +6,9 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename OnlineCellType, typename SerializedCellType>
-void DenseGrid<OnlineCellType, SerializedCellType>::updateCell(
-    const Index& index, const FloatingPoint update) {
+template <typename CellType>
+void DenseGrid<CellType>::updateCell(const Index& index,
+                                     const FloatingPoint update) {
   if (empty()) {
     min_index_ = index;
     max_index_ = index;
@@ -33,12 +33,11 @@ void DenseGrid<OnlineCellType, SerializedCellType>::updateCell(
     max_index_ = new_grid_map_max_index;
   }
 
-  accessCellData(index) += static_cast<OnlineCellType>(update);
+  accessCellData(index) += static_cast<CellType>(update);
 }
 
-template <typename OnlineCellType, typename SerializedCellType>
-FloatingPoint DenseGrid<OnlineCellType, SerializedCellType>::getCellValue(
-    const Index& index) const {
+template <typename CellType>
+FloatingPoint DenseGrid<CellType>::getCellValue(const Index& index) const {
   if (containsIndex(index)) {
     return static_cast<FloatingPoint>(accessCellData(index));
   } else {
@@ -46,9 +45,8 @@ FloatingPoint DenseGrid<OnlineCellType, SerializedCellType>::getCellValue(
   }
 }
 
-template <typename OnlineCellType, typename SerializedCellType>
-cv::Mat DenseGrid<OnlineCellType, SerializedCellType>::getImage(
-    bool use_color) const {
+template <typename CellType>
+cv::Mat DenseGrid<CellType>::getImage(bool use_color) const {
   cv::Mat image;
   if (use_color) {
     constexpr FloatingPoint kLogOddsMin = -4.f;
@@ -67,14 +65,12 @@ cv::Mat DenseGrid<OnlineCellType, SerializedCellType>::getImage(
   return image;
 }
 
-template <typename OnlineCellType, typename SerializedCellType>
-bool DenseGrid<OnlineCellType, SerializedCellType>::save(
-    const std::string& file_path_prefix) const {
-  const std::string header_file_path =
-      getHeaderFilePathFromPrefix(file_path_prefix);
+template <typename CellType>
+bool DenseGrid<CellType>::save(const std::string& file_path_prefix,
+                               bool use_floating_precision) const {
+  const std::string header_file_path = getHeaderFilePath(file_path_prefix);
   const std::string data_file_path =
-      getDataFilePathFromPrefix(file_path_prefix);
-  LOG(INFO) << "Saving: " << data_file_path;
+      getDataFilePath(file_path_prefix, use_floating_precision);
 
   std::ofstream header_file;
   header_file.open(header_file_path);
@@ -87,22 +83,22 @@ bool DenseGrid<OnlineCellType, SerializedCellType>::save(
   header_file.close();
 
   cv::Mat image;
-  Eigen::Matrix<SerializedCellType, Eigen::Dynamic, Eigen::Dynamic> data_tmp =
-      data_.template cast<SerializedCellType>();
-  cv::eigen2cv(data_tmp, image);
+  cv::eigen2cv(data_, image);
+  if (!use_floating_precision) {
+    image.convertTo(image,
+                    cv::traits::Type<SerializedFixedPrecisionType>::value);
+  }
   cv::imwrite(data_file_path, image);
 
   return true;
 }
 
-template <typename OnlineCellType, typename SerializedCellType>
-bool DenseGrid<OnlineCellType, SerializedCellType>::load(
-    const std::string& file_path_prefix) {
-  const std::string header_file_path =
-      getHeaderFilePathFromPrefix(file_path_prefix);
+template <typename CellType>
+bool DenseGrid<CellType>::load(const std::string& file_path_prefix,
+                               bool used_floating_precision) {
+  const std::string header_file_path = getHeaderFilePath(file_path_prefix);
   const std::string data_file_path =
-      getDataFilePathFromPrefix(file_path_prefix);
-  LOG(INFO) << "Loading: " << data_file_path;
+      getDataFilePath(file_path_prefix, used_floating_precision);
 
   std::ifstream header_file;
   header_file.open(header_file_path);
@@ -129,9 +125,8 @@ bool DenseGrid<OnlineCellType, SerializedCellType>::load(
     LOG(ERROR) << "Could not read map data file \"" << data_file_path << "\".";
     return false;
   }
-  Eigen::Matrix<SerializedCellType, Eigen::Dynamic, Eigen::Dynamic> data_tmp;
-  cv::cv2eigen(image, data_tmp);
-  data_ = data_tmp.template cast<OnlineCellType>();
+  image.convertTo(image, cv::traits::Type<CellDataType>::value);
+  cv::cv2eigen(image, data_);
 
   return true;
 }

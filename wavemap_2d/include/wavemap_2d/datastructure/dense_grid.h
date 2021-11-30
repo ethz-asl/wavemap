@@ -7,11 +7,10 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename OnlineCellType, typename SerializedCellType>
+template <typename CellType>
 class DenseGrid : public DataStructureBase {
  public:
-  using CellTypeOnline = OnlineCellType;
-  using CellTypeSerialized = SerializedCellType;
+  using CellDataType = CellType;
 
   explicit DenseGrid(const FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -34,39 +33,33 @@ class DenseGrid : public DataStructureBase {
         .all();
   }
 
-  void updateCell(const Index& index, const FloatingPoint update) override;
+  void updateCell(const Index& index, FloatingPoint update) override;
   FloatingPoint getCellValue(const Index& index) const override;
 
   cv::Mat getImage(bool use_color) const override;
-  bool save(const std::string& file_path_prefix) const override;
-  bool load(const std::string& file_path_prefix) override;
+  bool save(const std::string& file_path_prefix,
+            bool use_floating_precision) const override;
+  bool load(const std::string& file_path_prefix,
+            bool used_floating_precision) override;
 
  protected:
   Index min_index_;
   Index max_index_;
 
-  OnlineCellType& accessCellData(const Index& index) {
+  CellType& accessCellData(const Index& index) {
     // TODO(victorr): Add check for overflows
     const Index data_index = index - min_index_;
     return data_.coeffRef(data_index.x(), data_index.y());
   }
-  const OnlineCellType& accessCellData(const Index& index) const {
+  const CellType& accessCellData(const Index& index) const {
     // TODO(victorr): Add check for overflows
     const Index data_index = index - min_index_;
     return data_.coeff(data_index.x(), data_index.y());
   }
-  using DataGridType =
-      Eigen::Matrix<OnlineCellType, Eigen::Dynamic, Eigen::Dynamic>;
+  using DataGridType = Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic>;
   DataGridType data_;
 
-  using SerializedDataGridType =
-      Eigen::Matrix<SerializedCellType, Eigen::Dynamic, Eigen::Dynamic>;
-  std::string getDataFilePathFromPrefix(
-      const std::string& file_path_prefix) const override {
-    const std::string extension =
-        std::is_floating_point<SerializedCellType>::value ? "exr" : "jp2";
-    return file_path_prefix + "_data." + extension;
-  }
+  using SerializedFixedPrecisionType = int;
 };
 }  // namespace wavemap_2d
 

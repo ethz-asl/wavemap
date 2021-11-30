@@ -15,8 +15,7 @@ DEFINE_string(output_log_dir, "",
 DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
 
 int main(int argc, char** argv) {
-  using DataStructureType =
-      wavemap_2d::DenseGrid<wavemap_2d::FloatingPoint, int>;
+  using DataStructureType = wavemap_2d::DenseGrid<wavemap_2d::FloatingPoint>;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
@@ -108,9 +107,15 @@ int main(int argc, char** argv) {
 
   // Save images of the map
   for (const bool use_color : {false, true}) {
-    std::string image_path =
-        output_log_dir + std::string(use_color ? "color.png" : "raw.exr");
+    const std::string image_path =
+        output_log_dir + (use_color ? "color.png" : "raw.exr");
     occupancy_map->saveImage(image_path, /*use_color*/ use_color);
+  }
+  for (const bool use_floating_precision : {true, false}) {
+    const std::string map_path_prefix =
+        output_log_dir + "map" +
+        (use_floating_precision ? "_floating" : "_fixed");
+    occupancy_map->save(map_path_prefix, use_floating_precision);
   }
 
   // Print stats

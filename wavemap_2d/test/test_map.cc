@@ -102,13 +102,13 @@ class MapTest : public ::testing::Test {
   }
 
  private:
+  // TODO(victorr): Tighten this once truncation and rescaling has been
+  // implemented
   static constexpr FloatingPoint kCellValueErrorTolerance = 1.f;
   std::unique_ptr<RandomNumberGenerator> random_number_generator_;
 };
 
-using DataStructureTypes =
-    ::testing::Types<DenseGrid<FloatingPoint, FloatingPoint>,
-                     DenseGrid<FloatingPoint, int>>;
+using DataStructureTypes = ::testing::Types<DenseGrid<FloatingPoint>>;
 TYPED_TEST_SUITE(MapTest, DataStructureTypes);
 
 TYPED_TEST(MapTest, Initialization) {
@@ -179,13 +179,17 @@ TYPED_TEST(MapTest, InsertionTest) {
 TYPED_TEST(MapTest, Serialization) {
   const std::string datastructure_name =
       ::testing::UnitTest::GetInstance()->current_test_info()->type_param();
-  const std::string kTempFilePath = "/tmp/map_" + datastructure_name;
-  TypeParam map = TestFixture::getRandomMap();
-  ASSERT_TRUE(map.save(kTempFilePath));
+  for (const bool use_floating_precision : {true, false}) {
+    const std::string kTempFilePath =
+        "/tmp/map_" + datastructure_name +
+        (use_floating_precision ? "_floating" : "_fixed");
+    TypeParam map = TestFixture::getRandomMap();
+    ASSERT_TRUE(map.save(kTempFilePath, use_floating_precision));
 
-  TypeParam loaded_map(map.getResolution());
-  ASSERT_TRUE(loaded_map.load(kTempFilePath));
+    TypeParam loaded_map(map.getResolution());
+    ASSERT_TRUE(loaded_map.load(kTempFilePath, use_floating_precision));
 
-  TestFixture::compare(loaded_map, map);
+    TestFixture::compare(loaded_map, map);
+  }
 }
 }  // namespace wavemap_2d
