@@ -20,12 +20,26 @@ class MapTest : public ::testing::Test {
     ASSERT_EQ(map_reference.getMaxIndex(), map_to_test.getMaxIndex());
     ASSERT_EQ(map_reference.getResolution(), map_to_test.getResolution());
 
+    int reported_error_count = 0;
+    constexpr int kMaxNumReportedErrors = 30;
     const Index min_index = map_reference.getMinIndex();
     const Index max_index = map_reference.getMaxIndex();
     for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
       for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
-        EXPECT_EQ(map_reference.getCellValue(index),
-                  map_to_test.getCellValue(index));
+        auto reference_value = map_reference.getCellValue(index);
+        auto test_value = map_to_test.getCellValue(index);
+        if (kCellValueErrorTolerance < std::abs(reference_value - test_value)) {
+          ADD_FAILURE() << std::setprecision(4)
+                        << "Difference between the reference ("
+                        << reference_value << ") and test cell (" << test_value
+                        << ") values at index (" << index
+                        << ") exceeds the configured threshold ("
+                        << kCellValueErrorTolerance << ").";
+          if (kMaxNumReportedErrors < reported_error_count++) {
+            FAIL() << "Too many errors. Aborting comparison between reference "
+                      "and test map.";
+          }
+        }
       }
     }
   }
@@ -88,11 +102,13 @@ class MapTest : public ::testing::Test {
   }
 
  private:
+  static constexpr FloatingPoint kCellValueErrorTolerance = 1.f;
   std::unique_ptr<RandomNumberGenerator> random_number_generator_;
 };
 
 using DataStructureTypes =
-    ::testing::Types<DenseGrid<FloatingPoint>, DenseGrid<int>>;
+    ::testing::Types<DenseGrid<FloatingPoint, FloatingPoint>,
+                     DenseGrid<FloatingPoint, int>>;
 TYPED_TEST_SUITE(MapTest, DataStructureTypes);
 
 TYPED_TEST(MapTest, Initialization) {
@@ -149,13 +165,14 @@ TYPED_TEST(MapTest, InsertionTest) {
   TypeParam map(TestFixture::getRandomResolution());
   const std::vector<Index> random_indices = TestFixture::getRandomIndexVector();
   for (const Index& random_index : random_indices) {
-    typename TypeParam::CellType expected_value = 0;
+    FloatingPoint expected_value = 0.f;
     for (const FloatingPoint random_update :
          TestFixture::getRandomUpdateVector()) {
       map.updateCell(random_index, random_update);
       expected_value += random_update;
     }
-    EXPECT_FLOAT_EQ(map.getCellValue(random_index), expected_value);
+    EXPECT_NEAR(map.getCellValue(random_index), expected_value,
+                expected_value * 1e-2);
   }
 }
 

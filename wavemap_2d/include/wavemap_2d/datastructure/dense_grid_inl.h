@@ -6,13 +6,13 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellDataType>
-void DenseGrid<CellDataType>::updateCell(const Index& index,
-                                         const FloatingPoint update) {
+template <typename OnlineCellType, typename SerializedCellType>
+void DenseGrid<OnlineCellType, SerializedCellType>::updateCell(
+    const Index& index, const FloatingPoint update) {
   if (empty()) {
     min_index_ = index;
     max_index_ = index;
-    data_ = GridDataStructure::Zero(1, 1);
+    data_ = DataGridType::Zero(1, 1);
   }
 
   if (!containsIndex(index)) {
@@ -22,8 +22,8 @@ void DenseGrid<CellDataType>::updateCell(const Index& index,
 
     const Index new_grid_map_size =
         new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
-    GridDataStructure new_grid_map =
-        GridDataStructure::Zero(new_grid_map_size.x(), new_grid_map_size.y());
+    DataGridType new_grid_map =
+        DataGridType::Zero(new_grid_map_size.x(), new_grid_map_size.y());
 
     new_grid_map.block(min_index_diff.x(), min_index_diff.y(), size().x(),
                        size().y()) = data_;
@@ -33,11 +33,12 @@ void DenseGrid<CellDataType>::updateCell(const Index& index,
     max_index_ = new_grid_map_max_index;
   }
 
-  accessCellData(index) += static_cast<CellDataType>(update);
+  accessCellData(index) += static_cast<OnlineCellType>(update);
 }
 
-template <typename CellDataType>
-FloatingPoint DenseGrid<CellDataType>::getCellValue(const Index& index) const {
+template <typename OnlineCellType, typename SerializedCellType>
+FloatingPoint DenseGrid<OnlineCellType, SerializedCellType>::getCellValue(
+    const Index& index) const {
   if (containsIndex(index)) {
     return static_cast<FloatingPoint>(accessCellData(index));
   } else {
@@ -45,13 +46,14 @@ FloatingPoint DenseGrid<CellDataType>::getCellValue(const Index& index) const {
   }
 }
 
-template <typename CellDataType>
-cv::Mat DenseGrid<CellDataType>::getImage(bool use_color) const {
+template <typename OnlineCellType, typename SerializedCellType>
+cv::Mat DenseGrid<OnlineCellType, SerializedCellType>::getImage(
+    bool use_color) const {
   cv::Mat image;
   if (use_color) {
     constexpr FloatingPoint kLogOddsMin = -4.f;
     constexpr FloatingPoint kLogOddsMax = 4.f;
-    GridDataStructure grid_map_clamped =
+    DataGridType grid_map_clamped =
         data_.cwiseMin(kLogOddsMax).cwiseMax(kLogOddsMin);
 
     cv::eigen2cv(grid_map_clamped, image);
@@ -65,12 +67,14 @@ cv::Mat DenseGrid<CellDataType>::getImage(bool use_color) const {
   return image;
 }
 
-template <typename CellDataType>
-bool DenseGrid<CellDataType>::save(const std::string& file_path_prefix) const {
+template <typename OnlineCellType, typename SerializedCellType>
+bool DenseGrid<OnlineCellType, SerializedCellType>::save(
+    const std::string& file_path_prefix) const {
   const std::string header_file_path =
       getHeaderFilePathFromPrefix(file_path_prefix);
   const std::string data_file_path =
       getDataFilePathFromPrefix(file_path_prefix);
+  LOG(INFO) << "Saving: " << data_file_path;
 
   std::ofstream header_file;
   header_file.open(header_file_path);
@@ -83,18 +87,22 @@ bool DenseGrid<CellDataType>::save(const std::string& file_path_prefix) const {
   header_file.close();
 
   cv::Mat image;
-  cv::eigen2cv(data_, image);
+  Eigen::Matrix<SerializedCellType, Eigen::Dynamic, Eigen::Dynamic> data_tmp =
+      data_.template cast<SerializedCellType>();
+  cv::eigen2cv(data_tmp, image);
   cv::imwrite(data_file_path, image);
 
   return true;
 }
 
-template <typename CellDataType>
-bool DenseGrid<CellDataType>::load(const std::string& file_path_prefix) {
+template <typename OnlineCellType, typename SerializedCellType>
+bool DenseGrid<OnlineCellType, SerializedCellType>::load(
+    const std::string& file_path_prefix) {
   const std::string header_file_path =
       getHeaderFilePathFromPrefix(file_path_prefix);
   const std::string data_file_path =
       getDataFilePathFromPrefix(file_path_prefix);
+  LOG(INFO) << "Loading: " << data_file_path;
 
   std::ifstream header_file;
   header_file.open(header_file_path);
@@ -116,12 +124,14 @@ bool DenseGrid<CellDataType>::load(const std::string& file_path_prefix) {
   header_file >> max_index_.x() >> max_index_.y();
   header_file.close();
 
-  const cv::Mat image = cv::imread(data_file_path, cv::IMREAD_ANYDEPTH);
+  cv::Mat image = cv::imread(data_file_path, cv::IMREAD_ANYDEPTH);
   if (image.empty()) {
     LOG(ERROR) << "Could not read map data file \"" << data_file_path << "\".";
     return false;
   }
-  cv::cv2eigen(image, data_);
+  Eigen::Matrix<SerializedCellType, Eigen::Dynamic, Eigen::Dynamic> data_tmp;
+  cv::cv2eigen(image, data_tmp);
+  data_ = data_tmp.template cast<OnlineCellType>();
 
   return true;
 }

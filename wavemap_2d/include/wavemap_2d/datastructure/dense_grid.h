@@ -7,10 +7,11 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellDataType>
+template <typename OnlineCellType, typename SerializedCellType>
 class DenseGrid : public DataStructureBase {
  public:
-  using CellType = CellDataType;
+  using CellTypeOnline = OnlineCellType;
+  using CellTypeSerialized = SerializedCellType;
 
   explicit DenseGrid(const FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -44,24 +45,26 @@ class DenseGrid : public DataStructureBase {
   Index min_index_;
   Index max_index_;
 
-  CellDataType& accessCellData(const Index& index) {
+  OnlineCellType& accessCellData(const Index& index) {
     // TODO(victorr): Add check for overflows
     const Index data_index = index - min_index_;
     return data_.coeffRef(data_index.x(), data_index.y());
   }
-  const CellDataType& accessCellData(const Index& index) const {
+  const OnlineCellType& accessCellData(const Index& index) const {
     // TODO(victorr): Add check for overflows
     const Index data_index = index - min_index_;
     return data_.coeff(data_index.x(), data_index.y());
   }
-  using GridDataStructure =
-      Eigen::Matrix<CellDataType, Eigen::Dynamic, Eigen::Dynamic>;
-  GridDataStructure data_;
+  using DataGridType =
+      Eigen::Matrix<OnlineCellType, Eigen::Dynamic, Eigen::Dynamic>;
+  DataGridType data_;
 
+  using SerializedDataGridType =
+      Eigen::Matrix<SerializedCellType, Eigen::Dynamic, Eigen::Dynamic>;
   std::string getDataFilePathFromPrefix(
       const std::string& file_path_prefix) const override {
     const std::string extension =
-        std::is_floating_point<CellDataType>::value ? "exr" : "jp2";
+        std::is_floating_point<SerializedCellType>::value ? "exr" : "jp2";
     return file_path_prefix + "_data." + extension;
   }
 };

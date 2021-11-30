@@ -15,7 +15,8 @@ DEFINE_string(output_log_dir, "",
 DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
 
 int main(int argc, char** argv) {
-  using DataStructureType = wavemap_2d::DenseGrid<wavemap_2d::FloatingPoint>;
+  using DataStructureType =
+      wavemap_2d::DenseGrid<wavemap_2d::FloatingPoint, int>;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
