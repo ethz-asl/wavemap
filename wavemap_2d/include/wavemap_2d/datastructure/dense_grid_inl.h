@@ -1,23 +1,24 @@
-#include "wavemap_2d/map.h"
+#ifndef WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_
+#define WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_
+
+#include <string>
+
+#include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-void GridMap::clear() {
-  data_.resize(0, 0);
-  grid_map_min_index_ = Index::Zero();
-  grid_map_max_index_ = Index::Zero();
-}
-
-void GridMap::updateCell(const Index& index, const FloatingPoint update) {
+template <typename CellDataType>
+void DenseGrid<CellDataType>::updateCell(const Index& index,
+                                         const FloatingPoint update) {
   if (empty()) {
-    grid_map_min_index_ = index;
-    grid_map_max_index_ = index;
+    min_index_ = index;
+    max_index_ = index;
     data_ = GridDataStructure::Zero(1, 1);
   }
 
-  if (!mapContains(index)) {
-    const Index new_grid_map_max_index = grid_map_max_index_.cwiseMax(index);
-    const Index new_grid_map_min_index = grid_map_min_index_.cwiseMin(index);
-    const Index min_index_diff = grid_map_min_index_ - new_grid_map_min_index;
+  if (!containsIndex(index)) {
+    const Index new_grid_map_max_index = max_index_.cwiseMax(index);
+    const Index new_grid_map_min_index = min_index_.cwiseMin(index);
+    const Index min_index_diff = min_index_ - new_grid_map_min_index;
 
     const Index new_grid_map_size =
         new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
@@ -28,24 +29,24 @@ void GridMap::updateCell(const Index& index, const FloatingPoint update) {
                        size().y()) = data_;
 
     data_.swap(new_grid_map);
-    grid_map_min_index_ = new_grid_map_min_index;
-    grid_map_max_index_ = new_grid_map_max_index;
+    min_index_ = new_grid_map_min_index;
+    max_index_ = new_grid_map_max_index;
   }
 
-  const Index data_index = index - grid_map_min_index_;
-  data_.coeffRef(data_index.x(), data_index.y()) += update;
+  accessCellData(index) += static_cast<CellDataType>(update);
 }
 
-FloatingPoint GridMap::getCellValue(const Index& index) const {
-  if (mapContains(index)) {
-    const Index data_index = getDataIndex(index);
-    return data_(data_index.x(), data_index.y());
+template <typename CellDataType>
+FloatingPoint DenseGrid<CellDataType>::getCellValue(const Index& index) const {
+  if (containsIndex(index)) {
+    return static_cast<FloatingPoint>(accessCellData(index));
   } else {
     return 0.f;
   }
 }
 
-cv::Mat GridMap::getImage(bool use_color) const {
+template <typename CellDataType>
+cv::Mat DenseGrid<CellDataType>::getImage(bool use_color) const {
   cv::Mat image;
   if (use_color) {
     constexpr FloatingPoint kLogOddsMin = -4.f;
@@ -64,20 +65,8 @@ cv::Mat GridMap::getImage(bool use_color) const {
   return image;
 }
 
-void GridMap::showImage(bool use_color) const {
-  cv::namedWindow("Grid map", cv::WINDOW_NORMAL);
-  cv::setWindowProperty("Grid map", CV_WND_PROP_FULLSCREEN,
-                        CV_WINDOW_FULLSCREEN);
-  cv::imshow("Grid map", getImage(use_color));
-  cv::waitKey(1 /* ms */);
-}
-
-void GridMap::saveImage(const std::string& file_path,
-                        const bool use_color) const {
-  cv::imwrite(file_path, getImage(use_color));
-}
-
-bool GridMap::saveMap(const std::string& file_path_prefix) const {
+template <typename CellDataType>
+bool DenseGrid<CellDataType>::save(const std::string& file_path_prefix) const {
   const std::string header_file_path =
       getHeaderFilePathFromPrefix(file_path_prefix);
   const std::string data_file_path =
@@ -90,9 +79,7 @@ bool GridMap::saveMap(const std::string& file_path_prefix) const {
                << "\" for writing.";
     return false;
   }
-  header_file << resolution_ << "\n"
-              << grid_map_min_index_ << "\n"
-              << grid_map_max_index_;
+  header_file << resolution_ << "\n" << min_index_ << "\n" << max_index_;
   header_file.close();
 
   cv::Mat image;
@@ -102,7 +89,8 @@ bool GridMap::saveMap(const std::string& file_path_prefix) const {
   return true;
 }
 
-bool GridMap::loadMap(const std::string& file_path_prefix) {
+template <typename CellDataType>
+bool DenseGrid<CellDataType>::load(const std::string& file_path_prefix) {
   const std::string header_file_path =
       getHeaderFilePathFromPrefix(file_path_prefix);
   const std::string data_file_path =
@@ -124,12 +112,11 @@ bool GridMap::loadMap(const std::string& file_path_prefix) {
                << ").";
     return false;
   }
-  header_file >> grid_map_min_index_.x() >> grid_map_min_index_.y();
-  header_file >> grid_map_max_index_.x() >> grid_map_max_index_.y();
+  header_file >> min_index_.x() >> min_index_.y();
+  header_file >> max_index_.x() >> max_index_.y();
   header_file.close();
 
-  cv::Mat image =
-      cv::imread(data_file_path, cv::IMREAD_ANYCOLOR | cv::IMREAD_ANYDEPTH);
+  const cv::Mat image = cv::imread(data_file_path, cv::IMREAD_ANYDEPTH);
   if (image.empty()) {
     LOG(ERROR) << "Could not read map data file \"" << data_file_path << "\".";
     return false;
@@ -139,3 +126,7 @@ bool GridMap::loadMap(const std::string& file_path_prefix) {
   return true;
 }
 }  // namespace wavemap_2d
+
+#include "wavemap_2d/datastructure/dense_grid_inl.h"
+
+#endif  // WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_

@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_2d)
 
 find_package(catkin_simple REQUIRED)
-find_package(benchmark REQUIRED)
+if (ENABLE_BENCHMARKING)
+  find_package(benchmark REQUIRED)
+endif ()
 catkin_simple(ALL_DEPS_REQUIRED)
 
 add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN)
@@ -25,7 +27,7 @@ add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INIT
 cs_add_library(${PROJECT_NAME}
     src/integrator/pointcloud_integrator.cc
     src/integrator/beam_model.cc
-    src/map.cc)
+    src/datastructure/datastructure_base.cc)
 target_link_libraries(${PROJECT_NAME}) # ${PROJECT_NAME}_proto)
 
 ############
@@ -49,11 +51,11 @@ if (CATKIN_ENABLE_TESTING)
   target_link_libraries(test_map ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_measurement_integrator
-      test/test_measurement_integrator.cc)
+      test/test_integrator.cc)
   target_link_libraries(test_measurement_integrator ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_pointcloud_containers
-      test/test_pointcloud_containers.cc)
+      test/test_pointcloud.cc)
   target_link_libraries(test_pointcloud_containers ${PROJECT_NAME} testing_main)
 endif ()
 

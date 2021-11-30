@@ -1,10 +1,10 @@
-#include <fstream>
 #include <sstream>
 #include <string>
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
+#include "wavemap_2d/datastructure/dense_grid.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",
@@ -15,6 +15,8 @@ DEFINE_string(output_log_dir, "",
 DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
 
 int main(int argc, char** argv) {
+  using DataStructureType = wavemap_2d::DenseGrid<wavemap_2d::FloatingPoint>;
+
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
@@ -29,8 +31,8 @@ int main(int argc, char** argv) {
   CHECK_GT(map_resolution, 0.f)
       << "The map_resolution flag must be set to a positive number.";
 
-  // Setup the mapper
-  auto occupancy_map = std::make_shared<wavemap_2d::GridMap>(map_resolution);
+  // Set up the mapper
+  auto occupancy_map = std::make_shared<DataStructureType>(map_resolution);
   wavemap_2d::PointcloudIntegrator pointcloud_integrator(occupancy_map);
 
   // Open the log file

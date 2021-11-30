@@ -1,17 +1,19 @@
 #include <gtest/gtest.h>
 
-#include "wavemap_2d/map.h"
+#include "wavemap_2d/datastructure/datastructure_base.h"
+#include "wavemap_2d/datastructure/dense_grid.h"
 #include "wavemap_2d/utils/random_number_generator.h"
 
 namespace wavemap_2d {
+template <typename DataStructureType>
 class MapTest : public ::testing::Test {
  protected:
   void SetUp() override {
     random_number_generator_ = std::make_unique<RandomNumberGenerator>();
   }
 
-  static void compare(const GridMap& map_reference,
-                      const GridMap& map_to_test) {
+  static void compare(const DataStructureBase& map_reference,
+                      const DataStructureBase& map_to_test) {
     ASSERT_EQ(map_reference.empty(), map_to_test.empty());
     ASSERT_EQ(map_reference.size(), map_to_test.size());
     ASSERT_EQ(map_reference.getMinIndex(), map_to_test.getMinIndex());
@@ -56,8 +58,8 @@ class MapTest : public ::testing::Test {
     return random_indices;
   }
   FloatingPoint getRandomUpdate() const {
-    constexpr FloatingPoint kMinUpdate = 1e-3;
-    constexpr FloatingPoint kMaxUpdate = 1e3;
+    constexpr FloatingPoint kMinUpdate = 1e-2;
+    constexpr FloatingPoint kMaxUpdate = 1e2;
     return random_number_generator_->getRandomRealNumber(kMinUpdate,
                                                          kMaxUpdate);
   }
@@ -71,8 +73,8 @@ class MapTest : public ::testing::Test {
                   [this]() { return getRandomUpdate(); });
     return random_updates;
   }
-  GridMap getRandomMap() {
-    GridMap random_map(getRandomResolution());
+  DataStructureType getRandomMap() {
+    DataStructureType random_map(getRandomResolution());
     const Index min_index = -getRandomIndex().cwiseAbs();
     const Index max_index = getRandomIndex().cwiseAbs();
     random_map.updateCell(min_index, 0.f);
@@ -89,9 +91,13 @@ class MapTest : public ::testing::Test {
   std::unique_ptr<RandomNumberGenerator> random_number_generator_;
 };
 
-TEST_F(MapTest, Initialization) {
-  const FloatingPoint random_resolution = getRandomResolution();
-  GridMap map(random_resolution);
+using DataStructureTypes =
+    ::testing::Types<DenseGrid<FloatingPoint>, DenseGrid<int>>;
+TYPED_TEST_SUITE(MapTest, DataStructureTypes);
+
+TYPED_TEST(MapTest, Initialization) {
+  const FloatingPoint random_resolution = TestFixture::getRandomResolution();
+  TypeParam map(random_resolution);
   EXPECT_EQ(map.getResolution(), random_resolution);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), Index(0, 0));
@@ -99,12 +105,12 @@ TEST_F(MapTest, Initialization) {
   EXPECT_EQ(map.getMaxIndex(), Index::Zero());
 }
 
-TEST_F(MapTest, Resizing) {
-  GridMap map(getRandomResolution());
+TYPED_TEST(MapTest, Resizing) {
+  TypeParam map(TestFixture::getRandomResolution());
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), Index(0, 0));
 
-  const std::vector<Index> random_indices = getRandomIndexVector();
+  const std::vector<Index> random_indices = TestFixture::getRandomIndexVector();
 
   const Index& first_random_index = random_indices[0];
   map.updateCell(first_random_index, 0.f);
@@ -139,12 +145,13 @@ TEST_F(MapTest, Resizing) {
   EXPECT_EQ(map.getMaxIndex(), Index::Zero());
 }
 
-TEST_F(MapTest, InsertionTest) {
-  GridMap map(getRandomResolution());
-  const std::vector<Index> random_indices = getRandomIndexVector();
+TYPED_TEST(MapTest, InsertionTest) {
+  TypeParam map(TestFixture::getRandomResolution());
+  const std::vector<Index> random_indices = TestFixture::getRandomIndexVector();
   for (const Index& random_index : random_indices) {
-    FloatingPoint expected_value = 0.f;
-    for (const FloatingPoint random_update : getRandomUpdateVector()) {
+    typename TypeParam::CellType expected_value = 0;
+    for (const FloatingPoint random_update :
+         TestFixture::getRandomUpdateVector()) {
       map.updateCell(random_index, random_update);
       expected_value += random_update;
     }
@@ -152,14 +159,16 @@ TEST_F(MapTest, InsertionTest) {
   }
 }
 
-TEST_F(MapTest, Serialization) {
-  const std::string kTempFilePath = "/tmp/map";
-  GridMap map = getRandomMap();
-  ASSERT_TRUE(map.saveMap(kTempFilePath));
+TYPED_TEST(MapTest, Serialization) {
+  const std::string datastructure_name =
+      ::testing::UnitTest::GetInstance()->current_test_info()->type_param();
+  const std::string kTempFilePath = "/tmp/map_" + datastructure_name;
+  TypeParam map = TestFixture::getRandomMap();
+  ASSERT_TRUE(map.save(kTempFilePath));
 
-  GridMap loaded_map(map.getResolution());
-  ASSERT_TRUE(loaded_map.loadMap(kTempFilePath));
+  TypeParam loaded_map(map.getResolution());
+  ASSERT_TRUE(loaded_map.load(kTempFilePath));
 
-  compare(loaded_map, map);
+  TestFixture::compare(loaded_map, map);
 }
 }  // namespace wavemap_2d
