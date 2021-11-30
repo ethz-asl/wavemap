@@ -60,8 +60,10 @@ template <typename CellType>
 cv::Mat DenseGrid<CellType>::getImage(bool use_color) const {
   cv::Mat image;
   if (use_color) {
-    constexpr FloatingPoint kLogOddsMin = -4.f;
-    constexpr FloatingPoint kLogOddsMax = 4.f;
+    constexpr FloatingPoint kLogOddsMin =
+        CellType::hasLowerBound ? CellType::kLowerBound : -2;
+    constexpr FloatingPoint kLogOddsMax =
+        CellType::hasUpperBound ? CellType::kUpperBound : 4;
     const DataGridBaseFloat grid_map_clamped =
         data_.template cast<CellDataBaseFloat>()
             .cwiseMin(kLogOddsMax)
