@@ -4,6 +4,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
+#include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/dense_grid.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
@@ -14,8 +15,9 @@ DEFINE_string(output_log_dir, "",
               "blank to disable logging.");
 DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
 
+using namespace wavemap_2d;  // NOLINT
 int main(int argc, char** argv) {
-  using DataStructureType = wavemap_2d::DenseGrid<wavemap_2d::FloatingPoint>;
+  using DataStructureType = DenseGrid<SaturatingCell<>>;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
@@ -26,14 +28,13 @@ int main(int argc, char** argv) {
   CHECK(!carmen_log_file_path.empty())
       << "The carmen_log_file_path flag must be set to a non-empty string.";
   const std::string output_log_dir = FLAGS_output_log_dir;
-  const auto map_resolution =
-      static_cast<wavemap_2d::FloatingPoint>(FLAGS_map_resolution);
+  const auto map_resolution = static_cast<FloatingPoint>(FLAGS_map_resolution);
   CHECK_GT(map_resolution, 0.f)
       << "The map_resolution flag must be set to a positive number.";
 
   // Set up the mapper
   auto occupancy_map = std::make_shared<DataStructureType>(map_resolution);
-  wavemap_2d::PointcloudIntegrator pointcloud_integrator(occupancy_map);
+  PointcloudIntegrator pointcloud_integrator(occupancy_map);
 
   // Open the log file
   std::ifstream log_file(carmen_log_file_path);
@@ -63,7 +64,7 @@ int main(int argc, char** argv) {
       int n_beams;
       if (iss >> n_beams) {
         // Parse the pointcloud
-        wavemap_2d::Pointcloud pointcloud;
+        Pointcloud pointcloud;
         pointcloud.resize(n_beams);
         {
           bool success = true;
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
         }
 
         // Parse the position
-        wavemap_2d::Transformation pose;
+        Transformation pose;
         if (!(iss >> pose.getPosition().x() >> pose.getPosition().y() >>
               pose.getRotation().angle())) {
           LOG(WARNING) << "Could not parse pose... skipping.";
@@ -99,7 +100,7 @@ int main(int argc, char** argv) {
         pose.getRotation().angle() -= M_PI;
 
         // Integrate the pointcloud
-        wavemap_2d::PosedPointcloud posed_pointcloud(pose, pointcloud);
+        PosedPointcloud posed_pointcloud(pose, pointcloud);
         pointcloud_integrator.integratePointcloud(posed_pointcloud);
       }
     }

@@ -19,7 +19,7 @@ class PointcloudIterator {
   using value_type = Point;
   using pointer = void;
   using reference =
-      std::conditional_t<std::is_const<PointcloudType>::value,
+      std::conditional_t<std::is_const_v<PointcloudType>,
                          PointcloudData::ConstColXpr, PointcloudData::ColXpr>;
   using iterator_category = std::forward_iterator_tag;
   // NOTE: This iterator does not expose pointers to its values (only

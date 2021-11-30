@@ -10,7 +10,7 @@ namespace wavemap_2d {
 template <typename CellType>
 class DenseGrid : public DataStructureBase {
  public:
-  using CellDataType = CellType;
+  using cell_type = CellType;
 
   explicit DenseGrid(const FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -43,23 +43,30 @@ class DenseGrid : public DataStructureBase {
             bool used_floating_precision) override;
 
  protected:
+  using CellDataSpecialized = typename CellType::Specialized;
+  using CellDataBaseFloat = typename CellType::BaseFloat;
+  using CellDataBaseInt = typename CellType::BaseInt;
+
+  template <typename T>
+  using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+  using DataGridSpecialized = DataGrid<CellDataSpecialized>;
+  using DataGridBaseFloat = DataGrid<CellDataBaseFloat>;
+  using DataGridBaseInt = DataGrid<CellDataBaseInt>;
+
   Index min_index_;
   Index max_index_;
 
-  CellType& accessCellData(const Index& index) {
+  CellDataSpecialized& accessCellData(const Index& index) {
     // TODO(victorr): Add check for overflows
     const Index data_index = index - min_index_;
     return data_.coeffRef(data_index.x(), data_index.y());
   }
-  const CellType& accessCellData(const Index& index) const {
+  const CellDataSpecialized& accessCellData(const Index& index) const {
     // TODO(victorr): Add check for overflows
     const Index data_index = index - min_index_;
     return data_.coeff(data_index.x(), data_index.y());
   }
-  using DataGridType = Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic>;
-  DataGridType data_;
-
-  using SerializedFixedPrecisionType = int;
+  DataGridSpecialized data_;
 };
 }  // namespace wavemap_2d
 

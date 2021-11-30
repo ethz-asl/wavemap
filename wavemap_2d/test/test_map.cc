@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/datastructure_base.h"
 #include "wavemap_2d/datastructure/dense_grid.h"
 #include "wavemap_2d/utils/random_number_generator.h"
@@ -103,12 +104,13 @@ class MapTest : public ::testing::Test {
 
  private:
   // TODO(victorr): Tighten this once truncation and rescaling has been
-  // implemented
+  //                implemented
   static constexpr FloatingPoint kCellValueErrorTolerance = 1.f;
   std::unique_ptr<RandomNumberGenerator> random_number_generator_;
 };
 
-using DataStructureTypes = ::testing::Types<DenseGrid<FloatingPoint>>;
+using DataStructureTypes =
+    ::testing::Types<DenseGrid<UnboundedCell>, DenseGrid<SaturatingCell<>>>;
 TYPED_TEST_SUITE(MapTest, DataStructureTypes);
 
 TYPED_TEST(MapTest, Initialization) {
@@ -169,7 +171,9 @@ TYPED_TEST(MapTest, InsertionTest) {
     for (const FloatingPoint random_update :
          TestFixture::getRandomUpdateVector()) {
       map.updateCell(random_index, random_update);
-      expected_value += random_update;
+      expected_value = std::max(TypeParam::cell_type::kLowerBound,
+                                std::min(expected_value + random_update,
+                                         TypeParam::cell_type::kUpperBound));
     }
     EXPECT_NEAR(map.getCellValue(random_index), expected_value,
                 expected_value * 1e-2);
@@ -191,5 +195,25 @@ TYPED_TEST(MapTest, Serialization) {
 
     TestFixture::compare(loaded_map, map);
   }
+}
+
+TEST(CellTest, CellTraits) {
+  using UnboundedCell = CellTraits<FloatingPoint, FloatingPoint, int>;
+  EXPECT_FALSE(UnboundedCell::hasLowerBound);
+  EXPECT_FALSE(UnboundedCell::hasUpperBound);
+
+  using LowerBoundedCell = CellTraits<FloatingPoint, FloatingPoint, int, -2>;
+  EXPECT_TRUE(LowerBoundedCell::hasLowerBound);
+  EXPECT_FALSE(LowerBoundedCell::hasUpperBound);
+
+  using UpperBoundedCell =
+      CellTraits<FloatingPoint, FloatingPoint, int,
+                 std::numeric_limits<BoundType>::lowest(), 4>;
+  EXPECT_FALSE(UpperBoundedCell::hasLowerBound);
+  EXPECT_TRUE(UpperBoundedCell::hasUpperBound);
+
+  using FullyBoundedCell = CellTraits<FloatingPoint, FloatingPoint, int, -2, 4>;
+  EXPECT_TRUE(FullyBoundedCell::hasLowerBound);
+  EXPECT_TRUE(FullyBoundedCell::hasUpperBound);
 }
 }  // namespace wavemap_2d

@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_
 #define WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_
 
+#include <algorithm>
 #include <string>
 
 #include "wavemap_2d/datastructure/datastructure_base.h"
@@ -12,7 +13,7 @@ void DenseGrid<CellType>::updateCell(const Index& index,
   if (empty()) {
     min_index_ = index;
     max_index_ = index;
-    data_ = DataGridType::Zero(1, 1);
+    data_ = DataGridSpecialized::Zero(1, 1);
   }
 
   if (!containsIndex(index)) {
@@ -22,8 +23,8 @@ void DenseGrid<CellType>::updateCell(const Index& index,
 
     const Index new_grid_map_size =
         new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
-    DataGridType new_grid_map =
-        DataGridType::Zero(new_grid_map_size.x(), new_grid_map_size.y());
+    DataGridSpecialized new_grid_map =
+        DataGridSpecialized::Zero(new_grid_map_size.x(), new_grid_map_size.y());
 
     new_grid_map.block(min_index_diff.x(), min_index_diff.y(), size().x(),
                        size().y()) = data_;
@@ -33,7 +34,17 @@ void DenseGrid<CellType>::updateCell(const Index& index,
     max_index_ = new_grid_map_max_index;
   }
 
-  accessCellData(index) += static_cast<CellType>(update);
+  auto& cell_data = accessCellData(index);
+  if (CellType::hasLowerBound && CellType::hasUpperBound) {
+    cell_data = std::max(CellType::kLowerBound,
+                         std::min(cell_data + update, CellType::kUpperBound));
+  } else if (CellType::hasUpperBound) {
+    cell_data = std::min(cell_data + update, CellType::kUpperBound);
+  } else if (CellType::hasLowerBound) {
+    cell_data = std::max(CellType::kLowerBound, cell_data + update);
+  } else {
+    cell_data += update;
+  }
 }
 
 template <typename CellType>
@@ -51,15 +62,18 @@ cv::Mat DenseGrid<CellType>::getImage(bool use_color) const {
   if (use_color) {
     constexpr FloatingPoint kLogOddsMin = -4.f;
     constexpr FloatingPoint kLogOddsMax = 4.f;
-    DataGridType grid_map_clamped =
-        data_.cwiseMin(kLogOddsMax).cwiseMax(kLogOddsMin);
+    const DataGridBaseFloat grid_map_clamped =
+        data_.template cast<CellDataBaseFloat>()
+            .cwiseMin(kLogOddsMax)
+            .cwiseMax(kLogOddsMin);
 
     cv::eigen2cv(grid_map_clamped, image);
     image.convertTo(image, CV_8UC1, 255 / (kLogOddsMax - kLogOddsMin),
                     -kLogOddsMin);
     cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_JET);
   } else {
-    cv::eigen2cv(data_, image);
+    const DataGridBaseFloat data_tmp = data_.template cast<CellDataBaseFloat>();
+    cv::eigen2cv(data_tmp, image);
   }
 
   return image;
@@ -83,10 +97,12 @@ bool DenseGrid<CellType>::save(const std::string& file_path_prefix,
   header_file.close();
 
   cv::Mat image;
-  cv::eigen2cv(data_, image);
-  if (!use_floating_precision) {
-    image.convertTo(image,
-                    cv::traits::Type<SerializedFixedPrecisionType>::value);
+  if (use_floating_precision) {
+    const DataGridBaseFloat data_tmp = data_.template cast<CellDataBaseFloat>();
+    cv::eigen2cv(data_tmp, image);
+  } else {
+    const DataGridBaseInt data_tmp = data_.template cast<CellDataBaseInt>();
+    cv::eigen2cv(data_tmp, image);
   }
   cv::imwrite(data_file_path, image);
 
@@ -125,8 +141,16 @@ bool DenseGrid<CellType>::load(const std::string& file_path_prefix,
     LOG(ERROR) << "Could not read map data file \"" << data_file_path << "\".";
     return false;
   }
-  image.convertTo(image, cv::traits::Type<CellDataType>::value);
-  cv::cv2eigen(image, data_);
+  if (used_floating_precision) {
+    DataGridBaseFloat data_tmp;
+    cv::cv2eigen(image, data_tmp);
+    data_ = data_tmp.template cast<CellDataSpecialized>();
+
+  } else {
+    DataGridBaseInt data_tmp;
+    cv::cv2eigen(image, data_tmp);
+    data_ = data_tmp.template cast<CellDataSpecialized>();
+  }
 
   return true;
 }

@@ -34,19 +34,20 @@ package_name="wavemap_2d"
 executable="${catkin_ws_dir}/devel/lib/${package_name}/carmen_processor"
 
 declare -a carmen_log_file_names=(
-  "aces_publicb.gfs"
-  "belgioioso.gfs"
-  "csail.corrected"
-  "edmonton.gfs"
   "fr079-complete.gfs"
-  "fr101.carmen.gfs"
-  "fr-campus-20040714.carmen.gfs"
-  "intel.gfs"
-  "mexico.gfs"
-  "MIT_Infinite_Corridor_2002_09_11_same_floor.gfs"
-  "orebro.gfs"
-  "seattle-r.gfs"
 )
+# Options: ("fr079-complete.gfs"
+         #  "aces_publicb.gfs"
+         #  "belgioioso.gfs"
+         #  "csail.corrected"
+         #  "edmonton.gfs"
+         #  "fr101.carmen.gfs"
+         #  "fr-campus-20040714.carmen.gfs"
+         #  "intel.gfs"
+         #  "mexico.gfs"
+         #  "MIT_Infinite_Corridor_2002_09_11_same_floor.gfs"
+         #  "orebro.gfs"
+         #  "seattle-r.gfs")
 
 # ============ Vars =============
 experiment_date=$(date '+%Y-%m-%d-%H-%M-%S')
@@ -59,10 +60,7 @@ catkin build "${package_name}"
 popd || exit
 
 # Run the batches
-declare -a map_resolutions=(0.20 0.1 0.05 0.02 0.01)
+declare -a map_resolutions=(0.05)
+# Options: (0.20 0.1 0.05 0.02 0.01 0.005 0.002 0.001)
 max_num_jobs=8
-run_all_combinations
-
-max_num_jobs=4
-declare -a map_resolutions=(0.005 0.002 0.001)
 run_all_combinations
