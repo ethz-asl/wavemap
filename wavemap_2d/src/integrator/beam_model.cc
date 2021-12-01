@@ -2,15 +2,15 @@
 
 namespace wavemap_2d {
 Index BeamModel::getBottomLeftUpdateIndex() {
-  const Point bottom_left_point =
-      W_start_point_.cwiseMin(W_end_point_) - Point::Constant(kRangeThreshold);
+  const Point bottom_left_point = W_start_point_.cwiseMin(
+      W_end_point_ - Point::Constant(max_lateral_component_));
   const Point bottom_left_point_scaled = bottom_left_point * resolution_inv_;
   return bottom_left_point_scaled.array().floor().cast<IndexElement>();
 }
 
 Index BeamModel::getTopRightUpdateIndex() {
-  const Point top_right_point =
-      W_start_point_.cwiseMax(W_end_point_) + Point::Constant(kRangeThreshold);
+  const Point top_right_point = W_start_point_.cwiseMax(
+      W_end_point_ + Point::Constant(max_lateral_component_));
   const Point top_right_point_scaled = top_right_point * resolution_inv_;
   return top_right_point_scaled.array().ceil().cast<IndexElement>();
 }
@@ -20,13 +20,14 @@ FloatingPoint BeamModel::computeUpdateAt(const Index& index) {
   const Point C_cell_center = W_cell_center - W_start_point_;
   const FloatingPoint distance = C_cell_center.norm();
 
-  if (kEpsilon < distance && distance <= measured_distance_ + kRangeThreshold) {
+  if (kEpsilon < distance &&
+      distance <= measured_distance_ + kRangeDeltaThresh) {
     const FloatingPoint dot_prod_normalized =
         C_cell_center.dot(C_end_point_normalized_) / distance;
     const FloatingPoint angle = std::acos(dot_prod_normalized);
     if (angle <= kAngleThresh) {
-      const FloatingPoint f = (distance - measured_distance_) / kSigmaRange;
-      const FloatingPoint g = angle / kSigmaAngle;
+      const FloatingPoint f = (distance - measured_distance_) / kRangeSigma;
+      const FloatingPoint g = angle / kAngleSigma;
       const FloatingPoint range_contrib =
           q_cdf(f) - 0.5f * q_cdf(f - 3.f) - 0.5f;
       const FloatingPoint angle_contrib = q_cdf(g + 3.f) - q_cdf(g - 3.f);

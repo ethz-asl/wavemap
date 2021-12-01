@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
   // Save images of the map
   for (const bool use_color : {false, true}) {
     const std::string image_path =
-        output_log_dir + (use_color ? "color.png" : "raw.exr");
+        output_log_dir + (use_color ? "color.png" : "bnw.png");
     occupancy_map->saveImage(image_path, /*use_color*/ use_color);
   }
   for (const bool use_floating_precision : {true, false}) {

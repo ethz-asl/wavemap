@@ -59,23 +59,17 @@ FloatingPoint DenseGrid<CellType>::getCellValue(const Index& index) const {
 template <typename CellType>
 cv::Mat DenseGrid<CellType>::getImage(bool use_color) const {
   cv::Mat image;
+  constexpr FloatingPoint kLogOddsMin =
+      CellType::hasLowerBound ? CellType::kLowerBound : -2.f;
+  constexpr FloatingPoint kLogOddsMax =
+      CellType::hasUpperBound ? CellType::kUpperBound : 4.f;
+  const DataGridBaseFloat grid_map_tmp =
+      data_.template cast<CellDataBaseFloat>();
+  cv::eigen2cv(grid_map_tmp, image);
+  image.convertTo(image, CV_8UC1, 255.f / (kLogOddsMax - kLogOddsMin),
+                  -kLogOddsMin);
   if (use_color) {
-    constexpr FloatingPoint kLogOddsMin =
-        CellType::hasLowerBound ? CellType::kLowerBound : -2;
-    constexpr FloatingPoint kLogOddsMax =
-        CellType::hasUpperBound ? CellType::kUpperBound : 4;
-    const DataGridBaseFloat grid_map_clamped =
-        data_.template cast<CellDataBaseFloat>()
-            .cwiseMin(kLogOddsMax)
-            .cwiseMax(kLogOddsMin);
-
-    cv::eigen2cv(grid_map_clamped, image);
-    image.convertTo(image, CV_8UC1, 255 / (kLogOddsMax - kLogOddsMin),
-                    -kLogOddsMin);
-    cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_JET);
-  } else {
-    const DataGridBaseFloat data_tmp = data_.template cast<CellDataBaseFloat>();
-    cv::eigen2cv(data_tmp, image);
+    cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_PARULA);
   }
 
   return image;

@@ -1,12 +1,12 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-void DataStructureBase::showImage(bool use_color) const {
+void DataStructureBase::showImage(bool use_color, int delay_ms) const {
   cv::namedWindow("Grid map", cv::WINDOW_NORMAL);
   cv::setWindowProperty("Grid map", CV_WND_PROP_FULLSCREEN,
                         CV_WINDOW_FULLSCREEN);
   cv::imshow("Grid map", getImage(use_color));
-  cv::waitKey(1 /* ms */);
+  cv::waitKey(delay_ms);
 }
 
 void DataStructureBase::saveImage(const std::string& file_path,

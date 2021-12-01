@@ -34,7 +34,7 @@ class DataStructureBase {
   void printSize() const { LOG(INFO) << "Size:\n" << size(); }
 
   virtual cv::Mat getImage(bool use_color) const = 0;
-  void showImage(bool use_color = false) const;
+  void showImage(bool use_color = false, int delay_ms = 1) const;
   void saveImage(const std::string& file_path, bool use_color = false) const;
   virtual bool save(const std::string& file_path_prefix,
                     bool use_floating_precision) const = 0;

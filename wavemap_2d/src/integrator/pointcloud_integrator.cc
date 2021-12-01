@@ -8,7 +8,7 @@ void PointcloudIntegrator::integratePointcloud(
   beam_model_.setStartPoint(pointcloud.getOrigin());
   for (const auto& point : pointcloud.getPointsGlobal()) {
     beam_model_.setEndPoint(point);
-    if (40.f < beam_model_.getLength()) {
+    if (beam_model_.exceedsMaxRange()) {
       continue;
     }
 
