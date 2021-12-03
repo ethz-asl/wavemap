@@ -50,13 +50,13 @@ if (CATKIN_ENABLE_TESTING)
       test/test_map.cc)
   target_link_libraries(test_map ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_measurement_integrator
+  catkin_add_gtest(test_integrator
       test/test_integrator.cc)
-  target_link_libraries(test_measurement_integrator ${PROJECT_NAME} testing_main)
+  target_link_libraries(test_integrator ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_pointcloud_containers
+  catkin_add_gtest(test_pointcloud
       test/test_pointcloud.cc)
-  target_link_libraries(test_pointcloud_containers ${PROJECT_NAME} testing_main)
+  target_link_libraries(test_pointcloud ${PROJECT_NAME} testing_main)
 endif ()
 
 ##############

@@ -48,17 +48,22 @@ class PointcloudTest : public ::testing::Test {
     constexpr FloatingPoint kMaxAngle = M_PI;
     return random_number_generator_->getRandomRealNumber(kMinAngle, kMaxAngle);
   }
+  static Point getRandomPoint() {
+    constexpr FloatingPoint kMaxCoordinate = 1e3;
+    return kMaxCoordinate * Point::Random();
+  }
   std::vector<Point> getRandomPointVector() const {
     std::vector<Point> random_point_vector(getRandomPointcloudLength());
     std::generate(random_point_vector.begin(), random_point_vector.end(),
-                  []() { return Point::Random(); });
+                  []() { return getRandomPoint(); });
     return random_point_vector;
   }
   PointcloudData getRandomPointMatrix() const {
+    constexpr FloatingPoint kMaxCoordinate = 1e3;
     const Eigen::Index random_length = getRandomPointcloudLength();
-    PointcloudData random_point_matrix;
-    random_point_matrix.resize(kPointcloudPointDim, random_length);
-    random_point_matrix.setRandom();
+    PointcloudData random_point_matrix =
+        PointcloudData::Random(kPointcloudPointDim, random_length);
+    random_point_matrix *= kMaxCoordinate;
     return random_point_matrix;
   }
 

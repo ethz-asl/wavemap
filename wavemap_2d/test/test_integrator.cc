@@ -2,6 +2,7 @@
 
 #include "wavemap_2d/integrator/beam_model.h"
 #include "wavemap_2d/integrator/grid_iterator.h"
+#include "wavemap_2d/integrator/ray_iterator.h"
 #include "wavemap_2d/utils/random_number_generator.h"
 
 namespace wavemap_2d {
@@ -11,6 +12,12 @@ class IteratorTest : public ::testing::Test {
     random_number_generator_ = std::make_unique<RandomNumberGenerator>();
   }
 
+  FloatingPoint getRandomResolution() const {
+    constexpr FloatingPoint kMinResolution = 1e-3;
+    constexpr FloatingPoint kMaxResolution = 1e0;
+    return random_number_generator_->getRandomRealNumber(kMinResolution,
+                                                         kMaxResolution);
+  }
   IndexElement getRandomIndexElement() const {
     constexpr IndexElement kMinCoordinate = -1e3;
     constexpr IndexElement kMaxCoordinate = 1e3;
@@ -19,6 +26,19 @@ class IteratorTest : public ::testing::Test {
   }
   Index getRandomIndex() const {
     return {getRandomIndexElement(), getRandomIndexElement()};
+  }
+  static Point getRandomPoint() {
+    constexpr FloatingPoint kMaxCoordinate = 1e3;
+    return kMaxCoordinate * Point::Random();
+  }
+  FloatingPoint getRandomSignedDistance() {
+    constexpr FloatingPoint kMinDistance = -4e1;
+    constexpr FloatingPoint kMaxDistance = 4e1;
+    return random_number_generator_->getRandomRealNumber(kMinDistance,
+                                                         kMaxDistance);
+  }
+  Translation getRandomTranslation() {
+    return {getRandomSignedDistance(), getRandomSignedDistance()};
   }
 
  private:
@@ -50,6 +70,74 @@ TEST_F(IteratorTest, GridIterator) {
   EXPECT_EQ(grid_it, grid_it_end);
 }
 
+TEST_F(IteratorTest, RayIterator) {
+  // Create zero length, perfectly horizontal/vertical, and random test rays
+  constexpr int kNumTestRays = 10;
+  struct TestRay {
+    Point origin;
+    Translation translation;
+  };
+  std::vector<TestRay> test_rays(kNumTestRays);
+  test_rays[0] = {getRandomPoint(), {0.f, 0.f}};
+  test_rays[1] = {getRandomPoint(), {getRandomSignedDistance(), 0.f}};
+  test_rays[2] = {getRandomPoint(), {0.f, getRandomSignedDistance()}};
+  std::generate(test_rays.begin() + 3, test_rays.end(), [this]() {
+    return TestRay{getRandomPoint(), getRandomTranslation()};
+  });
+
+  for (const auto& test_ray : test_rays) {
+    const Point start_point = test_ray.origin;
+    const Point end_point = test_ray.origin + test_ray.translation;
+    const Translation t_start_end = end_point - start_point;
+    const FloatingPoint ray_length = t_start_end.norm();
+
+    const FloatingPoint resolution = getRandomResolution();
+    const FloatingPoint resolution_inv = 1.f / resolution;
+    const Index start_point_index =
+        (start_point * resolution_inv).array().round().cast<IndexElement>();
+    const Index end_point_index =
+        (end_point * resolution_inv).array().round().cast<IndexElement>();
+    const Index direction =
+        (end_point_index - start_point_index).cwiseSign().cast<IndexElement>();
+
+    Ray ray(start_point, end_point, resolution_inv);
+    EXPECT_EQ(*ray.begin(), start_point_index);
+    EXPECT_EQ(*ray.end(), end_point_index);
+
+    Index last_index;
+    size_t step_idx = 0u;
+    for (const Index& index : ray) {
+      if (step_idx == 0u) {
+        EXPECT_EQ(index, start_point_index)
+            << "Ray iterator did not start at start index.";
+      } else {
+        EXPECT_NE(index, last_index)
+            << "Ray iterator updated the same index twice.";
+        const Index index_diff = index - last_index;
+        EXPECT_EQ(index_diff.cwiseAbs().sum(), 1)
+            << "Ray iterator skipped a cell.";
+        EXPECT_TRUE((index_diff.array() == direction.array()).any())
+            << "Ray iterator stepped into an unexpected direction.";
+
+        const Point current_point = resolution * index.cast<FloatingPoint>();
+        const Translation t_start_current = current_point - start_point;
+        const FloatingPoint distance =
+            std::abs(t_start_end.x() * t_start_current.y() -
+                     t_start_current.x() * t_start_end.y()) /
+            ray_length;
+        EXPECT_LE(distance, std::sqrt(0.5f) * resolution)
+            << "Ray iterator updated cell that is not traversed by the ray";
+      }
+      last_index = index;
+      ++step_idx;
+    }
+    EXPECT_TRUE(last_index == end_point_index);
+    EXPECT_GE(step_idx, 1)
+        << "Ray iterator should at least take one step, to update the cell "
+           "that contains the start (and end) point.";
+  }
+}
+
 class MeasurementModelTest : public ::testing::Test {
  protected:
   void SetUp() override {
@@ -62,7 +150,10 @@ class MeasurementModelTest : public ::testing::Test {
     return random_number_generator_->getRandomRealNumber(kMinResolution,
                                                          kMaxResolution);
   }
-  static Point getRandomPoint() { return Point::Random(); }
+  static Point getRandomPoint() {
+    constexpr FloatingPoint kMaxCoordinate = 1e3;
+    return kMaxCoordinate * Point::Random();
+  }
   FloatingPoint getRandomSignedDistance() {
     constexpr FloatingPoint kMinDistance = -4e1;
     constexpr FloatingPoint kMaxDistance = 4e1;
@@ -86,7 +177,6 @@ TEST_F(MeasurementModelTest, BeamModel) {
   beam_model.setStartPoint(W_start_point);
   beam_model.setEndPoint(W_end_point);
 
-  const FloatingPoint resolution_inv = 1.f / resolution;
   const Point C_end_point = W_end_point - W_start_point;
   const FloatingPoint measured_distance = C_end_point.norm();
   const Point C_end_point_normalized = C_end_point / measured_distance;
