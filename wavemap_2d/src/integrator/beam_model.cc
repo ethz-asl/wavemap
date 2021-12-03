@@ -28,9 +28,8 @@ FloatingPoint BeamModel::computeUpdateAt(const Index& index) {
     if (angle <= kAngleThresh) {
       const FloatingPoint f = (distance - measured_distance_) / kRangeSigma;
       const FloatingPoint g = angle / kAngleSigma;
-      const FloatingPoint range_contrib =
-          q_cdf(f) - 0.5f * q_cdf(f - 3.f) - 0.5f;
-      const FloatingPoint angle_contrib = q_cdf(g + 3.f) - q_cdf(g - 3.f);
+      const FloatingPoint range_contrib = Qcdf(f) - 0.5f * Qcdf(f - 3.f) - 0.5f;
+      const FloatingPoint angle_contrib = Qcdf(g + 3.f) - Qcdf(g - 3.f);
       const FloatingPoint contribs = range_contrib * angle_contrib;
       const FloatingPoint scaled_contribs =
           ((contribs < 0.f) ? kFreeScaling * contribs : kOccScaling * contribs);
@@ -49,7 +48,7 @@ FloatingPoint BeamModel::computeUpdateAt(const Index& index) {
   return 0.f;
 }
 
-FloatingPoint BeamModel::q_cdf(const FloatingPoint t) {
+FloatingPoint BeamModel::Qcdf(FloatingPoint t) {
   if (t < -3.f) {
     return 0.f;
   } else if (-3.f <= t && t <= -1.f) {

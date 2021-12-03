@@ -10,9 +10,9 @@ namespace wavemap_2d {
 class Ray {
  public:
   Ray(const Point& start_point, const Point& end_point,
-      FloatingPoint resolution_inv) {
-    const Point start_point_scaled = start_point * resolution_inv;
-    const Point end_point_scaled = end_point * resolution_inv;
+      FloatingPoint resolution) {
+    const Point start_point_scaled = start_point / resolution;
+    const Point end_point_scaled = end_point / resolution;
     if (start_point_scaled.hasNaN() || end_point_scaled.hasNaN()) {
       ray_length_in_steps_ = 0u;
       return;

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/integrator/beam_model.h"
+#include "wavemap_2d/integrator/fixed_logodds_model.h"
 #include "wavemap_2d/integrator/grid_iterator.h"
 #include "wavemap_2d/integrator/ray_iterator.h"
 #include "wavemap_2d/utils/random_number_generator.h"
@@ -100,7 +101,7 @@ TEST_F(IteratorTest, RayIterator) {
     const Index direction =
         (end_point_index - start_point_index).cwiseSign().cast<IndexElement>();
 
-    Ray ray(start_point, end_point, resolution_inv);
+    Ray ray(start_point, end_point, resolution);
     EXPECT_EQ(*ray.begin(), start_point_index);
     EXPECT_EQ(*ray.end(), end_point_index);
 
@@ -229,5 +230,47 @@ TEST_F(MeasurementModelTest, BeamModel) {
           << (!within_angle ? "angle" : "");
     }
   }
+}
+
+TEST_F(MeasurementModelTest, FixedLogOddsModel) {
+  const Point start_point = getRandomPoint();
+  const Point end_point = start_point + getRandomTranslation();
+  const FloatingPoint resolution = getRandomResolution();
+  const FloatingPoint resolution_inv = 1.f / resolution;
+
+  FixedLogOddsModel fixed_log_odds_model(resolution);
+  fixed_log_odds_model.setStartPoint(start_point);
+  fixed_log_odds_model.setEndPoint(end_point);
+  const Index start_point_index =
+      (start_point * resolution_inv).array().round().cast<IndexElement>();
+  const Index end_point_index =
+      (end_point * resolution_inv).array().round().cast<IndexElement>();
+
+  const Index bottom_left_idx = start_point_index.cwiseMin(end_point_index);
+  const Index top_right_idx = start_point_index.cwiseMin(end_point_index);
+  const Index model_bottom_left_idx =
+      fixed_log_odds_model.getBottomLeftUpdateIndex();
+  const Index model_top_right_idx =
+      fixed_log_odds_model.getTopRightUpdateIndex();
+  EXPECT_TRUE((model_bottom_left_idx.array() <= bottom_left_idx.array()).all());
+  EXPECT_TRUE((top_right_idx.array() <= model_top_right_idx.array()).all());
+
+  size_t step_idx = 0u;
+  bool updated_end_point = false;
+  const Ray ray(start_point, end_point, resolution);
+  for (const auto& index : ray) {
+    const FloatingPoint update = fixed_log_odds_model.computeUpdateAt(index);
+    if (index == end_point_index) {
+      EXPECT_FLOAT_EQ(update, FixedLogOddsModel::kLogOddsOccupied);
+      EXPECT_FALSE(updated_end_point)
+          << "The cell containing the end point should only be updated once.";
+      updated_end_point = true;
+    } else {
+      EXPECT_FLOAT_EQ(update, FixedLogOddsModel::kLogOddsFree);
+    }
+    ++step_idx;
+  }
+  EXPECT_GE(step_idx, 1);
+  EXPECT_TRUE(updated_end_point);
 }
 }  // namespace wavemap_2d
