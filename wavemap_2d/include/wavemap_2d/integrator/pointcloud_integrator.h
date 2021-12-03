@@ -7,30 +7,23 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/datastructure_base.h"
 #include "wavemap_2d/integrator/beam_model.h"
+#include "wavemap_2d/integrator/fixed_logodds_model.h"
 #include "wavemap_2d/pointcloud.h"
 
 namespace wavemap_2d {
 class PointcloudIntegrator {
  public:
   PointcloudIntegrator() = delete;
-  explicit PointcloudIntegrator(DataStructureBase::Ptr occupancy_map)
+  explicit PointcloudIntegrator(DataStructureBase::Ptr occupancy_map,
+                                MeasurementModelBase::Ptr measurement_model)
       : occupancy_map_(CHECK_NOTNULL(occupancy_map)),
-        beam_model_(occupancy_map->getResolution()) {}
+        measurement_model_(CHECK_NOTNULL(measurement_model)) {}
 
   void integratePointcloud(const PosedPointcloud& pointcloud);
 
-  void printAabbBounds() const {
-    LOG(INFO) << "AABB min:\n" << aabb_min_ << "\nmax:\n" << aabb_max_;
-  }
-
  protected:
-  Point aabb_min_ = Point::Constant(std::numeric_limits<FloatingPoint>::max());
-  Point aabb_max_ =
-      Point::Constant(std::numeric_limits<FloatingPoint>::lowest());
-
   DataStructureBase::Ptr occupancy_map_;
-
-  BeamModel beam_model_;
+  MeasurementModelBase::Ptr measurement_model_;
 };
 }  // namespace wavemap_2d
 

@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_INTEGRATOR_BEAM_MODEL_H_
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/integrator/grid_iterator.h"
 #include "wavemap_2d/integrator/measurement_model_base.h"
 
 namespace wavemap_2d {
@@ -21,6 +22,7 @@ class BeamModel : public MeasurementModelBase {
   Index getTopRightUpdateIndex() override;
 
   FloatingPoint computeUpdateAt(const Index& index) override;
+  void updateMap(DataStructureBase& map) override;
 
  protected:
   Point C_end_point_;

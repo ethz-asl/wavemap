@@ -1,9 +1,16 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_MEASUREMENT_MODEL_BASE_H_
 #define WAVEMAP_2D_INTEGRATOR_MEASUREMENT_MODEL_BASE_H_
 
+#include <memory>
+
+#include "wavemap_2d/common.h"
+#include "wavemap_2d/datastructure/datastructure_base.h"
+
 namespace wavemap_2d {
 class MeasurementModelBase {
  public:
+  using Ptr = std::shared_ptr<MeasurementModelBase>;
+
   static constexpr FloatingPoint kRangeMax = 40.f;
 
   explicit MeasurementModelBase(FloatingPoint resolution)
@@ -28,6 +35,7 @@ class MeasurementModelBase {
   virtual Index getTopRightUpdateIndex() = 0;
 
   virtual FloatingPoint computeUpdateAt(const Index& index) = 0;
+  virtual void updateMap(DataStructureBase& map) = 0;  // NOLINT
 
  protected:
   const FloatingPoint resolution_;

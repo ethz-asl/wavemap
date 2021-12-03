@@ -27,6 +27,7 @@ add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INIT
 cs_add_library(${PROJECT_NAME}
     src/integrator/pointcloud_integrator.cc
     src/integrator/beam_model.cc
+    src/integrator/fixed_logodds_model.cc
     src/datastructure/datastructure_base.cc)
 target_link_libraries(${PROJECT_NAME}) # ${PROJECT_NAME}_proto)
 

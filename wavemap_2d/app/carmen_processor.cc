@@ -34,7 +34,8 @@ int main(int argc, char** argv) {
 
   // Set up the mapper
   auto occupancy_map = std::make_shared<DataStructureType>(map_resolution);
-  PointcloudIntegrator pointcloud_integrator(occupancy_map);
+  auto measurement_model = std::make_shared<BeamModel>(map_resolution);
+  PointcloudIntegrator pointcloud_integrator(occupancy_map, measurement_model);
 
   // Open the log file
   std::ifstream log_file(carmen_log_file_path);
@@ -121,7 +122,6 @@ int main(int argc, char** argv) {
 
   // Print stats
   LOG(INFO) << "Max ray length: " << max_distance;
-  pointcloud_integrator.printAabbBounds();
   occupancy_map->printSize();
   occupancy_map->showImage(/*use_color*/ true);
   cv::waitKey(1000 /*ms*/);

@@ -3,6 +3,7 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/integrator/measurement_model_base.h"
+#include "wavemap_2d/integrator/ray_iterator.h"
 
 namespace wavemap_2d {
 class FixedLogOddsModel : public MeasurementModelBase {
@@ -13,16 +14,8 @@ class FixedLogOddsModel : public MeasurementModelBase {
   explicit FixedLogOddsModel(FloatingPoint resolution)
       : MeasurementModelBase(resolution) {}
 
-  Index getBottomLeftUpdateIndex() override {
-    const Point bottom_left_point = W_start_point_.cwiseMin(W_end_point_);
-    const Point bottom_left_point_scaled = bottom_left_point * resolution_inv_;
-    return bottom_left_point_scaled.array().floor().cast<IndexElement>();
-  }
-  Index getTopRightUpdateIndex() override {
-    const Point top_right_point = W_start_point_.cwiseMax(W_end_point_);
-    const Point top_right_point_scaled = top_right_point * resolution_inv_;
-    return top_right_point_scaled.array().ceil().cast<IndexElement>();
-  }
+  Index getBottomLeftUpdateIndex() override;
+  Index getTopRightUpdateIndex() override;
 
   // NOTE: This method assumes queried indices always lies on the ray's line
   //       segment.
@@ -33,6 +26,7 @@ class FixedLogOddsModel : public MeasurementModelBase {
       return kLogOddsFree;
     }
   }
+  void updateMap(DataStructureBase& map) override;
 
  protected:
   Index end_point_index;

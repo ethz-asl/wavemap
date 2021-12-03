@@ -34,18 +34,25 @@ FloatingPoint BeamModel::computeUpdateAt(const Index& index) {
       const FloatingPoint scaled_contribs =
           ((contribs < 0.f) ? kFreeScaling * contribs : kOccScaling * contribs);
       const FloatingPoint p = scaled_contribs + 0.5f;
-      const FloatingPoint odds = std::log(p / (1.f - p));
-      return odds;
-
-      // TODO(victorr): Set up comparisons using the equations below and DDA
-      // if (distance < measured_distance_) {
-      //   return -0.4f;
-      // } else {
-      //   return 0.85f;
-      // }
+      const FloatingPoint log_odds = std::log(p / (1.f - p));
+      return log_odds;
     }
   }
   return 0.f;
+}
+
+void BeamModel::updateMap(DataStructureBase& map) {
+  if (exceedsMaxRange()) {
+    return;
+  }
+
+  const Index bottom_left_idx = getBottomLeftUpdateIndex();
+  const Index top_right_idx = getTopRightUpdateIndex();
+  const Grid grid(bottom_left_idx, top_right_idx);
+  for (const auto& index : grid) {
+    const FloatingPoint update = computeUpdateAt(index);
+    map.updateCell(index, update);
+  }
 }
 
 FloatingPoint BeamModel::Qcdf(FloatingPoint t) {
