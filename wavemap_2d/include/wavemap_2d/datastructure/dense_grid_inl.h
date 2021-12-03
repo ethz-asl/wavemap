@@ -7,9 +7,9 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellType>
-void DenseGrid<CellType>::updateCell(const Index& index,
-                                     const FloatingPoint update) {
+template <typename CellTypeT>
+void DenseGrid<CellTypeT>::updateCell(const Index& index,
+                                      const FloatingPoint update) {
   if (empty()) {
     min_index_ = index;
     max_index_ = index;
@@ -35,20 +35,20 @@ void DenseGrid<CellType>::updateCell(const Index& index,
   }
 
   auto& cell_data = accessCellData(index);
-  if (CellType::hasLowerBound && CellType::hasUpperBound) {
-    cell_data = std::max(CellType::kLowerBound,
-                         std::min(cell_data + update, CellType::kUpperBound));
-  } else if (CellType::hasUpperBound) {
-    cell_data = std::min(cell_data + update, CellType::kUpperBound);
-  } else if (CellType::hasLowerBound) {
-    cell_data = std::max(CellType::kLowerBound, cell_data + update);
+  if (CellTypeT::hasLowerBound && CellTypeT::hasUpperBound) {
+    cell_data = std::max(CellTypeT::kLowerBound,
+                         std::min(cell_data + update, CellTypeT::kUpperBound));
+  } else if (CellTypeT::hasUpperBound) {
+    cell_data = std::min(cell_data + update, CellTypeT::kUpperBound);
+  } else if (CellTypeT::hasLowerBound) {
+    cell_data = std::max(CellTypeT::kLowerBound, cell_data + update);
   } else {
     cell_data += update;
   }
 }
 
-template <typename CellType>
-FloatingPoint DenseGrid<CellType>::getCellValue(const Index& index) const {
+template <typename CellTypeT>
+FloatingPoint DenseGrid<CellTypeT>::getCellValue(const Index& index) const {
   if (containsIndex(index)) {
     return static_cast<FloatingPoint>(accessCellData(index));
   } else {
@@ -56,13 +56,13 @@ FloatingPoint DenseGrid<CellType>::getCellValue(const Index& index) const {
   }
 }
 
-template <typename CellType>
-cv::Mat DenseGrid<CellType>::getImage(bool use_color) const {
+template <typename CellTypeT>
+cv::Mat DenseGrid<CellTypeT>::getImage(bool use_color) const {
   cv::Mat image;
   constexpr FloatingPoint kLogOddsMin =
-      CellType::hasLowerBound ? CellType::kLowerBound : -2.f;
+      CellTypeT::hasLowerBound ? CellTypeT::kLowerBound : -2.f;
   constexpr FloatingPoint kLogOddsMax =
-      CellType::hasUpperBound ? CellType::kUpperBound : 4.f;
+      CellTypeT::hasUpperBound ? CellTypeT::kUpperBound : 4.f;
   const DataGridBaseFloat grid_map_tmp =
       data_.template cast<CellDataBaseFloat>();
   cv::eigen2cv(grid_map_tmp, image);
@@ -75,9 +75,9 @@ cv::Mat DenseGrid<CellType>::getImage(bool use_color) const {
   return image;
 }
 
-template <typename CellType>
-bool DenseGrid<CellType>::save(const std::string& file_path_prefix,
-                               bool use_floating_precision) const {
+template <typename CellTypeT>
+bool DenseGrid<CellTypeT>::save(const std::string& file_path_prefix,
+                                bool use_floating_precision) const {
   const std::string header_file_path = getHeaderFilePath(file_path_prefix);
   const std::string data_file_path =
       getDataFilePath(file_path_prefix, use_floating_precision);
@@ -97,17 +97,26 @@ bool DenseGrid<CellType>::save(const std::string& file_path_prefix,
     const DataGridBaseFloat data_tmp = data_.template cast<CellDataBaseFloat>();
     cv::eigen2cv(data_tmp, image);
   } else {
-    const DataGridBaseInt data_tmp = data_.template cast<CellDataBaseInt>();
-    cv::eigen2cv(data_tmp, image);
+    if (CellTypeT::isFullyBounded) {
+      const DataGridBaseInt data_rescaled =
+          ((data_.array() - CellTypeT::kLowerBound) *
+           CellTypeT::kSpecializedToBaseIntScalingFactor)
+              .template cast<CellDataBaseInt>();
+      cv::eigen2cv(data_rescaled, image);
+    } else {
+      const DataGridBaseInt data_tmp =
+          data_.array().round().template cast<CellDataBaseInt>();
+      cv::eigen2cv(data_tmp, image);
+    }
   }
   cv::imwrite(data_file_path, image);
 
   return true;
 }
 
-template <typename CellType>
-bool DenseGrid<CellType>::load(const std::string& file_path_prefix,
-                               bool used_floating_precision) {
+template <typename CellTypeT>
+bool DenseGrid<CellTypeT>::load(const std::string& file_path_prefix,
+                                bool used_floating_precision) {
   const std::string header_file_path = getHeaderFilePath(file_path_prefix);
   const std::string data_file_path =
       getDataFilePath(file_path_prefix, used_floating_precision);
@@ -145,7 +154,13 @@ bool DenseGrid<CellType>::load(const std::string& file_path_prefix,
   } else {
     DataGridBaseInt data_tmp;
     cv::cv2eigen(image, data_tmp);
-    data_ = data_tmp.template cast<CellDataSpecialized>();
+    if (CellTypeT::isFullyBounded) {
+      data_ = (data_tmp.template cast<CellDataSpecialized>().array() /
+               CellTypeT::kSpecializedToBaseIntScalingFactor) +
+              CellTypeT::kLowerBound;
+    } else {
+      data_ = data_tmp.template cast<CellDataSpecialized>();
+    }
   }
 
   return true;

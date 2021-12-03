@@ -7,10 +7,10 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellType>
+template <typename CellTypeT>
 class DenseGrid : public DataStructureBase {
  public:
-  using cell_type = CellType;
+  using CellType = CellTypeT;
 
   explicit DenseGrid(const FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -43,9 +43,9 @@ class DenseGrid : public DataStructureBase {
             bool used_floating_precision) override;
 
  protected:
-  using CellDataSpecialized = typename CellType::Specialized;
-  using CellDataBaseFloat = typename CellType::BaseFloat;
-  using CellDataBaseInt = typename CellType::BaseInt;
+  using CellDataSpecialized = typename CellTypeT::Specialized;
+  using CellDataBaseFloat = typename CellTypeT::BaseFloat;
+  using CellDataBaseInt = typename CellTypeT::BaseInt;
 
   template <typename T>
   using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;

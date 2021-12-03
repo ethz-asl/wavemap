@@ -24,14 +24,22 @@ struct CellTraits {
       (kLowerBound != std::numeric_limits<BoundType>::lowest());
   static constexpr bool hasUpperBound =
       (kUpperBound != std::numeric_limits<BoundType>::max());
+  static constexpr bool isFullyBounded = (hasLowerBound && hasUpperBound);
+
+  static constexpr SpecializedType kSpecializedToBaseIntScalingFactor =
+      (isFullyBounded)
+          ? (static_cast<SpecializedType>(std::numeric_limits<BaseInt>::max()) -
+             static_cast<SpecializedType>(
+                 std::numeric_limits<BaseInt>::lowest())) /
+                (kUpperBound - kLowerBound)
+          : 1.f;
 };
 
-struct UnboundedCell : CellTraits<FloatingPoint, FloatingPoint, int> {};
+struct UnboundedCell : CellTraits<FloatingPoint, FloatingPoint, int16_t> {};
 
 template <BoundType lower_bound = -2, BoundType upper_bound = 4>
-struct SaturatingCell
-    : CellTraits<FloatingPoint, FloatingPoint, int, lower_bound, upper_bound> {
-};
+struct SaturatingCell : CellTraits<FloatingPoint, FloatingPoint, uint16_t,
+                                   lower_bound, upper_bound> {};
 }  // namespace wavemap_2d
 
 #endif  // WAVEMAP_2D_DATASTRUCTURE_CELL_H_

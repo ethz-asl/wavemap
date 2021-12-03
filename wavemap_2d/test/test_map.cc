@@ -14,7 +14,8 @@ class MapTest : public ::testing::Test {
   }
 
   static void compare(const DataStructureBase& map_reference,
-                      const DataStructureBase& map_to_test) {
+                      const DataStructureBase& map_to_test,
+                      FloatingPoint cell_value_error_tolerance) {
     ASSERT_EQ(map_reference.empty(), map_to_test.empty());
     ASSERT_EQ(map_reference.size(), map_to_test.size());
     ASSERT_EQ(map_reference.getMinIndex(), map_to_test.getMinIndex());
@@ -22,20 +23,21 @@ class MapTest : public ::testing::Test {
     ASSERT_EQ(map_reference.getResolution(), map_to_test.getResolution());
 
     int reported_error_count = 0;
-    constexpr int kMaxNumReportedErrors = 30;
+    constexpr int kMaxNumReportedErrors = 10;
     const Index min_index = map_reference.getMinIndex();
     const Index max_index = map_reference.getMaxIndex();
     for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
       for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
         auto reference_value = map_reference.getCellValue(index);
         auto test_value = map_to_test.getCellValue(index);
-        if (kCellValueErrorTolerance < std::abs(reference_value - test_value)) {
+        if (cell_value_error_tolerance <
+            std::abs(reference_value - test_value)) {
           ADD_FAILURE() << std::setprecision(4)
                         << "Difference between the reference ("
                         << reference_value << ") and test cell (" << test_value
                         << ") values at index (" << index
                         << ") exceeds the configured threshold ("
-                        << kCellValueErrorTolerance << ").";
+                        << cell_value_error_tolerance << ").";
           if (kMaxNumReportedErrors < reported_error_count++) {
             FAIL() << "Too many errors. Aborting comparison between reference "
                       "and test map.";
@@ -103,9 +105,6 @@ class MapTest : public ::testing::Test {
   }
 
  private:
-  // TODO(victorr): Tighten this once truncation and rescaling has been
-  //                implemented
-  static constexpr FloatingPoint kCellValueErrorTolerance = 1.f;
   std::unique_ptr<RandomNumberGenerator> random_number_generator_;
 };
 
@@ -171,9 +170,9 @@ TYPED_TEST(MapTest, InsertionTest) {
     for (const FloatingPoint random_update :
          TestFixture::getRandomUpdateVector()) {
       map.updateCell(random_index, random_update);
-      expected_value = std::max(TypeParam::cell_type::kLowerBound,
+      expected_value = std::max(TypeParam::CellType::kLowerBound,
                                 std::min(expected_value + random_update,
-                                         TypeParam::cell_type::kUpperBound));
+                                         TypeParam::CellType::kUpperBound));
     }
     EXPECT_NEAR(map.getCellValue(random_index), expected_value,
                 expected_value * 1e-2);
@@ -181,6 +180,9 @@ TYPED_TEST(MapTest, InsertionTest) {
 }
 
 TYPED_TEST(MapTest, Serialization) {
+  constexpr FloatingPoint kUnboundedCellErrorValueTolerance = 0.5f;
+  constexpr FloatingPoint kBoundedCellErrorValueTolerance = 1e-3f;
+
   const std::string datastructure_name =
       ::testing::UnitTest::GetInstance()->current_test_info()->type_param();
   for (const bool use_floating_precision : {true, false}) {
@@ -193,7 +195,11 @@ TYPED_TEST(MapTest, Serialization) {
     TypeParam loaded_map(map.getResolution());
     ASSERT_TRUE(loaded_map.load(kTempFilePath, use_floating_precision));
 
-    TestFixture::compare(loaded_map, map);
+    if (TypeParam::CellType::isFullyBounded) {
+      TestFixture::compare(map, loaded_map, kBoundedCellErrorValueTolerance);
+    } else {
+      TestFixture::compare(map, loaded_map, kUnboundedCellErrorValueTolerance);
+    }
   }
 }
 
@@ -201,19 +207,38 @@ TEST(CellTest, CellTraits) {
   using UnboundedCell = CellTraits<FloatingPoint, FloatingPoint, int>;
   EXPECT_FALSE(UnboundedCell::hasLowerBound);
   EXPECT_FALSE(UnboundedCell::hasUpperBound);
+  EXPECT_FALSE(UnboundedCell::isFullyBounded);
+  EXPECT_FLOAT_EQ(UnboundedCell::kSpecializedToBaseIntScalingFactor, 1.f);
 
   using LowerBoundedCell = CellTraits<FloatingPoint, FloatingPoint, int, -2>;
   EXPECT_TRUE(LowerBoundedCell::hasLowerBound);
   EXPECT_FALSE(LowerBoundedCell::hasUpperBound);
+  EXPECT_FALSE(LowerBoundedCell::isFullyBounded);
+  EXPECT_FLOAT_EQ(LowerBoundedCell::kSpecializedToBaseIntScalingFactor, 1.f);
 
   using UpperBoundedCell =
       CellTraits<FloatingPoint, FloatingPoint, int,
                  std::numeric_limits<BoundType>::lowest(), 4>;
   EXPECT_FALSE(UpperBoundedCell::hasLowerBound);
   EXPECT_TRUE(UpperBoundedCell::hasUpperBound);
+  EXPECT_FALSE(UpperBoundedCell::isFullyBounded);
+  EXPECT_FLOAT_EQ(UpperBoundedCell::kSpecializedToBaseIntScalingFactor, 1.f);
 
-  using FullyBoundedCell = CellTraits<FloatingPoint, FloatingPoint, int, -2, 4>;
+  using Specialized = FloatingPoint;
+  using BaseInt = int;
+  constexpr BoundType kLowerBound = -2;
+  constexpr BoundType kUpperBound = 4;
+  using FullyBoundedCell =
+      CellTraits<Specialized, FloatingPoint, BaseInt, -2, 4>;
   EXPECT_TRUE(FullyBoundedCell::hasLowerBound);
   EXPECT_TRUE(FullyBoundedCell::hasUpperBound);
+  EXPECT_TRUE(FullyBoundedCell::isFullyBounded);
+  EXPECT_FLOAT_EQ(FullyBoundedCell::kLowerBound, kLowerBound);
+  EXPECT_FLOAT_EQ(FullyBoundedCell::kUpperBound, kUpperBound);
+  EXPECT_FLOAT_EQ(
+      FullyBoundedCell::kSpecializedToBaseIntScalingFactor,
+      (static_cast<Specialized>(std::numeric_limits<BaseInt>::max()) -
+       static_cast<Specialized>(std::numeric_limits<BaseInt>::lowest())) /
+          (kUpperBound - kLowerBound));
 }
 }  // namespace wavemap_2d
