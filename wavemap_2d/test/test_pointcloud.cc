@@ -163,7 +163,7 @@ class PosedPointcloudTest : public PointcloudTest {
 
   Transformation getRandomTransformation() {
     const Rotation random_rotation(getRandomAngle());
-    const Translation random_translation(Point().setRandom());
+    const Vector random_translation(Point().setRandom());
     return {random_rotation, random_translation};
   }
 };

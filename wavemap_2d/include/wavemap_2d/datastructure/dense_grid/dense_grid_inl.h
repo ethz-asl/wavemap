@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_
-#define WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_
+#ifndef WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_DENSE_GRID_INL_H_
+#define WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_DENSE_GRID_INL_H_
 
 #include <algorithm>
 #include <string>
@@ -167,6 +167,4 @@ bool DenseGrid<CellTypeT>::load(const std::string& file_path_prefix,
 }
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/datastructure/dense_grid_inl.h"
-
-#endif  // WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_INL_H_
+#endif  // WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_DENSE_GRID_INL_H_

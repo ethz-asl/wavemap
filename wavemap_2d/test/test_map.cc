@@ -2,7 +2,7 @@
 
 #include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/datastructure_base.h"
-#include "wavemap_2d/datastructure/dense_grid.h"
+#include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
 #include "wavemap_2d/utils/random_number_generator.h"
 
 namespace wavemap_2d {

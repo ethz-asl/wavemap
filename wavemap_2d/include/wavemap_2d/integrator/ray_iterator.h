@@ -23,14 +23,14 @@ class Ray {
     const Index diff_index = end_index_ - start_index_;
     ray_length_in_steps_ = diff_index.cwiseAbs().sum() + 1u;
 
-    const Translation ray_scaled = end_point_scaled - start_point_scaled;
+    const Vector ray_scaled = end_point_scaled - start_point_scaled;
     ray_step_signs_ = ray_scaled.cwiseSign().cast<IndexElement>();
 
     const Index corrected_step = ray_step_signs_.cwiseMax(0);
     const Point start_scaled_shifted = start_point_scaled +
-                                       Translation::Constant(0.5f) -
+                                       Vector::Constant(0.5f) -
                                        start_index_.cast<FloatingPoint>();
-    const Translation distance_to_boundaries =
+    const Vector distance_to_boundaries =
         corrected_step.cast<FloatingPoint>() - start_scaled_shifted;
 
     t_to_next_boundary_init_ =
@@ -86,7 +86,7 @@ class Ray {
     const Ray& ray_;
     unsigned int current_step_;
     Index current_index_;
-    Translation t_to_next_boundary_;
+    Vector t_to_next_boundary_;
   };
 
   Iterator begin() const { return Iterator{*this}; }
@@ -98,8 +98,8 @@ class Ray {
   unsigned int ray_length_in_steps_;
 
   Index ray_step_signs_;
-  Translation t_step_size_;
-  Translation t_to_next_boundary_init_;
+  Vector t_step_size_;
+  Vector t_to_next_boundary_init_;
 };
 }  // namespace wavemap_2d
 

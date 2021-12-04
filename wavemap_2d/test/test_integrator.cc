@@ -38,7 +38,7 @@ class IteratorTest : public ::testing::Test {
     return random_number_generator_->getRandomRealNumber(kMinDistance,
                                                          kMaxDistance);
   }
-  Translation getRandomTranslation() {
+  Vector getRandomTranslation() {
     return {getRandomSignedDistance(), getRandomSignedDistance()};
   }
 
@@ -76,7 +76,7 @@ TEST_F(IteratorTest, RayIterator) {
   constexpr int kNumTestRays = 10;
   struct TestRay {
     Point origin;
-    Translation translation;
+    Vector translation;
   };
   std::vector<TestRay> test_rays(kNumTestRays);
   test_rays[0] = {getRandomPoint(), {0.f, 0.f}};
@@ -89,7 +89,7 @@ TEST_F(IteratorTest, RayIterator) {
   for (const auto& test_ray : test_rays) {
     const Point start_point = test_ray.origin;
     const Point end_point = test_ray.origin + test_ray.translation;
-    const Translation t_start_end = end_point - start_point;
+    const Vector t_start_end = end_point - start_point;
     const FloatingPoint ray_length = t_start_end.norm();
 
     const FloatingPoint resolution = getRandomResolution();
@@ -121,7 +121,7 @@ TEST_F(IteratorTest, RayIterator) {
             << "Ray iterator stepped into an unexpected direction.";
 
         const Point current_point = resolution * index.cast<FloatingPoint>();
-        const Translation t_start_current = current_point - start_point;
+        const Vector t_start_current = current_point - start_point;
         const FloatingPoint distance =
             std::abs(t_start_end.x() * t_start_current.y() -
                      t_start_current.x() * t_start_end.y()) /
@@ -161,7 +161,7 @@ class MeasurementModelTest : public ::testing::Test {
     return random_number_generator_->getRandomRealNumber(kMinDistance,
                                                          kMaxDistance);
   }
-  Translation getRandomTranslation() {
+  Vector getRandomTranslation() {
     return {getRandomSignedDistance(), getRandomSignedDistance()};
   }
 

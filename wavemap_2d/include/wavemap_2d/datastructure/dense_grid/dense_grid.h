@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_H_
-#define WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_H_
+#ifndef WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_DENSE_GRID_H_
+#define WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_DENSE_GRID_H_
 
 #include <string>
 
@@ -70,6 +70,6 @@ class DenseGrid : public DataStructureBase {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/datastructure/dense_grid_inl.h"
+#include "wavemap_2d/datastructure/dense_grid/dense_grid_inl.h"
 
-#endif  // WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_H_
+#endif  // WAVEMAP_2D_DATASTRUCTURE_DENSE_GRID_DENSE_GRID_H_

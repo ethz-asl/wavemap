@@ -5,7 +5,7 @@
 #include <glog/logging.h>
 
 #include "wavemap_2d/datastructure/cell.h"
-#include "wavemap_2d/datastructure/dense_grid.h"
+#include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",
@@ -18,6 +18,7 @@ DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
 using namespace wavemap_2d;  // NOLINT
 int main(int argc, char** argv) {
   using DataStructureType = DenseGrid<SaturatingCell<>>;
+  using MeasurementModelType = BeamModel;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
@@ -34,7 +35,8 @@ int main(int argc, char** argv) {
 
   // Set up the mapper
   auto occupancy_map = std::make_shared<DataStructureType>(map_resolution);
-  auto measurement_model = std::make_shared<BeamModel>(map_resolution);
+  auto measurement_model =
+      std::make_shared<MeasurementModelType>(map_resolution);
   PointcloudIntegrator pointcloud_integrator(occupancy_map, measurement_model);
 
   // Open the log file
