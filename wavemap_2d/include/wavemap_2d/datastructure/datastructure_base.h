@@ -20,16 +20,15 @@ class DataStructureBase {
       : resolution_(resolution) {}
 
   virtual bool empty() const = 0;
-  virtual Index size() const = 0;
+  virtual size_t size() const = 0;
   virtual void clear() = 0;
 
-  virtual Index getMinIndex() const = 0;
-  virtual Index getMaxIndex() const = 0;
-  virtual bool containsIndex(const Index& index) const = 0;
   FloatingPoint getResolution() const { return resolution_; }
 
-  virtual void updateCell(const Index& index, FloatingPoint update) = 0;
+  virtual bool hasCell(const Index& index) const = 0;
   virtual FloatingPoint getCellValue(const Index& index) const = 0;
+  virtual void setCellValue(const Index& index, FloatingPoint new_value) = 0;
+  virtual void addToCellValue(const Index& index, FloatingPoint update) = 0;
 
   void printSize() const { LOG(INFO) << "Size:\n" << size(); }
 

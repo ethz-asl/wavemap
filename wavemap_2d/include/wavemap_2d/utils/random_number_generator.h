@@ -9,6 +9,8 @@ namespace wavemap_2d {
 class RandomNumberGenerator {
  public:
   RandomNumberGenerator() : random_number_generator_(std::random_device()()) {}
+  explicit RandomNumberGenerator(const size_t random_seed)
+      : random_number_generator_(random_seed) {}
 
   void setRandomSeed(const size_t random_seed) {
     random_number_generator_.seed(random_seed);

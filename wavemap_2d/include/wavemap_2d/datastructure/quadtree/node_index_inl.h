@@ -81,7 +81,7 @@ inline std::vector<NodeIndex> NodeIndex::computeChildIndices() const {
 inline NodeRelativeChildIndex NodeIndex::computeRelativeChildIndex() const {
   NodeRelativeChildIndex child_index = 0;
   for (int i = 0; i < MapDimension; ++i) {
-    if (position[i] % 2) child_index += constexprExp2(i);
+    if (position[i] % 2) child_index += constexpr_functions::exp2(i);
   }
   return child_index;
 }

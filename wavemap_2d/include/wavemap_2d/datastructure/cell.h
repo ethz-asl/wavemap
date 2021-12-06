@@ -26,6 +26,19 @@ struct CellTraits {
       (kUpperBound != std::numeric_limits<BoundType>::max());
   static constexpr bool isFullyBounded = (hasLowerBound && hasUpperBound);
 
+  static SpecializedType add(SpecializedType cell_value,
+                             SpecializedType update) {
+    if (hasLowerBound && hasUpperBound) {
+      return std::clamp(cell_value + update, kLowerBound, kUpperBound);
+    } else if (hasUpperBound) {
+      return std::min(cell_value + update, kUpperBound);
+    } else if (hasLowerBound) {
+      return std::max(kLowerBound, cell_value + update);
+    } else {
+      return cell_value + update;
+    }
+  }
+
   static constexpr SpecializedType kSpecializedToBaseIntScalingFactor =
       (isFullyBounded)
           ? (static_cast<SpecializedType>(std::numeric_limits<BaseInt>::max()) -

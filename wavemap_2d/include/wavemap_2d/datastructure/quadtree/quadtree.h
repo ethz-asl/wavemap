@@ -6,15 +6,16 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/datastructure_base.h"
+#include "wavemap_2d/datastructure/pointcloud.h"
 #include "wavemap_2d/datastructure/quadtree/node.h"
 #include "wavemap_2d/datastructure/quadtree/node_index.h"
-#include "wavemap_2d/datastructure/quadtree/quadtree_iterators.h"
-#include "wavemap_2d/pointcloud.h"
 
 namespace wavemap_2d {
-template <typename NodeDataType>
+template <typename CellTypeT>
 class Quadtree : public DataStructureBase {
  public:
+  using CellType = CellTypeT;
+
   explicit Quadtree(FloatingPoint resolution)
       : DataStructureBase(resolution),
         max_depth_(14),
@@ -23,15 +24,33 @@ class Quadtree : public DataStructureBase {
   }
   ~Quadtree() { root_node_.pruneChildren(); }
 
+  bool empty() const override { return !root_node_.hasNotNullChildren(); }
+  size_t size() const override {
+    // TODO(victorr): Compute the size (e.g. with DFS)
+    return 0u;
+  }
+  void clear() override { root_node_.pruneChildren(); }
+
+  bool hasCell(const Index& index) const override;
+  FloatingPoint getCellValue(const Index& index) const override;
+  void setCellValue(const Index& index, FloatingPoint new_value) override;
+  void addToCellValue(const Index& index, FloatingPoint update) override;
+
+  cv::Mat getImage(bool use_color) const override;
+  bool save(const std::string& file_path_prefix,
+            bool use_floating_precision) const override;
+  bool load(const std::string& file_path_prefix,
+            bool used_floating_precision) override;
+
+  NodeIndex computeNodeIndexFromIndex(const Index& index,
+                                      NodeIndexElement depth) const {
+    return computeNodeIndexFromCenter(index.template cast<FloatingPoint>(),
+                                      depth);
+  }
   NodeIndex computeNodeIndexFromCenter(const Point& center,
                                        NodeIndexElement depth) const;
   Point computeNodeCenterFromIndex(const NodeIndex& index) const;
   Point computeNodeCornerFromIndex(const NodeIndex& index) const;
-
-  NodeIndexElement getTreeDepthAtPosition(const Point& position) const {
-    CHECK(false) << "Not yet implemented";
-    return 0;
-  }
 
   FloatingPoint getNodeWidthAtDepth(NodeIndexElement depth) const {
     CHECK_LE(depth, max_depth_);
@@ -42,43 +61,31 @@ class Quadtree : public DataStructureBase {
     return luts_.node_halved_diagonals_at_depth_[depth];
   }
 
-  bool hasNodeWithIndex(const NodeIndex& index) {
-    return getNodeByIndex(index);
+ protected:
+  using CellDataSpecialized = typename CellTypeT::Specialized;
+
+  bool hasNode(const NodeIndex& index) { return getNode(index); }
+  void allocateNode(const NodeIndex& index) {
+    getNode(index, /* auto_allocate */ true);
   }
-  void allocateNodeWithIndex(const NodeIndex& index) {
-    getNodeByIndex(index, /* auto_allocate */ true);
-  }
-  bool removeNodeWithIndex(const NodeIndex& index);
+  bool removeNode(const NodeIndex& index);
 
   // NOTE: Pointers to the nodes themselves are not exposed (except for a const
   //       pointer to the root node). One reason being that they could otherwise
   //       be deleted by users without calling Quadtree::removeNode(...) method
   //       which would lead to inconsistencies in the Quadtree and lead to
   //       segfaults.
-  const Node<NodeDataType>* getRootNodeConstPtr() const { return &root_node_; }
-  NodeDataType* getNodeDataByIndex(const NodeIndex& index,
-                                   const bool auto_allocate = false);
-
-  Pointcloud getLeaveCenters(NodeIndexElement max_depth) const;
-  std::vector<PointWithValue> getLeaveValues(NodeIndexElement max_depth) const;
-
-  QuadtreeIterator<NodeDataType, TraversalOrder::kBreadthFirst>
-  getBreadthFirstIterator() const {
-    return QuadtreeIterator<NodeDataType, TraversalOrder::kBreadthFirst>(this);
-  }
-  QuadtreeIterator<NodeDataType, TraversalOrder::kDepthFirst>
-  getDepthFirstIterator() const {
-    return QuadtreeIterator<NodeDataType, TraversalOrder::kDepthFirst>(this);
+  const Node<CellDataSpecialized>* getRootNodePtr() const {
+    return &root_node_;
   }
 
- protected:
   NodeIndexElement max_depth_;
   FloatingPoint root_node_width_;
+  Node<CellDataSpecialized> root_node_;
 
-  Node<NodeDataType> root_node_;
-
-  Node<NodeDataType>* getNodeByIndex(const NodeIndex& index,
+  Node<CellDataSpecialized>* getNode(const NodeIndex& index,
                                      bool auto_allocate = false);
+  const Node<CellDataSpecialized>* getNode(const NodeIndex& index) const;
 
   FloatingPoint computeNodeWidthAtDepth(NodeIndexElement depth);
   Vector computeNodeHalvedDiagonalAtDepth(NodeIndexElement depth);

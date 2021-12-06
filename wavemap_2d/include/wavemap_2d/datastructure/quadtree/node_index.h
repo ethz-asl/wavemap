@@ -6,14 +6,16 @@
 #include <vector>
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/utils/constexpr_functions.h"
 
 namespace wavemap_2d {
 using NodeIndexElement = uint;
 using NodeRelativeChildIndex = uint8_t;
 using NodePositionIndex = Eigen::Matrix<NodeIndexElement, MapDimension, 1>;
+
 class NodeIndex {
  public:
-  static constexpr int kNumChildren = constexprExp2(MapDimension);
+  static constexpr int kNumChildren = constexpr_functions::exp2(MapDimension);
 
   NodeIndexElement depth = 0u;
   NodePositionIndex position = NodePositionIndex::Zero();

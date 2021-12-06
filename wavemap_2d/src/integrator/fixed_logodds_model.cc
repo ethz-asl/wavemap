@@ -21,7 +21,7 @@ void FixedLogOddsModel::updateMap(DataStructureBase& map) {
   const Ray ray(W_start_point_, W_end_point_, map.getResolution());
   for (const auto& index : ray) {
     const FloatingPoint update = computeUpdateAt(index);
-    map.updateCell(index, update);
+    map.addToCellValue(index, update);
   }
 }
 }  // namespace wavemap_2d

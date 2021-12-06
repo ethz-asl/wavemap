@@ -8,9 +8,10 @@ namespace wavemap_2d {
 template <typename NodeDataType>
 class Node {
  public:
+  template <typename PointerT>
   struct IndexPointerPair {
     NodeIndex index;
-    Node<NodeDataType>* ptr;
+    PointerT ptr;
     bool operator==(const IndexPointerPair& other) const {
       return index == other.index && ptr == other.ptr;
     }
@@ -18,20 +19,14 @@ class Node {
       return !(*this == other);  // NOLINT
     }
   };
-  struct IndexConstPointerPair {
-    NodeIndex index;
-    const Node<NodeDataType>* ptr;
-    bool operator==(const IndexConstPointerPair& other) const {
-      return index == other.index && ptr == other.ptr;
-    }
-    bool operator!=(const IndexConstPointerPair& other) const {
-      return !(*this == other);  // NOLINT
-    }
-  };
 
-  Node() : children_(nullptr) {}
+  Node() : data_(0), children_(nullptr) {}
   ~Node() { pruneChildren(); }
 
+  NodeDataType& data() { return data_; }
+  const NodeDataType& data() const { return data_; }
+
+  // TODO(victorr): Give these methods clearer names
   void allocateChildren();
   bool hasAllocatedChildren() const;
   bool hasNotNullChildren() const;
@@ -41,18 +36,15 @@ class Node {
     CHECK_NOTNULL(children_);
     return children_[child_index];
   }
+  // TODO(victorr): Clean this up
   Node*& getChildPtr(NodeRelativeChildIndex child_index) {
     CHECK_NOTNULL(children_);
     return children_[child_index];
   }
-  const Node* getChildConstPtr(NodeRelativeChildIndex child_index) const {
+  const Node* getChildPtr(NodeRelativeChildIndex child_index) const {
     CHECK_NOTNULL(children_);
     return children_[child_index];
   }
-
-  const NodeDataType& getNodeData() const { return data_; }
-  NodeDataType* getNodeDataPtr() { return &data_; }
-  const NodeDataType* getNodeDataConstPtr() const { return &data_; }
 
  protected:
   NodeDataType data_;

@@ -51,7 +51,7 @@ void BeamModel::updateMap(DataStructureBase& map) {
   const Grid grid(bottom_left_idx, top_right_idx);
   for (const auto& index : grid) {
     const FloatingPoint update = computeUpdateAt(index);
-    map.updateCell(index, update);
+    map.addToCellValue(index, update);
   }
 }
 

@@ -8,51 +8,53 @@
 
 namespace wavemap_2d {
 template <typename CellTypeT>
-void DenseGrid<CellTypeT>::updateCell(const Index& index,
-                                      const FloatingPoint update) {
-  if (empty()) {
-    min_index_ = index;
-    max_index_ = index;
-    data_ = DataGridSpecialized::Zero(1, 1);
+void DenseGrid<CellTypeT>::clear() {
+  data_.resize(0, 0);
+  min_index_ = Index::Zero();
+  max_index_ = Index::Zero();
+}
+
+template <typename CellTypeT>
+bool DenseGrid<CellTypeT>::hasCell(const Index& index) const {
+  if (!empty()) {
+    return (min_index_.array() <= index.array() &&
+            index.array() <= max_index_.array())
+        .all();
   }
-
-  if (!containsIndex(index)) {
-    const Index new_grid_map_max_index = max_index_.cwiseMax(index);
-    const Index new_grid_map_min_index = min_index_.cwiseMin(index);
-    const Index min_index_diff = min_index_ - new_grid_map_min_index;
-
-    const Index new_grid_map_size =
-        new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
-    DataGridSpecialized new_grid_map =
-        DataGridSpecialized::Zero(new_grid_map_size.x(), new_grid_map_size.y());
-
-    new_grid_map.block(min_index_diff.x(), min_index_diff.y(), size().x(),
-                       size().y()) = data_;
-
-    data_.swap(new_grid_map);
-    min_index_ = new_grid_map_min_index;
-    max_index_ = new_grid_map_max_index;
-  }
-
-  auto& cell_data = accessCellData(index);
-  if (CellTypeT::hasLowerBound && CellTypeT::hasUpperBound) {
-    cell_data = std::max(CellTypeT::kLowerBound,
-                         std::min(cell_data + update, CellTypeT::kUpperBound));
-  } else if (CellTypeT::hasUpperBound) {
-    cell_data = std::min(cell_data + update, CellTypeT::kUpperBound);
-  } else if (CellTypeT::hasLowerBound) {
-    cell_data = std::max(CellTypeT::kLowerBound, cell_data + update);
-  } else {
-    cell_data += update;
-  }
+  return false;
 }
 
 template <typename CellTypeT>
 FloatingPoint DenseGrid<CellTypeT>::getCellValue(const Index& index) const {
-  if (containsIndex(index)) {
-    return static_cast<FloatingPoint>(accessCellData(index));
+  if (hasCell(index)) {
+    return static_cast<FloatingPoint>(*accessCellData(index));
   } else {
     return 0.f;
+  }
+}
+
+template <typename CellTypeT>
+void DenseGrid<CellTypeT>::setCellValue(const Index& index,
+                                        FloatingPoint new_value) {
+  constexpr bool kAutoAllocate = true;
+  CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
+  if (cell_data) {
+    // TODO(victorr): Decide whether truncation should be applied here as well
+    *cell_data = new_value;
+  } else {
+    LOG(ERROR) << "Failed to allocate cell at index: " << index;
+  }
+}
+
+template <typename CellTypeT>
+void DenseGrid<CellTypeT>::addToCellValue(const Index& index,
+                                          FloatingPoint update) {
+  constexpr bool kAutoAllocate = true;
+  CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
+  if (cell_data) {
+    *cell_data = CellTypeT::add(*cell_data, update);
+  } else {
+    LOG(ERROR) << "Failed to allocate cell at index: " << index;
   }
 }
 
@@ -164,6 +166,60 @@ bool DenseGrid<CellTypeT>::load(const std::string& file_path_prefix,
   }
 
   return true;
+}
+
+template <typename CellTypeT>
+typename CellTypeT::Specialized* DenseGrid<CellTypeT>::accessCellData(
+    const Index& index, bool auto_allocate) {
+  if (empty()) {
+    if (auto_allocate) {
+      min_index_ = index;
+      max_index_ = index;
+      data_ = DataGridSpecialized::Zero(1, 1);
+    } else {
+      // TODO(victorr): Add unit test
+      return nullptr;
+    }
+  }
+
+  if (!hasCell(index)) {
+    if (auto_allocate) {
+      const Index new_grid_map_max_index = max_index_.cwiseMax(index);
+      const Index new_grid_map_min_index = min_index_.cwiseMin(index);
+      const Index min_index_diff = min_index_ - new_grid_map_min_index;
+
+      const Index new_grid_map_dim =
+          new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
+      DataGridSpecialized new_grid_map =
+          DataGridSpecialized::Zero(new_grid_map_dim.x(), new_grid_map_dim.y());
+
+      new_grid_map.block(min_index_diff.x(), min_index_diff.y(),
+                         data_.rows(), data_.cols()) = data_;
+
+      data_.swap(new_grid_map);
+      min_index_ = new_grid_map_min_index;
+      max_index_ = new_grid_map_max_index;
+    } else {
+      // TODO(victorr): Add unit test
+      return nullptr;
+    }
+  }
+
+  // TODO(victorr): Add check for overflows
+  const Index data_index = index - min_index_;
+  return &data_.coeffRef(data_index.x(), data_index.y());
+}
+
+template <typename CellTypeT>
+const typename CellTypeT::Specialized* DenseGrid<CellTypeT>::accessCellData(
+    const Index& index) const {
+  if (empty() || !hasCell(index)) {
+    // TODO(victorr): Add unit test
+    return nullptr;
+  }
+  // TODO(victorr): Add check for overflows
+  const Index data_index = index - min_index_;
+  return &data_.coeff(data_index.x(), data_index.y());
 }
 }  // namespace wavemap_2d
 

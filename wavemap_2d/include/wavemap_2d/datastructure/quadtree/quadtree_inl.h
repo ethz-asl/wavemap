@@ -4,12 +4,76 @@
 #include <stack>
 #include <vector>
 
-#include "wavemap_2d/pointcloud.h"
+#include "wavemap_2d/datastructure/pointcloud.h"
 #include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap_2d {
-template <typename NodeDataType>
-NodeIndex Quadtree<NodeDataType>::computeNodeIndexFromCenter(
+template <typename CellTypeT>
+bool Quadtree<CellTypeT>::hasCell(const Index& index) const {
+  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  const Node<CellDataSpecialized>* node = getNode(node_index);
+  return node;
+}
+
+template <typename CellTypeT>
+FloatingPoint Quadtree<CellTypeT>::getCellValue(const Index& index) const {
+  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  const Node<CellDataSpecialized>* node = getNode(node_index);
+  if (node) {
+    return node->data();
+  } else {
+    return 0.f;
+  }
+}
+
+template <typename CellTypeT>
+void Quadtree<CellTypeT>::setCellValue(const Index& index,
+                                       FloatingPoint new_value) {
+  constexpr bool kAutoAllocate = true;
+  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  Node<CellDataSpecialized>* node = getNode(node_index, kAutoAllocate);
+  if (node) {
+    node->data() = new_value;
+  } else {
+    LOG(ERROR) << "Failed to allocate cell at index: " << index;
+  }
+}
+
+template <typename CellTypeT>
+void Quadtree<CellTypeT>::addToCellValue(const Index& index,
+                                         FloatingPoint update) {
+  constexpr bool kAutoAllocate = true;
+  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  Node<CellDataSpecialized>* node = getNode(node_index, kAutoAllocate);
+  if (node) {
+    node->data() = CellTypeT::add(node->data(), update);
+  } else {
+    LOG(ERROR) << "Failed to allocate cell at index: " << index;
+  }
+}
+
+template <typename CellTypeT>
+cv::Mat Quadtree<CellTypeT>::getImage(bool /*use_color*/) const {
+  // TODO(victorr): Implement this
+  return {};
+}
+
+template <typename CellTypeT>
+bool Quadtree<CellTypeT>::save(const std::string& /*file_path_prefix*/,
+                               bool /*use_floating_precision*/) const {
+  // TODO(victorr): Implement this
+  return false;
+}
+
+template <typename CellTypeT>
+bool Quadtree<CellTypeT>::load(const std::string& /*file_path_prefix*/,
+                               bool /*used_floating_precision*/) {
+  // TODO(victorr): Implement this
+  return false;
+}
+
+template <typename CellTypeT>
+NodeIndex Quadtree<CellTypeT>::computeNodeIndexFromCenter(
     const Point& center, NodeIndexElement depth) const {
   NodeIndex index;
   const FloatingPoint width = getNodeWidthAtDepth(depth);
@@ -24,30 +88,30 @@ NodeIndex Quadtree<NodeDataType>::computeNodeIndexFromCenter(
   return index;
 }
 
-template <typename NodeDataType>
-Point Quadtree<NodeDataType>::computeNodeCenterFromIndex(
+template <typename CellTypeT>
+Point Quadtree<CellTypeT>::computeNodeCenterFromIndex(
     const NodeIndex& index) const {
   const Vector node_halved_diagonal = getNodeHalvedDiagonalAtDepth(index.depth);
   return computeNodeCornerFromIndex(index) + node_halved_diagonal;
 }
 
-template <typename NodeDataType>
-Point Quadtree<NodeDataType>::computeNodeCornerFromIndex(
+template <typename CellTypeT>
+Point Quadtree<CellTypeT>::computeNodeCornerFromIndex(
     const NodeIndex& index) const {
   const FloatingPoint width = getNodeWidthAtDepth(index.depth);
   const Vector root_halved_diagonal = getNodeHalvedDiagonalAtDepth(0u);
   return index.position.cast<FloatingPoint>() * width - root_halved_diagonal;
 }
 
-template <typename NodeDataType>
-bool Quadtree<NodeDataType>::removeNodeWithIndex(const NodeIndex& index) {
-  Node<NodeDataType> node_ptr = getNodeByIndex(index);
+template <typename CellTypeT>
+bool Quadtree<CellTypeT>::removeNode(const NodeIndex& index) {
+  Node<CellDataSpecialized> node_ptr = getNode(index);
   if (node_ptr) {
     delete node_ptr;
     // Set the parent node's pointer to the child we just deleted to nullptr
     NodeIndex parent_index = index.computeParentIndex();
-    Node<NodeDataType> parent_node =
-        getNodeByIndex(parent_index, /*auto_allocate*/ false);
+    Node<CellDataSpecialized> parent_node =
+        getNode(parent_index, /*auto_allocate*/ false);
     if (parent_node) {
       parent_node.getChildPtr(index.computeRelativeChildIndex()) = nullptr;
     } else {
@@ -60,96 +124,10 @@ bool Quadtree<NodeDataType>::removeNodeWithIndex(const NodeIndex& index) {
   }
 }
 
-template <typename NodeDataType>
-NodeDataType* Quadtree<NodeDataType>::getNodeDataByIndex(
-    const NodeIndex& index, const bool auto_allocate) {
-  Node<NodeDataType>* node = getNodeByIndex(index, auto_allocate);
-  if (node) {
-    return node->getNodeDataPtr();
-  } else {
-    return nullptr;
-  }
-}
-
-template <typename NodeDataType>
-Pointcloud Quadtree<NodeDataType>::getLeaveCenters(
-    const NodeIndexElement max_depth) const {
-  // TODO(victorr): Extend the OctreeIterator to take a max_depth param,
-  //                then use that instead of reimplementing traversal here
-  using IndexConstPointerPair =
-      typename Node<NodeDataType>::IndexConstPointerPair;
-  std::vector<Point> points;
-
-  std::stack<IndexConstPointerPair> node_queue;
-  IndexConstPointerPair root_node = {NodeIndex(), &root_node_};
-  node_queue.emplace(root_node);
-
-  while (!node_queue.empty()) {
-    IndexConstPointerPair node = node_queue.top();
-    node_queue.pop();
-
-    if (node.ptr->hasAllocatedChildren() && node.index.depth <= max_depth) {
-      for (NodeRelativeChildIndex relative_child_idx = 0;
-           relative_child_idx < NodeIndex::kNumChildren; ++relative_child_idx) {
-        if (node.ptr->hasChild(relative_child_idx)) {
-          IndexConstPointerPair child_node = {
-              node.index.computeChildIndex(relative_child_idx),
-              node.ptr->getChildConstPtr(relative_child_idx)};
-          node_queue.emplace(child_node);
-        }
-      }
-    } else {
-      Point center = computeNodeCenterFromIndex(node.index);
-      points.push_back(center);
-    }
-  }
-
-  return Pointcloud(points);
-}
-
-template <typename NodeDataType>
-std::vector<PointWithValue> Quadtree<NodeDataType>::getLeaveValues(
-    const NodeIndexElement max_depth) const {
-  // TODO(victorr): Extend the OctreeIterator to take a max_depth param,
-  //                then use that instead of reimplementing traversal here
-
-  using IndexConstPointerPair =
-      typename Node<NodeDataType>::IndexConstPointerPair;
-  std::vector<PointWithValue> pointcloud;
-
-  std::stack<IndexConstPointerPair> node_queue;
-  IndexConstPointerPair root_node = {NodeIndex(), &root_node_};
-  node_queue.emplace(root_node);
-
-  while (!node_queue.empty()) {
-    IndexConstPointerPair node = node_queue.top();
-    node_queue.pop();
-
-    if (node.ptr->hasAllocatedChildren() && node.index.depth <= max_depth) {
-      for (NodeRelativeChildIndex relative_child_idx = 0;
-           relative_child_idx < NodeIndex::kNumChildren; ++relative_child_idx) {
-        if (node.ptr->hasChild(relative_child_idx)) {
-          IndexConstPointerPair child_node = {
-              node.index.computeChildIndex(relative_child_idx),
-              node.ptr->getChildConstPtr(relative_child_idx)};
-          node_queue.emplace(child_node);
-        }
-      }
-    } else {
-      PointWithValue point_with_value;
-      point_with_value.position = computeNodeCenterFromIndex(node.index);
-      point_with_value.value = node.ptr->getNodeDataConstPtr()->value;
-      pointcloud.push_back(point_with_value);
-    }
-  }
-
-  return pointcloud;
-}
-
-template <typename NodeDataType>
-Node<NodeDataType>* Quadtree<NodeDataType>::getNodeByIndex(
+template <typename CellTypeT>
+Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
     const NodeIndex& index, bool auto_allocate) {
-  Node<NodeDataType>* current_parent = &root_node_;
+  Node<CellDataSpecialized>* current_parent = &root_node_;
   std::vector<NodeRelativeChildIndex> child_indices =
       index.computeRelativeChildIndices();
   for (const NodeRelativeChildIndex child_index : child_indices) {
@@ -165,7 +143,8 @@ Node<NodeDataType>* Quadtree<NodeDataType>::getNodeByIndex(
     // Check if the child is allocated
     if (!current_parent->getChildPtr(child_index)) {
       if (auto_allocate) {
-        current_parent->getChildPtr(child_index) = new Node<NodeDataType>;
+        current_parent->getChildPtr(child_index) =
+            new Node<CellDataSpecialized>;
       } else {
         return nullptr;
       }
@@ -177,20 +156,43 @@ Node<NodeDataType>* Quadtree<NodeDataType>::getNodeByIndex(
   return current_parent;
 }
 
-template <typename NodeDataType>
-FloatingPoint Quadtree<NodeDataType>::computeNodeWidthAtDepth(
+template <typename CellTypeT>
+const Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
+    const NodeIndex& index) const {
+  const Node<CellDataSpecialized>* current_parent = &root_node_;
+  std::vector<NodeRelativeChildIndex> child_indices =
+      index.computeRelativeChildIndices();
+  for (const NodeRelativeChildIndex child_index : child_indices) {
+    // Check if the child pointer array is allocated
+    if (!current_parent->hasAllocatedChildren()) {
+      return nullptr;
+    }
+
+    // Check if the child is allocated
+    if (!current_parent->getChildPtr(child_index)) {
+      return nullptr;
+    }
+
+    current_parent = current_parent->getChildPtr(child_index);
+  }
+
+  return current_parent;
+}
+
+template <typename CellTypeT>
+FloatingPoint Quadtree<CellTypeT>::computeNodeWidthAtDepth(
     NodeIndexElement depth) {
   return root_node_width_ / std::exp2(depth);
 }
 
-template <typename NodeDataType>
-Vector Quadtree<NodeDataType>::computeNodeHalvedDiagonalAtDepth(
+template <typename CellTypeT>
+Vector Quadtree<CellTypeT>::computeNodeHalvedDiagonalAtDepth(
     NodeIndexElement depth) {
   return Vector::Constant(0.5f) * computeNodeWidthAtDepth(depth);
 }
 
-template <typename NodeDataType>
-void Quadtree<NodeDataType>::updateLookupTables() {
+template <typename CellTypeT>
+void Quadtree<CellTypeT>::updateLookupTables() {
   // Update the cache sizes
   luts_.node_widths_at_depth_.resize(max_depth_ + 1);
   luts_.node_halved_diagonals_at_depth_.resize(max_depth_ + 1);

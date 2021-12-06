@@ -8,7 +8,7 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 #include "wavemap_2d/integrator/beam_model.h"
 #include "wavemap_2d/integrator/fixed_logodds_model.h"
-#include "wavemap_2d/pointcloud.h"
+#include "wavemap_2d/datastructure/pointcloud.h"
 
 namespace wavemap_2d {
 class PointcloudIntegrator {
