@@ -3,24 +3,7 @@
 
 namespace wavemap_2d {
 template <typename NodeDataType>
-bool Node<NodeDataType>::hasNotNullChildren() const {
-  if (children_) {
-    for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
-      if (children_[idx]) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-template <typename NodeDataType>
-bool Node<NodeDataType>::hasAllocatedChildren() const {
-  return children_;
-}
-
-template <typename NodeDataType>
-void Node<NodeDataType>::allocateChildren() {
+void Node<NodeDataType>::allocateChildrenArray() {
   if (!children_) {
     children_ = new Node*[NodeIndex::kNumChildren];
     for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
@@ -40,6 +23,45 @@ void Node<NodeDataType>::pruneChildren() {
     delete children_;
     children_ = nullptr;
   }
+}
+
+template <typename NodeDataType>
+bool Node<NodeDataType>::hasAtLeastOneChild() const {
+  if (children_) {
+    for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
+      if (children_[idx]) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+template <typename NodeDataType>
+void Node<NodeDataType>::allocateChild(
+    NodeRelativeChildIndex child_index) const {
+  if (!children_) {
+    hasAllocatedChildrenArray();
+  }
+  children_[child_index] = new Node;
+}
+
+template <typename NodeDataType>
+Node<NodeDataType>* Node<NodeDataType>::getChild(
+    NodeRelativeChildIndex child_index) {
+  if (children_) {
+    return children_[child_index];
+  }
+  return nullptr;
+}
+
+template <typename NodeDataType>
+const Node<NodeDataType>* Node<NodeDataType>::getChild(
+    NodeRelativeChildIndex child_index) const {
+  if (children_) {
+    return children_[child_index];
+  }
+  return nullptr;
 }
 }  // namespace wavemap_2d
 

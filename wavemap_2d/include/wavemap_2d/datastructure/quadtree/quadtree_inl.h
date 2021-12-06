@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_DATASTRUCTURE_QUADTREE_QUADTREE_INL_H_
 
 #include <stack>
+#include <string>
 #include <vector>
 
 #include "wavemap_2d/datastructure/pointcloud.h"
@@ -9,15 +10,45 @@
 
 namespace wavemap_2d {
 template <typename CellTypeT>
+size_t Quadtree<CellTypeT>::size() const {
+  size_t num_nodes = 0u;
+
+  std::stack<const Node<CellDataSpecialized>*> stack;
+  stack.template emplace(&root_node_);
+  while (!stack.empty()) {
+    ++num_nodes;
+    const Node<CellDataSpecialized>* node = stack.top();
+    stack.pop();
+
+    if (node->hasAllocatedChildrenArray()) {
+      for (NodeRelativeChildIndex child_idx = 0;
+           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+        if (node->hasChild(child_idx)) {
+          stack.template emplace(node->getChild(child_idx));
+        }
+      }
+    }
+  }
+
+  // Subtract 1 to account for the fact that the root node is always allocated
+  // and therefore isn't counted in the size
+  --num_nodes;
+
+  return num_nodes;
+}
+
+template <typename CellTypeT>
 bool Quadtree<CellTypeT>::hasCell(const Index& index) const {
-  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  const NodeIndex node_index =
+      computeNodeIndexFromIndexAndDepth(index, max_depth_);
   const Node<CellDataSpecialized>* node = getNode(node_index);
   return node;
 }
 
 template <typename CellTypeT>
 FloatingPoint Quadtree<CellTypeT>::getCellValue(const Index& index) const {
-  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  const NodeIndex node_index =
+      computeNodeIndexFromIndexAndDepth(index, max_depth_);
   const Node<CellDataSpecialized>* node = getNode(node_index);
   if (node) {
     return node->data();
@@ -30,7 +61,8 @@ template <typename CellTypeT>
 void Quadtree<CellTypeT>::setCellValue(const Index& index,
                                        FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
-  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  const NodeIndex node_index =
+      computeNodeIndexFromIndexAndDepth(index, max_depth_);
   Node<CellDataSpecialized>* node = getNode(node_index, kAutoAllocate);
   if (node) {
     node->data() = new_value;
@@ -43,7 +75,8 @@ template <typename CellTypeT>
 void Quadtree<CellTypeT>::addToCellValue(const Index& index,
                                          FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
-  const NodeIndex node_index = computeNodeIndexFromIndex(index, max_depth_);
+  const NodeIndex node_index =
+      computeNodeIndexFromIndexAndDepth(index, max_depth_);
   Node<CellDataSpecialized>* node = getNode(node_index, kAutoAllocate);
   if (node) {
     node->data() = CellTypeT::add(node->data(), update);
@@ -70,6 +103,13 @@ bool Quadtree<CellTypeT>::load(const std::string& /*file_path_prefix*/,
                                bool /*used_floating_precision*/) {
   // TODO(victorr): Implement this
   return false;
+}
+
+template <typename CellTypeT>
+NodeIndex Quadtree<CellTypeT>::computeNodeIndexFromIndexAndDepth(
+    const Index& index, NodeIndexElement depth) const {
+  return computeNodeIndexFromCenter(index.template cast<FloatingPoint>(),
+                                    depth);
 }
 
 template <typename CellTypeT>
@@ -113,7 +153,7 @@ bool Quadtree<CellTypeT>::removeNode(const NodeIndex& index) {
     Node<CellDataSpecialized> parent_node =
         getNode(parent_index, /*auto_allocate*/ false);
     if (parent_node) {
-      parent_node.getChildPtr(index.computeRelativeChildIndex()) = nullptr;
+      parent_node.getChild(index.computeRelativeChildIndex()) = nullptr;
     } else {
       LOG(ERROR) << "Removed child node that was already orphaned. This should "
                     "never happen.";
@@ -132,25 +172,24 @@ Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
       index.computeRelativeChildIndices();
   for (const NodeRelativeChildIndex child_index : child_indices) {
     // Check if the child pointer array is allocated
-    if (!current_parent->hasAllocatedChildren()) {
+    if (!current_parent->hasAllocatedChildrenArray()) {
       if (auto_allocate) {
-        current_parent->allocateChildren();
+        current_parent->allocateChildrenArray();
       } else {
         return nullptr;
       }
     }
 
     // Check if the child is allocated
-    if (!current_parent->getChildPtr(child_index)) {
+    if (!current_parent->getChild(child_index)) {
       if (auto_allocate) {
-        current_parent->getChildPtr(child_index) =
-            new Node<CellDataSpecialized>;
+        current_parent->allocateChild(child_index);
       } else {
         return nullptr;
       }
     }
 
-    current_parent = current_parent->getChildPtr(child_index);
+    current_parent = current_parent->getChild(child_index);
   }
 
   return current_parent;
@@ -164,16 +203,16 @@ const Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
       index.computeRelativeChildIndices();
   for (const NodeRelativeChildIndex child_index : child_indices) {
     // Check if the child pointer array is allocated
-    if (!current_parent->hasAllocatedChildren()) {
+    if (!current_parent->hasAllocatedChildrenArray()) {
       return nullptr;
     }
 
     // Check if the child is allocated
-    if (!current_parent->getChildPtr(child_index)) {
+    if (!current_parent->getChild(child_index)) {
       return nullptr;
     }
 
-    current_parent = current_parent->getChildPtr(child_index);
+    current_parent = current_parent->getChild(child_index);
   }
 
   return current_parent;

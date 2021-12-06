@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_2D_DATASTRUCTURE_QUADTREE_QUADTREE_H_
 #define WAVEMAP_2D_DATASTRUCTURE_QUADTREE_QUADTREE_H_
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -24,11 +25,9 @@ class Quadtree : public DataStructureBase {
   }
   ~Quadtree() { root_node_.pruneChildren(); }
 
-  bool empty() const override { return !root_node_.hasNotNullChildren(); }
-  size_t size() const override {
-    // TODO(victorr): Compute the size (e.g. with DFS)
-    return 0u;
-  }
+  bool empty() const override { return !root_node_.hasAtLeastOneChild(); }
+  size_t size() const override;
+  NodeIndexElement getMaxDepth() const { return max_depth_; }
   void clear() override { root_node_.pruneChildren(); }
 
   bool hasCell(const Index& index) const override;
@@ -42,11 +41,13 @@ class Quadtree : public DataStructureBase {
   bool load(const std::string& file_path_prefix,
             bool used_floating_precision) override;
 
-  NodeIndex computeNodeIndexFromIndex(const Index& index,
-                                      NodeIndexElement depth) const {
-    return computeNodeIndexFromCenter(index.template cast<FloatingPoint>(),
-                                      depth);
-  }
+  // TODO(victorr): Add indexing unit tests
+  // TODO(victorr): Check if this this indexing convention is the best option
+  //                for wavelet trees
+  // TODO(victorr): Move these computations to an index handler that can be
+  //                shared among future hierarchical datastructures
+  NodeIndex computeNodeIndexFromIndexAndDepth(const Index& index,
+                                              NodeIndexElement depth) const;
   NodeIndex computeNodeIndexFromCenter(const Point& center,
                                        NodeIndexElement depth) const;
   Point computeNodeCenterFromIndex(const NodeIndex& index) const;
@@ -64,25 +65,16 @@ class Quadtree : public DataStructureBase {
  protected:
   using CellDataSpecialized = typename CellTypeT::Specialized;
 
-  bool hasNode(const NodeIndex& index) { return getNode(index); }
-  void allocateNode(const NodeIndex& index) {
-    getNode(index, /* auto_allocate */ true);
-  }
-  bool removeNode(const NodeIndex& index);
-
-  // NOTE: Pointers to the nodes themselves are not exposed (except for a const
-  //       pointer to the root node). One reason being that they could otherwise
-  //       be deleted by users without calling Quadtree::removeNode(...) method
-  //       which would lead to inconsistencies in the Quadtree and lead to
-  //       segfaults.
-  const Node<CellDataSpecialized>* getRootNodePtr() const {
-    return &root_node_;
-  }
-
   NodeIndexElement max_depth_;
   FloatingPoint root_node_width_;
   Node<CellDataSpecialized> root_node_;
 
+  bool hasNode(const NodeIndex& index) { return getNode(index); }
+  void allocateNode(const NodeIndex& index) {
+    constexpr bool kAutoAllocate = true;
+    getNode(index, kAutoAllocate);
+  }
+  bool removeNode(const NodeIndex& index);
   Node<CellDataSpecialized>* getNode(const NodeIndex& index,
                                      bool auto_allocate = false);
   const Node<CellDataSpecialized>* getNode(const NodeIndex& index) const;
