@@ -8,8 +8,34 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    container: ros:noetic-ros-base-focal
+    container:
+      image: ros:noetic-ros-base-focal
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Install catkin-tools
-        run: apt update && apt install -y python3-catkin-tools
+      - name: Install general and ROS-related APT packages
+        run: |
+          apt-get update
+          apt-get install -y git python3-catkin-tools python3-vcstool
+
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+        with:
+          path: catkin_ws/src/wavemap_2d
+
+      - name: Install package dependencies
+        working-directory: catkin_ws
+        shell: bash
+        run: |
+          vcs import --recursive --input src/wavemap_2d/wavemap_2d_ssh.yml
+          rosdep update
+          rosdep install --from-paths src --ignore-src -r -y
+          tree
+
+      - name: Build (Release)
+        working-directory: catkin_ws
+        shell: bash
+        run: |
+          tree
+          source /opt/ros/noetic/setup.bash
+          catkin init
+          catkin build wavemap_2d --cmake-args -DCMAKE_BUILD_TYPE=Release
