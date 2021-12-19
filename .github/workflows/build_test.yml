@@ -2,14 +2,14 @@ name: Build test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ $default-branch ]
   pull_request:
 
 jobs:
   build:
     runs-on: self-hosted
+    container: ros:noetic-ros-base-focal
     steps:
       - uses: actions/checkout@v2
-      - name: Run a one-line script
-        run: echo Hello, world!
-        
+      - name: Install catkin-tools
+        run: apt update && apt install -y python3-catkin-tools
