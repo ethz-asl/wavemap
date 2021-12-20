@@ -27,22 +27,16 @@ jobs:
           apt-get update
           apt-get install -y git tree python3-catkin-tools python3-vcstool
 
-      - name: Setup ccache
+      - name: Install and configure ccache
         shell: bash
         run: |
           apt-get update && apt-get install -y ccache
-          export PATH="/usr/lib/ccache:$PATH"
-          export CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)
+          echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
           mkdir -p $CCACHE_DIR
           ccache --max-size=10G
-          
-          echo "Updated PATH=$PATH"
-          echo "Set CCACHE_DIR=$CCACHE_DIR"
-          echo "Set CCACHE_STAMP=$CCACHE_STAMP"
-          
-          echo "CCACHE_STAMP=$CCACHE_STAMP" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
-      - name: Cache ccache files
+          echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
+
+      - name: Setup ccache cache sharing
         uses: actions/cache@v2
         with:
           path: ${{env.CCACHE_DIR}}
@@ -80,11 +74,7 @@ jobs:
         run: |
           source /opt/ros/noetic/setup.bash
           catkin init
-          which gcc  # TODO(victorr): Remove this
-          ccache -p  # TODO(victorr): Remove this
-          ccache -s  # TODO(victorr): Remove this
           catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
-          ccache -s  # TODO(victorr): Remove this
 
       - name: Run unit tests
         working-directory: ${{env.CATKIN_WS_PATH}}
@@ -96,3 +86,14 @@ jobs:
           echo "::group::Run unit tests"
           status=0 && for f in devel/lib/wavemap_2d/test_*; do $f || exit 1; done
           echo "::endgroup::"
+
+      - name: Ccache info
+        shell: bash
+        run: |
+          if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
+            echo "Using ccache: true"
+          else
+            echo "Using ccache: FALSE"
+          fi
+          echo "Ccache stats"
+          ccache --show-stats
