@@ -43,6 +43,10 @@ jobs:
           rosdep install --from-paths src --ignore-src -r -y
           echo "::endgroup::"
 
+      # TODO(victorr): Fix this upstream
+      - name: Manually install opencv_viz (missing opencv3 dependency)
+        run: apt-get install -y libopencv-viz-dev
+
       - name: Show the workspace tree
         working-directory: ${{env.CATKIN_WS_PATH}}
         run: pwd && tree -l
