@@ -5,6 +5,12 @@ on:
     branches: [ $default-branch ]
   pull_request:
 
+# NOTE: We do not store the catkin_ws under $HOME ("/github/home/") since that
+#       dir persists between jobs when using self-hosted GitHub Actions runners
+#       (/github/home is a docker volume mapped to the container's host).
+env:
+  CATKIN_WS_DIR: '/home/ci/catkin_ws'
+
 jobs:
   build:
     runs-on: self-hosted
@@ -25,25 +31,25 @@ jobs:
 
       - name: Fetch the package's code
         uses: actions/checkout@v2
-        with:
-          path: catkin_ws/src/wavemap_2d
 
-      - name: Install package dependencies
-        working-directory: catkin_ws
+      - name: Create catkin_ws and install package dependencies
         shell: bash
         run: |
+          mkdir -p ${{ env.CATKIN_WS_DIR }}/src
+          cd ${{ env.CATKIN_WS_DIR }}
+          ln -s $GITHUB_WORKSPACE src
           vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
           rosdep update
           rosdep install --from-paths src --ignore-src -r -y
 
       - name: Show the workspace tree
-        working-directory: catkin_ws
-        run: tree
+        working-directory: ${{ env.CATKIN_WS_DIR }}
+        run: pwd && tree -l
 
       - name: Build in release mode
-        working-directory: catkin_ws
+        working-directory: ${{ env.CATKIN_WS_DIR }}
         shell: bash
         run: |
           source /opt/ros/noetic/setup.bash
           catkin init
-          catkin build wavemap_2d -j$(nproc) -l$(nproc) --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
+          catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
