@@ -1,4 +1,4 @@
-name: Build test
+name: Build and Test
 
 on:
   push:
@@ -12,7 +12,7 @@ env:
   CATKIN_WS_PATH: '/home/ci/catkin_ws'
 
 jobs:
-  build:
+  build_and_test:
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
@@ -58,3 +58,14 @@ jobs:
           source /opt/ros/noetic/setup.bash
           catkin init
           catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Run unit tests
+        working-directory: ${{env.CATKIN_WS_PATH}}
+        shell: bash
+        run: |
+          echo "::group::Build unit tests"
+          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+          echo "::endgroup::"
+          echo "::group::Run unit tests"
+          status=0 && for f in devel/lib/wavemap_2d/test_*; do $f || exit 1; done
+          echo "::endgroup::"
