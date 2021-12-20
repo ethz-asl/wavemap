@@ -1,0 +1,107 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+
+# NOTE: We do not store the work files under $HOME ("/github/home/") since that
+#       dir persists between jobs when using self-hosted GitHub Actions runners
+#       (/github/home is a docker volume mapped to the container's host).
+env:
+  CATKIN_WS_PATH: '/home/ci/catkin_ws'
+  CCACHE_DIR: '/home/ci/ccache'
+
+jobs:
+  build_and_test:
+    name: Build and Test
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+
+    steps:
+      - name: Environment info
+        run: uname -r && lsb_release -a
+
+      - name: Install general and ROS-related APT packages
+        run: |
+          apt-get update
+          apt-get install -y git tree python3-catkin-tools python3-vcstool
+
+      - name: Install and configure ccache
+        shell: bash
+        run: |
+          apt-get update && apt-get install -y ccache
+          echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
+          mkdir -p $CCACHE_DIR
+          ccache --max-size=8G
+          echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
+
+      - name: Setup ccache cache sharing
+        uses: actions/cache@v2
+        with:
+          path: ${{env.CCACHE_DIR}}
+          key: noetic-ccache-${{env.CCACHE_STAMP}}
+          restore-keys: noetic-ccache-
+
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Create catkin_ws and install package dependencies
+        shell: bash
+        run: |
+          mkdir -p ${{env.CATKIN_WS_PATH}}/src
+          cd ${{env.CATKIN_WS_PATH}}
+          ln -s $GITHUB_WORKSPACE src
+          echo "::group::Import from-source dependencies with vcstool"
+          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
+          echo "::endgroup::"
+          echo "::group::Install system dependencies with rosdep"
+          rosdep update
+          rosdep install --from-paths src --ignore-src -r -y
+          echo "::endgroup::"
+
+      # TODO(victorr): Fix this upstream
+      - name: Manually install opencv_viz (missing opencv3 dependency)
+        run: apt-get install -y libopencv-viz-dev
+
+      - name: Show the workspace tree
+        working-directory: ${{env.CATKIN_WS_PATH}}
+        run: pwd && tree -l
+
+      - name: Build in release mode
+        working-directory: ${{env.CATKIN_WS_PATH}}
+        shell: bash
+        run: |
+          source /opt/ros/noetic/setup.bash
+          catkin init
+          catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build and run unit tests
+        working-directory: ${{env.CATKIN_WS_PATH}}
+        shell: bash
+        run: |
+          echo "::group::Build unit tests"
+          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+          echo "::endgroup::"
+          echo "::group::Run unit tests"
+          all_tests_passed=1
+          for f in devel/lib/wavemap_2d/test_*
+            do $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then 
+            echo "Not all tests passed!"
+            exit 1
+          fi
+          echo "::endgroup::"
+
+      - name: Ccache statistics
+        shell: bash
+        run: |
+          if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
+            echo "Using ccache: true"
+          else
+            echo "Using ccache: FALSE"
+          fi
+          echo "Ccache stats"
+          ccache --show-stats
