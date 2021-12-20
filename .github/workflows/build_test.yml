@@ -12,10 +12,15 @@ jobs:
       image: ros:noetic-ros-base-focal
 
     steps:
+      - name: Environment Info
+        run: |
+          pwd
+          uname -r
+          lsb_release -a
       - name: Install general and ROS-related APT packages
         run: |
           apt-get update
-          apt-get install -y git python3-catkin-tools python3-vcstool
+          apt-get install -y git tree python3-catkin-tools python3-vcstool
 
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -26,7 +31,7 @@ jobs:
         working-directory: catkin_ws
         shell: bash
         run: |
-          vcs import --recursive --input src/wavemap_2d/wavemap_2d_ssh.yml
+          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml
           rosdep update
           rosdep install --from-paths src --ignore-src -r -y
           tree
