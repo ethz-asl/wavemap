@@ -33,7 +33,7 @@ jobs:
           apt-get update && apt-get install -y ccache
           echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
           mkdir -p $CCACHE_DIR
-          ccache --max-size=10G
+          ccache --max-size=8G
           echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
 
       - name: Setup ccache cache sharing
@@ -84,10 +84,10 @@ jobs:
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
           echo "::endgroup::"
           echo "::group::Run unit tests"
-          status=0 && for f in devel/lib/wavemap_2d/test_*; do $f || exit 1; done
+          status=0 && for f in devel/lib/wavemap_2d/test_*; do $f --gtest_color=yes || exit 1; done
           echo "::endgroup::"
 
-      - name: Ccache info
+      - name: Ccache statistics
         shell: bash
         run: |
           if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
