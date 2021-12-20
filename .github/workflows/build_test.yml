@@ -12,11 +12,12 @@ jobs:
       image: ros:noetic-ros-base-focal
 
     steps:
-      - name: Environment Info
+      - name: Environment info
         run: |
           pwd
           uname -r
           lsb_release -a
+
       - name: Install general and ROS-related APT packages
         run: |
           apt-get update
@@ -34,13 +35,15 @@ jobs:
           vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml
           rosdep update
           rosdep install --from-paths src --ignore-src -r -y
-          tree
 
-      - name: Build (Release)
+      - name: Show the workspace tree
+        working-directory: catkin_ws
+        run: tree
+
+      - name: Build in release mode
         working-directory: catkin_ws
         shell: bash
         run: |
-          tree
           source /opt/ros/noetic/setup.bash
           catkin init
           catkin build wavemap_2d --cmake-args -DCMAKE_BUILD_TYPE=Release
