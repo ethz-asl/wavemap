@@ -32,7 +32,7 @@ jobs:
         working-directory: catkin_ws
         shell: bash
         run: |
-          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml
+          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
           rosdep update
           rosdep install --from-paths src --ignore-src -r -y
 
