@@ -77,7 +77,7 @@ jobs:
           catkin init
           catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-      - name: Run unit tests
+      - name: Build and run unit tests
         working-directory: ${{env.CATKIN_WS_PATH}}
         shell: bash
         run: |
@@ -85,7 +85,14 @@ jobs:
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
           echo "::endgroup::"
           echo "::group::Run unit tests"
-          status=0 && for f in devel/lib/wavemap_2d/test_*; do $f --gtest_color=yes || exit 1; done
+          all_tests_passed=1
+          for f in devel/lib/wavemap_2d/test_*
+            do $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then 
+            echo "Not all tests passed!"
+            exit 1
+          fi
           echo "::endgroup::"
 
       - name: Ccache statistics
