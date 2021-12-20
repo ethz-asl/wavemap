@@ -46,4 +46,4 @@ jobs:
         run: |
           source /opt/ros/noetic/setup.bash
           catkin init
-          catkin build wavemap_2d --no-status --cmake-args -DCMAKE_BUILD_TYPE=Release
+          catkin build wavemap_2d -j$(nproc) -l$(nproc) --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
