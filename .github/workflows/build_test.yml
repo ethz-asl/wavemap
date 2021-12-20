@@ -43,6 +43,8 @@ jobs:
       - name: Build in release mode
         working-directory: catkin_ws
         shell: bash
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
           source /opt/ros/noetic/setup.bash
           catkin init
