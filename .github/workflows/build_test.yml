@@ -9,7 +9,7 @@ on:
 #       dir persists between jobs when using self-hosted GitHub Actions runners
 #       (/github/home is a docker volume mapped to the container's host).
 env:
-  CATKIN_WS_DIR: '/home/ci/catkin_ws'
+  CATKIN_WS_PATH: '/home/ci/catkin_ws'
 
 jobs:
   build:
@@ -19,10 +19,7 @@ jobs:
 
     steps:
       - name: Environment info
-        run: |
-          pwd
-          uname -r
-          lsb_release -a
+        run: uname -r && lsb_release -a
 
       - name: Install general and ROS-related APT packages
         run: |
@@ -35,19 +32,23 @@ jobs:
       - name: Create catkin_ws and install package dependencies
         shell: bash
         run: |
-          mkdir -p ${{ env.CATKIN_WS_DIR }}/src
-          cd ${{ env.CATKIN_WS_DIR }}
+          mkdir -p ${{env.CATKIN_WS_PATH}}/src
+          cd ${{env.CATKIN_WS_PATH}}
           ln -s $GITHUB_WORKSPACE src
+          echo "::group::Import from-source dependencies with vcstool"
           vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
+          echo "::endgroup::"
+          echo "::group::Install system dependencies with rosdep"
           rosdep update
           rosdep install --from-paths src --ignore-src -r -y
+          echo "::endgroup::"
 
       - name: Show the workspace tree
-        working-directory: ${{ env.CATKIN_WS_DIR }}
+        working-directory: ${{env.CATKIN_WS_PATH}}
         run: pwd && tree -l
 
       - name: Build in release mode
-        working-directory: ${{ env.CATKIN_WS_DIR }}
+        working-directory: ${{env.CATKIN_WS_PATH}}
         shell: bash
         run: |
           source /opt/ros/noetic/setup.bash
