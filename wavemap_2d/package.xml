@@ -16,7 +16,6 @@
   <depend>eigen_catkin</depend>
 
   <depend>minkindr</depend>
-  <depend>protobuf_catkin</depend>
 
   <depend>opencv3_catkin</depend>
 
