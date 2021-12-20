@@ -1,15 +1,16 @@
-name: Build and Test
+name: Continuous Integration
 
 on:
   push:
     branches: [ $default-branch ]
   pull_request:
 
-# NOTE: We do not store the catkin_ws under $HOME ("/github/home/") since that
+# NOTE: We do not store the work files under $HOME ("/github/home/") since that
 #       dir persists between jobs when using self-hosted GitHub Actions runners
 #       (/github/home is a docker volume mapped to the container's host).
 env:
   CATKIN_WS_PATH: '/home/ci/catkin_ws'
+  CCACHE_DIR: '/home/ci/ccache'
 
 jobs:
   build_and_test:
@@ -25,6 +26,28 @@ jobs:
         run: |
           apt-get update
           apt-get install -y git tree python3-catkin-tools python3-vcstool
+
+      - name: Setup ccache
+        shell: bash
+        run: |
+          apt-get update && apt-get install -y ccache
+          export PATH="/usr/lib/ccache:$PATH"
+          export CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)
+          mkdir -p $CCACHE_DIR
+          ccache --max-size=10G
+          
+          echo "Updated PATH=$PATH"
+          echo "Set CCACHE_DIR=$CCACHE_DIR"
+          echo "Set CCACHE_STAMP=$CCACHE_STAMP"
+          
+          echo "CCACHE_STAMP=$CCACHE_STAMP" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+      - name: Cache ccache files
+        uses: actions/cache@v2
+        with:
+          path: ${{env.CCACHE_DIR}}
+          key: noetic-ccache-${{env.CCACHE_STAMP}}
+          restore-keys: noetic-ccache-
 
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -57,7 +80,11 @@ jobs:
         run: |
           source /opt/ros/noetic/setup.bash
           catkin init
+          which gcc  # TODO(victorr): Remove this
+          ccache -p  # TODO(victorr): Remove this
+          ccache -s  # TODO(victorr): Remove this
           catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
+          ccache -s  # TODO(victorr): Remove this
 
       - name: Run unit tests
         working-directory: ${{env.CATKIN_WS_PATH}}
