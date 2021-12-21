@@ -1,5 +1,10 @@
 name: 'Setup catkin_ws and install deps'
 description: 'Setup the catkin workspace and install all system and package dependencies'
+inputs:
+  catkin_config_args:
+    description: 'Catkin config args'
+    required: false
+    default: '--cmake-args -DCMAKE_BUILD_TYPE=Release'
 
 runs:
   using: "composite"
@@ -23,6 +28,9 @@ runs:
         mkdir -p ${{env.CATKIN_WS_PATH}}/src
         cd ${{env.CATKIN_WS_PATH}}
         ln -s $GITHUB_WORKSPACE src
+        source /opt/ros/noetic/setup.bash
+        catkin init
+        catkin config ${{ inputs.catkin_config_args }}
         echo "::group::Import from-source dependencies with vcstool"
         vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
         echo "::endgroup::"
@@ -30,6 +38,10 @@ runs:
         rosdep update
         rosdep install --from-paths src --ignore-src -r -y
         echo "::endgroup::"
+        echo "::group::Bootstrap catkin build"
+        # Build any small package to create catkin_ws/devel/setup.bash, removing the need
+        # to source /opt/ros/noetic/setup.bash before the future first "real" catkin build call
+        catkin build catkin_simple --no-status
         echo "::endgroup::"
 
     # TODO(victorr): Fix this upstream

@@ -10,7 +10,7 @@ runs:
         apt-get update && apt-get install -y ccache
         echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
         mkdir -p $CCACHE_DIR
-        ccache --max-size=8G
+        ccache --max-size=1G
         echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
 
     - name: Setup ccache cache sharing
