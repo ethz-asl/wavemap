@@ -27,24 +27,10 @@ jobs:
           apt-get update
           apt-get install -y git tree python3-catkin-tools python3-vcstool
 
-      - name: Install and configure ccache
-        shell: bash
-        run: |
-          apt-get update && apt-get install -y ccache
-          echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
-          mkdir -p $CCACHE_DIR
-          ccache --max-size=8G
-          echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
-
-      - name: Setup ccache cache sharing
-        uses: actions/cache@v2
-        with:
-          path: ${{env.CCACHE_DIR}}
-          key: noetic-ccache-${{env.CCACHE_STAMP}}
-          restore-keys: noetic-ccache-
-
       - name: Fetch the package's code
         uses: actions/checkout@v2
+
+      - uses: ./.github/actions/setup-ccache
 
       - name: Create catkin_ws and install package dependencies
         shell: bash
@@ -119,24 +105,10 @@ jobs:
           apt-get update
           apt-get install -y git tree python3-catkin-tools python3-vcstool
 
-      - name: Install and configure ccache
-        shell: bash
-        run: |
-          apt-get update && apt-get install -y ccache
-          echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
-          mkdir -p $CCACHE_DIR
-          ccache --max-size=8G
-          echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
-
-      - name: Setup ccache cache sharing
-        uses: actions/cache@v2
-        with:
-          path: ${{env.CCACHE_DIR}}
-          key: noetic-ccache-${{env.CCACHE_STAMP}}
-          restore-keys: noetic-ccache-
-
       - name: Fetch the package's code
         uses: actions/checkout@v2
+
+      - uses: ./.github/actions/setup-ccache
 
       - name: Create catkin_ws and install package dependencies
         shell: bash
