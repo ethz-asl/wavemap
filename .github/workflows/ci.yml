@@ -18,7 +18,6 @@ jobs:
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
-
     steps:
       - name: Environment info
         run: uname -r && lsb_release -a
@@ -94,6 +93,86 @@ jobs:
             exit 1
           fi
           echo "::endgroup::"
+
+      - name: Ccache statistics
+        shell: bash
+        run: |
+          if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
+            echo "Using ccache: true"
+          else
+            echo "Using ccache: FALSE"
+          fi
+          echo "Ccache stats"
+          ccache --show-stats
+
+  coverage:
+    name: Test coverage
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Environment info
+        run: uname -r && lsb_release -a
+
+      - name: Install general and ROS-related APT packages
+        run: |
+          apt-get update
+          apt-get install -y git tree python3-catkin-tools python3-vcstool
+
+      - name: Install and configure ccache
+        shell: bash
+        run: |
+          apt-get update && apt-get install -y ccache
+          echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
+          mkdir -p $CCACHE_DIR
+          ccache --max-size=8G
+          echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
+
+      - name: Setup ccache cache sharing
+        uses: actions/cache@v2
+        with:
+          path: ${{env.CCACHE_DIR}}
+          key: noetic-ccache-${{env.CCACHE_STAMP}}
+          restore-keys: noetic-ccache-
+
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Create catkin_ws and install package dependencies
+        shell: bash
+        run: |
+          mkdir -p ${{env.CATKIN_WS_PATH}}/src
+          cd ${{env.CATKIN_WS_PATH}}
+          ln -s $GITHUB_WORKSPACE src
+          echo "::group::Import from-source dependencies with vcstool"
+          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
+          echo "::endgroup::"
+          echo "::group::Install system dependencies with rosdep"
+          rosdep update
+          rosdep install --from-paths src --ignore-src -r -y
+          echo "::endgroup::"
+
+      # TODO(victorr): Fix this upstream
+      - name: Manually install opencv_viz (missing opencv3 dependency)
+        run: apt-get install -y libopencv-viz-dev
+
+      - name: Show the workspace tree
+        working-directory: ${{env.CATKIN_WS_PATH}}
+        run: pwd && tree -l
+
+      - name: Build in debug mode
+        working-directory: ${{env.CATKIN_WS_PATH}}
+        shell: bash
+        run: |
+          source /opt/ros/noetic/setup.bash
+          catkin config --cmake-args -DENABLE_COVERAGE_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
+          catkin build wavemap_2d
+
+      - name: Analyze unit test coverage
+        working-directory: ${{env.CATKIN_WS_PATH}}
+        shell: bash
+        run: |
+          catkin build wavemap_2d -v --no-deps --catkin-make-args wavemap_2d_coverage_report
 
       - name: Ccache statistics
         shell: bash
