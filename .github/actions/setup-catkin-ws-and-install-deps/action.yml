@@ -4,19 +4,22 @@ description: 'Setup the catkin workspace and install all system and package depe
 runs:
   using: "composite"
   steps:
-    - name: Environment info
-      shell: bash
-      run: uname -r && lsb_release -a
-
-    - name: Install general and ROS-related APT packages
-      shell: bash
+    - shell: bash
       run: |
+        echo "::group::Environment info"
+        uname -r && lsb_release -a
+        echo "::endgroup::"
+
+    - shell: bash
+      run: |
+        echo "::group::Install general and ROS-related APT packages"
         apt-get update
         apt-get install -y git tree python3-catkin-tools python3-vcstool
+        echo "::endgroup::"
 
-    - name: Create catkin_ws and install package dependencies
-      shell: bash
+    - shell: bash
       run: |
+        echo "::group::Create catkin_ws and install package dependencies"
         mkdir -p ${{env.CATKIN_WS_PATH}}/src
         cd ${{env.CATKIN_WS_PATH}}
         ln -s $GITHUB_WORKSPACE src
@@ -27,13 +30,18 @@ runs:
         rosdep update
         rosdep install --from-paths src --ignore-src -r -y
         echo "::endgroup::"
+        echo "::endgroup::"
 
     # TODO(victorr): Fix this upstream
-    - name: Manually install opencv_viz (missing opencv3 dependency)
-      shell: bash
-      run: apt-get install -y libopencv-viz-dev
+    - shell: bash
+      run: |
+        echo "::group::Manually install opencv_viz (missing opencv3 dependency)"
+        apt-get install -y libopencv-viz-dev
+        echo "::endgroup::"
 
-    - name: Show the workspace tree
-      shell: bash
+    - shell: bash
       working-directory: ${{env.CATKIN_WS_PATH}}
-      run: pwd && tree -l
+      run: |
+        echo "::group::Show the workspace tree"
+        pwd && tree -l
+        echo "::endgroup::"

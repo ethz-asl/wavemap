@@ -76,7 +76,7 @@ jobs:
         uses: ./.github/actions/log-ccache-stats
 
   coverage:
-    name: Test coverage
+    name: Coverage
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
