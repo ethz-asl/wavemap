@@ -68,7 +68,7 @@ if (CATKIN_ENABLE_TESTING)
   target_link_libraries(test_constexpr_functions ${PROJECT_NAME} testing_main)
 
   if (ENABLE_COVERAGE_TESTING)
-    set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/${PROJECT_NAME}/test/*" "*/${PROJECT_NAME}/${PROJECT_NAME}/app/*" "*/${PROJECT_NAME}/${PROJECT_NAME}/benchmark/*")
+    set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test/*" "*/${PROJECT_NAME}/app/*" "*/${PROJECT_NAME}/benchmark/*")
     add_code_coverage(
         NAME ${PROJECT_NAME}_coverage_report
         DEPENDENCIES tests)
