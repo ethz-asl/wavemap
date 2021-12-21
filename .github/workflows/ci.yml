@@ -38,6 +38,7 @@ jobs:
 
   test:
     name: Test
+    needs: build
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
@@ -56,6 +57,7 @@ jobs:
         shell: bash
         run: |
           echo "::group::Build unit tests"
+          catkin build wavemap_2d --no-status --force-color
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
           echo "::endgroup::"
           echo "::group::Run unit tests"
@@ -74,6 +76,7 @@ jobs:
 
   coverage:
     name: Coverage
+    needs: test
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
