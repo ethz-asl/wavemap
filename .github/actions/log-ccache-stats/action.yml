@@ -1,4 +1,5 @@
-name: 'Show statistics for ccache'
+name: 'Log ccache stats'
+description: 'Log statistics for ccache if it was enabled'
 
 runs:
   using: "composite"

@@ -13,8 +13,8 @@ env:
   CCACHE_DIR: '/home/ci/ccache'
 
 jobs:
-  build_and_test:
-    name: Build and Test
+  build:
+    name: Build
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
@@ -35,6 +35,24 @@ jobs:
           source /opt/ros/noetic/setup.bash
           catkin init
           catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  test:
+    name: Test
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
 
       - name: Build and run unit tests
         working-directory: ${{env.CATKIN_WS_PATH}}
