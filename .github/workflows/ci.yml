@@ -19,40 +19,14 @@ jobs:
     container:
       image: ros:noetic-ros-base-focal
     steps:
-      - name: Environment info
-        run: uname -r && lsb_release -a
-
-      - name: Install general and ROS-related APT packages
-        run: |
-          apt-get update
-          apt-get install -y git tree python3-catkin-tools python3-vcstool
-
       - name: Fetch the package's code
         uses: actions/checkout@v2
 
-      - uses: ./.github/actions/setup-ccache
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
 
-      - name: Create catkin_ws and install package dependencies
-        shell: bash
-        run: |
-          mkdir -p ${{env.CATKIN_WS_PATH}}/src
-          cd ${{env.CATKIN_WS_PATH}}
-          ln -s $GITHUB_WORKSPACE src
-          echo "::group::Import from-source dependencies with vcstool"
-          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
-          echo "::endgroup::"
-          echo "::group::Install system dependencies with rosdep"
-          rosdep update
-          rosdep install --from-paths src --ignore-src -r -y
-          echo "::endgroup::"
-
-      # TODO(victorr): Fix this upstream
-      - name: Manually install opencv_viz (missing opencv3 dependency)
-        run: apt-get install -y libopencv-viz-dev
-
-      - name: Show the workspace tree
-        working-directory: ${{env.CATKIN_WS_PATH}}
-        run: pwd && tree -l
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
 
       - name: Build in release mode
         working-directory: ${{env.CATKIN_WS_PATH}}
@@ -80,16 +54,8 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: Ccache statistics
-        shell: bash
-        run: |
-          if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
-            echo "Using ccache: true"
-          else
-            echo "Using ccache: FALSE"
-          fi
-          echo "Ccache stats"
-          ccache --show-stats
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
 
   coverage:
     name: Test coverage
@@ -97,40 +63,14 @@ jobs:
     container:
       image: ros:noetic-ros-base-focal
     steps:
-      - name: Environment info
-        run: uname -r && lsb_release -a
-
-      - name: Install general and ROS-related APT packages
-        run: |
-          apt-get update
-          apt-get install -y git tree python3-catkin-tools python3-vcstool
-
       - name: Fetch the package's code
         uses: actions/checkout@v2
 
-      - uses: ./.github/actions/setup-ccache
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
 
-      - name: Create catkin_ws and install package dependencies
-        shell: bash
-        run: |
-          mkdir -p ${{env.CATKIN_WS_PATH}}/src
-          cd ${{env.CATKIN_WS_PATH}}
-          ln -s $GITHUB_WORKSPACE src
-          echo "::group::Import from-source dependencies with vcstool"
-          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
-          echo "::endgroup::"
-          echo "::group::Install system dependencies with rosdep"
-          rosdep update
-          rosdep install --from-paths src --ignore-src -r -y
-          echo "::endgroup::"
-
-      # TODO(victorr): Fix this upstream
-      - name: Manually install opencv_viz (missing opencv3 dependency)
-        run: apt-get install -y libopencv-viz-dev
-
-      - name: Show the workspace tree
-        working-directory: ${{env.CATKIN_WS_PATH}}
-        run: pwd && tree -l
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
 
       - name: Build in debug mode
         working-directory: ${{env.CATKIN_WS_PATH}}
@@ -155,13 +95,5 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
-      - name: Ccache statistics
-        shell: bash
-        run: |
-          if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
-            echo "Using ccache: true"
-          else
-            echo "Using ccache: FALSE"
-          fi
-          echo "Ccache stats"
-          ccache --show-stats
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats

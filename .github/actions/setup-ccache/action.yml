@@ -1,5 +1,5 @@
 name: 'Setup ccache'
-description: 'Install and configure ccache to use '
+description: 'Install ccache and configure it to use GitHub cache sharing'
 
 runs:
   using: "composite"
@@ -19,4 +19,3 @@ runs:
         path: ${{env.CCACHE_DIR}}
         key: noetic-ccache-${{env.CCACHE_STAMP}}
         restore-keys: noetic-ccache-
-        

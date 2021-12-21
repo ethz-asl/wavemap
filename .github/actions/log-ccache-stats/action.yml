@@ -1,0 +1,15 @@
+name: 'Show statistics for ccache'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Ccache statistics
+      shell: bash
+      run: |
+        if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
+          echo "Using ccache: true"
+          echo "Ccache stats"
+          ccache --show-stats
+        else
+          echo "Using ccache: FALSE"
+        fi

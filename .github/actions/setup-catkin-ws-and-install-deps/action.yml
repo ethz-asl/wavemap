@@ -1,0 +1,39 @@
+name: 'Setup catkin_ws and install deps'
+description: 'Setup the catkin workspace and install all system and package dependencies'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Environment info
+      shell: bash
+      run: uname -r && lsb_release -a
+
+    - name: Install general and ROS-related APT packages
+      shell: bash
+      run: |
+        apt-get update
+        apt-get install -y git tree python3-catkin-tools python3-vcstool
+
+    - name: Create catkin_ws and install package dependencies
+      shell: bash
+      run: |
+        mkdir -p ${{env.CATKIN_WS_PATH}}/src
+        cd ${{env.CATKIN_WS_PATH}}
+        ln -s $GITHUB_WORKSPACE src
+        echo "::group::Import from-source dependencies with vcstool"
+        vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
+        echo "::endgroup::"
+        echo "::group::Install system dependencies with rosdep"
+        rosdep update
+        rosdep install --from-paths src --ignore-src -r -y
+        echo "::endgroup::"
+
+    # TODO(victorr): Fix this upstream
+    - name: Manually install opencv_viz (missing opencv3 dependency)
+      shell: bash
+      run: apt-get install -y libopencv-viz-dev
+
+    - name: Show the workspace tree
+      shell: bash
+      working-directory: ${{env.CATKIN_WS_PATH}}
+      run: pwd && tree -l
