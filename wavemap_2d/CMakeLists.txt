@@ -13,12 +13,18 @@ endif ()
 
 add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN)
 
+if (USE_UBSAN)
+  add_definitions(-fsanitize=undefined -fno-omit-frame-pointer -g)
+  link_libraries(ubsan)
+endif()
+if (USE_ASAN)
+  add_definitions(-fsanitize=address -fno-omit-frame-pointer -g)
+  link_libraries(asan)
+endif()
+
 #############
 # LIBRARIES #
 #############
-#cs_add_library(${PROJECT_NAME}_proto
-#    ${PROTO_SRCS})
-
 cs_add_library(${PROJECT_NAME}
     src/integrator/pointcloud_integrator.cc
     src/integrator/beam_model.cc
