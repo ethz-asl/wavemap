@@ -116,10 +116,14 @@ jobs:
         uses: ./.github/actions/log-ccache-stats
 
   sanitize:
-    name: Clang sanitizers
+    name: Sanitize ${{ matrix.sanitizer.detects }}
     strategy:
       matrix:
-        sanitizer: [ UBSAN, ASAN, MSAN, TSAN ]
+        sanitizer:
+          - {name: UBSAN, detects: 'undefined behavior'}
+          - {name: ASAN, detects: 'addressability issues and memory leaks'}
+          - {name: MSAN, detects: 'usage of uninitialized memory'}
+          - {name: TSAN, detects: 'data races and deadlocks'}
       fail-fast: false
     needs: test
     runs-on: self-hosted
@@ -135,7 +139,7 @@ jobs:
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
-          catkin_config_args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer }}=ON
+          catkin_config_args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
 
       - name: Install clang
         run: apt-get install -y clang
