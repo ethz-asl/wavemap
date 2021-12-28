@@ -24,6 +24,8 @@ jobs:
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
@@ -48,6 +50,8 @@ jobs:
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
@@ -86,11 +90,13 @@ jobs:
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-debug
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
-          catkin_config_args: --cmake-args -DENABLE_COVERAGE_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
+          catkin-config-args: --cmake-args -DENABLE_COVERAGE_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build in debug mode
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -121,8 +127,8 @@ jobs:
       matrix:
         sanitizer:
           - {name: UBSAN, detects: 'undefined behavior'}
-          - {name: ASAN, detects: 'addressability issues and memory leaks'}
-          - {name: MSAN, detects: 'usage of uninitialized memory'}
+          - {name: ASAN, detects: 'addressability and leaks'}
+          - {name: MSAN, detects: 'uninitialized memory'}
           - {name: TSAN, detects: 'data races and deadlocks'}
       fail-fast: false
     needs: test
@@ -135,11 +141,13 @@ jobs:
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-clang-${{ matrix.sanitizer.name }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
-          catkin_config_args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
 
       - name: Install clang
         run: apt-get install -y clang
