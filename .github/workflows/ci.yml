@@ -29,7 +29,7 @@ jobs:
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
 
       - name: Build in release mode
-        working-directory: ${{env.CATKIN_WS_PATH}}
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: catkin build wavemap_2d --no-status --force-color
 
@@ -53,7 +53,7 @@ jobs:
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
 
       - name: Build and run unit tests
-        working-directory: ${{env.CATKIN_WS_PATH}}
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           echo "::group::Build unit tests"
@@ -93,12 +93,12 @@ jobs:
           catkin_config_args: --cmake-args -DENABLE_COVERAGE_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build in debug mode
-        working-directory: ${{env.CATKIN_WS_PATH}}
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: catkin build wavemap_2d --no-status --force-color
 
       - name: Analyze unit test coverage
-        working-directory: ${{env.CATKIN_WS_PATH}}
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           catkin build wavemap_2d -v --no-status --force-color --no-deps --catkin-make-args wavemap_2d_coverage_report
@@ -107,7 +107,7 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ${{env.CATKIN_WS_PATH}}/build/wavemap_2d
+          directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
           flags: unittests
           fail_ci_if_error: true
           verbose: true
@@ -115,8 +115,12 @@ jobs:
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
 
-  ubsan:
-    name: Undefined Behavior Sanitizer
+  sanitize:
+    name: Clang sanitizers
+    strategy:
+      matrix:
+        sanitizer: [ UBSAN, ASAN, MSAN, TSAN ]
+      fail-fast: false
     needs: test
     runs-on: self-hosted
     container:
@@ -131,50 +135,13 @@ jobs:
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
-          catkin_config_args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_UBSAN=ON
+          catkin_config_args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer }}=ON
+
+      - name: Install clang
+        run: apt-get install -y clang
 
       - name: Build and run unit tests
-        working-directory: ${{env.CATKIN_WS_PATH}}
-        shell: bash
-        run: |
-          echo "::group::Build unit tests"
-          catkin build wavemap_2d --no-status --force-color
-          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
-          echo "::endgroup::"
-          echo "::group::Run unit tests"
-          all_tests_passed=1
-          for f in devel/lib/wavemap_2d/test_*
-            do $f --gtest_color=yes || all_tests_passed=0
-          done
-          if [ $all_tests_passed -ne 1 ]; then 
-            echo "Not all tests passed!"
-            exit 1
-          fi
-          echo "::endgroup::"
-
-      - name: Show statistics for ccache
-        uses: ./.github/actions/log-ccache-stats
-
-  asan:
-    name: Address Sanitizer
-    needs: test
-    runs-on: self-hosted
-    container:
-      image: ros:noetic-ros-base-focal
-    steps:
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
-      - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin_config_args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_ASAN=ON
-
-      - name: Build and run unit tests
-        working-directory: ${{env.CATKIN_WS_PATH}}
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           echo "::group::Build unit tests"
