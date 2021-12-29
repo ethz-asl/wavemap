@@ -51,7 +51,7 @@ class DataStructureBase {
   static std::string getDataFilePath(const std::string& file_path_prefix,
                                      const bool use_floating_precision) {
     return file_path_prefix + "_data." +
-           (use_floating_precision ? "exr" : "jp2");
+           (use_floating_precision ? "tiff" : "jp2");
   }
 };
 }  // namespace wavemap_2d

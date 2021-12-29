@@ -20,7 +20,7 @@ void Node<NodeDataType>::pruneChildren() {
         delete children_[idx];
       }
     }
-    delete children_;
+    delete[] children_;
     children_ = nullptr;
   }
 }

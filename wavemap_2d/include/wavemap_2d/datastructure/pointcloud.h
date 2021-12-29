@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_POINTCLOUD_H_
-#define WAVEMAP_2D_POINTCLOUD_H_
+#ifndef WAVEMAP_2D_DATASTRUCTURE_POINTCLOUD_H_
+#define WAVEMAP_2D_DATASTRUCTURE_POINTCLOUD_H_
 
 #include <utility>
 
@@ -83,7 +83,7 @@ class Pointcloud {
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
 
-  void clear() { data_.resize(0, 0); }
+  void clear() { data_.resize(wavemap_2d::kPointcloudPointDim, 0); }
   void resize(const unsigned int n_points) {
     data_.resize(wavemap_2d::kPointcloudPointDim, n_points);
   }
@@ -125,4 +125,4 @@ class PosedPointcloud {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_POINTCLOUD_H_
+#endif  // WAVEMAP_2D_DATASTRUCTURE_POINTCLOUD_H_
