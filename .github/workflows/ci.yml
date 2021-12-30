@@ -163,7 +163,7 @@ jobs:
       - name: Check unit tests with ${{ matrix.sanitizer.name }}
         working-directory: ${{ env.CATKIN_WS_PATH }}
         env:
-          UBSAN_OPTIONS: halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
           ASAN_OPTIONS: halt_on_error=1:detect_leaks=1:detect_stack_use_after_return=1
           TSAN_OPTIONS: halt_on_error=1
         shell: bash
