@@ -126,10 +126,12 @@ jobs:
     strategy:
       matrix:
         sanitizer:
-          - {name: UBSAN, detects: 'undefined behavior'}
-          - {name: ASAN, detects: 'addressability and leaks'}
-          - {name: MSAN, detects: 'uninitialized memory'}
-          - {name: TSAN, detects: 'data races and deadlocks'}
+          - { name: UBSAN, detects: 'undefined behavior' }
+          - { name: ASAN, detects: 'addressability and leaks' }
+          - { name: TSAN, detects: 'data races and deadlocks' }
+          # NOTE: MSAN (uninitialized memory) is not used for now since it also
+          #       requires all dependencies to instrumented (recompiled with
+          #       clang and the MSan flags, LLVM's stdlib instead of GCCs,...).
       fail-fast: false
     needs: test
     runs-on: self-hosted
@@ -142,15 +144,12 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-clang-${{ matrix.sanitizer.name }}
+          cache-key: noetic-gcc-${{ matrix.sanitizer.name }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
           catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
-
-      - name: Install clang
-        run: apt-get install -y clang
 
       - name: Build and run unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -166,6 +165,55 @@ jobs:
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then 
+            echo "Not all tests passed!"
+            exit 1
+          fi
+          echo "::endgroup::"
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  valgrind:
+    name: Valgrind memcheck
+    # NOTE: Valgrind is used to catch remaining issues not covered by the
+    #       above sanitizers (e.g. usage of uninitialized memory).
+    needs: test
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Install Valgrind
+        run: apt-get install -y valgrind
+
+      - name: Build and run unit tests in valgrind
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        env:
+          ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1
+        shell: bash
+        run: |
+          echo "::group::Build unit tests"
+          catkin build wavemap_2d --no-status --force-color
+          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+          echo "::endgroup::"
+          echo "::group::Run unit tests"
+          all_tests_passed=1
+          for f in devel/lib/wavemap_2d/test_*
+            do valgrind --exit-on-first-error=yes --error-exitcode=1 $f --gtest_color=yes || all_tests_passed=0
           done
           if [ $all_tests_passed -ne 1 ]; then 
             echo "Not all tests passed!"
