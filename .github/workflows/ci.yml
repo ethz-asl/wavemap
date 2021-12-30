@@ -56,15 +56,17 @@ jobs:
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
 
-      - name: Build and run unit tests
+      - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::group::Build unit tests"
           catkin build wavemap_2d --no-status --force-color
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
-          echo "::endgroup::"
-          echo "::group::Run unit tests"
+
+      - name: Run unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
@@ -73,7 +75,6 @@ jobs:
             echo "Not all tests passed!"
             exit 1
           fi
-          echo "::endgroup::"
 
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
@@ -129,9 +130,10 @@ jobs:
           - { name: UBSAN, detects: 'undefined behavior' }
           - { name: ASAN, detects: 'addressability and leaks' }
           - { name: TSAN, detects: 'data races and deadlocks' }
-          # NOTE: MSAN (uninitialized memory) is not used for now since it also
-          #       requires all dependencies to instrumented (recompiled with
-          #       clang and the MSan flags, LLVM's stdlib instead of GCCs,...).
+          # NOTE: MSAN is not used for now since it also requires all deps to be
+          #       instrumented (recompiled with clang and the MSan flags, LLVM's
+          #       stdlib instead of GCCs,...). We therefore use Valgrind to
+          #       check for uninitialized memory usage errors instead.
       fail-fast: false
     needs: test
     runs-on: self-hosted
@@ -151,17 +153,19 @@ jobs:
         with:
           catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
 
-      - name: Build and run unit tests
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          catkin build wavemap_2d --no-status --force-color
+          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+
+      - name: Check unit tests with ${{ matrix.sanitizer.name }}
         working-directory: ${{ env.CATKIN_WS_PATH }}
         env:
           ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1
         shell: bash
         run: |
-          echo "::group::Build unit tests"
-          catkin build wavemap_2d --no-status --force-color
-          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
-          echo "::endgroup::"
-          echo "::group::Run unit tests"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
@@ -170,15 +174,12 @@ jobs:
             echo "Not all tests passed!"
             exit 1
           fi
-          echo "::endgroup::"
 
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
 
   valgrind:
     name: Valgrind memcheck
-    # NOTE: Valgrind is used to catch remaining issues not covered by the
-    #       above sanitizers (e.g. usage of uninitialized memory).
     needs: test
     runs-on: self-hosted
     container:
@@ -200,17 +201,17 @@ jobs:
       - name: Install Valgrind
         run: apt-get install -y valgrind
 
-      - name: Build and run unit tests in valgrind
+      - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
-        env:
-          ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1
         shell: bash
         run: |
-          echo "::group::Build unit tests"
           catkin build wavemap_2d --no-status --force-color
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
-          echo "::endgroup::"
-          echo "::group::Run unit tests"
+
+      - name: Check unit tests with Valgrind memcheck
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do valgrind --exit-on-first-error=yes --error-exitcode=1 $f --gtest_color=yes || all_tests_passed=0
@@ -219,7 +220,6 @@ jobs:
             echo "Not all tests passed!"
             exit 1
           fi
-          echo "::endgroup::"
 
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
