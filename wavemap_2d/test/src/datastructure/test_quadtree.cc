@@ -139,4 +139,20 @@ TYPED_TEST(QuadtreeTest, InsertionTest) {
     }
   }
 }
+
+TEST(DummyTests, UnitializedMemory) {
+  FloatingPoint dummy;
+  std::cout << dummy << std::endl;
+}
+
+TEST(DummyTests, MemoryLeaks) {
+  auto* dummy_ptr = new FloatingPoint;
+  *dummy_ptr = 5.f;
+}
+
+TEST(DummyTests, UndefinedBehavior) {
+  int k = 0x7fffffff;
+  k += 0x7fffffff;
+  std::cout << k << std::endl;
+}
 }  // namespace wavemap_2d

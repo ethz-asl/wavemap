@@ -163,7 +163,9 @@ jobs:
       - name: Check unit tests with ${{ matrix.sanitizer.name }}
         working-directory: ${{ env.CATKIN_WS_PATH }}
         env:
-          ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1
+          UBSAN_OPTIONS: halt_on_error=1
+          ASAN_OPTIONS: halt_on_error=1:detect_leaks=1:detect_stack_use_after_return=1
+          TSAN_OPTIONS: halt_on_error=1
         shell: bash
         run: |
           all_tests_passed=1
@@ -214,7 +216,7 @@ jobs:
         run: |
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
-            do valgrind --exit-on-first-error=yes --error-exitcode=1 $f --gtest_color=yes || all_tests_passed=0
+            do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible $f --gtest_color=yes || all_tests_passed=0
           done
           if [ $all_tests_passed -ne 1 ]; then 
             echo "Not all tests passed!"
