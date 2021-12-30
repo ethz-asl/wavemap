@@ -193,8 +193,8 @@ typename CellTypeT::Specialized* DenseGrid<CellTypeT>::accessCellData(
       DataGridSpecialized new_grid_map =
           DataGridSpecialized::Zero(new_grid_map_dim.x(), new_grid_map_dim.y());
 
-      new_grid_map.block(min_index_diff.x(), min_index_diff.y(),
-                         data_.rows(), data_.cols()) = data_;
+      new_grid_map.block(min_index_diff.x(), min_index_diff.y(), data_.rows(),
+                         data_.cols()) = data_;
 
       data_.swap(new_grid_map);
       min_index_ = new_grid_map_min_index;

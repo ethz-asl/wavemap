@@ -38,6 +38,24 @@ jobs:
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
 
+  pre-commit:
+    name: Lint
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Install pre-commit's dependencies
+        run: |
+          apt-get update
+          apt-get install -y git python3-pip clang-format
+          pip3 install pre-commit cpplint
+
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Run the pre-commit hooks
+        run: pre-commit run --all-files
+
   test:
     name: Test
     needs: build
@@ -71,7 +89,7 @@ jobs:
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
           done
-          if [ $all_tests_passed -ne 1 ]; then 
+          if [ $all_tests_passed -ne 1 ]; then
             echo "Not all tests passed!"
             exit 1
           fi
@@ -172,7 +190,7 @@ jobs:
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
           done
-          if [ $all_tests_passed -ne 1 ]; then 
+          if [ $all_tests_passed -ne 1 ]; then
             echo "Not all tests passed!"
             exit 1
           fi
@@ -218,7 +236,7 @@ jobs:
           for f in devel/lib/wavemap_2d/test_*
             do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible $f --gtest_color=yes || all_tests_passed=0
           done
-          if [ $all_tests_passed -ne 1 ]; then 
+          if [ $all_tests_passed -ne 1 ]; then
             echo "Not all tests passed!"
             exit 1
           fi

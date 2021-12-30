@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_2D_DATASTRUCTURE_CELL_H_
 #define WAVEMAP_2D_DATASTRUCTURE_CELL_H_
 
+#include <algorithm>
 #include <limits>
 
 #include "wavemap_2d/common.h"
