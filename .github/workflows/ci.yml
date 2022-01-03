@@ -64,7 +64,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run the pre-commit hooks
-        run: pre-commit run --all-files
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
+          pre-commit run --all-files
+          echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
   clang-tidy:
     name: Clang tidy
@@ -96,7 +99,10 @@ jobs:
 
       - name: Run clang-tidy
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
-        run: run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
   test:
     name: Test
@@ -238,6 +244,7 @@ jobs:
           TSAN_OPTIONS: halt_on_error=1
         shell: bash
         run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc-sanitizers.json"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
@@ -246,6 +253,9 @@ jobs:
             echo "Not all tests passed!"
             exit 1
           fi
+          echo "::remove-matcher owner=problem-matcher-gcc-ubsan::"
+          echo "::remove-matcher owner=problem-matcher-gcc-asan::"
+          echo "::remove-matcher owner=problem-matcher-gcc-tsan::"
 
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
@@ -287,14 +297,18 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
+          echo "::add-matcher::./.github/problem-matchers/valgrind.json"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
-            do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible $f --gtest_color=yes || all_tests_passed=0
+            do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
+            grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml
+            rm valgrind-log.xml
           done
           if [ $all_tests_passed -ne 1 ]; then
             echo "Not all tests passed!"
             exit 1
           fi
+          echo "::remove-matcher owner=problem-matcher-valgrind::"
 
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats

@@ -1,0 +1,41 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "problem-matcher-gcc-ubsan",
+      "pattern": [
+        {
+          "regexp": "^(.*?):(\\d+):(\\d*):?\\s+(?:runtime\\s+)?(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      ]
+    },
+    {
+      "owner": "problem-matcher-gcc-asan",
+      "pattern": [
+        {
+          "regexp": "^==(\\d+)==(WARNING|ERROR):(.*?)$",
+          "code": 1,
+          "severity": 2,
+          "message": 3
+        }
+      ]
+    },
+    {
+      "owner": "problem-matcher-gcc-tsan",
+      "pattern": [
+        {
+          "regexp": "^(.*?):(\\d+):(\\d*):?\\s+(?:runtime\\s+)?(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      ]
+    }
+  ]
+}
