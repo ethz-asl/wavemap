@@ -74,21 +74,4 @@ TEST(CellTest, CellTraits) {
     EXPECT_FLOAT_EQ(FullyBoundedCell::add(0.f, 10.f), kUpperBound);
   }
 }
-
-TEST(DummyTests, UnitializedMemory) {
-  int* a = new int[10];
-  a[5] = 0;
-  if (a[1]) printf("xx\n");
-}
-
-TEST(DummyTests, MemoryLeaks) {
-  auto* dummy_ptr = new FloatingPoint;
-  *dummy_ptr = 5.f;
-}
-
-TEST(DummyTests, UndefinedBehavior) {
-  int k = 0x7fffffff;
-  k += 0x7fffffff;
-  std::cout << k << std::endl;
-}
 }  // namespace wavemap_2d
