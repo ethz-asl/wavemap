@@ -47,7 +47,7 @@ jobs:
       - name: Install pre-commit's dependencies
         run: |
           apt-get update
-          apt-get install -y git python3-pip clang-format
+          apt-get install -y git python3-pip clang-format cppcheck
           pip3 install pre-commit cpplint
 
       - name: Fetch the package's code

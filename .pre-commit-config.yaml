@@ -37,3 +37,5 @@ repos:
         args: [ -style=file ]
       - id: cpplint
         args: [ "--filter=-legal/copyright,-build/include_order" ]
+      - id: cppcheck
+        args: [ --quiet, --std=c++17, --language=c++, --library=googletest, "--suppress=syntaxError:*test/src/*/test_*.cc", --enable=performance, --force ]
