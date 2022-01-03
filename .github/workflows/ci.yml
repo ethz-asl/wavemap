@@ -56,6 +56,37 @@ jobs:
       - name: Run the pre-commit hooks
         run: pre-commit run --all-files
 
+  clang-tidy:
+    name: Clang tidy
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_CLANG_TIDY=ON
+
+      - name: Install clang-tidy
+        run: apt-get install -y clang-tidy
+
+      - name: Build dependencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_2d --no-status --force-color
+
+      - name: Run clang-tidy
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        run: run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
+
   test:
     name: Test
     needs: build
@@ -125,8 +156,7 @@ jobs:
       - name: Analyze unit test coverage
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: |
-          catkin build wavemap_2d -v --no-status --force-color --no-deps --catkin-make-args wavemap_2d_coverage_report
+        run: catkin build wavemap_2d -v --no-status --force-color --no-deps --catkin-make-args wavemap_2d_coverage_report
 
       - name: Upload coverage stats to Codecov
         uses: codecov/codecov-action@v2

@@ -27,6 +27,10 @@ if (USE_TSAN)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer -g")
 endif ()
 
+if (USE_CLANG_TIDY)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+
 #############
 # LIBRARIES #
 #############
