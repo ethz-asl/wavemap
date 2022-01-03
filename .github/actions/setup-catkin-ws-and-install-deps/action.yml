@@ -3,8 +3,7 @@ description: 'Setup the catkin workspace and install all system and package depe
 inputs:
   catkin-config-args:
     description: 'Catkin config args'
-    required: false
-    default: '--cmake-args -DCMAKE_BUILD_TYPE=Release'
+    required: true
 
 runs:
   using: "composite"

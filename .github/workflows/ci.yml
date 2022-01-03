@@ -29,13 +29,20 @@ jobs:
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build in release mode
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
+      - name: Build catkin package
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_2d --no-status --force-color
+          catkin build wavemap_2d --no-status --force-color --no-deps
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Show statistics for ccache
@@ -82,7 +89,7 @@ jobs:
       - name: Install clang-tidy
         run: apt-get install -y clang-tidy
 
-      - name: Build dependencies
+      - name: Build catkin package and dependencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: catkin build wavemap_2d --no-status --force-color
@@ -108,13 +115,21 @@ jobs:
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          catkin build wavemap_2d --no-status --force-color
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+          echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Run unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -152,15 +167,15 @@ jobs:
         with:
           catkin-config-args: --cmake-args -DENABLE_COVERAGE_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build in debug mode
+      - name: Build catkin package dependencies (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
-      - name: Analyze unit test coverage
+      - name: Build unit tests and analyze coverage (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d -v --no-status --force-color --no-deps --catkin-make-args wavemap_2d_coverage_report
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args wavemap_2d_coverage_report
 
       - name: Upload coverage stats to Codecov
         uses: codecov/codecov-action@v2
@@ -205,12 +220,15 @@ jobs:
         with:
           catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
 
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: |
-          catkin build wavemap_2d --no-status --force-color
-          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
 
       - name: Check unit tests with ${{ matrix.sanitizer.name }}
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -255,12 +273,15 @@ jobs:
       - name: Install Valgrind
         run: apt-get install -y valgrind
 
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: |
-          catkin build wavemap_2d --no-status --force-color
-          catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
 
       - name: Check unit tests with Valgrind memcheck
         working-directory: ${{ env.CATKIN_WS_PATH }}
