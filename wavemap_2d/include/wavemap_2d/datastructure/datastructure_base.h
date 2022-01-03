@@ -18,6 +18,7 @@ class DataStructureBase {
 
   explicit DataStructureBase(const FloatingPoint resolution)
       : resolution_(resolution) {}
+  virtual ~DataStructureBase() = default;
 
   virtual bool empty() const = 0;
   virtual size_t size() const = 0;
