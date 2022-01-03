@@ -58,6 +58,7 @@ jobs:
 
   clang-tidy:
     name: Clang tidy
+    needs: build
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
