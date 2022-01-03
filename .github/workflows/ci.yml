@@ -301,8 +301,7 @@ jobs:
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
-            grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml
-            rm valgrind-log.xml
+            grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml || true
           done
           if [ $all_tests_passed -ne 1 ]; then
             echo "Not all tests passed!"
