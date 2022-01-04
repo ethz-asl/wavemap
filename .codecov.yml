@@ -1,3 +1,6 @@
+codecov:
+  branch: develop
+
 comment:
   layout: "files"
   behavior: default
