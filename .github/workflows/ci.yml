@@ -11,6 +11,7 @@ on:
 env:
   CATKIN_WS_PATH: '/home/ci/catkin_ws'
   CCACHE_DIR: '/home/ci/ccache'
+  PRE_COMMIT_DIR: '/home/ci/pre-commit'
 
 jobs:
   build:
@@ -63,9 +64,19 @@ jobs:
       - name: Fetch the package's code
         uses: actions/checkout@v2
 
+      - name: Get python version for pre-commit cache
+        run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Setup pre-commit cache sharing
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.PRE_COMMIT_DIR }}
+          key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
       - name: Run the pre-commit hooks
         run: |
           echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
+          export PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }}
           pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
