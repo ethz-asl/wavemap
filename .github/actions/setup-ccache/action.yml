@@ -15,11 +15,9 @@ runs:
         echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
         mkdir -p $CCACHE_DIR
         ccache --max-size=1G
-        echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
 
     - name: Setup ccache cache sharing
       uses: actions/cache@v2
       with:
         path: ${{ env.CCACHE_DIR }}
-        key: ccache-${{ inputs.cache-key }}-${{ env.CCACHE_STAMP }}
-        restore-keys: ccache-${{ inputs.cache-key }}-
+        key: ccache-${{ inputs.cache-key }}
