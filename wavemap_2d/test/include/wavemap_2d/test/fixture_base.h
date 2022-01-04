@@ -1,5 +1,8 @@
-#ifndef WAVEMAP_2D_TEST_COMMON_BASE_FIXTURE_H_
-#define WAVEMAP_2D_TEST_COMMON_BASE_FIXTURE_H_
+#ifndef WAVEMAP_2D_TEST_INCLUDE_WAVEMAP_2D_TEST_FIXTURE_BASE_H_
+#define WAVEMAP_2D_TEST_INCLUDE_WAVEMAP_2D_TEST_FIXTURE_BASE_H_
+
+#include <memory>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -84,4 +87,4 @@ class FixtureBase : public ::testing::Test {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_TEST_COMMON_BASE_FIXTURE_H_
+#endif  // WAVEMAP_2D_TEST_INCLUDE_WAVEMAP_2D_TEST_FIXTURE_BASE_H_

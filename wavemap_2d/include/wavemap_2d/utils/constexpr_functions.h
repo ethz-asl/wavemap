@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INCLUDE_WAVEMAP_2D_UTILS_CONSTEXPR_FUNCTIONS_H_
-#define WAVEMAP_2D_INCLUDE_WAVEMAP_2D_UTILS_CONSTEXPR_FUNCTIONS_H_
+#ifndef WAVEMAP_2D_UTILS_CONSTEXPR_FUNCTIONS_H_
+#define WAVEMAP_2D_UTILS_CONSTEXPR_FUNCTIONS_H_
 
 namespace wavemap_2d::constexpr_functions {
 constexpr int exp2(int exponent) {
@@ -11,4 +11,4 @@ constexpr int exp2(int exponent) {
 }
 }  // namespace wavemap_2d::constexpr_functions
 
-#endif  // WAVEMAP_2D_INCLUDE_WAVEMAP_2D_UTILS_CONSTEXPR_FUNCTIONS_H_
+#endif  // WAVEMAP_2D_UTILS_CONSTEXPR_FUNCTIONS_H_

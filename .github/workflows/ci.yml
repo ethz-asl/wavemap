@@ -13,95 +13,301 @@ env:
   CCACHE_DIR: '/home/ci/ccache'
 
 jobs:
-  build_and_test:
-    name: Build and Test
+  build:
+    name: Build
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
-
     steps:
-      - name: Environment info
-        run: uname -r && lsb_release -a
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
 
-      - name: Install general and ROS-related APT packages
-        run: |
-          apt-get update
-          apt-get install -y git tree python3-catkin-tools python3-vcstool
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
 
-      - name: Install and configure ccache
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
+      - name: Build catkin package
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          apt-get update && apt-get install -y ccache
-          echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
-          mkdir -p $CCACHE_DIR
-          ccache --max-size=8G
-          echo "CCACHE_STAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_2d --no-status --force-color --no-deps
+          echo "::remove-matcher owner=problem-matcher-gcc::"
 
-      - name: Setup ccache cache sharing
-        uses: actions/cache@v2
-        with:
-          path: ${{env.CCACHE_DIR}}
-          key: noetic-ccache-${{env.CCACHE_STAMP}}
-          restore-keys: noetic-ccache-
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  pre-commit:
+    name: Lint
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Install pre-commit's dependencies
+        run: |
+          apt-get update
+          apt-get install -y git python3-pip clang-format cppcheck
+          pip3 install pre-commit cpplint
 
       - name: Fetch the package's code
         uses: actions/checkout@v2
 
-      - name: Create catkin_ws and install package dependencies
+      - name: Run the pre-commit hooks
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
+          pre-commit run --all-files
+          echo "::remove-matcher owner=problem-matcher-pre-commit::"
+
+  clang-tidy:
+    name: Clang tidy
+    needs: build
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_CLANG_TIDY=ON
+
+      - name: Install clang-tidy
+        run: apt-get install -y clang-tidy
+
+      - name: Build catkin package and dependencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_2d --no-status --force-color
+
+      - name: Run clang-tidy
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
+
+  test:
+    name: Test
+    needs: build
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          mkdir -p ${{env.CATKIN_WS_PATH}}/src
-          cd ${{env.CATKIN_WS_PATH}}
-          ln -s $GITHUB_WORKSPACE src
-          echo "::group::Import from-source dependencies with vcstool"
-          vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
-          echo "::endgroup::"
-          echo "::group::Install system dependencies with rosdep"
-          rosdep update
-          rosdep install --from-paths src --ignore-src -r -y
-          echo "::endgroup::"
-
-      # TODO(victorr): Fix this upstream
-      - name: Manually install opencv_viz (missing opencv3 dependency)
-        run: apt-get install -y libopencv-viz-dev
-
-      - name: Show the workspace tree
-        working-directory: ${{env.CATKIN_WS_PATH}}
-        run: pwd && tree -l
-
-      - name: Build in release mode
-        working-directory: ${{env.CATKIN_WS_PATH}}
-        shell: bash
-        run: |
-          source /opt/ros/noetic/setup.bash
-          catkin init
-          catkin build wavemap_2d --no-status --force-color --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build and run unit tests
-        working-directory: ${{env.CATKIN_WS_PATH}}
-        shell: bash
-        run: |
-          echo "::group::Build unit tests"
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
-          echo "::endgroup::"
-          echo "::group::Run unit tests"
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Run unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
           done
-          if [ $all_tests_passed -ne 1 ]; then 
+          if [ $all_tests_passed -ne 1 ]; then
             echo "Not all tests passed!"
             exit 1
           fi
-          echo "::endgroup::"
 
-      - name: Ccache statistics
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  coverage:
+    name: Coverage
+    needs: test
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-debug
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DENABLE_COVERAGE_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build catkin package dependencies (in debug mode)
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
+      - name: Build unit tests and analyze coverage (in debug mode)
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args wavemap_2d_coverage_report
+
+      - name: Upload coverage stats to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  sanitize:
+    name: Sanitize ${{ matrix.sanitizer.detects }}
+    strategy:
+      matrix:
+        sanitizer:
+          - { name: UBSAN, detects: 'undefined behavior' }
+          - { name: ASAN, detects: 'addressability and leaks' }
+          - { name: TSAN, detects: 'data races and deadlocks' }
+          # NOTE: MSAN is not used for now since it also requires all deps to be
+          #       instrumented (recompiled with clang and the MSan flags, LLVM's
+          #       stdlib instead of GCCs,...). We therefore use Valgrind to
+          #       check for uninitialized memory usage errors instead.
+      fail-fast: false
+    needs: test
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-${{ matrix.sanitizer.name }}
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
+
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+
+      - name: Check unit tests with ${{ matrix.sanitizer.name }}
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        env:
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+          ASAN_OPTIONS: halt_on_error=1:detect_leaks=1:detect_stack_use_after_return=1
+          TSAN_OPTIONS: halt_on_error=1
         shell: bash
         run: |
-          if [ "$(which gcc)" == "/usr/lib/ccache/gcc" ]; then
-            echo "Using ccache: true"
-          else
-            echo "Using ccache: FALSE"
+          echo "::add-matcher::./.github/problem-matchers/gcc-sanitizers.json"
+          all_tests_passed=1
+          for f in devel/lib/wavemap_2d/test_*
+            do $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
           fi
-          echo "Ccache stats"
-          ccache --show-stats
+          echo "::remove-matcher owner=problem-matcher-gcc-ubsan::"
+          echo "::remove-matcher owner=problem-matcher-gcc-asan::"
+          echo "::remove-matcher owner=problem-matcher-gcc-tsan::"
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  valgrind:
+    name: Valgrind memcheck
+    needs: test
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-key: noetic-gcc-release
+
+      - name: Setup catkin_ws and install all dependencies
+        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+        with:
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Install Valgrind
+        run: apt-get install -y valgrind
+
+      - name: Build catkin package depencencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+
+      - name: Check unit tests with Valgrind memcheck
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/valgrind.json"
+          all_tests_passed=1
+          for f in devel/lib/wavemap_2d/test_*
+            do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
+            grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml || true
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
+          fi
+          echo "::remove-matcher owner=problem-matcher-valgrind::"
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats

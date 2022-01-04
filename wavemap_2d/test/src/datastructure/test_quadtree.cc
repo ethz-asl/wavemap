@@ -8,42 +8,6 @@ namespace wavemap_2d {
 template <typename CellType>
 class QuadtreeTest : public FixtureBase {
  protected:
-  static void compare(const Quadtree<CellType>& map_reference,
-                      const Quadtree<CellType>& map_to_test,
-                      FloatingPoint cell_value_error_tolerance) {
-    ASSERT_EQ(map_reference.empty(), map_to_test.empty());
-    ASSERT_EQ(map_reference.size(), map_to_test.size());
-    ASSERT_EQ(map_reference.getResolution(), map_to_test.getResolution());
-
-    //    int reported_error_count = 0;
-    //    constexpr int kMaxNumReportedErrors = 10;
-    //    const Index min_index = map_reference.getMinIndex();
-    //    const Index max_index = map_reference.getMaxIndex();
-    //    for (Index index = min_index; index.x() <= max_index.x(); ++index.x())
-    //    {
-    //      for (index.y() = min_index.y(); index.y() <= max_index.y();
-    //      ++index.y()) {
-    //        auto reference_value = map_reference.getCellValue(index);
-    //        auto test_value = map_to_test.getCellValue(index);
-    //        if (cell_value_error_tolerance <
-    //            std::abs(reference_value - test_value)) {
-    //          ADD_FAILURE() << std::setprecision(4)
-    //                        << "Difference between the reference ("
-    //                        << reference_value << ") and test cell (" <<
-    //                        test_value
-    //                        << ") values at index (" << index
-    //                        << ") exceeds the configured threshold ("
-    //                        << cell_value_error_tolerance << ").";
-    //          if (kMaxNumReportedErrors < reported_error_count++) {
-    //            FAIL() << "Too many errors. Aborting comparison between
-    //            reference "
-    //                      "and test map.";
-    //          }
-    //        }
-    //      }
-    //    }
-  }
-
   Quadtree<CellType> getRandomMap() {
     Quadtree<CellType> random_map(getRandomResolution());
     const Index min_index = -getRandomIndex().cwiseAbs();
@@ -96,7 +60,7 @@ TYPED_TEST(QuadtreeTest, Resizing) {
     EXPECT_GE(map.size(), map.getMaxDepth());
     size_t max_unique_nodes = 0u;
     const size_t num_inserted_nodes = random_indices.size();
-    for (int depth = 0; depth <= map.getMaxDepth(); ++depth) {
+    for (unsigned int depth = 0u; depth <= map.getMaxDepth(); ++depth) {
       const size_t max_unique_nodes_at_depth = std::exp2(MapDimension * depth);
       if (max_unique_nodes_at_depth < num_inserted_nodes) {
         max_unique_nodes += max_unique_nodes_at_depth;

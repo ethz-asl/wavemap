@@ -17,6 +17,7 @@ class MeasurementModelBase {
       : resolution_(resolution),
         resolution_inv_(1.f / resolution),
         measured_distance_(0.f) {}
+  virtual ~MeasurementModelBase() = default;
 
   void setStartPoint(const Point& start_point) {
     W_start_point_ = start_point;

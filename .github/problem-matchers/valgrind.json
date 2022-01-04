@@ -1,0 +1,13 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "problem-matcher-valgrind",
+      "pattern": [
+        {
+          "regexp": "(?<=\\<what\\>)(.*?)(?=\\<\\/what\\>)",
+          "message": 1
+        }
+      ]
+    }
+  ]
+}

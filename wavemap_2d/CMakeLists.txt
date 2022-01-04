@@ -2,19 +2,38 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_2d)
 
 find_package(catkin_simple REQUIRED)
+catkin_simple(ALL_DEPS_REQUIRED)
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
 endif ()
-catkin_simple(ALL_DEPS_REQUIRED)
+if (CATKIN_ENABLE_TESTING AND ENABLE_COVERAGE_TESTING)
+  find_package(code_coverage REQUIRED)
+  APPEND_COVERAGE_COMPILER_FLAGS()
+endif ()
 
-add_definitions(-std=c++17 -Wall -Wextra -Wno-deprecated-copy -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-deprecated-copy -Wno-class-memaccess")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN")
+
+if (USE_UBSAN)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer -g")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow")
+endif ()
+if (USE_ASAN)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer -g")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize-address-use-after-scope")
+endif ()
+if (USE_TSAN)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer -g")
+endif ()
+
+if (USE_CLANG_TIDY)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
 
 #############
 # LIBRARIES #
 #############
-#cs_add_library(${PROJECT_NAME}_proto
-#    ${PROTO_SRCS})
-
 cs_add_library(${PROJECT_NAME}
     src/integrator/pointcloud_integrator.cc
     src/integrator/beam_model.cc
@@ -62,6 +81,13 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_constexpr_functions test/src/utils/test_constexpr_functions.cc)
   target_include_directories(test_constexpr_functions PRIVATE test/include)
   target_link_libraries(test_constexpr_functions ${PROJECT_NAME} testing_main)
+
+  if (ENABLE_COVERAGE_TESTING)
+    set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test/*" "*/${PROJECT_NAME}/app/*" "*/${PROJECT_NAME}/benchmark/*")
+    add_code_coverage(
+        NAME ${PROJECT_NAME}_coverage_report
+        DEPENDENCIES tests)
+  endif ()
 endif ()
 
 ##############
