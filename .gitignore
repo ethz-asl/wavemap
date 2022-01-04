@@ -49,3 +49,8 @@ qtcreator-*
 
 # Catkin custom files
 CATKIN_IGNORE
+
+# CLion
+.idea
+cmake-build-*
+

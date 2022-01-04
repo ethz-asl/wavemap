@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>wavemap_2d</name>
+  <version>0.0.0</version>
+  <description>Continuous, hierarchical occupancy mapping using wavelets</description>
+
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <depend>glog_catkin</depend>
+  <depend>eigen_catkin</depend>
+  <depend>minkindr</depend>
+  <depend>opencv3_catkin</depend>
+
+</package>
