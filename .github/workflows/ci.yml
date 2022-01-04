@@ -98,7 +98,7 @@ jobs:
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_CLANG_TIDY=ON
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
       - name: Install clang-tidy
         run: apt-get install -y clang-tidy
@@ -106,7 +106,7 @@ jobs:
       - name: Build catkin package and dependencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color
+        run: catkin build wavemap_2d --no-status --force-color --cmake-args -DUSE_CLANG_TIDY=ON
 
       - name: Run clang-tidy
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
@@ -182,7 +182,7 @@ jobs:
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
-          catkin-config-args: --cmake-args -DENABLE_COVERAGE_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build catkin package dependencies (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -192,7 +192,7 @@ jobs:
       - name: Build unit tests and analyze coverage (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args wavemap_2d_coverage_report
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --cmake-args -DENABLE_COVERAGE_TESTING=ON --catkin-make-args wavemap_2d_coverage_report
 
       - name: Upload coverage stats to Codecov
         uses: codecov/codecov-action@v2
@@ -230,12 +230,12 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-${{ matrix.sanitizer.name }}
+          cache-key: noetic-gcc-release
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
         with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release -DUSE_${{ matrix.sanitizer.name }}=ON
+          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
       - name: Build catkin package depencencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -245,7 +245,7 @@ jobs:
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --cmake-args -DUSE_${{ matrix.sanitizer.name }}=ON --catkin-make-args tests
 
       - name: Check unit tests with ${{ matrix.sanitizer.name }}
         working-directory: ${{ env.CATKIN_WS_PATH }}
