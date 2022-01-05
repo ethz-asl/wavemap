@@ -82,6 +82,10 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_constexpr_functions PRIVATE test/include)
   target_link_libraries(test_constexpr_functions ${PROJECT_NAME} testing_main)
 
+  catkin_add_gtest(test_wavelet_transform test/src/test_wavelet_transform.cc)
+  target_include_directories(test_wavelet_transform PRIVATE test/include)
+  target_link_libraries(test_wavelet_transform ${PROJECT_NAME} testing_main)
+
   if (ENABLE_COVERAGE_TESTING)
     set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test/*" "*/${PROJECT_NAME}/app/*" "*/${PROJECT_NAME}/benchmark/*")
     add_code_coverage(
