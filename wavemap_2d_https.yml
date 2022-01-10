@@ -27,3 +27,7 @@ repositories:
     type: git
     url: https://github.com/ethz-asl/opencv3_catkin.git
     version: master
+  catkin_grpc:
+    type: git
+    url: https://github.com/CogRob/catkin_grpc.git
+    version: master
