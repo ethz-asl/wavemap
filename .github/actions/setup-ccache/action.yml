@@ -15,6 +15,7 @@ runs:
         echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
         mkdir -p $CCACHE_DIR
         ccache --max-size=1G
+        ccache --set-config=compiler_check=content
 
     - name: Setup ccache cache sharing
       uses: actions/cache@v2
