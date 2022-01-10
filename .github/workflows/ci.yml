@@ -26,7 +26,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
+          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
@@ -101,7 +101,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
+          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
@@ -143,7 +143,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
+          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
@@ -192,7 +192,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-debug
+          cache-key: noetic-gcc-debug-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
@@ -245,7 +245,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
+          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
@@ -299,7 +299,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
+          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Setup catkin_ws and install all dependencies
         uses: ./.github/actions/setup-catkin-ws-and-install-deps
