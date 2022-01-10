@@ -17,4 +17,6 @@
   <depend>minkindr</depend>
   <depend>opencv3_catkin</depend>
 
+  <test_depend>code_coverage</test_depend>
+
 </package>

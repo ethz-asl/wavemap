@@ -18,6 +18,7 @@ class DataStructureBase {
 
   explicit DataStructureBase(const FloatingPoint resolution)
       : resolution_(resolution) {}
+  virtual ~DataStructureBase() = default;
 
   virtual bool empty() const = 0;
   virtual size_t size() const = 0;
@@ -51,7 +52,7 @@ class DataStructureBase {
   static std::string getDataFilePath(const std::string& file_path_prefix,
                                      const bool use_floating_precision) {
     return file_path_prefix + "_data." +
-           (use_floating_precision ? "exr" : "jp2");
+           (use_floating_precision ? "tiff" : "jp2");
   }
 };
 }  // namespace wavemap_2d
