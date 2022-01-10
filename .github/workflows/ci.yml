@@ -12,13 +12,81 @@ env:
   CATKIN_WS_PATH: '/home/ci/catkin_ws'
   CCACHE_DIR: '/home/ci/ccache'
   PRE_COMMIT_DIR: '/home/ci/pre-commit'
+  DOCKER_REGISTRY: nikola.vwire.ch:29139
 
 jobs:
-  build:
-    name: Build
+  container:
+    name: Setup container
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    outputs:
+      image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build the image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          load: true
+          tags: wavemap_2d:test
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
+
+      - name: Test the image
+        run: docker run --rm wavemap_2d:test
+
+      - name: Build (from cache) and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
+
+  pre-commit:
+    name: Lint
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
+    steps:
+      - name: Install pre-commit's dependencies
+        run: |
+          apt-get update
+          apt-get install -y git python3-pip clang-format cppcheck
+          pip3 install pre-commit cpplint
+
+      - name: Fetch the package's code
+        uses: actions/checkout@v2
+
+      - name: Get python version for pre-commit cache
+        run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Setup pre-commit cache sharing
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.PRE_COMMIT_DIR }}
+          key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run the pre-commit hooks
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
+          export PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }}
+          pre-commit run --all-files
+          echo "::remove-matcher owner=problem-matcher-pre-commit::"
+
+  build:
+    name: Build
+    needs: container
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -57,43 +125,12 @@ jobs:
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
 
-  pre-commit:
-    name: Lint
-    runs-on: self-hosted
-    container:
-      image: ros:noetic-ros-base-focal
-    steps:
-      - name: Install pre-commit's dependencies
-        run: |
-          apt-get update
-          apt-get install -y git python3-pip clang-format cppcheck
-          pip3 install pre-commit cpplint
-
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
-      - name: Get python version for pre-commit cache
-        run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
-
-      - name: Setup pre-commit cache sharing
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.PRE_COMMIT_DIR }}
-          key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Run the pre-commit hooks
-        run: |
-          echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
-          export PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }}
-          pre-commit run --all-files
-          echo "::remove-matcher owner=problem-matcher-pre-commit::"
-
   clang-tidy:
     name: Clang tidy
     needs: build
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -135,7 +172,7 @@ jobs:
     needs: build
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -184,7 +221,7 @@ jobs:
     needs: test
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -237,7 +274,7 @@ jobs:
     needs: test
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -291,7 +328,7 @@ jobs:
     needs: test
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
