@@ -6,6 +6,7 @@
 
 #include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
+#include "wavemap_2d/discrete_wavelet_transform.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",
@@ -108,6 +109,7 @@ int main(int argc, char** argv) {
       }
     }
   }
+  std::cout << std::endl;
 
   // Save images of the map
   for (const bool use_color : {false, true}) {
@@ -120,6 +122,24 @@ int main(int argc, char** argv) {
         output_log_dir + "map" +
         (use_floating_precision ? "_floating" : "_fixed");
     occupancy_map->save(map_path_prefix, use_floating_precision);
+  }
+
+  // Compress
+  constexpr FloatingPoint kThreshold = 1e-3;
+  const size_t num_non_zero_cells_initial =
+      (kThreshold < occupancy_map->getData().cwiseAbs().array()).count();
+  const int max_num_passes = std::floor(std::log2(std::min(
+      occupancy_map->dimensions().x(), occupancy_map->dimensions().y())));
+  for (int pass_idx = 0; pass_idx < max_num_passes; ++pass_idx) {
+    auto map_data = occupancy_map->getData();
+    DiscreteWaveletTransform::ForwardHaarNaive(map_data, pass_idx);
+    const size_t num_non_zero_cells =
+        (kThreshold < map_data.cwiseAbs().array()).count();
+    std::cout << "Total non-zero cells at pass " << pass_idx << ": "
+              << num_non_zero_cells << "  ("
+              << (static_cast<float>(num_non_zero_cells) /
+                  static_cast<float>(num_non_zero_cells_initial) * 100.f)
+              << "%)" << std::endl;
   }
 
   // Print stats

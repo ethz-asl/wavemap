@@ -11,6 +11,15 @@ template <typename CellTypeT>
 class DenseGrid : public DataStructureBase {
  public:
   using CellType = CellTypeT;
+  using CellDataSpecialized = typename CellTypeT::Specialized;
+  using CellDataBaseFloat = typename CellTypeT::BaseFloat;
+  using CellDataBaseInt = typename CellTypeT::BaseInt;
+
+  template <typename T>
+  using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+  using DataGridSpecialized = DataGrid<CellDataSpecialized>;
+  using DataGridBaseFloat = DataGrid<CellDataBaseFloat>;
+  using DataGridBaseInt = DataGrid<CellDataBaseInt>;
 
   explicit DenseGrid(const FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -29,6 +38,7 @@ class DenseGrid : public DataStructureBase {
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
+  const DataGridSpecialized& getData() { return data_; }
 
   cv::Mat getImage(bool use_color) const override;
   bool save(const std::string& file_path_prefix,
@@ -37,16 +47,6 @@ class DenseGrid : public DataStructureBase {
             bool used_floating_precision) override;
 
  protected:
-  using CellDataSpecialized = typename CellTypeT::Specialized;
-  using CellDataBaseFloat = typename CellTypeT::BaseFloat;
-  using CellDataBaseInt = typename CellTypeT::BaseInt;
-
-  template <typename T>
-  using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-  using DataGridSpecialized = DataGrid<CellDataSpecialized>;
-  using DataGridBaseFloat = DataGrid<CellDataBaseFloat>;
-  using DataGridBaseInt = DataGrid<CellDataBaseInt>;
-
   Index min_index_;
   Index max_index_;
 
