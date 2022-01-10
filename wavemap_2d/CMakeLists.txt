@@ -3,6 +3,7 @@ project(wavemap_2d)
 
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
+
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
 endif ()
