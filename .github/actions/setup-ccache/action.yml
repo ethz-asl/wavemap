@@ -21,3 +21,7 @@ runs:
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ inputs.cache-key }}
+
+    - name: Zero ccache stats
+      shell: bash
+      run: ccache --zero-stats
