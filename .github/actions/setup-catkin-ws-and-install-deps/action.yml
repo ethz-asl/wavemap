@@ -22,6 +22,8 @@ runs:
         echo "::endgroup::"
 
     - shell: bash
+      env:
+        DEBIAN_FRONTEND: noninteractive  # For rosdep
       run: |
         echo "::group::Create catkin_ws and install package dependencies"
         mkdir -p ${{ env.CATKIN_WS_PATH }}/src
