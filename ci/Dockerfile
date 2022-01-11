@@ -29,3 +29,8 @@ RUN apt-get install -y libopencv-viz-dev
 #       to source /opt/ros/noetic/setup.bash before the future first "real" catkin build call
 RUN . /opt/ros/noetic/setup.sh && \
     catkin build catkin_simple --no-status
+
+# Update the entrypoint to source the workspace
+RUN sed --in-place \
+      's|^source .*|source "/home/ci/catkin_ws/devel/setup.bash"|' \
+      /ros_entrypoint.sh
