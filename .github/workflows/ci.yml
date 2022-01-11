@@ -23,7 +23,7 @@ jobs:
     outputs:
       image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
     steps:
-      - name: Checkout
+      - name: Fetch the package's code
         uses: actions/checkout@v2
 
       - name: Set up Docker Buildx
@@ -32,7 +32,7 @@ jobs:
       - name: Build the image
         uses: docker/build-push-action@v2
         with:
-          context: ci
+          context: .
           load: true
           tags: wavemap_2d:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -44,7 +44,7 @@ jobs:
       - name: Build (from cache) and push
         uses: docker/build-push-action@v2
         with:
-          context: ci
+          context: .
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -88,18 +88,10 @@ jobs:
     container:
       image: ${{ needs.container.outputs.image }}
     steps:
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
       - name: Build wavemap_2d's catkin package depencencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -132,18 +124,10 @@ jobs:
     container:
       image: ${{ needs.container.outputs.image }}
     steps:
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
       - name: Install clang-tidy
         run: apt-get install -y clang-tidy
@@ -174,18 +158,10 @@ jobs:
     container:
       image: ${{ needs.container.outputs.image }}
     steps:
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
       - name: Build catkin package depencencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -223,18 +199,15 @@ jobs:
     container:
       image: ${{ needs.container.outputs.image }}
     steps:
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-debug-${{ secrets.CCACHE_CACHE_VERSION }}
 
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Debug
+      - name: Configure catkin to compile in debug mode
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build catkin package dependencies (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -276,18 +249,10 @@ jobs:
     container:
       image: ${{ needs.container.outputs.image }}
     steps:
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
       - name: Build catkin package depencencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -330,18 +295,10 @@ jobs:
     container:
       image: ${{ needs.container.outputs.image }}
     steps:
-      - name: Fetch the package's code
-        uses: actions/checkout@v2
-
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
 
       - name: Install Valgrind
         run: apt-get install -y valgrind

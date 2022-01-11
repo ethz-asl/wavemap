@@ -8,20 +8,18 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install and configure ccache
-      shell: bash
-      run: |
-        apt-get update && apt-get install -y ccache
-        echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
-        mkdir -p $CCACHE_DIR
-        ccache --max-size=1G
-        ccache --set-config=compiler_check=content
-
     - name: Setup ccache cache sharing
       uses: actions/cache@v2
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ inputs.cache-key }}
+
+    - name: Configure ccache
+      shell: bash
+      run: |
+        echo "PATH="/usr/lib/ccache:$PATH"" >> $GITHUB_ENV
+        ccache --max-size=1G
+        ccache --set-config=compiler_check=content
 
     - name: Reset ccache stats to get per-run statistics
       shell: bash
