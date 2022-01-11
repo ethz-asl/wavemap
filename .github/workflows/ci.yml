@@ -33,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ci/Dockerfile
+          file: .github/Dockerfile
           load: true
           tags: wavemap_2d:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -46,7 +46,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ci/Dockerfile
+          file: .github/Dockerfile
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -132,7 +132,9 @@ jobs:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Install clang-tidy
-        run: apt-get install -y clang-tidy
+        run: |
+          apt-get update
+          apt-get install -y clang-tidy
 
       - name: Build catkin package and dependencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -303,7 +305,9 @@ jobs:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Install Valgrind
-        run: apt-get install -y valgrind
+        run: |
+          apt-get update
+          apt-get install -y valgrind
 
       - name: Build catkin package depencencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
