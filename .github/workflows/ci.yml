@@ -32,7 +32,7 @@ jobs:
       - name: Build the image
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ci
           load: true
           tags: wavemap_2d:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -44,7 +44,7 @@ jobs:
       - name: Build (from cache) and push
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ci
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -127,7 +127,7 @@ jobs:
 
   clang-tidy:
     name: Clang tidy
-    needs: build
+    needs: [container, build]
     runs-on: self-hosted
     container:
       image: ${{ needs.container.outputs.image }}
@@ -169,7 +169,7 @@ jobs:
 
   test:
     name: Test
-    needs: build
+    needs: [container, build]
     runs-on: self-hosted
     container:
       image: ${{ needs.container.outputs.image }}
@@ -218,7 +218,7 @@ jobs:
 
   coverage:
     name: Coverage
-    needs: test
+    needs: [container, test]
     runs-on: self-hosted
     container:
       image: ${{ needs.container.outputs.image }}
@@ -271,7 +271,7 @@ jobs:
           #       stdlib instead of GCCs,...). We therefore use Valgrind to
           #       check for uninitialized memory usage errors instead.
       fail-fast: false
-    needs: test
+    needs: [container, test]
     runs-on: self-hosted
     container:
       image: ${{ needs.container.outputs.image }}
@@ -325,7 +325,7 @@ jobs:
 
   valgrind:
     name: Valgrind memcheck
-    needs: test
+    needs: [container, test]
     runs-on: self-hosted
     container:
       image: ${{ needs.container.outputs.image }}
