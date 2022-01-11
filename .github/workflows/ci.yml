@@ -33,6 +33,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
+          file: ci/Dockerfile
           load: true
           tags: wavemap_2d:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -45,6 +46,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
+          file: ci/Dockerfile
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache

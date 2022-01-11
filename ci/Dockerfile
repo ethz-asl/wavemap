@@ -8,7 +8,7 @@ RUN apt-get update && \
 
 COPY . /home/ci/catkin_ws/src/wavemap_2d/
 
-# Create catkin_ws and install package dependencies
+# Create catkin_ws and configure catkin
 WORKDIR /home/ci/catkin_ws
 RUN . /opt/ros/noetic/setup.sh && \
     catkin init && \
