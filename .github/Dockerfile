@@ -1,6 +1,6 @@
 ARG FROM_IMAGE=ros:noetic-ros-base-focal
 ARG CATKIN_WS=/home/ci/catkin_ws
-
+ARG ROS_HOME=/home/ci/.ros
 
 FROM $FROM_IMAGE AS cacher
 
@@ -38,6 +38,7 @@ COPY --from=cacher /tmp/$CATKIN_WS .
 #       opencv3's dependencies (seemingly required but missing on headless
 #       systems and not declared through rosdep).
 ARG DEBIAN_FRONTEND=noninteractive
+ENV ROS_HOME $ROS_HOME
 RUN apt-get update && \
     apt-get install -q -y git tree python3-catkin-tools python3-vcstool ccache libopencv-viz-dev && \
     rosdep update && \
