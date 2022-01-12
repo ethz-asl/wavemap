@@ -49,8 +49,6 @@ DEFINE_double(Qw, 0.0,
 using namespace wavemap_2d;                // NOLINT
 using namespace wavemap_2d::ground_truth;  // NOLINT
 int main(int argc, char* argv[]) {
-  using PointcloudMsg = pcl::PointCloud<pcl::PointXYZI>;
-
   std::stringstream required_args;
   required_args << "ply_input_filepath occupancy_grid_output_filepath "
                    "resolution slice_height scale_factor x y z Qx Qy Qz Qw";

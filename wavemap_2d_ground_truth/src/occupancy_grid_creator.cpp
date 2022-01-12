@@ -24,7 +24,8 @@ void OccupancyGridCreator::integrateTriangle(const Triangle& triangle) {
   }
 }
 
-void OccupancyGridCreator::floodfillUnoccupied(FloatingPoint distance_value) {
+void OccupancyGridCreator::floodfillUnoccupied(
+    FloatingPoint /*distance_value*/) {
   // TODO(victorr): Implement BFS based flood fill
 }
 
