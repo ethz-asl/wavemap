@@ -5,8 +5,9 @@ ARG CATKIN_WS=/home/ci/catkin_ws
 FROM $FROM_IMAGE AS cacher
 
 # Install vcstool
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
-    apt-get install -y git python3-vcstool && \
+    apt-get install -q -y git python3-vcstool && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy in the project's source
@@ -38,9 +39,9 @@ COPY --from=cacher /tmp/$CATKIN_WS .
 #       systems and not declared through rosdep).
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
-    apt-get install -y git tree python3-catkin-tools python3-vcstool ccache libopencv-viz-dev && \
+    apt-get install -q -y git tree python3-catkin-tools python3-vcstool ccache libopencv-viz-dev && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src --skip-keys="numpy_eigen catkin_boost_python_buildtool" -y && \
+    rosdep install --from-paths src --ignore-src --skip-keys="numpy_eigen catkin_boost_python_buildtool" -q -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Load the rest of the catkin workspace
