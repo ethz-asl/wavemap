@@ -21,8 +21,8 @@ jobs:
     container:
       image: docker:20.10.9-dind
     outputs:
-      workspace-image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
-      built-deps-image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/built-deps:${{ github.sha }}
+      image-workspace: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
+      image-workspace-built-deps: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace-built-deps:${{ github.sha }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -36,7 +36,7 @@ jobs:
           context: .
           file: .github/Dockerfile
           target: workspace
-          load: trueFROM_IMAGE
+          load: true
           tags: wavemap_2d/workspace:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
@@ -60,23 +60,23 @@ jobs:
         with:
           context: .
           file: .github/Dockerfile
-          target: build-dependencies
+          target: workspace-built-deps
           load: true
-          tags: wavemap_2d/built-deps:test
+          tags: wavemap_2d/workspace-built-deps:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
 
       - name: Test the built-dependencies image
-        run: docker run --rm wavemap_2d/built-deps:test
+        run: docker run --rm wavemap_2d/workspace-built-deps:test
 
       - name: Push the built-dependencies image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: .github/Dockerfile
-          target: build-dependencies
+          target: workspace-built-deps
           push: true
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/built-deps:${{ github.sha }}
+          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace-built-deps:${{ github.sha }}
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
 
@@ -116,7 +116,7 @@ jobs:
     needs: container
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.built-deps-image }}
+      image: ${{ needs.container.outputs.image-workspace-built-deps }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -147,7 +147,7 @@ jobs:
     needs: [ container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.built-deps-image }}
+      image: ${{ needs.container.outputs.image-workspace-built-deps }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -183,7 +183,7 @@ jobs:
     needs: [ container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.built-deps-image }}
+      image: ${{ needs.container.outputs.image-workspace-built-deps }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -219,7 +219,7 @@ jobs:
     needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.workspace-image }}
+      image: ${{ needs.container.outputs.image-workspace }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -269,7 +269,7 @@ jobs:
     needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.built-deps-image }}
+      image: ${{ needs.container.outputs.image-workspace-built-deps }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -310,7 +310,7 @@ jobs:
     needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.built-deps-image }}
+      image: ${{ needs.container.outputs.image-workspace-built-deps }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
