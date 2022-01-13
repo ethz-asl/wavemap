@@ -16,12 +16,13 @@ env:
 
 jobs:
   container:
-    name: Setup container
+    name: Setup containers
     runs-on: self-hosted
     container:
       image: docker:20.10.9-dind
     outputs:
-      image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
+      workspace-image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
+      built-deps-image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/built-deps:${{ github.sha }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -29,26 +30,53 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Build the image
+      - name: Build the workspace image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: .github/Dockerfile
-          load: true
-          tags: wavemap_2d:test
+          target: workspace
+          load: trueFROM_IMAGE
+          tags: wavemap_2d/workspace:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
 
-      - name: Test the image
-        run: docker run --rm wavemap_2d:test
+      - name: Test the workspace image
+        run: docker run --rm wavemap_2d/workspace:test
 
-      - name: Build (from cache) and push
+      - name: Push the workspace image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: .github/Dockerfile
+          target: workspace
           push: true
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:${{ github.sha }}
+          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
+
+      - name: Build the built-dependencies image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: .github/Dockerfile
+          target: build-dependencies
+          load: true
+          tags: wavemap_2d/built-deps:test
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
+
+      - name: Test the built-dependencies image
+        run: docker run --rm wavemap_2d/built-deps:test
+
+      - name: Push the built-dependencies image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: .github/Dockerfile
+          target: build-dependencies
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/built-deps:${{ github.sha }}
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
 
@@ -88,17 +116,12 @@ jobs:
     needs: container
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.container.outputs.built-deps-image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Build wavemap_2d's catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
       - name: Build wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -121,10 +144,10 @@ jobs:
 
   clang-tidy:
     name: Clang tidy
-    needs: [container, build]
+    needs: [ container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.container.outputs.built-deps-image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -157,20 +180,15 @@ jobs:
 
   test:
     name: Test
-    needs: [container, build]
+    needs: [ container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.container.outputs.built-deps-image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Build catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -198,10 +216,10 @@ jobs:
 
   coverage:
     name: Coverage
-    needs: [container, test]
+    needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.container.outputs.workspace-image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -248,20 +266,15 @@ jobs:
           #       stdlib instead of GCCs,...). We therefore use Valgrind to
           #       check for uninitialized memory usage errors instead.
       fail-fast: false
-    needs: [container, test]
+    needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.container.outputs.built-deps-image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
-
-      - name: Build catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -294,10 +307,10 @@ jobs:
 
   valgrind:
     name: Valgrind memcheck
-    needs: [container, test]
+    needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.container.outputs.built-deps-image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -308,11 +321,6 @@ jobs:
         run: |
           apt-get update
           apt-get install -y valgrind
-
-      - name: Build catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}

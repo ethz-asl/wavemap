@@ -26,7 +26,7 @@ RUN mkdir -p /tmp/$CATKIN_WS && \
       xargs cp --parents -t /tmp/$CATKIN_WS || true
 
 
-FROM $FROM_IMAGE AS builder
+FROM $FROM_IMAGE AS workspace
 
 # Load the cached manifests
 ARG CATKIN_WS
@@ -40,7 +40,7 @@ COPY --from=cacher /tmp/$CATKIN_WS .
 ARG DEBIAN_FRONTEND=noninteractive
 ENV ROS_HOME $ROS_HOME
 RUN apt-get update && \
-    apt-get install -q -y git tree python3-catkin-tools python3-vcstool ccache libopencv-viz-dev && \
+    apt-get install -q -y git python3-catkin-tools ccache libopencv-viz-dev && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src --skip-keys="numpy_eigen catkin_boost_python_buildtool" -q -y && \
     rm -rf /var/lib/apt/lists/*
@@ -61,3 +61,23 @@ ENV CATKIN_WS $CATKIN_WS
 RUN sed --in-place \
       's|^source .*|source "$CATKIN_WS/devel/setup.bash"|' \
       /ros_entrypoint.sh
+
+
+FROM workspace AS builder
+# TODO(victorr): Load ccache and build, then adapt build-dependencies to only
+#                pull in the built catkin_ws and add an output stage to pull out
+#                the updated ccache cacche
+# TODO(victorr): Add mechanism to only pull cache out when the dependencies
+#                changed
+# TODO(victorr): Improve caching by pulling in and building source deps before
+#                pulling in package code (since the deps don't change often,
+#                this might even remove the need for ccache)
+
+
+FROM workspace AS build-dependencies
+
+WORKDIR $CATKIN_WS
+RUN export PATH="/usr/lib/ccache:$PATH" && \
+    ccache --max-size=1G && \
+    ccache --set-config=compiler_check=content && \
+    catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
