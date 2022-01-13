@@ -34,6 +34,7 @@ jobs:
           context: .
           file: .github/Dockerfile
           target: workspace
+          build-args: BUILDKIT_INLINE_CACHE=1
           load: true
           tags: wavemap_2d:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -47,6 +48,7 @@ jobs:
           context: .
           file: .github/Dockerfile
           target: workspace
+          build-args: BUILDKIT_INLINE_CACHE=1
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
 
@@ -56,6 +58,7 @@ jobs:
           context: .
           file: .github/Dockerfile
           target: workspace-built-deps
+          build-args: BUILDKIT_INLINE_CACHE=1
           load: true
           tags: wavemap_2d:test
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
@@ -69,9 +72,11 @@ jobs:
           context: .
           file: .github/Dockerfile
           target: workspace-built-deps
+          build-args: BUILDKIT_INLINE_CACHE=1
           push: true
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace-built-deps:${{ github.sha }}
-          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace-built-deps:${{ github.sha }}
+            ${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
 
   pre-commit:
     name: Lint
