@@ -17,7 +17,8 @@ COPY . src/wavemap_2d/
 
 # Import from-source dependencies with vcstool
 RUN mkdir src/dependencies && \
-    vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src/dependencies
+    vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml \
+      src/dependencies
 
 # Cache the manifests for use in subsequent stages
 RUN mkdir -p /tmp/$CATKIN_WS && \
@@ -27,8 +28,12 @@ RUN mkdir -p /tmp/$CATKIN_WS && \
       xargs cp --parents -t /tmp/$CATKIN_WS || true
 
 # Cache the package dependencies for use in subsequent stages
+# NOTE: The access/modification times are fixed to avoid metadata-based cache
+#       misses. This is safe since only the contents of this file matter.
 RUN catkin init && \
-    echo $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)') > /tmp/wavemap_2d_deps
+    echo $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | \
+      grep -oP '(?<= - ).*?(?=$)') > /tmp/wavemap_2d_dependency_list && \
+    touch -d '2020-01-01 0:00:00' /tmp/wavemap_2d_dependency_list
 
 
 FROM $FROM_IMAGE AS system-deps-installer
@@ -43,15 +48,17 @@ COPY --from=cacher /tmp/$CATKIN_WS .
 #       opencv3's dependencies (required but seemingly missing on headless
 #       systems and not declared through rosdep).
 ARG DEBIAN_FRONTEND=noninteractive
+ARG ROS_HOME
 ENV ROS_HOME $ROS_HOME
 RUN apt-get update && \
     apt-get install -q -y git python3-catkin-tools ccache libopencv-viz-dev && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src --skip-keys="numpy_eigen catkin_boost_python_buildtool" -q -y && \
+    rosdep install --from-paths src --ignore-src \
+      --skip-keys="numpy_eigen catkin_boost_python_buildtool" -q -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Add ccache to the path
-ENV PATH="/usr/lib/ccache:${PATH}"
+ENV PATH "/usr/lib/ccache:${PATH}"
 
 
 FROM system-deps-installer AS workspace-underlay
@@ -61,40 +68,50 @@ ARG CATKIN_WS
 WORKDIR $CATKIN_WS
 COPY --from=cacher $CATKIN_WS/src/dependencies src/dependencies
 
-# Update the entrypoint to source the workspace that will be built in the following steps
-ENV CATKIN_WS $CATKIN_WS
-RUN sed --in-place \
-      's|^source .*|source "$CATKIN_WS/devel/setup.bash"|' \
-      /ros_entrypoint.sh
+# Setup the catkin workspace
+RUN . /opt/ros/noetic/setup.sh && \
+    catkin init && \
+    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 
 FROM workspace-underlay AS workspace
 
 # Load the package source code
+ARG CATKIN_WS
+WORKDIR $CATKIN_WS
 COPY --from=cacher $CATKIN_WS/src/wavemap_2d src/wavemap_2d
 
 # Configure and bootstrap catkin
-# NOTE: Build any small package to create catkin_ws/devel/setup.bash, removing the need
-#       to source /opt/ros/noetic/setup.bash before the future first "real" catkin build call
+# NOTE: We build an (arbitrary) small package to create
+#       catkin_ws/devel/setup.bash, such that we can directly
+#       source our workspace in the container entrypoint script
 RUN . /opt/ros/noetic/setup.sh && \
-    catkin init && \
-    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
     catkin build catkin_simple --no-status
+
+# Update the entrypoint to source the workspace
+RUN sed --in-place \
+      's|^source .*|source "'$CATKIN_WS'/devel/setup.bash"|' \
+      /ros_entrypoint.sh
 
 
 FROM workspace-underlay AS workspace-built-deps
 
-# Build the from-source dependencies
+# Copy the from-source dependencies
 ARG CATKIN_WS
 WORKDIR $CATKIN_WS
-COPY --from=cacher /tmp/wavemap_2d_deps wavemap_2d_deps
+COPY --from=cacher /tmp/wavemap_2d_dependency_list wavemap_2d_dependency_list
+
+# Build the from-source dependencies
 RUN . /opt/ros/noetic/setup.sh && \
-    catkin init && \
-    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-    catkin build --no-status --force-color $(cat wavemap_2d_deps)
+    catkin build --no-status --force-color $(cat wavemap_2d_dependency_list)
 
 # Load the package source code
 COPY --from=cacher $CATKIN_WS/src/wavemap_2d src/wavemap_2d
+
+# Update the entrypoint to source the workspace
+RUN sed --in-place \
+      's|^source .*|source "'$CATKIN_WS'/devel/setup.bash"|' \
+      /ros_entrypoint.sh
 
 
 FROM workspace-built-deps AS workspace-built-full
