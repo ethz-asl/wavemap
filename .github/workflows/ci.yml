@@ -22,6 +22,10 @@ jobs:
       image-workspace: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
       image-workspace-built-deps: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace-built-deps:${{ github.sha }}
     steps:
+      # TODO(victorr): Perform full pruning if less than X Gb left
+      - name: Make space for the builds
+        run: docker system prune -f
+
       - name: Fetch the package's code
         uses: actions/checkout@v2
 
