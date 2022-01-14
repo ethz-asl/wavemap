@@ -19,12 +19,11 @@ jobs:
     name: Setup containers
     runs-on: self-hosted
     outputs:
-      image-workspace: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
-      image-workspace-built-deps: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace-built-deps:${{ github.sha }}
+      image-workspace: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+      image-workspace-built-deps: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
     steps:
-      # TODO(victorr): Perform full pruning if less than X Gb left
       - name: Make space for the builds
-        run: docker system prune -f
+        run: docker system prune -af --volumes
 
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -32,55 +31,52 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Build the workspace image
+      - name: Build the workspace-underlay image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: .github/Dockerfile
-          target: workspace
-          build-args: BUILDKIT_INLINE_CACHE=1
+          target: workspace-underlay
+          pull: true
           load: true
-          tags: wavemap_2d:test
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-underlay-buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-underlay-buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-underlay-${{ github.sha }}
 
-      - name: Test the workspace image
-        run: docker run --rm wavemap_2d:test
+      - name: Test the workspace-underlay image
+        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-underlay-${{ github.sha }}
 
-      - name: Push the workspace image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: .github/Dockerfile
-          target: workspace
-          build-args: BUILDKIT_INLINE_CACHE=1
-          push: true
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace:${{ github.sha }}
-
-      - name: Build the built-dependencies image
+      - name: Build the workspace-built-deps image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: .github/Dockerfile
           target: workspace-built-deps
-          build-args: BUILDKIT_INLINE_CACHE=1
+          pull: true
           load: true
-          tags: wavemap_2d:test
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
+          cache-from: |
+            type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-buildcache
+            type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-underlay-buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
 
-      - name: Test the built-dependencies image
-        run: docker run --rm wavemap_2d:test
+      - name: Test the workspace-built-deps image
+        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
 
-      - name: Push the built-dependencies image
+      - name: Push the workspace-built-deps image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: .github/Dockerfile
           target: workspace-built-deps
-          build-args: BUILDKIT_INLINE_CACHE=1
           push: true
-          tags: |
-            ${{ env.DOCKER_REGISTRY }}/wavemap_2d/workspace-built-deps:${{ github.sha }}
-            ${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
+          cache-from: |
+            type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-buildcache
+            type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-underlay-buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+
+      - name: Clean up
+        run: docker system prune -af --volumes
 
   pre-commit:
     name: Lint
