@@ -20,12 +20,25 @@ RUN mkdir src/dependencies && \
     vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml \
       src/dependencies
 
-# Cache the manifests for use in subsequent stages
-RUN mkdir -p /tmp/$CATKIN_WS && \
-    find ./ -name "package.xml" | \
-      xargs cp --parents -t /tmp/$CATKIN_WS && \
-    find ./ -name "CATKIN_IGNORE" | \
-      xargs cp --parents -t /tmp/$CATKIN_WS || true
+# Cache the manifests of all packages for use in subsequent stages
+RUN mkdir -p /tmp/manifests && \
+    find ./src -name "package.xml" | \
+      xargs cp --parents -t /tmp/manifests && \
+    find ./src -name "CATKIN_IGNORE" | \
+      xargs cp --parents -t /tmp/manifests || true && \
+    echo "Manifests hash:" && \
+    find /tmp/manifests -type f -print0 | sort -z | \
+      xargs -0 sha1sum | sha1sum
+
+# Cache the dependencies source code for use in subsequent stages
+# NOTE: We filter out the git histories since these change even if the code
+#       didn't, which causes unnecessary Docker build cache misses.
+RUN mkdir -p /tmp/filtered_sources && \
+    find ./src/dependencies -type d -name .git -prune -o -type f -print | \
+      xargs cp --parents -t /tmp/filtered_sources || true && \
+    echo "Filtered dependencies sources hash:" && \
+    find /tmp/filtered_sources -type f -print0 | sort -z | \
+      xargs -0 sha1sum | sha1sum
 
 
 FROM $FROM_IMAGE AS system-deps-installer
@@ -33,7 +46,7 @@ FROM $FROM_IMAGE AS system-deps-installer
 # Load the cached manifests
 ARG CATKIN_WS
 WORKDIR $CATKIN_WS
-COPY --from=cacher /tmp/$CATKIN_WS .
+COPY --from=cacher /tmp/manifests .
 
 # Install general and ROS-related system dependencies
 # NOTE: Manually installing opencv_viz is a temporary workaround to satisfy
@@ -53,20 +66,7 @@ RUN apt-get update && \
 ENV PATH "/usr/lib/ccache:${PATH}"
 
 
-FROM system-deps-installer AS workspace-underlay
-
-# Load the dependencies source code
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
-COPY --from=cacher $CATKIN_WS/src/dependencies src/dependencies
-
-# Setup the catkin workspace
-RUN . /opt/ros/noetic/setup.sh && \
-    catkin init && \
-    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-
-FROM workspace-underlay AS workspace
+FROM system-deps-installer AS workspace
 
 # Configure and bootstrap catkin
 # NOTE: We build an (arbitrary) small package to create
@@ -74,41 +74,49 @@ FROM workspace-underlay AS workspace
 #       source our workspace in the container entrypoint script
 ARG CATKIN_WS
 WORKDIR $CATKIN_WS
+COPY --from=cacher $CATKIN_WS/src/wavemap_2d/ci src/wavemap_2d/ci
 RUN . /opt/ros/noetic/setup.sh && \
-    catkin build catkin_simple --no-status
-
-# Load the package source code
-COPY --from=cacher $CATKIN_WS/src/wavemap_2d src/wavemap_2d
+    catkin init && \
+    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
+    catkin build catkin_setup --no-status
 
 # Update the entrypoint to source the workspace
 RUN sed --in-place \
       's|^source .*|source "'$CATKIN_WS'/devel/setup.bash"|' \
       /ros_entrypoint.sh
 
+# Load the workspace sources
+COPY --from=cacher $CATKIN_WS/src src
 
-FROM workspace-underlay AS workspace-built-deps
 
-# Load the package's manifest to resolve its dependencies
+FROM system-deps-installer AS workspace-built-deps
+
+# Load the dependencies source code and our package's manifest
+# to resolve which dependencies should be built
 ARG CATKIN_WS
 WORKDIR $CATKIN_WS
-COPY --from=cacher $CATKIN_WS/src/wavemap_2d/wavemap_2d/package.xml src/wavemap_2d/wavemap_2d/package.xml
+COPY --from=cacher /tmp/filtered_sources/src/dependencies src/dependencies
+COPY --from=cacher $CATKIN_WS/src/wavemap_2d/wavemap_2d/package.xml \
+                   src/wavemap_2d/wavemap_2d/package.xml
 
-# Setup the catkin workspace and build the from-source dependencies
+# Setup the catkin workspace and build the dependencies
 RUN . /opt/ros/noetic/setup.sh && \
+    catkin init && \
+    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
     catkin build --no-status --force-color \
       $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | \
         grep -oP '(?<= - ).*?(?=$)')
 
-# Load the package source code
-COPY --from=cacher $CATKIN_WS/src/wavemap_2d src/wavemap_2d
-
 # Update the entrypoint to source the workspace
 RUN sed --in-place \
       's|^source .*|source "'$CATKIN_WS'/devel/setup.bash"|' \
       /ros_entrypoint.sh
 
+# Load the remaining workspace sources
+COPY --from=cacher $CATKIN_WS/src src
 
-FROM workspace-underlay AS workspace-built-full
+
+FROM workspace-built-deps AS workspace-built-full
 
 # Build the package
 ARG CATKIN_WS
