@@ -67,6 +67,12 @@ jobs:
       - name: Make sure a ccache directory exists
         run: mkdir -p ccache
 
+      - name: Measure the build time
+        id: start-time
+        run: |
+          stamp=$(date +%s)
+          echo "::set-output name=stamp::${stamp}"
+
       - name: Build the workspace-built-deps image
         uses: docker/build-push-action@v2
         with:
@@ -79,6 +85,17 @@ jobs:
             type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-buildcache,mode=max
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+
+      - name: Determine whether the ccache cache should be updated
+        id: should-writeback-ccache
+        run: |
+          runtime=$(( $(date +%s) - ${{needs.start-time.outputs.stamp}} ))
+          echo $runtime
+          answer=false
+          if [ 180 -le $runtime ]; then
+            answer=true
+          fi
+          echo "::set-output name=answer::${answer}"
 
       - name: Test the workspace-built-deps image
         run: docker run --rm ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
@@ -96,6 +113,7 @@ jobs:
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
 
       - name: Write back the build's ccache cache
+        if: steps.should-writeback-ccache.outputs.answer == 'true'
         uses: docker/build-push-action@v2
         with:
           context: .
