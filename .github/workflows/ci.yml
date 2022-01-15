@@ -18,8 +18,8 @@ env:
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
 jobs:
-  container:
-    name: Setup containers
+  workspace-container:
+    name: Setup workspace container
     runs-on: self-hosted
     container:
       image: docker:20.10.9-dind
@@ -116,18 +116,37 @@ jobs:
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
           outputs: type=local,dest=ccache
 
-  pre-commit:
-    name: Lint
+  pre-commit-container:
+    name: Setup pre-commit container
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: docker:20.10.9-dind
+    outputs:
+      image: ${{ env.DOCKER_REGISTRY }}/pre-commit:latest
     steps:
-      - name: Install pre-commit's dependencies
-        run: |
-          apt-get update
-          apt-get install -y git python3-pip clang-format cppcheck
-          pip3 install pre-commit cpplint
+      - name: Fetch the package's repository
+        uses: actions/checkout@v2
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push the pre-commit image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: .github/pre-commit.Dockerfile
+          push: true
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/pre-commit:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/pre-commit:buildcache,mode=max
+          tags: ${{ env.DOCKER_REGISTRY }}/pre-commit:latest
+
+  pre-commit:
+    name: Lint
+    needs: pre-commit-container
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.pre-commit-container.outputs.image }}
+    steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
         # NOTE: This has to be done after installing pre-commit, s.t. the
@@ -151,10 +170,10 @@ jobs:
 
   build:
     name: Build
-    needs: container
+    needs: workspace-container
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -188,10 +207,10 @@ jobs:
 
   clang-tidy:
     name: Clang tidy
-    needs: [ container, build ]
+    needs: [ workspace-container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -230,10 +249,10 @@ jobs:
 
   test:
     name: Test
-    needs: [ container, build ]
+    needs: [ workspace-container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -272,10 +291,10 @@ jobs:
 
   coverage:
     name: Coverage
-    needs: [ container, test ]
+    needs: [ workspace-container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -315,6 +334,10 @@ jobs:
 
   sanitize:
     name: Sanitize ${{ matrix.sanitizer.detects }}
+    needs: [ workspace-container, test ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
     strategy:
       matrix:
         sanitizer:
@@ -326,10 +349,6 @@ jobs:
           #       stdlib instead of GCCs,...). We therefore use Valgrind to
           #       check for uninitialized memory usage errors instead.
       fail-fast: false
-    needs: [ container, test ]
-    runs-on: self-hosted
-    container:
-      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -373,10 +392,10 @@ jobs:
 
   valgrind:
     name: Valgrind memcheck
-    needs: [ container, test ]
+    needs: [ workspace-container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image }}
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
