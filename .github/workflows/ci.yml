@@ -9,10 +9,15 @@ on:
 #       dir persists between jobs when using self-hosted GitHub Actions runners
 #       (/github/home is a docker volume mapped to the container's host).
 env:
-  CATKIN_WS_PATH: '/home/ci/catkin_ws'
-  CCACHE_DIR: '/home/ci/ccache'
-  PRE_COMMIT_DIR: '/home/ci/pre-commit'
+  REPOSITORY_NAME: wavemap_2d
   DOCKER_REGISTRY: nikola.vwire.ch:29139
+  DOCKER_TARGET: workspace-built-deps
+  ROS_HOME: /home/ci/.ros
+  CATKIN_WS_PATH: /home/ci/catkin_ws
+  ACTIONS_PATH: ./src/wavemap_2d/.github/actions
+  PROBLEM_MATCHERS_PATH: ./src/wavemap_2d/.github/problem-matchers
+  CCACHE_DIR: /home/ci/ccache
+  PRE_COMMIT_DIR: /home/ci/pre-commit
 
 jobs:
   container:
@@ -21,12 +26,12 @@ jobs:
     container:
       image: docker:20.10.9-dind
     outputs:
-      image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+      image: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
         with:
-          path: wavemap_2d
+          path: ${{ env.REPOSITORY_NAME }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -46,16 +51,23 @@ jobs:
           stamp=$(date +%s)
           echo "::set-output name=stamp::${stamp}"
 
-      - name: Build the workspace-built-deps image
+      - name: Build the ${{ env.DOCKER_TARGET }} image
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: wavemap_2d/.github/Dockerfile
-          target: workspace-built-deps
+          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          target: ${{ env.DOCKER_TARGET }}
+          build-args: |
+            FROM_IMAGE=ros:noetic-ros-base-focal
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=wavemap_2d
           load: true
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache,mode=max
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache,mode=max
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
 
       - name: Determine whether the ccache cache should be updated
         id: should-writeback-ccache
@@ -68,28 +80,42 @@ jobs:
           fi
           echo "::set-output name=answer::${answer}"
 
-      - name: Test the workspace-built-deps image
-        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+      - name: Test the ${{ env.DOCKER_TARGET }} image
+        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
 
-      - name: Push the workspace-built-deps image
+      - name: Push the ${{ env.DOCKER_TARGET }} image
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: wavemap_2d/.github/Dockerfile
-          target: workspace-built-deps
+          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          target: ${{ env.DOCKER_TARGET }}
+          build-args: |
+            FROM_IMAGE=ros:noetic-ros-base-focal
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=wavemap_2d
           push: true
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
 
       - name: Write back the build's ccache cache
         if: steps.should-writeback-ccache.outputs.answer == 'true'
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: wavemap_2d/.github/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
           target: workspace-deps-builder-ccache-extractor
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+          build-args: |
+            FROM_IMAGE=ros:noetic-ros-base-focal
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=wavemap_2d
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
           outputs: type=local,dest=ccache
 
   pre-commit:
@@ -118,7 +144,7 @@ jobs:
 
       - name: Run the pre-commit hooks
         run: |
-          echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/pre-commit.json"
           export PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }}
           pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
@@ -131,7 +157,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
+        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -139,7 +165,7 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc.json"
           catkin build wavemap_2d --no-status --force-color --no-deps
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
@@ -147,12 +173,12 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc.json"
           catkin build wavemap_2d_ground_truth --no-status --force-color
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Show statistics for ccache
-        uses: ./.github/actions/log-ccache-stats
+        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
 
   clang-tidy:
     name: Clang tidy
@@ -162,7 +188,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
+        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -179,14 +205,14 @@ jobs:
       - name: Run clang-tidy for wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
         run: |
-          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/clang-tidy.json"
           run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
       - name: Run clang-tidy for wavemap_2d_ground_truth
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d_ground_truth
         run: |
-          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/clang-tidy.json"
           run-clang-tidy -header-filter="*include/wavemap_2d_ground_truth/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
@@ -198,7 +224,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
+        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -206,7 +232,7 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc.json"
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
@@ -224,7 +250,7 @@ jobs:
           fi
 
       - name: Show statistics for ccache
-        uses: ./.github/actions/log-ccache-stats
+        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
 
   coverage:
     name: Coverage
@@ -234,7 +260,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
+        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
         with:
           cache-key: noetic-gcc-debug-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -261,7 +287,7 @@ jobs:
           verbose: true
 
       - name: Show statistics for ccache
-        uses: ./.github/actions/log-ccache-stats
+        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
 
   sanitize:
     name: Sanitize ${{ matrix.sanitizer.detects }}
@@ -282,7 +308,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
+        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -299,7 +325,7 @@ jobs:
           TSAN_OPTIONS: halt_on_error=1
         shell: bash
         run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc-sanitizers.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc-sanitizers.json"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
@@ -313,7 +339,7 @@ jobs:
           echo "::remove-matcher owner=problem-matcher-gcc-tsan::"
 
       - name: Show statistics for ccache
-        uses: ./.github/actions/log-ccache-stats
+        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
 
   valgrind:
     name: Valgrind memcheck
@@ -323,7 +349,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
+        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -341,7 +367,7 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::./.github/problem-matchers/valgrind.json"
+          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/valgrind.json"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
@@ -354,4 +380,4 @@ jobs:
           echo "::remove-matcher owner=problem-matcher-valgrind::"
 
       - name: Show statistics for ccache
-        uses: ./.github/actions/log-ccache-stats
+        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats

@@ -1,7 +1,9 @@
-ARG FROM_IMAGE=ros:noetic-ros-base-focal
-ARG CATKIN_WS=/home/ci/catkin_ws
-ARG CCACHE_DIR=/home/ci/ccache
-ARG ROS_HOME=/home/ci/.ros
+ARG FROM_IMAGE
+ARG CATKIN_WS_PATH
+ARG CCACHE_DIR
+ARG ROS_HOME
+ARG REPOSITORY_NAME
+ARG PACKAGE_NAME
 
 FROM $FROM_IMAGE AS cacher
 
@@ -12,13 +14,14 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy in the project's source
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
-COPY wavemap_2d src/wavemap_2d/
+ARG CATKIN_WS_PATH
+ARG REPOSITORY_NAME
+WORKDIR $CATKIN_WS_PATH
+COPY $REPOSITORY_NAME src/$REPOSITORY_NAME/
 
 # Import from-source dependencies with vcstool
 RUN mkdir src/dependencies && \
-    vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml \
+    vcs import --recursive --input src/$REPOSITORY_NAME/wavemap_2d_https.yml \
       src/dependencies
 
 # Cache the manifests of all packages for use in subsequent stages
@@ -45,8 +48,8 @@ RUN mkdir -p /tmp/filtered_sources && \
 FROM $FROM_IMAGE AS system-deps-installer
 
 # Load the cached manifests
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
+ARG CATKIN_WS_PATH
+WORKDIR $CATKIN_WS_PATH
 COPY --from=cacher /tmp/manifests .
 
 # Install general and ROS-related system dependencies
@@ -72,11 +75,13 @@ FROM system-deps-installer AS workspace-deps-builder
 
 # Load the dependencies source code and our package's manifest
 # to resolve which dependencies should be built
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
+ARG CATKIN_WS_PATH
+ARG REPOSITORY_NAME
+ARG PACKAGE_NAME
+WORKDIR $CATKIN_WS_PATH
 COPY --from=cacher /tmp/filtered_sources/src/dependencies src/dependencies
-COPY --from=cacher $CATKIN_WS/src/wavemap_2d/wavemap_2d/package.xml \
-                   src/wavemap_2d/wavemap_2d/package.xml
+COPY --from=cacher $CATKIN_WS_PATH/src/$REPOSITORY_NAME/$PACKAGE_NAME/package.xml \
+                   src/$REPOSITORY_NAME/$PACKAGE_NAME/package.xml
 
 # Pull in ccache's cache
 ARG CCACHE_DIR
@@ -87,20 +92,22 @@ RUN . /opt/ros/noetic/setup.sh && \
     catkin init && \
     catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
     catkin build --no-status --force-color \
-      $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | \
+      $(catkin list --deps --directory $(catkin locate $PACKAGE_NAME) -u | \
         grep -oP '(?<= - ).*?(?=$)')
 
 
 FROM workspace-deps-builder AS workspace-full-builder
 
 # Load package source code
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
-COPY --from=cacher $CATKIN_WS/src/wavemap_2d src/wavemap_2d
+ARG CATKIN_WS_PATH
+ARG REPOSITORY_NAME
+ARG PACKAGE_NAME
+WORKDIR $CATKIN_WS_PATH
+COPY --from=cacher $CATKIN_WS_PATH/src/$REPOSITORY_NAME src/$REPOSITORY_NAME
 
 # Build the package
 RUN . /opt/ros/noetic/setup.sh && \
-    catkin build --no-status --force-color wavemap_2d
+    catkin build --no-status --force-color $PACKAGE_NAME
 
 
 FROM system-deps-installer AS workspace-underlay
@@ -110,11 +117,11 @@ FROM system-deps-installer AS workspace-underlay
 #       images built only up to the current stage (i.e. with
 #       --target=workspace-underlay) cannot yet successfully be booted.
 RUN sed --in-place \
-      's|^source .*|source "'$CATKIN_WS'/devel/setup.bash"|' \
+      's|^source .*|source "'$CATKIN_WS_PATH'/devel/setup.bash"|' \
       /ros_entrypoint.sh
 
 # Load the workspace sources
-COPY --from=cacher $CATKIN_WS/src src
+COPY --from=cacher $CATKIN_WS_PATH/src src
 
 
 FROM workspace-underlay AS workspace
@@ -123,8 +130,8 @@ FROM workspace-underlay AS workspace
 # NOTE: We build an (arbitrary) small package to create
 #       catkin_ws/devel/setup.bash, such that we can directly
 #       source our workspace in the container entrypoint script
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
+ARG CATKIN_WS_PATH
+WORKDIR $CATKIN_WS_PATH
 RUN . /opt/ros/noetic/setup.sh && \
     catkin init && \
     catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
@@ -135,17 +142,17 @@ RUN . /opt/ros/noetic/setup.sh && \
 FROM workspace-underlay AS workspace-built-deps
 
 # Pull in the compiled workspace
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
-COPY --from=workspace-deps-builder $CATKIN_WS .
+ARG CATKIN_WS_PATH
+WORKDIR $CATKIN_WS_PATH
+COPY --from=workspace-deps-builder $CATKIN_WS_PATH .
 
 
 FROM workspace-underlay AS workspace-built-full
 
 # Pull in the compiled workspace
-ARG CATKIN_WS
-WORKDIR $CATKIN_WS
-COPY --from=workspace-full-builder $CATKIN_WS .
+ARG CATKIN_WS_PATH
+WORKDIR $CATKIN_WS_PATH
+COPY --from=workspace-full-builder $CATKIN_WS_PATH .
 
 
 FROM scratch AS workspace-deps-builder-ccache-extractor
