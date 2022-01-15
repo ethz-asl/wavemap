@@ -288,12 +288,18 @@ jobs:
         with:
           cache-key: noetic-gcc-debug-${{ secrets.CCACHE_CACHE_VERSION }}
 
-      - name: Build catkin package dependencies (in debug mode)
+      - name: Switch catkin workspace to debug mode
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           catkin clean -y
           catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build catkin package dependencies (in debug mode)
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          source /opt/ros/noetic/setup.bash
           catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
       - name: Build unit tests and analyze coverage (in debug mode)
