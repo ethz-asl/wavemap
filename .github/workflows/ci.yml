@@ -22,9 +22,6 @@ jobs:
       image-workspace: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-${{ github.sha }}
       image-workspace-built-deps: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
     steps:
-      - name: Make space for the builds
-        run: docker system prune -af --volumes
-
       - name: Fetch the package's code
         uses: actions/checkout@v2
         with:
@@ -100,7 +97,6 @@ jobs:
           context: .
           file: wavemap_2d/.github/Dockerfile
           target: workspace
-          pull: true
           load: true
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-${{ github.sha }}
@@ -117,9 +113,6 @@ jobs:
           push: true
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-${{ github.sha }}
-
-      - name: Clean up
-        run: docker system prune -af --volumes
 
   pre-commit:
     name: Lint
