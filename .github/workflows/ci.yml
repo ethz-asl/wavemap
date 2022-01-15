@@ -19,8 +19,7 @@ jobs:
     name: Setup containers
     runs-on: self-hosted
     outputs:
-      image-workspace: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-${{ github.sha }}
-      image-workspace-built-deps: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
+      image: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
     steps:
       - name: Fetch the package's code
         uses: actions/checkout@v2
@@ -91,29 +90,6 @@ jobs:
           tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-built-deps-${{ github.sha }}
           outputs: type=local,dest=ccache
 
-      - name: Build the workspace image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: wavemap_2d/.github/Dockerfile
-          target: workspace
-          load: true
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-${{ github.sha }}
-
-      - name: Test the workspace image
-        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-${{ github.sha }}
-
-      - name: Push the workspace image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: wavemap_2d/.github/Dockerfile
-          target: workspace
-          push: true
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/wavemap_2d:buildcache
-          tags: ${{ env.DOCKER_REGISTRY }}/wavemap_2d:workspace-${{ github.sha }}
-
   pre-commit:
     name: Lint
     runs-on: self-hosted
@@ -150,7 +126,7 @@ jobs:
     needs: container
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image-workspace-built-deps }}
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -181,7 +157,7 @@ jobs:
     needs: [ container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image-workspace-built-deps }}
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -217,7 +193,7 @@ jobs:
     needs: [ container, build ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image-workspace-built-deps }}
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -253,7 +229,7 @@ jobs:
     needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image-workspace }}
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -263,7 +239,9 @@ jobs:
       - name: Configure catkin to compile in debug mode
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
+        run: |
+          catkin clean -y
+          catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build catkin package dependencies (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -303,7 +281,7 @@ jobs:
     needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image-workspace-built-deps }}
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
@@ -344,7 +322,7 @@ jobs:
     needs: [ container, test ]
     runs-on: self-hosted
     container:
-      image: ${{ needs.container.outputs.image-workspace-built-deps }}
+      image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
