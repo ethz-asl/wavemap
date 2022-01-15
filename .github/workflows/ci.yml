@@ -14,8 +14,6 @@ env:
   DOCKER_TARGET: workspace-built-deps
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
-  ACTIONS_PATH: ./src/wavemap_2d/.github/actions
-  PROBLEM_MATCHERS_PATH: ./src/wavemap_2d/.github/problem-matchers
   CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
@@ -144,7 +142,7 @@ jobs:
 
       - name: Run the pre-commit hooks
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/pre-commit.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/pre-commit.json"
           export PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }}
           pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
@@ -157,7 +155,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
+        uses: ./src/wavemap_2d/.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -165,7 +163,7 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/gcc.json"
           catkin build wavemap_2d --no-status --force-color --no-deps
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
@@ -173,12 +171,12 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/gcc.json"
           catkin build wavemap_2d_ground_truth --no-status --force-color
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Show statistics for ccache
-        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
+        uses: ./src/wavemap_2d/.github/actions/log-ccache-stats
 
   clang-tidy:
     name: Clang tidy
@@ -188,7 +186,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
+        uses: ./src/wavemap_2d/.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -205,14 +203,14 @@ jobs:
       - name: Run clang-tidy for wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/clang-tidy.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/clang-tidy.json"
           run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
       - name: Run clang-tidy for wavemap_2d_ground_truth
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d_ground_truth
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/clang-tidy.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/clang-tidy.json"
           run-clang-tidy -header-filter="*include/wavemap_2d_ground_truth/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
@@ -224,7 +222,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
+        uses: ./src/wavemap_2d/.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -232,7 +230,7 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/gcc.json"
           catkin build wavemap_2d --no-status --force-color --no-deps --verbose --catkin-make-args tests
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
@@ -250,7 +248,7 @@ jobs:
           fi
 
       - name: Show statistics for ccache
-        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
+        uses: ./src/wavemap_2d/.github/actions/log-ccache-stats
 
   coverage:
     name: Coverage
@@ -260,7 +258,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
+        uses: ./src/wavemap_2d/.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-debug-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -287,7 +285,7 @@ jobs:
           verbose: true
 
       - name: Show statistics for ccache
-        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
+        uses: ./src/wavemap_2d/.github/actions/log-ccache-stats
 
   sanitize:
     name: Sanitize ${{ matrix.sanitizer.detects }}
@@ -308,7 +306,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
+        uses: ./src/wavemap_2d/.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -325,7 +323,7 @@ jobs:
           TSAN_OPTIONS: halt_on_error=1
         shell: bash
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/gcc-sanitizers.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/gcc-sanitizers.json"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do $f --gtest_color=yes || all_tests_passed=0
@@ -339,7 +337,7 @@ jobs:
           echo "::remove-matcher owner=problem-matcher-gcc-tsan::"
 
       - name: Show statistics for ccache
-        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
+        uses: ./src/wavemap_2d/.github/actions/log-ccache-stats
 
   valgrind:
     name: Valgrind memcheck
@@ -349,7 +347,7 @@ jobs:
       image: ${{ needs.container.outputs.image }}
     steps:
       - name: Setup ccache
-        uses: ${{ env.ACTIONS_PATH }}/setup-ccache
+        uses: ./src/wavemap_2d/.github/actions/setup-ccache
         with:
           cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
 
@@ -367,7 +365,7 @@ jobs:
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
-          echo "::add-matcher::${{ env.PROBLEM_MATCHERS_PATH }}/valgrind.json"
+          echo "::add-matcher::./src/wavemap_2d/.github/problem-matchers/valgrind.json"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
             do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
@@ -380,4 +378,4 @@ jobs:
           echo "::remove-matcher owner=problem-matcher-valgrind::"
 
       - name: Show statistics for ccache
-        uses: ${{ env.ACTIONS_PATH }}/log-ccache-stats
+        uses: ./src/wavemap_2d/.github/actions/log-ccache-stats
