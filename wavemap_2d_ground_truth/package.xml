@@ -4,10 +4,11 @@
     <version>0.0.0</version>
     <description>Generate ground truth occupancy maps</description>
 
-    <author email="victorr@ethz.ch">Victor Reijgwart</author>
     <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
-
     <license>BSD</license>
+    <url>https://github.com/victorreijgwart/wavemap_2d</url>
+
+    <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
     <buildtool_depend>catkin</buildtool_depend>
     <buildtool_depend>catkin_simple</buildtool_depend>

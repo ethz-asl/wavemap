@@ -4,8 +4,6 @@ project(wavemap_2d_msgs)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
-##########
-# EXPORT #
-##########
+# Export
 cs_install()
 cs_export()

@@ -10,8 +10,8 @@
 
   <!-- Launch Gazebo world -->
   <!-- Add the sample_data/gazebo models and resources to gazebo path -->
-  <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
-  <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
+  <env name="GAZEBO_MODEL_PATH" value="$(optenv GAZEBO_MODEL_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
+  <env name="GAZEBO_RESOURCE_PATH" value="$(optenv GAZEBO_RESOURCE_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find wavemap_2d_ground_truth)/sample_data/gazebo/worlds/burning_building_rubble.world"/>
