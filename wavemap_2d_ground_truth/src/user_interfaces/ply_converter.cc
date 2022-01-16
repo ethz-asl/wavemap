@@ -46,7 +46,6 @@ DEFINE_double(Qw, 0.0,
               "Qw component of the quaternion of the rotation to apply to the "
               "geometry in the PLY file.");
 
-using namespace wavemap_2d;                // NOLINT
 using namespace wavemap_2d::ground_truth;  // NOLINT
 int main(int argc, char* argv[]) {
   std::stringstream required_args;
@@ -87,9 +86,10 @@ int main(int argc, char* argv[]) {
   LOG(INFO) << "Will apply transformation:\n"
             << "- scaling: " << FLAGS_scale_factor << "\n"
             << "- translation: "
-            << EigenFormat::oneLine(transform.getPosition()) << "\n"
+            << wavemap_2d::EigenFormat::oneLine(transform.getPosition()) << "\n"
             << "- rotation: "
-            << EigenFormat::oneLine(transform.getRotation().vector());
+            << wavemap_2d::EigenFormat::oneLine(
+                   transform.getRotation().vector());
 
   /* Load the PLY file */
   pcl::PolygonMesh mesh;
@@ -114,11 +114,11 @@ int main(int argc, char* argv[]) {
     triangle_i++;
     // Only print progress for each promile of completion, to reduce IO wait
     if (triangle_i % (num_triangles / 1000) == 0) {
-      Index occupancy_grid_dimensions =
+      wavemap_2d::Index occupancy_grid_dimensions =
           occupancy_grid_creator.getOccupancyGrid().dimensions();
       printf("\rProgress: %3.1f%% - map dimensions [%i, %i]",
-             static_cast<FloatingPoint>(triangle_i) /
-                 static_cast<FloatingPoint>(num_triangles) * 100,
+             static_cast<wavemap_2d::FloatingPoint>(triangle_i) /
+                 static_cast<wavemap_2d::FloatingPoint>(num_triangles) * 100,
              occupancy_grid_dimensions.x(), occupancy_grid_dimensions.y());
       std::cout << std::flush;
     }

@@ -26,6 +26,19 @@ cs_add_executable(ply_converter
     src/user_interfaces/ply_converter.cc)
 target_link_libraries(ply_converter ${PROJECT_NAME})
 
+#################
+# GAZEBO PLUGIN #
+#################
+set(BUILD_GAZEBO_PLUGINS TRUE)
+
+if (BUILD_GAZEBO_PLUGINS)
+  include_directories(${GAZEBO_INCLUDE_DIRS})
+  cs_add_library(${PROJECT_NAME}_plugin
+      src/user_interfaces/gazebo_plugin.cc
+      src/geometry.cc
+      src/occupancy_grid_creator.cc)
+endif ()
+
 ##########
 # EXPORT #
 ##########
