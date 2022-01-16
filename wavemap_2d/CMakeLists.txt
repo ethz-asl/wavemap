@@ -20,7 +20,7 @@ set(CMAKE_CXX_FLAGS
 
 if (USE_UBSAN)
   set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer -g
+      "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer -g \
       -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow")
 endif ()
 if (USE_ASAN)
