@@ -16,15 +16,15 @@ endif()
 # LIBRARIES #
 #############
 cs_add_library(${PROJECT_NAME}
-    src/occupancy_grid_creator.cpp
-    src/geometry.cpp)
+    src/occupancy_grid_creator.cc
+    src/geometry.cc)
 
 ##############
 ## BINARIES ##
 ##############
-cs_add_executable(ply_to_occupancy_grid
-    src/user_interfaces/ply_to_occupancy_script.cpp)
-target_link_libraries(ply_to_occupancy_grid ${PROJECT_NAME})
+cs_add_executable(ply_converter
+    src/user_interfaces/ply_converter.cc)
+target_link_libraries(ply_converter ${PROJECT_NAME})
 
 ##########
 # EXPORT #
