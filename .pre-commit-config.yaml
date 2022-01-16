@@ -54,29 +54,36 @@ repos:
                 --library=googletest, --library=ci/cppcheck/gazebo,
                 "--suppress=syntaxError:*test/src/*/test_*.cc" ]
 
-  - repo: https://github.com/comkieffer/pre-commit-xmllint.git
-    rev: 1.0.0
+  - repo: local
     hooks:
       - name: Lint package manifests
         id: xmllint
+        entry: xmllint --noout
+        language: system
         types: [ file ]
         files: (package.xml)$
         args: [ --schema, ci/xml_schemas/package_format2.xsd ]
       - name: Lint launch files
         id: xmllint
+        entry: xmllint --noout
+        language: system
         types: [ file ]
         files: \.(launch)$
         args: [ --schema, ci/xml_schemas/roslaunch.xsd ]
+      - name: Lint URDF files
+        id: xmllint
+        entry: xmllint --noout
+        language: system
+        types: [ file ]
+        files: \.(urdf)$
+        args: [ --schema, ci/xml_schemas/package_format2.xsd ]
     # - name: Lint SDF files
     #   id: xmllint
+    #   entry: xmllint --noout
+    #   language: system
     #   types: [ file ]
     #   files: \.(sdf|model|world)$
     #   args: [ --schema, ci/xml_schemas/sdf.xsd ]
-    # - name: Lint URDF files
-    #   id: xmllint
-    #   types: [ file ]
-    #   files: \.(urdf)$
-    #   args: [ --schema, ci/xml_schemas/package_format2.xsd ]
 
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13

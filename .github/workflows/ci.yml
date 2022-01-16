@@ -125,7 +125,7 @@ jobs:
       - name: Install pre-commit's dependencies
         run: |
           apt-get update
-          apt-get install -q -y git python3-pip clang-format cppcheck
+          apt-get install -q -y git python3-pip clang-format cppcheck libxml2-utils
           pip3 install pre-commit cpplint
 
       - name: Fetch the package's repository
