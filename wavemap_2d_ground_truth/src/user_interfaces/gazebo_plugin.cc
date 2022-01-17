@@ -16,9 +16,9 @@ void Wavemap2DGroundTruthPlugin::Load(physics::WorldPtr world,
 
   // Advertise the TSDF generation service
   std::string service_name = "save_occupancy_grid_to_file";
-  LOG(INFO) << "Advertising service: " << service_name;
   srv_ = nh_private_.advertiseService(
       service_name, &Wavemap2DGroundTruthPlugin::serviceCallback, this);
+  LOG(INFO) << "Advertising service: " << srv_.getService();
 }
 
 bool Wavemap2DGroundTruthPlugin::serviceCallback(
@@ -94,7 +94,7 @@ bool Wavemap2DGroundTruthPlugin::serviceCallback(
           return false;
         }
 
-        const common::Mesh* mesh_ptr;
+        const common::Mesh* mesh_ptr = nullptr;
         std::string mesh_name;
         if (geometry_type_str == "mesh") {
           // find base name of mesh object
@@ -144,7 +144,7 @@ bool Wavemap2DGroundTruthPlugin::serviceCallback(
         for (size_t submesh_id = 0; submesh_id < num_submeshes; submesh_id++) {
           // Create a copy of the submesh s.t. it can be manipulated
           const common::SubMesh* submesh_original =
-              CHECK_NOTNULL(mesh_ptr)->GetSubMesh(submesh_id);
+              mesh_ptr->GetSubMesh(submesh_id);
           if (!submesh_original) {
             LOG(ERROR) << "Could not get pointer to submesh nr" << submesh_id
                        << " of mesh named " << mesh_name;
