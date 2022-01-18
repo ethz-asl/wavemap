@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ccache
-          key: ccache-noetic-gcc-docker
+          key: ccache-noetic-gcc-docker-${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Make sure a ccache directory exists
         run: mkdir -p ccache
