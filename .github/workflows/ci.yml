@@ -34,11 +34,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
+      - name: Get the current date (for ccache cache matching)
+        id: get-date
+        run: echo "::set-output name=date::$(date -u "+%Y-%m-%d_%H-%M-%S")"
+
       - name: Pull in ccache to accelerate the build
         uses: actions/cache@v2
         with:
           path: ccache
-          key: ccache-noetic-gcc-docker-${{ secrets.CCACHE_CACHE_VERSION }}
+          key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-
 
       - name: Make sure a ccache directory exists
         run: mkdir -p ccache
@@ -174,7 +181,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
+          cache-group: noetic-gcc-release
 
       - name: Build wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -211,7 +218,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
+          cache-group: noetic-gcc-release
 
       - name: Install clang-tidy
         run: |
@@ -253,7 +260,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
+          cache-group: noetic-gcc-release
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -295,7 +302,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-debug-${{ secrets.CCACHE_CACHE_VERSION }}
+          cache-group: noetic-gcc-debug
 
       - name: Switch catkin workspace to debug mode
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -355,7 +362,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
+          cache-group: noetic-gcc-release
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -402,7 +409,7 @@ jobs:
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release-${{ secrets.CCACHE_CACHE_VERSION }}
+          cache-group: noetic-gcc-release
 
       - name: Install Valgrind
         run: |

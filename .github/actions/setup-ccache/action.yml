@@ -1,18 +1,29 @@
 name: 'Setup ccache'
 description: 'Install ccache and configure it to use GitHub cache sharing'
 inputs:
-  cache-key:
+  cache-group:
     description: 'Key used to separate ccache caches on GitHub from different configurations'
     required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Get the current date (used for cache matching)
+      id: get-date
+      shell: bash
+      run: echo "::set-output name=date::$(date -u "+%Y-%m-%d_%H-%M-%S")"
+
     - name: Setup ccache cache sharing
       uses: actions/cache@v2
       with:
         path: ${{ env.CCACHE_DIR }}
-        key: ccache-${{ inputs.cache-key }}
+        key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-${{ inputs.cache-group }}-${{ github.sha }}-${{ steps.get-date.outputs.date }}
+        restore-keys: |
+          ccache-${{ secrets.CCACHE_CACHE_VERSION }}-${{ inputs.cache-group }}-${{ github.sha }}-
+          ccache-${{ secrets.CCACHE_CACHE_VERSION }}-${{ inputs.cache-group }}-
+        # NOTE: The action internally also gives priority to caches that were
+        #       created for the same git branch, i.e. it first tries to match
+        #       the restore keys against the current branch and then main.
 
     - name: Configure ccache
       shell: bash
