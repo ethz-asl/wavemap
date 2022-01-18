@@ -182,6 +182,7 @@ jobs:
         uses: ./.github/actions/setup-ccache
         with:
           cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Build wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -219,6 +220,7 @@ jobs:
         uses: ./.github/actions/setup-ccache
         with:
           cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Install clang-tidy
         run: |
@@ -261,6 +263,7 @@ jobs:
         uses: ./.github/actions/setup-ccache
         with:
           cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -303,6 +306,7 @@ jobs:
         uses: ./.github/actions/setup-ccache
         with:
           cache-group: noetic-gcc-debug
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Switch catkin workspace to debug mode
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -363,6 +367,7 @@ jobs:
         uses: ./.github/actions/setup-ccache
         with:
           cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -410,6 +415,7 @@ jobs:
         uses: ./.github/actions/setup-ccache
         with:
           cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Install Valgrind
         run: |
