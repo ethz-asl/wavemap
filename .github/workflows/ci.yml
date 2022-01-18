@@ -120,6 +120,14 @@ jobs:
     name: Lint
     runs-on: self-hosted
     container:
+      # NOTE: Pylint checks if all modules that are marked for import are
+      #       available. At the time of writing, the python scripts in this repo
+      #       only depend on modules that are present on noetic-ros-base-focal
+      #       out of the box. If scripts are added later that depend on custom
+      #       package (e.g. installed through rosdep or pulled in through
+      #       vcstool), it'd make sense to run pre-commit in a full workspace
+      #       container (such as ${{ needs.workspace-container.outputs.image }})
+      #       at the cost of a longer waiting time.
       image: ros:noetic-ros-base-focal
     steps:
       - name: Install pre-commit's dependencies
@@ -143,10 +151,11 @@ jobs:
           key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run the pre-commit hooks
+        shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
-          export PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }}
-          pre-commit run --all-files
+          source /opt/ros/noetic/setup.bash
+          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
   build:
