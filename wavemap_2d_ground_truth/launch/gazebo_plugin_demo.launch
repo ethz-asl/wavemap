@@ -19,5 +19,4 @@
     <arg name="debug" value="$(arg debug_gazebo)"/>
     <arg name="paused" value="$(arg pause_gazebo)"/>
   </include>
-
 </launch>
