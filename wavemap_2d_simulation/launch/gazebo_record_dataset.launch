@@ -1,5 +1,8 @@
 <launch>
   <!-- Configure -->
+  <!-- Record and visualize simulated sensor data -->
+  <arg name="show_rviz" default="true"/>
+  <arg name="record_rosbag" default="false"/>
   <!-- Gazebo: -->
   <arg name="show_gazebo" default="true"/>
   <arg name="debug_gazebo" default="false"/>
@@ -14,7 +17,7 @@
   <!-- Ground truth occupancy grid generation: -->
   <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.2"/>
   <param name="/gazebo/wavemap_2d_ground_truth_plugin/slice_height"
-         value="1.0"/>
+         value="0.268"/>
   <!-- NOTE: Save the ground truth wavemap_2d map with:
      rosservice call /gazebo/wavemap_2d_ground_truth_plugin/save_occupancy_grid_to_file "file_path: '/home/you/ground_truth_map_name.tsdf'"-->
 
@@ -57,8 +60,19 @@
   </node>
 
   <!-- Sensor reading visualization in RViz -->
-  <arg name="rviz_file"
-       default="$(find wavemap_2d_simulation)/config/gazebo_plugin.rviz"/>
-  <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false"
-        args="-d $(arg rviz_file)" output="screen"/>
+  <group if="$(arg show_rviz)">
+    <arg name="rviz_file"
+         default="$(find wavemap_2d_simulation)/config/gazebo_plugin.rviz"/>
+    <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false"
+          args="-d $(arg rviz_file)" output="screen"/>
+  </group>
+
+  <!-- Record rosbag -->
+  <group if="$(arg record_rosbag)">
+    <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+    <arg name="bag_save_path" default="../catkin_ws/bags"/>
+    <arg name="bag_prefix" default="simple_building_manual"/>
+    <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
+          args="/clock /tf /tf_static /robot/laser/scan --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
+  </group>
 </launch>

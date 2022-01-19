@@ -45,10 +45,9 @@ cs_add_library(
   src/integrator/fixed_logodds_model.cc
   src/datastructure/datastructure_base.cc
   src/utils/eigen_format.cc)
-target_link_libraries(${PROJECT_NAME}) # ${PROJECT_NAME}_proto)
 
 # Binaries
-add_executable(carmen_processor app/carmen_processor.cc)
+cs_add_executable(carmen_processor app/carmen_processor.cc)
 target_link_libraries(carmen_processor ${PROJECT_NAME})
 
 # Tests
