@@ -34,11 +34,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Get the current date (for ccache cache matching)
+      - name: Prepare ccache to accelerate the build
         id: get-date
-        run: echo "::set-output name=date::$(date -u "+%Y-%m-%d_%H-%M-%S")"
+        # NOTE: Installing tar is required for actions/cache@v2 to work properly
+        #       on docker:20.10.9-dind.
+        run: |
+          apk add --no-cache tar
+          mkdir -p ccache
+          echo "::set-output name=date::$(date -u "+%Y-%m-%d_%H-%M-%S")"
 
-      - name: Pull in ccache to accelerate the build
+      - name: Pull in ccache's cache
         uses: actions/cache@v2
         with:
           path: ccache
@@ -47,10 +52,7 @@ jobs:
             ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-
             ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-
 
-      - name: Make sure a ccache directory exists
-        run: mkdir -p ccache
-
-      - name: Measure the build time
+      - name: Start measuring the build time
         id: start-time
         run: |
           stamp=$(date +%s)
