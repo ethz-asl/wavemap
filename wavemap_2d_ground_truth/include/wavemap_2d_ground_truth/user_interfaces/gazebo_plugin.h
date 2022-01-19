@@ -20,9 +20,8 @@ class Wavemap2DGroundTruthPlugin : public WorldPlugin {
 
   void Load(physics::WorldPtr world, sdf::ElementPtr _sdf) override;
 
-  bool serviceCallback(
-      wavemap_2d_msgs::FilePath::Request& request,     // NOLINT
-      wavemap_2d_msgs::FilePath::Response& response);  // NOLINT
+  bool serviceCallback(wavemap_2d_msgs::FilePath::Request& request,
+                       wavemap_2d_msgs::FilePath::Response& response);
 
  private:
   physics::WorldPtr world_;

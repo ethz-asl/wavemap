@@ -29,11 +29,11 @@ struct Plane {
   Point3D normal;
   FloatingPoint offset_along_normal;
 
-  bool intersectsLineSegment(
-      const LineSegment& segment, Point3D& intersection_point,  // NOLINT
-      FloatingPoint& distance_to_intersection) const;           // NOLINT
   bool intersectsLineSegment(const LineSegment& segment,
-                             Point3D& intersection_point) const;  // NOLINT
+                             Point3D& intersection_point,
+                             FloatingPoint& distance_to_intersection) const;
+  bool intersectsLineSegment(const LineSegment& segment,
+                             Point3D& intersection_point) const;
   bool intersectsLineSegment(const LineSegment& segment) const;
 
   std::string toString() const;
@@ -48,19 +48,19 @@ struct Triangle {
   FloatingPoint getDistanceToPoint(const Point3D& point) const;
 
   bool intersectsXAlignedRay(const Point2D& ray_origin_yz,
-                             Point3D& barycentric_coordinates) const;  // NOLINT
+                             Point3D& barycentric_coordinates) const;
   bool intersectsXAlignedRay(const Point2D& ray_origin_yz) const;
 
   bool intersectsPlane(const Plane& plane,
-                       LineSegment& intersecting_segment) const;  // NOLINT
+                       LineSegment& intersecting_segment) const;
   bool intersectsPlane(const Plane& plane) const;
 
   std::string toString() const;
 
  protected:
-  static int getRelativeOrientation(
-      const Point2D& vertex_one, const Point2D& vertex_two,
-      FloatingPoint& twice_signed_area);  // NOLINT
+  static int getRelativeOrientation(const Point2D& vertex_one,
+                                    const Point2D& vertex_two,
+                                    FloatingPoint& twice_signed_area);
   static int getRelativeOrientation(const Point2D& vertex_one,
                                     const Point2D& vertex_two);
 };

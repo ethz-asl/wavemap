@@ -46,7 +46,6 @@ repos:
         args: [ -style=file ]
       - name: Run cpplint
         id: cpplint
-        args: [ "--filter=-legal/copyright,-build/include_order" ]
       - name: Run cppcheck
         id: cppcheck
         args: [ --std=c++17, --language=c++, --force, --quiet,

@@ -36,7 +36,7 @@ class MeasurementModelBase {
   virtual Index getTopRightUpdateIndex() = 0;
 
   virtual FloatingPoint computeUpdateAt(const Index& index) = 0;
-  virtual void updateMap(DataStructureBase& map) = 0;  // NOLINT
+  virtual void updateMap(DataStructureBase& map) = 0;
 
  protected:
   const FloatingPoint resolution_;
