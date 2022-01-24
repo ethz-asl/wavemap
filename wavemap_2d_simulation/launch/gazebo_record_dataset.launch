@@ -1,0 +1,78 @@
+<launch>
+  <!-- Configure -->
+  <!-- Record and visualize simulated sensor data -->
+  <arg name="show_rviz" default="true"/>
+  <arg name="record_rosbag" default="false"/>
+  <!-- Gazebo: -->
+  <arg name="show_gazebo" default="true"/>
+  <arg name="debug_gazebo" default="false"/>
+  <arg name="pause_gazebo" default="false"/>
+  <!-- Robot model and spawning position: -->
+  <arg name="robot_name" default="simple_robot"/>
+  <arg name="file"
+       default="$(find wavemap_2d_simulation)/models/robot/model.sdf"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.1"/>
+  <!-- Ground truth occupancy grid generation: -->
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.2"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/slice_height"
+         value="0.268"/>
+  <!-- NOTE: Save the ground truth wavemap_2d map with:
+     rosservice call /gazebo/wavemap_2d_ground_truth_plugin/save_occupancy_grid_to_file "file_path: '/home/you/ground_truth_map_name.tsdf'"-->
+
+  <!-- Add our custom models to Gazebo's path -->
+  <env name="GAZEBO_MODEL_PATH"
+       value="$(optenv GAZEBO_MODEL_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models:$(find wavemap_2d_simulation)/models"/>
+  <env name="GAZEBO_RESOURCE_PATH"
+       value="$(optenv GAZEBO_RESOURCE_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models:$(find wavemap_2d_simulation)/models"/>
+
+  <!-- Launch Gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name"
+         value="$(find wavemap_2d_ground_truth)/sample_data/gazebo/worlds/burning_building_rubble.world"/>
+    <arg name="gui" value="$(arg show_gazebo)"/>
+    <arg name="debug" value="$(arg debug_gazebo)"/>
+    <arg name="paused" value="$(arg pause_gazebo)"/>
+  </include>
+
+  <!-- Spawn the robot in Gazebo -->
+  <node name="spawn_$(arg robot_name)" pkg="gazebo_ros" type="spawn_model"
+        launch-prefix="bash -c 'sleep 5; $0 $@'"
+        args="-file $(arg file)
+         -sdf
+         -x $(arg x)
+         -y $(arg y)
+         -z $(arg z)
+         -model $(arg robot_name)"
+        respawn="false" output="screen">
+  </node>
+  <node name="tf_$(arg robot_name)_2d_laser" pkg="tf"
+        type="static_transform_publisher"
+        args="0.21 0 0.2175 0 0 0 1 chassis 2d_laser 100"/>
+
+  <!-- Translate keyboard arrow keys to velocity commands -->
+  <node name="teleop_$(arg robot_name)" pkg="wavemap_2d_simulation"
+        type="key_teleop.py"
+        output="screen">
+    <remap from="/key_vel" to="/cmd_vel"/>
+    <rosparam file="$(find wavemap_2d_simulation)/config/key_teleop.yaml"/>
+  </node>
+
+  <!-- Sensor reading visualization in RViz -->
+  <group if="$(arg show_rviz)">
+    <arg name="rviz_file"
+         default="$(find wavemap_2d_simulation)/config/wavemap_2d_simulation.rviz"/>
+    <node pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false"
+          args="-d $(arg rviz_file)" output="screen"/>
+  </group>
+
+  <!-- Record rosbag -->
+  <group if="$(arg record_rosbag)">
+    <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+    <arg name="bag_save_path" default="../catkin_ws/bags"/>
+    <arg name="bag_prefix" default="simple_building_manual"/>
+    <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
+          args="/clock /tf /tf_static /robot/laser/scan --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
+  </group>
+</launch>

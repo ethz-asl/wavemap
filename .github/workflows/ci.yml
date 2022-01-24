@@ -9,60 +9,146 @@ on:
 #       dir persists between jobs when using self-hosted GitHub Actions runners
 #       (/github/home is a docker volume mapped to the container's host).
 env:
-  CATKIN_WS_PATH: '/home/ci/catkin_ws'
-  CCACHE_DIR: '/home/ci/ccache'
-  PRE_COMMIT_DIR: '/home/ci/pre-commit'
+  REPOSITORY_NAME: wavemap_2d
+  DOCKER_REGISTRY: nikola.vwire.ch:29139
+  DOCKER_TARGET: workspace-built-deps
+  ROS_HOME: /home/ci/.ros
+  CATKIN_WS_PATH: /home/ci/catkin_ws
+  CCACHE_DIR: /home/ci/ccache
+  PRE_COMMIT_DIR: /home/ci/pre-commit
 
 jobs:
-  build:
-    name: Build
+  workspace-container:
+    name: Setup workspace container
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: docker:20.10.9-dind
+    outputs:
+      image: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
     steps:
-      - name: Fetch the package's code
+      - name: Fetch the package's repository
         uses: actions/checkout@v2
-
-      - name: Setup ccache
-        uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
+          path: ${{ env.REPOSITORY_NAME }}
 
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-      - name: Build catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
-
-      - name: Build catkin package
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
+      - name: Prepare ccache to accelerate the build
+        id: get-date
+        # NOTE: Installing tar is required for actions/cache@v2 to work properly
+        #       on docker:20.10.9-dind.
         run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_2d --no-status --force-color --no-deps
-          echo "::remove-matcher owner=problem-matcher-gcc::"
+          apk add --no-cache tar
+          mkdir -p ccache
+          echo "::set-output name=date::$(date -u "+%Y-%m-%d_%H-%M-%S")"
 
-      - name: Show statistics for ccache
-        uses: ./.github/actions/log-ccache-stats
+      - name: Pull in ccache's cache
+        uses: actions/cache@v2
+        with:
+          path: ccache
+          key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-
+
+      - name: Start measuring the build time
+        id: start-time
+        run: |
+          stamp=$(date +%s)
+          echo "::set-output name=stamp::${stamp}"
+
+      - name: Build the ${{ env.DOCKER_TARGET }} image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          target: ${{ env.DOCKER_TARGET }}
+          build-args: |
+            FROM_IMAGE=ros:noetic-ros-base-focal
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=wavemap_2d
+          load: true
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache,mode=max
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+
+      - name: Determine whether the ccache cache should be updated
+        id: should-writeback-ccache
+        run: |
+          runtime=$(( $(date +%s) - ${{ steps.start-time.outputs.stamp }} ))
+          echo $runtime
+          answer=false
+          if [ 180 -le $runtime ]; then
+            answer=true
+          fi
+          echo "::set-output name=answer::${answer}"
+
+      - name: Test the ${{ env.DOCKER_TARGET }} image
+        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+
+      - name: Push the ${{ env.DOCKER_TARGET }} image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          target: ${{ env.DOCKER_TARGET }}
+          build-args: |
+            FROM_IMAGE=ros:noetic-ros-base-focal
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=wavemap_2d
+          push: true
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+
+      - name: Write back the build's ccache cache
+        if: steps.should-writeback-ccache.outputs.answer == 'true'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          target: workspace-deps-builder-ccache-extractor
+          build-args: |
+            FROM_IMAGE=ros:noetic-ros-base-focal
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=wavemap_2d
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+          outputs: type=local,dest=ccache
 
   pre-commit:
     name: Lint
     runs-on: self-hosted
     container:
+      # NOTE: Pylint checks if all modules that are marked for import are
+      #       available. At the time of writing, the python scripts in this repo
+      #       only depend on modules that are present on noetic-ros-base-focal
+      #       out of the box. If scripts are added later that depend on custom
+      #       package (e.g. installed through rosdep or pulled in through
+      #       vcstool), it'd make sense to run pre-commit in a full workspace
+      #       container (such as ${{ needs.workspace-container.outputs.image }})
+      #       at the cost of a longer waiting time.
       image: ros:noetic-ros-base-focal
     steps:
       - name: Install pre-commit's dependencies
         run: |
           apt-get update
-          apt-get install -y git python3-pip clang-format cppcheck
+          apt-get install -q -y git python3-pip clang-format cppcheck libxml2-utils
           pip3 install pre-commit cpplint
 
-      - name: Fetch the package's code
+      - name: Fetch the package's repository
         uses: actions/checkout@v2
+        # NOTE: This has to be done after installing pre-commit, s.t. the
+        #       pre-commit hooks are automatically initialized.
 
       - name: Get python version for pre-commit cache
         run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
@@ -74,71 +160,127 @@ jobs:
           key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run the pre-commit hooks
+        shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
-          export PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }}
-          pre-commit run --all-files
+          source /opt/ros/noetic/setup.bash
+          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
-  clang-tidy:
-    name: Clang tidy
-    needs: build
+  build:
+    name: Build
+    needs: workspace-container
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
-      - name: Fetch the package's code
+      - name: Fetch the package's repository
         uses: actions/checkout@v2
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
+      - name: Build wavemap_2d
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_2d --no-status --force-color --no-deps
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Build wavemap_2d_ros
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_2d_ros --no-status --force-color
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Build wavemap_2d_ground_truth
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_2d_ground_truth --no-status --force-color
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  clang-tidy:
+    name: Clang tidy
+    needs: [ workspace-container, build ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v2
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
         with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Install clang-tidy
-        run: apt-get install -y clang-tidy
+        run: |
+          apt-get update
+          apt-get install -y clang-tidy
 
       - name: Build catkin package and dependencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color --cmake-args -DUSE_CLANG_TIDY=ON
+        run: catkin build wavemap_2d wavemap_2d_ros wavemap_2d_ground_truth --no-status --force-color --cmake-args -DUSE_CLANG_TIDY=ON
 
-      - name: Run clang-tidy
+      - name: Run clang-tidy for wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
         run: |
           echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
           run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
+      - name: Run clang-tidy for wavemap_2d_ros
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d_ros
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap_2d_ros/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
+
+      - name: Run clang-tidy for wavemap_2d_ground_truth
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d_ground_truth
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap_2d_ground_truth/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
+
   test:
     name: Test
-    needs: build
+    needs: [ workspace-container, build ]
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
-      - name: Fetch the package's code
+      - name: Fetch the package's repository
         uses: actions/checkout@v2
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -166,28 +308,36 @@ jobs:
 
   coverage:
     name: Coverage
-    needs: test
+    needs: [ workspace-container, test ]
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
-      - name: Fetch the package's code
+      - name: Fetch the package's repository
         uses: actions/checkout@v2
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-debug
+          cache-group: noetic-gcc-debug
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Debug
+      - name: Switch catkin workspace to debug mode
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          catkin clean -y
+          catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build catkin package dependencies (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+        run: |
+          source /opt/ros/noetic/setup.bash
+          catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
       - name: Build unit tests and analyze coverage (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -208,6 +358,10 @@ jobs:
 
   sanitize:
     name: Sanitize ${{ matrix.sanitizer.detects }}
+    needs: [ workspace-container, test ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
     strategy:
       matrix:
         sanitizer:
@@ -219,28 +373,18 @@ jobs:
           #       stdlib instead of GCCs,...). We therefore use Valgrind to
           #       check for uninitialized memory usage errors instead.
       fail-fast: false
-    needs: test
-    runs-on: self-hosted
-    container:
-      image: ros:noetic-ros-base-focal
     steps:
-      - name: Fetch the package's code
+      - name: Fetch the package's repository
         uses: actions/checkout@v2
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -273,31 +417,27 @@ jobs:
 
   valgrind:
     name: Valgrind memcheck
-    needs: test
+    needs: [ workspace-container, test ]
     runs-on: self-hosted
     container:
-      image: ros:noetic-ros-base-focal
+      image: ${{ needs.workspace-container.outputs.image }}
     steps:
-      - name: Fetch the package's code
+      - name: Fetch the package's repository
         uses: actions/checkout@v2
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
 
       - name: Setup ccache
         uses: ./.github/actions/setup-ccache
         with:
-          cache-key: noetic-gcc-release
-
-      - name: Setup catkin_ws and install all dependencies
-        uses: ./.github/actions/setup-catkin-ws-and-install-deps
-        with:
-          catkin-config-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
       - name: Install Valgrind
-        run: apt-get install -y valgrind
-
-      - name: Build catkin package depencencies
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
+        run: |
+          apt-get update
+          apt-get install -y valgrind
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}

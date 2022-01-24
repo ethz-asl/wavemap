@@ -28,7 +28,7 @@ class PointcloudIterator {
   // TODO(victorr): Modify the linter to adhere to the new google style guide,
   //                which recommends passing by non-const reference instead of
   //                by pointer
-  explicit PointcloudIterator(PointcloudType& pointcloud,  // NOLINT
+  explicit PointcloudIterator(PointcloudType& pointcloud,
                               Index index = std::ptrdiff_t(0))
       : pointcloud_(pointcloud), index_(index) {}
 

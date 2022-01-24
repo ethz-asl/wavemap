@@ -22,6 +22,8 @@ runs:
         echo "::endgroup::"
 
     - shell: bash
+      env:
+        DEBIAN_FRONTEND: noninteractive  # For rosdep
       run: |
         echo "::group::Create catkin_ws and install package dependencies"
         mkdir -p ${{ env.CATKIN_WS_PATH }}/src
@@ -35,7 +37,7 @@ runs:
         echo "::endgroup::"
         echo "::group::Install system dependencies with rosdep"
         rosdep update
-        rosdep install --from-paths src --ignore-src -r -y
+        rosdep install --from-paths src --ignore-src --skip-keys="numpy_eigen catkin_boost_python_buildtool" -y
         echo "::endgroup::"
         echo "::group::Bootstrap catkin build"
         # Build any small package to create catkin_ws/devel/setup.bash, removing the need

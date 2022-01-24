@@ -1,0 +1,29 @@
+<launch>
+  <!-- General arguments -->
+  <arg name="use_batch_mode"
+       default="true"
+       doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
+  <arg name="rosbag_path"
+       default="../catkin_ws/bags/simple_building_manual_2022-01-19-18-15-16.bag"
+       doc="Replay the rosbag at the specified path."/>
+  <arg name="pointcloud_topic"
+       default="/robot/laser/scan"/>
+  <arg name="debug_mode"
+       default="false"
+       doc="Run the mapper in a debugger (gdb)."/>
+  <arg name="show_rviz"
+       default="true"
+       doc="Automatically launch Rviz."/>
+
+  <!-- Process the rosbag with wavemap -->
+  <group if="$(arg use_batch_mode)">
+    <!-- In batch mode (process the rosbag as fast as possible) -->
+    <include file="$(find wavemap_2d_ros)/launch/rosbag_processor.launch"
+             pass_all_args="true"/>
+  </group>
+  <group unless="$(arg use_batch_mode)">
+    <!-- In normal mode (replay the rosbag) -->
+    <include file="$(find wavemap_2d_ros)/launch/wavemap_2d_server.launch"
+             pass_all_args="true"/>
+  </group>
+</launch>
