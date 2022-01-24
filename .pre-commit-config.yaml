@@ -50,7 +50,7 @@ repos:
         id: cppcheck
         args: [ --std=c++17, --language=c++, --force, --quiet,
                 "--enable=performance,portability",
-                --library=googletest, --library=ci/cppcheck/gazebo,
+                --library=googletest, --library=tools/cppcheck/gazebo,
                 "--suppress=syntaxError:*test/src/*/test_*.cc" ]
 
   - repo: local
@@ -61,28 +61,28 @@ repos:
         language: system
         types: [ file ]
         files: (package.xml)$
-        args: [ --schema, ci/xml_schemas/package_format2.xsd ]
+        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
       - name: Lint launch files
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(launch)$
-        args: [ --schema, ci/xml_schemas/roslaunch.xsd ]
+        args: [ --schema, tools/xml_schemas/roslaunch.xsd ]
       - name: Lint URDF files
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(urdf)$
-        args: [ --schema, ci/xml_schemas/package_format2.xsd ]
+        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
     # - name: Lint SDF files
     #   id: xmllint
     #   entry: xmllint --noout
     #   language: system
     #   types: [ file ]
     #   files: \.(sdf|model|world)$
-    #   args: [ --schema, ci/xml_schemas/sdf.xsd ]
+    #   args: [ --schema, tools/xml_schemas/sdf.xsd ]
 
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
