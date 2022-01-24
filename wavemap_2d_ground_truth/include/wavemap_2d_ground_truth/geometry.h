@@ -9,11 +9,11 @@
 
 namespace wavemap_2d::ground_truth {
 // NOTE: Many of the methods declared in this header are implemented based on
-//       the examples in: "Real-time collision detection" by Christer Ericson
+//       the examples in "Real-time collision detection" by Christer Ericson
 
 struct AABB {
   Point3D min = Point3D::Constant(std::numeric_limits<FloatingPoint>::lowest());
-  Point3D max = Point3D ::Constant(std::numeric_limits<FloatingPoint>::max());
+  Point3D max = Point3D::Constant(std::numeric_limits<FloatingPoint>::max());
 
   std::string toString() const;
 };

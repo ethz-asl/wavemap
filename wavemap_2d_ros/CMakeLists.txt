@@ -5,9 +5,6 @@ find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 # Configure
-if (ENABLE_BENCHMARKING)
-  find_package(benchmark REQUIRED)
-endif ()
 if (CATKIN_ENABLE_TESTING AND ENABLE_COVERAGE_TESTING)
   find_package(code_coverage REQUIRED)
   append_coverage_compiler_flags()

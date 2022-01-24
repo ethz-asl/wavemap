@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>wavemap_2d_msgs</name>
-    <version>0.0.0</version>
-    <description>Message definitions for wavemap_2d ROS interface.</description>
+  <name>wavemap_2d_msgs</name>
+  <version>0.0.0</version>
+  <description>Message definitions for wavemap_2d's ROS interface.</description>
 
-    <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
-    <license>BSD</license>
-    <url>https://github.com/victorreijgwart/wavemap_2d</url>
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/victorreijgwart/wavemap_2d</url>
 
-    <author email="victorr@ethz.ch">Victor Reijgwart</author>
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
-    <buildtool_depend>catkin</buildtool_depend>
-    <buildtool_depend>catkin_simple</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
 
-    <depend>message_generation</depend>
-    <depend>message_runtime</depend>
-    <depend>std_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>message_runtime</depend>
+  <depend>std_msgs</depend>
 </package>

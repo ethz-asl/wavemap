@@ -2,7 +2,8 @@
 <package format="2">
   <name>wavemap_2d</name>
   <version>0.0.0</version>
-  <description>Continuous, hierarchical occupancy mapping using wavelets</description>
+  <description>Continuous, hierarchical occupancy mapping using wavelets.
+  </description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
   <license>BSD</license>

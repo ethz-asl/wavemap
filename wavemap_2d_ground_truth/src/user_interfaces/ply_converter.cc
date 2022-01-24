@@ -46,7 +46,7 @@ DEFINE_double(Qw, 0.0,
               "Qw component of the quaternion of the rotation to apply to the "
               "geometry in the PLY file.");
 
-using namespace wavemap_2d::ground_truth;  // NOLINT
+using namespace wavemap_2d;  // NOLINT
 int main(int argc, char* argv[]) {
   std::stringstream required_args;
   required_args << "ply_input_filepath occupancy_grid_output_filepath "
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]) {
 
   // Initialize the occupancy grid creator
   LOG(INFO) << "Generating the occupancy grid";
-  OccupancyGridCreator occupancy_grid_creator(FLAGS_resolution,
-                                              FLAGS_slice_height);
+  ground_truth::OccupancyGridCreator occupancy_grid_creator(FLAGS_resolution,
+                                                            FLAGS_slice_height);
 
   // Iterate over all triangles
   size_t triangle_i = 0;

@@ -1,8 +1,5 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
-#include <pcl/conversions.h>
-#include <pcl/point_types.h>
-#include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
@@ -88,7 +85,6 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle nh_private) {
 }
 
 void Wavemap2DServer::visualizeMap() {
-  pcl::PointCloud<pcl::PointXYZI> map_leaves_pointcloud_msg;
   if (!occupancy_map_->empty()) {
     ROS_INFO_STREAM("Saving map of size " << occupancy_map_->dimensions());
     occupancy_map_->showImage(true, 1000);
