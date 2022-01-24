@@ -16,6 +16,8 @@ class MeasurementModelBase {
   explicit MeasurementModelBase(FloatingPoint resolution)
       : resolution_(resolution),
         resolution_inv_(1.f / resolution),
+        W_start_point_(Point::Zero()),
+        W_end_point_(Point::Zero()),
         measured_distance_(0.f) {}
   virtual ~MeasurementModelBase() = default;
 
