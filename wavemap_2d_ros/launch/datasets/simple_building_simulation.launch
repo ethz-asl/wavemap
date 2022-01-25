@@ -4,7 +4,7 @@
        default="true"
        doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
   <arg name="rosbag_path"
-       default="../catkin_ws/bags/simple_building_manual_2022-01-19-15-27-36.bag"
+       default="../catkin_ws/bags/simple_building_manual_2022-01-25-22-35-25.bag"
        doc="Replay the rosbag at the specified path."/>
   <arg name="pointcloud_topic"
        default="/robot/laser/scan"/>

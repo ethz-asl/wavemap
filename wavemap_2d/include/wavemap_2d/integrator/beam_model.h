@@ -18,11 +18,11 @@ class BeamModel : public MeasurementModelBase {
   explicit BeamModel(FloatingPoint resolution)
       : MeasurementModelBase(resolution), max_lateral_component_(0.f) {}
 
-  Index getBottomLeftUpdateIndex() override;
-  Index getTopRightUpdateIndex() override;
+  Index getBottomLeftUpdateIndex() const override;
+  Index getTopRightUpdateIndex() const override;
 
-  FloatingPoint computeUpdateAt(const Index& index) override;
-  void updateMap(DataStructureBase& map) override;
+  FloatingPoint computeUpdateAt(const Index& index) const override;
+  void updateMap(DataStructureBase& map) const override;
 
  protected:
   Point C_end_point_;
@@ -30,6 +30,8 @@ class BeamModel : public MeasurementModelBase {
   FloatingPoint max_lateral_component_;
   // TODO(victorr): Consider calculating the true min/max lateral components,
   //                or using a better approximation
+  Index getUpdateMinIndex() const;
+  Index getUpdateMaxIndex() const;
 
   void updateCachedVariablesDerived() override {
     C_end_point_ = W_end_point_ - W_start_point_;

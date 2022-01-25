@@ -60,11 +60,12 @@ void Wavemap2DServer::processPointcloudQueue() {
     }
 
     // Convert the scan to a pointcloud
-    std::vector<Point> t_C_points_2d;
-    t_C_points_2d.reserve(scan_msg.ranges.size());
     const size_t num_rays = scan_msg.ranges.size();
+    std::vector<Point> t_C_points_2d;
+    t_C_points_2d.reserve(num_rays);
     for (size_t ray_idx = 0u; ray_idx < num_rays; ++ray_idx) {
-      const FloatingPoint ray_range = scan_msg.ranges[ray_idx];
+      const FloatingPoint ray_range =
+          std::min(scan_msg.ranges[ray_idx], scan_msg.range_max);
       const FloatingPoint ray_angle =
           static_cast<FloatingPoint>(ray_idx) * scan_msg.angle_increment +
           scan_msg.angle_min;
@@ -122,7 +123,7 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle nh_private) {
 
 void Wavemap2DServer::visualizeMap() {
   if (!occupancy_map_->empty()) {
-    ROS_INFO_STREAM("Saving map of size " << occupancy_map_->dimensions());
+    ROS_INFO_STREAM("Showing map of size " << occupancy_map_->dimensions());
     occupancy_map_->showImage(true);
   }
 }
