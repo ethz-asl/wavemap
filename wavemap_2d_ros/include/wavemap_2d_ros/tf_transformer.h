@@ -10,23 +10,28 @@
 namespace wavemap_2d {
 class TfTransformer {
  public:
-  TfTransformer()
-      : tf_buffer_(ros::Duration(10.0)),
+  explicit TfTransformer(FloatingPoint tf_buffer_cache_time = 10.f)
+      : tf_buffer_(ros::Duration(tf_buffer_cache_time)),
         tf_listener_(tf_buffer_),
         transform_lookup_retry_period_(0.02),
         transform_lookup_max_time_(0.25) {}
 
-  // Method that waits for a transform to become available, while doing less
-  // agressive polling that ROS's standard tf2_ros::Buffer::canTransform(...)
+  // Check whether a transform is available
+  bool isTransformAvailable(const std::string& to_frame_id,
+                            const std::string& from_frame_id,
+                            const ros::Time& frame_timestamp);
+
+  // Waits for a transform to become available, while doing less aggressive
+  // polling that ROS's standard tf2_ros::Buffer::canTransform(...)
   bool waitForTransform(const std::string& to_frame_id,
                         const std::string& from_frame_id,
                         const ros::Time& frame_timestamp);
 
-  // Method to lookup transforms and convert them Kindr
+  // Lookup transforms and convert them to Kindr
   bool lookupTransform(const std::string& to_frame_id,
                        const std::string& from_frame_id,
                        const ros::Time& frame_timestamp,
-                       Transformation3D* transform);
+                       Transformation3D& transform);
 
  protected:
   tf2_ros::Buffer tf_buffer_;
@@ -45,7 +50,7 @@ class TfTransformer {
   bool lookupTransformImpl(const std::string& to_frame_id,
                            const std::string& from_frame_id,
                            const ros::Time& frame_timestamp,
-                           Transformation3D* transform);
+                           Transformation3D& transform);
 };
 }  // namespace wavemap_2d
 

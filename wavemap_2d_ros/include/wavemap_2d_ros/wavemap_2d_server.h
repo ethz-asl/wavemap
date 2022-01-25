@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_
 
 #include <memory>
+#include <queue>
 #include <string>
 
 #include <glog/logging.h>
@@ -27,10 +28,13 @@ class Wavemap2DServer {
     std::string pointcloud_topic_name = "scan";
     int pointcloud_topic_queue_length = 10;
 
-    float map_visualization_timer_period_s = 10.f;
+    float map_visualization_period_s = 10.f;
 
     float map_autosave_period_s = -1.f;
     std::string map_autosave_path;
+
+    float pointcloud_queue_processing_period_s = 0.1f;
+    float pointcloud_queue_max_wait_for_transform_s = 1.f;
 
     static Config fromRosParams(ros::NodeHandle nh);
     bool isValid(bool verbose = true);
@@ -73,20 +77,21 @@ class Wavemap2DServer {
   std::shared_ptr<DataStructureType> occupancy_map_;
   std::shared_ptr<MeasurementModelType> measurement_model_;
   std::shared_ptr<PointcloudIntegrator> pointcloud_integrator_;
-
   TfTransformer transformer_;
 
-  ros::Subscriber pointcloud_sub_;
-  void subscribeToTopics(ros::NodeHandle nh);
+  std::queue<sensor_msgs::LaserScan> pointcloud_queue_;
+  void processPointcloudQueue();
 
-  void advertiseTopics(ros::NodeHandle /* nh_private */) {}
-
-  ros::ServiceServer save_map_srv_;
-  ros::ServiceServer load_map_srv_;
-  void advertiseServices(ros::NodeHandle nh_private);
-
+  ros::Timer pointcloud_queue_processing_timer_;
   ros::Timer map_visualization_timer_;
   ros::Timer map_autosave_timer_;
+  ros::Subscriber pointcloud_sub_;
+  ros::ServiceServer save_map_srv_;
+  ros::ServiceServer load_map_srv_;
+  void subscribeToTimers(ros::NodeHandle nh);
+  void subscribeToTopics(ros::NodeHandle nh);
+  void advertiseTopics(ros::NodeHandle nh_private);
+  void advertiseServices(ros::NodeHandle nh_private);
 };
 }  // namespace wavemap_2d
 
