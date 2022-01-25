@@ -4,7 +4,6 @@
 #include <map>
 #include <string>
 
-#include <minkindr_conversions/kindr_msg.h>
 #include <tf2_ros/transform_listener.h>
 #include <wavemap_2d/common.h>
 

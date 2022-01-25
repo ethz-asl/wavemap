@@ -1,18 +1,19 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>wavemap_2d_simulation</name>
-    <version>0.0.0</version>
-    <description>Models and launchers to record datasets in simulation.</description>
+  <name>wavemap_2d_simulation</name>
+  <version>0.0.0</version>
+  <description>Models and launchers to record datasets in simulation.
+  </description>
 
-    <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
-    <license>BSD</license>
-    <url>https://github.com/victorreijgwart/wavemap_2d</url>
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/victorreijgwart/wavemap_2d</url>
 
-    <author email="victorr@ethz.ch">Victor Reijgwart</author>
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
-    <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 
-    <depend>gazebo</depend>
-    <depend>gazebo_ros</depend>
-    <depend>wavemap_2d_ground_truth</depend>
+  <depend>gazebo</depend>
+  <depend>gazebo_ros</depend>
+  <depend>wavemap_2d_ground_truth</depend>
 </package>

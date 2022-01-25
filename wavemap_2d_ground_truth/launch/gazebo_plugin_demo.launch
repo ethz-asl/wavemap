@@ -9,7 +9,7 @@
   <arg name="pause_gazebo" default="false"/>
 
   <!-- Launch Gazebo world -->
-  <!-- Add the sample_data/gazebo models and resources to gazebo path -->
+  <!-- Add the sample_data/gazebo models and resources to gazebo's path -->
   <env name="GAZEBO_MODEL_PATH" value="$(optenv GAZEBO_MODEL_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
   <env name="GAZEBO_RESOURCE_PATH" value="$(optenv GAZEBO_RESOURCE_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
 

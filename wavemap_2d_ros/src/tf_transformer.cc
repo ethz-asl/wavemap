@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <minkindr_conversions/kindr_msg.h>
+
 namespace wavemap_2d {
 bool TfTransformer::waitForTransform(const std::string& to_frame_id,
                                      const std::string& from_frame_id,

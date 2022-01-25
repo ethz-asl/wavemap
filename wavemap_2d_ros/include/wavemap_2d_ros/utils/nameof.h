@@ -32,7 +32,7 @@
 
 #define NAMEOF(x) wavemap_2d::_nameof<0>(#x, sizeof(x))  // NOLINT
 
-#include <regex>  // NOLINT [build/c++11]
+#include <regex>  // NOLINT
 #include <stdexcept>
 #include <string>
 
