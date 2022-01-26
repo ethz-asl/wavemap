@@ -32,7 +32,6 @@ MapEvaluationSummary EvaluateMap(
     if (reference_state == CellState::kUnknown ||
         !EvaluationCellSelector::matches(
             evaluation_cell_selector.reference_cells, reference_state)) {
-      ++result.num_cells_ignored;
       continue;
     }
 
@@ -49,25 +48,25 @@ MapEvaluationSummary EvaluateMap(
       case CellEvaluationResult::kTruePositive:
         ++result.num_true_positive;
         if (visualize) {
-          error_map->setCellValue(index, 20.f);
+          error_map->setCellValue(index, 2.f);
         }
         break;
       case CellEvaluationResult::kTrueNegative:
         ++result.num_true_negative;
         if (visualize) {
-          error_map->setCellValue(index, 10.f);
+          error_map->setCellValue(index, 1.f);
         }
         break;
       case CellEvaluationResult::kFalsePositive:
         ++result.num_false_positive;
         if (visualize) {
-          error_map->setCellValue(index, -20.f);
+          error_map->setCellValue(index, -2.f);
         }
         break;
       case CellEvaluationResult::kFalseNegative:
         ++result.num_false_negative;
         if (visualize) {
-          error_map->setCellValue(index, -10.f);
+          error_map->setCellValue(index, -1.f);
         }
         break;
       default:

@@ -139,6 +139,8 @@ void Wavemap2DServer::subscribeToTopics(ros::NodeHandle nh) {
 void Wavemap2DServer::advertiseTopics(ros::NodeHandle /* nh_private */) {}
 
 void Wavemap2DServer::advertiseServices(ros::NodeHandle nh_private) {
+  visualize_map_srv_ = nh_private.advertiseService(
+      "visualize_map", &Wavemap2DServer::visualizeMapCallback, this);
   save_map_srv_ = nh_private.advertiseService(
       "save_map", &Wavemap2DServer::saveMapCallback, this);
   load_map_srv_ = nh_private.advertiseService(

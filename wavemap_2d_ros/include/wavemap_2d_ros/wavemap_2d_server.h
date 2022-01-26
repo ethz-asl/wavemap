@@ -8,6 +8,7 @@
 #include <glog/logging.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
+#include <std_srvs/Empty.h>
 #include <wavemap_2d/common.h>
 #include <wavemap_2d/datastructure/cell.h>
 #include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
@@ -46,6 +47,11 @@ class Wavemap2DServer {
                   Config config);
 
   void pointcloudCallback(const sensor_msgs::LaserScan& scan_msg);
+  bool visualizeMapCallback(std_srvs::Empty::Request& /* request */,
+                            std_srvs::Empty::Response& /* response */) {
+    visualizeMap();
+    return true;
+  }
   bool saveMapCallback(wavemap_2d_msgs::FilePath::Request& request,
                        wavemap_2d_msgs::FilePath::Response& response) {
     response.success = saveMap(request.file_path);
@@ -92,6 +98,7 @@ class Wavemap2DServer {
   ros::Timer map_visualization_timer_;
   ros::Timer map_autosave_timer_;
   ros::Subscriber pointcloud_sub_;
+  ros::ServiceServer visualize_map_srv_;
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
   ros::ServiceServer evaluate_map_srv_;

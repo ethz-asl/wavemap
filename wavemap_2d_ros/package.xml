@@ -24,5 +24,6 @@
   <depend>rosbag</depend>
 
   <depend>sensor_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>wavemap_2d_msgs</depend>
 </package>
