@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "wavemap_2d_ground_truth/common.h"
 #include "wavemap_2d_ground_truth/occupancy_grid_creator.h"
 
 namespace gazebo {
@@ -276,9 +277,8 @@ bool Wavemap2DGroundTruthPlugin::serviceCallback(
   // Save the occupancy grid to a file
   LOG_IF(INFO, kDebug) << "Saving occupancy grid to file: "
                        << request.file_path;
-  constexpr bool kUseFloatingPrecision = true;
-  occupancy_grid_creator.getOccupancyGrid().save(request.file_path,
-                                                 kUseFloatingPrecision);
+  occupancy_grid_creator.getOccupancyGrid().save(
+      request.file_path, wavemap_2d::ground_truth::kSaveWithFloatingPrecision);
 
   return true;
 }

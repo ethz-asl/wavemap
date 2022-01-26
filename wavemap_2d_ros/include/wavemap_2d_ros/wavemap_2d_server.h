@@ -56,6 +56,11 @@ class Wavemap2DServer {
     response.success = loadMap(request.file_path);
     return true;
   }
+  bool evaluateMapCallback(wavemap_2d_msgs::FilePath::Request& request,
+                           wavemap_2d_msgs::FilePath::Response& response) {
+    response.success = evaluateMap(request.file_path);
+    return true;
+  }
 
   void visualizeMap();
   bool saveMap(const std::string& file_path) {
@@ -66,6 +71,7 @@ class Wavemap2DServer {
     return !occupancy_map_->empty() &&
            occupancy_map_->save(file_path, kSaveWithFloatingPointPrecision);
   }
+  bool evaluateMap(const std::string& file_path);
 
  protected:
   using DataStructureType = DenseGrid<SaturatingCell<>>;
@@ -88,6 +94,7 @@ class Wavemap2DServer {
   ros::Subscriber pointcloud_sub_;
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
+  ros::ServiceServer evaluate_map_srv_;
   void subscribeToTimers(ros::NodeHandle nh);
   void subscribeToTopics(ros::NodeHandle nh);
   void advertiseTopics(ros::NodeHandle nh_private);

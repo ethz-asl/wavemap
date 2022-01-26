@@ -44,7 +44,8 @@ cs_add_library(
   src/integrator/beam_model.cc
   src/integrator/fixed_logodds_model.cc
   src/datastructure/datastructure_base.cc
-  src/utils/eigen_format.cc)
+  src/utils/eigen_format.cc
+  src/utils/evaluation_utils.cc)
 
 # Binaries
 cs_add_executable(carmen_processor app/carmen_processor.cc)

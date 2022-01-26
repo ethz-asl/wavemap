@@ -1,6 +1,7 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
 namespace wavemap_2d {
@@ -87,14 +88,37 @@ void Wavemap2DServer::processPointcloudQueue() {
   }
 }
 
+bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
+  DataStructureType ground_truth_map(occupancy_map_->getResolution());
+  if (ground_truth_map.load(file_path, true)) {
+    utils::EvaluationCellSelector evaluation_cell_selector;
+    auto unknown_cell_handling = utils::UnknownCellHandling::kIgnore;
+    utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
+        ground_truth_map, *occupancy_map_, evaluation_cell_selector,
+        unknown_cell_handling, true);
+    if (map_evaluation_summary.is_valid) {
+      ROS_INFO_STREAM("Map evaluation overview:\n"
+                      << map_evaluation_summary.toString());
+    } else {
+      ROS_WARN("Map evaluation failed.");
+    }
+    return map_evaluation_summary.is_valid;
+  }
+  return false;
+}
+
 void Wavemap2DServer::subscribeToTimers(ros::NodeHandle nh) {
   pointcloud_queue_processing_timer_ = nh.createTimer(
       ros::Duration(config_.pointcloud_queue_processing_period_s),
       std::bind(&Wavemap2DServer::processPointcloudQueue, this));
 
-  map_visualization_timer_ =
-      nh.createTimer(ros::Duration(config_.map_visualization_period_s),
-                     std::bind(&Wavemap2DServer::visualizeMap, this));
+  if (0.f < config_.map_visualization_period_s) {
+    ROS_INFO_STREAM("Registering map visualization timer with period "
+                    << config_.map_visualization_period_s << "s");
+    map_visualization_timer_ =
+        nh.createTimer(ros::Duration(config_.map_visualization_period_s),
+                       std::bind(&Wavemap2DServer::visualizeMap, this));
+  }
 
   if (0.f < config_.map_autosave_period_s &&
       !config_.map_autosave_path.empty()) {
@@ -119,6 +143,8 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle nh_private) {
       "save_map", &Wavemap2DServer::saveMapCallback, this);
   load_map_srv_ = nh_private.advertiseService(
       "load_map", &Wavemap2DServer::loadMapCallback, this);
+  evaluate_map_srv_ = nh_private.advertiseService(
+      "evaluate_map", &Wavemap2DServer::evaluateMapCallback, this);
 }
 
 void Wavemap2DServer::visualizeMap() {
@@ -195,11 +221,11 @@ bool Wavemap2DServer::Config::isValid(const bool verbose) {
                              << " must be a non-negative float";
   }
 
-  if (pointcloud_queue_processing_period_s < 0.f) {
+  if (pointcloud_queue_processing_period_s <= 0.f) {
     all_valid = false;
     LOG_IF(WARNING, verbose)
         << "Param " << NAMEOF(pointcloud_queue_processing_period_s)
-        << " must be a non-negative float";
+        << " must be a positive float";
   }
 
   if (pointcloud_queue_max_wait_for_transform_s < 0.f) {
