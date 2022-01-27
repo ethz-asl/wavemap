@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_2D_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_
 #define WAVEMAP_2D_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_
 
+#include <vector>
+
 #include <wavemap_2d/datastructure/cell.h>
 #include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
 
@@ -18,11 +20,13 @@ class OccupancyGridCreator {
   const DenseGrid<UnboundedCell>& getOccupancyGrid() { return occupancy_grid_; }
 
   // Floodfill the unoccupied space in the mesh, up to the bounds of the AABB.
-  void floodfillUnoccupied(FloatingPoint distance_value);
+  void floodfillUnoccupied(const Index& start_index);
 
  private:
   DenseGrid<UnboundedCell> occupancy_grid_;
   FloatingPoint slice_height_;
+
+  static const std::vector<Index> kNeighborOffsets;
 };
 }  // namespace wavemap_2d::ground_truth
 

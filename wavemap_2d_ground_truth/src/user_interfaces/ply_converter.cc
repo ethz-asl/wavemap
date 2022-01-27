@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
   // TODO(victorr): Read from optional param
   constexpr bool floodfill_unoccupied = false;
   if (floodfill_unoccupied) {
-    occupancy_grid_creator.floodfillUnoccupied(4 * FLAGS_resolution);
+    occupancy_grid_creator.floodfillUnoccupied(Index::Zero());
   }
 
   /* Check if the map is empty before continuing */

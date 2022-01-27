@@ -25,7 +25,13 @@ void Wavemap2DGroundTruthPlugin::Load(physics::WorldPtr world,
 bool Wavemap2DGroundTruthPlugin::serviceCallback(
     wavemap_2d_msgs::FilePath::Request& request,
     wavemap_2d_msgs::FilePath::Response& response) {
-  constexpr bool kDebug = false;
+  response.success = saveOccupancyGrid(request.file_path);
+  return true;
+}
+
+bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
+    const std::string& file_path) {
+  constexpr bool kDebug = true;
 
   // Read the resolution and slice height from ROS params
   wavemap_2d::FloatingPoint resolution;
@@ -258,11 +264,8 @@ bool Wavemap2DGroundTruthPlugin::serviceCallback(
   nh_private_.param("floodfill_unoccupied", floodfill_unoccupied,
                     floodfill_unoccupied);
   if (floodfill_unoccupied) {
-    wavemap_2d::FloatingPoint distance = 4 * resolution;
-    nh_private_.param("floodfill_distance", distance, distance);
-    LOG_IF(INFO, kDebug)
-        << "Floodfill unoccupied space, with floodfill distance: " << distance;
-    occupancy_grid_creator.floodfillUnoccupied(distance);
+    LOG_IF(INFO, kDebug) << "Floodfill unoccupied space";
+    occupancy_grid_creator.floodfillUnoccupied(wavemap_2d::Index::Zero());
   }
 
   // Visualize the TSDF and intersection count layers
@@ -275,10 +278,9 @@ bool Wavemap2DGroundTruthPlugin::serviceCallback(
   }
 
   // Save the occupancy grid to a file
-  LOG_IF(INFO, kDebug) << "Saving occupancy grid to file: "
-                       << request.file_path;
+  LOG_IF(INFO, kDebug) << "Saving occupancy grid to file: " << file_path;
   occupancy_grid_creator.getOccupancyGrid().save(
-      request.file_path, wavemap_2d::ground_truth::kSaveWithFloatingPrecision);
+      file_path, wavemap_2d::ground_truth::kSaveWithFloatingPrecision);
 
   return true;
 }
