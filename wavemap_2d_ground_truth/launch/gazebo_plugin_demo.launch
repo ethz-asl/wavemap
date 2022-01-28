@@ -1,8 +1,8 @@
 <launch>
   <!-- Save the ground truth wavemap_2d map with:
        rosservice call /gazebo/wavemap_2d_ground_truth_plugin/save_occupancy_grid_to_file "file_path: '/home/you/ground_truth_map_name.tsdf'"-->
-  <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.2"/>
-  <param name="/gazebo/wavemap_2d_ground_truth_plugin/slice_height" value="1.0"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.05"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/slice_height" value="0.268"/>
   <param name="/gazebo/wavemap_2d_ground_truth_plugin/floodfill_unoccupied" value="true"/>
 
   <arg name="show_gazebo" default="true"/>

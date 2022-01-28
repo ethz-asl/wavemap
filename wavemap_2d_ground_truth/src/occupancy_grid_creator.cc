@@ -32,13 +32,12 @@ void OccupancyGridCreator::integrateTriangle(const Triangle& triangle) {
 
 void OccupancyGridCreator::floodfillUnoccupied(const Index& start_index) {
   std::queue<Index> open_queue;
-  open_queue.emplace(start_index);
   std::unordered_set<Index, IndexHash> closed_set;
-  closed_set.emplace(start_index);
 
   const Index min_index = occupancy_grid_.getMinIndex();
   const Index max_index = occupancy_grid_.getMaxIndex();
 
+  open_queue.emplace(start_index);
   while (!open_queue.empty()) {
     const Index current_index = open_queue.front();
     open_queue.pop();
