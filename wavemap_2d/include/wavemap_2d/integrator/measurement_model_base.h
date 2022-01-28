@@ -36,7 +36,8 @@ class MeasurementModelBase {
   bool exceedsMaxRange() const { return kRangeMax < measured_distance_; }
   Point getEndPointOrMaxRange() const {
     if (kRangeMax < measured_distance_) {
-      return kRangeMax / measured_distance_ * (W_end_point_ - W_start_point_);
+      return W_start_point_ +
+             kRangeMax / measured_distance_ * (W_end_point_ - W_start_point_);
     } else {
       return W_end_point_;
     }
