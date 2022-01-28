@@ -76,7 +76,8 @@ template <typename CellType, typename TestMap>
 MapEvaluationSummary EvaluateMap(
     const DenseGrid<CellType>& map_reference, const TestMap& map_to_test,
     const EvaluationCellSelector& evaluation_cell_selector,
-    UnknownCellHandling unknown_test_cell_handling, bool visualize = false);
+    UnknownCellHandling unknown_test_cell_handling,
+    DenseGrid<CellType>* error_grid = nullptr);
 }  // namespace wavemap_2d::utils
 
 #include "wavemap_2d/utils/evaluation_utils_impl.h"

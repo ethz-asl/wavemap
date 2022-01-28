@@ -9,6 +9,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_srvs/Empty.h>
+#include <visualization_msgs/Marker.h>
 #include <wavemap_2d/common.h>
 #include <wavemap_2d/datastructure/cell.h>
 #include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
@@ -98,6 +99,9 @@ class Wavemap2DServer {
   ros::Timer map_visualization_timer_;
   ros::Timer map_autosave_timer_;
   ros::Subscriber pointcloud_sub_;
+  ros::Publisher occupancy_grid_pub_;
+  ros::Publisher occupancy_grid_error_pub_;
+  ros::Publisher occupancy_grid_ground_truth_pub_;
   ros::ServiceServer visualize_map_srv_;
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
@@ -106,6 +110,20 @@ class Wavemap2DServer {
   void subscribeToTopics(ros::NodeHandle nh);
   void advertiseTopics(ros::NodeHandle nh_private);
   void advertiseServices(ros::NodeHandle nh_private);
+
+  struct RGBAColor {
+    FloatingPoint a;
+    FloatingPoint r;
+    FloatingPoint g;
+    FloatingPoint b;
+  };
+  static constexpr RGBAColor kTransparent{0.f, 0.f, 0.f, 0.f};
+  static constexpr RGBAColor kWhite{1.f, 1.f, 1.f, 1.f};
+  static constexpr RGBAColor kBlack{1.f, 0.f, 0.f, 0.f};
+  static visualization_msgs::Marker gridToMarker(
+      const DataStructureType& grid, const std::string& world_frame,
+      const std::string& marker_namespace,
+      const std::function<RGBAColor(FloatingPoint)>& color_map);
 };
 }  // namespace wavemap_2d
 

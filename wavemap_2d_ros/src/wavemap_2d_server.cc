@@ -89,21 +89,56 @@ void Wavemap2DServer::processPointcloudQueue() {
 }
 
 bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
-  DataStructureType ground_truth_map(occupancy_map_->getResolution());
-  if (ground_truth_map.load(file_path, true)) {
-    utils::EvaluationCellSelector evaluation_cell_selector;
-    auto unknown_cell_handling = utils::UnknownCellHandling::kIgnore;
-    utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
-        ground_truth_map, *occupancy_map_, evaluation_cell_selector,
-        unknown_cell_handling, true);
-    if (map_evaluation_summary.is_valid) {
-      ROS_INFO_STREAM("Map evaluation overview:\n"
-                      << map_evaluation_summary.toString());
-    } else {
-      ROS_WARN("Map evaluation failed.");
-    }
-    return map_evaluation_summary.is_valid;
+  if (!occupancy_map_) {
+    ROS_ERROR("The occupancy map has not yet been created.");
+    return false;
   }
+  const FloatingPoint resolution = occupancy_map_->getResolution();
+
+  DataStructureType ground_truth_map(resolution);
+  if (!ground_truth_map.load(file_path, true)) {
+    ROS_WARN("Could not load the ground truth map.");
+    return false;
+  }
+  visualization_msgs::Marker occupancy_grid_ground_truth_marker = gridToMarker(
+      ground_truth_map, config_.world_frame, "occupancy_grid_ground_truth",
+      [](FloatingPoint gt_occupancy) {
+        if (std::abs(gt_occupancy) < kEpsilon) {
+          return kTransparent;
+        } else if (gt_occupancy < 0.f) {
+          return kWhite;
+        } else {
+          return kBlack;
+        }
+      });
+  occupancy_grid_ground_truth_pub_.publish(occupancy_grid_ground_truth_marker);
+
+  utils::EvaluationCellSelector evaluation_cell_selector;
+  auto unknown_cell_handling = utils::UnknownCellHandling::kIgnore;
+  DataStructureType error_grid(resolution);
+  utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
+      ground_truth_map, *occupancy_map_, evaluation_cell_selector,
+      unknown_cell_handling, &error_grid);
+
+  if (map_evaluation_summary.is_valid) {
+    ROS_INFO_STREAM("Map evaluation overview:\n"
+                    << map_evaluation_summary.toString());
+    visualization_msgs::Marker occupancy_error_grid_marker = gridToMarker(
+        error_grid, config_.world_frame, "occupancy_grid_evaluation",
+        [](FloatingPoint error_value) {
+          if (error_value < 0.f) {
+            return RGBAColor{1.f, error_value / 2.f, 0.f, 0.f};
+          } else if (0.f < error_value) {
+            return RGBAColor{1.f, 0.f, error_value / 2.f, 0.f};
+          } else {
+            return kTransparent;
+          }
+        });
+    occupancy_grid_error_pub_.publish(occupancy_error_grid_marker);
+    return true;
+  }
+
+  ROS_WARN("Map evaluation failed.");
   return false;
 }
 
@@ -136,7 +171,15 @@ void Wavemap2DServer::subscribeToTopics(ros::NodeHandle nh) {
                                  &Wavemap2DServer::pointcloudCallback, this);
 }
 
-void Wavemap2DServer::advertiseTopics(ros::NodeHandle /* nh_private */) {}
+void Wavemap2DServer::advertiseTopics(ros::NodeHandle nh_private) {
+  occupancy_grid_pub_ = nh_private.advertise<visualization_msgs::Marker>(
+      "occupancy_grid", 10, true);
+  occupancy_grid_error_pub_ = nh_private.advertise<visualization_msgs::Marker>(
+      "occupancy_grid_error", 10, true);
+  occupancy_grid_ground_truth_pub_ =
+      nh_private.advertise<visualization_msgs::Marker>(
+          "occupancy_grid_ground_truth", 10, true);
+}
 
 void Wavemap2DServer::advertiseServices(ros::NodeHandle nh_private) {
   visualize_map_srv_ = nh_private.advertiseService(
@@ -150,10 +193,60 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle nh_private) {
 }
 
 void Wavemap2DServer::visualizeMap() {
-  if (!occupancy_map_->empty()) {
-    ROS_INFO_STREAM("Showing map of size " << occupancy_map_->dimensions());
-    occupancy_map_->showImage(true);
+  if (occupancy_map_ && !occupancy_map_->empty()) {
+    visualization_msgs::Marker occupancy_grid_marker = gridToMarker(
+        *occupancy_map_, config_.world_frame, "occupancy_grid",
+        [](FloatingPoint cell_log_odds) {
+          if (std::abs(cell_log_odds) < kEpsilon) {
+            return kTransparent;
+          }
+          const FloatingPoint cell_odds = std::exp(cell_log_odds);
+          const FloatingPoint cell_prob = cell_odds / (1.f + cell_odds);
+          const FloatingPoint cell_free_prob = 1.f - cell_prob;
+          return RGBAColor{1.f, cell_free_prob, cell_free_prob, cell_free_prob};
+        });
+    occupancy_grid_pub_.publish(occupancy_grid_marker);
   }
+}
+
+visualization_msgs::Marker Wavemap2DServer::gridToMarker(
+    const Wavemap2DServer::DataStructureType& grid,
+    const std::string& world_frame, const std::string& marker_namespace,
+    const std::function<RGBAColor(FloatingPoint)>& color_map) {
+  const FloatingPoint resolution = grid.getResolution();
+
+  visualization_msgs::Marker grid_marker;
+  grid_marker.header.frame_id = world_frame;
+  grid_marker.header.stamp = ros::Time();
+  grid_marker.ns = marker_namespace;
+  grid_marker.id = 0;
+  grid_marker.type = visualization_msgs::Marker::POINTS;
+  grid_marker.action = visualization_msgs::Marker::MODIFY;
+  grid_marker.pose.orientation.w = 1.0;
+  grid_marker.scale.x = resolution;
+  grid_marker.scale.y = resolution;
+  grid_marker.scale.z = resolution;
+  grid_marker.color.a = 1.0;
+
+  for (const Index& index : Grid(grid.getMinIndex(), grid.getMaxIndex())) {
+    const Point cell_position = index.cast<FloatingPoint>() * resolution;
+    geometry_msgs::Point position_msg;
+    position_msg.x = cell_position.x();
+    position_msg.y = cell_position.y();
+    position_msg.z = 0.0;
+    grid_marker.points.emplace_back(position_msg);
+
+    const FloatingPoint cell_value = grid.getCellValue(index);
+    const RGBAColor color = color_map(cell_value);
+    std_msgs::ColorRGBA color_msg;
+    color_msg.a = color.a;
+    color_msg.r = color.r;
+    color_msg.g = color.g;
+    color_msg.b = color.b;
+    grid_marker.colors.emplace_back(color_msg);
+  }
+
+  return grid_marker;
 }
 
 Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(

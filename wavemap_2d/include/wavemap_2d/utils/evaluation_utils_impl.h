@@ -8,13 +8,8 @@ template <typename CellType, typename TestMap>
 MapEvaluationSummary EvaluateMap(
     const DenseGrid<CellType>& map_reference, const TestMap& map_to_test,
     const EvaluationCellSelector& evaluation_cell_selector,
-    UnknownCellHandling unknown_test_cell_handling, bool visualize) {
-  std::unique_ptr<DenseGrid<CellType>> error_map;
-  if (visualize) {
-    error_map =
-        std::make_unique<DenseGrid<CellType>>(map_reference.getResolution());
-  }
-
+    UnknownCellHandling unknown_test_cell_handling,
+    DenseGrid<CellType>* error_grid) {
   if (evaluation_cell_selector.iterate_over_known_cells_from !=
       CellSource::kReference) {
     LOG(ERROR) << "Evaluations currently only support iterating over the "
@@ -47,36 +42,32 @@ MapEvaluationSummary EvaluateMap(
         EvaluateCell(reference_state, test_state, unknown_test_cell_handling)) {
       case CellEvaluationResult::kTruePositive:
         ++result.num_true_positive;
-        if (visualize) {
-          error_map->setCellValue(index, 2.f);
+        if (error_grid) {
+          error_grid->setCellValue(index, 2.f);
         }
         break;
       case CellEvaluationResult::kTrueNegative:
         ++result.num_true_negative;
-        if (visualize) {
-          error_map->setCellValue(index, 1.f);
+        if (error_grid) {
+          error_grid->setCellValue(index, 1.f);
         }
         break;
       case CellEvaluationResult::kFalsePositive:
         ++result.num_false_positive;
-        if (visualize) {
-          error_map->setCellValue(index, -2.f);
+        if (error_grid) {
+          error_grid->setCellValue(index, -2.f);
         }
         break;
       case CellEvaluationResult::kFalseNegative:
         ++result.num_false_negative;
-        if (visualize) {
-          error_map->setCellValue(index, -1.f);
+        if (error_grid) {
+          error_grid->setCellValue(index, -1.f);
         }
         break;
       default:
         ++result.num_cells_ignored;
         break;
     }
-  }
-
-  if (visualize) {
-    error_map->showImage(true);
   }
 
   return result;

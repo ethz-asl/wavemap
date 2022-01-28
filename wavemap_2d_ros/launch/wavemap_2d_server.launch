@@ -32,7 +32,7 @@
          value="gdb -ex run --args"/>
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
-    <node name="wavemap_2d_server_node" pkg="wavemap_2d_ros"
+    <node name="wavemap_2d" pkg="wavemap_2d_ros"
           type="wavemap_2d_server_node"
           output="screen" args="-alsologtostderr"
           launch-prefix="$(arg launch_prefix)">
