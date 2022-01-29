@@ -29,8 +29,6 @@ class Node {
   const Node* getChild(NodeRelativeChildIndex child_index) const;
 
  protected:
-  using ChildNodePtrArray = Node * [NodeIndex::kNumChildren];
-
   NodeDataType data_;
   Node** children_;
 };
