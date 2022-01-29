@@ -7,7 +7,7 @@
 namespace wavemap_2d {
 Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                                  Wavemap2DServer::Config config)
-    : config_(config) {
+    : config_(std::move(config)) {
   // Assert that the config is valid
   CHECK(config_.isValid(/*verbose*/ true));
 
@@ -81,7 +81,13 @@ void Wavemap2DServer::processPointcloudQueue() {
     const Transformation T_W_C_2d(Rotation(T_W_C.getRotation().log().z()),
                                   T_W_C.getPosition().head<2>());
     const PosedPointcloud posed_pointcloud(T_W_C_2d, Pointcloud(t_C_points_2d));
+    integration_timer.start();
     pointcloud_integrator_->integratePointcloud(posed_pointcloud);
+    ROS_INFO_STREAM("Integrated new pointcloud in "
+                    << integration_timer.stop() << "s. Total integration time: "
+                    << integration_timer.getTotal() << "s.");
+    ROS_INFO_STREAM("Current map memory usage: "
+                    << occupancy_map_->getMemoryUsage() / 1e6 << "MB.");
 
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();
@@ -142,7 +148,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   return false;
 }
 
-void Wavemap2DServer::subscribeToTimers(ros::NodeHandle nh) {
+void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
   pointcloud_queue_processing_timer_ = nh.createTimer(
       ros::Duration(config_.pointcloud_queue_processing_period_s),
       std::bind(&Wavemap2DServer::processPointcloudQueue, this));
@@ -165,13 +171,13 @@ void Wavemap2DServer::subscribeToTimers(ros::NodeHandle nh) {
   }
 }
 
-void Wavemap2DServer::subscribeToTopics(ros::NodeHandle nh) {
+void Wavemap2DServer::subscribeToTopics(ros::NodeHandle& nh) {
   pointcloud_sub_ = nh.subscribe(config_.pointcloud_topic_name,
                                  config_.pointcloud_topic_queue_length,
                                  &Wavemap2DServer::pointcloudCallback, this);
 }
 
-void Wavemap2DServer::advertiseTopics(ros::NodeHandle nh_private) {
+void Wavemap2DServer::advertiseTopics(ros::NodeHandle& nh_private) {
   occupancy_grid_pub_ = nh_private.advertise<visualization_msgs::Marker>(
       "occupancy_grid", 10, true);
   occupancy_grid_error_pub_ = nh_private.advertise<visualization_msgs::Marker>(
@@ -181,7 +187,7 @@ void Wavemap2DServer::advertiseTopics(ros::NodeHandle nh_private) {
           "occupancy_grid_ground_truth", 10, true);
 }
 
-void Wavemap2DServer::advertiseServices(ros::NodeHandle nh_private) {
+void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
   visualize_map_srv_ = nh_private.advertiseService(
       "visualize_map", &Wavemap2DServer::visualizeMapCallback, this);
   save_map_srv_ = nh_private.advertiseService(

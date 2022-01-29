@@ -1,6 +1,7 @@
 map_resolution: 0.05
 world_frame: "odom"
 pointcloud_topic_queue_length: 10
-map_visualization_period_s: 10.0
-map_autosave_period_s: 10.0
+pointcloud_queue_max_wait_for_transform_s: 10
+map_visualization_period_s: 1.0
+map_autosave_period_s: -1.0
 map_autosave_path: "../catkin_ws/wavemap_2d_map"

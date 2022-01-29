@@ -18,6 +18,8 @@ class Node {
   void allocateChildrenArray();
   void pruneChildren();
 
+  size_t getMemoryUsage() const;
+
   bool hasAtLeastOneChild() const;
   bool hasChild(NodeRelativeChildIndex child_index) const {
     return children_ && children_[child_index];
@@ -27,6 +29,8 @@ class Node {
   const Node* getChild(NodeRelativeChildIndex child_index) const;
 
  protected:
+  using ChildNodePtrArray = Node * [NodeIndex::kNumChildren];
+
   NodeDataType data_;
   Node** children_;
 };

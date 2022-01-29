@@ -38,6 +38,30 @@ size_t Quadtree<CellTypeT>::size() const {
 }
 
 template <typename CellTypeT>
+size_t Quadtree<CellTypeT>::getMemoryUsage() const {
+  size_t memory_usage = 0u;
+
+  std::stack<const Node<CellDataSpecialized>*> stack;
+  stack.template emplace(&root_node_);
+  while (!stack.empty()) {
+    const Node<CellDataSpecialized>* node = stack.top();
+    stack.pop();
+    memory_usage += node->getMemoryUsage();
+
+    if (node->hasAllocatedChildrenArray()) {
+      for (NodeRelativeChildIndex child_idx = 0;
+           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+        if (node->hasChild(child_idx)) {
+          stack.template emplace(node->getChild(child_idx));
+        }
+      }
+    }
+  }
+
+  return memory_usage;
+}
+
+template <typename CellTypeT>
 bool Quadtree<CellTypeT>::hasCell(const Index& index) const {
   const NodeIndex node_index =
       computeNodeIndexFromIndexAndDepth(index, max_depth_);

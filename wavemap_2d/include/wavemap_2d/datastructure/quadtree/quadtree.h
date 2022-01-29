@@ -29,6 +29,8 @@ class Quadtree : public DataStructureBase {
   size_t size() const override;
   void clear() override { root_node_.pruneChildren(); }
 
+  size_t getMemoryUsage() const override;
+
   NodeIndexElement getMaxDepth() const { return max_depth_; }
   Index getMinPossibleIndex() {
     return (-getNodeHalvedDiagonalAtDepth(0u)).template cast<IndexElement>();

@@ -5,7 +5,7 @@ namespace wavemap_2d {
 template <typename NodeDataType>
 void Node<NodeDataType>::allocateChildrenArray() {
   if (!children_) {
-    children_ = new Node*[NodeIndex::kNumChildren];
+    children_ = new ChildNodePtrArray;
     for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
       children_[idx] = nullptr;
     }
@@ -23,6 +23,15 @@ void Node<NodeDataType>::pruneChildren() {
     delete[] children_;
     children_ = nullptr;
   }
+}
+
+template <typename NodeDataType>
+size_t Node<NodeDataType>::getMemoryUsage() const {
+  size_t memory_usage = sizeof(Node<NodeDataType>);
+  if (hasAllocatedChildrenArray()) {
+    memory_usage += sizeof(ChildNodePtrArray);
+  }
+  return memory_usage;
 }
 
 template <typename NodeDataType>

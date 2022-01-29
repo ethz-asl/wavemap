@@ -17,6 +17,7 @@
 #include <wavemap_2d_msgs/FilePath.h>
 
 #include "wavemap_2d_ros/tf_transformer.h"
+#include "wavemap_2d_ros/utils/timer.h"
 
 namespace wavemap_2d {
 
@@ -94,6 +95,7 @@ class Wavemap2DServer {
 
   std::queue<sensor_msgs::LaserScan> pointcloud_queue_;
   void processPointcloudQueue();
+  CpuTimer integration_timer;
 
   ros::Timer pointcloud_queue_processing_timer_;
   ros::Timer map_visualization_timer_;
@@ -106,10 +108,10 @@ class Wavemap2DServer {
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
   ros::ServiceServer evaluate_map_srv_;
-  void subscribeToTimers(ros::NodeHandle nh);
-  void subscribeToTopics(ros::NodeHandle nh);
-  void advertiseTopics(ros::NodeHandle nh_private);
-  void advertiseServices(ros::NodeHandle nh_private);
+  void subscribeToTimers(const ros::NodeHandle& nh);
+  void subscribeToTopics(ros::NodeHandle& nh);
+  void advertiseTopics(ros::NodeHandle& nh_private);
+  void advertiseServices(ros::NodeHandle& nh_private);
 
   struct RGBAColor {
     FloatingPoint a;

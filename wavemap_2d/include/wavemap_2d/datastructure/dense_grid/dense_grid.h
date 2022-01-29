@@ -21,6 +21,10 @@ class DenseGrid : public DataStructureBase {
   size_t size() const override { return data_.size(); }
   void clear() override;
 
+  size_t getMemoryUsage() const override {
+    return size() * sizeof(CellDataSpecialized);
+  }
+
   Index dimensions() const { return {data_.rows(), data_.cols()}; }
   Index getMinIndex() const { return min_index_; }
   Index getMaxIndex() const { return max_index_; }
