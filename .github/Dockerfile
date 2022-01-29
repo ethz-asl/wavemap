@@ -5,12 +5,14 @@ ARG ROS_HOME
 ARG REPOSITORY_NAME
 ARG PACKAGE_NAME
 
+# hadolint ignore=DL3006
 FROM $FROM_IMAGE AS cacher
 
 # Install vcstool
 ARG DEBIAN_FRONTEND=noninteractive
+# hadolint ignore=DL3008
 RUN apt-get update && \
-    apt-get install -q -y git python3-vcstool && \
+    apt-get install -q -y --no-install-recommends git python3-vcstool && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy in the project's source
@@ -25,10 +27,11 @@ RUN mkdir src/dependencies && \
       src/dependencies
 
 # Cache the manifests of all packages for use in subsequent stages
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /tmp/manifests && \
-    find ./src -name "package.xml" | \
+    find ./src -name "package.xml" -print0 | \
       xargs cp --parents -t /tmp/manifests && \
-    find ./src -name "CATKIN_IGNORE" | \
+    find ./src -name "CATKIN_IGNORE" -print0 | \
       xargs cp --parents -t /tmp/manifests || true && \
     echo "Manifests hash:" && \
     find /tmp/manifests -type f -print0 | sort -z | \
@@ -38,13 +41,14 @@ RUN mkdir -p /tmp/manifests && \
 # NOTE: We filter out the git histories since these change even if the code
 #       didn't, which causes unnecessary Docker build cache misses.
 RUN mkdir -p /tmp/filtered_sources && \
-    find ./src/dependencies -type d -name .git -prune -o -type f -print | \
+    find ./src/dependencies -type d -name .git -prune -o -type f -print0 | \
       xargs cp --parents -t /tmp/filtered_sources || true && \
     echo "Filtered dependencies sources hash:" && \
     find /tmp/filtered_sources -type f -print0 | sort -z | \
       xargs -0 sha1sum | sha1sum
 
 
+# hadolint ignore=DL3006
 FROM $FROM_IMAGE AS system-deps-installer
 
 # Load the cached manifests
@@ -59,8 +63,9 @@ COPY --from=cacher /tmp/manifests .
 ARG DEBIAN_FRONTEND=noninteractive
 ARG ROS_HOME
 ENV ROS_HOME=$ROS_HOME
+# hadolint ignore=DL3008
 RUN apt-get update && \
-    apt-get install -q -y git python3-catkin-tools ccache libopencv-viz-dev && \
+    apt-get install -q -y --no-install-recommends git python3-catkin-tools ccache libopencv-viz-dev && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src \
       --skip-keys="numpy_eigen catkin_boost_python_buildtool" -q -y && \
@@ -88,6 +93,8 @@ ARG CCACHE_DIR
 COPY ccache $CCACHE_DIR
 
 # Setup the catkin workspace and build the dependencies
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# hadolint ignore=SC2046
 RUN . /opt/ros/noetic/setup.sh && \
     catkin init && \
     catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
@@ -116,6 +123,7 @@ FROM system-deps-installer AS workspace-underlay
 # NOTE: The devel/setup.bash will only be pulled in in a subsequent stage, so
 #       images built only up to the current stage (i.e. with
 #       --target=workspace-underlay) cannot yet successfully be booted.
+# hadolint ignore=SC2086
 RUN sed --in-place \
       's|^source .*|source "'$CATKIN_WS_PATH'/devel/setup.bash"|' \
       /ros_entrypoint.sh
@@ -158,10 +166,12 @@ COPY --from=workspace-full-builder $CATKIN_WS_PATH .
 FROM scratch AS workspace-deps-builder-ccache-extractor
 
 ARG CCACHE_DIR
+WORKDIR /
 COPY --from=workspace-deps-builder $CCACHE_DIR .
 
 
 FROM scratch AS workspace-full-builder-ccache-extractor
 
 ARG CCACHE_DIR
+WORKDIR /
 COPY --from=workspace-full-builder $CCACHE_DIR .

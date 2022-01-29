@@ -53,37 +53,6 @@ repos:
                 --library=googletest, --library=tools/cppcheck/gazebo,
                 "--suppress=syntaxError:*test/src/*/test_*.cc" ]
 
-  - repo: local
-    hooks:
-      - name: Lint package manifests
-        id: xmllint
-        entry: xmllint --noout
-        language: system
-        types: [ file ]
-        files: (package.xml)$
-        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
-      - name: Lint launch files
-        id: xmllint
-        entry: xmllint --noout
-        language: system
-        types: [ file ]
-        files: \.(launch)$
-        args: [ --schema, tools/xml_schemas/roslaunch.xsd ]
-      - name: Lint URDF files
-        id: xmllint
-        entry: xmllint --noout
-        language: system
-        types: [ file ]
-        files: \.(urdf)$
-        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
-    # - name: Lint SDF files
-    #   id: xmllint
-    #   entry: xmllint --noout
-    #   language: system
-    #   types: [ file ]
-    #   files: \.(sdf|model|world)$
-    #   args: [ --schema, tools/xml_schemas/sdf.xsd ]
-
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
@@ -93,3 +62,46 @@ repos:
       - name: Run cmake-lint
         id: cmake-lint
         additional_dependencies: [ pyyaml>=5.1 ]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.8.0.3
+    hooks:
+      - name: Run shellcheck
+        id: shellcheck
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.8.0
+    hooks:
+      - name: Check dockerfiles with hadolint
+        id: hadolint
+
+  - repo: local
+    hooks:
+      - name: Check package manifests
+        id: xmllint
+        entry: xmllint --noout
+        language: system
+        types: [ file ]
+        files: (package.xml)$
+        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
+      - name: Check launch files
+        id: xmllint
+        entry: xmllint --noout
+        language: system
+        types: [ file ]
+        files: \.(launch)$
+        args: [ --schema, tools/xml_schemas/roslaunch.xsd ]
+      - name: Check URDF files
+        id: xmllint
+        entry: xmllint --noout
+        language: system
+        types: [ file ]
+        files: \.(urdf)$
+        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
+    # - name: Check SDF files
+    #   id: xmllint
+    #   entry: xmllint --noout
+    #   language: system
+    #   types: [ file ]
+    #   files: \.(sdf|model|world)$
+    #   args: [ --schema, tools/xml_schemas/sdf.xsd ]

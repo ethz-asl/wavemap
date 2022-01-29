@@ -144,6 +144,8 @@ jobs:
           apt-get update
           apt-get install -q -y git python3-pip clang-format cppcheck libxml2-utils
           pip3 install pre-commit cpplint
+          wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
+          chmod +x /bin/hadolint
 
       - name: Fetch the package's repository
         uses: actions/checkout@v2
