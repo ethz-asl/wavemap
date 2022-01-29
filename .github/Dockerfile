@@ -29,10 +29,10 @@ RUN mkdir src/dependencies && \
 # Cache the manifests of all packages for use in subsequent stages
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /tmp/manifests && \
-    find ./src -name "package.xml" -print0 | \
-      xargs cp --parents -t /tmp/manifests && \
-    find ./src -name "CATKIN_IGNORE" -print0 | \
-      xargs cp --parents -t /tmp/manifests || true && \
+    find ./src -name "package.xml" -exec \
+      cp --parents -t /tmp/manifests {} \; && \
+    find ./src -name "CATKIN_IGNORE" -exec \
+      cp --parents -t /tmp/manifests {} \; && \
     echo "Manifests hash:" && \
     find /tmp/manifests -type f -print0 | sort -z | \
       xargs -0 sha1sum | sha1sum
@@ -41,8 +41,8 @@ RUN mkdir -p /tmp/manifests && \
 # NOTE: We filter out the git histories since these change even if the code
 #       didn't, which causes unnecessary Docker build cache misses.
 RUN mkdir -p /tmp/filtered_sources && \
-    find ./src/dependencies -type d -name .git -prune -o -type f -print0 | \
-      xargs cp --parents -t /tmp/filtered_sources || true && \
+    find ./src/dependencies -type d -name .git -prune -o -type f -exec \
+      cp --parents -t /tmp/filtered_sources {} \; && \
     echo "Filtered dependencies sources hash:" && \
     find /tmp/filtered_sources -type f -print0 | sort -z | \
       xargs -0 sha1sum | sha1sum
