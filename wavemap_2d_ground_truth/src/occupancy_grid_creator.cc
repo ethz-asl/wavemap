@@ -64,5 +64,4 @@ void OccupancyGridCreator::floodfillUnoccupied(const Index& start_index) {
     }
   }
 }
-
 }  // namespace wavemap_2d::ground_truth

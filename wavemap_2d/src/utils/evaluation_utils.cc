@@ -1,43 +1,6 @@
 #include "wavemap_2d/utils/evaluation_utils.h"
 
 namespace wavemap_2d::utils {
-CellEvaluationResult EvaluateCell(
-    CellState reference_state, CellState test_state,
-    UnknownCellHandling unknown_test_cell_handling) {
-  if (test_state == CellState::kUnknown) {
-    switch (unknown_test_cell_handling) {
-      case UnknownCellHandling::kIgnore:
-        return CellEvaluationResult::kIgnore;
-      case UnknownCellHandling::kAlwaysFalse:
-        if (reference_state == CellState::kOccupied) {
-          return CellEvaluationResult::kFalseNegative;
-        } else {
-          return CellEvaluationResult::kFalsePositive;
-        }
-      case UnknownCellHandling::kAssumeFree:
-        test_state = CellState::kFree;
-        break;
-      case UnknownCellHandling::kAssumeOccupied:
-        test_state = CellState::kOccupied;
-        break;
-    }
-  }
-
-  if (reference_state == test_state) {
-    if (test_state == CellState::kOccupied) {
-      return CellEvaluationResult::kTruePositive;
-    } else {
-      return CellEvaluationResult::kTrueNegative;
-    }
-  } else {
-    if (test_state == CellState::kOccupied) {
-      return CellEvaluationResult::kFalsePositive;
-    } else {
-      return CellEvaluationResult::kFalseNegative;
-    }
-  }
-}
-
 FloatingPoint MapEvaluationSummary::precision() const {
   return static_cast<FloatingPoint>(num_true_positive) /
          static_cast<FloatingPoint>(num_true_positive + num_false_positive);

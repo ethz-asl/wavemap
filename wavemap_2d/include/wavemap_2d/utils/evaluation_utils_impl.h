@@ -4,73 +4,73 @@
 #include <memory>
 
 namespace wavemap_2d::utils {
-template <typename CellType, typename TestMap>
-MapEvaluationSummary EvaluateMap(
-    const DenseGrid<CellType>& map_reference, const TestMap& map_to_test,
-    const EvaluationCellSelector& evaluation_cell_selector,
-    UnknownCellHandling unknown_test_cell_handling,
-    DenseGrid<CellType>* error_grid) {
-  if (evaluation_cell_selector.iterate_over_known_cells_from !=
-      CellSource::kReference) {
-    LOG(ERROR) << "Evaluations currently only support iterating over the "
-                  "reference map.";
-    return MapEvaluationSummary{.is_valid = false};
-  }
-
+template <typename CellType, typename PredictedMap>
+MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
+                                 const PredictedMap& predicted_map,
+                                 const MapEvaluationConfig& config,
+                                 DenseGrid<CellType>* error_grid) {
   MapEvaluationSummary result;
-  const Index min_index = map_reference.getMinIndex();
-  const Index max_index = map_reference.getMaxIndex();
-  Grid evaluation_grid(min_index, max_index);
-  for (const Index& index : evaluation_grid) {
-    auto reference_value = map_reference.getCellValue(index);
-    const CellState reference_state = CellStateFromValue(reference_value);
-    if (reference_state == CellState::kUnknown ||
-        !EvaluationCellSelector::matches(
-            evaluation_cell_selector.reference_cells, reference_state)) {
-      continue;
-    }
 
-    auto test_value = map_to_test.getCellValue(index);
-    const CellState test_state = CellStateFromValue(test_value);
-    if (!EvaluationCellSelector::matches(evaluation_cell_selector.test_cells,
-                                         test_state)) {
+  const Index min_index = reference_map.getMinIndex();
+  const Index max_index = reference_map.getMaxIndex();
+  for (const Index& index : Grid(min_index, max_index)) {
+    const OccupancyState reference_state =
+        GetCellState(reference_map, index, config.reference_cell_selector,
+                     config.reference_treat_unknown_cells_as);
+    if (reference_state.isUnknown()) {
       ++result.num_cells_ignored;
       continue;
     }
 
-    switch (
-        EvaluateCell(reference_state, test_state, unknown_test_cell_handling)) {
-      case CellEvaluationResult::kTruePositive:
+    const OccupancyState predicted_state =
+        GetCellState(predicted_map, index, config.predicted_cell_selector,
+                     config.predicted_treat_unknown_cells_as);
+    if (predicted_state.isUnknown()) {
+      ++result.num_cells_ignored;
+      continue;
+    }
+
+    std::optional<FloatingPoint> error_value;
+    if (predicted_state.isOccupied()) {
+      if (reference_state.isOccupied()) {
         ++result.num_true_positive;
-        if (error_grid) {
-          error_grid->setCellValue(index, 2.f);
-        }
-        break;
-      case CellEvaluationResult::kTrueNegative:
-        ++result.num_true_negative;
-        if (error_grid) {
-          error_grid->setCellValue(index, 1.f);
-        }
-        break;
-      case CellEvaluationResult::kFalsePositive:
+        error_value = 2.f;
+      } else {
         ++result.num_false_positive;
-        if (error_grid) {
-          error_grid->setCellValue(index, -2.f);
-        }
-        break;
-      case CellEvaluationResult::kFalseNegative:
+        error_value = -2.f;
+      }
+    } else {
+      if (reference_state.isFree()) {
+        ++result.num_true_negative;
+        error_value = 1.f;
+      } else {
         ++result.num_false_negative;
-        if (error_grid) {
-          error_grid->setCellValue(index, -1.f);
-        }
-        break;
-      default:
-        ++result.num_cells_ignored;
-        break;
+        error_value = -1.f;
+      }
+    }
+    if (error_grid && error_value) {
+      error_grid->setCellValue(index, error_value.value());
     }
   }
 
   return result;
+}
+
+template <typename Map>
+OccupancyState GetCellState(const Map& map, const Index& index,
+                            const CellSelector& cell_selector,
+                            OccupancyState treat_unknown_cells_as) {
+  const auto cell_value = map.getCellValue(index);
+  const OccupancyState cell_state = OccupancyState::fromValue(cell_value);
+
+  if (!cell_selector.matches(cell_state)) {
+    return OccupancyState::Unknown();
+  }
+  if (cell_state.isUnknown()) {
+    return treat_unknown_cells_as;
+  }
+
+  return cell_state;
 }
 }  // namespace wavemap_2d::utils
 

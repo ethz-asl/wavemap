@@ -119,12 +119,17 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
       });
   occupancy_grid_ground_truth_pub_.publish(occupancy_grid_ground_truth_marker);
 
-  utils::EvaluationCellSelector evaluation_cell_selector;
-  auto unknown_cell_handling = utils::UnknownCellHandling::kIgnore;
+  utils::MapEvaluationConfig evaluation_config;
+  evaluation_config.reference_cell_selector = {
+      utils::CellSelector::Categories::kAny};
+  evaluation_config.reference_treat_unknown_cells_as =
+      OccupancyState::Occupied();
+  evaluation_config.predicted_cell_selector = {
+      utils::CellSelector::Categories::kAnyObserved};
+
   DataStructureType error_grid(resolution);
   utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
-      ground_truth_map, *occupancy_map_, evaluation_cell_selector,
-      unknown_cell_handling, &error_grid);
+      ground_truth_map, *occupancy_map_, evaluation_config, &error_grid);
 
   if (map_evaluation_summary.is_valid) {
     ROS_INFO_STREAM("Map evaluation overview:\n"

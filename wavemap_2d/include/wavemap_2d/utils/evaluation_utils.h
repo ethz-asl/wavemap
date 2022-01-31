@@ -4,23 +4,42 @@
 #include <string>
 
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
+#include "wavemap_2d/datastructure/occupancy_state.h"
 #include "wavemap_2d/integrator/grid_iterator.h"
 
 namespace wavemap_2d::utils {
-enum class CellSource { kReference, kTest, kBoth };
-enum class CellState { kUnknown, kFree, kOccupied, kAny };
-enum class UnknownCellHandling {
-  kAssumeFree,
-  kAssumeOccupied,
-  kAlwaysFalse,
-  kIgnore
+struct CellSelector {
+  enum class Categories {
+    kUnknown,
+    kAnyObserved,
+    kFree,
+    kOccupied,
+    kAny
+  } category;
+
+  bool matches(OccupancyState cell_state) const {
+    switch (category) {
+      case Categories::kAny:
+        return true;
+      case Categories::kUnknown:
+        return !cell_state.isUnknown();
+      case Categories::kAnyObserved:
+        return cell_state.isObserved();
+      case Categories::kFree:
+        return cell_state.isFree();
+      case Categories::kOccupied:
+        return cell_state.isOccupied();
+    }
+    return false;
+  }
 };
-enum class CellEvaluationResult {
-  kIgnore,
-  kTruePositive,
-  kTrueNegative,
-  kFalsePositive,
-  kFalseNegative
+
+struct MapEvaluationConfig {
+  CellSelector reference_cell_selector{CellSelector::Categories::kAnyObserved};
+  CellSelector predicted_cell_selector{CellSelector::Categories::kAnyObserved};
+
+  OccupancyState reference_treat_unknown_cells_as = OccupancyState::Unknown();
+  OccupancyState predicted_treat_unknown_cells_as = OccupancyState::Unknown();
 };
 
 struct MapEvaluationSummary {
@@ -44,40 +63,16 @@ struct MapEvaluationSummary {
   std::string toString() const;
 };
 
-CellState CellStateFromValue(FloatingPoint cell_value) {
-  if (std::abs(cell_value) < kEpsilon) {
-    return CellState::kUnknown;
-  } else if (cell_value < 0.f) {
-    return CellState::kFree;
-  } else {
-    return CellState::kOccupied;
-  }
-}
+template <typename CellType, typename PredictedMap>
+MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
+                                 const PredictedMap& predicted_map,
+                                 const MapEvaluationConfig& config,
+                                 DenseGrid<CellType>* error_grid = nullptr);
 
-struct EvaluationCellSelector {
-  CellSource iterate_over_known_cells_from = CellSource::kReference;
-  CellState reference_cells = CellState::kAny;
-  CellState test_cells = CellState::kAny;
-
-  static bool matches(CellState reference_state, CellState test_state) {
-    if (reference_state == CellState::kAny) {
-      return true;
-    } else {
-      return reference_state == test_state;
-    }
-  }
-};
-
-CellEvaluationResult EvaluateCell(
-    CellState reference_state, CellState test_state,
-    UnknownCellHandling unknown_test_cell_handling);
-
-template <typename CellType, typename TestMap>
-MapEvaluationSummary EvaluateMap(
-    const DenseGrid<CellType>& map_reference, const TestMap& map_to_test,
-    const EvaluationCellSelector& evaluation_cell_selector,
-    UnknownCellHandling unknown_test_cell_handling,
-    DenseGrid<CellType>* error_grid = nullptr);
+template <typename Map>
+OccupancyState GetCellState(const Map& map, const Index& index,
+                            const CellSelector& cell_selector,
+                            OccupancyState treat_unknown_cells_as);
 }  // namespace wavemap_2d::utils
 
 #include "wavemap_2d/utils/evaluation_utils_impl.h"
