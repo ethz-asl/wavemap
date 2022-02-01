@@ -35,11 +35,18 @@ struct CellSelector {
 };
 
 struct MapEvaluationConfig {
-  CellSelector reference_cell_selector{CellSelector::Categories::kAnyObserved};
-  CellSelector predicted_cell_selector{CellSelector::Categories::kAnyObserved};
+  enum class Source { kReference, kPredicted };
+  Source iterate_over = Source::kReference;
+  Source crop_to = Source::kReference;
 
-  OccupancyState reference_treat_unknown_cells_as = OccupancyState::Unknown();
-  OccupancyState predicted_treat_unknown_cells_as = OccupancyState::Unknown();
+  struct {
+    CellSelector cell_selector = {CellSelector::Categories::kAnyObserved};
+    OccupancyState treat_unknown_cells_as = OccupancyState::Unknown();
+  } reference;
+  struct {
+    CellSelector cell_selector = {CellSelector::Categories::kAnyObserved};
+    OccupancyState treat_unknown_cells_as = OccupancyState::Unknown();
+  } predicted;
 };
 
 struct MapEvaluationSummary {

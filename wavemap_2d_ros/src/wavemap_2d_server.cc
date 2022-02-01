@@ -99,9 +99,11 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
     ROS_ERROR("The occupancy map has not yet been created.");
     return false;
   }
-  const FloatingPoint resolution = occupancy_map_->getResolution();
 
-  DataStructureType ground_truth_map(resolution);
+  // TODO(victorr): Make it possible to load maps without knowing the resolution
+  //                on beforehand (e.g. through a static method)
+  const FloatingPoint kGroundTruthMapResolution = 1e-2;
+  DataStructureType ground_truth_map(kGroundTruthMapResolution);
   if (!ground_truth_map.load(file_path, true)) {
     ROS_WARN("Could not load the ground truth map.");
     return false;
@@ -120,14 +122,17 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   occupancy_grid_ground_truth_pub_.publish(occupancy_grid_ground_truth_marker);
 
   utils::MapEvaluationConfig evaluation_config;
-  evaluation_config.reference_cell_selector = {
+  evaluation_config.iterate_over =
+      utils::MapEvaluationConfig::Source::kPredicted;
+  evaluation_config.crop_to = utils::MapEvaluationConfig::Source::kReference;
+  evaluation_config.reference.cell_selector = {
       utils::CellSelector::Categories::kAny};
-  evaluation_config.reference_treat_unknown_cells_as =
+  evaluation_config.reference.treat_unknown_cells_as =
       OccupancyState::Occupied();
-  evaluation_config.predicted_cell_selector = {
+  evaluation_config.predicted.cell_selector = {
       utils::CellSelector::Categories::kAnyObserved};
 
-  DataStructureType error_grid(resolution);
+  DataStructureType error_grid(occupancy_map_->getResolution());
   utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
       ground_truth_map, *occupancy_map_, evaluation_config, &error_grid);
 
@@ -138,7 +143,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
         error_grid, config_.world_frame, "occupancy_grid_evaluation",
         [](FloatingPoint error_value) {
           if (error_value < 0.f) {
-            return RGBAColor{1.f, error_value / 2.f, 0.f, 0.f};
+            return RGBAColor{1.f, 1.f - error_value / 2.f, 0.f, 0.f};
           } else if (0.f < error_value) {
             return RGBAColor{1.f, 0.f, error_value / 2.f, 0.f};
           } else {
