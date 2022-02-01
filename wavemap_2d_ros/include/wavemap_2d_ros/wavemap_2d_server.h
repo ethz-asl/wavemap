@@ -84,7 +84,7 @@ class Wavemap2DServer {
 
  protected:
   using DataStructureType = Quadtree<SaturatingCell<>>;
-  using MeasurementModelType = FixedLogOddsModel;
+  using MeasurementModelType = BeamModel;
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
   Config config_;

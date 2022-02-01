@@ -33,15 +33,20 @@ class Quadtree : public DataStructureBase {
 
   NodeIndexElement getMaxDepth() const { return max_depth_; }
   Index getMinPossibleIndex() const {
-    return (-getNodeHalvedDiagonalAtDepth(0u)).template cast<IndexElement>();
+    return -(luts_.node_halved_diagonals_at_depth_[0] / resolution_)
+                .array()
+                .round()
+                .template cast<IndexElement>();
   }
   Index getMaxPossibleIndex() const {
-    return getNodeHalvedDiagonalAtDepth(0u).template cast<IndexElement>();
+    return (luts_.node_halved_diagonals_at_depth_[0] / resolution_)
+        .array()
+        .round()
+        .template cast<IndexElement>();
   }
 
-  // TODO(victorr): Replace this with a more fine grained method
-  Index getMinIndex() const override { return getMinPossibleIndex(); }
-  Index getMaxIndex() const override { return getMaxPossibleIndex(); }
+  Index getMinIndex() const override;
+  Index getMaxIndex() const override;
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
