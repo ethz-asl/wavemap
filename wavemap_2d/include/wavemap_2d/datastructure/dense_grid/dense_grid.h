@@ -26,8 +26,8 @@ class DenseGrid : public DataStructureBase {
   }
 
   Index dimensions() const { return {data_.rows(), data_.cols()}; }
-  Index getMinIndex() const { return min_index_; }
-  Index getMaxIndex() const { return max_index_; }
+  Index getMinIndex() const override { return min_index_; }
+  Index getMaxIndex() const override { return max_index_; }
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;

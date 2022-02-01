@@ -103,7 +103,8 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   // TODO(victorr): Make it possible to load maps without knowing the resolution
   //                on beforehand (e.g. through a static method)
   const FloatingPoint kGroundTruthMapResolution = 1e-2;
-  DataStructureType ground_truth_map(kGroundTruthMapResolution);
+  using GTDataStructureType = DenseGrid<UnboundedCell>;
+  GTDataStructureType ground_truth_map(kGroundTruthMapResolution);
   if (!ground_truth_map.load(file_path, true)) {
     ROS_WARN("Could not load the ground truth map.");
     return false;
@@ -132,7 +133,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   evaluation_config.predicted.cell_selector = {
       utils::CellSelector::Categories::kAnyObserved};
 
-  DataStructureType error_grid(occupancy_map_->getResolution());
+  GTDataStructureType error_grid(occupancy_map_->getResolution());
   utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
       ground_truth_map, *occupancy_map_, evaluation_config, &error_grid);
 
@@ -223,46 +224,6 @@ void Wavemap2DServer::visualizeMap() {
         });
     occupancy_grid_pub_.publish(occupancy_grid_marker);
   }
-}
-
-visualization_msgs::Marker Wavemap2DServer::gridToMarker(
-    const Wavemap2DServer::DataStructureType& grid,
-    const std::string& world_frame, const std::string& marker_namespace,
-    const std::function<RGBAColor(FloatingPoint)>& color_map) {
-  const FloatingPoint resolution = grid.getResolution();
-
-  visualization_msgs::Marker grid_marker;
-  grid_marker.header.frame_id = world_frame;
-  grid_marker.header.stamp = ros::Time();
-  grid_marker.ns = marker_namespace;
-  grid_marker.id = 0;
-  grid_marker.type = visualization_msgs::Marker::POINTS;
-  grid_marker.action = visualization_msgs::Marker::MODIFY;
-  grid_marker.pose.orientation.w = 1.0;
-  grid_marker.scale.x = resolution;
-  grid_marker.scale.y = resolution;
-  grid_marker.scale.z = resolution;
-  grid_marker.color.a = 1.0;
-
-  for (const Index& index : Grid(grid.getMinIndex(), grid.getMaxIndex())) {
-    const Point cell_position = index.cast<FloatingPoint>() * resolution;
-    geometry_msgs::Point position_msg;
-    position_msg.x = cell_position.x();
-    position_msg.y = cell_position.y();
-    position_msg.z = 0.0;
-    grid_marker.points.emplace_back(position_msg);
-
-    const FloatingPoint cell_value = grid.getCellValue(index);
-    const RGBAColor color = color_map(cell_value);
-    std_msgs::ColorRGBA color_msg;
-    color_msg.a = color.a;
-    color_msg.r = color.r;
-    color_msg.g = color.g;
-    color_msg.b = color.b;
-    grid_marker.colors.emplace_back(color_msg);
-  }
-
-  return grid_marker;
 }
 
 Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(

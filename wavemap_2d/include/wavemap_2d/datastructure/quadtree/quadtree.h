@@ -32,12 +32,16 @@ class Quadtree : public DataStructureBase {
   size_t getMemoryUsage() const override;
 
   NodeIndexElement getMaxDepth() const { return max_depth_; }
-  Index getMinPossibleIndex() {
+  Index getMinPossibleIndex() const {
     return (-getNodeHalvedDiagonalAtDepth(0u)).template cast<IndexElement>();
   }
-  Index getMaxPossibleIndex() {
+  Index getMaxPossibleIndex() const {
     return getNodeHalvedDiagonalAtDepth(0u).template cast<IndexElement>();
   }
+
+  // TODO(victorr): Replace this with a more fine grained method
+  Index getMinIndex() const override { return getMinPossibleIndex(); }
+  Index getMaxIndex() const override { return getMaxPossibleIndex(); }
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;

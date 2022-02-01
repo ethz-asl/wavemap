@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_UTILS_EVALUATION_UTILS_IMPL_H_
-#define WAVEMAP_2D_UTILS_EVALUATION_UTILS_IMPL_H_
+#ifndef WAVEMAP_2D_UTILS_EVALUATION_UTILS_INL_H_
+#define WAVEMAP_2D_UTILS_EVALUATION_UTILS_INL_H_
 
 #include <memory>
 
@@ -109,4 +109,4 @@ OccupancyState GetCellState(const Map& map, const Index& index,
 }
 }  // namespace wavemap_2d::utils
 
-#endif  // WAVEMAP_2D_UTILS_EVALUATION_UTILS_IMPL_H_
+#endif  // WAVEMAP_2D_UTILS_EVALUATION_UTILS_INL_H_

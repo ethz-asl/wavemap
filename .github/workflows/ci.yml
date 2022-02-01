@@ -80,9 +80,10 @@ jobs:
         id: should-writeback-ccache
         run: |
           runtime=$(( $(date +%s) - ${{ steps.start-time.outputs.stamp }} ))
+          threshold = 300  # seconds
           echo $runtime
           answer=false
-          if [ 180 -le $runtime ]; then
+          if [ $threshold -le $runtime ]; then
             answer=true
           fi
           echo "::set-output name=answer::${answer}"

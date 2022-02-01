@@ -13,6 +13,7 @@
 #include <wavemap_2d/common.h>
 #include <wavemap_2d/datastructure/cell.h>
 #include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
+#include <wavemap_2d/datastructure/quadtree/quadtree.h>
 #include <wavemap_2d/integrator/pointcloud_integrator.h>
 #include <wavemap_2d_msgs/FilePath.h>
 
@@ -82,8 +83,8 @@ class Wavemap2DServer {
   bool evaluateMap(const std::string& file_path);
 
  protected:
-  using DataStructureType = DenseGrid<SaturatingCell<>>;
-  using MeasurementModelType = BeamModel;
+  using DataStructureType = Quadtree<SaturatingCell<>>;
+  using MeasurementModelType = FixedLogOddsModel;
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
   Config config_;
@@ -122,11 +123,14 @@ class Wavemap2DServer {
   static constexpr RGBAColor kTransparent{0.f, 0.f, 0.f, 0.f};
   static constexpr RGBAColor kWhite{1.f, 1.f, 1.f, 1.f};
   static constexpr RGBAColor kBlack{1.f, 0.f, 0.f, 0.f};
+  template <typename Map>
   static visualization_msgs::Marker gridToMarker(
-      const DataStructureType& grid, const std::string& world_frame,
+      const Map& grid, const std::string& world_frame,
       const std::string& marker_namespace,
       const std::function<RGBAColor(FloatingPoint)>& color_map);
 };
 }  // namespace wavemap_2d
+
+#include "wavemap_2d_ros/wavemap_2d_server_inl.h"
 
 #endif  // WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_

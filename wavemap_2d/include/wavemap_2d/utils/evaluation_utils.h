@@ -82,6 +82,6 @@ OccupancyState GetCellState(const Map& map, const Index& index,
                             OccupancyState treat_unknown_cells_as);
 }  // namespace wavemap_2d::utils
 
-#include "wavemap_2d/utils/evaluation_utils_impl.h"
+#include "wavemap_2d/utils/evaluation_utils_inl.h"
 
 #endif  // WAVEMAP_2D_UTILS_EVALUATION_UTILS_H_
