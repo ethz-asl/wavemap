@@ -53,7 +53,9 @@ void BeamModel::updateMap(DataStructureBase& map) const {
   const Grid grid(getUpdateMinIndex(), getUpdateMaxIndex());
   for (const auto& index : grid) {
     const FloatingPoint update = computeUpdateAt(index);
-    map.addToCellValue(index, update);
+    if (kEpsilon < std::abs(update)) {
+      map.addToCellValue(index, update);
+    }
   }
 }
 
