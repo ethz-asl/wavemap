@@ -75,6 +75,14 @@ repos:
       - name: Check dockerfiles with hadolint
         id: hadolint
 
+  - repo: https://github.com/sirosen/check-jsonschema
+    rev: 0.10.1
+    hooks:
+      - name: Check GitHub workflow files
+        id: check-github-workflows
+      - name: Check GitHub action files
+        id: check-github-actions
+
   - repo: local
     hooks:
       - name: Check package manifests
