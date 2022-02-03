@@ -12,10 +12,10 @@
 #include <visualization_msgs/Marker.h>
 #include <wavemap_2d/common.h>
 #include <wavemap_2d/datastructure/cell.h>
-#include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
-#include <wavemap_2d/datastructure/quadtree/quadtree.h>
 #include <wavemap_2d/integrator/pointcloud_integrator.h>
 #include <wavemap_2d_msgs/FilePath.h>
+#include <wavemap_2d_msgs/MapEvaluationSummary.h>
+#include <wavemap_2d_msgs/PerformanceStats.h>
 
 #include "wavemap_2d_ros/tf_transformer.h"
 #include "wavemap_2d_ros/utils/timer.h"
@@ -28,6 +28,9 @@ class Wavemap2DServer {
     float map_resolution = 0.f;
 
     std::string world_frame = "odom";
+
+    std::string data_structure_type = "dense_grid";
+    std::string measurement_model_type = "beam_model";
 
     std::string pointcloud_topic_name = "scan";
     int pointcloud_topic_queue_length = 10;
@@ -87,14 +90,12 @@ class Wavemap2DServer {
   bool evaluateMap(const std::string& file_path);
 
  protected:
-  using DataStructureType = Quadtree<SaturatingCell<>>;
-  using MeasurementModelType = BeamModel;
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
   Config config_;
 
-  std::shared_ptr<DataStructureType> occupancy_map_;
-  std::shared_ptr<MeasurementModelType> measurement_model_;
+  std::shared_ptr<DataStructureBase> occupancy_map_;
+  std::shared_ptr<MeasurementModelBase> measurement_model_;
   std::shared_ptr<PointcloudIntegrator> pointcloud_integrator_;
   TfTransformer transformer_;
 
@@ -110,6 +111,8 @@ class Wavemap2DServer {
   ros::Publisher occupancy_grid_pub_;
   ros::Publisher occupancy_grid_error_pub_;
   ros::Publisher occupancy_grid_ground_truth_pub_;
+  ros::Publisher map_evaluation_summary_pub_;
+  ros::Publisher performance_stats_pub_;
   ros::ServiceServer visualize_map_srv_;
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;

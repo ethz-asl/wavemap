@@ -1,6 +1,8 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
+#include <wavemap_2d/datastructure/quadtree/quadtree.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
@@ -12,9 +14,24 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   CHECK(config_.isValid(/*verbose*/ true));
 
   // Setup integrator
-  occupancy_map_ = std::make_shared<DataStructureType>(config_.map_resolution);
-  measurement_model_ =
-      std::make_shared<MeasurementModelType>(config_.map_resolution);
+  // TODO(victorr): Move this to a factory class
+  if (config_.data_structure_type == "quadtree") {
+    ROS_INFO("Using quadtree datastructure");
+    occupancy_map_ =
+        std::make_shared<Quadtree<SaturatingCell<>>>(config_.map_resolution);
+  } else {
+    ROS_INFO("Using dense grid datastructure");
+    occupancy_map_ =
+        std::make_shared<DenseGrid<SaturatingCell<>>>(config_.map_resolution);
+  }
+  if (config_.measurement_model_type == "fixed_log_odds") {
+    ROS_INFO("Using fixed log odds measurement model");
+    measurement_model_ =
+        std::make_shared<FixedLogOddsModel>(config_.map_resolution);
+  } else {
+    ROS_INFO("Using beam measurement model");
+    measurement_model_ = std::make_shared<BeamModel>(config_.map_resolution);
+  }
   pointcloud_integrator_ = std::make_shared<PointcloudIntegrator>(
       occupancy_map_, measurement_model_);
 
@@ -83,11 +100,21 @@ void Wavemap2DServer::processPointcloudQueue() {
     const PosedPointcloud posed_pointcloud(T_W_C_2d, Pointcloud(t_C_points_2d));
     integration_timer.start();
     pointcloud_integrator_->integratePointcloud(posed_pointcloud);
+    const double pointcloud_integration_time = integration_timer.stop();
+    const double total_pointcloud_integration_time =
+        integration_timer.getTotal();
+    const size_t map_memory_usage = occupancy_map_->getMemoryUsage();
     ROS_INFO_STREAM("Integrated new pointcloud in "
-                    << integration_timer.stop() << "s. Total integration time: "
-                    << integration_timer.getTotal() << "s.");
-    ROS_INFO_STREAM("Current map memory usage: "
-                    << occupancy_map_->getMemoryUsage() / 1e6 << "MB.");
+                    << pointcloud_integration_time
+                    << "s. Total integration time: "
+                    << total_pointcloud_integration_time << "s.");
+    ROS_INFO_STREAM("Current map memory usage: " << map_memory_usage / 1e6
+                                                 << "MB.");
+    wavemap_2d_msgs::PerformanceStats performance_stats_msg;
+    performance_stats_msg.map_memory_usage = map_memory_usage;
+    performance_stats_msg.total_pointcloud_integration_time =
+        total_pointcloud_integration_time;
+    performance_stats_pub_.publish(performance_stats_msg);
 
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();
@@ -140,6 +167,28 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   if (map_evaluation_summary.is_valid) {
     ROS_INFO_STREAM("Map evaluation overview:\n"
                     << map_evaluation_summary.toString());
+
+    wavemap_2d_msgs::MapEvaluationSummary map_evaluation_summary_msg;
+    map_evaluation_summary_msg.is_valid = map_evaluation_summary.is_valid;
+    map_evaluation_summary_msg.num_true_positive =
+        map_evaluation_summary.num_true_positive;
+    map_evaluation_summary_msg.num_true_negative =
+        map_evaluation_summary.num_true_negative;
+    map_evaluation_summary_msg.num_false_positive =
+        map_evaluation_summary.num_false_positive;
+    map_evaluation_summary_msg.num_false_negative =
+        map_evaluation_summary.num_false_negative;
+    map_evaluation_summary_msg.num_cells_ignored =
+        map_evaluation_summary.num_cells_ignored;
+    map_evaluation_summary_msg.num_cells_evaluated =
+        map_evaluation_summary.num_cells_evaluated();
+    map_evaluation_summary_msg.num_cells_considered =
+        map_evaluation_summary.num_cells_considered();
+    map_evaluation_summary_msg.precision = map_evaluation_summary.precision();
+    map_evaluation_summary_msg.recall = map_evaluation_summary.recall();
+    map_evaluation_summary_msg.f_1_score = map_evaluation_summary.f_1_score();
+    map_evaluation_summary_pub_.publish(map_evaluation_summary_msg);
+
     visualization_msgs::Marker occupancy_error_grid_marker = gridToMarker(
         error_grid, config_.world_frame, "occupancy_grid_evaluation",
         [](FloatingPoint error_value) {
@@ -206,6 +255,12 @@ void Wavemap2DServer::advertiseTopics(ros::NodeHandle& nh_private) {
   occupancy_grid_ground_truth_pub_ =
       nh_private.advertise<visualization_msgs::Marker>(
           "occupancy_grid_ground_truth", 10, true);
+  map_evaluation_summary_pub_ =
+      nh_private.advertise<wavemap_2d_msgs::MapEvaluationSummary>(
+          "map_evaluation_summary", 10, true);
+  performance_stats_pub_ =
+      nh_private.advertise<wavemap_2d_msgs::PerformanceStats>(
+          "performance_stats", 10, true);
 }
 
 void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
