@@ -34,6 +34,10 @@ class Wavemap2DServer {
 
     float map_visualization_period_s = 10.f;
 
+    // NOTE: evaluation will only be performed if map_ground_truth_path is set
+    float map_evaluation_period_s = 10.f;
+    std::string map_ground_truth_path;
+
     float map_autosave_period_s = -1.f;
     std::string map_autosave_path;
 
@@ -100,6 +104,7 @@ class Wavemap2DServer {
 
   ros::Timer pointcloud_queue_processing_timer_;
   ros::Timer map_visualization_timer_;
+  ros::Timer map_evaluation_timer_;
   ros::Timer map_autosave_timer_;
   ros::Subscriber pointcloud_sub_;
   ros::Publisher occupancy_grid_pub_;

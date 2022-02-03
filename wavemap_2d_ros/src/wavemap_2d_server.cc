@@ -172,6 +172,16 @@ void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
                        std::bind(&Wavemap2DServer::visualizeMap, this));
   }
 
+  if (0.f < config_.map_evaluation_period_s &&
+      !config_.map_ground_truth_path.empty()) {
+    ROS_INFO_STREAM("Registering map evaluation timer with period "
+                    << config_.map_evaluation_period_s << "s");
+    map_evaluation_timer_ =
+        nh.createTimer(ros::Duration(config_.map_evaluation_period_s),
+                       std::bind(&Wavemap2DServer::evaluateMap, this,
+                                 config_.map_ground_truth_path));
+  }
+
   if (0.f < config_.map_autosave_period_s &&
       !config_.map_autosave_path.empty()) {
     ROS_INFO_STREAM("Registering autosave timer with period "
@@ -244,6 +254,11 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
   nh.param(NAMEOF(config.map_visualization_period_s),
            config.map_visualization_period_s,
            config.map_visualization_period_s);
+
+  nh.param(NAMEOF(config.map_evaluation_period_s),
+           config.map_evaluation_period_s, config.map_evaluation_period_s);
+  nh.param(NAMEOF(config.map_ground_truth_path), config.map_ground_truth_path,
+           config.map_ground_truth_path);
 
   nh.param(NAMEOF(config.map_autosave_period_s), config.map_autosave_period_s,
            config.map_autosave_period_s);

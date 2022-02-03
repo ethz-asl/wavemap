@@ -4,4 +4,5 @@ pointcloud_topic_queue_length: 10
 pointcloud_queue_max_wait_for_transform_s: 10
 map_visualization_period_s: 1.0
 map_autosave_period_s: -1.0
-map_autosave_path: "../catkin_ws/wavemap_2d_map"
+map_autosave_path: "../catkin_ws/data/wavemap_2d_map"
+map_ground_truth_path: "../catkin_ws/data/wavemap_2d_ground_truth_1cm_floodfill"

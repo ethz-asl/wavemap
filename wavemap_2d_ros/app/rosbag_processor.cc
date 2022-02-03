@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
   // Playback the bag
   ros::Time side_tasks_last_timestamp(0);
-  const ros::Duration kSideTasksDt(0.01);
+  const ros::Duration kSideTasksDt(0.005);
   for (const rosbag::MessageInstance& msg : bag_view) {
     // Exit if CTRL+C was pressed
     if (!ros::ok()) {
@@ -116,7 +116,8 @@ int main(int argc, char** argv) {
     }
 
     // Catch up on some periodic tasks
-    if (side_tasks_last_timestamp + kSideTasksDt < msg.getTime()) {
+    if (msg.getTime() < side_tasks_last_timestamp ||
+        side_tasks_last_timestamp + kSideTasksDt < msg.getTime()) {
       side_tasks_last_timestamp = msg.getTime();
 
       // Publish clock substitute if needed
