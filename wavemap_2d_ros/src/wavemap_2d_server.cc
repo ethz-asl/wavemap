@@ -300,6 +300,11 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
 
   nh.param(NAMEOF(config.world_frame), config.world_frame, config.world_frame);
 
+  nh.param(NAMEOF(config.data_structure_type), config.data_structure_type,
+           config.data_structure_type);
+  nh.param(NAMEOF(config.measurement_model_type), config.measurement_model_type,
+           config.measurement_model_type);
+
   nh.param(NAMEOF(config.pointcloud_topic_name), config.pointcloud_topic_name,
            config.pointcloud_topic_name);
   nh.param(NAMEOF(config.pointcloud_topic_queue_length),

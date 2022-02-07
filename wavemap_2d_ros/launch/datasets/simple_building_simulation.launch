@@ -18,6 +18,12 @@
        default="true"
        doc="Automatically launch Rviz."/>
   <arg name="record_rosbag" default="false"/>
+  <!-- Wavemap params -->
+  <arg name="data_structure_type"
+       default="dense_grid"/>
+  <arg name="measurement_model_type"
+       default="beam_model"/>
+
 
   <!-- Process the rosbag with wavemap -->
   <group if="$(arg use_batch_mode)">
@@ -35,7 +41,8 @@
   <group if="$(arg record_rosbag)">
     <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
     <arg name="bag_save_path" default="../catkin_ws/bags/evaluations"/>
-    <arg name="bag_prefix" default="simple_building_manual"/>
+    <arg name="bag_prefix"
+         default="simple_building_manual-$(arg data_structure_type)-$(arg measurement_model_type)"/>
     <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
           args="/wavemap_2d/map_evaluation_summary /wavemap_2d/performance_stats /wavemap_2d/occupancy_grid /wavemap_2d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
   </group>

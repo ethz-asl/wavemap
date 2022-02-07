@@ -13,6 +13,11 @@
   <arg name="show_rviz"
        default="true"
        doc="Automatically launch Rviz."/>
+  <!-- Wavemap params -->
+  <arg name="data_structure_type"
+       default="dense_grid"/>
+  <arg name="measurement_model_type"
+       default="beam_model"/>
 
   <!-- Process the rosbag with wavemap as fast as possible -->
   <param name="/use_sim_time" value="true"/>
@@ -23,12 +28,14 @@
 
     <node name="wavemap_2d" pkg="wavemap_2d_ros"
           type="rosbag_processor"
-          output="screen" args="-alsologtostderr"
+          output="screen" args="-alsologtostderr" required="true"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
       <param name="pointcloud_topic"
              value="$(arg pointcloud_topic)"/>
       <param name="rosbag_path" value="$(arg rosbag_path)"/>
+      <param name="data_structure_type" value="$(arg data_structure_type)"/>
+      <param name="measurement_model_type" value="$(arg measurement_model_type)"/>
     </node>
   </group>
 
