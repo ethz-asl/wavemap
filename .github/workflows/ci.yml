@@ -10,7 +10,7 @@ on:
 #       (/github/home is a docker volume mapped to the container's host).
 env:
   REPOSITORY_NAME: wavemap_2d
-  DOCKER_REGISTRY: nikola.vwire.ch:29139
+  DOCKER_REGISTRY: hub.wavemap2d.vwire.ch
   DOCKER_TARGET: workspace-built-deps
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
