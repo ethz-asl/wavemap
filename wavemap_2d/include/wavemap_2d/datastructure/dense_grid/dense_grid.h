@@ -53,12 +53,11 @@ class DenseGrid : public DataStructureBase {
 
   Index min_index_;
   Index max_index_;
+  DataGridSpecialized data_;
 
   CellDataSpecialized* accessCellData(const Index& index,
                                       bool auto_allocate = false);
   const CellDataSpecialized* accessCellData(const Index& index) const;
-
-  DataGridSpecialized data_;
 };
 }  // namespace wavemap_2d
 

@@ -26,8 +26,9 @@ bool DenseGrid<CellTypeT>::hasCell(const Index& index) const {
 
 template <typename CellTypeT>
 FloatingPoint DenseGrid<CellTypeT>::getCellValue(const Index& index) const {
-  if (hasCell(index)) {
-    return static_cast<FloatingPoint>(*accessCellData(index));
+  const CellDataSpecialized* cell_data = accessCellData(index);
+  if (cell_data) {
+    return static_cast<FloatingPoint>(*cell_data);
   } else {
     return 0.f;
   }

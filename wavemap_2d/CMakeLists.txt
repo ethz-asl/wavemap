@@ -63,6 +63,11 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_dense_grid PRIVATE test/include)
   target_link_libraries(test_dense_grid ${PROJECT_NAME} testing_main)
 
+  catkin_add_gtest(test_hashed_blocks
+                   test/src/datastructure/test_hashed_blocks.cc)
+  target_include_directories(test_hashed_blocks PRIVATE test/include)
+  target_link_libraries(test_hashed_blocks ${PROJECT_NAME} testing_main)
+
   catkin_add_gtest(test_pointcloud test/src/datastructure/test_pointcloud.cc)
   target_include_directories(test_pointcloud PRIVATE test/include)
   target_link_libraries(test_pointcloud ${PROJECT_NAME} testing_main)
