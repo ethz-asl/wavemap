@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_RAY_ITERATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_RAY_ITERATOR_H_
+#ifndef WAVEMAP_2D_ITERATOR_RAY_ITERATOR_H_
+#define WAVEMAP_2D_ITERATOR_RAY_ITERATOR_H_
 
 #include "wavemap_2d/common.h"
 
@@ -82,7 +82,7 @@ class Ray {
       return !(lhs == rhs);  // NOLINT
     }
 
-   private:
+   protected:
     const Ray& ray_;
     unsigned int current_step_;
     Index current_index_;
@@ -103,4 +103,4 @@ class Ray {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_INTEGRATOR_RAY_ITERATOR_H_
+#endif  // WAVEMAP_2D_ITERATOR_RAY_ITERATOR_H_

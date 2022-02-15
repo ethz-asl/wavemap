@@ -5,7 +5,7 @@
 
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
 #include "wavemap_2d/datastructure/occupancy_state.h"
-#include "wavemap_2d/integrator/grid_iterator.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d::utils {
 struct CellSelector {

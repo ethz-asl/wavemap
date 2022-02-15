@@ -3,7 +3,7 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/integrator/measurement_model_base.h"
-#include "wavemap_2d/integrator/ray_iterator.h"
+#include "wavemap_2d/iterator/ray_iterator.h"
 
 namespace wavemap_2d {
 class FixedLogOddsModel : public MeasurementModelBase {

@@ -2,8 +2,8 @@
 #define WAVEMAP_2D_INTEGRATOR_BEAM_MODEL_H_
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/integrator/grid_iterator.h"
 #include "wavemap_2d/integrator/measurement_model_base.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d {
 class BeamModel : public MeasurementModelBase {

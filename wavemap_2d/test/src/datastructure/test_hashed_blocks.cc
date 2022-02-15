@@ -6,7 +6,7 @@
 
 namespace wavemap_2d {
 template <typename CellType>
-class DenseGridTest : public FixtureBase {};
+using DenseGridTest = FixtureBase;
 
 using CellTypes = ::testing::Types<UnboundedCell, SaturatingCell<>>;
 TYPED_TEST_SUITE(DenseGridTest, CellTypes);
