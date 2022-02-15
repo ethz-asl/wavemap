@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "wavemap_2d/discrete_wavelet_transform.h"
 #include "wavemap_2d/test/fixture_base.h"
+#include "wavemap_2d/transform/discrete_wavelet_transform.h"
+#include "wavemap_2d/transform/naive_haar.h"
 
 namespace wavemap_2d {
 class WaveletTransformTest : public FixtureBase {
@@ -118,6 +119,7 @@ class WaveletTransformTest : public FixtureBase {
 // TODO(victorr): Add tests for odd numbers of rows and columns
 
 TEST_F(WaveletTransformTest, KnownPatterns) {
+  const NaiveHaar<FloatingPoint> dwt;
   constexpr int kNSizeIncrements = 3;
   for (int size_idx = 1; size_idx <= kNSizeIncrements; ++size_idx) {
     const auto rows = static_cast<Eigen::Index>(std::exp2(size_idx));
@@ -135,7 +137,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
         MatrixF matrix = original_matrix;
 
         // Forward test
-        DiscreteWaveletTransform::ForwardHaarNaive(matrix, pass_idx);
+        dwt.forward(matrix, pass_idx);
         const FloatingPoint power = matrix.norm();
         const FloatingPoint LL_band_num_cells =
             static_cast<FloatingPoint>(matrix.size()) /
@@ -149,7 +151,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
         EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
 
         // Backward test
-        DiscreteWaveletTransform::BackwardHaarNaive(matrix, pass_idx);
+        dwt.backward(matrix, pass_idx);
         EXPECT_TRUE(cwiseNear(matrix - original_matrix, 0))
             << "Expected decode(encode(original_matrix))=original_matrix for "
                "original matrix:\n"
@@ -178,7 +180,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
           const MatrixF original_matrix = matrix;
 
           // Forward test
-          DiscreteWaveletTransform::ForwardHaarNaive(matrix, pass_idx);
+          dwt.forward(matrix, pass_idx);
           BandExpectationMap band_expectations_map{
               {{BandOrientation::LL, pass_idx}, 0.f}};
           if (transpose) {
@@ -190,7 +192,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
           EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
 
           // Backward test
-          DiscreteWaveletTransform::BackwardHaarNaive(matrix, pass_idx);
+          dwt.backward(matrix, pass_idx);
           EXPECT_TRUE(cwiseNear(matrix - original_matrix, 0))
               << "Expected decode(encode(original_matrix))=original_matrix for "
                  "original matrix:\n"
@@ -217,7 +219,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
         const MatrixF original_matrix = matrix;
 
         // Forward test
-        DiscreteWaveletTransform::ForwardHaarNaive(matrix, pass_idx);
+        dwt.forward(matrix, pass_idx);
         BandExpectationMap band_expectations_map;
         if (transpose) {
           band_expectations_map[{BandOrientation::HL, 1}] = -1.f;
@@ -229,7 +231,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
         EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
 
         // Backward test
-        DiscreteWaveletTransform::BackwardHaarNaive(matrix, pass_idx);
+        dwt.backward(matrix, pass_idx);
         EXPECT_TRUE(cwiseNear(matrix - original_matrix, 0))
             << "Expected decode(encode(original_matrix))=original_matrix for "
                "original matrix:\n"
@@ -255,7 +257,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
         const MatrixF original_matrix = matrix;
 
         // Forward test
-        DiscreteWaveletTransform::ForwardHaarNaive(matrix, pass_idx);
+        dwt.forward(matrix, pass_idx);
         BandExpectationMap band_expectations_map{
             {{BandOrientation::HH, 1}, -1.f}};
         expectBands(matrix, pass_idx, original_matrix, band_expectations_map,
@@ -263,7 +265,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
         EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
 
         // Backward test
-        DiscreteWaveletTransform::BackwardHaarNaive(matrix, pass_idx);
+        dwt.backward(matrix, pass_idx);
         EXPECT_TRUE(cwiseNear(matrix - original_matrix, 0))
             << "Expected decode(encode(original_matrix))=original_matrix for "
                "original matrix:\n"
@@ -277,6 +279,7 @@ TEST_F(WaveletTransformTest, KnownPatterns) {
 }
 
 TEST_F(WaveletTransformTest, RandomMatrices) {
+  const NaiveHaar<FloatingPoint> dwt;
   constexpr int kNSizeIncrements = 7;
   for (int size_idx = 1; size_idx <= kNSizeIncrements; ++size_idx) {
     const auto rows = static_cast<Eigen::Index>(std::exp2(size_idx));
@@ -289,9 +292,9 @@ TEST_F(WaveletTransformTest, RandomMatrices) {
       MatrixF matrix = original_matrix;
 
       // Transform back and forth
-      DiscreteWaveletTransform::ForwardHaarNaive(matrix, pass_idx);
+      dwt.forward(matrix, pass_idx);
       EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
-      DiscreteWaveletTransform::BackwardHaarNaive(matrix, pass_idx);
+      dwt.backward(matrix, pass_idx);
       EXPECT_TRUE(cwiseNear(matrix - original_matrix, 0))
           << "Expected decode(encode(original_matrix))=original_matrix for "
              "original matrix:\n"
@@ -306,8 +309,8 @@ TEST_F(WaveletTransformTest, RandomMatrices) {
       const MatrixF original_matrix = MatrixF::Random(rows, cols);
       MatrixF matrix = original_matrix;
       MatrixF matrix_transposed = original_matrix.transpose();
-      DiscreteWaveletTransform::ForwardHaarNaive(matrix, pass_idx);
-      DiscreteWaveletTransform::ForwardHaarNaive(matrix_transposed, pass_idx);
+      dwt.forward(matrix, pass_idx);
+      dwt.forward(matrix_transposed, pass_idx);
       EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
       EXPECT_FLOAT_EQ(matrix_transposed.norm(), original_matrix.norm());
       EXPECT_TRUE(cwiseNear(matrix - matrix_transposed.transpose(), 0.f));

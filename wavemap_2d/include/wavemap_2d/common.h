@@ -11,6 +11,9 @@ namespace wavemap_2d {
 using FloatingPoint = float;
 constexpr FloatingPoint kEpsilon = 1e-6;
 
+template <typename T>
+using Matrix = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
 constexpr int MapDimension = 2;
 using Transformation = kindr::minimal::Transformation2DTemplate<FloatingPoint>;
 using Point = Transformation::Position;

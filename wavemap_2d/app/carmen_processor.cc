@@ -6,8 +6,8 @@
 
 #include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
-#include "wavemap_2d/discrete_wavelet_transform.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
+#include "wavemap_2d/transform/naive_haar.h"
 
 DEFINE_string(carmen_log_file_path, "",
               "Path to the carmen log file to get the input data from.");
@@ -130,9 +130,10 @@ int main(int argc, char** argv) {
       (kThreshold < occupancy_map->getData().cwiseAbs().array()).count();
   const int max_num_passes = std::floor(std::log2(std::min(
       occupancy_map->dimensions().x(), occupancy_map->dimensions().y())));
+  const NaiveHaar<FloatingPoint> dwt;
   for (int pass_idx = 0; pass_idx < max_num_passes; ++pass_idx) {
     auto map_data = occupancy_map->getData();
-    DiscreteWaveletTransform::ForwardHaarNaive(map_data, pass_idx);
+    dwt.forward(map_data, pass_idx);
     const size_t num_non_zero_cells =
         (kThreshold < map_data.cwiseAbs().array()).count();
     std::cout << "Total non-zero cells at pass " << pass_idx << ": "
