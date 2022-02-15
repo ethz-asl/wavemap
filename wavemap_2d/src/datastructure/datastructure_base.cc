@@ -2,6 +2,10 @@
 
 namespace wavemap_2d {
 void DataStructureBase::showImage(bool use_color, int delay_ms) const {
+  if (empty()) {
+    return;
+  }
+
   cv::namedWindow("Grid map", cv::WINDOW_NORMAL);
   cv::setWindowProperty("Grid map", CV_WND_PROP_FULLSCREEN,
                         CV_WINDOW_FULLSCREEN);

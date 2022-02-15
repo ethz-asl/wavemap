@@ -27,8 +27,26 @@ class Quadtree : public DataStructureBase {
 
   bool empty() const override { return !root_node_.hasAtLeastOneChild(); }
   size_t size() const override;
-  NodeIndexElement getMaxDepth() const { return max_depth_; }
   void clear() override { root_node_.pruneChildren(); }
+
+  size_t getMemoryUsage() const override;
+
+  NodeIndexElement getMaxDepth() const { return max_depth_; }
+  Index getMinPossibleIndex() const {
+    return -(luts_.node_halved_diagonals_at_depth_[0] / resolution_)
+                .array()
+                .round()
+                .template cast<IndexElement>();
+  }
+  Index getMaxPossibleIndex() const {
+    return (luts_.node_halved_diagonals_at_depth_[0] / resolution_)
+        .array()
+        .round()
+        .template cast<IndexElement>();
+  }
+
+  Index getMinIndex() const override;
+  Index getMaxIndex() const override;
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;

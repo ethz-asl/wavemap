@@ -1,10 +1,10 @@
 #include <benchmark/benchmark.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/integrator/grid_iterator.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d {
-static void GridIterationNestedForLoop(benchmark::State& state) {  // NOLINT
+static void GridIterationNestedForLoop(benchmark::State& state) {
   // Code before the loop is not measured
   const Index bottom_left_idx{-1000, -1000};
   const Index top_right_idx{1000, 1000};
@@ -24,7 +24,7 @@ static void GridIterationNestedForLoop(benchmark::State& state) {  // NOLINT
 }
 BENCHMARK(GridIterationNestedForLoop);
 
-static void GridIterationRangeBasedLoop(benchmark::State& state) {  // NOLINT
+static void GridIterationRangeBasedLoop(benchmark::State& state) {
   // Code before the loop is not measured
   const Index bottom_left_idx{-1000, -1000};
   const Index top_right_idx{1000, 1000};

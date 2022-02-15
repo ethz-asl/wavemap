@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Downloaded from: http://download.ros.org/schema/package_format2.xsd -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!-- Content of package_common.xsd inlined -->
+  <xs:simpleType name="VersionType">
+    <xs:annotation>
+      <xs:documentation>
+        The version number must have the form "X.Y.Z" where X, Y, and Z
+        are non-negative integers, and must not contain leading zeroes.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:token">
+      <xs:pattern value="(0|[1-9][0-9]*)(.(0|[1-9][0-9]*)){2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="DescriptionType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>
+        The description allows any content but should be limited to XHTML.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="EmailType">
+    <xs:annotation>
+      <xs:documentation>
+        A valid email address must follow several complex rules
+        (see https://en.wikipedia.org/wiki/Email_address).
+        For ROS packages only a few are enforced, and not the full character set
+        is supported.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[-a-zA-Z0-9_%+]+(\.[-a-zA-Z0-9_%+]+)*@[-a-zA-Z0-9%]+(\.[-a-zA-Z0-9%]+)*\.[a-zA-Z]{2,}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="PersonWithEmailType">
+    <xs:simpleContent>
+      <xs:extension base="xs:token">
+        <xs:attribute name="email" type="EmailType" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="PersonWithOptionalEmailType">
+    <xs:simpleContent>
+      <xs:extension base="xs:token">
+        <xs:attribute name="email" type="EmailType" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="UrlTypeEnum">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="website"/>
+      <xs:enumeration value="bugtracker"/>
+      <xs:enumeration value="repository"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="UrlType">
+    <xs:simpleContent>
+      <xs:extension base="xs:anyURI">
+        <xs:attribute name="type" type="UrlTypeEnum" use="optional" default="website"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="VersionLimitType">
+    <xs:annotation>
+      <xs:documentation>
+        The version limit must have the form "X.Y.Z", "X.Y", or "X".
+        See documentation for VersionType for further details.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:token">
+      <xs:pattern value="(0|[1-9][0-9]*)(.(0|[1-9][0-9]*)){0,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="DependencyType">
+    <xs:simpleContent>
+      <xs:extension base="xs:token">
+        <!-- The dependency must have a version less than the specified limit. -->
+        <xs:attribute name="version_lt" type="VersionLimitType" use="optional"/>
+        <!-- The dependency must have a version less than or equal to the specified limit. -->
+        <xs:attribute name="version_lte" type="VersionLimitType" use="optional"/>
+        <!-- The dependency must have a version equal to the specified limit. -->
+        <xs:attribute name="version_eq" type="VersionLimitType" use="optional"/>
+        <!-- The dependency must have a version greater than or equal to the specified limit. -->
+        <xs:attribute name="version_gte" type="VersionLimitType" use="optional"/>
+        <!-- The dependency must have a version greater than the specified limit. -->
+        <xs:attribute name="version_gt" type="VersionLimitType" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="ExportType">
+    <xs:sequence>
+      <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="package">
+    <xs:annotation>
+      <xs:documentation>
+        Specified in REP 140 (see http://www.ros.org/reps/rep-0140.html).
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" minOccurs="1" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              The package name should be unique within the ROS community.
+              It may differ from the folder name into which it is checked out,
+              but that is not recommended.
+              It must start with a lower-case letter and consist of only
+              lower-case letters, numbers and underscores.
+              It must not have two consecutive underscores.
+            </xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:restriction base="xs:token">
+              <xs:pattern value="[a-z](_?[a-z0-9]+)*"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="version" type="VersionType" minOccurs="1" maxOccurs="1"/>
+        <xs:element name="description" type="DescriptionType" minOccurs="1" maxOccurs="1"/>
+        <xs:element name="maintainer" type="PersonWithEmailType" minOccurs="1" maxOccurs="unbounded"/>
+        <xs:element name="license" type="xs:token" minOccurs="1" maxOccurs="unbounded"/>
+
+        <xs:element name="url" type="UrlType" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="author" type="PersonWithOptionalEmailType" minOccurs="0" maxOccurs="unbounded"/>
+
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element type="DependencyType" name="build_depend"/>
+          <xs:element type="DependencyType" name="build_export_depend"/>
+          <xs:element type="DependencyType" name="buildtool_depend"/>
+          <xs:element type="DependencyType" name="buildtool_export_depend"/>
+          <xs:element type="DependencyType" name="exec_depend"/>
+          <xs:element type="DependencyType" name="depend"/>
+          <xs:element type="DependencyType" name="doc_depend"/>
+          <xs:element type="DependencyType" name="test_depend"/>
+          <xs:element type="DependencyType" name="conflict"/>
+          <xs:element type="DependencyType" name="replace"/>
+        </xs:choice>
+
+        <xs:element name="export" type="ExportType" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+      <xs:attribute name="format" fixed="2" use="required"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

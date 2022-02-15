@@ -1,0 +1,14 @@
+bool is_valid
+
+uint64 num_true_positive
+uint64 num_true_negative
+uint64 num_false_positive
+uint64 num_false_negative
+uint64 num_cells_ignored
+
+uint64 num_cells_evaluated
+uint64 num_cells_considered
+
+float32 precision
+float32 recall
+float32 f_1_score

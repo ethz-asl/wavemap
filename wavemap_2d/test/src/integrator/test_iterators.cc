@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "wavemap_2d/integrator/grid_iterator.h"
-#include "wavemap_2d/integrator/ray_iterator.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
+#include "wavemap_2d/iterator/ray_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {

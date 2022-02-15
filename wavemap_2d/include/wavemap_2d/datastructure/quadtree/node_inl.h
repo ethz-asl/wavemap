@@ -26,6 +26,15 @@ void Node<NodeDataType>::pruneChildren() {
 }
 
 template <typename NodeDataType>
+size_t Node<NodeDataType>::getMemoryUsage() const {
+  size_t memory_usage = sizeof(Node<NodeDataType>);
+  if (hasAllocatedChildrenArray()) {
+    memory_usage += NodeIndex::kNumChildren * sizeof(Node*);
+  }
+  return memory_usage;
+}
+
+template <typename NodeDataType>
 bool Node<NodeDataType>::hasAtLeastOneChild() const {
   if (children_) {
     for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {

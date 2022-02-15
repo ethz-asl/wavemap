@@ -30,9 +30,13 @@ class DenseGrid : public DataStructureBase {
   size_t size() const override { return data_.size(); }
   void clear() override;
 
+  size_t getMemoryUsage() const override {
+    return size() * sizeof(CellDataSpecialized);
+  }
+
   Index dimensions() const { return {data_.rows(), data_.cols()}; }
-  Index getMinIndex() const { return min_index_; }
-  Index getMaxIndex() const { return max_index_; }
+  Index getMinIndex() const override { return min_index_; }
+  Index getMaxIndex() const override { return max_index_; }
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
@@ -49,12 +53,11 @@ class DenseGrid : public DataStructureBase {
  protected:
   Index min_index_;
   Index max_index_;
+  DataGridSpecialized data_;
 
   CellDataSpecialized* accessCellData(const Index& index,
                                       bool auto_allocate = false);
   const CellDataSpecialized* accessCellData(const Index& index) const;
-
-  DataGridSpecialized data_;
 };
 }  // namespace wavemap_2d
 

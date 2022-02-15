@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Downloaded from: https://gist.githubusercontent.com/nalt/dfa2abc9d2e3ae4feb82ca5608090387/raw/roslaunch.xsd -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:simpleType name="SubstitutionType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="$\(anon .*|$\(arg .*|$\(dirname .*|$\(env .*|$\(eval .*|$\(find .*|$\(optenv .*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="BoolType">
+    <xs:union memberTypes="SubstitutionType">
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:enumeration value='true'/>
+          <xs:enumeration value='false'/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="StringType">
+    <xs:union memberTypes="SubstitutionType">
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:pattern value="[^$].*" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:enumeration value=''/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:element name='launch'>
+    <xs:complexType>
+      <xs:choice minOccurs='0' maxOccurs='unbounded'>
+        <xs:element ref='node'/>
+        <xs:element ref='machine'/>
+        <xs:element ref='include'/>
+        <xs:element ref='remap'/>
+        <xs:element ref='env'/>
+        <xs:element ref='param'/>
+        <xs:element ref='rosparam'/>
+        <xs:element ref='group'/>
+        <xs:element ref='test'/>
+        <xs:element ref='arg'/>
+      </xs:choice>
+      <xs:attribute name='deprecated' type='StringType'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='arg'>
+    <xs:annotation>
+      <xs:documentation>
+        Specifies arguments passed via command-line, via an include, or declared for higher-level files.
+        Args are not global. Use $(arg name) to read an argument.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='name' type='StringType' use='required'/>
+      <xs:attribute name='value' type='StringType'/>
+      <xs:attribute name='default' type='StringType'/>
+      <xs:attribute name='doc' type='StringType'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='env'>
+    <xs:annotation>
+      <xs:documentation>
+        Set environment variables on nodes that are launched.
+        When used inside of launch tag, only applies to nodes declared after.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='name' type='StringType' use='required'/>
+      <xs:attribute name='value' type='StringType' use='required'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='group'>
+    <xs:complexType>
+      <xs:choice minOccurs='0' maxOccurs='unbounded'>
+        <xs:element ref='group'/>
+        <xs:element ref='node'/>
+        <xs:element ref='machine'/>
+        <xs:element ref='include'/>
+        <xs:element ref='remap'/>
+        <xs:element ref='env'/>
+        <xs:element ref='param'/>
+        <xs:element ref='rosparam'/>
+        <xs:element ref='test'/>
+        <xs:element ref='arg'/>
+      </xs:choice>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='ns' type='StringType'/>
+      <xs:attribute name='clear_params' type="BoolType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='include'>
+    <xs:complexType>
+      <xs:choice minOccurs='0' maxOccurs='unbounded'>
+        <xs:element ref='env'/>
+        <xs:element ref='arg'/>
+      </xs:choice>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='file' type='StringType' use='required'/>
+      <xs:attribute name='ns' type='StringType'/>
+      <xs:attribute name='env-loader' type='StringType'/>
+      <xs:attribute name='clear_params' type="BoolType"/>
+      <xs:attribute name='pass_all_args' type="BoolType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='node'>
+    <xs:complexType>
+      <xs:choice minOccurs='0' maxOccurs='unbounded'>
+        <xs:element ref='env'/>
+        <xs:element ref='remap'/>
+        <xs:element ref='rosparam'/>
+        <xs:element ref='param'/>
+      </xs:choice>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='pkg' type='StringType' use='required'/>
+      <xs:attribute name='type' type='StringType' use='required'/>
+      <xs:attribute name='name' type='StringType'/>
+      <xs:attribute name='args' type='StringType'/>
+      <xs:attribute name='machine' type='StringType'/>
+      <xs:attribute name='respawn' type="BoolType"/>
+      <xs:attribute name='respawn_delay' type='StringType'/>
+      <xs:attribute name='required' type="BoolType"/>
+      <xs:attribute name='clear_params' type="BoolType"/>
+      <xs:attribute name='output'>
+        <xs:simpleType>
+          <xs:union memberTypes="SubstitutionType">
+            <xs:simpleType>
+              <xs:restriction base='xs:string'>
+                <xs:enumeration value='log'/>
+                <xs:enumeration value='screen'/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:union>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name='cwd'>
+        <xs:simpleType>
+          <xs:union memberTypes="SubstitutionType">
+            <xs:simpleType>
+              <xs:restriction base='xs:string'>
+                <xs:enumeration value='ROS_HOME'/>
+                <xs:enumeration value='node'/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:union>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name='launch-prefix' type='StringType'/>
+      <xs:attribute name='ns' type='StringType'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='test'>
+    <xs:complexType>
+      <xs:choice minOccurs='0' maxOccurs='unbounded'>
+        <xs:element ref='env'/>
+        <xs:element ref='remap'/>
+        <xs:element ref='rosparam'/>
+        <xs:element ref='param'/>
+      </xs:choice>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='pkg' type='StringType' use='required'/>
+      <xs:attribute name='type' type='StringType' use='required'/>
+      <xs:attribute name='test-name' type='StringType' use='required'/>
+      <xs:attribute name='name' type='StringType'/>
+      <xs:attribute name='args' type='StringType'/>
+      <xs:attribute name='clear_params' type="BoolType"/>
+      <xs:attribute name='cwd'>
+        <xs:simpleType>
+          <xs:union memberTypes="SubstitutionType">
+            <xs:simpleType>
+              <xs:restriction base='xs:string'>
+                <xs:enumeration value='ROS_HOME'/>
+                <xs:enumeration value='node'/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:union>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name='launch-prefix' type='StringType'/>
+      <xs:attribute name='ns' type='StringType'/>
+      <xs:attribute name='retry' type='StringType'/>
+      <xs:attribute name='time-limit' type='StringType'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='machine'>
+    <xs:complexType>
+      <xs:sequence minOccurs='0' maxOccurs='unbounded'>
+        <xs:element ref='env'/>
+      </xs:sequence>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='name' type='StringType' use='required'/>
+      <xs:attribute name='address' type='StringType' use='required'/>
+      <xs:attribute name='env-loader' type='StringType'/>
+      <xs:attribute name='default'>
+        <xs:simpleType>
+          <xs:union memberTypes="BoolType">
+            <xs:simpleType>
+              <xs:restriction base='xs:string'>
+                <xs:enumeration value='never'/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:union>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name='user' type='StringType'/>
+      <xs:attribute name='password' type='StringType'/>
+      <xs:attribute name='timeout' type='StringType'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='param'>
+    <xs:annotation>
+      <xs:documentation>
+        Defines parameter to be set on the Parameter Server as given value, from textfile, binfile or command output.
+        Inside of a node tag, parameter is treated as a private.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='name' type='StringType' use='required'/>
+      <xs:attribute name='value' type='StringType'/>
+      <xs:attribute name='type'>
+        <xs:simpleType>
+          <xs:restriction base='xs:string'>
+            <xs:enumeration value='string'/>
+            <xs:enumeration value='str'/>
+            <xs:enumeration value='int'/>
+            <xs:enumeration value='double'/>
+            <xs:enumeration value='bool'/>
+            <xs:enumeration value='yaml'/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name='textfile' type='StringType'/>
+      <xs:attribute name='binfile' type='StringType'/>
+      <xs:attribute name='command' type='StringType'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='remap'>
+    <xs:complexType>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='from' type='StringType' use='required'/>
+      <xs:attribute name='to' type='StringType' use='required'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='rosparam'>
+    <xs:annotation>
+      <xs:documentation>
+        Enables rosparam YAML files for loading and dumping parameters to/from Parameter Server.
+        Can also be used to remove parameters.
+        Can either reference a YAML file or contain raw YAML text.
+        If the YAML defines a dictionary, param attribute may be omitted.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType mixed='true'>
+      <xs:attribute name='if' type='StringType'/>
+      <xs:attribute name='unless' type='StringType'/>
+      <xs:attribute name='command' type='StringType'/>
+      <xs:attribute name='file' type='StringType'/>
+      <xs:attribute name='param' type='StringType'/>
+      <xs:attribute name='ns' type='StringType'/>
+      <xs:attribute name='subst_value' type="BoolType"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

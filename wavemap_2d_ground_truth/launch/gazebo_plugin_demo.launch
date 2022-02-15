@@ -1,0 +1,23 @@
+<launch>
+  <!-- Save the ground truth wavemap_2d map with:
+       rosservice call /gazebo/wavemap_2d_ground_truth_plugin/save_occupancy_grid_to_file "file_path: '/home/you/ground_truth_map_name.tsdf'"-->
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.01"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/slice_height" value="0.268"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/floodfill_unoccupied" value="true"/>
+
+  <arg name="show_gazebo" default="true"/>
+  <arg name="debug_gazebo" default="false"/>
+  <arg name="pause_gazebo" default="false"/>
+
+  <!-- Launch Gazebo world -->
+  <!-- Add the sample_data/gazebo models and resources to gazebo's path -->
+  <env name="GAZEBO_MODEL_PATH" value="$(optenv GAZEBO_MODEL_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
+  <env name="GAZEBO_RESOURCE_PATH" value="$(optenv GAZEBO_RESOURCE_PATH):$(find wavemap_2d_ground_truth)/sample_data/gazebo/models"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find wavemap_2d_ground_truth)/sample_data/gazebo/worlds/burning_building_rubble.world"/>
+    <arg name="gui" value="$(arg show_gazebo)"/>
+    <arg name="debug" value="$(arg debug_gazebo)"/>
+    <arg name="paused" value="$(arg pause_gazebo)"/>
+  </include>
+</launch>

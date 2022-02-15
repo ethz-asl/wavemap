@@ -5,7 +5,7 @@ function run_all_combinations() {
   for map_resolution in "${map_resolutions[@]}"; do
     # Get the git commit ID (included in the log dir name for future reference)
     git_dir=$(rospack find wavemap_2d)/../.git
-    git_commit_id=$(git --git-dir=${git_dir} rev-parse --short --verify HEAD)
+    git_commit_id=$(git --git-dir="${git_dir}" rev-parse --short --verify HEAD)
 
     for carmen_log_file_name in "${carmen_log_file_names[@]}"; do
       # Ensure that at most max_num_jobs jobs run in parallel
@@ -20,7 +20,7 @@ function run_all_combinations() {
 
       # Run the experiments
       carmen_log_file_path="${carmen_log_dir}/${carmen_log_file_name}"
-      "${executable}" -alsologtostderr -map_resolution ${map_resolution} -carmen-log-file-path "${carmen_log_file_path}" -output_log_dir "${run_log_file_prefix}" &
+      "${executable}" -alsologtostderr -map_resolution "${map_resolution}" -carmen-log-file-path "${carmen_log_file_path}" -output_log_dir "${run_log_file_prefix}" &
     done
   done
 }

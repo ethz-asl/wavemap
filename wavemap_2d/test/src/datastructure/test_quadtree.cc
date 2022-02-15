@@ -21,6 +21,26 @@ class QuadtreeTest : public FixtureBase {
     }
     return random_map;
   }
+
+  std::vector<Index> getRandomIndexVectorWithinBounds(
+      const Index& min_index, const Index& max_index) const {
+    CHECK((min_index.array() < max_index.array()).all());
+    constexpr size_t kMinNumIndices = 2u;
+    constexpr size_t kMaxNumIndices = 100u;
+    const size_t num_indices = random_number_generator_->getRandomInteger(
+        kMinNumIndices, kMaxNumIndices);
+    std::vector<Index> random_indices;
+    random_indices.reserve(num_indices);
+    while (random_indices.size() < num_indices) {
+      const Index random_index = getRandomIndex();
+      if ((min_index.array() < random_index.array() &&
+           random_index.array() < max_index.array())
+              .all()) {
+        random_indices.emplace_back(random_index);
+      }
+    }
+    return random_indices;
+  }
 };
 
 using CellTypes = ::testing::Types<UnboundedCell, SaturatingCell<>>;
@@ -42,7 +62,8 @@ TYPED_TEST(QuadtreeTest, Resizing) {
     ASSERT_EQ(map.size(), 0u);
 
     const std::vector<Index> random_indices =
-        TestFixture::getRandomIndexVector();
+        TestFixture::getRandomIndexVectorWithinBounds(
+            map.getMinPossibleIndex(), map.getMaxPossibleIndex());
 
     const Index& first_random_index = random_indices[0];
     map.addToCellValue(first_random_index, 0.f);
@@ -83,11 +104,15 @@ TYPED_TEST(QuadtreeTest, Resizing) {
 }
 
 TYPED_TEST(QuadtreeTest, InsertionTest) {
+  // TODO(victorr): Once the quadtree indexing has been refactored, add tests to
+  //                make sure that out of bounds accesses/insertions are handled
+  //                correctly (e.g. throw error or do nothing and print error).
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     Quadtree<TypeParam> map(TestFixture::getRandomResolution());
     const std::vector<Index> random_indices =
-        TestFixture::getRandomIndexVector();
+        TestFixture::getRandomIndexVectorWithinBounds(
+            map.getMinPossibleIndex(), map.getMaxPossibleIndex());
     for (const Index& random_index : random_indices) {
       FloatingPoint expected_value = 0.f;
       map.setCellValue(random_index, 0.f);

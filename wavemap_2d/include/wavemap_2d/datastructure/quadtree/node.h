@@ -18,6 +18,8 @@ class Node {
   void allocateChildrenArray();
   void pruneChildren();
 
+  size_t getMemoryUsage() const;
+
   bool hasAtLeastOneChild() const;
   bool hasChild(NodeRelativeChildIndex child_index) const {
     return children_ && children_[child_index];

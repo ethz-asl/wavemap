@@ -1,8 +1,10 @@
 #ifndef WAVEMAP_2D_DATASTRUCTURE_QUADTREE_QUADTREE_INL_H_
 #define WAVEMAP_2D_DATASTRUCTURE_QUADTREE_QUADTREE_INL_H_
 
+#include <limits>
 #include <stack>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "wavemap_2d/datastructure/pointcloud.h"
@@ -35,6 +37,111 @@ size_t Quadtree<CellTypeT>::size() const {
   --num_nodes;
 
   return num_nodes;
+}
+
+template <typename CellTypeT>
+size_t Quadtree<CellTypeT>::getMemoryUsage() const {
+  size_t memory_usage = 0u;
+
+  std::stack<const Node<CellDataSpecialized>*> stack;
+  stack.template emplace(&root_node_);
+  while (!stack.empty()) {
+    const Node<CellDataSpecialized>* node = stack.top();
+    stack.pop();
+    memory_usage += node->getMemoryUsage();
+
+    if (node->hasAllocatedChildrenArray()) {
+      for (NodeRelativeChildIndex child_idx = 0;
+           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+        if (node->hasChild(child_idx)) {
+          stack.template emplace(node->getChild(child_idx));
+        }
+      }
+    }
+  }
+
+  return memory_usage;
+}
+
+// TODO(victorr): Replace this with an implementation that only expands
+//                potential min candidates
+template <typename CellTypeT>
+Index Quadtree<CellTypeT>::getMinIndex() const {
+  Index min_index = Index::Constant(std::numeric_limits<IndexElement>::max());
+
+  std::stack<std::pair<NodeIndex, const Node<CellDataSpecialized>*>> stack;
+  stack.template emplace(NodeIndex{}, &root_node_);
+  while (!stack.empty()) {
+    const NodeIndex node_index = stack.top().first;
+    const Node<CellDataSpecialized>* node = stack.top().second;
+    stack.pop();
+
+    if (node->hasAllocatedChildrenArray()) {
+      for (NodeRelativeChildIndex child_idx = 0;
+           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+        if (node->hasChild(child_idx)) {
+          const NodeIndex child_node_index =
+              node_index.computeChildIndex(child_idx);
+          const Node<CellDataSpecialized>* child_node =
+              node->getChild(child_idx);
+          stack.template emplace(child_node_index, child_node);
+        }
+      }
+    } else {
+      const Index index =
+          ((luts_.node_widths_at_depth_[node_index.depth] *
+                node_index.position.template cast<FloatingPoint>() -
+            luts_.node_halved_diagonals_at_depth_[0]) /
+           resolution_)
+              .array()
+              .round()
+              .template cast<IndexElement>();
+      min_index = min_index.cwiseMin(index);
+    }
+  }
+
+  return min_index;
+}
+
+// TODO(victorr): Replace this with an implementation that only expands
+//                potential max candidates
+template <typename CellTypeT>
+Index Quadtree<CellTypeT>::getMaxIndex() const {
+  Index max_index =
+      Index::Constant(std::numeric_limits<IndexElement>::lowest());
+
+  std::stack<std::pair<NodeIndex, const Node<CellDataSpecialized>*>> stack;
+  stack.template emplace(NodeIndex{}, &root_node_);
+  while (!stack.empty()) {
+    const NodeIndex node_index = stack.top().first;
+    const Node<CellDataSpecialized>* node = stack.top().second;
+    stack.pop();
+
+    if (node->hasAllocatedChildrenArray()) {
+      for (NodeRelativeChildIndex child_idx = 0;
+           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+        if (node->hasChild(child_idx)) {
+          const NodeIndex child_node_index =
+              node_index.computeChildIndex(child_idx);
+          const Node<CellDataSpecialized>* child_node =
+              node->getChild(child_idx);
+          stack.template emplace(child_node_index, child_node);
+        }
+      }
+    } else {
+      const Index index =
+          ((luts_.node_widths_at_depth_[node_index.depth] *
+                node_index.position.template cast<FloatingPoint>() -
+            luts_.node_halved_diagonals_at_depth_[0]) /
+           resolution_)
+              .array()
+              .round()
+              .template cast<IndexElement>();
+      max_index = max_index.cwiseMax(index);
+    }
+  }
+
+  return max_index;
 }
 
 template <typename CellTypeT>
@@ -108,8 +215,10 @@ bool Quadtree<CellTypeT>::load(const std::string& /*file_path_prefix*/,
 template <typename CellTypeT>
 NodeIndex Quadtree<CellTypeT>::computeNodeIndexFromIndexAndDepth(
     const Index& index, NodeIndexElement depth) const {
-  return computeNodeIndexFromCenter(index.template cast<FloatingPoint>(),
-                                    depth);
+  // TODO(victorr): Compute it in integer form, instead of round tripping
+  //                through real coordinates
+  return computeNodeIndexFromCenter(
+      resolution_ * index.template cast<FloatingPoint>(), depth);
 }
 
 template <typename CellTypeT>
