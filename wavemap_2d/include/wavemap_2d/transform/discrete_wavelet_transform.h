@@ -11,9 +11,15 @@ namespace wavemap_2d {
 template <typename T>
 class DiscreteWaveletTransform {
  public:
-  // TODO(victorr): Check that num rows and columns are divisible by 2^n_pass
-  void forward(Matrix<T>& matrix, int n_passes) const {
+  void forward(MatrixT<T>& matrix, int n_passes) const {
     CHECK(!matrix.IsRowMajor);
+    const auto min_divisor = static_cast<Eigen::Index>(std::exp2(n_passes - 1));
+    CHECK_EQ(matrix.rows() % min_divisor, 0)
+        << "The number of rows (" << matrix.rows()
+        << ") must be divisible by 2^(n_passes-1) (" << min_divisor << ")";
+    CHECK_EQ(matrix.cols() % min_divisor, 0)
+        << "The number of columns (" << matrix.cols()
+        << ") must be divisible by 2^(n_passes-1) (" << min_divisor << ")";
 
     for (int pass_idx = 0; pass_idx < n_passes; ++pass_idx) {
       Eigen::Index relevant_rows = matrix.rows() / std::exp2(pass_idx);
@@ -23,9 +29,15 @@ class DiscreteWaveletTransform {
     }
   }
 
-  // TODO(victorr): Check that num rows and columns are divisible by 2^n_pass
-  void backward(Matrix<T>& matrix, int n_passes) const {
+  void backward(MatrixT<T>& matrix, int n_passes) const {
     CHECK(!matrix.IsRowMajor);
+    const auto min_divisor = static_cast<Eigen::Index>(std::exp2(n_passes - 1));
+    CHECK_EQ(matrix.rows() % min_divisor, 0)
+        << "The number of rows (" << matrix.rows()
+        << ") must be divisible by 2^(n_passes-1) (" << min_divisor << ")";
+    CHECK_EQ(matrix.cols() % min_divisor, 0)
+        << "The number of columns (" << matrix.cols()
+        << ") must be divisible by 2^(n_passes-1) (" << min_divisor << ")";
 
     for (int pass_idx = n_passes - 1; 0 <= pass_idx; --pass_idx) {
       Eigen::Index relevant_rows = matrix.rows() / std::exp2(pass_idx);
@@ -36,8 +48,8 @@ class DiscreteWaveletTransform {
   }
 
  protected:
-  virtual Matrix<T> singleForwardPass(Matrix<T> matrix) const = 0;
-  virtual Matrix<T> singleBackwardPass(Matrix<T> matrix) const = 0;
+  virtual MatrixT<T> singleForwardPass(MatrixT<T> matrix) const = 0;
+  virtual MatrixT<T> singleBackwardPass(MatrixT<T> matrix) const = 0;
 };
 }  // namespace wavemap_2d
 
