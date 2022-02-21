@@ -11,8 +11,8 @@
 #include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
-size_t Quadtree<CellTypeT>::size() const {
+template <typename CellT>
+size_t Quadtree<CellT>::size() const {
   size_t num_nodes = 0u;
 
   std::stack<const Node<CellDataSpecialized>*> stack;
@@ -39,8 +39,8 @@ size_t Quadtree<CellTypeT>::size() const {
   return num_nodes;
 }
 
-template <typename CellTypeT>
-size_t Quadtree<CellTypeT>::getMemoryUsage() const {
+template <typename CellT>
+size_t Quadtree<CellT>::getMemoryUsage() const {
   size_t memory_usage = 0u;
 
   std::stack<const Node<CellDataSpecialized>*> stack;
@@ -65,8 +65,8 @@ size_t Quadtree<CellTypeT>::getMemoryUsage() const {
 
 // TODO(victorr): Replace this with an implementation that only expands
 //                potential min candidates
-template <typename CellTypeT>
-Index Quadtree<CellTypeT>::getMinIndex() const {
+template <typename CellT>
+Index Quadtree<CellT>::getMinIndex() const {
   Index min_index = Index::Constant(std::numeric_limits<IndexElement>::max());
 
   std::stack<std::pair<NodeIndex, const Node<CellDataSpecialized>*>> stack;
@@ -105,8 +105,8 @@ Index Quadtree<CellTypeT>::getMinIndex() const {
 
 // TODO(victorr): Replace this with an implementation that only expands
 //                potential max candidates
-template <typename CellTypeT>
-Index Quadtree<CellTypeT>::getMaxIndex() const {
+template <typename CellT>
+Index Quadtree<CellT>::getMaxIndex() const {
   Index max_index =
       Index::Constant(std::numeric_limits<IndexElement>::lowest());
 
@@ -144,16 +144,16 @@ Index Quadtree<CellTypeT>::getMaxIndex() const {
   return max_index;
 }
 
-template <typename CellTypeT>
-bool Quadtree<CellTypeT>::hasCell(const Index& index) const {
+template <typename CellT>
+bool Quadtree<CellT>::hasCell(const Index& index) const {
   const NodeIndex node_index =
       computeNodeIndexFromIndexAndDepth(index, max_depth_);
   const Node<CellDataSpecialized>* node = getNode(node_index);
   return node;
 }
 
-template <typename CellTypeT>
-FloatingPoint Quadtree<CellTypeT>::getCellValue(const Index& index) const {
+template <typename CellT>
+FloatingPoint Quadtree<CellT>::getCellValue(const Index& index) const {
   const NodeIndex node_index =
       computeNodeIndexFromIndexAndDepth(index, max_depth_);
   const Node<CellDataSpecialized>* node = getNode(node_index);
@@ -164,9 +164,9 @@ FloatingPoint Quadtree<CellTypeT>::getCellValue(const Index& index) const {
   }
 }
 
-template <typename CellTypeT>
-void Quadtree<CellTypeT>::setCellValue(const Index& index,
-                                       FloatingPoint new_value) {
+template <typename CellT>
+void Quadtree<CellT>::setCellValue(const Index& index,
+                                   FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   const NodeIndex node_index =
       computeNodeIndexFromIndexAndDepth(index, max_depth_);
@@ -178,42 +178,41 @@ void Quadtree<CellTypeT>::setCellValue(const Index& index,
   }
 }
 
-template <typename CellTypeT>
-void Quadtree<CellTypeT>::addToCellValue(const Index& index,
-                                         FloatingPoint update) {
+template <typename CellT>
+void Quadtree<CellT>::addToCellValue(const Index& index, FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   const NodeIndex node_index =
       computeNodeIndexFromIndexAndDepth(index, max_depth_);
   Node<CellDataSpecialized>* node = getNode(node_index, kAutoAllocate);
   if (node) {
-    node->data() = CellTypeT::add(node->data(), update);
+    node->data() = CellT::add(node->data(), update);
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << index;
   }
 }
 
-template <typename CellTypeT>
-cv::Mat Quadtree<CellTypeT>::getImage(bool /*use_color*/) const {
+template <typename CellT>
+cv::Mat Quadtree<CellT>::getImage(bool /*use_color*/) const {
   // TODO(victorr): Implement this
   return {};
 }
 
-template <typename CellTypeT>
-bool Quadtree<CellTypeT>::save(const std::string& /*file_path_prefix*/,
-                               bool /*use_floating_precision*/) const {
+template <typename CellT>
+bool Quadtree<CellT>::save(const std::string& /*file_path_prefix*/,
+                           bool /*use_floating_precision*/) const {
   // TODO(victorr): Implement this
   return false;
 }
 
-template <typename CellTypeT>
-bool Quadtree<CellTypeT>::load(const std::string& /*file_path_prefix*/,
-                               bool /*used_floating_precision*/) {
+template <typename CellT>
+bool Quadtree<CellT>::load(const std::string& /*file_path_prefix*/,
+                           bool /*used_floating_precision*/) {
   // TODO(victorr): Implement this
   return false;
 }
 
-template <typename CellTypeT>
-NodeIndex Quadtree<CellTypeT>::computeNodeIndexFromIndexAndDepth(
+template <typename CellT>
+NodeIndex Quadtree<CellT>::computeNodeIndexFromIndexAndDepth(
     const Index& index, NodeIndexElement depth) const {
   // TODO(victorr): Compute it in integer form, instead of round tripping
   //                through real coordinates
@@ -221,8 +220,8 @@ NodeIndex Quadtree<CellTypeT>::computeNodeIndexFromIndexAndDepth(
       resolution_ * index.template cast<FloatingPoint>(), depth);
 }
 
-template <typename CellTypeT>
-NodeIndex Quadtree<CellTypeT>::computeNodeIndexFromCenter(
+template <typename CellT>
+NodeIndex Quadtree<CellT>::computeNodeIndexFromCenter(
     const Point& center, NodeIndexElement depth) const {
   NodeIndex index;
   const FloatingPoint width = getNodeWidthAtDepth(depth);
@@ -237,23 +236,23 @@ NodeIndex Quadtree<CellTypeT>::computeNodeIndexFromCenter(
   return index;
 }
 
-template <typename CellTypeT>
-Point Quadtree<CellTypeT>::computeNodeCenterFromIndex(
+template <typename CellT>
+Point Quadtree<CellT>::computeNodeCenterFromIndex(
     const NodeIndex& index) const {
   const Vector node_halved_diagonal = getNodeHalvedDiagonalAtDepth(index.depth);
   return computeNodeCornerFromIndex(index) + node_halved_diagonal;
 }
 
-template <typename CellTypeT>
-Point Quadtree<CellTypeT>::computeNodeCornerFromIndex(
+template <typename CellT>
+Point Quadtree<CellT>::computeNodeCornerFromIndex(
     const NodeIndex& index) const {
   const FloatingPoint width = getNodeWidthAtDepth(index.depth);
   const Vector root_halved_diagonal = getNodeHalvedDiagonalAtDepth(0u);
   return index.position.cast<FloatingPoint>() * width - root_halved_diagonal;
 }
 
-template <typename CellTypeT>
-bool Quadtree<CellTypeT>::removeNode(const NodeIndex& index) {
+template <typename CellT>
+bool Quadtree<CellT>::removeNode(const NodeIndex& index) {
   Node<CellDataSpecialized> node_ptr = getNode(index);
   if (node_ptr) {
     delete node_ptr;
@@ -273,8 +272,8 @@ bool Quadtree<CellTypeT>::removeNode(const NodeIndex& index) {
   }
 }
 
-template <typename CellTypeT>
-Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
+template <typename CellT>
+Node<typename CellT::Specialized>* Quadtree<CellT>::getNode(
     const NodeIndex& index, bool auto_allocate) {
   Node<CellDataSpecialized>* current_parent = &root_node_;
   std::vector<NodeRelativeChildIndex> child_indices =
@@ -304,8 +303,8 @@ Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
   return current_parent;
 }
 
-template <typename CellTypeT>
-const Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
+template <typename CellT>
+const Node<typename CellT::Specialized>* Quadtree<CellT>::getNode(
     const NodeIndex& index) const {
   const Node<CellDataSpecialized>* current_parent = &root_node_;
   std::vector<NodeRelativeChildIndex> child_indices =
@@ -327,20 +326,19 @@ const Node<typename CellTypeT::Specialized>* Quadtree<CellTypeT>::getNode(
   return current_parent;
 }
 
-template <typename CellTypeT>
-FloatingPoint Quadtree<CellTypeT>::computeNodeWidthAtDepth(
-    NodeIndexElement depth) {
+template <typename CellT>
+FloatingPoint Quadtree<CellT>::computeNodeWidthAtDepth(NodeIndexElement depth) {
   return root_node_width_ / std::exp2(depth);
 }
 
-template <typename CellTypeT>
-Vector Quadtree<CellTypeT>::computeNodeHalvedDiagonalAtDepth(
+template <typename CellT>
+Vector Quadtree<CellT>::computeNodeHalvedDiagonalAtDepth(
     NodeIndexElement depth) {
   return Vector::Constant(0.5f) * computeNodeWidthAtDepth(depth);
 }
 
-template <typename CellTypeT>
-void Quadtree<CellTypeT>::updateLookupTables() {
+template <typename CellT>
+void Quadtree<CellT>::updateLookupTables() {
   // Update the cache sizes
   luts_.node_widths_at_depth_.resize(max_depth_ + 1);
   luts_.node_halved_diagonals_at_depth_.resize(max_depth_ + 1);

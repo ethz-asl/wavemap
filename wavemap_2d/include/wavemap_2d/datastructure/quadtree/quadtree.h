@@ -12,10 +12,10 @@
 #include "wavemap_2d/datastructure/quadtree/node_index.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
+template <typename CellT>
 class Quadtree : public DataStructureBase {
  public:
-  using CellType = CellTypeT;
+  using CellType = CellT;
 
   explicit Quadtree(FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -81,7 +81,7 @@ class Quadtree : public DataStructureBase {
   }
 
  protected:
-  using CellDataSpecialized = typename CellTypeT::Specialized;
+  using CellDataSpecialized = typename CellT::Specialized;
 
   NodeIndexElement max_depth_;
   FloatingPoint root_node_width_;

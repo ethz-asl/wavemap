@@ -8,8 +8,8 @@
 #include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
-Index HashedBlocks<CellTypeT>::getMinIndex() const {
+template <typename CellT>
+Index HashedBlocks<CellT>::getMinIndex() const {
   if (!empty()) {
     Index min_block_index =
         Index::Constant(std::numeric_limits<IndexElement>::max());
@@ -21,8 +21,8 @@ Index HashedBlocks<CellTypeT>::getMinIndex() const {
   return Index::Zero();
 }
 
-template <typename CellTypeT>
-Index HashedBlocks<CellTypeT>::getMaxIndex() const {
+template <typename CellT>
+Index HashedBlocks<CellT>::getMaxIndex() const {
   if (!empty()) {
     Index max_block_index =
         Index::Constant(std::numeric_limits<IndexElement>::lowest());
@@ -34,13 +34,13 @@ Index HashedBlocks<CellTypeT>::getMaxIndex() const {
   return Index::Zero();
 }
 
-template <typename CellTypeT>
-bool HashedBlocks<CellTypeT>::hasCell(const Index& index) const {
+template <typename CellT>
+bool HashedBlocks<CellT>::hasCell(const Index& index) const {
   return blocks_.count(computeBlockIndexFromIndex(index));
 }
 
-template <typename CellTypeT>
-FloatingPoint HashedBlocks<CellTypeT>::getCellValue(const Index& index) const {
+template <typename CellT>
+FloatingPoint HashedBlocks<CellT>::getCellValue(const Index& index) const {
   const CellDataSpecialized* cell_data = accessCellData(index);
   if (cell_data) {
     return static_cast<FloatingPoint>(*cell_data);
@@ -48,9 +48,9 @@ FloatingPoint HashedBlocks<CellTypeT>::getCellValue(const Index& index) const {
   return 0.f;
 }
 
-template <typename CellTypeT>
-void HashedBlocks<CellTypeT>::setCellValue(const Index& index,
-                                           FloatingPoint new_value) {
+template <typename CellT>
+void HashedBlocks<CellT>::setCellValue(const Index& index,
+                                       FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
   if (cell_data) {
@@ -61,21 +61,21 @@ void HashedBlocks<CellTypeT>::setCellValue(const Index& index,
   }
 }
 
-template <typename CellTypeT>
-void HashedBlocks<CellTypeT>::addToCellValue(const Index& index,
-                                             FloatingPoint update) {
+template <typename CellT>
+void HashedBlocks<CellT>::addToCellValue(const Index& index,
+                                         FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
   if (cell_data) {
-    *cell_data = CellTypeT::add(*cell_data, update);
+    *cell_data = CellT::add(*cell_data, update);
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << index;
   }
 }
 
-template <typename CellTypeT>
-cv::Mat HashedBlocks<CellTypeT>::getImage(bool use_color) const {
-  DenseGrid<CellTypeT> dense_grid(resolution_);
+template <typename CellT>
+cv::Mat HashedBlocks<CellT>::getImage(bool use_color) const {
+  DenseGrid<CellT> dense_grid(resolution_);
   for (const Index& index : Grid(getMinIndex(), getMaxIndex())) {
     const FloatingPoint cell_value = getCellValue(index);
     dense_grid.setCellValue(index, cell_value);
@@ -83,22 +83,22 @@ cv::Mat HashedBlocks<CellTypeT>::getImage(bool use_color) const {
   return dense_grid.getImage(use_color);
 }
 
-template <typename CellTypeT>
-bool HashedBlocks<CellTypeT>::save(const std::string& /* file_path_prefix */,
-                                   bool /* use_floating_precision */) const {
+template <typename CellT>
+bool HashedBlocks<CellT>::save(const std::string& /* file_path_prefix */,
+                               bool /* use_floating_precision */) const {
   // TODO(victorr): Implement this
   return false;
 }
 
-template <typename CellTypeT>
-bool HashedBlocks<CellTypeT>::load(const std::string& /* file_path_prefix */,
-                                   bool /* used_floating_precision */) {
+template <typename CellT>
+bool HashedBlocks<CellT>::load(const std::string& /* file_path_prefix */,
+                               bool /* used_floating_precision */) {
   // TODO(victorr): Implement this
   return false;
 }
 
-template <typename CellTypeT>
-typename CellTypeT::Specialized* HashedBlocks<CellTypeT>::accessCellData(
+template <typename CellT>
+typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
     const Index& index, bool auto_allocate) {
   BlockIndex block_index = computeBlockIndexFromIndex(index);
   auto it = blocks_.find(block_index);
@@ -114,8 +114,8 @@ typename CellTypeT::Specialized* HashedBlocks<CellTypeT>::accessCellData(
   return &it->second.coeffRef(cell_index.x(), cell_index.y());
 }
 
-template <typename CellTypeT>
-const typename CellTypeT::Specialized* HashedBlocks<CellTypeT>::accessCellData(
+template <typename CellT>
+const typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
     const Index& index) const {
   BlockIndex block_index = computeBlockIndexFromIndex(index);
   const auto& it = blocks_.find(block_index);
@@ -127,18 +127,18 @@ const typename CellTypeT::Specialized* HashedBlocks<CellTypeT>::accessCellData(
   return nullptr;
 }
 
-template <typename CellTypeT>
-typename HashedBlocks<CellTypeT>::BlockIndex
-HashedBlocks<CellTypeT>::computeBlockIndexFromIndex(const Index& index) const {
+template <typename CellT>
+typename HashedBlocks<CellT>::BlockIndex
+HashedBlocks<CellT>::computeBlockIndexFromIndex(const Index& index) const {
   return {
       std::floor(kCellsPerSideInv * static_cast<FloatingPoint>(index.x())),
       std::floor(kCellsPerSideInv * static_cast<FloatingPoint>(index.y())),
   };
 }
 
-template <typename CellTypeT>
-typename HashedBlocks<CellTypeT>::CellIndex
-HashedBlocks<CellTypeT>::computeCellIndexFromBlockIndexAndIndex(
+template <typename CellT>
+typename HashedBlocks<CellT>::CellIndex
+HashedBlocks<CellT>::computeCellIndexFromBlockIndexAndIndex(
     const HashedBlocks::BlockIndex& block_index, const Index& index) const {
   Index origin = kCellsPerSide * block_index;
   Index cell_index = index - origin;

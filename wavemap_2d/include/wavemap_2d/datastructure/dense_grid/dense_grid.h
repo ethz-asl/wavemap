@@ -7,13 +7,13 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
+template <typename CellT>
 class DenseGrid : public DataStructureBase {
  public:
-  using CellType = CellTypeT;
-  using CellDataSpecialized = typename CellTypeT::Specialized;
-  using CellDataBaseFloat = typename CellTypeT::BaseFloat;
-  using CellDataBaseInt = typename CellTypeT::BaseInt;
+  using CellType = CellT;
+  using CellDataSpecialized = typename CellT::Specialized;
+  using CellDataBaseFloat = typename CellT::BaseFloat;
+  using CellDataBaseInt = typename CellT::BaseInt;
 
   template <typename T>
   using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;

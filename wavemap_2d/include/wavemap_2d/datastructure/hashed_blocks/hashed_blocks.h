@@ -7,10 +7,10 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
+template <typename CellT>
 class HashedBlocks : public DataStructureBase {
  public:
-  using CellType = CellTypeT;
+  using CellType = CellT;
 
   explicit HashedBlocks(const FloatingPoint resolution)
       : DataStructureBase(resolution) {}
@@ -38,7 +38,7 @@ class HashedBlocks : public DataStructureBase {
             bool used_floating_precision) override;
 
  protected:
-  using CellDataSpecialized = typename CellTypeT::Specialized;
+  using CellDataSpecialized = typename CellT::Specialized;
 
   static constexpr IndexElement kCellsPerSide = 64;
   static constexpr IndexElement kCellsPerBlock = kCellsPerSide * kCellsPerSide;
