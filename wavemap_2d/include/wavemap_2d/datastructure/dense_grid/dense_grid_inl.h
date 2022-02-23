@@ -61,28 +61,13 @@ void DenseGrid<CellT>::addToCellValue(const Index& index,
 
 template <typename CellT>
 cv::Mat DenseGrid<CellT>::getImage(bool use_color) const {
-  if (empty()) {
-    return cv::Mat{};
-  }
-
-  cv::Mat image;
   constexpr FloatingPoint kLogOddsMin =
       CellT::hasLowerBound ? CellT::kLowerBound : -2.f;
   constexpr FloatingPoint kLogOddsMax =
       CellT::hasUpperBound ? CellT::kUpperBound : 4.f;
   const DataGridBaseFloat grid_map_tmp =
       data_.template cast<CellDataBaseFloat>();
-  cv::eigen2cv(grid_map_tmp, image);
-  image.convertTo(image, CV_8UC1, 255.f / (kLogOddsMax - kLogOddsMin),
-                  -kLogOddsMin);
-  cv::flip(image, image, -1);
-  cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
-
-  if (use_color) {
-    cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_PARULA);
-  }
-
-  return image;
+  return MatrixToImage(grid_map_tmp, kLogOddsMin, kLogOddsMax, use_color);
 }
 
 template <typename CellT>

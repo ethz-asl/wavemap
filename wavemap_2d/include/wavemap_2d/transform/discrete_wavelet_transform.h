@@ -13,6 +13,9 @@ class DiscreteWaveletTransform {
  public:
   void forward(MatrixT<T>& matrix, int n_passes) const {
     CHECK(!matrix.IsRowMajor);
+    CHECK_GT(n_passes, 0) << "The number of wavelet transform passes must be a "
+                             "positive integer, but received "
+                          << n_passes << " instead.";
     const auto min_divisor = static_cast<Eigen::Index>(std::exp2(n_passes - 1));
     CHECK_EQ(matrix.rows() % min_divisor, 0)
         << "The number of rows (" << matrix.rows()
@@ -31,6 +34,9 @@ class DiscreteWaveletTransform {
 
   void backward(MatrixT<T>& matrix, int n_passes) const {
     CHECK(!matrix.IsRowMajor);
+    CHECK_GT(n_passes, 0) << "The number of wavelet transform passes must be a "
+                             "positive integer, but received "
+                          << n_passes << " instead.";
     const auto min_divisor = static_cast<Eigen::Index>(std::exp2(n_passes - 1));
     CHECK_EQ(matrix.rows() % min_divisor, 0)
         << "The number of rows (" << matrix.rows()
