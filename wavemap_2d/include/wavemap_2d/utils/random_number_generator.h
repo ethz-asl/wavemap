@@ -32,6 +32,11 @@ class RandomNumberGenerator {
     return uniform_distribution(random_number_generator_);
   }
 
+  bool getRandomBool(FloatingPoint p_true) {
+    std::bernoulli_distribution bernoulli_distribution(p_true);
+    return bernoulli_distribution(random_number_generator_);
+  }
+
  protected:
   std::mt19937 random_number_generator_;
 };

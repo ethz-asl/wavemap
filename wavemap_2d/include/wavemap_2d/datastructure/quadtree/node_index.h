@@ -1,7 +1,6 @@
 #ifndef WAVEMAP_2D_DATASTRUCTURE_QUADTREE_NODE_INDEX_H_
 #define WAVEMAP_2D_DATASTRUCTURE_QUADTREE_NODE_INDEX_H_
 
-#include <iostream>
 #include <string>
 #include <vector>
 

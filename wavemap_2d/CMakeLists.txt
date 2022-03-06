@@ -14,7 +14,7 @@ if (CATKIN_ENABLE_TESTING AND ENABLE_COVERAGE_TESTING)
 endif ()
 
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=c++17 \
+    "${CMAKE_CXX_FLAGS} -std=c++17 -march=native \
     -Wall -Wextra -Wno-deprecated-copy -Wno-class-memaccess \
     -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN")
 
@@ -76,6 +76,11 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_quadtree PRIVATE test/include)
   target_link_libraries(test_quadtree ${PROJECT_NAME} testing_main)
 
+  catkin_add_gtest(test_sparse_vector
+                   test/src/datastructure/test_sparse_vector.cc)
+  target_include_directories(test_sparse_vector PRIVATE test/include)
+  target_link_libraries(test_sparse_vector ${PROJECT_NAME} testing_main)
+
   catkin_add_gtest(test_iterators test/src/integrator/test_iterators.cc)
   target_include_directories(test_iterators PRIVATE test/include)
   target_link_libraries(test_iterators ${PROJECT_NAME} testing_main)
@@ -116,6 +121,10 @@ if (ENABLE_BENCHMARKING)
   add_executable(benchmark_measurement_integrator
                  benchmark/benchmark_measurement_integrator.cc)
   target_link_libraries(benchmark_measurement_integrator ${PROJECT_NAME}
+                        benchmarking_main)
+
+  add_executable(benchmark_sparse_array benchmark/benchmark_sparse_array.cc)
+  target_link_libraries(benchmark_sparse_array ${PROJECT_NAME}
                         benchmarking_main)
 endif ()
 
