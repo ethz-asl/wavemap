@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "wavemap_2d/datastructure/datastructure_base.h"
+#include "wavemap_2d/datastructure/index_hashes.h"
 
 namespace wavemap_2d {
 template <typename CellT>
@@ -50,7 +51,7 @@ class HashedBlocks : public DataStructureBase {
   using BlockIndex = Index;
   using CellIndex = Index;
 
-  std::unordered_map<BlockIndex, Block, IndexHash> blocks_;
+  std::unordered_map<BlockIndex, Block, VoxbloxIndexHash> blocks_;
 
   CellDataSpecialized* accessCellData(const Index& index,
                                       bool auto_allocate = false);
