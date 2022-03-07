@@ -1,35 +1,26 @@
 #ifndef WAVEMAP_2D_DATASTRUCTURE_QUADTREE_NODE_INL_H_
 #define WAVEMAP_2D_DATASTRUCTURE_QUADTREE_NODE_INL_H_
 
+#include <memory>
+
 namespace wavemap_2d {
 template <typename NodeDataType>
 void Node<NodeDataType>::allocateChildrenArray() {
   if (!children_) {
-    children_ = new Node*[NodeIndex::kNumChildren];
-    for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
-      children_[idx] = nullptr;
-    }
+    children_ = std::make_unique<ChildrenArray>();
   }
 }
 
 template <typename NodeDataType>
 void Node<NodeDataType>::pruneChildren() {
-  if (children_) {
-    for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
-      if (children_[idx]) {
-        delete children_[idx];
-      }
-    }
-    delete[] children_;
-    children_ = nullptr;
-  }
+  children_.reset();
 }
 
 template <typename NodeDataType>
 size_t Node<NodeDataType>::getMemoryUsage() const {
   size_t memory_usage = sizeof(Node<NodeDataType>);
   if (hasAllocatedChildrenArray()) {
-    memory_usage += NodeIndex::kNumChildren * sizeof(Node*);
+    memory_usage += sizeof(ChildrenArray);
   }
   return memory_usage;
 }
@@ -52,7 +43,7 @@ void Node<NodeDataType>::allocateChild(
   if (!children_) {
     hasAllocatedChildrenArray();
   }
-  children_[child_index] = new Node;
+  children_[child_index] = std::make_unique<Node>();
 }
 
 template <typename NodeDataType>

@@ -1,6 +1,9 @@
 #ifndef WAVEMAP_2D_DATASTRUCTURE_QUADTREE_NODE_H_
 #define WAVEMAP_2D_DATASTRUCTURE_QUADTREE_NODE_H_
 
+#include <array>
+#include <memory>
+
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/quadtree/node_index.h"
 
@@ -29,8 +32,11 @@ class Node {
   const Node* getChild(NodeRelativeChildIndex child_index) const;
 
  protected:
+  using ChildrenArray =
+      std::array<std::unique_ptr<Node>, NodeIndex::kNumChildren>;
+
   NodeDataType data_;
-  Node** children_;
+  std::unique_ptr<ChildrenArray> children_;
 };
 }  // namespace wavemap_2d
 
