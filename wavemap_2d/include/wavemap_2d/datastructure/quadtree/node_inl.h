@@ -29,7 +29,7 @@ template <typename NodeDataType>
 bool Node<NodeDataType>::hasAtLeastOneChild() const {
   if (children_) {
     for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
-      if (children_[idx]) {
+      if (children_->operator[](idx)) {
         return true;
       }
     }
@@ -43,14 +43,14 @@ void Node<NodeDataType>::allocateChild(
   if (!children_) {
     hasAllocatedChildrenArray();
   }
-  children_[child_index] = std::make_unique<Node>();
+  children_->operator[](child_index) = std::make_unique<Node>();
 }
 
 template <typename NodeDataType>
 Node<NodeDataType>* Node<NodeDataType>::getChild(
     NodeRelativeChildIndex child_index) {
   if (children_) {
-    return children_[child_index];
+    return children_->operator[](child_index).get();
   }
   return nullptr;
 }
@@ -59,7 +59,7 @@ template <typename NodeDataType>
 const Node<NodeDataType>* Node<NodeDataType>::getChild(
     NodeRelativeChildIndex child_index) const {
   if (children_) {
-    return children_[child_index];
+    return children_->operator[](child_index).get();
   }
   return nullptr;
 }

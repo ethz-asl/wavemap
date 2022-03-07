@@ -11,13 +11,15 @@ namespace wavemap_2d {
 template <typename NodeDataType>
 class Node {
  public:
-  Node() : data_(0), children_(nullptr) {}
+  Node() : data_(0) {}
   ~Node() { pruneChildren(); }
 
   NodeDataType& data() { return data_; }
   const NodeDataType& data() const { return data_; }
 
-  bool hasAllocatedChildrenArray() const { return children_; }
+  bool hasAllocatedChildrenArray() const {
+    return static_cast<bool>(children_);
+  }
   void allocateChildrenArray();
   void pruneChildren();
 
@@ -25,7 +27,7 @@ class Node {
 
   bool hasAtLeastOneChild() const;
   bool hasChild(NodeRelativeChildIndex child_index) const {
-    return children_ && children_[child_index];
+    return children_ && children_->operator[](child_index);
   }
   void allocateChild(NodeRelativeChildIndex child_index) const;
   Node* getChild(NodeRelativeChildIndex child_index);
