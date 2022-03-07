@@ -7,10 +7,10 @@
 #include "wavemap_2d/common.h"
 
 namespace wavemap_2d {
-template <typename T, T default_value = 0>
+template <typename T, size_t max_size, T default_value = 0>
 class SparseVector {
  public:
-  static constexpr uint8_t kMaxSize = 64;
+  static constexpr uint8_t kMaxSize = max_size;
   static constexpr T kDefaultValue = default_value;
 
   SparseVector() : bitmask_(kZeros) {}
@@ -44,12 +44,18 @@ class SparseVector {
   // TODO(victorr): Add deflate (prune) method
 
  private:
-  static constexpr std::bitset<kMaxSize> kZeros{0ull};
-  static constexpr std::bitset<kMaxSize> kOnes{0xFFFFFFFFFFFFFFFF};
+  static constexpr std::bitset<max_size> kZeros{0};
+  static const std::bitset<max_size> kOnes;
+  // NOTE: Unfortunately std::bitset does not (yet) have a constexpr constructor
+  //       that makes it possible to set more than the first 64 bits.
 
-  std::bitset<kMaxSize> bitmask_;
+  std::bitset<max_size> bitmask_;
   std::vector<T> compacted_vector_;
 };
+
+template <typename T, size_t max_size, T default_value>
+const std::bitset<max_size> SparseVector<T, max_size, default_value>::kOnes =
+    std::bitset<max_size>{}.set();
 }  // namespace wavemap_2d
 
 #endif  // WAVEMAP_2D_DATASTRUCTURE_SPARSE_VECTOR_H_

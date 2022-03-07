@@ -6,7 +6,7 @@
 namespace wavemap_2d {
 TEST(SparseVectorTest, Insertion) {
   using ElementType = size_t;
-  constexpr uint8_t kMaxSize = SparseVector<ElementType>::kMaxSize;
+  constexpr uint8_t kMaxSize = 64u;
   constexpr ElementType kDefaultValue = 0u;
   constexpr size_t kFixedRandomSeed = 0u;
 
@@ -15,7 +15,7 @@ TEST(SparseVectorTest, Insertion) {
     const FloatingPoint prob_non_zero =
         static_cast<FloatingPoint>(percentage_non_zero) / 100.f;
     std::vector<ElementType> dense_vector(kMaxSize, kDefaultValue);
-    SparseVector<ElementType> sparse_vector;
+    SparseVector<ElementType, kMaxSize> sparse_vector;
 
     EXPECT_EQ(sparse_vector.size(), 0);
     EXPECT_EQ(sparse_vector.capacity(), 0);
