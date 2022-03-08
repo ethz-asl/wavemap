@@ -23,7 +23,7 @@ TYPED_TEST(DenseGridTest, Initialization) {
   EXPECT_EQ(map.getMaxIndex(), Index::Zero());
 }
 
-TYPED_TEST(DenseGridTest, InsertionTest) {
+TYPED_TEST(DenseGridTest, Insertion) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
     HashedBlocks<TypeParam> map(TestFixture::getRandomResolution());

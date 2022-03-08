@@ -5,6 +5,7 @@
 #include "wavemap_2d/datastructure/quadtree/quadtree.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/test/fixture_base.h"
+#include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap_2d {
 template <typename CellType>
@@ -24,6 +25,12 @@ class QuadtreeTest : public FixtureBase {
     return random_map;
   }
 
+  NodeIndexElement getRandomDepth() const {
+    constexpr NodeIndexElement kMinDepth = 0;
+    constexpr NodeIndexElement kMaxDepth = 14;
+    return random_number_generator_->getRandomInteger(kMinDepth, kMaxDepth);
+  }
+
   std::vector<Index> getRandomIndexVectorWithinBounds(
       const Index& min_index, const Index& max_index) const {
     CHECK((min_index.array() < max_index.array()).all());
@@ -37,6 +44,30 @@ class QuadtreeTest : public FixtureBase {
       const Index random_index = getRandomIndex();
       if ((min_index.array() < random_index.array() &&
            random_index.array() < max_index.array())
+              .all()) {
+        random_indices.emplace_back(random_index);
+      }
+    }
+    return random_indices;
+  }
+
+  std::vector<NodeIndex> getRandomNodeIndexVectorWithinBounds(
+      const Index& min_index, const Index& max_index,
+      NodeIndexElement min_depth, NodeIndexElement max_depth) const {
+    CHECK((min_index.array() < max_index.array()).all());
+    CHECK_LE(min_depth, max_depth);
+    constexpr size_t kMinNumIndices = 2u;
+    constexpr size_t kMaxNumIndices = 100u;
+    const size_t num_indices = random_number_generator_->getRandomInteger(
+        kMinNumIndices, kMaxNumIndices);
+    std::vector<NodeIndex> random_indices;
+    random_indices.reserve(num_indices);
+    while (random_indices.size() < num_indices) {
+      const NodeIndex random_index = {.depth = getRandomDepth(),
+                                      .position = getRandomIndex()};
+      if (min_depth <= random_index.depth && random_index.depth <= max_depth &&
+          (min_index.array() < random_index.position.array() &&
+           random_index.position.array() < max_index.array())
               .all()) {
         random_indices.emplace_back(random_index);
       }
@@ -83,7 +114,7 @@ TYPED_TEST(QuadtreeTest, Resizing) {
     EXPECT_GE(map.size(), map.getMaxDepth());
     size_t max_unique_nodes = 0u;
     const size_t num_inserted_nodes = random_indices.size();
-    for (unsigned int depth = 0u; depth <= map.getMaxDepth(); ++depth) {
+    for (NodeIndexElement depth = 0u; depth <= map.getMaxDepth(); ++depth) {
       const size_t max_unique_nodes_at_depth = std::exp2(kMapDimension * depth);
       if (max_unique_nodes_at_depth < num_inserted_nodes) {
         max_unique_nodes += max_unique_nodes_at_depth;
@@ -105,11 +136,10 @@ TYPED_TEST(QuadtreeTest, Resizing) {
   }
 }
 
-TYPED_TEST(QuadtreeTest, InsertionTest) {
-  // TODO(victorr): Once the quadtree indexing has been refactored, add tests to
-  //                make sure that out of bounds accesses/insertions are handled
+TYPED_TEST(QuadtreeTest, Insertion) {
+  // TODO(victorr): Test whether out of bounds accesses/insertions are handled
   //                correctly (e.g. throw error or do nothing and print error).
-  constexpr int kNumRepetitions = 100;
+  constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
     Quadtree<TypeParam> map(TestFixture::getRandomResolution());
     const std::vector<Index> random_indices =
@@ -127,6 +157,107 @@ TYPED_TEST(QuadtreeTest, InsertionTest) {
       }
       EXPECT_NEAR(map.getCellValue(random_index), expected_value,
                   expected_value * 1e-6);
+    }
+  }
+}
+
+TYPED_TEST(QuadtreeTest, NodeIndexConversions) {
+  const Quadtree<TypeParam> map(TestFixture::getRandomResolution());
+
+  // Generate a combination of random and handpicked node indices for testing
+  const NodeIndexElement max_depth = map.getMaxDepth();
+  std::vector<NodeIndex> random_indices =
+      TestFixture::getRandomNodeIndexVectorWithinBounds(
+          map.getMinPossibleIndex(), map.getMaxPossibleIndex(), 1, max_depth);
+  random_indices.emplace_back(NodeIndex{.depth = 0, .position = {0, 0}});
+  for (NodeIndexElement index_depth = 1; index_depth < max_depth;
+       ++index_depth) {
+    for (NodeIndexElement index_x = -1; index_x <= 1; ++index_x) {
+      for (NodeIndexElement index_y = -1; index_y <= 1; ++index_y) {
+        random_indices.emplace_back(
+            NodeIndex{.depth = index_depth, .position = {index_x, index_y}});
+      }
+    }
+  }
+
+  // Test conversions from node indices to other coordinate and index types
+  for (const NodeIndex& node_index : random_indices) {
+    // Compare to coordinate convention
+    {
+      const Index index_from_quadtree =
+          map.computeIndexFromNodeIndex(node_index);
+      const Index index_from_convention = computeNearestIndexForScaledPoint(
+          node_index.position.template cast<FloatingPoint>() *
+              std::exp2(max_depth - node_index.depth) -
+          Vector::Constant(std::exp2(max_depth - 1)));
+      EXPECT_EQ(index_from_quadtree, index_from_convention)
+          << "Quadtree converts node index " << node_index.toString()
+          << " to regular index " << EigenFormat::oneLine(index_from_quadtree)
+          << " does not match convention "
+          << EigenFormat::oneLine(index_from_convention);
+    }
+
+    // Roundtrip through regular indices (integer coordinates)
+    {
+      const Index index = map.computeIndexFromNodeIndex(node_index);
+      const NodeIndex roundtrip_node_index =
+          map.computeNodeIndexFromIndexAndDepth(index, node_index.depth);
+      EXPECT_EQ(roundtrip_node_index, node_index)
+          << "Going from node index " << node_index.toString()
+          << " to regular index " << EigenFormat::oneLine(index)
+          << " and back should yield the same node index, but got "
+          << roundtrip_node_index.toString() << " instead.";
+    }
+
+    // Roundtrip through real valued coordinates
+    {
+      const Point node_center = map.computeNodeCenterFromNodeIndex(node_index);
+      const NodeIndex roundtrip_node_index =
+          map.computeNodeIndexFromCenter(node_center, node_index.depth);
+      EXPECT_EQ(roundtrip_node_index, node_index)
+          << "Going from node index " << node_index.toString()
+          << " to node center " << EigenFormat::oneLine(node_center)
+          << " and back should yield the same node index, but got "
+          << roundtrip_node_index.toString() << " instead.";
+    }
+  }
+}
+
+TYPED_TEST(QuadtreeTest, ChildParentIndexing) {
+  const Quadtree<TypeParam> map(TestFixture::getRandomResolution());
+
+  // Generate a combination of random and handpicked node indices for testing
+  const NodeIndexElement max_depth = map.getMaxDepth();
+  std::vector<NodeIndex> random_indices =
+      TestFixture::getRandomNodeIndexVectorWithinBounds(
+          map.getMinPossibleIndex(), map.getMaxPossibleIndex(), max_depth,
+          max_depth);
+  random_indices.emplace_back(NodeIndex{.depth = 0, .position = {0, 0}});
+  for (NodeIndexElement index_depth = 1; index_depth < max_depth;
+       ++index_depth) {
+    for (NodeIndexElement index_x = 0; index_x <= 1; ++index_x) {
+      for (NodeIndexElement index_y = 0; index_y <= 1; ++index_y) {
+        random_indices.emplace_back(
+            NodeIndex{.depth = index_depth, .position = {index_x, index_y}});
+      }
+    }
+  }
+
+  // Test round trips between children and parents
+  const NodeIndex root_index{.depth = 0, .position = {0, 0}};
+  for (const NodeIndex& node_index : random_indices) {
+    const NodeIndex top_parent_index = node_index.computeParentIndex(0);
+    EXPECT_EQ(top_parent_index, root_index)
+        << "The index of the highest parent of node " << node_index.toString()
+        << " is " << top_parent_index.toString()
+        << " while it should equal the root node index "
+        << root_index.toString() << ".";
+    for (NodeRelativeChildIndex relative_child_idx = 0;
+         relative_child_idx < NodeIndex::kNumChildren; ++relative_child_idx) {
+      const NodeIndex child_index =
+          node_index.computeChildIndex(relative_child_idx);
+      EXPECT_EQ(child_index.computeRelativeChildIndex(), relative_child_idx);
+      EXPECT_EQ(child_index.computeParentIndex(), node_index);
     }
   }
 }

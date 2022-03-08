@@ -21,10 +21,11 @@ class Quadtree : public DataStructureBase {
   explicit Quadtree(FloatingPoint resolution)
       : DataStructureBase(resolution),
         max_depth_(14),
-        root_node_width_(std::exp2(max_depth_) * resolution) {
+        root_node_width_(std::exp2(max_depth_) * resolution),
+        root_node_offset_(Index::Constant(std::exp2(max_depth_ - 1))) {
     updateLookupTables();
   }
-  ~Quadtree() { root_node_.pruneChildren(); }
+  ~Quadtree() override { root_node_.pruneChildren(); }
 
   bool empty() const override { return !root_node_.hasAtLeastOneChild(); }
   size_t size() const override;
@@ -33,19 +34,9 @@ class Quadtree : public DataStructureBase {
   size_t getMemoryUsage() const override;
 
   NodeIndexElement getMaxDepth() const { return max_depth_; }
-  Index getMinPossibleIndex() const {
-    return -(luts_.node_halved_diagonals_at_depth_[0] / resolution_)
-                .array()
-                .round()
-                .template cast<IndexElement>();
-  }
-  Index getMaxPossibleIndex() const {
-    return (luts_.node_halved_diagonals_at_depth_[0] / resolution_)
-        .array()
-        .round()
-        .template cast<IndexElement>();
-  }
 
+  Index getMinPossibleIndex() const;
+  Index getMaxPossibleIndex() const;
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
 
@@ -60,32 +51,19 @@ class Quadtree : public DataStructureBase {
   bool load(const std::string& file_path_prefix,
             bool used_floating_precision) override;
 
-  // TODO(victorr): Add indexing unit tests
-  // TODO(victorr): Check if this this indexing convention is the best option
-  //                for wavelet trees
-  // TODO(victorr): Move these computations to an index handler that can be
-  //                shared among future hierarchical datastructures
   NodeIndex computeNodeIndexFromIndexAndDepth(const Index& index,
                                               NodeIndexElement depth) const;
   NodeIndex computeNodeIndexFromCenter(const Point& center,
                                        NodeIndexElement depth) const;
-  Point computeNodeCenterFromIndex(const NodeIndex& index) const;
-  Point computeNodeCornerFromIndex(const NodeIndex& index) const;
-
-  FloatingPoint getNodeWidthAtDepth(NodeIndexElement depth) const {
-    CHECK_LE(depth, max_depth_);
-    return luts_.node_widths_at_depth_[depth];
-  }
-  Vector getNodeHalvedDiagonalAtDepth(NodeIndexElement depth) const {
-    CHECK_LE(depth, max_depth_);
-    return luts_.node_halved_diagonals_at_depth_[depth];
-  }
+  Index computeIndexFromNodeIndex(const NodeIndex& node_index) const;
+  Point computeNodeCenterFromNodeIndex(const NodeIndex& node_index) const;
 
  protected:
   using CellDataSpecialized = typename CellT::Specialized;
 
   NodeIndexElement max_depth_;
   FloatingPoint root_node_width_;
+  Index root_node_offset_;
   Node<CellDataSpecialized> root_node_;
 
   bool hasNode(const NodeIndex& index) { return getNode(index); }
@@ -98,14 +76,22 @@ class Quadtree : public DataStructureBase {
                                      bool auto_allocate = false);
   const Node<CellDataSpecialized>* getNode(const NodeIndex& index) const;
 
+  FloatingPoint getNodeWidthAtDepth(NodeIndexElement depth) const {
+    DCHECK_LE(depth, max_depth_);
+    return luts_.node_widths_at_depth_[depth];
+  }
+  Vector getNodeHalvedDiagonalAtDepth(NodeIndexElement depth) const {
+    DCHECK_LE(depth, max_depth_);
+    return luts_.node_halved_diagonals_at_depth_[depth];
+  }
+
   FloatingPoint computeNodeWidthAtDepth(NodeIndexElement depth);
   Vector computeNodeHalvedDiagonalAtDepth(NodeIndexElement depth);
-
-  void updateLookupTables();
   struct {
     std::vector<FloatingPoint> node_widths_at_depth_;
     std::vector<Vector> node_halved_diagonals_at_depth_;
   } luts_;
+  void updateLookupTables();
 };
 }  // namespace wavemap_2d
 

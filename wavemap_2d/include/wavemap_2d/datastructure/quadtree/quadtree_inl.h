@@ -63,6 +63,16 @@ size_t Quadtree<CellT>::getMemoryUsage() const {
   return memory_usage;
 }
 
+template <typename CellT>
+Index Quadtree<CellT>::getMinPossibleIndex() const {
+  return Index::Constant(-std::exp2(max_depth_ - 1)) + root_node_offset_;
+}
+
+template <typename CellT>
+Index Quadtree<CellT>::getMaxPossibleIndex() const {
+  return Index::Constant(std::exp2(max_depth_ - 1)) + root_node_offset_;
+}
+
 // TODO(victorr): Replace this with an implementation that only expands
 //                potential min candidates
 template <typename CellT>
@@ -88,14 +98,7 @@ Index Quadtree<CellT>::getMinIndex() const {
         }
       }
     } else {
-      const Index index =
-          ((luts_.node_widths_at_depth_[node_index.depth] *
-                node_index.position.template cast<FloatingPoint>() -
-            luts_.node_halved_diagonals_at_depth_[0]) /
-           resolution_)
-              .array()
-              .round()
-              .template cast<IndexElement>();
+      const Index index = computeIndexFromNodeIndex(node_index);
       min_index = min_index.cwiseMin(index);
     }
   }
@@ -129,14 +132,7 @@ Index Quadtree<CellT>::getMaxIndex() const {
         }
       }
     } else {
-      const Index index =
-          ((luts_.node_widths_at_depth_[node_index.depth] *
-                node_index.position.template cast<FloatingPoint>() -
-            luts_.node_halved_diagonals_at_depth_[0]) /
-           resolution_)
-              .array()
-              .round()
-              .template cast<IndexElement>();
+      const Index index = computeIndexFromNodeIndex(node_index);
       max_index = max_index.cwiseMax(index);
     }
   }
@@ -214,82 +210,60 @@ bool Quadtree<CellT>::load(const std::string& /*file_path_prefix*/,
 template <typename CellT>
 NodeIndex Quadtree<CellT>::computeNodeIndexFromIndexAndDepth(
     const Index& index, NodeIndexElement depth) const {
-  // TODO(victorr): Compute it in integer form, instead of round tripping
-  //                through real coordinates
-  return computeNodeIndexFromCenter(
-      resolution_ * index.template cast<FloatingPoint>(), depth);
+  const NodeIndexElement height = max_depth_ - depth;
+  NodeIndex node_index{.depth = depth, .position = index + root_node_offset_};
+  node_index.position.x() >>= height;
+  node_index.position.y() >>= height;
+  return node_index;
 }
 
 template <typename CellT>
 NodeIndex Quadtree<CellT>::computeNodeIndexFromCenter(
     const Point& center, NodeIndexElement depth) const {
-  NodeIndex index;
   const FloatingPoint width = getNodeWidthAtDepth(depth);
-  const Vector root_halved_diagonal = getNodeHalvedDiagonalAtDepth(0u);
-  const Vector node_halved_diagonal = getNodeHalvedDiagonalAtDepth(depth);
+  const Vector root_node_halved_diagonal = getNodeHalvedDiagonalAtDepth(0);
+  Index position_index = computeNearestIndexForScaledPoint(
+      (center + root_node_halved_diagonal) / width);
+  return {.depth = depth, .position = position_index};
+}
 
-  index.position =
-      ((center + root_halved_diagonal - node_halved_diagonal) / width)
-          .cast<NodeIndexElement>();
-  index.depth = depth;
-
+template <typename CellT>
+Index Quadtree<CellT>::computeIndexFromNodeIndex(
+    const NodeIndex& node_index) const {
+  const NodeIndexElement node_height = max_depth_ - node_index.depth;
+  Index index = node_index.position * (1 << node_height) - root_node_offset_;
   return index;
 }
 
 template <typename CellT>
-Point Quadtree<CellT>::computeNodeCenterFromIndex(
-    const NodeIndex& index) const {
-  const Vector node_halved_diagonal = getNodeHalvedDiagonalAtDepth(index.depth);
-  return computeNodeCornerFromIndex(index) + node_halved_diagonal;
-}
-
-template <typename CellT>
-Point Quadtree<CellT>::computeNodeCornerFromIndex(
-    const NodeIndex& index) const {
-  const FloatingPoint width = getNodeWidthAtDepth(index.depth);
-  const Vector root_halved_diagonal = getNodeHalvedDiagonalAtDepth(0u);
-  return index.position.cast<FloatingPoint>() * width - root_halved_diagonal;
+Point Quadtree<CellT>::computeNodeCenterFromNodeIndex(
+    const NodeIndex& node_index) const {
+  const FloatingPoint width = getNodeWidthAtDepth(node_index.depth);
+  const Vector root_node_halved_diagonal = getNodeHalvedDiagonalAtDepth(0);
+  return node_index.position.cast<FloatingPoint>() * width -
+         root_node_halved_diagonal;
 }
 
 template <typename CellT>
 bool Quadtree<CellT>::removeNode(const NodeIndex& index) {
-  Node<CellDataSpecialized> node_ptr = getNode(index);
-  if (node_ptr) {
-    delete node_ptr;
-    // Set the parent node's pointer to the child we just deleted to nullptr
-    NodeIndex parent_index = index.computeParentIndex();
-    Node<CellDataSpecialized> parent_node =
-        getNode(parent_index, /*auto_allocate*/ false);
-    if (parent_node) {
-      parent_node.getChild(index.computeRelativeChildIndex()) = nullptr;
-    } else {
-      LOG(ERROR) << "Removed child node that was already orphaned. This should "
-                    "never happen.";
-    }
-    return true;
-  } else {
-    return false;
+  NodeIndex parent_index = index.computeParentIndex();
+  Node<CellDataSpecialized>* parent_node =
+      getNode(parent_index, /*auto_allocate*/ false);
+  if (parent_node) {
+    return parent_node->deleteChild(index.computeRelativeChildIndex());
   }
+  return false;
 }
 
 template <typename CellT>
 Node<typename CellT::Specialized>* Quadtree<CellT>::getNode(
     const NodeIndex& index, bool auto_allocate) {
   Node<CellDataSpecialized>* current_parent = &root_node_;
-  std::vector<NodeRelativeChildIndex> child_indices =
+  const std::vector<NodeRelativeChildIndex> child_indices =
       index.computeRelativeChildIndices();
   for (const NodeRelativeChildIndex child_index : child_indices) {
-    // Check if the child pointer array is allocated
-    if (!current_parent->hasAllocatedChildrenArray()) {
-      if (auto_allocate) {
-        current_parent->allocateChildrenArray();
-      } else {
-        return nullptr;
-      }
-    }
-
     // Check if the child is allocated
-    if (!current_parent->getChild(child_index)) {
+    if (!current_parent->hasChild(child_index)) {
       if (auto_allocate) {
         current_parent->allocateChild(child_index);
       } else {
@@ -307,16 +281,11 @@ template <typename CellT>
 const Node<typename CellT::Specialized>* Quadtree<CellT>::getNode(
     const NodeIndex& index) const {
   const Node<CellDataSpecialized>* current_parent = &root_node_;
-  std::vector<NodeRelativeChildIndex> child_indices =
+  const std::vector<NodeRelativeChildIndex> child_indices =
       index.computeRelativeChildIndices();
   for (const NodeRelativeChildIndex child_index : child_indices) {
-    // Check if the child pointer array is allocated
-    if (!current_parent->hasAllocatedChildrenArray()) {
-      return nullptr;
-    }
-
     // Check if the child is allocated
-    if (!current_parent->getChild(child_index)) {
+    if (!current_parent->hasChild(child_index)) {
       return nullptr;
     }
 

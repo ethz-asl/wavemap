@@ -38,12 +38,22 @@ bool Node<NodeDataType>::hasAtLeastOneChild() const {
 }
 
 template <typename NodeDataType>
-void Node<NodeDataType>::allocateChild(
-    NodeRelativeChildIndex child_index) const {
+void Node<NodeDataType>::allocateChild(NodeRelativeChildIndex child_index) {
   if (!children_) {
-    hasAllocatedChildrenArray();
+    allocateChildrenArray();
   }
   children_->operator[](child_index) = std::make_unique<Node>();
+}
+
+template <typename NodeDataType>
+bool Node<NodeDataType>::deleteChild(NodeRelativeChildIndex child_index) {
+  if (children_) {
+    if (children_->operator[](child_index)) {
+      children_->operator[](child_index).reset();
+      return true;
+    }
+  }
+  return false;
 }
 
 template <typename NodeDataType>

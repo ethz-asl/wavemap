@@ -8,15 +8,14 @@
 #include "wavemap_2d/utils/constexpr_functions.h"
 
 namespace wavemap_2d {
-using NodeIndexElement = uint;
+using NodeIndexElement = int;
 using NodeRelativeChildIndex = uint8_t;
 using NodePositionIndex = Eigen::Matrix<NodeIndexElement, kMapDimension, 1>;
 
-class NodeIndex {
- public:
+struct NodeIndex {
   static constexpr int kNumChildren = constexpr_functions::exp2(kMapDimension);
 
-  NodeIndexElement depth = 0u;
+  NodeIndexElement depth = 0;
   NodePositionIndex position = NodePositionIndex::Zero();
 
   bool operator==(const NodeIndex& other) const {

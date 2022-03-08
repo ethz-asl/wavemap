@@ -117,7 +117,7 @@ TYPED_TEST(DenseGridTest, Resizing) {
   }
 }
 
-TYPED_TEST(DenseGridTest, InsertionTest) {
+TYPED_TEST(DenseGridTest, Insertion) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
     DenseGrid<TypeParam> map(TestFixture::getRandomResolution());

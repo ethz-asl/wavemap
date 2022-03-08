@@ -29,7 +29,9 @@ class Node {
   bool hasChild(NodeRelativeChildIndex child_index) const {
     return children_ && children_->operator[](child_index);
   }
-  void allocateChild(NodeRelativeChildIndex child_index) const;
+
+  void allocateChild(NodeRelativeChildIndex child_index);
+  bool deleteChild(NodeRelativeChildIndex child_index);
   Node* getChild(NodeRelativeChildIndex child_index);
   const Node* getChild(NodeRelativeChildIndex child_index) const;
 
