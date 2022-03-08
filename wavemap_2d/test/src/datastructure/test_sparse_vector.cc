@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/sparse_vector.h"
 #include "wavemap_2d/utils/random_number_generator.h"
 

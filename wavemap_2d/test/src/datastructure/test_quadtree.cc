@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 
+#include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/quadtree/quadtree.h"
+#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {
@@ -82,7 +84,7 @@ TYPED_TEST(QuadtreeTest, Resizing) {
     size_t max_unique_nodes = 0u;
     const size_t num_inserted_nodes = random_indices.size();
     for (unsigned int depth = 0u; depth <= map.getMaxDepth(); ++depth) {
-      const size_t max_unique_nodes_at_depth = std::exp2(MapDimension * depth);
+      const size_t max_unique_nodes_at_depth = std::exp2(kMapDimension * depth);
       if (max_unique_nodes_at_depth < num_inserted_nodes) {
         max_unique_nodes += max_unique_nodes_at_depth;
       } else {

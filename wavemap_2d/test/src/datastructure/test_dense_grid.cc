@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 
+#include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
+#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {

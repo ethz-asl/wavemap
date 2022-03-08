@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/iterator/ray_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/pointcloud.h"
 #include "wavemap_2d/test/fixture_base.h"
 

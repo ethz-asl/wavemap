@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/utils/random_number_generator.h"
 
 namespace wavemap_2d {

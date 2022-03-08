@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/integrator/beam_model.h"
 #include "wavemap_2d/integrator/fixed_logodds_model.h"
 #include "wavemap_2d/test/fixture_base.h"
