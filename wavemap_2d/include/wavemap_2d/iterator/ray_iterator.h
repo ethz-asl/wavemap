@@ -19,8 +19,8 @@ class Ray {
       return;
     }
 
-    start_index_ = start_point_scaled.array().round().cast<IndexElement>();
-    end_index_ = end_point_scaled.array().round().cast<IndexElement>();
+    start_index_ = computeNearestIndexForScaledPoint(start_point_scaled);
+    end_index_ = computeNearestIndexForScaledPoint(end_point_scaled);
     const Index diff_index = end_index_ - start_index_;
     ray_length_in_steps_ = diff_index.cwiseAbs().sum() + 1u;
 

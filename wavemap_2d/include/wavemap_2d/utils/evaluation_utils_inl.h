@@ -19,10 +19,8 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
           ? reference_map.getResolution() / predicted_map.getResolution()
           : predicted_map.getResolution() / reference_map.getResolution();
   auto convertIndex = [index_ratio](const Index& index) {
-    return (index_ratio * index.cast<FloatingPoint>())
-        .array()
-        .round()
-        .template cast<IndexElement>();
+    return computeNearestIndexForPoint(index.cast<FloatingPoint>(),
+                                       index_ratio);
   };
 
   // Determine the box over which we'll iterate

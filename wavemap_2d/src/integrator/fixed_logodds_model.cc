@@ -3,14 +3,12 @@
 namespace wavemap_2d {
 Index FixedLogOddsModel::getBottomLeftUpdateIndex() const {
   const Point bottom_left_point = W_start_point_.cwiseMin(W_end_point_);
-  const Point bottom_left_point_scaled = bottom_left_point * resolution_inv_;
-  return bottom_left_point_scaled.array().floor().cast<IndexElement>();
+  return computeFloorIndexForPoint(bottom_left_point, resolution_inv_);
 }
 
 Index FixedLogOddsModel::getTopRightUpdateIndex() const {
   const Point top_right_point = W_start_point_.cwiseMax(W_end_point_);
-  const Point top_right_point_scaled = top_right_point * resolution_inv_;
-  return top_right_point_scaled.array().ceil().cast<IndexElement>();
+  return computeCeilIndexForPoint(top_right_point, resolution_inv_);
 }
 
 void FixedLogOddsModel::updateMap(DataStructureBase& map) const {

@@ -62,9 +62,9 @@ TEST_F(IteratorTest, RayIterator) {
     const FloatingPoint resolution = getRandomResolution();
     const FloatingPoint resolution_inv = 1.f / resolution;
     const Index start_point_index =
-        (start_point * resolution_inv).array().round().cast<IndexElement>();
+        computeNearestIndexForPoint(start_point, resolution_inv);
     const Index end_point_index =
-        (end_point * resolution_inv).array().round().cast<IndexElement>();
+        computeNearestIndexForPoint(end_point, resolution_inv);
     const Index direction =
         (end_point_index - start_point_index).cwiseSign().cast<IndexElement>();
 
@@ -87,7 +87,7 @@ TEST_F(IteratorTest, RayIterator) {
         EXPECT_TRUE((index_diff.array() == direction.array()).any())
             << "Ray iterator stepped into an unexpected direction.";
 
-        const Point current_point = resolution * index.cast<FloatingPoint>();
+        const Point current_point = computeCenterFromIndex(index, resolution);
         const Vector t_start_current = current_point - start_point;
         const FloatingPoint distance =
             std::abs(t_start_end.x() * t_start_current.y() -
