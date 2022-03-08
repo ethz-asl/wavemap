@@ -2,7 +2,8 @@
 
 #include <unordered_set>
 
-#include <wavemap_2d/datastructure/index_hashes.h>
+#include <wavemap_2d/indexing/index.h>
+#include <wavemap_2d/indexing/index_hashes.h>
 #include <wavemap_2d/iterator/ray_iterator.h>
 
 #include "wavemap_2d_ground_truth/geometry.h"

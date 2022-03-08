@@ -10,6 +10,7 @@
 #include "wavemap_2d/datastructure/pointcloud.h"
 #include "wavemap_2d/datastructure/quadtree/node.h"
 #include "wavemap_2d/datastructure/quadtree/node_index.h"
+#include "wavemap_2d/indexing/index.h"
 
 namespace wavemap_2d {
 template <typename CellT>

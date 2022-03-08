@@ -4,8 +4,6 @@
 #include <bitset>
 #include <vector>
 
-#include "wavemap_2d/common.h"
-
 namespace wavemap_2d {
 template <typename T, size_t max_size, T default_value = 0>
 class SparseVector {

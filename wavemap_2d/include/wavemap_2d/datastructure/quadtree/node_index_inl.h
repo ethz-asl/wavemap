@@ -59,8 +59,8 @@ inline NodeIndex NodeIndex::computeChildIndex(
   child_index.depth += 1;
 
   // Add offset to current child
-  std::bitset<MapDimension> child_bitset(relative_child_index);
-  for (int i = 0; i < MapDimension; ++i) {
+  std::bitset<kMapDimension> child_bitset(relative_child_index);
+  for (int i = 0; i < kMapDimension; ++i) {
     if (child_bitset[i]) child_index.position[i] += 1;
   }
 
@@ -80,7 +80,7 @@ inline std::vector<NodeIndex> NodeIndex::computeChildIndices() const {
 
 inline NodeRelativeChildIndex NodeIndex::computeRelativeChildIndex() const {
   NodeRelativeChildIndex child_index = 0;
-  for (int i = 0; i < MapDimension; ++i) {
+  for (int i = 0; i < kMapDimension; ++i) {
     if (position[i] % 2) child_index += constexpr_functions::exp2(i);
   }
   return child_index;
@@ -103,7 +103,7 @@ NodeIndex::computeRelativeChildIndices() const {
 inline std::string NodeIndex::toString() const {
   std::stringstream ss;
   ss << "[";
-  for (int i = 0; i < MapDimension; ++i) {
+  for (int i = 0; i < kMapDimension; ++i) {
     ss << position[i] << ", ";
   }
   ss << depth << "]";

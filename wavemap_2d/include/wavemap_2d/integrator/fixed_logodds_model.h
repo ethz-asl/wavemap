@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_INTEGRATOR_FIXED_LOGODDS_MODEL_H_
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/integrator/measurement_model_base.h"
 #include "wavemap_2d/iterator/ray_iterator.h"
 

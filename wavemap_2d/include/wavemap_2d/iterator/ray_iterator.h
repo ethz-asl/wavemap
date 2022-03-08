@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_ITERATOR_RAY_ITERATOR_H_
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 
 namespace wavemap_2d {
 // NOTE: The ray casting code in this class is largely based on voxblox's

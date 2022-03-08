@@ -1,7 +1,8 @@
-#ifndef WAVEMAP_2D_DATASTRUCTURE_INDEX_HASHES_H_
-#define WAVEMAP_2D_DATASTRUCTURE_INDEX_HASHES_H_
+#ifndef WAVEMAP_2D_INDEXING_INDEX_HASHES_H_
+#define WAVEMAP_2D_INDEXING_INDEX_HASHES_H_
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 
 namespace wavemap_2d {
 struct VoxbloxIndexHash {
@@ -26,4 +27,4 @@ struct VDBIndexHash {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_DATASTRUCTURE_INDEX_HASHES_H_
+#endif  // WAVEMAP_2D_INDEXING_INDEX_HASHES_H_

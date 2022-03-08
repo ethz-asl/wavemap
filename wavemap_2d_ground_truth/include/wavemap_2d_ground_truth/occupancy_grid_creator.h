@@ -5,6 +5,7 @@
 
 #include <wavemap_2d/datastructure/cell.h>
 #include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
+#include <wavemap_2d/indexing/index.h>
 
 #include "wavemap_2d_ground_truth/common.h"
 #include "wavemap_2d_ground_truth/geometry.h"

@@ -4,8 +4,10 @@
 #include <string>
 #include <unordered_map>
 
+#include "wavemap_2d/common.h"
 #include "wavemap_2d/datastructure/datastructure_base.h"
-#include "wavemap_2d/datastructure/index_hashes.h"
+#include "wavemap_2d/indexing/index.h"
+#include "wavemap_2d/indexing/index_hashes.h"
 
 namespace wavemap_2d {
 template <typename CellT>

@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 
 namespace wavemap_2d {
 class Grid {

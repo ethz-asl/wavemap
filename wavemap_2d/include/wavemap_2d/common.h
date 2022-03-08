@@ -10,12 +10,12 @@
 namespace wavemap_2d {
 using FloatingPoint = float;
 constexpr FloatingPoint kEpsilon = 1e-6;
+constexpr int kMapDimension = 2;
 
 template <typename T>
 using MatrixT = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 using Matrix = MatrixT<FloatingPoint>;
 
-constexpr int MapDimension = 2;
 using Transformation = kindr::minimal::Transformation2DTemplate<FloatingPoint>;
 using Point = Transformation::Position;
 using Vector = Transformation::Position;
@@ -26,14 +26,6 @@ using Transformation3D =
 using Point3D = Transformation3D::Position;
 using Vector3D = Transformation3D::Position;
 using Rotation3D = Transformation3D::Rotation;
-
-using IndexElement = int;
-using Index = Eigen::Matrix<IndexElement, 2, 1>;
-
-struct PointWithValue {
-  Point position;
-  FloatingPoint value;
-};
 }  // namespace wavemap_2d
 
 #endif  // WAVEMAP_2D_COMMON_H_

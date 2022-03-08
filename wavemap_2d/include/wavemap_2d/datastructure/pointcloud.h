@@ -13,8 +13,6 @@ using PointcloudData =
 template <typename PointcloudType>
 class PointcloudIterator {
  public:
-  using Index = Eigen::Index;
-
   using difference_type = std::ptrdiff_t;
   using value_type = Point;
   using pointer = void;
@@ -29,7 +27,7 @@ class PointcloudIterator {
   //                which recommends passing by non-const reference instead of
   //                by pointer
   explicit PointcloudIterator(PointcloudType& pointcloud,
-                              Index index = std::ptrdiff_t(0))
+                              Eigen::Index index = std::ptrdiff_t(0))
       : pointcloud_(pointcloud), index_(index) {}
 
   PointcloudIterator& operator++() {  // prefix ++
@@ -55,7 +53,7 @@ class PointcloudIterator {
 
  protected:
   PointcloudType& pointcloud_;
-  Index index_;
+  Eigen::Index index_;
 };
 
 class Pointcloud {

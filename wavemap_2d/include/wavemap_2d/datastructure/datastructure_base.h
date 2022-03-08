@@ -10,6 +10,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 
 namespace wavemap_2d {
 class DataStructureBase {

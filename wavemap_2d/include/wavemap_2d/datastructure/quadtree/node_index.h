@@ -10,11 +10,11 @@
 namespace wavemap_2d {
 using NodeIndexElement = uint;
 using NodeRelativeChildIndex = uint8_t;
-using NodePositionIndex = Eigen::Matrix<NodeIndexElement, MapDimension, 1>;
+using NodePositionIndex = Eigen::Matrix<NodeIndexElement, kMapDimension, 1>;
 
 class NodeIndex {
  public:
-  static constexpr int kNumChildren = constexpr_functions::exp2(MapDimension);
+  static constexpr int kNumChildren = constexpr_functions::exp2(kMapDimension);
 
   NodeIndexElement depth = 0u;
   NodePositionIndex position = NodePositionIndex::Zero();
