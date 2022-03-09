@@ -51,6 +51,10 @@ cs_add_library(
 cs_add_executable(carmen_processor app/carmen_processor.cc)
 target_link_libraries(carmen_processor ${PROJECT_NAME})
 
+cs_add_executable(offline_compression_evaluation
+                  app/offline_compression_evaluation.cc)
+target_link_libraries(offline_compression_evaluation ${PROJECT_NAME})
+
 # Tests
 if (CATKIN_ENABLE_TESTING)
   cs_add_library(testing_main test/gtest_main.cc)

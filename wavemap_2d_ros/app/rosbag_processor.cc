@@ -137,6 +137,9 @@ int main(int argc, char** argv) {
   }
 
   wavemap_server.visualizeMap();
+  wavemap_server.saveMap(
+      "/home/victor/catkin_ws/data/estimated_maps/"
+      "simple_building_dense_grid_beam_model_5cm");
 
   return 0;
 }

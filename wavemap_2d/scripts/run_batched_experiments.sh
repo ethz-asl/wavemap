@@ -60,7 +60,7 @@ catkin build "${package_name}"
 popd || exit
 
 # Run the batches
-declare -a map_resolutions=(0.05)
+declare -a map_resolutions=(0.1)
 # Options: (0.20 0.1 0.05 0.02 0.01 0.005 0.002 0.001)
 max_num_jobs=8
 run_all_combinations
