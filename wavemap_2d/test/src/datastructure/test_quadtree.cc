@@ -261,4 +261,32 @@ TYPED_TEST(QuadtreeTest, ChildParentIndexing) {
     }
   }
 }
+
+TYPED_TEST(QuadtreeTest, Pruning) {
+  constexpr int kNumRepetitions = 10;
+  for (int i = 0; i < kNumRepetitions; ++i) {
+    Quadtree<TypeParam> map(TestFixture::getRandomResolution());
+    const std::vector<Index> random_indices =
+        TestFixture::getRandomIndexVectorWithinBounds(
+            map.getMinPossibleIndex(), map.getMaxPossibleIndex());
+
+    // Check that zero values are inserted but removed after pruning
+    ASSERT_TRUE(map.empty());
+    for (const Index& random_index : random_indices) {
+      map.setCellValue(random_index, 0.f);
+    }
+    EXPECT_FALSE(map.empty());
+    map.prune();
+    EXPECT_TRUE(map.empty());
+
+    // Check that non-zero values are inserted but not removed after pruning
+    ASSERT_TRUE(map.empty());
+    for (const Index& random_index : random_indices) {
+      map.setCellValue(random_index, 1.f);
+    }
+    EXPECT_FALSE(map.empty());
+    map.prune();
+    EXPECT_FALSE(map.empty());
+  }
+}
 }  // namespace wavemap_2d

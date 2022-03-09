@@ -14,6 +14,8 @@ class Node {
   Node() : data_(0) {}
   ~Node() = default;
 
+  bool empty() { return !hasAtLeastOneChild() && data_ == 0; }
+
   NodeDataType& data() { return data_; }
   const NodeDataType& data() const { return data_; }
 
@@ -21,14 +23,15 @@ class Node {
   void allocateChildrenArrayIfNeeded();
   void deleteChildrenArray();
 
-  size_t getMemoryUsage() const;
-
   bool hasChild(NodeRelativeChildIndex child_index) const;
   bool hasAtLeastOneChild() const;
   void allocateChild(NodeRelativeChildIndex child_index);
   bool deleteChild(NodeRelativeChildIndex child_index);
   Node* getChild(NodeRelativeChildIndex child_index);
   const Node* getChild(NodeRelativeChildIndex child_index) const;
+
+  void pruneChildren();
+  size_t getMemoryUsage() const;
 
  protected:
   using ChildrenArray =

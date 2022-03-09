@@ -30,20 +30,20 @@ class Quadtree : public DataStructureBase {
   bool empty() const override { return !root_node_.hasAtLeastOneChild(); }
   size_t size() const override;
   void clear() override { root_node_.deleteChildrenArray(); }
-
-  size_t getMemoryUsage() const override;
-
-  NodeIndexElement getMaxDepth() const { return max_depth_; }
+  void prune() { root_node_.pruneChildren(); }
 
   Index getMinPossibleIndex() const;
   Index getMaxPossibleIndex() const;
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
+  NodeIndexElement getMaxDepth() const { return max_depth_; }
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
+
+  size_t getMemoryUsage() const override;
 
   cv::Mat getImage(bool use_color) const override;
   bool save(const std::string& file_path_prefix,

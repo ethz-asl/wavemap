@@ -17,24 +17,15 @@ void Node<NodeDataType>::deleteChildrenArray() {
 }
 
 template <typename NodeDataType>
-size_t Node<NodeDataType>::getMemoryUsage() const {
-  size_t memory_usage = sizeof(Node<NodeDataType>);
-  if (hasChildrenArray()) {
-    memory_usage += sizeof(ChildrenArray);
-  }
-  return memory_usage;
-}
-
-template <typename NodeDataType>
 bool Node<NodeDataType>::hasChild(NodeRelativeChildIndex child_index) const {
-  return hasChildrenArray() && children_->operator[](child_index);
+  return getChild(child_index);
 }
 
 template <typename NodeDataType>
 bool Node<NodeDataType>::hasAtLeastOneChild() const {
   if (hasChildrenArray()) {
-    for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
-      if (children_->operator[](idx)) {
+    for (int child_idx = 0; child_idx < NodeIndex::kNumChildren; ++child_idx) {
+      if (hasChild(child_idx)) {
         return true;
       }
     }
@@ -73,6 +64,38 @@ const Node<NodeDataType>* Node<NodeDataType>::getChild(
     return children_->operator[](child_index).get();
   }
   return nullptr;
+}
+
+template <typename NodeDataType>
+void Node<NodeDataType>::pruneChildren() {
+  // Recursively delete all zero nodes without children (leaves)
+  if (hasChildrenArray()) {
+    bool has_non_empty_child = false;
+    for (int child_idx = 0; child_idx < NodeIndex::kNumChildren; ++child_idx) {
+      Node* child = getChild(child_idx);
+      if (child) {
+        child->pruneChildren();
+        if (child->empty()) {
+          deleteChild(child_idx);
+        } else {
+          has_non_empty_child = true;
+        }
+      }
+    }
+    // Free up the children array if it only contains null ptrs
+    if (!has_non_empty_child) {
+      deleteChildrenArray();
+    }
+  }
+}
+
+template <typename NodeDataType>
+size_t Node<NodeDataType>::getMemoryUsage() const {
+  size_t memory_usage = sizeof(Node<NodeDataType>);
+  if (hasChildrenArray()) {
+    memory_usage += sizeof(ChildrenArray);
+  }
+  return memory_usage;
 }
 }  // namespace wavemap_2d
 

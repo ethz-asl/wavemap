@@ -40,30 +40,6 @@ size_t Quadtree<CellT>::size() const {
 }
 
 template <typename CellT>
-size_t Quadtree<CellT>::getMemoryUsage() const {
-  size_t memory_usage = 0u;
-
-  std::stack<const Node<CellDataSpecialized>*> stack;
-  stack.template emplace(&root_node_);
-  while (!stack.empty()) {
-    const Node<CellDataSpecialized>* node = stack.top();
-    stack.pop();
-    memory_usage += node->getMemoryUsage();
-
-    if (node->hasChildrenArray()) {
-      for (NodeRelativeChildIndex child_idx = 0;
-           child_idx < NodeIndex::kNumChildren; ++child_idx) {
-        if (node->hasChild(child_idx)) {
-          stack.template emplace(node->getChild(child_idx));
-        }
-      }
-    }
-  }
-
-  return memory_usage;
-}
-
-template <typename CellT>
 Index Quadtree<CellT>::getMinPossibleIndex() const {
   return Index::Constant(-std::exp2(max_depth_ - 1)) + root_node_offset_;
 }
@@ -185,6 +161,30 @@ void Quadtree<CellT>::addToCellValue(const Index& index, FloatingPoint update) {
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << index;
   }
+}
+
+template <typename CellT>
+size_t Quadtree<CellT>::getMemoryUsage() const {
+  size_t memory_usage = 0u;
+
+  std::stack<const Node<CellDataSpecialized>*> stack;
+  stack.template emplace(&root_node_);
+  while (!stack.empty()) {
+    const Node<CellDataSpecialized>* node = stack.top();
+    stack.pop();
+    memory_usage += node->getMemoryUsage();
+
+    if (node->hasChildrenArray()) {
+      for (NodeRelativeChildIndex child_idx = 0;
+           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+        if (node->hasChild(child_idx)) {
+          stack.template emplace(node->getChild(child_idx));
+        }
+      }
+    }
+  }
+
+  return memory_usage;
 }
 
 template <typename CellT>
