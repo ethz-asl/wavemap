@@ -11,6 +11,8 @@ namespace wavemap_2d {
 template <typename T>
 class DiscreteWaveletTransform {
  public:
+  virtual ~DiscreteWaveletTransform() = default;
+
   void forward(MatrixT<T>& matrix, int n_passes) const {
     CHECK(!matrix.IsRowMajor);
     CHECK_GT(n_passes, 0) << "The number of wavelet transform passes must be a "
