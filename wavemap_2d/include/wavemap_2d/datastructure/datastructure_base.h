@@ -6,7 +6,6 @@
 #include <string>
 
 #include <Eigen/Eigen>
-#include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
 #include "wavemap_2d/common.h"
@@ -48,13 +47,6 @@ class DataStructureBase {
   virtual bool load(const std::string& file_path_prefix,
                     bool used_floating_precision) = 0;
 
-  // TODO(victorr): Move these methods to a utils class
-  template <typename T>
-  static cv::Mat MatrixToImage(const MatrixT<T>& matrix,
-                               FloatingPoint lower_bound,
-                               FloatingPoint upper_bound, bool use_color);
-  static void ShowImage(const cv::Mat& image, int delay_ms = 1);
-
  protected:
   const FloatingPoint resolution_;
 
@@ -68,7 +60,5 @@ class DataStructureBase {
   }
 };
 }  // namespace wavemap_2d
-
-#include "wavemap_2d/datastructure/datastructure_base_inl.h"
 
 #endif  // WAVEMAP_2D_DATASTRUCTURE_DATASTRUCTURE_BASE_H_

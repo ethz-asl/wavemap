@@ -43,8 +43,8 @@ class DenseGrid : public DataStructureBase {
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
-  const DataGridSpecialized& getData() const { return data_; }
   DataGridSpecialized& getData() { return data_; }
+  const DataGridSpecialized& getData() const { return data_; }
 
   cv::Mat getImage(bool use_color) const override;
   bool save(const std::string& file_path_prefix,

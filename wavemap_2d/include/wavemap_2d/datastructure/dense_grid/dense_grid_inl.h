@@ -4,7 +4,10 @@
 #include <algorithm>
 #include <string>
 
+#include <opencv2/core/eigen.hpp>
+
 #include "wavemap_2d/datastructure/datastructure_base.h"
+#include "wavemap_2d/utils/image_utils.h"
 
 namespace wavemap_2d {
 template <typename CellT>
