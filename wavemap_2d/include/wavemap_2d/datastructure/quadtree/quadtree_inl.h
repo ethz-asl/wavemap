@@ -22,7 +22,7 @@ size_t Quadtree<CellT>::size() const {
     const Node<CellDataSpecialized>* node = stack.top();
     stack.pop();
 
-    if (node->hasAllocatedChildrenArray()) {
+    if (node->hasChildrenArray()) {
       for (NodeRelativeChildIndex child_idx = 0;
            child_idx < NodeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
@@ -50,7 +50,7 @@ size_t Quadtree<CellT>::getMemoryUsage() const {
     stack.pop();
     memory_usage += node->getMemoryUsage();
 
-    if (node->hasAllocatedChildrenArray()) {
+    if (node->hasChildrenArray()) {
       for (NodeRelativeChildIndex child_idx = 0;
            child_idx < NodeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
@@ -86,7 +86,7 @@ Index Quadtree<CellT>::getMinIndex() const {
     const Node<CellDataSpecialized>* node = stack.top().second;
     stack.pop();
 
-    if (node->hasAllocatedChildrenArray()) {
+    if (node->hasChildrenArray()) {
       for (NodeRelativeChildIndex child_idx = 0;
            child_idx < NodeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
@@ -120,7 +120,7 @@ Index Quadtree<CellT>::getMaxIndex() const {
     const Node<CellDataSpecialized>* node = stack.top().second;
     stack.pop();
 
-    if (node->hasAllocatedChildrenArray()) {
+    if (node->hasChildrenArray()) {
       for (NodeRelativeChildIndex child_idx = 0;
            child_idx < NodeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {

@@ -5,29 +5,34 @@
 
 namespace wavemap_2d {
 template <typename NodeDataType>
-void Node<NodeDataType>::allocateChildrenArray() {
-  if (!children_) {
+void Node<NodeDataType>::allocateChildrenArrayIfNeeded() {
+  if (!hasChildrenArray()) {
     children_ = std::make_unique<ChildrenArray>();
   }
 }
 
 template <typename NodeDataType>
-void Node<NodeDataType>::pruneChildren() {
+void Node<NodeDataType>::deleteChildrenArray() {
   children_.reset();
 }
 
 template <typename NodeDataType>
 size_t Node<NodeDataType>::getMemoryUsage() const {
   size_t memory_usage = sizeof(Node<NodeDataType>);
-  if (hasAllocatedChildrenArray()) {
+  if (hasChildrenArray()) {
     memory_usage += sizeof(ChildrenArray);
   }
   return memory_usage;
 }
 
 template <typename NodeDataType>
+bool Node<NodeDataType>::hasChild(NodeRelativeChildIndex child_index) const {
+  return hasChildrenArray() && children_->operator[](child_index);
+}
+
+template <typename NodeDataType>
 bool Node<NodeDataType>::hasAtLeastOneChild() const {
-  if (children_) {
+  if (hasChildrenArray()) {
     for (int idx = 0; idx < NodeIndex::kNumChildren; ++idx) {
       if (children_->operator[](idx)) {
         return true;
@@ -39,19 +44,15 @@ bool Node<NodeDataType>::hasAtLeastOneChild() const {
 
 template <typename NodeDataType>
 void Node<NodeDataType>::allocateChild(NodeRelativeChildIndex child_index) {
-  if (!children_) {
-    allocateChildrenArray();
-  }
+  allocateChildrenArrayIfNeeded();
   children_->operator[](child_index) = std::make_unique<Node>();
 }
 
 template <typename NodeDataType>
 bool Node<NodeDataType>::deleteChild(NodeRelativeChildIndex child_index) {
-  if (children_) {
-    if (children_->operator[](child_index)) {
-      children_->operator[](child_index).reset();
-      return true;
-    }
+  if (hasChild(child_index)) {
+    children_->operator[](child_index).reset();
+    return true;
   }
   return false;
 }
@@ -59,7 +60,7 @@ bool Node<NodeDataType>::deleteChild(NodeRelativeChildIndex child_index) {
 template <typename NodeDataType>
 Node<NodeDataType>* Node<NodeDataType>::getChild(
     NodeRelativeChildIndex child_index) {
-  if (children_) {
+  if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }
   return nullptr;
@@ -68,7 +69,7 @@ Node<NodeDataType>* Node<NodeDataType>::getChild(
 template <typename NodeDataType>
 const Node<NodeDataType>* Node<NodeDataType>::getChild(
     NodeRelativeChildIndex child_index) const {
-  if (children_) {
+  if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }
   return nullptr;

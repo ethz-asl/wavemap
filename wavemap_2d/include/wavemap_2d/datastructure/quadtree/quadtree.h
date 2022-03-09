@@ -25,11 +25,11 @@ class Quadtree : public DataStructureBase {
         root_node_offset_(Index::Constant(std::exp2(max_depth_ - 1))) {
     updateLookupTables();
   }
-  ~Quadtree() override { root_node_.pruneChildren(); }
+  ~Quadtree() override = default;
 
   bool empty() const override { return !root_node_.hasAtLeastOneChild(); }
   size_t size() const override;
-  void clear() override { root_node_.pruneChildren(); }
+  void clear() override { root_node_.deleteChildrenArray(); }
 
   size_t getMemoryUsage() const override;
 

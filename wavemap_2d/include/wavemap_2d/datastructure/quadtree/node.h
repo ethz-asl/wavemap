@@ -12,24 +12,19 @@ template <typename NodeDataType>
 class Node {
  public:
   Node() : data_(0) {}
-  ~Node() { pruneChildren(); }
+  ~Node() = default;
 
   NodeDataType& data() { return data_; }
   const NodeDataType& data() const { return data_; }
 
-  bool hasAllocatedChildrenArray() const {
-    return static_cast<bool>(children_);
-  }
-  void allocateChildrenArray();
-  void pruneChildren();
+  bool hasChildrenArray() const { return static_cast<bool>(children_); }
+  void allocateChildrenArrayIfNeeded();
+  void deleteChildrenArray();
 
   size_t getMemoryUsage() const;
 
+  bool hasChild(NodeRelativeChildIndex child_index) const;
   bool hasAtLeastOneChild() const;
-  bool hasChild(NodeRelativeChildIndex child_index) const {
-    return children_ && children_->operator[](child_index);
-  }
-
   void allocateChild(NodeRelativeChildIndex child_index);
   bool deleteChild(NodeRelativeChildIndex child_index);
   Node* getChild(NodeRelativeChildIndex child_index);
