@@ -6,9 +6,11 @@
 
 #include "wavemap_2d/datastructure/cell.h"
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
-#include "wavemap_2d/transform/lifted_cdf_5_3.h"
-#include "wavemap_2d/transform/lifted_cdf_9_7.h"
-#include "wavemap_2d/transform/naive_haar.h"
+#include "wavemap_2d/datastructure/quadtree/quadtree.h"
+#include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"
+#include "wavemap_2d/transform/dense/lifted_cdf_9_7.h"
+#include "wavemap_2d/transform/dense/naive_haar.h"
+#include "wavemap_2d/transform/tree/child_averaging.h"
 #include "wavemap_2d/utils/evaluation_utils.h"
 
 DEFINE_string(estimated_map_file_path, "", "Path to the estimated map.");
@@ -38,9 +40,9 @@ int main(int argc, char** argv) {
   // Load the estimated map
   const auto estimated_map_resolution =
       static_cast<FloatingPoint>(FLAGS_estimated_map_resolution);
-  auto occupancy_map =
+  auto estimated_map =
       std::make_shared<DataStructureType>(estimated_map_resolution);
-  CHECK(occupancy_map->load(FLAGS_estimated_map_file_path,
+  CHECK(estimated_map->load(FLAGS_estimated_map_file_path,
                             FLAGS_estimated_map_saved_with_floating_precision));
 
   // Load the ground truth map
@@ -64,13 +66,12 @@ int main(int argc, char** argv) {
       utils::CellSelector::Categories::kAnyObserved};
 
   // Compress
-  constexpr FloatingPoint kThreshold =
-      std::numeric_limits<FloatingPoint>::min();
-  const Index map_size = occupancy_map->dimensions();
+  constexpr FloatingPoint kThreshold = kEpsilon;
+  const Index map_size = estimated_map->dimensions();
   const int max_num_passes = std::floor(std::log2(map_size.minCoeff()));
 
   const auto min_divisor = static_cast<int>(std::exp2(max_num_passes));
-  Index new_max_index = occupancy_map->getMinIndex();
+  Index new_max_index = estimated_map->getMinIndex();
   if (map_size.x() % min_divisor != 0) {
     const IndexElement new_x_size =
         (map_size.x() / min_divisor + 1) * min_divisor;
@@ -81,12 +82,12 @@ int main(int argc, char** argv) {
         (map_size.y() / min_divisor + 1) * min_divisor;
     new_max_index.y() += new_y_size - 1;
   }
-  occupancy_map->addToCellValue(new_max_index, 0.f);
+  estimated_map->addToCellValue(new_max_index, 0.f);
 
   const size_t num_non_zero_cells_initial =
-      (kThreshold < occupancy_map->getData().cwiseAbs().array()).count();
+      (kThreshold < estimated_map->getData().cwiseAbs().array()).count();
   const utils::MapEvaluationSummary estimated_map_evaluation_summary =
-      utils::EvaluateMap(ground_truth_map, *occupancy_map, evaluation_config);
+      utils::EvaluateMap(ground_truth_map, *estimated_map, evaluation_config);
   CHECK(estimated_map_evaluation_summary.is_valid);
   for (const auto& dwt :
        {std::shared_ptr<DiscreteWaveletTransform<FloatingPoint>>(
@@ -97,8 +98,8 @@ int main(int argc, char** argv) {
             new LiftedCDF97<FloatingPoint>())}) {
     for (int pass_idx = 1; pass_idx < std::min(max_num_passes, 9); ++pass_idx) {
       // Compress
-      DataStructureType reconstructed_map(*occupancy_map);
-      GTDataStructureType error_map(occupancy_map->getResolution());
+      DataStructureType reconstructed_map(*estimated_map);
+      GTDataStructureType error_map(estimated_map->getResolution());
       dwt->forward(reconstructed_map.getData(), pass_idx);
 
       // Truncate
@@ -144,4 +145,24 @@ int main(int argc, char** argv) {
     }
     std::cout << std::endl;
   }
+
+  // Evaluate compression in a quadtree
+  Quadtree<UnboundedCell> quadtree(estimated_map_resolution);
+  for (const Index& index :
+       Grid(estimated_map->getMinIndex(), estimated_map->getMaxIndex())) {
+    quadtree.setCellValue(index, estimated_map->getCellValue(index));
+  }
+  LOG(INFO) << "Dense grid memory usage: "
+            << estimated_map->getMemoryUsage() / 1000 << " KB.";
+  LOG(INFO) << "Size: " << estimated_map->size();
+  LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
+            << " KB.";
+  LOG(INFO) << "Size: " << quadtree.size();
+  quadtree.prune();
+  LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
+            << " KB.";
+  quadtree.applyBottomUp(AverageAndPruneChildren<UnboundedCell::Specialized>);
+  LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
+            << " KB.";
+  LOG(INFO) << "Size: " << quadtree.size();
 }

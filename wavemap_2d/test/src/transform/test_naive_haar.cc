@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/test/fixture_wavelet_transforms.h"
-#include "wavemap_2d/transform/naive_haar.h"
+#include "wavemap_2d/transform/dense/naive_haar.h"
 
 namespace wavemap_2d {
 using NaiveHaarTest = FixtureWaveletTransform;

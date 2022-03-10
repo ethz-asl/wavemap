@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/test/fixture_wavelet_transforms.h"
-#include "wavemap_2d/transform/lifted_cdf_5_3.h"
-#include "wavemap_2d/transform/lifted_cdf_9_7.h"
-#include "wavemap_2d/transform/naive_haar.h"
+#include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"
+#include "wavemap_2d/transform/dense/lifted_cdf_9_7.h"
+#include "wavemap_2d/transform/dense/naive_haar.h"
 
 namespace wavemap_2d {
 template <typename WaveletType>

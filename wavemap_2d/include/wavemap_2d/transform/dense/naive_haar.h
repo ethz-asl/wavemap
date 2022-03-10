@@ -1,7 +1,7 @@
-#ifndef WAVEMAP_2D_TRANSFORM_NAIVE_HAAR_H_
-#define WAVEMAP_2D_TRANSFORM_NAIVE_HAAR_H_
+#ifndef WAVEMAP_2D_TRANSFORM_DENSE_NAIVE_HAAR_H_
+#define WAVEMAP_2D_TRANSFORM_DENSE_NAIVE_HAAR_H_
 
-#include "wavemap_2d/transform/discrete_wavelet_transform.h"
+#include "wavemap_2d/transform/dense/discrete_wavelet_transform.h"
 
 namespace wavemap_2d {
 template <typename T>
@@ -67,4 +67,4 @@ class NaiveHaar : public DiscreteWaveletTransform<T> {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_TRANSFORM_NAIVE_HAAR_H_
+#endif  // WAVEMAP_2D_TRANSFORM_DENSE_NAIVE_HAAR_H_

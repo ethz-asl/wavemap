@@ -14,23 +14,7 @@ namespace wavemap_2d {
 template <typename CellT>
 size_t Quadtree<CellT>::size() const {
   size_t num_nodes = 0u;
-
-  std::stack<const Node<CellDataSpecialized>*> stack;
-  stack.template emplace(&root_node_);
-  while (!stack.empty()) {
-    ++num_nodes;
-    const Node<CellDataSpecialized>* node = stack.top();
-    stack.pop();
-
-    if (node->hasChildrenArray()) {
-      for (NodeRelativeChildIndex child_idx = 0;
-           child_idx < NodeIndex::kNumChildren; ++child_idx) {
-        if (node->hasChild(child_idx)) {
-          stack.template emplace(node->getChild(child_idx));
-        }
-      }
-    }
-  }
+  applyBottomUp([&num_nodes](const NodeType*) { ++num_nodes; });
 
   // Subtract 1 to account for the fact that the root node is always allocated
   // and therefore isn't counted in the size

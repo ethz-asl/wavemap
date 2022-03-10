@@ -1,9 +1,9 @@
-#ifndef WAVEMAP_2D_TRANSFORM_LIFTED_CDF_9_7_H_
-#define WAVEMAP_2D_TRANSFORM_LIFTED_CDF_9_7_H_
+#ifndef WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_9_7_H_
+#define WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_9_7_H_
 
 #include <vector>
 
-#include "wavemap_2d/transform/discrete_wavelet_transform.h"
+#include "wavemap_2d/transform/dense/discrete_wavelet_transform.h"
 
 namespace wavemap_2d {
 template <typename T>
@@ -31,6 +31,6 @@ class LiftedCDF97 : public DiscreteWaveletTransform<T> {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/transform/lifted_cdf_9_7_inl.h"
+#include "wavemap_2d/transform/dense/lifted_cdf_9_7_inl.h"
 
-#endif  // WAVEMAP_2D_TRANSFORM_LIFTED_CDF_9_7_H_
+#endif  // WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_9_7_H_

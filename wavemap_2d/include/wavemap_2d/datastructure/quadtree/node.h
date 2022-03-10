@@ -14,7 +14,10 @@ class Node {
   Node() : data_(0) {}
   ~Node() = default;
 
-  bool empty() { return !hasAtLeastOneChild() && data_ == 0; }
+  bool empty() const {
+    return (data_ == static_cast<NodeDataType>(0)) && !hasAtLeastOneChild();
+  }
+  void pruneChildren();
 
   NodeDataType& data() { return data_; }
   const NodeDataType& data() const { return data_; }
@@ -30,7 +33,19 @@ class Node {
   Node* getChild(NodeRelativeChildIndex child_index);
   const Node* getChild(NodeRelativeChildIndex child_index) const;
 
-  void pruneChildren();
+  template <typename Functor>
+  void applyToChildren(Functor&& fn);
+  template <typename Functor>
+  void applyToChildren(Functor&& fn) const;
+  template <typename Functor>
+  void applyBottomUp(Functor&& fn);
+  template <typename Functor>
+  void applyBottomUp(Functor&& fn) const;
+  template <typename Functor>
+  void applyTopDown(Functor&& fn);
+  template <typename Functor>
+  void applyTopDown(Functor&& fn) const;
+
   size_t getMemoryUsage() const;
 
  protected:

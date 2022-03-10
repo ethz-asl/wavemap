@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_TRANSFORM_LIFTED_CDF_5_3_INL_H_
-#define WAVEMAP_2D_TRANSFORM_LIFTED_CDF_5_3_INL_H_
+#ifndef WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_5_3_INL_H_
+#define WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_5_3_INL_H_
 
 #include <vector>
 
@@ -113,4 +113,4 @@ void LiftedCDF53<T>::singleBackwardPass1D(XprT x) const {
 }
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_TRANSFORM_LIFTED_CDF_5_3_INL_H_
+#endif  // WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_5_3_INL_H_

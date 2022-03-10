@@ -17,6 +17,7 @@ template <typename CellT>
 class Quadtree : public DataStructureBase {
  public:
   using CellType = CellT;
+  using NodeType = Node<typename CellT::Specialized>;
 
   explicit Quadtree(FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -27,7 +28,7 @@ class Quadtree : public DataStructureBase {
   }
   ~Quadtree() override = default;
 
-  bool empty() const override { return !root_node_.hasAtLeastOneChild(); }
+  bool empty() const override { return root_node_.empty(); }
   size_t size() const override;
   void clear() override { root_node_.deleteChildrenArray(); }
   void prune() { root_node_.pruneChildren(); }
@@ -42,6 +43,23 @@ class Quadtree : public DataStructureBase {
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
+
+  template <typename Functor>
+  void applyBottomUp(Functor&& fn) {
+    root_node_.applyBottomUp(fn);
+  }
+  template <typename Functor>
+  void applyBottomUp(Functor&& fn) const {
+    root_node_.applyBottomUp(fn);
+  }
+  template <typename Functor>
+  void applyTopDown(Functor&& fn) {
+    root_node_.applyTopDown(fn);
+  }
+  template <typename Functor>
+  void applyTopDown(Functor&& fn) const {
+    root_node_.applyTopDown(fn);
+  }
 
   size_t getMemoryUsage() const override;
 
@@ -64,7 +82,7 @@ class Quadtree : public DataStructureBase {
   NodeIndexElement max_depth_;
   FloatingPoint root_node_width_;
   Index root_node_offset_;
-  Node<CellDataSpecialized> root_node_;
+  NodeType root_node_;
 
   bool hasNode(const NodeIndex& index) { return getNode(index); }
   void allocateNode(const NodeIndex& index) {
@@ -72,9 +90,8 @@ class Quadtree : public DataStructureBase {
     getNode(index, kAutoAllocate);
   }
   bool removeNode(const NodeIndex& index);
-  Node<CellDataSpecialized>* getNode(const NodeIndex& index,
-                                     bool auto_allocate = false);
-  const Node<CellDataSpecialized>* getNode(const NodeIndex& index) const;
+  NodeType* getNode(const NodeIndex& index, bool auto_allocate = false);
+  const NodeType* getNode(const NodeIndex& index) const;
 
   FloatingPoint getNodeWidthAtDepth(NodeIndexElement depth) const {
     DCHECK_LE(depth, max_depth_);
