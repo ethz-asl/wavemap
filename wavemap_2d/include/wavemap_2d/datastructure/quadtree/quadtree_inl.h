@@ -13,14 +13,35 @@
 namespace wavemap_2d {
 template <typename CellT>
 size_t Quadtree<CellT>::size() const {
-  size_t num_nodes = 0u;
-  applyBottomUp([&num_nodes](const NodeType*) { ++num_nodes; });
+  auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
+  // NOTE: 1 is subtracted from the count to account for the fact that the root
+  //       node is even allocated when the quadtree is empty.
+  return std::distance(subtree_iterator.begin(), subtree_iterator.end()) - 1u;
+}
 
-  // Subtract 1 to account for the fact that the root node is always allocated
-  // and therefore isn't counted in the size
-  --num_nodes;
+template <typename CellT>
+void Quadtree<CellT>::prune() {
+  for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
+    if (node.hasChildrenArray()) {
+      bool has_non_empty_child = false;
+      for (int child_idx = 0; child_idx < NodeIndex::kNumChildren;
+           ++child_idx) {
+        NodeType* child_ptr = node.getChild(child_idx);
+        if (child_ptr) {
+          if (child_ptr->empty()) {
+            node.deleteChild(child_idx);
+          } else {
+            has_non_empty_child = true;
+          }
+        }
+      }
 
-  return num_nodes;
+      // Free up the children array if it only contains null pointers
+      if (!has_non_empty_child) {
+        node.deleteChildrenArray();
+      }
+    }
+  }
 }
 
 template <typename CellT>

@@ -9,7 +9,6 @@ namespace wavemap_2d {
 class SubtreeIteratorTest : public FixtureBase {
  protected:
   using NodeType = Node<int>;
-  using NodePtrType = NodeType*;
 
   static std::unique_ptr<NodeType> demoTree() {
     auto root_node = std::make_unique<NodeType>(1);
@@ -35,44 +34,60 @@ class SubtreeIteratorTest : public FixtureBase {
 };
 
 TEST_F(SubtreeIteratorTest, DepthFirstPreorderTraversal) {
-  std::unique_ptr<Node<int>> root_node = demoTree();
+  std::unique_ptr<const Node<int>> root_node = demoTree();
   const std::vector<int> expected_nodes{1, 2,  4,  5,  9,  10, 6, 3,
                                         7, 11, 12, 13, 14, 8,  15};
+  auto subtree_iterator =
+      Subtree<const NodeType, TraversalOrder::kDepthFirstPreorder>(
+          root_node.get());
 
+  // Test iteration order and completeness
   int idx = 0;
-  for (NodePtrType node_ptr :
-       Subtree<NodePtrType, TraversalOrder::kDepthFirstPreorder>(
-           root_node.get())) {
-    EXPECT_EQ(node_ptr->data(), expected_nodes[idx++]);
+  for (const NodeType& node : subtree_iterator) {
+    EXPECT_EQ(node.data(), expected_nodes[idx++]);
   }
   EXPECT_EQ(idx, expected_nodes.size());
+
+  // Test compatibility with std::distance (e.g. to count the number of nodes)
+  EXPECT_EQ(std::distance(subtree_iterator.begin(), subtree_iterator.end()),
+            expected_nodes.size());
 }
 
 TEST_F(SubtreeIteratorTest, DepthFirstPostorderTraversal) {
-  std::unique_ptr<Node<int>> root_node = demoTree();
+  std::unique_ptr<const Node<int>> root_node = demoTree();
   const std::vector<int> expected_nodes{4,  9,  10, 5,  6, 2, 11, 12,
                                         13, 14, 7,  15, 8, 3, 1};
+  auto subtree_iterator =
+      Subtree<const NodeType, TraversalOrder::kDepthFirstPostorder>(
+          root_node.get());
 
+  // Test iteration order and completeness
   int idx = 0;
-  for (NodePtrType node_ptr :
-       Subtree<NodePtrType, TraversalOrder::kDepthFirstPostorder>(
-           root_node.get())) {
-    //    LOG(INFO) << "Got: " << node_ptr->data() << " while expecting "
-    //              << expected_nodes[idx++];
-    EXPECT_EQ(node_ptr->data(), expected_nodes[idx++]);
+  for (const NodeType& node : subtree_iterator) {
+    EXPECT_EQ(node.data(), expected_nodes[idx++]);
   }
   EXPECT_EQ(idx, expected_nodes.size());
+
+  // Test compatibility with std::distance (e.g. to count the number of nodes)
+  EXPECT_EQ(std::distance(subtree_iterator.begin(), subtree_iterator.end()),
+            expected_nodes.size());
 }
 TEST_F(SubtreeIteratorTest, BreadthFirstTraversal) {
-  std::unique_ptr<Node<int>> root_node = demoTree();
+  std::unique_ptr<const Node<int>> root_node = demoTree();
   const std::vector<int> expected_nodes{1, 2,  3,  4,  5,  6,  7, 8,
                                         9, 10, 11, 12, 13, 14, 15};
+  auto subtree_iterator =
+      Subtree<const NodeType, TraversalOrder::kBreadthFirst>(root_node.get());
 
+  // Test iteration order and completeness
   int idx = 0;
-  for (NodePtrType node_ptr :
-       Subtree<NodePtrType, TraversalOrder::kBreadthFirst>(root_node.get())) {
-    EXPECT_EQ(node_ptr->data(), expected_nodes[idx++]);
+  for (const NodeType& node : subtree_iterator) {
+    EXPECT_EQ(node.data(), expected_nodes[idx++]);
   }
   EXPECT_EQ(idx, expected_nodes.size());
+
+  // Test compatibility with std::distance (e.g. to count the number of nodes)
+  EXPECT_EQ(std::distance(subtree_iterator.begin(), subtree_iterator.end()),
+            expected_nodes.size());
 }
 }  // namespace wavemap_2d

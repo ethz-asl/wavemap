@@ -16,13 +16,19 @@ enum class TraversalOrder {
 //                less memory (at the cost of increased compute)
 // TODO(victorr): Add an IndexedSubtree class
 
-template <typename NodePtrType, TraversalOrder traversal_order>
+template <typename NodeType, TraversalOrder traversal_order>
 class Subtree {
  public:
-  explicit Subtree(NodePtrType root_node) : root_node_(root_node) {}
+  explicit Subtree(NodeType* root_node) : root_node_(root_node) {}
 
   class Iterator {
    public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = NodeType;
+    using pointer = NodeType*;
+    using reference = NodeType&;
+    using iterator_category = std::forward_iterator_tag;
+
     static_assert(
         traversal_order != TraversalOrder::kDepthFirstPostorder,
         "This class should only be compiled when using depth first preorder "
@@ -30,15 +36,18 @@ class Subtree {
         "implemented separately through template specialization. If this "
         "message appears, the specialization must have broken.");
 
-    explicit Iterator(NodePtrType root_node) {
+    explicit Iterator(NodeType* root_node) {
       if (root_node) {
         upcoming_nodes_.template emplace_front(root_node);
       }
     }
 
-    NodePtrType operator*() { return upcoming_nodes_.front(); }
+    NodeType& operator*() { return *upcoming_nodes_.front(); }
+    const NodeType& operator*() const { return *upcoming_nodes_.front(); }
+    NodeType* operator->() { return upcoming_nodes_.front(); }
+
     Iterator& operator++() {  // prefix ++
-      NodePtrType node_ptr = dequeueNode();
+      NodeType* node_ptr = dequeueNode();
       enqueueNodeAndFirstChildren(node_ptr);
 
       return *this;
@@ -59,19 +68,19 @@ class Subtree {
     }
 
    protected:
-    std::deque<NodePtrType> upcoming_nodes_;
-    NodePtrType dequeueNode() {
-      NodePtrType node_ptr = upcoming_nodes_.front();
+    std::deque<NodeType*> upcoming_nodes_;
+    NodeType* dequeueNode() {
+      NodeType* node_ptr = upcoming_nodes_.front();
       upcoming_nodes_.pop_front();
       return node_ptr;
     }
-    void enqueueNodeAndFirstChildren(NodePtrType parent_ptr) {
+    void enqueueNodeAndFirstChildren(NodeType* parent_ptr) {
       if (parent_ptr->hasChildrenArray()) {
         switch (traversal_order) {
           case TraversalOrder::kDepthFirstPreorder:
             for (int child_idx = NodeIndex::kNumChildren - 1; 0 <= child_idx;
                  --child_idx) {
-              NodePtrType child_ptr = parent_ptr->getChild(child_idx);
+              NodeType* child_ptr = parent_ptr->getChild(child_idx);
               if (child_ptr) {
                 upcoming_nodes_.template emplace_front(child_ptr);
               }
@@ -80,7 +89,7 @@ class Subtree {
           case TraversalOrder::kBreadthFirst:
             for (int child_idx = 0; child_idx < NodeIndex::kNumChildren;
                  ++child_idx) {
-              NodePtrType child_ptr = parent_ptr->getChild(child_idx);
+              NodeType* child_ptr = parent_ptr->getChild(child_idx);
               if (child_ptr) {
                 upcoming_nodes_.template emplace_back(child_ptr);
               }
@@ -95,23 +104,34 @@ class Subtree {
   auto end() { return Iterator(nullptr); }
 
  protected:
-  NodePtrType const root_node_;
+  NodeType* const root_node_;
 };
 
-template <typename NodePtrType>
-class Subtree<NodePtrType, TraversalOrder::kDepthFirstPostorder> {
+template <typename NodeType>
+class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
  public:
-  explicit Subtree(NodePtrType root_node) : root_node_(root_node) {}
+  explicit Subtree(NodeType* root_node) : root_node_(root_node) {}
 
   class Iterator {
    public:
-    explicit Iterator(NodePtrType root_node) {
+    using difference_type = std::ptrdiff_t;
+    using value_type = NodeType;
+    using pointer = NodeType*;
+    using reference = NodeType&;
+    using iterator_category = std::forward_iterator_tag;
+
+    explicit Iterator(NodeType* root_node) {
       if (root_node) {
         enqueueNodeAndFirstChildren(root_node);
       }
     }
 
-    NodePtrType operator*() { return upcoming_nodes_.front().node_ptr; }
+    NodeType& operator*() { return *upcoming_nodes_.front().node_ptr; }
+    const NodeType& operator*() const {
+      return *upcoming_nodes_.front().node_ptr;
+    }
+    NodeType* operator->() { return upcoming_nodes_.front().node_ptr; }
+
     Iterator& operator++() {  // prefix ++
       upcoming_nodes_.pop_front();
 
@@ -125,7 +145,7 @@ class Subtree<NodePtrType, TraversalOrder::kDepthFirstPostorder> {
       for (++node_and_state.last_expanded_child_idx;
            node_and_state.last_expanded_child_idx < NodeIndex::kNumChildren;
            ++node_and_state.last_expanded_child_idx) {
-        NodePtrType child_ptr = node_and_state.node_ptr->getChild(
+        NodeType* child_ptr = node_and_state.node_ptr->getChild(
             node_and_state.last_expanded_child_idx);
         if (child_ptr) {
           enqueueNodeAndFirstChildren(child_ptr);
@@ -151,7 +171,7 @@ class Subtree<NodePtrType, TraversalOrder::kDepthFirstPostorder> {
 
    protected:
     struct NodeAndState {
-      NodePtrType node_ptr;
+      NodeType* node_ptr;
       NodeRelativeChildIndex last_expanded_child_idx;
       bool operator==(const NodeAndState& rhs) const {
         return node_ptr == rhs.node_ptr &&
@@ -159,13 +179,13 @@ class Subtree<NodePtrType, TraversalOrder::kDepthFirstPostorder> {
       }
     };
     std::deque<NodeAndState> upcoming_nodes_;
-    void enqueueNodeAndFirstChildren(NodePtrType parent_ptr) {
+    void enqueueNodeAndFirstChildren(NodeType* parent_ptr) {
       if (parent_ptr->hasChildrenArray()) {
         // If the node has descendants, recursively enqueue all of its
         // descendants that have the lowest index on their respective level
         for (NodeRelativeChildIndex child_idx = 0;
              child_idx < NodeIndex::kNumChildren; ++child_idx) {
-          NodePtrType child_ptr = parent_ptr->getChild(child_idx);
+          NodeType* child_ptr = parent_ptr->getChild(child_idx);
           if (child_ptr) {
             upcoming_nodes_.template emplace_front(
                 NodeAndState{parent_ptr, child_idx});
@@ -185,7 +205,7 @@ class Subtree<NodePtrType, TraversalOrder::kDepthFirstPostorder> {
   auto end() { return Iterator(nullptr); }
 
  protected:
-  NodePtrType const root_node_;
+  NodeType* const root_node_;
 };
 }  // namespace wavemap_2d
 

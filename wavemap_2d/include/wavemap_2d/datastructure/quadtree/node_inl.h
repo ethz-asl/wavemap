@@ -6,32 +6,6 @@
 
 namespace wavemap_2d {
 template <typename NodeDataType>
-void Node<NodeDataType>::pruneChildren() {
-  // Recursively delete all zero nodes without children (empty leaves)
-  applyBottomUp([](Node<NodeDataType>* parent_ptr) {
-    if (parent_ptr->hasChildrenArray()) {
-      bool has_non_empty_child = false;
-      for (int child_idx = 0; child_idx < NodeIndex::kNumChildren;
-           ++child_idx) {
-        Node* child_ptr = parent_ptr->getChild(child_idx);
-        if (child_ptr) {
-          if (child_ptr->empty()) {
-            parent_ptr->deleteChild(child_idx);
-          } else {
-            has_non_empty_child = true;
-          }
-        }
-      }
-
-      // Free up the children array if it only contains null pointers
-      if (!has_non_empty_child) {
-        parent_ptr->deleteChildrenArray();
-      }
-    }
-  });
-}
-
-template <typename NodeDataType>
 void Node<NodeDataType>::allocateChildrenArrayIfNeeded() {
   if (!hasChildrenArray()) {
     children_ = std::make_unique<ChildrenArray>();
@@ -95,71 +69,6 @@ const Node<NodeDataType>* Node<NodeDataType>::getChild(
     return children_->operator[](child_index).get();
   }
   return nullptr;
-}
-
-template <typename NodeDataType>
-template <typename Functor>
-void Node<NodeDataType>::applyToChildren(Functor&& fn) {
-  if (hasChildrenArray()) {
-    for (int child_idx = 0; child_idx < NodeIndex::kNumChildren; ++child_idx) {
-      Node* child_ptr = getChild(child_idx);
-      if (child_ptr) {
-        fn(child_ptr);
-      }
-    }
-  }
-}
-
-template <typename NodeDataType>
-template <typename Functor>
-void Node<NodeDataType>::applyToChildren(Functor&& fn) const {
-  if (hasChildrenArray()) {
-    for (int child_idx = 0; child_idx < NodeIndex::kNumChildren; ++child_idx) {
-      const Node* child_ptr = getChild(child_idx);
-      if (child_ptr) {
-        fn(child_ptr);
-      }
-    }
-  }
-}
-
-template <typename NodeDataType>
-template <typename Functor>
-void Node<NodeDataType>::applyBottomUp(Functor&& fn) {
-  // Recurse through the tree and apply the function to the children first
-  // NOTE: This corresponds to postorder depth-first traversal.
-  // TODO(victorr): Consider managing the stack explicitly instead of using
-  //                recursion
-  applyToChildren(
-      [&fn](Node<NodeDataType>* node_ptr) { node_ptr->applyBottomUp(fn); });
-  fn(this);
-}
-
-template <typename NodeDataType>
-template <typename Functor>
-void Node<NodeDataType>::applyBottomUp(Functor&& fn) const {
-  // Recurse through the tree and apply the function to the children first
-  // NOTE: This corresponds to postorder depth-first traversal.
-  // TODO(victorr): Consider managing the stack explicitly instead of using
-  //                recursion
-  applyToChildren([&fn](const Node<NodeDataType>* node_ptr) {
-    node_ptr->applyBottomUp(fn);
-  });
-  fn(this);
-}
-
-template <typename NodeDataType>
-template <typename Functor>
-void Node<NodeDataType>::applyTopDown(Functor&& fn) {
-  // Apply the function to the nodes in breadth-first order
-  LOG(FATAL) << "Not yet implemented.";
-}
-
-template <typename NodeDataType>
-template <typename Functor>
-void Node<NodeDataType>::applyTopDown(Functor&& fn) const {
-  // Apply the function to the nodes in breadth-first order
-  LOG(FATAL) << "Not yet implemented.";
 }
 
 template <typename NodeDataType>

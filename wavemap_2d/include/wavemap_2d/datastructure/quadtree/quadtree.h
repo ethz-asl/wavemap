@@ -11,6 +11,7 @@
 #include "wavemap_2d/datastructure/quadtree/node.h"
 #include "wavemap_2d/datastructure/quadtree/node_index.h"
 #include "wavemap_2d/indexing/index.h"
+#include "wavemap_2d/iterator/subtree_iterator.h"
 
 namespace wavemap_2d {
 template <typename CellT>
@@ -31,7 +32,7 @@ class Quadtree : public DataStructureBase {
   bool empty() const override { return root_node_.empty(); }
   size_t size() const override;
   void clear() override { root_node_.deleteChildrenArray(); }
-  void prune() { root_node_.pruneChildren(); }
+  void prune();
 
   Index getMinPossibleIndex() const;
   Index getMaxPossibleIndex() const;
@@ -44,21 +45,13 @@ class Quadtree : public DataStructureBase {
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
 
-  template <typename Functor>
-  void applyBottomUp(Functor&& fn) {
-    root_node_.applyBottomUp(fn);
+  template <TraversalOrder traversal_order>
+  auto getIterator() {
+    return Subtree<NodeType, traversal_order>(&root_node_);
   }
-  template <typename Functor>
-  void applyBottomUp(Functor&& fn) const {
-    root_node_.applyBottomUp(fn);
-  }
-  template <typename Functor>
-  void applyTopDown(Functor&& fn) {
-    root_node_.applyTopDown(fn);
-  }
-  template <typename Functor>
-  void applyTopDown(Functor&& fn) const {
-    root_node_.applyTopDown(fn);
+  template <TraversalOrder traversal_order>
+  auto getIterator() const {
+    return Subtree<const NodeType, traversal_order>(&root_node_);
   }
 
   size_t getMemoryUsage() const override;
