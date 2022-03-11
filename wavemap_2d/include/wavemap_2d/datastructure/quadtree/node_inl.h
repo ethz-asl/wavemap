@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_DATASTRUCTURE_QUADTREE_NODE_INL_H_
 
 #include <memory>
+#include <utility>
 
 namespace wavemap_2d {
 template <typename NodeDataType>
@@ -60,9 +61,13 @@ bool Node<NodeDataType>::hasAtLeastOneChild() const {
 }
 
 template <typename NodeDataType>
-void Node<NodeDataType>::allocateChild(NodeRelativeChildIndex child_index) {
+template <typename... NodeConstructorArgs>
+Node<NodeDataType>* Node<NodeDataType>::allocateChild(
+    NodeRelativeChildIndex child_index, NodeConstructorArgs&&... args) {
   allocateChildrenArrayIfNeeded();
-  children_->operator[](child_index) = std::make_unique<Node>();
+  children_->operator[](child_index) =
+      std::make_unique<Node>(std::forward<NodeConstructorArgs>(args)...);
+  return children_->operator[](child_index).get();
 }
 
 template <typename NodeDataType>

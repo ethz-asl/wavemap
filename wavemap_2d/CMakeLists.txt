@@ -85,9 +85,18 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_sparse_vector PRIVATE test/include)
   target_link_libraries(test_sparse_vector ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_iterators test/src/integrator/test_iterators.cc)
-  target_include_directories(test_iterators PRIVATE test/include)
-  target_link_libraries(test_iterators ${PROJECT_NAME} testing_main)
+  catkin_add_gtest(test_grid_iterator test/src/iterator/test_grid_iterator.cc)
+  target_include_directories(test_grid_iterator PRIVATE test/include)
+  target_link_libraries(test_grid_iterator ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_ray_iterator test/src/iterator/test_ray_iterator.cc)
+  target_include_directories(test_ray_iterator PRIVATE test/include)
+  target_link_libraries(test_ray_iterator ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_subtree_iterator
+                   test/src/iterator/test_subtree_iterator.cc)
+  target_include_directories(test_subtree_iterator PRIVATE test/include)
+  target_link_libraries(test_subtree_iterator ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_measurement_models
                    test/src/integrator/test_measurement_models.cc)

@@ -12,6 +12,7 @@ template <typename NodeDataType>
 class Node {
  public:
   Node() : data_(0) {}
+  explicit Node(NodeDataType data) : data_(data) {}
   ~Node() = default;
 
   bool empty() const {
@@ -28,7 +29,9 @@ class Node {
 
   bool hasChild(NodeRelativeChildIndex child_index) const;
   bool hasAtLeastOneChild() const;
-  void allocateChild(NodeRelativeChildIndex child_index);
+  template <typename... NodeConstructorArgs>
+  Node* allocateChild(NodeRelativeChildIndex child_index,
+                      NodeConstructorArgs&&... args);
   bool deleteChild(NodeRelativeChildIndex child_index);
   Node* getChild(NodeRelativeChildIndex child_index);
   const Node* getChild(NodeRelativeChildIndex child_index) const;
@@ -37,6 +40,7 @@ class Node {
   void applyToChildren(Functor&& fn);
   template <typename Functor>
   void applyToChildren(Functor&& fn) const;
+  // TODO(victorr): Remove these
   template <typename Functor>
   void applyBottomUp(Functor&& fn);
   template <typename Functor>
