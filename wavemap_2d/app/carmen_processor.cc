@@ -4,7 +4,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "wavemap_2d/datastructure/cell.h"
+#include "wavemap_2d/datastructure/cell_types/scalar_occupancy_cell.h"
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
@@ -17,7 +17,7 @@ DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
 
 using namespace wavemap_2d;  // NOLINT
 int main(int argc, char** argv) {
-  using DataStructureType = DenseGrid<SaturatingCell<>>;
+  using DataStructureType = DenseGrid<SaturatingOccupancyCell>;
   using MeasurementModelType = BeamModel;
 
   google::InitGoogleLogging(argv[0]);

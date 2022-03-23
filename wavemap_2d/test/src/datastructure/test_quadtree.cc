@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/datastructure/cell.h"
+#include "wavemap_2d/datastructure/cell_types/scalar_occupancy_cell.h"
 #include "wavemap_2d/datastructure/quadtree/quadtree.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/test/fixture_base.h"
@@ -76,7 +76,8 @@ class QuadtreeTest : public FixtureBase {
   }
 };
 
-using CellTypes = ::testing::Types<UnboundedCell, SaturatingCell<>>;
+using CellTypes =
+    ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
 TYPED_TEST_SUITE(QuadtreeTest, CellTypes);
 
 TYPED_TEST(QuadtreeTest, Initialization) {

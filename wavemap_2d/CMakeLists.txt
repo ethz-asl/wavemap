@@ -59,7 +59,7 @@ target_link_libraries(offline_compression_evaluation ${PROJECT_NAME})
 if (CATKIN_ENABLE_TESTING)
   cs_add_library(testing_main test/gtest_main.cc)
 
-  catkin_add_gtest(test_cell_traits test/src/datastructure/test_cell_traits.cc)
+  catkin_add_gtest(test_cell_traits test/src/datastructure/test_cell_types.cc)
   target_include_directories(test_cell_traits PRIVATE test/include)
   target_link_libraries(test_cell_traits ${PROJECT_NAME} testing_main)
 

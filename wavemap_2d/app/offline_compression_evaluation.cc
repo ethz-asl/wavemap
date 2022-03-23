@@ -4,7 +4,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "wavemap_2d/datastructure/cell.h"
+#include "wavemap_2d/datastructure/cell_types/scalar_occupancy_cell.h"
 #include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
 #include "wavemap_2d/datastructure/quadtree/quadtree.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"
@@ -30,8 +30,8 @@ DEFINE_bool(
 
 using namespace wavemap_2d;  // NOLINT
 int main(int argc, char** argv) {
-  using DataStructureType = DenseGrid<SaturatingCell<>>;
-  using GTDataStructureType = DenseGrid<UnboundedCell>;
+  using DataStructureType = DenseGrid<SaturatingOccupancyCell>;
+  using GTDataStructureType = DenseGrid<UnboundedScalarCell>;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
   }
 
   // Evaluate compression in a quadtree
-  Quadtree<UnboundedCell> quadtree(estimated_map_resolution);
+  Quadtree<UnboundedOccupancyCell> quadtree(estimated_map_resolution);
   for (const Index& index :
        Grid(estimated_map->getMinIndex(), estimated_map->getMaxIndex())) {
     quadtree.setCellValue(index, estimated_map->getCellValue(index));
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
             << " KB.";
   for (auto& node :
        quadtree.getIterator<TraversalOrder::kDepthFirstPostorder>()) {
-    AverageAndPruneChildren<UnboundedCell::Specialized>(node);
+    AverageAndPruneChildren<UnboundedOccupancyCell::Specialized>(node);
   }
   LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
             << " KB.";

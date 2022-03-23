@@ -1,6 +1,7 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <wavemap_2d/datastructure/cell_types/scalar_occupancy_cell.h>
 #include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
 #include <wavemap_2d/datastructure/hashed_blocks/hashed_blocks.h>
 #include <wavemap_2d/datastructure/quadtree/quadtree.h>
@@ -18,16 +19,16 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // TODO(victorr): Move this to a factory class
   if (config_.data_structure_type == "quadtree") {
     ROS_INFO("Using quadtree datastructure");
-    occupancy_map_ =
-        std::make_shared<Quadtree<SaturatingCell<>>>(config_.map_resolution);
+    occupancy_map_ = std::make_shared<Quadtree<SaturatingOccupancyCell>>(
+        config_.map_resolution);
   } else if (config_.data_structure_type == "hashed_blocks") {
     ROS_INFO("Using hashed blocks datastructure");
-    occupancy_map_ = std::make_shared<HashedBlocks<SaturatingCell<>>>(
+    occupancy_map_ = std::make_shared<HashedBlocks<SaturatingOccupancyCell>>(
         config_.map_resolution);
   } else {
     ROS_INFO("Using dense grid datastructure");
-    occupancy_map_ =
-        std::make_shared<DenseGrid<SaturatingCell<>>>(config_.map_resolution);
+    occupancy_map_ = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
+        config_.map_resolution);
   }
   if (config_.measurement_model_type == "fixed_log_odds") {
     ROS_INFO("Using fixed log odds measurement model");
@@ -135,7 +136,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   // TODO(victorr): Make it possible to load maps without knowing the resolution
   //                on beforehand (e.g. through a static method)
   const FloatingPoint kGroundTruthMapResolution = 1e-2;
-  using GTDataStructureType = DenseGrid<UnboundedCell>;
+  using GTDataStructureType = DenseGrid<UnboundedScalarCell>;
   GTDataStructureType ground_truth_map(kGroundTruthMapResolution);
   if (!ground_truth_map.load(file_path, true)) {
     ROS_WARN("Could not load the ground truth map.");

@@ -11,7 +11,6 @@
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/Marker.h>
 #include <wavemap_2d/common.h>
-#include <wavemap_2d/datastructure/cell.h>
 #include <wavemap_2d/integrator/pointcloud_integrator.h>
 #include <wavemap_2d_msgs/FilePath.h>
 #include <wavemap_2d_msgs/MapEvaluationSummary.h>
