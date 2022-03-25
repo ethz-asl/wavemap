@@ -4,9 +4,9 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "wavemap_2d/datastructure/cell_types/scalar_occupancy_cell.h"
-#include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
-#include "wavemap_2d/datastructure/quadtree/quadtree.h"
+#include "wavemap_2d/datastructure/generic/quadtree/quadtree.h"
+#include "wavemap_2d/datastructure/volumetric/cell_types/occupancy_cell.h"
+#include "wavemap_2d/datastructure/volumetric/fixed_resolution/dense_grid.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_9_7.h"
 #include "wavemap_2d/transform/dense/naive_haar.h"

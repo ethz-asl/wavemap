@@ -26,6 +26,6 @@ class LiftedCDF53 : public DiscreteWaveletTransform<T> {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/transform/dense/lifted_cdf_5_3_inl.h"
+#include "wavemap_2d/transform/dense/impl/lifted_cdf_5_3_inl.h"
 
 #endif  // WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_5_3_H_

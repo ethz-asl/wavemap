@@ -3,8 +3,8 @@
 
 #include <deque>
 
-#include "wavemap_2d/datastructure/quadtree/node.h"
-#include "wavemap_2d/datastructure/quadtree/node_index.h"
+#include "wavemap_2d/datastructure/generic/quadtree/node.h"
+#include "wavemap_2d/indexing/quadtree_index.h"
 
 namespace wavemap_2d {
 enum class TraversalOrder {

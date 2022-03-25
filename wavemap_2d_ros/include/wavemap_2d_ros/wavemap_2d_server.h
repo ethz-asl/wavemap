@@ -94,7 +94,7 @@ class Wavemap2DServer {
   Config config_;
 
   std::shared_ptr<DataStructureBase> occupancy_map_;
-  std::shared_ptr<MeasurementModelBase> measurement_model_;
+  std::shared_ptr<MeasurementModel> measurement_model_;
   std::shared_ptr<PointcloudIntegrator> pointcloud_integrator_;
   TfTransformer transformer_;
 
@@ -138,6 +138,6 @@ class Wavemap2DServer {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d_ros/wavemap_2d_server_inl.h"
+#include "wavemap_2d_ros/impl/wavemap_2d_server_inl.h"
 
 #endif  // WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_

@@ -1,11 +1,8 @@
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
-#include "wavemap_2d/iterator/grid_iterator.h"
-#include "wavemap_2d/iterator/ray_iterator.h"
-
 namespace wavemap_2d {
 void PointcloudIntegrator::integratePointcloud(
-    const PosedPointcloud& pointcloud) {
+    const PosedPointcloud<>& pointcloud) {
   const Point origin = pointcloud.getOrigin();
   if (origin.hasNaN()) {
     LOG(WARNING) << "Ignoring request to integrate pointcloud whose origin "

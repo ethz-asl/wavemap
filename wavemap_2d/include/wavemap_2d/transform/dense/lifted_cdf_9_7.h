@@ -31,6 +31,6 @@ class LiftedCDF97 : public DiscreteWaveletTransform<T> {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/transform/dense/lifted_cdf_9_7_inl.h"
+#include "wavemap_2d/transform/dense/impl/lifted_cdf_9_7_inl.h"
 
 #endif  // WAVEMAP_2D_TRANSFORM_DENSE_LIFTED_CDF_9_7_H_
