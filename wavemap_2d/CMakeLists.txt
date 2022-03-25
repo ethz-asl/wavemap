@@ -136,8 +136,8 @@ if (ENABLE_BENCHMARKING)
   target_link_libraries(benchmark_measurement_integrator ${PROJECT_NAME}
                         benchmarking_main)
 
-  add_executable(benchmark_sparse_array benchmark/benchmark_sparse_array.cc)
-  target_link_libraries(benchmark_sparse_array ${PROJECT_NAME}
+  add_executable(benchmark_sparse_vector benchmark/benchmark_sparse_vector.cc)
+  target_link_libraries(benchmark_sparse_vector ${PROJECT_NAME}
                         benchmarking_main)
 endif ()
 
