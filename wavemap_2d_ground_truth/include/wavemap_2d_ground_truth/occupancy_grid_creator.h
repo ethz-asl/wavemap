@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <wavemap_2d/datastructure/volumetric/cell_types/scalar_cell.h>
-#include <wavemap_2d/datastructure/volumetric/fixed_resolution/dense_grid.h>
+#include <wavemap_2d/data_structure/volumetric/cell_types/scalar_cell.h>
+#include <wavemap_2d/data_structure/volumetric/dense_grid.h>
 #include <wavemap_2d/indexing/index.h>
 
 #include "wavemap_2d_ground_truth/common.h"

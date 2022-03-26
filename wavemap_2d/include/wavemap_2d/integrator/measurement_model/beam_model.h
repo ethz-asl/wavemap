@@ -23,7 +23,7 @@ class BeamModel : public MeasurementModel {
   Index getTopRightUpdateIndex() const override;
 
   FloatingPoint computeUpdateAt(const Index& index) const override;
-  void updateMap(DataStructureBase& map) const override;
+  void updateMap(VolumetricDataStructure& map) const override;
 
  protected:
   Point C_end_point_;

@@ -21,9 +21,6 @@ class PointcloudIterator {
   // NOTE: This iterator does not expose pointers to its values (only
   //       references) since pointers wouldn't play nice with Eigen
 
-  // TODO(victorr): Modify the linter to adhere to the new google style guide,
-  //                which recommends passing by non-const reference instead of
-  //                by pointer
   explicit PointcloudIterator(PointcloudType& pointcloud,
                               Eigen::Index index = std::ptrdiff_t(0))
       : pointcloud_(pointcloud), index_(index) {}

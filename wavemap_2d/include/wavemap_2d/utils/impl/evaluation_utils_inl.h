@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include "wavemap_2d/indexing/index_conversions.h"
+
 namespace wavemap_2d::utils {
 template <typename CellType, typename PredictedMap>
 MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,

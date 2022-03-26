@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/datastructure/volumetric/volumetric_datastructure.h"
+#include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/indexing/index.h"
 
 namespace wavemap_2d {
@@ -48,7 +48,7 @@ class MeasurementModel {
   virtual Index getTopRightUpdateIndex() const = 0;
 
   virtual FloatingPoint computeUpdateAt(const Index& index) const = 0;
-  virtual void updateMap(DataStructureBase& map) const = 0;
+  virtual void updateMap(VolumetricDataStructure& map) const = 0;
 
  protected:
   static constexpr bool kUseClearing = true;

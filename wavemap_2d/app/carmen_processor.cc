@@ -4,8 +4,8 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "wavemap_2d/datastructure/volumetric/cell_types/occupancy_cell.h"
-#include "wavemap_2d/datastructure/volumetric/fixed_resolution/dense_grid.h"
+#include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
+#include "wavemap_2d/data_structure/volumetric/dense_grid.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",

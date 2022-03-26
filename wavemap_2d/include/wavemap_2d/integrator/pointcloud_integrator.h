@@ -5,8 +5,8 @@
 #include <utility>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/datastructure/generic/pointcloud.h"
-#include "wavemap_2d/datastructure/volumetric/volumetric_datastructure.h"
+#include "wavemap_2d/data_structure/generic/pointcloud.h"
+#include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/integrator/measurement_model/beam_model.h"
 #include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
 
@@ -14,7 +14,7 @@ namespace wavemap_2d {
 class PointcloudIntegrator {
  public:
   PointcloudIntegrator() = delete;
-  explicit PointcloudIntegrator(DataStructureBase::Ptr occupancy_map,
+  explicit PointcloudIntegrator(VolumetricDataStructure::Ptr occupancy_map,
                                 MeasurementModel::Ptr measurement_model)
       : occupancy_map_(CHECK_NOTNULL(occupancy_map)),
         measurement_model_(CHECK_NOTNULL(measurement_model)) {}
@@ -22,7 +22,7 @@ class PointcloudIntegrator {
   void integratePointcloud(const PosedPointcloud<>& pointcloud);
 
  protected:
-  DataStructureBase::Ptr occupancy_map_;
+  VolumetricDataStructure::Ptr occupancy_map_;
   MeasurementModel::Ptr measurement_model_;
 };
 }  // namespace wavemap_2d

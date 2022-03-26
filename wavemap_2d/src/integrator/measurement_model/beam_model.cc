@@ -1,5 +1,7 @@
 #include "wavemap_2d/integrator/measurement_model/beam_model.h"
 
+#include "wavemap_2d/indexing/index_conversions.h"
+
 namespace wavemap_2d {
 Index BeamModel::getBottomLeftUpdateIndex() const {
   const Point bottom_left_point = W_start_point_.cwiseMin(
@@ -43,7 +45,7 @@ FloatingPoint BeamModel::computeUpdateAt(const Index& index) const {
   return 0.f;
 }
 
-void BeamModel::updateMap(DataStructureBase& map) const {
+void BeamModel::updateMap(VolumetricDataStructure& map) const {
   if (!kUseClearing && exceedsMaxRange()) {
     return;
   }

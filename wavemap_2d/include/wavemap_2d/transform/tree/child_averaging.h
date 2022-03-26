@@ -1,7 +1,7 @@
 #ifndef WAVEMAP_2D_TRANSFORM_TREE_CHILD_AVERAGING_H_
 #define WAVEMAP_2D_TRANSFORM_TREE_CHILD_AVERAGING_H_
 
-#include "wavemap_2d/datastructure/generic/quadtree/node.h"
+#include "wavemap_2d/data_structure/generic/quadtree/node.h"
 
 namespace wavemap_2d {
 template <typename NodeDataType>

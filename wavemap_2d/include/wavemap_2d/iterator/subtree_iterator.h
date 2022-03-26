@@ -3,7 +3,7 @@
 
 #include <deque>
 
-#include "wavemap_2d/datastructure/generic/quadtree/node.h"
+#include "wavemap_2d/data_structure/generic/quadtree/node.h"
 #include "wavemap_2d/indexing/quadtree_index.h"
 
 namespace wavemap_2d {

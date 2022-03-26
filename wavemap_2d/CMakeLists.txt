@@ -40,10 +40,11 @@ endif ()
 # Libraries
 cs_add_library(
   ${PROJECT_NAME}
+  src/data_structure/volumetric_data_structure.cc
+  src/indexing/quadtree_index.cc
   src/integrator/pointcloud_integrator.cc
   src/integrator/measurement_model/beam_model.cc
   src/integrator/measurement_model/fixed_logodds_model.cc
-  src/datastructure/volumetric_datastructure.cc
   src/utils/eigen_format.cc
   src/utils/evaluation_utils.cc)
 
@@ -61,36 +62,51 @@ if (CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(
     test_cell_traits
-    test/src/datastructure/volumetric/cell_types/test_cell_types.cc)
+    test/src/data_structure/volumetric/cell_types/test_cell_types.cc)
   target_include_directories(test_cell_traits PRIVATE test/include)
   target_link_libraries(test_cell_traits ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(
-    test_dense_grid
-    test/src/datastructure/volumetric/fixed_resolution/test_dense_grid.cc)
+  catkin_add_gtest(test_dense_grid
+                   test/src/data_structure/volumetric/test_dense_grid.cc)
   target_include_directories(test_dense_grid PRIVATE test/include)
   target_link_libraries(test_dense_grid ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(
-    test_hashed_blocks
-    test/src/datastructure/volumetric/fixed_resolution/test_hashed_blocks.cc)
+  catkin_add_gtest(test_hashed_blocks
+                   test/src/data_structure/volumetric/test_hashed_blocks.cc)
   target_include_directories(test_hashed_blocks PRIVATE test/include)
   target_link_libraries(test_hashed_blocks ${PROJECT_NAME} testing_main)
 
+  catkin_add_gtest(
+    test_volumetric_data_structure
+    test/src/data_structure/volumetric/test_volumetric_data_structure.cc)
+  target_include_directories(test_volumetric_data_structure
+                             PRIVATE test/include)
+  target_link_libraries(test_volumetric_data_structure ${PROJECT_NAME}
+                        testing_main)
+
   catkin_add_gtest(test_pointcloud
-                   test/src/datastructure/generic/test_pointcloud.cc)
+                   test/src/data_structure/generic/test_pointcloud.cc)
   target_include_directories(test_pointcloud PRIVATE test/include)
   target_link_libraries(test_pointcloud ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_quadtree
-                   test/src/datastructure/generic/test_quadtree.cc)
+                   test/src/data_structure/generic/test_quadtree.cc)
   target_include_directories(test_quadtree PRIVATE test/include)
   target_link_libraries(test_quadtree ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_sparse_vector
-                   test/src/datastructure/generic/test_sparse_vector.cc)
+                   test/src/data_structure/generic/test_sparse_vector.cc)
   target_include_directories(test_sparse_vector PRIVATE test/include)
   target_link_libraries(test_sparse_vector ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_index_conversions
+                   test/src/indexing/test_index_conversions.cc)
+  target_include_directories(test_index_conversions PRIVATE test/include)
+  target_link_libraries(test_index_conversions ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_quadtree_index test/src/indexing/test_quadtree_index.cc)
+  target_include_directories(test_quadtree_index PRIVATE test/include)
+  target_link_libraries(test_quadtree_index ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_grid_iterator test/src/iterator/test_grid_iterator.cc)
   target_include_directories(test_grid_iterator PRIVATE test/include)

@@ -1,5 +1,7 @@
 #include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
 
+#include "wavemap_2d/indexing/index_conversions.h"
+
 namespace wavemap_2d {
 Index FixedLogOddsModel::getBottomLeftUpdateIndex() const {
   const Point bottom_left_point = W_start_point_.cwiseMin(W_end_point_);
@@ -11,7 +13,7 @@ Index FixedLogOddsModel::getTopRightUpdateIndex() const {
   return computeCeilIndexForPoint(top_right_point, resolution_inv_);
 }
 
-void FixedLogOddsModel::updateMap(DataStructureBase& map) const {
+void FixedLogOddsModel::updateMap(VolumetricDataStructure& map) const {
   if (!kUseClearing && exceedsMaxRange()) {
     return;
   }

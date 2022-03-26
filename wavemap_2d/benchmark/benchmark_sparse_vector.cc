@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/datastructure/generic/sparse_vector.h"
+#include "wavemap_2d/data_structure/generic/sparse_vector.h"
 #include "wavemap_2d/utils/random_number_generator.h"
 
 namespace wavemap_2d {

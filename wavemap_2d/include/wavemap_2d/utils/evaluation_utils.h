@@ -4,8 +4,8 @@
 #include <string>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/datastructure/volumetric/cell_types/occupancy_state.h"
-#include "wavemap_2d/datastructure/volumetric/fixed_resolution/dense_grid.h"
+#include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_state.h"
+#include "wavemap_2d/data_structure/volumetric/dense_grid.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 

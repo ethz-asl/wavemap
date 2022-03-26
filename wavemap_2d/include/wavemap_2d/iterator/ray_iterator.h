@@ -3,6 +3,7 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/indexing/index.h"
+#include "wavemap_2d/indexing/index_conversions.h"
 
 namespace wavemap_2d {
 // NOTE: The ray casting code in this class is largely based on voxblox's

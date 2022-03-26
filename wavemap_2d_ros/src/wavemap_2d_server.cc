@@ -1,10 +1,10 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <wavemap_2d/datastructure/generic/quadtree/quadtree.h>
-#include <wavemap_2d/datastructure/volumetric/cell_types/occupancy_cell.h>
-#include <wavemap_2d/datastructure/volumetric/fixed_resolution/dense_grid.h>
-#include <wavemap_2d/datastructure/volumetric/fixed_resolution/hashed_blocks.h>
+#include <wavemap_2d/data_structure/generic/quadtree/quadtree.h>
+#include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap_2d/data_structure/volumetric/dense_grid.h>
+#include <wavemap_2d/data_structure/volumetric/hashed_blocks.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
