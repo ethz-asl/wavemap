@@ -56,8 +56,10 @@ TYPED_TEST(QuadtreeTest, Resizing) {
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), 0u);
 
-  const std::vector<Index> random_indices = TestFixture::getRandomIndexVector(
-      map.getMinPossibleIndex(), map.getMaxPossibleIndex());
+  const Index kMinIndex{-2e3, -1e3};
+  const Index kMaxIndex{1e3, 2e3};
+  const std::vector<Index> random_indices =
+      TestFixture::getRandomIndexVector(kMinIndex, kMaxIndex);
 
   const Index& first_random_index = random_indices[0];
   map.addToCellValue(first_random_index, 0.f);

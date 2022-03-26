@@ -15,6 +15,9 @@
 #include "wavemap_2d/iterator/subtree_iterator.h"
 
 namespace wavemap_2d {
+// TODO(victorr): Make this data structure generic (no longer inherit from
+//                VolumetricDataStructure) and move the VolumetricDataStructure
+//                specific methods to a volumetric/ScalarQuadtree class
 template <typename CellT>
 class Quadtree : public VolumetricDataStructure {
  public:
