@@ -329,6 +329,11 @@ jobs:
           cache-group: noetic-gcc-debug
           cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
+      - name: Install lcov for coverage report generation
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends lcov
+
       - name: Switch catkin workspace to debug mode
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
@@ -343,10 +348,44 @@ jobs:
           source /opt/ros/noetic/setup.bash
           catkin build --no-status --force-color $(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)')
 
-      - name: Build unit tests and analyze coverage (in debug mode)
+      - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --cmake-args -DENABLE_COVERAGE_TESTING=ON --catkin-make-args wavemap_2d_coverage_report
+        run: catkin build wavemap_2d --no-status --force-color --no-deps --verbose --cmake-args -DENABLE_COVERAGE_TESTING=ON --catkin-make-args tests
+
+      - name: Set coverage counters to zero and create report base
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        shell: bash
+        run: |
+          lcov --zerocounters --directory .
+          lcov --capture --initial --directory . --output-file wavemap_2d_coverage_base.info
+
+      - name: Run all tests while measuring coverage
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        shell: bash
+        run: |
+          all_tests_passed=1
+          for f in ../../devel/lib/wavemap_2d/test_*
+          do
+            $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed! Note that the code is currently compiled"\
+                 "in Debug mode, so some additional errors may be caught compared"\
+                 "to previous test runs in Release mode (e.g. failing DCHECKs)."
+            exit 1
+          fi
+
+      - name: Create the coverage report
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        shell: bash
+        run: |
+          lcov --capture --directory . --output-file wavemap_2d_coverage_unit_tests.info
+          lcov --add-tracefile wavemap_2d_coverage_base.info --add-tracefile wavemap_2d_coverage_unit_tests.info --output-file wavemap_2d_coverage_total.info
+          lcov --extract wavemap_2d_coverage_total.info '*/wavemap_2d/wavemap_2d*' --output-file wavemap_2d_coverage_filtered_intermediate.info
+          lcov --remove wavemap_2d_coverage_filtered_intermediate.info '*/wavemap_2d/test/*' '*/wavemap_2d/app/*' '*/wavemap_2d/benchmark/*' --output-file wavemap_2d_coverage.info
+          rm wavemap_2d_coverage_base.info wavemap_2d_coverage_unit_tests.info wavemap_2d_coverage_total.info wavemap_2d_coverage_filtered_intermediate.info
+          lcov --list wavemap_2d_coverage.info  # Include report in logs for debugging
 
       - name: Upload coverage stats to Codecov
         uses: codecov/codecov-action@v2
