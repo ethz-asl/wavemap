@@ -13,10 +13,6 @@ TEST_F(NaiveHaarTest, KnownPatterns) {
     const auto rows = static_cast<Eigen::Index>(std::exp2(size_idx));
     const auto cols = static_cast<Eigen::Index>(std::exp2(size_idx));
     for (int pass_idx = 1; pass_idx <= size_idx; ++pass_idx) {
-      DLOG(INFO) << "Evaluating pass " << pass_idx << " / " << size_idx
-                 << " for matrix of size [" << rows << ", " << cols << "]"
-                 << std::endl;
-
       // Constant matrices
       for (FloatingPoint constant_value : {0.f, 1.f}) {
         // Setup the matrix

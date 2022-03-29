@@ -97,12 +97,14 @@ TEST_F(QuadtreeIndexTest, ChildParentIndexing) {
   // Test round trips between children and parents
   const NodeIndex root_index{.depth = 0, .position = {0, 0}};
   for (const NodeIndex& node_index : random_indices) {
-    const NodeIndex top_parent_index = node_index.computeParentIndex(0);
-    EXPECT_EQ(top_parent_index, root_index)
-        << "The index of the highest parent of node " << node_index.toString()
-        << " is " << top_parent_index.toString()
-        << " while it should equal the root node index "
-        << root_index.toString() << ".";
+    if (node_index.depth != 0) {
+      const NodeIndex top_parent_index = node_index.computeParentIndex(0);
+      EXPECT_EQ(top_parent_index, root_index)
+          << "The index of the highest parent of node " << node_index.toString()
+          << " is " << top_parent_index.toString()
+          << " while it should equal the root node index "
+          << root_index.toString() << ".";
+    }
     for (NodeRelativeChildIndex relative_child_idx = 0;
          relative_child_idx < NodeIndex::kNumChildren; ++relative_child_idx) {
       const NodeIndex child_index =

@@ -18,7 +18,7 @@ inline NodeIndex NodeIndex::computeParentIndex() const {
 
 inline NodeIndex NodeIndex::computeParentIndex(
     NodeIndexElement parent_depth) const {
-  DCHECK_GT(parent_depth, 0);
+  DCHECK_GE(parent_depth, 0);
   DCHECK_LT(parent_depth, depth);
   const NodeIndexElement depth_difference = depth - parent_depth;
 
