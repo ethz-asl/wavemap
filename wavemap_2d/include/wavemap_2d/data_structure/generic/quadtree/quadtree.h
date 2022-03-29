@@ -15,71 +15,18 @@
 #include "wavemap_2d/iterator/subtree_iterator.h"
 
 namespace wavemap_2d {
-// TODO(victorr): Make this data structure generic (no longer inherit from
-//                VolumetricDataStructure) and move the VolumetricDataStructure
-//                specific methods to a volumetric/ScalarQuadtree class
-template <typename CellT>
-class Quadtree : public VolumetricDataStructure {
+template <typename NodeDataType>
+class Quadtree {
  public:
-  using CellType = CellT;
-  using NodeType = Node<typename CellT::Specialized>;
+  using NodeType = Node<NodeDataType>;
 
-  explicit Quadtree(FloatingPoint resolution)
-      : VolumetricDataStructure(resolution),
-        max_depth_(14),
-        root_node_width_(std::exp2(max_depth_) * resolution),
-        root_node_offset_(Index::Constant(std::exp2(max_depth_ - 1))) {}
-  ~Quadtree() override = default;
+  Quadtree() = default;
+  ~Quadtree() = default;
 
-  bool empty() const override { return root_node_.empty(); }
-  size_t size() const override;
-  void clear() override { root_node_.deleteChildrenArray(); }
+  bool empty() const { return root_node_.empty(); }
+  size_t size() const;
+  void clear() { root_node_.deleteChildrenArray(); }
   void prune();
-
-  Index getMinPossibleIndex() const;
-  Index getMaxPossibleIndex() const;
-  Index getMinIndex() const override;
-  Index getMaxIndex() const override;
-  NodeIndexElement getMaxDepth() const { return max_depth_; }
-
-  bool hasCell(const Index& index) const override;
-  FloatingPoint getCellValue(const Index& index) const override;
-  void setCellValue(const Index& index, FloatingPoint new_value) override;
-  void addToCellValue(const Index& index, FloatingPoint update) override;
-
-  template <TraversalOrder traversal_order>
-  auto getIterator() {
-    return Subtree<NodeType, traversal_order>(&root_node_);
-  }
-  template <TraversalOrder traversal_order>
-  auto getIterator() const {
-    return Subtree<const NodeType, traversal_order>(&root_node_);
-  }
-
-  size_t getMemoryUsage() const override;
-
-  cv::Mat getImage(bool use_color) const override;
-  bool save(const std::string& file_path_prefix,
-            bool use_floating_precision) const override;
-  bool load(const std::string& file_path_prefix,
-            bool used_floating_precision) override;
-
-  NodeIndex indexToNodeIndex(const Index& index) const {
-    return computeNodeIndexFromIndexAndDepth(index + root_node_offset_,
-                                             max_depth_, max_depth_);
-  }
-  Index nodeIndexToIndex(const NodeIndex& node_index) const {
-    return computeIndexFromNodeIndex(node_index, max_depth_) -
-           root_node_offset_;
-  }
-
- protected:
-  using CellDataSpecialized = typename CellT::Specialized;
-
-  NodeIndexElement max_depth_;
-  FloatingPoint root_node_width_;
-  Index root_node_offset_;
-  NodeType root_node_;
 
   bool hasNode(const NodeIndex& index) { return getNode(index); }
   void allocateNode(const NodeIndex& index) {
@@ -90,8 +37,22 @@ class Quadtree : public VolumetricDataStructure {
   NodeType* getNode(const NodeIndex& index, bool auto_allocate = false);
   const NodeType* getNode(const NodeIndex& index) const;
 
-  FloatingPoint computeNodeWidthAtDepth(NodeIndexElement depth);
-  Vector computeNodeHalvedDiagonalAtDepth(NodeIndexElement depth);
+  NodeType& getRootNode() { return root_node_; }
+  const NodeType& getRootNode() const { return root_node_; }
+
+  template <TraversalOrder traversal_order>
+  auto getIterator() {
+    return Subtree<NodeType, traversal_order>(&root_node_);
+  }
+  template <TraversalOrder traversal_order>
+  auto getIterator() const {
+    return Subtree<const NodeType, traversal_order>(&root_node_);
+  }
+
+  size_t getMemoryUsage() const;
+
+ protected:
+  NodeType root_node_;
 };
 }  // namespace wavemap_2d
 

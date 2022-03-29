@@ -4,9 +4,9 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "wavemap_2d/data_structure/generic/quadtree/quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
+#include "wavemap_2d/data_structure/volumetric/scalar_quadtree.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_9_7.h"
 #include "wavemap_2d/transform/dense/naive_haar.h"
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
   }
 
   // Evaluate compression in a quadtree
-  Quadtree<UnboundedOccupancyCell> quadtree(estimated_map_resolution);
+  ScalarQuadtree<UnboundedOccupancyCell> quadtree(estimated_map_resolution);
   for (const Index& index :
        Grid(estimated_map->getMinIndex(), estimated_map->getMaxIndex())) {
     quadtree.setCellValue(index, estimated_map->getCellValue(index));

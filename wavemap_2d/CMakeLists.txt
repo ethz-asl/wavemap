@@ -89,10 +89,10 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_pointcloud PRIVATE test/include)
   target_link_libraries(test_pointcloud ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_quadtree
-                   test/src/data_structure/generic/test_quadtree.cc)
-  target_include_directories(test_quadtree PRIVATE test/include)
-  target_link_libraries(test_quadtree ${PROJECT_NAME} testing_main)
+  catkin_add_gtest(test_scalar_quadtree
+                   test/src/data_structure/volumetric/test_scalar_quadtree.cc)
+  target_include_directories(test_scalar_quadtree PRIVATE test/include)
+  target_link_libraries(test_scalar_quadtree ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_sparse_vector
                    test/src/data_structure/generic/test_sparse_vector.cc)

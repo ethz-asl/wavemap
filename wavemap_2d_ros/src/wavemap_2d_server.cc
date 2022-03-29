@@ -1,10 +1,10 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <wavemap_2d/data_structure/generic/quadtree/quadtree.h>
 #include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_2d/data_structure/volumetric/dense_grid.h>
 #include <wavemap_2d/data_structure/volumetric/hashed_blocks.h>
+#include <wavemap_2d/data_structure/volumetric/scalar_quadtree.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
@@ -19,7 +19,7 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // TODO(victorr): Move this to a factory class
   if (config_.data_structure_type == "quadtree") {
     ROS_INFO("Using quadtree datastructure");
-    occupancy_map_ = std::make_shared<Quadtree<SaturatingOccupancyCell>>(
+    occupancy_map_ = std::make_shared<ScalarQuadtree<SaturatingOccupancyCell>>(
         config_.map_resolution);
   } else if (config_.data_structure_type == "hashed_blocks") {
     ROS_INFO("Using hashed blocks datastructure");

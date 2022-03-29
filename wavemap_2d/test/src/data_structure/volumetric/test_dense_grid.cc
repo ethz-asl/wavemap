@@ -63,8 +63,8 @@ using CellTypes =
     ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
 TYPED_TEST_SUITE(DenseGridTest, CellTypes);
 
-// NOTE: Insertion tests are performed as part of the more general volumetric
-//       data structure test suite.
+// NOTE: Insertion tests are performed as part of the test suite for the
+//       VolumetricDataStructure interface.
 
 TYPED_TEST(DenseGridTest, Initialization) {
   const FloatingPoint random_resolution = TestFixture::getRandomResolution();
