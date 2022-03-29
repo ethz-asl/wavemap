@@ -32,6 +32,11 @@ using CellTypes =
     ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
 TYPED_TEST_SUITE(QuadtreeTest, CellTypes);
 
+// NOTE: Insertion tests are performed as part of the more general volumetric
+//       data structure test suite.
+// TODO(victorr): Test whether out of bounds accesses/insertions are handled
+//                correctly (e.g. throw error or do nothing and print error).
+
 TYPED_TEST(QuadtreeTest, Initialization) {
   const FloatingPoint random_resolution = TestFixture::getRandomResolution();
   Quadtree<TypeParam> map(random_resolution);
@@ -96,30 +101,6 @@ TYPED_TEST(QuadtreeTest, Resizing) {
   map.clear();
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);
-}
-
-TYPED_TEST(QuadtreeTest, Insertion) {
-  // TODO(victorr): Test whether out of bounds accesses/insertions are handled
-  //                correctly (e.g. throw error or do nothing and print error).
-  constexpr int kNumRepetitions = 10;
-  for (int i = 0; i < kNumRepetitions; ++i) {
-    Quadtree<TypeParam> map(TestFixture::getRandomResolution());
-    const std::vector<Index> random_indices = TestFixture::getRandomIndexVector(
-        map.getMinPossibleIndex(), map.getMaxPossibleIndex());
-    for (const Index& random_index : random_indices) {
-      FloatingPoint expected_value = 0.f;
-      map.setCellValue(random_index, 0.f);
-      for (const FloatingPoint random_update :
-           TestFixture::getRandomUpdateVector()) {
-        map.addToCellValue(random_index, random_update);
-        expected_value = std::max(
-            TypeParam::kLowerBound,
-            std::min(expected_value + random_update, TypeParam::kUpperBound));
-      }
-      EXPECT_NEAR(map.getCellValue(random_index), expected_value,
-                  expected_value * 1e-6);
-    }
-  }
 }
 
 TYPED_TEST(QuadtreeTest, Pruning) {
