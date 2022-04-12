@@ -11,12 +11,12 @@ namespace wavemap_2d {
 template <typename NodeDataType>
 class Node {
  public:
-  Node() : data_(0) {}
+  Node() : data_{} {}
   explicit Node(NodeDataType data) : data_(data) {}
   ~Node() = default;
 
   bool empty() const {
-    return (data_ == static_cast<NodeDataType>(0)) && !hasAtLeastOneChild();
+    return data_ == NodeDataType{} && !hasAtLeastOneChild();
   }
 
   NodeDataType& data() { return data_; }

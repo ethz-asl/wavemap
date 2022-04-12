@@ -25,6 +25,7 @@ class ScalarQuadtree : public VolumetricDataStructure {
   size_t size() const override { return quadtree_.size(); }
   void clear() override { return quadtree_.clear(); }
   void prune() { return quadtree_.prune(); }
+  void averageAndPrune();
 
   Index getMinPossibleIndex() const;
   Index getMaxPossibleIndex() const;

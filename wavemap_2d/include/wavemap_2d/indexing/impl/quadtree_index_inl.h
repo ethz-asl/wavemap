@@ -54,6 +54,7 @@ inline NodeIndex NodeIndex::computeChildIndex(
   child_index.depth += 1;
 
   // Add offset to current child
+  // TODO(victorr): Remove usage of bittset and use "& (1 << idx)" instead
   std::bitset<kMapDimension> child_bitset(relative_child_index);
   for (int i = 0; i < kMapDimension; ++i) {
     child_index.position[i] += child_bitset[i];
@@ -73,6 +74,7 @@ inline std::vector<NodeIndex> NodeIndex::computeChildIndices() const {
 
 inline NodeRelativeChildIndex NodeIndex::computeRelativeChildIndex() const {
   NodeRelativeChildIndex child_index = 0;
+  // TODO(victorr): Remove usage of bittset and use "& (1 << idx)" instead
   std::bitset<kMapDimension> child_bitset;
   for (int i = 0; i < kMapDimension; ++i) {
     child_bitset.set(i, position[i] & 0b1);

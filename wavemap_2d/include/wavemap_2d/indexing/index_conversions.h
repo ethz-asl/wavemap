@@ -35,6 +35,7 @@ inline NodeIndex computeNodeIndexFromCenter(const Point& center,
                                             NodeIndexElement depth) {
   const FloatingPoint width =
       root_node_width / std::exp2f(static_cast<FloatingPoint>(depth));
+  // TODO(victorr): This offset is data structure specific (move it to the ds)
   const Vector root_node_halved_diagonal =
       root_node_width * Vector::Constant(0.5f);
   Index position_index = computeNearestIndexForScaledPoint(
@@ -47,6 +48,7 @@ inline Point computeNodeCenterFromNodeIndex(const NodeIndex& node_index,
                                             NodeIndexElement depth) {
   const FloatingPoint width =
       root_node_width / std::exp2f(static_cast<FloatingPoint>(depth));
+  // TODO(victorr): This offset is data structure specific (move it to the ds)
   const Vector root_node_halved_diagonal =
       root_node_width * Vector::Constant(0.5f);
   return node_index.position.cast<FloatingPoint>() * width -

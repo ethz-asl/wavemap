@@ -6,7 +6,17 @@
 #include <string>
 #include <utility>
 
+#include "wavemap_2d/transform/tree/child_averaging.h"
+
 namespace wavemap_2d {
+template <typename CellT>
+void ScalarQuadtree<CellT>::averageAndPrune() {
+  for (auto& node :
+       quadtree_.template getIterator<TraversalOrder::kDepthFirstPostorder>()) {
+    AverageAndPruneChildren<UnboundedOccupancyCell::Specialized>(node);
+  }
+}
+
 template <typename CellT>
 Index ScalarQuadtree<CellT>::getMinPossibleIndex() const {
   return nodeIndexToIndex(NodeIndex{max_depth_, Index::Constant(0)});
