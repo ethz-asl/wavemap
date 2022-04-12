@@ -32,8 +32,10 @@ class MeasurementModel {
     measured_distance_ = (W_end_point_ - W_start_point_).norm();
     updateCachedVariablesDerived();
   }
-
+  const Point& getStartPoint() { return W_start_point_; }
+  const Point& getEndPoint() { return W_end_point_; }
   FloatingPoint getLength() const { return measured_distance_; }
+
   bool exceedsMaxRange() const { return kRangeMax < measured_distance_; }
   Point getEndPointOrMaxRange() const {
     if (kRangeMax < measured_distance_) {

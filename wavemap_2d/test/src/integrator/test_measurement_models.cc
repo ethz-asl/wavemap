@@ -48,10 +48,12 @@ TEST_F(MeasurementModelTest, BeamModel) {
       const FloatingPoint distance = C_cell_center.norm();
       const FloatingPoint dot_prod_normalized =
           C_cell_center.dot(C_end_point_normalized) / distance;
-      const FloatingPoint angle = std::acos(dot_prod_normalized);
+      const FloatingPoint angle =
+          std::acos(std::clamp(dot_prod_normalized, 0.f, 1.f));
 
-      const bool within_range =
-          distance <= measured_distance + BeamModel::kRangeDeltaThresh;
+      const FloatingPoint non_zero_range =
+          measured_distance + BeamModel::kRangeDeltaThresh;
+      const bool within_range = distance <= non_zero_range;
       const bool within_angle = angle <= BeamModel::kAngleThresh;
       if (within_range && within_angle) {
         if (distance < measured_distance) {
@@ -67,9 +69,14 @@ TEST_F(MeasurementModelTest, BeamModel) {
         EXPECT_FLOAT_EQ(update, 0.f)
             << "Encountered non-zero update for cell that is not within the "
                "beam's "
-            << (!within_range ? "range" : "")
+            << (!within_range ? "range (" + std::to_string(distance) + " !<= " +
+                                    std::to_string(non_zero_range) + ") "
+                              : "")
             << (!within_range && !within_angle ? " and " : "")
-            << (!within_angle ? "angle" : "");
+            << (!within_angle
+                    ? "angle (" + std::to_string(angle) + " !<= " +
+                          std::to_string(BeamModel::kAngleThresh) + ") "
+                    : "");
       }
     }
   }
