@@ -25,7 +25,8 @@ bool Node<NodeDataType>::hasChild(NodeRelativeChildIndex child_index) const {
 template <typename NodeDataType>
 bool Node<NodeDataType>::hasAtLeastOneChild() const {
   if (hasChildrenArray()) {
-    for (int child_idx = 0; child_idx < NodeIndex::kNumChildren; ++child_idx) {
+    for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
+         ++child_idx) {
       if (hasChild(child_idx)) {
         return true;
       }

@@ -78,8 +78,8 @@ class Subtree {
       if (parent_ptr->hasChildrenArray()) {
         switch (traversal_order) {
           case TraversalOrder::kDepthFirstPreorder:
-            for (int child_idx = NodeIndex::kNumChildren - 1; 0 <= child_idx;
-                 --child_idx) {
+            for (int child_idx = QuadtreeIndex::kNumChildren - 1;
+                 0 <= child_idx; --child_idx) {
               NodeType* child_ptr = parent_ptr->getChild(child_idx);
               if (child_ptr) {
                 upcoming_nodes_.template emplace_front(child_ptr);
@@ -87,7 +87,7 @@ class Subtree {
             }
             break;
           case TraversalOrder::kBreadthFirst:
-            for (int child_idx = 0; child_idx < NodeIndex::kNumChildren;
+            for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
                  ++child_idx) {
               NodeType* child_ptr = parent_ptr->getChild(child_idx);
               if (child_ptr) {
@@ -143,7 +143,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
       // Otherwise enqueue the next node and its
       NodeAndState& node_and_state = upcoming_nodes_.front();
       for (++node_and_state.last_expanded_child_idx;
-           node_and_state.last_expanded_child_idx < NodeIndex::kNumChildren;
+           node_and_state.last_expanded_child_idx < QuadtreeIndex::kNumChildren;
            ++node_and_state.last_expanded_child_idx) {
         NodeType* child_ptr = node_and_state.node_ptr->getChild(
             node_and_state.last_expanded_child_idx);
@@ -184,7 +184,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
         // If the node has descendants, recursively enqueue all of its
         // descendants that have the lowest index on their respective level
         for (NodeRelativeChildIndex child_idx = 0;
-             child_idx < NodeIndex::kNumChildren; ++child_idx) {
+             child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
           NodeType* child_ptr = parent_ptr->getChild(child_idx);
           if (child_ptr) {
             upcoming_nodes_.template emplace_front(
@@ -196,7 +196,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
       } else {
         // Otherwise, only enqueue the node itself
         upcoming_nodes_.template emplace_front(
-            NodeAndState{parent_ptr, NodeIndex::kNumChildren});
+            NodeAndState{parent_ptr, QuadtreeIndex::kNumChildren});
       }
     }
   };

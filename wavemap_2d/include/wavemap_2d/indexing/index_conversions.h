@@ -30,9 +30,9 @@ inline Point computeCenterFromIndex(const Index& index,
   return index.cast<FloatingPoint>() * resolution;
 }
 
-inline NodeIndex computeNodeIndexFromCenter(const Point& center,
-                                            FloatingPoint root_node_width,
-                                            NodeIndexElement depth) {
+inline QuadtreeIndex computeNodeIndexFromCenter(const Point& center,
+                                                FloatingPoint root_node_width,
+                                                NodeIndexElement depth) {
   const FloatingPoint width =
       root_node_width / std::exp2f(static_cast<FloatingPoint>(depth));
   // TODO(victorr): This offset is data structure specific (move it to the ds)
@@ -43,7 +43,7 @@ inline NodeIndex computeNodeIndexFromCenter(const Point& center,
   return {.depth = depth, .position = position_index};
 }
 
-inline Point computeNodeCenterFromNodeIndex(const NodeIndex& node_index,
+inline Point computeNodeCenterFromNodeIndex(const QuadtreeIndex& node_index,
                                             FloatingPoint root_node_width,
                                             NodeIndexElement depth) {
   const FloatingPoint width =
@@ -56,17 +56,16 @@ inline Point computeNodeCenterFromNodeIndex(const NodeIndex& node_index,
 }
 
 // TODO(victorr): Consider parameterizing nodes on height ipv depth
-inline NodeIndex computeNodeIndexFromIndexAndDepth(const Index& index,
-                                                   NodeIndexElement depth,
-                                                   NodeIndexElement max_depth) {
+inline QuadtreeIndex computeNodeIndexFromIndexAndDepth(
+    const Index& index, NodeIndexElement depth, NodeIndexElement max_depth) {
   const NodeIndexElement node_height = max_depth - depth;
-  NodeIndex node_index{.depth = depth, .position = index};
+  QuadtreeIndex node_index{.depth = depth, .position = index};
   node_index.position.x() >>= node_height;
   node_index.position.y() >>= node_height;
   return node_index;
 }
 
-inline Index computeIndexFromNodeIndex(const NodeIndex& node_index,
+inline Index computeIndexFromNodeIndex(const QuadtreeIndex& node_index,
                                        NodeIndexElement max_depth) {
   const NodeIndexElement node_height = max_depth - node_index.depth;
   Index index = node_index.position * (1 << node_height);

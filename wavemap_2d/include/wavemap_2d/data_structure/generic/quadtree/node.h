@@ -39,7 +39,7 @@ class Node {
 
  protected:
   using ChildrenArray =
-      std::array<std::unique_ptr<Node>, NodeIndex::kNumChildren>;
+      std::array<std::unique_ptr<Node>, QuadtreeIndex::kNumChildren>;
 
   NodeDataType data_;
   std::unique_ptr<ChildrenArray> children_;

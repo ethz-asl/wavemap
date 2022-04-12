@@ -5,10 +5,10 @@
 #include <vector>
 
 namespace wavemap_2d {
-inline NodeIndex NodeIndex::computeParentIndex() const {
+inline QuadtreeIndex QuadtreeIndex::computeParentIndex() const {
   DCHECK_GT(depth, 0);
 
-  NodeIndex parent_index = *this;
+  QuadtreeIndex parent_index = *this;
   parent_index.position.x() >>= 1;
   parent_index.position.y() >>= 1;
   parent_index.depth = depth - 1;
@@ -16,13 +16,13 @@ inline NodeIndex NodeIndex::computeParentIndex() const {
   return parent_index;
 }
 
-inline NodeIndex NodeIndex::computeParentIndex(
+inline QuadtreeIndex QuadtreeIndex::computeParentIndex(
     NodeIndexElement parent_depth) const {
   DCHECK_GE(parent_depth, 0);
   DCHECK_LT(parent_depth, depth);
   const NodeIndexElement depth_difference = depth - parent_depth;
 
-  NodeIndex parent_index = *this;
+  QuadtreeIndex parent_index = *this;
   parent_index.position.x() >>= depth_difference;
   parent_index.position.y() >>= depth_difference;
   parent_index.depth = parent_depth;
@@ -30,12 +30,12 @@ inline NodeIndex NodeIndex::computeParentIndex(
   return parent_index;
 }
 
-inline std::vector<NodeIndex> NodeIndex::computeParentIndices() const {
+inline std::vector<QuadtreeIndex> QuadtreeIndex::computeParentIndices() const {
   if (depth == 0) {
     return {};
   }
 
-  std::vector<NodeIndex> parent_indices(depth);
+  std::vector<QuadtreeIndex> parent_indices(depth);
   parent_indices[depth - 1] = computeParentIndex();
   for (NodeIndexElement depth_idx = depth - 2; 0 <= depth_idx; --depth_idx) {
     parent_indices[depth_idx] =
@@ -45,9 +45,9 @@ inline std::vector<NodeIndex> NodeIndex::computeParentIndices() const {
   return parent_indices;
 }
 
-inline NodeIndex NodeIndex::computeChildIndex(
+inline QuadtreeIndex QuadtreeIndex::computeChildIndex(
     NodeRelativeChildIndex relative_child_index) const {
-  NodeIndex child_index = *this;
+  QuadtreeIndex child_index = *this;
 
   // Compute index of first child
   child_index.position *= 2;
@@ -63,8 +63,8 @@ inline NodeIndex NodeIndex::computeChildIndex(
   return child_index;
 }
 
-inline std::vector<NodeIndex> NodeIndex::computeChildIndices() const {
-  std::vector<NodeIndex> child_indices(kNumChildren);
+inline std::vector<QuadtreeIndex> QuadtreeIndex::computeChildIndices() const {
+  std::vector<QuadtreeIndex> child_indices(kNumChildren);
   for (NodeRelativeChildIndex relative_child_idx = 0;
        relative_child_idx < kNumChildren; ++relative_child_idx) {
     child_indices[relative_child_idx] = computeChildIndex(relative_child_idx);
@@ -72,7 +72,7 @@ inline std::vector<NodeIndex> NodeIndex::computeChildIndices() const {
   return child_indices;
 }
 
-inline NodeRelativeChildIndex NodeIndex::computeRelativeChildIndex() const {
+inline NodeRelativeChildIndex QuadtreeIndex::computeRelativeChildIndex() const {
   NodeRelativeChildIndex child_index = 0;
   // TODO(victorr): Remove usage of bittset and use "& (1 << idx)" instead
   std::bitset<kMapDimension> child_bitset;
@@ -84,9 +84,9 @@ inline NodeRelativeChildIndex NodeIndex::computeRelativeChildIndex() const {
 }
 
 inline std::vector<NodeRelativeChildIndex>
-NodeIndex::computeRelativeChildIndices() const {
+QuadtreeIndex::computeRelativeChildIndices() const {
   std::vector<NodeRelativeChildIndex> child_indices(depth);
-  NodeIndex node_index = *this;
+  QuadtreeIndex node_index = *this;
   for (NodeIndexElement depth_idx = depth - 1; 0 <= depth_idx; --depth_idx) {
     child_indices[depth_idx] = node_index.computeRelativeChildIndex();
     node_index = node_index.computeParentIndex();

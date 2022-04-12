@@ -19,12 +19,12 @@ void ScalarQuadtree<CellT>::averageAndPrune() {
 
 template <typename CellT>
 Index ScalarQuadtree<CellT>::getMinPossibleIndex() const {
-  return nodeIndexToIndex(NodeIndex{max_depth_, Index::Constant(0)});
+  return nodeIndexToIndex(QuadtreeIndex{max_depth_, Index::Constant(0)});
 }
 
 template <typename CellT>
 Index ScalarQuadtree<CellT>::getMaxPossibleIndex() const {
-  return nodeIndexToIndex(NodeIndex{
+  return nodeIndexToIndex(QuadtreeIndex{
       max_depth_, Index::Constant(constexpr_functions::exp2(max_depth_))});
 }
 
@@ -34,18 +34,18 @@ template <typename CellT>
 Index ScalarQuadtree<CellT>::getMinIndex() const {
   Index min_index = Index::Constant(std::numeric_limits<IndexElement>::max());
 
-  std::stack<std::pair<NodeIndex, const Node<CellDataSpecialized>*>> stack;
-  stack.template emplace(NodeIndex{}, &quadtree_.getRootNode());
+  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>*>> stack;
+  stack.template emplace(QuadtreeIndex{}, &quadtree_.getRootNode());
   while (!stack.empty()) {
-    const NodeIndex node_index = stack.top().first;
+    const QuadtreeIndex node_index = stack.top().first;
     const Node<CellDataSpecialized>* node = stack.top().second;
     stack.pop();
 
     if (node->hasChildrenArray()) {
       for (NodeRelativeChildIndex child_idx = 0;
-           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
-          const NodeIndex child_node_index =
+          const QuadtreeIndex child_node_index =
               node_index.computeChildIndex(child_idx);
           const Node<CellDataSpecialized>* child_node =
               node->getChild(child_idx);
@@ -68,18 +68,18 @@ Index ScalarQuadtree<CellT>::getMaxIndex() const {
   Index max_index =
       Index::Constant(std::numeric_limits<IndexElement>::lowest());
 
-  std::stack<std::pair<NodeIndex, const Node<CellDataSpecialized>*>> stack;
-  stack.template emplace(NodeIndex{}, &quadtree_.getRootNode());
+  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>*>> stack;
+  stack.template emplace(QuadtreeIndex{}, &quadtree_.getRootNode());
   while (!stack.empty()) {
-    const NodeIndex node_index = stack.top().first;
+    const QuadtreeIndex node_index = stack.top().first;
     const Node<CellDataSpecialized>* node = stack.top().second;
     stack.pop();
 
     if (node->hasChildrenArray()) {
       for (NodeRelativeChildIndex child_idx = 0;
-           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
-          const NodeIndex child_node_index =
+          const QuadtreeIndex child_node_index =
               node_index.computeChildIndex(child_idx);
           const Node<CellDataSpecialized>* child_node =
               node->getChild(child_idx);
@@ -97,14 +97,14 @@ Index ScalarQuadtree<CellT>::getMaxIndex() const {
 
 template <typename CellT>
 bool ScalarQuadtree<CellT>::hasCell(const Index& index) const {
-  const NodeIndex node_index = indexToNodeIndex(index);
+  const QuadtreeIndex node_index = indexToNodeIndex(index);
   const Node<CellDataSpecialized>* node = quadtree_.getNode(node_index);
   return node;
 }
 
 template <typename CellT>
 FloatingPoint ScalarQuadtree<CellT>::getCellValue(const Index& index) const {
-  const NodeIndex node_index = indexToNodeIndex(index);
+  const QuadtreeIndex node_index = indexToNodeIndex(index);
   const Node<CellDataSpecialized>* node = quadtree_.getNode(node_index);
   if (node) {
     return node->data();
@@ -117,7 +117,7 @@ template <typename CellT>
 void ScalarQuadtree<CellT>::setCellValue(const Index& index,
                                          FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
-  const NodeIndex node_index = indexToNodeIndex(index);
+  const QuadtreeIndex node_index = indexToNodeIndex(index);
   Node<CellDataSpecialized>* node =
       quadtree_.getNode(node_index, kAutoAllocate);
   if (node) {
@@ -131,7 +131,7 @@ template <typename CellT>
 void ScalarQuadtree<CellT>::addToCellValue(const Index& index,
                                            FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
-  const NodeIndex node_index = indexToNodeIndex(index);
+  const QuadtreeIndex node_index = indexToNodeIndex(index);
   Node<CellDataSpecialized>* node =
       quadtree_.getNode(node_index, kAutoAllocate);
   if (node) {

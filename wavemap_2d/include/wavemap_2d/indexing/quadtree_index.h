@@ -15,25 +15,26 @@ using NodePositionIndex = Eigen::Matrix<NodeIndexElement, kMapDimension, 1>;
 // TODO(victorr): Consider generalizing this to a templated n-dimensional
 //                version supporting m-ary subdivision (not just diadic)
 
-// TODO(victorr): Update this class' name
-struct NodeIndex {
+struct QuadtreeIndex {
   static constexpr int kNumChildren = constexpr_functions::exp2(kMapDimension);
 
   NodeIndexElement depth = 0;
   NodePositionIndex position = NodePositionIndex::Zero();
 
-  bool operator==(const NodeIndex& other) const {
+  bool operator==(const QuadtreeIndex& other) const {
     return depth == other.depth && position == other.position;
   }
-  bool operator!=(const NodeIndex& other) const { return !(*this == other); }
+  bool operator!=(const QuadtreeIndex& other) const {
+    return !(*this == other);
+  }
 
-  NodeIndex computeParentIndex() const;
-  NodeIndex computeParentIndex(NodeIndexElement parent_depth) const;
-  std::vector<NodeIndex> computeParentIndices() const;
+  QuadtreeIndex computeParentIndex() const;
+  QuadtreeIndex computeParentIndex(NodeIndexElement parent_depth) const;
+  std::vector<QuadtreeIndex> computeParentIndices() const;
 
-  NodeIndex computeChildIndex(
+  QuadtreeIndex computeChildIndex(
       NodeRelativeChildIndex relative_child_index) const;
-  std::vector<NodeIndex> computeChildIndices() const;
+  std::vector<QuadtreeIndex> computeChildIndices() const;
   NodeRelativeChildIndex computeRelativeChildIndex() const;
   std::vector<NodeRelativeChildIndex> computeRelativeChildIndices() const;
 

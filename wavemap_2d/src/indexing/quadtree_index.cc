@@ -3,7 +3,7 @@
 #include <string>
 
 namespace wavemap_2d {
-std::string NodeIndex::toString() const {
+std::string QuadtreeIndex::toString() const {
   std::stringstream ss;
   ss << "[depth=";
   ss << depth << ", position=[";

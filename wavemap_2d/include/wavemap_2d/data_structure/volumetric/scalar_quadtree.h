@@ -55,11 +55,11 @@ class ScalarQuadtree : public VolumetricDataStructure {
   bool load(const std::string& file_path_prefix,
             bool used_floating_precision) override;
 
-  NodeIndex indexToNodeIndex(const Index& index) const {
+  QuadtreeIndex indexToNodeIndex(const Index& index) const {
     return computeNodeIndexFromIndexAndDepth(index + root_node_offset_,
                                              max_depth_, max_depth_);
   }
-  Index nodeIndexToIndex(const NodeIndex& node_index) const {
+  Index nodeIndexToIndex(const QuadtreeIndex& node_index) const {
     return computeIndexFromNodeIndex(node_index, max_depth_) -
            root_node_offset_;
   }

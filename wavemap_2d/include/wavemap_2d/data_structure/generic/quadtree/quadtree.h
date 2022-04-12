@@ -28,14 +28,14 @@ class Quadtree {
   void clear() { root_node_.deleteChildrenArray(); }
   void prune();
 
-  bool hasNode(const NodeIndex& index) { return getNode(index); }
-  void allocateNode(const NodeIndex& index) {
+  bool hasNode(const QuadtreeIndex& index) { return getNode(index); }
+  void allocateNode(const QuadtreeIndex& index) {
     constexpr bool kAutoAllocate = true;
     getNode(index, kAutoAllocate);
   }
-  bool removeNode(const NodeIndex& index);
-  NodeType* getNode(const NodeIndex& index, bool auto_allocate = false);
-  const NodeType* getNode(const NodeIndex& index) const;
+  bool removeNode(const QuadtreeIndex& index);
+  NodeType* getNode(const QuadtreeIndex& index, bool auto_allocate = false);
+  const NodeType* getNode(const QuadtreeIndex& index) const;
 
   NodeType& getRootNode() { return root_node_; }
   const NodeType& getRootNode() const { return root_node_; }

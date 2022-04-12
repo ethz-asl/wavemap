@@ -112,7 +112,7 @@ class FixtureBase : public ::testing::Test {
     return random_number_generator_->getRandomInteger(min_depth, max_depth);
   }
 
-  std::vector<NodeIndex> getRandomQuadtreeIndexVector(
+  std::vector<QuadtreeIndex> getRandomQuadtreeIndexVector(
       const Index& min_index, const Index& max_index,
       NodeIndexElement min_depth, NodeIndexElement max_depth) const {
     CHECK((min_index.array() < max_index.array()).all());
@@ -123,9 +123,9 @@ class FixtureBase : public ::testing::Test {
     const size_t num_indices = random_number_generator_->getRandomInteger(
         kMinNumIndices, kMaxNumIndices);
 
-    std::vector<NodeIndex> random_indices(num_indices);
+    std::vector<QuadtreeIndex> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(), [&]() {
-      return NodeIndex{
+      return QuadtreeIndex{
           .depth = getRandomQuadtreeIndexDepth(min_depth, max_depth),
           .position = getRandomIndex(min_index, max_index)};
     });

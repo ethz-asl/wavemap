@@ -9,7 +9,8 @@ void AverageAndPruneChildren(Node<NodeDataType>& node) {
   if (node.hasChildrenArray()) {
     // Compute the average of all children
     auto child_sum = static_cast<NodeDataType>(0);
-    for (int child_idx = 0; child_idx < NodeIndex::kNumChildren; ++child_idx) {
+    for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
+         ++child_idx) {
       Node<NodeDataType>* child_ptr = node.getChild(child_idx);
       if (child_ptr) {
         child_sum += child_ptr->data();
@@ -18,11 +19,12 @@ void AverageAndPruneChildren(Node<NodeDataType>& node) {
       }
     }
     node.data() =
-        child_sum / static_cast<NodeDataType>(NodeIndex::kNumChildren);
+        child_sum / static_cast<NodeDataType>(QuadtreeIndex::kNumChildren);
 
     // Prune away children whose value is identical to the parent node
     bool has_non_empty_child = false;
-    for (int child_idx = 0; child_idx < NodeIndex::kNumChildren; ++child_idx) {
+    for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
+         ++child_idx) {
       const Node<NodeDataType>* child_ptr = node.getChild(child_idx);
       if (child_ptr) {
         if ((std::abs(child_ptr->data() - node.data()) < kEpsilon) &&

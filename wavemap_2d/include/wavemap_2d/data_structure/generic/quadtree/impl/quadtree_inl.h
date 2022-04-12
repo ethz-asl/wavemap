@@ -21,7 +21,7 @@ void Quadtree<NodeDataType>::prune() {
   for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
     if (node.hasChildrenArray()) {
       bool has_non_empty_child = false;
-      for (int child_idx = 0; child_idx < NodeIndex::kNumChildren;
+      for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
            ++child_idx) {
         NodeType* child_ptr = node.getChild(child_idx);
         if (child_ptr) {
@@ -54,7 +54,7 @@ size_t Quadtree<NodeDataType>::getMemoryUsage() const {
 
     if (node->hasChildrenArray()) {
       for (NodeRelativeChildIndex child_idx = 0;
-           child_idx < NodeIndex::kNumChildren; ++child_idx) {
+           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           stack.template emplace(node->getChild(child_idx));
         }
@@ -66,8 +66,8 @@ size_t Quadtree<NodeDataType>::getMemoryUsage() const {
 }
 
 template <typename NodeDataType>
-bool Quadtree<NodeDataType>::removeNode(const NodeIndex& index) {
-  NodeIndex parent_index = index.computeParentIndex();
+bool Quadtree<NodeDataType>::removeNode(const QuadtreeIndex& index) {
+  QuadtreeIndex parent_index = index.computeParentIndex();
   Node<NodeDataType>* parent_node =
       getNode(parent_index, /*auto_allocate*/ false);
   if (parent_node) {
@@ -77,7 +77,7 @@ bool Quadtree<NodeDataType>::removeNode(const NodeIndex& index) {
 }
 
 template <typename NodeDataType>
-Node<NodeDataType>* Quadtree<NodeDataType>::getNode(const NodeIndex& index,
+Node<NodeDataType>* Quadtree<NodeDataType>::getNode(const QuadtreeIndex& index,
                                                     bool auto_allocate) {
   Node<NodeDataType>* current_parent = &root_node_;
   const std::vector<NodeRelativeChildIndex> child_indices =
@@ -100,7 +100,7 @@ Node<NodeDataType>* Quadtree<NodeDataType>::getNode(const NodeIndex& index,
 
 template <typename NodeDataType>
 const Node<NodeDataType>* Quadtree<NodeDataType>::getNode(
-    const NodeIndex& index) const {
+    const QuadtreeIndex& index) const {
   const Node<NodeDataType>* current_parent = &root_node_;
   const std::vector<NodeRelativeChildIndex> child_indices =
       index.computeRelativeChildIndices();
