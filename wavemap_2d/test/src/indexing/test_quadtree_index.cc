@@ -110,8 +110,16 @@ TEST_F(QuadtreeIndexTest, ChildParentIndexing) {
          ++relative_child_idx) {
       const QuadtreeIndex child_index =
           node_index.computeChildIndex(relative_child_idx);
-      EXPECT_EQ(child_index.computeRelativeChildIndex(), relative_child_idx);
-      EXPECT_EQ(child_index.computeParentIndex(), node_index);
+      EXPECT_EQ(child_index.computeRelativeChildIndex(), relative_child_idx)
+          << "The child's index relative to its parent \""
+          << std::to_string(child_index.computeRelativeChildIndex())
+          << "\" should match the requested relative child index \""
+          << std::to_string(relative_child_idx) << "\".";
+      EXPECT_EQ(child_index.computeParentIndex(), node_index)
+          << "The current child's parent "
+          << child_index.computeParentIndex().toString()
+          << " should be equal to the parent it was derived from "
+          << node_index.toString() << ".";
     }
   }
 }

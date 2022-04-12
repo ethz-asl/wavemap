@@ -1,7 +1,6 @@
 #ifndef WAVEMAP_2D_INDEXING_IMPL_QUADTREE_INDEX_INL_H_
 #define WAVEMAP_2D_INDEXING_IMPL_QUADTREE_INDEX_INL_H_
 
-#include <bitset>
 #include <vector>
 
 namespace wavemap_2d {
@@ -54,10 +53,8 @@ inline QuadtreeIndex QuadtreeIndex::computeChildIndex(
   child_index.depth += 1;
 
   // Add offset to current child
-  // TODO(victorr): Remove usage of bittset and use "& (1 << idx)" instead
-  std::bitset<kMapDimension> child_bitset(relative_child_index);
   for (int i = 0; i < kMapDimension; ++i) {
-    child_index.position[i] += child_bitset[i];
+    child_index.position[i] += (relative_child_index >> i) & 0b1;
   }
 
   return child_index;
@@ -74,12 +71,9 @@ inline std::vector<QuadtreeIndex> QuadtreeIndex::computeChildIndices() const {
 
 inline NodeRelativeChildIndex QuadtreeIndex::computeRelativeChildIndex() const {
   NodeRelativeChildIndex child_index = 0;
-  // TODO(victorr): Remove usage of bittset and use "& (1 << idx)" instead
-  std::bitset<kMapDimension> child_bitset;
   for (int i = 0; i < kMapDimension; ++i) {
-    child_bitset.set(i, position[i] & 0b1);
+    child_index += (position[i] & 0b1) << i;
   }
-  child_index = child_bitset.to_ulong();
   return child_index;
 }
 
