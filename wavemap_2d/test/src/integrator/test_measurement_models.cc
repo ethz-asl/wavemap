@@ -4,6 +4,8 @@
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/integrator/measurement_model/beam_model.h"
 #include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
+#include "wavemap_2d/iterator/ray_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {

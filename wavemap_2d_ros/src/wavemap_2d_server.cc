@@ -5,6 +5,8 @@
 #include <wavemap_2d/data_structure/volumetric/dense_grid.h>
 #include <wavemap_2d/data_structure/volumetric/hashed_blocks.h>
 #include <wavemap_2d/data_structure/volumetric/scalar_quadtree.h>
+#include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
+#include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
@@ -32,14 +34,11 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   }
   if (config_.measurement_model_type == "fixed_log_odds") {
     ROS_INFO("Using fixed log odds measurement model");
-    measurement_model_ =
-        std::make_shared<FixedLogOddsModel>(config_.map_resolution);
+    pointcloud_integrator_ = std::make_shared<RayIntegrator>(occupancy_map_);
   } else {
     ROS_INFO("Using beam measurement model");
-    measurement_model_ = std::make_shared<BeamModel>(config_.map_resolution);
+    pointcloud_integrator_ = std::make_shared<BeamIntegrator>(occupancy_map_);
   }
-  pointcloud_integrator_ = std::make_shared<PointcloudIntegrator>(
-      occupancy_map_, measurement_model_);
 
   // Connect to ROS
   subscribeToTimers(nh);

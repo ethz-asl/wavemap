@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "wavemap_2d/iterator/grid_iterator.h"
+
 namespace wavemap_2d {
 template <typename Map>
 visualization_msgs::Marker Wavemap2DServer::gridToMarker(

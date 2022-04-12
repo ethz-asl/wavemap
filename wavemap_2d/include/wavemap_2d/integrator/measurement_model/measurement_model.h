@@ -36,6 +36,7 @@ class MeasurementModel {
   const Point& getEndPoint() { return W_end_point_; }
   FloatingPoint getLength() const { return measured_distance_; }
 
+  bool isMeasurementValid() const;
   bool exceedsMaxRange() const { return kRangeMax < measured_distance_; }
   Point getEndPointOrMaxRange() const {
     if (kRangeMax < measured_distance_) {
@@ -50,7 +51,6 @@ class MeasurementModel {
   virtual Index getTopRightUpdateIndex() const = 0;
 
   virtual FloatingPoint computeUpdateAt(const Index& index) const = 0;
-  virtual void updateMap(VolumetricDataStructure& map) const = 0;
 
  protected:
   static constexpr bool kUseClearing = true;

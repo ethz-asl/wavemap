@@ -14,18 +14,4 @@ Index BeamModel::getTopRightUpdateIndex() const {
       getEndPointOrMaxRange() + Point::Constant(max_lateral_component_));
   return computeCeilIndexForPoint(top_right_point, resolution_inv_);
 }
-
-void BeamModel::updateMap(VolumetricDataStructure& map) const {
-  if (!kUseClearing && exceedsMaxRange()) {
-    return;
-  }
-
-  const Grid grid(getBottomLeftUpdateIndex(), getTopRightUpdateIndex());
-  for (const auto& index : grid) {
-    const FloatingPoint update = computeUpdateAt(index);
-    if (kEpsilon < std::abs(update)) {
-      map.addToCellValue(index, update);
-    }
-  }
-}
 }  // namespace wavemap_2d

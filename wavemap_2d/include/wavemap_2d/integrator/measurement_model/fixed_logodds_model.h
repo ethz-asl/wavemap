@@ -5,7 +5,6 @@
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/indexing/index_conversions.h"
 #include "wavemap_2d/integrator/measurement_model/measurement_model.h"
-#include "wavemap_2d/iterator/ray_iterator.h"
 
 namespace wavemap_2d {
 class FixedLogOddsModel : public MeasurementModel {
@@ -28,7 +27,6 @@ class FixedLogOddsModel : public MeasurementModel {
       return kLogOddsFree;
     }
   }
-  void updateMap(VolumetricDataStructure& map) const override;
 
  protected:
   Index end_point_index_;

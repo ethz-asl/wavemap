@@ -6,7 +6,8 @@
 
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
-#include "wavemap_2d/integrator/pointcloud_integrator.h"
+#include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
+#include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",
               "Path to the carmen log file to get the input data from.");
@@ -18,7 +19,7 @@ DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
 using namespace wavemap_2d;  // NOLINT
 int main(int argc, char** argv) {
   using DataStructureType = DenseGrid<SaturatingOccupancyCell>;
-  using MeasurementModelType = BeamModel;
+  using PointcloudIntegratorType = BeamIntegrator;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
@@ -34,10 +35,9 @@ int main(int argc, char** argv) {
       << "The map_resolution flag must be set to a positive number.";
 
   // Set up the mapper
-  auto occupancy_map = std::make_shared<DataStructureType>(map_resolution);
-  auto measurement_model =
-      std::make_shared<MeasurementModelType>(map_resolution);
-  PointcloudIntegrator pointcloud_integrator(occupancy_map, measurement_model);
+  VolumetricDataStructure::Ptr occupancy_map =
+      std::make_shared<DataStructureType>(map_resolution);
+  PointcloudIntegratorType pointcloud_integrator(occupancy_map);
 
   // Open the log file
   std::ifstream log_file(carmen_log_file_path);

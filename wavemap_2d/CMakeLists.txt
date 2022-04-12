@@ -46,6 +46,7 @@ cs_add_library(
   src/integrator/pointcloud_integrator.cc
   src/integrator/measurement_model/beam_model.cc
   src/integrator/measurement_model/fixed_logodds_model.cc
+  src/integrator/measurement_model/measurement_model.cc
   src/utils/eigen_format.cc
   src/utils/evaluation_utils.cc)
 

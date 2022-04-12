@@ -4,7 +4,6 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/integrator/measurement_model/measurement_model.h"
-#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d {
 class BeamModel : public MeasurementModel {
@@ -22,7 +21,6 @@ class BeamModel : public MeasurementModel {
   Index getTopRightUpdateIndex() const override;
 
   FloatingPoint computeUpdateAt(const Index& index) const override;
-  void updateMap(VolumetricDataStructure& map) const override;
 
  protected:
   Point C_end_point_;

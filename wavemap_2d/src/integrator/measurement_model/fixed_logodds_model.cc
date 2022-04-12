@@ -12,16 +12,4 @@ Index FixedLogOddsModel::getTopRightUpdateIndex() const {
   const Point top_right_point = W_start_point_.cwiseMax(W_end_point_);
   return computeCeilIndexForPoint(top_right_point, resolution_inv_);
 }
-
-void FixedLogOddsModel::updateMap(VolumetricDataStructure& map) const {
-  if (!kUseClearing && exceedsMaxRange()) {
-    return;
-  }
-
-  const Ray ray(W_start_point_, getEndPointOrMaxRange(), map.getResolution());
-  for (const auto& index : ray) {
-    const FloatingPoint update = computeUpdateAt(index);
-    map.addToCellValue(index, update);
-  }
-}
 }  // namespace wavemap_2d

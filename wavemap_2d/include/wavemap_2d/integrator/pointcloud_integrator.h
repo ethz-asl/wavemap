@@ -14,16 +14,15 @@ namespace wavemap_2d {
 class PointcloudIntegrator {
  public:
   PointcloudIntegrator() = delete;
-  explicit PointcloudIntegrator(VolumetricDataStructure::Ptr occupancy_map,
-                                MeasurementModel::Ptr measurement_model)
-      : occupancy_map_(CHECK_NOTNULL(occupancy_map)),
-        measurement_model_(CHECK_NOTNULL(measurement_model)) {}
+  explicit PointcloudIntegrator(VolumetricDataStructure::Ptr occupancy_map)
+      : occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}
 
-  void integratePointcloud(const PosedPointcloud<>& pointcloud);
+  virtual void integratePointcloud(const PosedPointcloud<>& pointcloud) = 0;
 
  protected:
   VolumetricDataStructure::Ptr occupancy_map_;
-  MeasurementModel::Ptr measurement_model_;
+
+  static bool isPointcloudValid(const PosedPointcloud<>& pointcloud);
 };
 }  // namespace wavemap_2d
 

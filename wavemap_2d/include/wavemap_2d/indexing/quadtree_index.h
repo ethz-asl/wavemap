@@ -14,7 +14,6 @@ using NodePositionIndex = Eigen::Matrix<NodeIndexElement, kMapDimension, 1>;
 
 // TODO(victorr): Consider generalizing this to a templated n-dimensional
 //                version supporting m-ary subdivision (not just diadic)
-
 struct QuadtreeIndex {
   static constexpr int kNumChildren = constexpr_functions::exp2(kMapDimension);
 

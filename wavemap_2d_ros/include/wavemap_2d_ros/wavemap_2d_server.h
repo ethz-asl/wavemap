@@ -94,7 +94,6 @@ class Wavemap2DServer {
   Config config_;
 
   std::shared_ptr<VolumetricDataStructure> occupancy_map_;
-  std::shared_ptr<MeasurementModel> measurement_model_;
   std::shared_ptr<PointcloudIntegrator> pointcloud_integrator_;
   TfTransformer transformer_;
 
