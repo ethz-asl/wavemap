@@ -16,6 +16,7 @@ class PointcloudIntegrator {
   PointcloudIntegrator() = delete;
   explicit PointcloudIntegrator(VolumetricDataStructure::Ptr occupancy_map)
       : occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}
+  virtual ~PointcloudIntegrator() = default;
 
   virtual void integratePointcloud(const PosedPointcloud<>& pointcloud) = 0;
 
