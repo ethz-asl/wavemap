@@ -13,6 +13,9 @@ class BeamModel : public MeasurementModel {
   static constexpr FloatingPoint kAngleSigma = kAngleThresh / 6.f;
   static constexpr FloatingPoint kRangeSigma = kRangeDeltaThresh / 6.f;
   static constexpr FloatingPoint kScaling = 0.5f;
+  // NOTE: The angle and upper range thresholds have a width of 6 sigmas because
+  //       the ground truth surface thickness is 3 sigma, and the angular/range
+  //       uncertainty extends the non-zero regions with another 3 sigma.
 
   explicit BeamModel(FloatingPoint resolution)
       : MeasurementModel(resolution), max_lateral_component_(0.f) {}

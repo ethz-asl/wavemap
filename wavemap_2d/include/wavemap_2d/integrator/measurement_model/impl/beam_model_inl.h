@@ -9,37 +9,51 @@ inline FloatingPoint BeamModel::computeUpdateAt(const Index& index) const {
   const Point W_cell_center = computeCenterFromIndex(index, resolution_);
   const Point C_cell_center = W_cell_center - W_start_point_;
 
+  // Compute the distance to the sensor
   const FloatingPoint distance = C_cell_center.norm();
+  // Return early if the point is beyond the beam's max range
   if (kRangeMax < distance) {
     return 0.f;
   }
-
-  if (kEpsilon < distance &&
-      distance <= measured_distance_ + kRangeDeltaThresh) {
-    const FloatingPoint dot_prod_normalized =
-        C_cell_center.dot(C_end_point_normalized_) / distance;
-    if (dot_prod_normalized < 0.f) {
-      return 0.f;
-    }
-    FloatingPoint angle = 0.f;
-    if (dot_prod_normalized <= 1.f) {
-      angle = std::acos(dot_prod_normalized);
-    }
-    DCHECK(!std::isnan(angle));
-    if (angle <= kAngleThresh) {
-      const FloatingPoint g = angle / kAngleSigma;
-      const FloatingPoint f = (distance - measured_distance_) / kRangeSigma;
-      const FloatingPoint angle_contrib = Qcdf(g + 3.f) - Qcdf(g - 3.f);
-      const FloatingPoint range_contrib = Qcdf(f) - 0.5f * Qcdf(f - 3.f) - 0.5f;
-      const FloatingPoint contribs = range_contrib * angle_contrib;
-      const FloatingPoint scaled_contribs = kScaling * contribs;
-      const FloatingPoint p = scaled_contribs + 0.5f;
-      const FloatingPoint log_odds = std::log(p / (1.f - p));
-      DCHECK(!std::isnan(log_odds) && std::isfinite(log_odds));
-      return log_odds;
-    }
+  // Return early if the point is inside the sensor or far behind the surface
+  if (distance < kEpsilon ||
+      measured_distance_ + kRangeDeltaThresh < distance) {
+    return 0.f;
   }
-  return 0.f;
+
+  // Compute the angle w.r.t. the ray
+  const FloatingPoint dot_prod_normalized =
+      C_cell_center.dot(C_end_point_normalized_) / distance;
+  // Return early if the point is behind the sensor
+  if (dot_prod_normalized < 0.f) {
+    return 0.f;
+  }
+  FloatingPoint angle;
+  if (dot_prod_normalized <= 1.f) {
+    // The normalized dot product is within the arc cosine's valid range
+    angle = std::acos(dot_prod_normalized);
+  } else {
+    // Due to floating point precision, the normalized dot product can slightly
+    // exceed 1.0 for points on the beam's centerline (i.e. if the angle is 0).
+    angle = 0.f;
+  }
+  DCHECK(!std::isnan(angle));
+  // Return early if the point is not inside the beam's non-zero region
+  if (kAngleThresh < angle) {
+    return 0.f;
+  }
+
+  // Compute the full measurement update
+  const FloatingPoint g = angle / kAngleSigma;
+  const FloatingPoint f = (distance - measured_distance_) / kRangeSigma;
+  const FloatingPoint angle_contrib = Qcdf(g + 3.f) - Qcdf(g - 3.f);
+  const FloatingPoint range_contrib = Qcdf(f) - 0.5f * Qcdf(f - 3.f) - 0.5f;
+  const FloatingPoint scaled_contribs =
+      kScaling * range_contrib * angle_contrib;
+  const FloatingPoint p = scaled_contribs + 0.5f;
+  const FloatingPoint log_odds = std::log(p / (1.f - p));
+  DCHECK(!std::isnan(log_odds) && std::isfinite(log_odds));
+  return log_odds;
 }
 
 inline FloatingPoint BeamModel::Qcdf(FloatingPoint t) {
