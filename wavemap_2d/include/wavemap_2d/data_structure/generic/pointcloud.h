@@ -27,20 +27,19 @@ class Pointcloud {
     }
   }
 
+  bool empty() const { return !size(); }
+  size_t size() const { return data_.cols(); }
+  void resize(const unsigned int n_points) {
+    data_.resize(point_dimensions, n_points);
+  }
+  void clear() { data_.resize(point_dimensions, 0); }
+
   typename PointcloudData::ColXpr operator[](Eigen::Index point_index) {
     return data_.col(point_index);
   }
   typename PointcloudData::ConstColXpr operator[](
       Eigen::Index point_index) const {
     return data_.col(point_index);
-  }
-
-  bool empty() const { return !size(); }
-  size_t size() const { return data_.cols(); }
-
-  void clear() { data_.resize(point_dimensions, 0); }
-  void resize(const unsigned int n_points) {
-    data_.resize(point_dimensions, n_points);
   }
 
   PointcloudData& data() { return data_; }

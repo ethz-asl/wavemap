@@ -7,6 +7,7 @@
 #include <wavemap_2d/data_structure/volumetric/scalar_quadtree.h>
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
 #include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
+#include <wavemap_2d/integrator/scan_integrator/scan_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
@@ -32,11 +33,14 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
     occupancy_map_ = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
         config_.map_resolution);
   }
-  if (config_.measurement_model_type == "fixed_log_odds") {
-    ROS_INFO("Using fixed log odds measurement model");
+  if (config_.measurement_model_type == "scan_integrator") {
+    ROS_INFO("Using scan integrator");
+    pointcloud_integrator_ = std::make_shared<ScanIntegrator>(occupancy_map_);
+  } else if (config_.measurement_model_type == "fixed_log_odds") {
+    ROS_INFO("Using ray integrator");
     pointcloud_integrator_ = std::make_shared<RayIntegrator>(occupancy_map_);
   } else {
-    ROS_INFO("Using beam measurement model");
+    ROS_INFO("Using beam integrator");
     pointcloud_integrator_ = std::make_shared<BeamIntegrator>(occupancy_map_);
   }
 

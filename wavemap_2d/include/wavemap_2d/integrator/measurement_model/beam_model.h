@@ -24,6 +24,9 @@ class BeamModel : public MeasurementModel {
   Index getTopRightUpdateIndex() const override;
 
   FloatingPoint computeUpdateAt(const Index& index) const override;
+  static FloatingPoint computeUpdate(FloatingPoint cell_to_sensor_distance,
+                                     FloatingPoint cell_to_beam_angle,
+                                     FloatingPoint measured_distance);
 
  protected:
   Point C_end_point_;

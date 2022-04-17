@@ -10,42 +10,52 @@ inline FloatingPoint BeamModel::computeUpdateAt(const Index& index) const {
   const Point C_cell_center = W_cell_center - W_start_point_;
 
   // Compute the distance to the sensor
-  const FloatingPoint distance = C_cell_center.norm();
+  const FloatingPoint cell_to_sensor_distance = C_cell_center.norm();
   // Return early if the point is beyond the beam's max range
-  if (kRangeMax < distance) {
+  if (kRangeMax < cell_to_sensor_distance) {
     return 0.f;
   }
   // Return early if the point is inside the sensor or far behind the surface
-  if (distance < kEpsilon ||
-      measured_distance_ + kRangeDeltaThresh < distance) {
+  if (cell_to_sensor_distance < kEpsilon ||
+      measured_distance_ + kRangeDeltaThresh < cell_to_sensor_distance) {
     return 0.f;
   }
 
   // Compute the angle w.r.t. the ray
+  // NOTE: This relative angle computation method works in 2D and 3D.
   const FloatingPoint dot_prod_normalized =
-      C_cell_center.dot(C_end_point_normalized_) / distance;
+      C_cell_center.dot(C_end_point_normalized_) / cell_to_sensor_distance;
   // Return early if the point is behind the sensor
   if (dot_prod_normalized < 0.f) {
     return 0.f;
   }
-  FloatingPoint angle;
+  FloatingPoint cell_to_beam_angle;
   if (dot_prod_normalized <= 1.f) {
     // The normalized dot product is within the arc cosine's valid range
-    angle = std::acos(dot_prod_normalized);
+    cell_to_beam_angle = std::acos(dot_prod_normalized);
   } else {
     // Due to floating point precision, the normalized dot product can slightly
     // exceed 1.0 for points on the beam's centerline (i.e. if the angle is 0).
-    angle = 0.f;
+    cell_to_beam_angle = 0.f;
   }
-  DCHECK(!std::isnan(angle));
-  // Return early if the point is not inside the beam's non-zero region
-  if (kAngleThresh < angle) {
+  DCHECK(!std::isnan(cell_to_beam_angle));
+  // Return early if the point is outside the beam's non-zero angular region
+  if (kAngleThresh < cell_to_beam_angle) {
     return 0.f;
   }
 
   // Compute the full measurement update
-  const FloatingPoint g = angle / kAngleSigma;
-  const FloatingPoint f = (distance - measured_distance_) / kRangeSigma;
+  return computeUpdate(cell_to_sensor_distance, cell_to_beam_angle,
+                       measured_distance_);
+}
+
+inline FloatingPoint BeamModel::computeUpdate(
+    FloatingPoint cell_to_sensor_distance, FloatingPoint cell_to_beam_angle,
+    FloatingPoint measured_distance) {
+  // Compute the full measurement update
+  const FloatingPoint g = cell_to_beam_angle / kAngleSigma;
+  const FloatingPoint f =
+      (cell_to_sensor_distance - measured_distance) / kRangeSigma;
   const FloatingPoint angle_contrib = Qcdf(g + 3.f) - Qcdf(g - 3.f);
   const FloatingPoint range_contrib = Qcdf(f) - 0.5f * Qcdf(f - 3.f) - 0.5f;
   const FloatingPoint scaled_contribs =
