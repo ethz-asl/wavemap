@@ -35,7 +35,11 @@ class BeamModel : public MeasurementModel {
 
   void updateCachedVariablesDerived() override {
     C_end_point_ = W_end_point_ - W_start_point_;
-    C_end_point_normalized_ = C_end_point_ / measured_distance_;
+    if (measured_distance_ < kEpsilon) {
+      C_end_point_normalized_ = Point::Zero();
+    } else {
+      C_end_point_normalized_ = C_end_point_ / measured_distance_;
+    }
     // TODO(victorr): Calculate this properly
     max_lateral_component_ = std::max(
         std::sin(kAngleThresh) * (measured_distance_ + kRangeDeltaThresh),
