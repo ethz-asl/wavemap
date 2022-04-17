@@ -23,47 +23,46 @@ class FixtureBase : public ::testing::Test {
         std::make_unique<RandomNumberGenerator>(kFixedRandomSeed);
   }
 
-  FloatingPoint getRandomResolution() const {
-    constexpr FloatingPoint kMinResolution = 1e-3;
-    constexpr FloatingPoint kMaxResolution = 1e0;
-    return random_number_generator_->getRandomRealNumber(kMinResolution,
-                                                         kMaxResolution);
+  FloatingPoint getRandomResolution(FloatingPoint min_resolution = 1e-3,
+                                    FloatingPoint max_resolution = 1e0) const {
+    return random_number_generator_->getRandomRealNumber(min_resolution,
+                                                         max_resolution);
   }
 
-  static Point getRandomPoint() {
-    constexpr FloatingPoint kMaxCoordinate = 1e3;
-    return kMaxCoordinate * Point::Random();
+  static Point getRandomPoint(FloatingPoint max_distance = 5e2) {
+    return max_distance * Point::Random();
   }
 
-  FloatingPoint getRandomSignedDistance() {
-    constexpr FloatingPoint kMinDistance = -4e1;
-    constexpr FloatingPoint kMaxDistance = 4e1;
-    return random_number_generator_->getRandomRealNumber(kMinDistance,
-                                                         kMaxDistance);
+  unsigned int getRandomPointcloudSize(unsigned int min_size = 1u,
+                                       unsigned int max_size = 1000u) const {
+    return random_number_generator_->getRandomInteger(min_size, max_size);
+  }
+
+  std::vector<Point> getRandomPointVector() const {
+    std::vector<Point> random_point_vector(getRandomPointcloudSize());
+    std::generate(random_point_vector.begin(), random_point_vector.end(),
+                  []() { return getRandomPoint(); });
+    return random_point_vector;
+  }
+
+  FloatingPoint getRandomSignedDistance(FloatingPoint min_distance = -4e1,
+                                        FloatingPoint max_distance = 4e1) {
+    return random_number_generator_->getRandomRealNumber(min_distance,
+                                                         max_distance);
   }
 
   Vector getRandomTranslation() {
     return {getRandomSignedDistance(), getRandomSignedDistance()};
   }
 
-  FloatingPoint getRandomAngle(FloatingPoint min_angle,
-                               FloatingPoint max_angle) const {
+  FloatingPoint getRandomAngle(FloatingPoint min_angle = -M_PI,
+                               FloatingPoint max_angle = M_PI) const {
     return random_number_generator_->getRandomRealNumber(min_angle, max_angle);
   }
-  FloatingPoint getRandomAngle() const {
-    constexpr FloatingPoint kMinAngle = -M_PI;
-    constexpr FloatingPoint kMaxAngle = M_PI;
-    return getRandomAngle(kMinAngle, kMaxAngle);
-  }
 
-  IndexElement getRandomIndexElement() const {
-    constexpr IndexElement kMinCoordinate = -1e3;
-    constexpr IndexElement kMaxCoordinate = 1e3;
-    return getRandomIndexElement(kMinCoordinate, kMaxCoordinate);
-  }
-
-  IndexElement getRandomIndexElement(const IndexElement min_coordinate,
-                                     const IndexElement max_coordinate) const {
+  IndexElement getRandomIndexElement(
+      const IndexElement min_coordinate = -1e3,
+      const IndexElement max_coordinate = 1e3) const {
     return random_number_generator_->getRandomInteger(min_coordinate,
                                                       max_coordinate);
   }
@@ -77,11 +76,10 @@ class FixtureBase : public ::testing::Test {
             getRandomIndexElement(min_index.y(), max_index.y())};
   }
 
-  std::vector<Index> getRandomIndexVector() const {
-    constexpr size_t kMinNumIndices = 2u;
-    constexpr size_t kMaxNumIndices = 100u;
+  std::vector<Index> getRandomIndexVector(size_t min_num_indices = 2u,
+                                          size_t max_num_indices = 100u) const {
     const size_t num_indices = random_number_generator_->getRandomInteger(
-        kMinNumIndices, kMaxNumIndices);
+        min_num_indices, max_num_indices);
 
     std::vector<Index> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(),
@@ -90,13 +88,13 @@ class FixtureBase : public ::testing::Test {
   }
 
   std::vector<Index> getRandomIndexVector(const Index& min_index,
-                                          const Index& max_index) const {
+                                          const Index& max_index,
+                                          size_t min_num_indices = 2u,
+                                          size_t max_num_indices = 100u) const {
     CHECK((min_index.array() < max_index.array()).all());
 
-    constexpr size_t kMinNumIndices = 2u;
-    constexpr size_t kMaxNumIndices = 100u;
     const size_t num_indices = random_number_generator_->getRandomInteger(
-        kMinNumIndices, kMaxNumIndices);
+        min_num_indices, max_num_indices);
 
     std::vector<Index> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(),
@@ -104,28 +102,21 @@ class FixtureBase : public ::testing::Test {
     return random_indices;
   }
 
-  NodeIndexElement getRandomQuadtreeIndexDepth() const {
-    constexpr NodeIndexElement kMinDepth = 0;
-    constexpr NodeIndexElement kMaxDepth = 14;
-    return getRandomQuadtreeIndexDepth(kMinDepth, kMaxDepth);
-  }
-
   NodeIndexElement getRandomQuadtreeIndexDepth(
-      const NodeIndexElement min_depth,
-      const NodeIndexElement max_depth) const {
+      const NodeIndexElement min_depth = 0,
+      const NodeIndexElement max_depth = 14) const {
     return random_number_generator_->getRandomInteger(min_depth, max_depth);
   }
 
   std::vector<QuadtreeIndex> getRandomQuadtreeIndexVector(
       const Index& min_index, const Index& max_index,
-      NodeIndexElement min_depth, NodeIndexElement max_depth) const {
+      NodeIndexElement min_depth, NodeIndexElement max_depth,
+      size_t min_num_indices = 2u, size_t max_num_indices = 100u) const {
     CHECK((min_index.array() < max_index.array()).all());
     CHECK_LE(min_depth, max_depth);
 
-    constexpr size_t kMinNumIndices = 2u;
-    constexpr size_t kMaxNumIndices = 100u;
     const size_t num_indices = random_number_generator_->getRandomInteger(
-        kMinNumIndices, kMaxNumIndices);
+        min_num_indices, max_num_indices);
 
     std::vector<QuadtreeIndex> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(), [&]() {
@@ -136,18 +127,16 @@ class FixtureBase : public ::testing::Test {
     return random_indices;
   }
 
-  FloatingPoint getRandomUpdate() const {
-    constexpr FloatingPoint kMinUpdate = 1e-2;
-    constexpr FloatingPoint kMaxUpdate = 1e2;
-    return random_number_generator_->getRandomRealNumber(kMinUpdate,
-                                                         kMaxUpdate);
+  FloatingPoint getRandomUpdate(FloatingPoint min_update = 1e-2,
+                                FloatingPoint max_update = 1e2) const {
+    return random_number_generator_->getRandomRealNumber(min_update,
+                                                         max_update);
   }
 
-  std::vector<FloatingPoint> getRandomUpdateVector() const {
-    constexpr size_t kMinNumUpdates = 0u;
-    constexpr size_t kMaxNumUpdates = 100u;
+  std::vector<FloatingPoint> getRandomUpdateVector(
+      size_t min_num_updates = 0u, size_t max_num_updates = 100u) const {
     const size_t num_updates = random_number_generator_->getRandomInteger(
-        kMinNumUpdates, kMaxNumUpdates);
+        min_num_updates, max_num_updates);
     std::vector<FloatingPoint> random_updates(num_updates);
     std::generate(random_updates.begin(), random_updates.end(),
                   [this]() { return getRandomUpdate(); });
