@@ -20,7 +20,9 @@ class ScanIntegrator : public PointcloudIntegrator {
     }
 
     // Compute the range image and the scan's AABB
-    RangeImage range_image(-M_PI_2f32, M_PI_2f32, 400);
+    // TODO(victorr): Make this configurable
+    RangeImage range_image(-M_PI_2f32, M_PI_2f32, pointcloud.size());
+    FloatingPoint range_max = 0.f;
     Point aabb_min = Point::Constant(std::numeric_limits<FloatingPoint>::max());
     Point aabb_max =
         Point::Constant(std::numeric_limits<FloatingPoint>::lowest());
@@ -46,11 +48,22 @@ class ScanIntegrator : public PointcloudIntegrator {
       Point C_point_truncated = C_point;
       if (BeamModel::kRangeMax < range) {
         C_point_truncated *= BeamModel::kRangeMax / range;
+        range_max = std::max(range_max, BeamModel::kRangeMax);
+      } else {
+        range_max = std::max(range_max, range);
       }
       const Point W_point_truncated = pointcloud.getPose() * C_point_truncated;
       aabb_min = aabb_min.cwiseMin(W_point_truncated);
       aabb_max = aabb_max.cwiseMax(W_point_truncated);
     }
+
+    // Pad the aabb to account for the beam uncertainties
+    const FloatingPoint max_lateral_component =
+        std::max(std::sin(BeamModel::kAngleThresh) *
+                     (range_max + BeamModel::kRangeDeltaThresh),
+                 BeamModel::kRangeDeltaThresh);
+    aabb_min -= Vector::Constant(max_lateral_component);
+    aabb_max += Vector::Constant(max_lateral_component);
 
     // Compute the min and max map indices that could be affected by the cloud
     const FloatingPoint resolution = occupancy_map_->getResolution();
@@ -74,10 +87,10 @@ class ScanIntegrator : public PointcloudIntegrator {
           std::max(0l, range_image.angleToCeilIndex(cell_azimuth_angle -
                                                     BeamModel::kAngleThresh));
       const auto last_idx =
-          std::min(range_image.getNBeams(),
+          std::min(range_image.getNBeams() - 1,
                    range_image.angleToFloorIndex(cell_azimuth_angle +
                                                  BeamModel::kAngleThresh));
-
+      FloatingPoint total_update = 0.f;
       for (RangeImageIndex idx = first_idx; idx <= last_idx; ++idx) {
         const FloatingPoint measured_distance = range_image[idx];
         if (BeamModel::kRangeMax < cell_to_sensor_distance) {
@@ -96,9 +109,11 @@ class ScanIntegrator : public PointcloudIntegrator {
           continue;
         }
 
-        const FloatingPoint update = BeamModel::computeUpdate(
+        total_update += BeamModel::computeUpdate(
             cell_to_sensor_distance, cell_to_beam_angle, measured_distance);
-        occupancy_map_->addToCellValue(index, update);
+      }
+      if (kEpsilon < std::abs(total_update)) {
+        occupancy_map_->addToCellValue(index, total_update);
       }
     }
   }

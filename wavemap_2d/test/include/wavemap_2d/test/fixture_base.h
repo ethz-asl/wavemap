@@ -33,20 +33,9 @@ class FixtureBase : public ::testing::Test {
     return max_distance * Point::Random();
   }
 
-  unsigned int getRandomPointcloudSize(unsigned int min_size = 1u,
-                                       unsigned int max_size = 1000u) const {
-    return random_number_generator_->getRandomInteger(min_size, max_size);
-  }
-
-  std::vector<Point> getRandomPointVector() const {
-    std::vector<Point> random_point_vector(getRandomPointcloudSize());
-    std::generate(random_point_vector.begin(), random_point_vector.end(),
-                  []() { return getRandomPoint(); });
-    return random_point_vector;
-  }
-
-  FloatingPoint getRandomSignedDistance(FloatingPoint min_distance = -4e1,
-                                        FloatingPoint max_distance = 4e1) {
+  FloatingPoint getRandomSignedDistance(
+      FloatingPoint min_distance = -4e1,
+      FloatingPoint max_distance = 4e1) const {
     return random_number_generator_->getRandomRealNumber(min_distance,
                                                          max_distance);
   }

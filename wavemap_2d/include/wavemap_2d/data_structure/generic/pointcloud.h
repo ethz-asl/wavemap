@@ -66,6 +66,9 @@ class PosedPointcloud {
                   Pointcloud<point_dimensions> points_C)
       : T_W_C_(T_W_C), points_C_(std::move(points_C)) {}
 
+  bool empty() const { return !size(); }
+  size_t size() const { return points_C_.size(); }
+
   Point getOrigin() const { return T_W_C_.getPosition(); }
   const Transformation& getPose() const { return T_W_C_; }
 

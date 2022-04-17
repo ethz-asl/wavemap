@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
 
 #include <limits>
+#include <memory>
 #include <utility>
 
 #include "wavemap_2d/common.h"
@@ -13,6 +14,8 @@
 namespace wavemap_2d {
 class PointcloudIntegrator {
  public:
+  using Ptr = std::shared_ptr<PointcloudIntegrator>;
+
   PointcloudIntegrator() = delete;
   explicit PointcloudIntegrator(VolumetricDataStructure::Ptr occupancy_map)
       : occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}

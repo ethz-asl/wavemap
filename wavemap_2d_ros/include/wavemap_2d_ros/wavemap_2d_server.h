@@ -1,7 +1,6 @@
 #ifndef WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_
 #define WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_
 
-#include <memory>
 #include <queue>
 #include <string>
 
@@ -93,8 +92,8 @@ class Wavemap2DServer {
 
   Config config_;
 
-  std::shared_ptr<VolumetricDataStructure> occupancy_map_;
-  std::shared_ptr<PointcloudIntegrator> pointcloud_integrator_;
+  VolumetricDataStructure::Ptr occupancy_map_;
+  PointcloudIntegrator::Ptr pointcloud_integrator_;
   TfTransformer transformer_;
 
   std::queue<sensor_msgs::LaserScan> pointcloud_queue_;

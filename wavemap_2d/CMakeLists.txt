@@ -128,6 +128,12 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_subtree_iterator PRIVATE test/include)
   target_link_libraries(test_subtree_iterator ${PROJECT_NAME} testing_main)
 
+  catkin_add_gtest(test_pointcloud_integrators
+                   test/src/integrator/test_pointcloud_integrators.cc)
+  target_include_directories(test_pointcloud_integrators PRIVATE test/include)
+  target_link_libraries(test_pointcloud_integrators ${PROJECT_NAME}
+                        testing_main)
+
   catkin_add_gtest(test_measurement_models
                    test/src/integrator/test_measurement_models.cc)
   target_include_directories(test_measurement_models PRIVATE test/include)
