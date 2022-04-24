@@ -67,7 +67,7 @@ class ScalarQuadtree : public VolumetricDataStructure {
   FloatingPoint computeNodeWidthAtDepth(NodeIndexElement depth);
   Vector computeNodeHalvedDiagonalAtDepth(NodeIndexElement depth);
 
- protected:
+ private:
   using CellDataSpecialized = typename CellT::Specialized;
 
   Quadtree<CellDataSpecialized> quadtree_;

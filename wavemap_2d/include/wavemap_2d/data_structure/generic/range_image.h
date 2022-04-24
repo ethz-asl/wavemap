@@ -69,7 +69,7 @@ class RangeImage {
     return angleToBearing(angle);
   }
 
- protected:
+ private:
   RangeImageData data_;
 
   const FloatingPoint min_angle_;

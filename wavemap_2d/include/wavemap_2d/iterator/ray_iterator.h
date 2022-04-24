@@ -84,7 +84,7 @@ class Ray {
       return !(lhs == rhs);  // NOLINT
     }
 
-   protected:
+   private:
     const Ray& ray_;
     unsigned int current_step_;
     Index current_index_;
@@ -94,7 +94,7 @@ class Ray {
   Iterator begin() const { return Iterator{*this}; }
   Iterator end() const { return Iterator{*this, /*end*/ true}; }
 
- protected:
+ private:
   Index start_index_;
   Index end_index_;
   unsigned int ray_length_in_steps_;

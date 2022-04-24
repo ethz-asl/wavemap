@@ -57,7 +57,7 @@ struct Triangle {
 
   std::string toString() const;
 
- protected:
+ private:
   static int getRelativeOrientation(const Point& vertex_one,
                                     const Point& vertex_two,
                                     FloatingPoint& twice_signed_area);

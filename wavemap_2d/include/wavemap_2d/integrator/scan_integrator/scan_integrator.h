@@ -15,7 +15,7 @@ class ScanIntegrator : public PointcloudIntegrator {
 
   void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
 
- protected:
+ private:
   static void computeRangeImageAndAABB(const PosedPointcloud<>& pointcloud,
                                        RangeImage& range_image, AABB& aabb);
 

@@ -46,7 +46,7 @@ class PointcloudIterator {
 
   reference operator*() const { return pointcloud_.operator[](index_); }
 
- protected:
+ private:
   PointcloudType& pointcloud_;
   Eigen::Index index_;
 };

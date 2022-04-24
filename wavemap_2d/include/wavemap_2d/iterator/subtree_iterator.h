@@ -67,7 +67,7 @@ class Subtree {
       return !(lhs == rhs);  // NOLINT
     }
 
-   protected:
+   private:
     std::deque<NodeType*> upcoming_nodes_;
     NodeType* dequeueNode() {
       NodeType* node_ptr = upcoming_nodes_.front();
@@ -103,7 +103,7 @@ class Subtree {
   auto begin() { return Iterator(root_node_); }
   auto end() { return Iterator(nullptr); }
 
- protected:
+ private:
   NodeType* const root_node_;
 };
 
@@ -169,7 +169,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
       return !(lhs == rhs);  // NOLINT
     }
 
-   protected:
+   private:
     struct NodeAndState {
       NodeType* node_ptr;
       NodeRelativeChildIndex last_expanded_child_idx;
@@ -204,7 +204,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
   auto begin() { return Iterator(root_node_); }
   auto end() { return Iterator(nullptr); }
 
- protected:
+ private:
   NodeType* const root_node_;
 };
 }  // namespace wavemap_2d

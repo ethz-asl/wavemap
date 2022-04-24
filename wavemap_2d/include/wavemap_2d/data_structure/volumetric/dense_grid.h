@@ -52,7 +52,7 @@ class DenseGrid : public VolumetricDataStructure {
   bool load(const std::string& file_path_prefix,
             bool used_floating_precision) override;
 
- protected:
+ private:
   Index min_index_;
   Index max_index_;
   DataGridSpecialized data_;

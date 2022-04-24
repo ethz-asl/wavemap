@@ -37,7 +37,7 @@ class RandomNumberGenerator {
     return bernoulli_distribution(random_number_generator_);
   }
 
- protected:
+ private:
   std::mt19937 random_number_generator_;
 };
 }  // namespace wavemap_2d

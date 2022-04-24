@@ -54,7 +54,7 @@ class Pointcloud {
   const_iterator cbegin() const { return const_iterator(*this); }
   const_iterator cend() const { return const_iterator(*this, data_.cols()); }
 
- protected:
+ private:
   PointcloudData data_;
 };
 
@@ -80,7 +80,7 @@ class PosedPointcloud {
         T_W_C_.transformVectorized(points_C_.data()));
   }
 
- protected:
+ private:
   Transformation T_W_C_;
   Pointcloud<point_dimensions> points_C_;
 };

@@ -40,7 +40,7 @@ class CpuTimer {
 
   double getTotal() const { return cpu_time_total; }
 
- protected:
+ private:
   bool running;
   double cpu_time_total;
 

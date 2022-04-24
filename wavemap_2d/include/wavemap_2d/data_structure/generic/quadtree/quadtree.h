@@ -51,7 +51,7 @@ class Quadtree {
 
   size_t getMemoryUsage() const;
 
- protected:
+ private:
   NodeType root_node_;
 };
 }  // namespace wavemap_2d

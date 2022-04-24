@@ -6,7 +6,7 @@
 namespace wavemap_2d {
 template <typename T>
 class NaiveHaar : public DiscreteWaveletTransform<T> {
- protected:
+ private:
   static constexpr T kSqrt2Inv = 1 / M_SQRT2;
 
   MatrixT<T> singleForwardPass(MatrixT<T> matrix) const override {

@@ -33,7 +33,7 @@ class TfTransformer {
                        const ros::Time& frame_timestamp,
                        Transformation3D& transform);
 
- protected:
+ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 

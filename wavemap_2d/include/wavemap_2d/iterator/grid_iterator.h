@@ -42,7 +42,7 @@ class Grid {
       return !(lhs == rhs);  // NOLINT
     }
 
-   protected:
+   private:
     const Grid& grid_;
     Index current_index_;
   };
@@ -50,7 +50,7 @@ class Grid {
   Iterator begin() const { return Iterator{*this}; }
   Iterator end() const { return Iterator{*this, /*end*/ true}; }
 
- protected:
+ private:
   const Index min_index_;
   const Index max_index_;
 };

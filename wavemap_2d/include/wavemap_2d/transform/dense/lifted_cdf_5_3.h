@@ -8,7 +8,7 @@
 namespace wavemap_2d {
 template <typename T>
 class LiftedCDF53 : public DiscreteWaveletTransform<T> {
- protected:
+ private:
   static constexpr T kScaleInv = M_SQRT2;
   static constexpr T kScale = 1.f / kScaleInv;
   static constexpr T kPredict1 = -1.f / 2.f;

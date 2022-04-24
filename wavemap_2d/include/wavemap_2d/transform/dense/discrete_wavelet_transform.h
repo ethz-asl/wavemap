@@ -55,7 +55,7 @@ class DiscreteWaveletTransform {
     }
   }
 
- protected:
+ private:
   virtual MatrixT<T> singleForwardPass(MatrixT<T> matrix) const = 0;
   virtual MatrixT<T> singleBackwardPass(MatrixT<T> matrix) const = 0;
 };

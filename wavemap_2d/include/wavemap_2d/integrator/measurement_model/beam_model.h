@@ -28,7 +28,7 @@ class BeamModel : public MeasurementModel {
                                      FloatingPoint cell_to_beam_angle,
                                      FloatingPoint measured_distance);
 
- protected:
+ private:
   Point C_end_point_;
   Point C_end_point_normalized_;
   FloatingPoint max_lateral_component_;

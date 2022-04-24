@@ -40,7 +40,7 @@ class HashedBlocks : public VolumetricDataStructure {
   bool load(const std::string& file_path_prefix,
             bool used_floating_precision) override;
 
- protected:
+ private:
   using CellDataSpecialized = typename CellT::Specialized;
 
   static constexpr IndexElement kCellsPerSide = 64;

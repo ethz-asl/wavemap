@@ -36,7 +36,7 @@ class RayIntegrator : public PointcloudIntegrator {
     }
   }
 
- protected:
+ private:
   using MeasurementModelType = FixedLogOddsModel;
 };
 }  // namespace wavemap_2d

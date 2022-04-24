@@ -8,7 +8,7 @@
 namespace wavemap_2d {
 template <typename T>
 class LiftedCDF97 : public DiscreteWaveletTransform<T> {
- protected:
+ private:
   // NOTE: These values are from the JPEG200 Standard (ISO/IEC 15444-1).
   static constexpr T kScaleInv = 1.230174104914001;
   static constexpr T kScale = 1 / kScaleInv;

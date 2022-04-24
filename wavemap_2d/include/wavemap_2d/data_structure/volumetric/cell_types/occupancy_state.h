@@ -29,7 +29,7 @@ class OccupancyState {
     }
   }
 
- protected:
+ private:
   OccupancyState(bool observed, bool occupied)
       : observed_(observed), occupied_(occupied) {}
 

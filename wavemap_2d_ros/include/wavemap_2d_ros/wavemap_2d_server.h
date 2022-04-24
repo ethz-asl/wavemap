@@ -87,7 +87,7 @@ class Wavemap2DServer {
   }
   bool evaluateMap(const std::string& file_path);
 
- protected:
+ private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
   Config config_;

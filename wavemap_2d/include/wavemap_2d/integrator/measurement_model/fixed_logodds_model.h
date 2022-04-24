@@ -28,7 +28,7 @@ class FixedLogOddsModel : public MeasurementModel {
     }
   }
 
- protected:
+ private:
   Index end_point_index_;
 
   void updateCachedVariablesDerived() override {

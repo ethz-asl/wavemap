@@ -37,7 +37,7 @@ class BeamIntegrator : public PointcloudIntegrator {
     }
   }
 
- protected:
+ private:
   using MeasurementModelType = BeamModel;
 };
 }  // namespace wavemap_2d

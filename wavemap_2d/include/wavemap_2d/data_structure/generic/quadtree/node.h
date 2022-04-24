@@ -37,7 +37,7 @@ class Node {
 
   size_t getMemoryUsage() const;
 
- protected:
+ private:
   using ChildrenArray =
       std::array<std::unique_ptr<Node>, QuadtreeIndex::kNumChildren>;
 
