@@ -42,7 +42,7 @@ Index ScalarQuadtree<CellT>::getMinIndex() const {
     stack.pop();
 
     if (node->hasChildrenArray()) {
-      for (NodeRelativeChildIndex child_idx = 0;
+      for (QuadtreeRelativeChildIndex child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           const QuadtreeIndex child_node_index =
@@ -76,7 +76,7 @@ Index ScalarQuadtree<CellT>::getMaxIndex() const {
     stack.pop();
 
     if (node->hasChildrenArray()) {
-      for (NodeRelativeChildIndex child_idx = 0;
+      for (QuadtreeRelativeChildIndex child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           const QuadtreeIndex child_node_index =
@@ -163,13 +163,13 @@ bool ScalarQuadtree<CellT>::load(const std::string& /*file_path_prefix*/,
 
 template <typename CellT>
 FloatingPoint ScalarQuadtree<CellT>::computeNodeWidthAtDepth(
-    NodeIndexElement depth) {
+    QuadtreeIndexElement depth) {
   return root_node_width_ / std::exp2(depth);
 }
 
 template <typename CellT>
 Vector ScalarQuadtree<CellT>::computeNodeHalvedDiagonalAtDepth(
-    NodeIndexElement depth) {
+    QuadtreeIndexElement depth) {
   return Vector::Constant(0.5f) * computeNodeWidthAtDepth(depth);
 }
 }  // namespace wavemap_2d

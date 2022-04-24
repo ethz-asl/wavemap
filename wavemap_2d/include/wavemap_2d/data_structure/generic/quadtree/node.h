@@ -26,14 +26,14 @@ class Node {
   void allocateChildrenArrayIfNeeded();
   void deleteChildrenArray();
 
-  bool hasChild(NodeRelativeChildIndex child_index) const;
+  bool hasChild(QuadtreeRelativeChildIndex child_index) const;
   bool hasAtLeastOneChild() const;
   template <typename... NodeConstructorArgs>
-  Node* allocateChild(NodeRelativeChildIndex child_index,
+  Node* allocateChild(QuadtreeRelativeChildIndex child_index,
                       NodeConstructorArgs&&... args);
-  bool deleteChild(NodeRelativeChildIndex child_index);
-  Node* getChild(NodeRelativeChildIndex child_index);
-  const Node* getChild(NodeRelativeChildIndex child_index) const;
+  bool deleteChild(QuadtreeRelativeChildIndex child_index);
+  Node* getChild(QuadtreeRelativeChildIndex child_index);
+  const Node* getChild(QuadtreeRelativeChildIndex child_index) const;
 
   size_t getMemoryUsage() const;
 

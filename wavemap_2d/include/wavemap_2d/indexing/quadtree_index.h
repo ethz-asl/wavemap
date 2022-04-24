@@ -8,17 +8,18 @@
 #include "wavemap_2d/utils/constexpr_functions.h"
 
 namespace wavemap_2d {
-using NodeIndexElement = int;
-using NodeRelativeChildIndex = uint8_t;
-using NodePositionIndex = Eigen::Matrix<NodeIndexElement, kMapDimension, 1>;
+using QuadtreeIndexElement = int;
+using QuadtreeRelativeChildIndex = uint8_t;
+using QuadtreePositionIndex =
+    Eigen::Matrix<QuadtreeIndexElement, kMapDimension, 1>;
 
 // TODO(victorr): Consider generalizing this to a templated n-dimensional
 //                version supporting m-ary subdivision (not just diadic)
 struct QuadtreeIndex {
   static constexpr int kNumChildren = constexpr_functions::exp2(kMapDimension);
 
-  NodeIndexElement depth = 0;
-  NodePositionIndex position = NodePositionIndex::Zero();
+  QuadtreeIndexElement depth = 0;
+  QuadtreePositionIndex position = QuadtreePositionIndex::Zero();
 
   bool operator==(const QuadtreeIndex& other) const {
     return depth == other.depth && position == other.position;
@@ -28,14 +29,14 @@ struct QuadtreeIndex {
   }
 
   QuadtreeIndex computeParentIndex() const;
-  QuadtreeIndex computeParentIndex(NodeIndexElement parent_depth) const;
+  QuadtreeIndex computeParentIndex(QuadtreeIndexElement parent_depth) const;
   std::vector<QuadtreeIndex> computeParentIndices() const;
 
   QuadtreeIndex computeChildIndex(
-      NodeRelativeChildIndex relative_child_index) const;
+      QuadtreeRelativeChildIndex relative_child_index) const;
   std::vector<QuadtreeIndex> computeChildIndices() const;
-  NodeRelativeChildIndex computeRelativeChildIndex() const;
-  std::vector<NodeRelativeChildIndex> computeRelativeChildIndices() const;
+  QuadtreeRelativeChildIndex computeRelativeChildIndex() const;
+  std::vector<QuadtreeRelativeChildIndex> computeRelativeChildIndices() const;
 
   std::string toString() const;
 };

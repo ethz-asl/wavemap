@@ -9,7 +9,7 @@
 namespace wavemap_2d {
 class QuadtreeIndexTest : public FixtureBase {
  protected:
-  static constexpr NodeIndexElement kMaxDepth = 14;
+  static constexpr QuadtreeIndexElement kMaxDepth = 14;
   const Index kMinPossibleQuadtreeIndex = Index::Constant(0);
   const Index kMaxPossibleQuadtreeIndex =
       Index::Constant(constexpr_functions::exp2(QuadtreeIndexTest::kMaxDepth));
@@ -24,10 +24,10 @@ TEST_F(QuadtreeIndexTest, NodeIndexConversions) {
   std::vector<QuadtreeIndex> random_indices = getRandomQuadtreeIndexVector(
       kMinPossibleQuadtreeIndex, kMaxPossibleQuadtreeIndex, 1, kMaxDepth);
   random_indices.emplace_back(QuadtreeIndex{.depth = 0, .position = {0, 0}});
-  for (NodeIndexElement index_depth = 1; index_depth < kMaxDepth;
+  for (QuadtreeIndexElement index_depth = 1; index_depth < kMaxDepth;
        ++index_depth) {
-    for (NodeIndexElement index_x = -1; index_x <= 1; ++index_x) {
-      for (NodeIndexElement index_y = -1; index_y <= 1; ++index_y) {
+    for (QuadtreeIndexElement index_x = -1; index_x <= 1; ++index_x) {
+      for (QuadtreeIndexElement index_y = -1; index_y <= 1; ++index_y) {
         random_indices.emplace_back(QuadtreeIndex{
             .depth = index_depth, .position = {index_x, index_y}});
       }
@@ -84,10 +84,10 @@ TEST_F(QuadtreeIndexTest, ChildParentIndexing) {
       kMinPossibleQuadtreeIndex, kMaxPossibleQuadtreeIndex, kMaxDepth,
       kMaxDepth);
   random_indices.emplace_back(QuadtreeIndex{.depth = 0, .position = {0, 0}});
-  for (NodeIndexElement index_depth = 1; index_depth < kMaxDepth;
+  for (QuadtreeIndexElement index_depth = 1; index_depth < kMaxDepth;
        ++index_depth) {
-    for (NodeIndexElement index_x = 0; index_x <= 1; ++index_x) {
-      for (NodeIndexElement index_y = 0; index_y <= 1; ++index_y) {
+    for (QuadtreeIndexElement index_x = 0; index_x <= 1; ++index_x) {
+      for (QuadtreeIndexElement index_y = 0; index_y <= 1; ++index_y) {
         random_indices.emplace_back(QuadtreeIndex{
             .depth = index_depth, .position = {index_x, index_y}});
       }
@@ -105,7 +105,7 @@ TEST_F(QuadtreeIndexTest, ChildParentIndexing) {
           << " while it should equal the root node index "
           << root_index.toString() << ".";
     }
-    for (NodeRelativeChildIndex relative_child_idx = 0;
+    for (QuadtreeRelativeChildIndex relative_child_idx = 0;
          relative_child_idx < QuadtreeIndex::kNumChildren;
          ++relative_child_idx) {
       const QuadtreeIndex child_index =

@@ -31,7 +31,7 @@ class ScalarQuadtree : public VolumetricDataStructure {
   Index getMaxPossibleIndex() const;
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
-  NodeIndexElement getMaxDepth() const { return max_depth_; }
+  QuadtreeIndexElement getMaxDepth() const { return max_depth_; }
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
@@ -64,14 +64,14 @@ class ScalarQuadtree : public VolumetricDataStructure {
            root_node_offset_;
   }
 
-  FloatingPoint computeNodeWidthAtDepth(NodeIndexElement depth);
-  Vector computeNodeHalvedDiagonalAtDepth(NodeIndexElement depth);
+  FloatingPoint computeNodeWidthAtDepth(QuadtreeIndexElement depth);
+  Vector computeNodeHalvedDiagonalAtDepth(QuadtreeIndexElement depth);
 
  private:
   using CellDataSpecialized = typename CellT::Specialized;
 
   Quadtree<CellDataSpecialized> quadtree_;
-  NodeIndexElement max_depth_;
+  QuadtreeIndexElement max_depth_;
   FloatingPoint root_node_width_;
   Index root_node_offset_;
 };

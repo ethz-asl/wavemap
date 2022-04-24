@@ -53,7 +53,7 @@ size_t Quadtree<NodeDataType>::getMemoryUsage() const {
     memory_usage += node->getMemoryUsage();
 
     if (node->hasChildrenArray()) {
-      for (NodeRelativeChildIndex child_idx = 0;
+      for (QuadtreeRelativeChildIndex child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           stack.template emplace(node->getChild(child_idx));
@@ -80,9 +80,9 @@ template <typename NodeDataType>
 Node<NodeDataType>* Quadtree<NodeDataType>::getNode(const QuadtreeIndex& index,
                                                     bool auto_allocate) {
   Node<NodeDataType>* current_parent = &root_node_;
-  const std::vector<NodeRelativeChildIndex> child_indices =
+  const std::vector<QuadtreeRelativeChildIndex> child_indices =
       index.computeRelativeChildIndices();
-  for (const NodeRelativeChildIndex child_index : child_indices) {
+  for (const QuadtreeRelativeChildIndex child_index : child_indices) {
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       if (auto_allocate) {
@@ -102,9 +102,9 @@ template <typename NodeDataType>
 const Node<NodeDataType>* Quadtree<NodeDataType>::getNode(
     const QuadtreeIndex& index) const {
   const Node<NodeDataType>* current_parent = &root_node_;
-  const std::vector<NodeRelativeChildIndex> child_indices =
+  const std::vector<QuadtreeRelativeChildIndex> child_indices =
       index.computeRelativeChildIndices();
-  for (const NodeRelativeChildIndex child_index : child_indices) {
+  for (const QuadtreeRelativeChildIndex child_index : child_indices) {
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       return nullptr;

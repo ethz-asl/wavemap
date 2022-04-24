@@ -172,7 +172,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
    private:
     struct NodeAndState {
       NodeType* node_ptr;
-      NodeRelativeChildIndex last_expanded_child_idx;
+      QuadtreeRelativeChildIndex last_expanded_child_idx;
       bool operator==(const NodeAndState& rhs) const {
         return node_ptr == rhs.node_ptr &&
                last_expanded_child_idx == rhs.last_expanded_child_idx;
@@ -183,7 +183,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
       if (parent_ptr->hasChildrenArray()) {
         // If the node has descendants, recursively enqueue all of its
         // descendants that have the lowest index on their respective level
-        for (NodeRelativeChildIndex child_idx = 0;
+        for (QuadtreeRelativeChildIndex child_idx = 0;
              child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
           NodeType* child_ptr = parent_ptr->getChild(child_idx);
           if (child_ptr) {

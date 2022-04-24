@@ -16,10 +16,10 @@ inline QuadtreeIndex QuadtreeIndex::computeParentIndex() const {
 }
 
 inline QuadtreeIndex QuadtreeIndex::computeParentIndex(
-    NodeIndexElement parent_depth) const {
+    QuadtreeIndexElement parent_depth) const {
   DCHECK_GE(parent_depth, 0);
   DCHECK_LT(parent_depth, depth);
-  const NodeIndexElement depth_difference = depth - parent_depth;
+  const QuadtreeIndexElement depth_difference = depth - parent_depth;
 
   QuadtreeIndex parent_index = *this;
   parent_index.position.x() >>= depth_difference;
@@ -36,7 +36,8 @@ inline std::vector<QuadtreeIndex> QuadtreeIndex::computeParentIndices() const {
 
   std::vector<QuadtreeIndex> parent_indices(depth);
   parent_indices[depth - 1] = computeParentIndex();
-  for (NodeIndexElement depth_idx = depth - 2; 0 <= depth_idx; --depth_idx) {
+  for (QuadtreeIndexElement depth_idx = depth - 2; 0 <= depth_idx;
+       --depth_idx) {
     parent_indices[depth_idx] =
         parent_indices[depth_idx + 1].computeParentIndex();
   }
@@ -45,7 +46,7 @@ inline std::vector<QuadtreeIndex> QuadtreeIndex::computeParentIndices() const {
 }
 
 inline QuadtreeIndex QuadtreeIndex::computeChildIndex(
-    NodeRelativeChildIndex relative_child_index) const {
+    QuadtreeRelativeChildIndex relative_child_index) const {
   QuadtreeIndex child_index = *this;
 
   // Compute index of first child
@@ -62,26 +63,28 @@ inline QuadtreeIndex QuadtreeIndex::computeChildIndex(
 
 inline std::vector<QuadtreeIndex> QuadtreeIndex::computeChildIndices() const {
   std::vector<QuadtreeIndex> child_indices(kNumChildren);
-  for (NodeRelativeChildIndex relative_child_idx = 0;
+  for (QuadtreeRelativeChildIndex relative_child_idx = 0;
        relative_child_idx < kNumChildren; ++relative_child_idx) {
     child_indices[relative_child_idx] = computeChildIndex(relative_child_idx);
   }
   return child_indices;
 }
 
-inline NodeRelativeChildIndex QuadtreeIndex::computeRelativeChildIndex() const {
-  NodeRelativeChildIndex child_index = 0;
+inline QuadtreeRelativeChildIndex QuadtreeIndex::computeRelativeChildIndex()
+    const {
+  QuadtreeRelativeChildIndex child_index = 0;
   for (int i = 0; i < kMapDimension; ++i) {
     child_index += (position[i] & 0b1) << i;
   }
   return child_index;
 }
 
-inline std::vector<NodeRelativeChildIndex>
+inline std::vector<QuadtreeRelativeChildIndex>
 QuadtreeIndex::computeRelativeChildIndices() const {
-  std::vector<NodeRelativeChildIndex> child_indices(depth);
+  std::vector<QuadtreeRelativeChildIndex> child_indices(depth);
   QuadtreeIndex node_index = *this;
-  for (NodeIndexElement depth_idx = depth - 1; 0 <= depth_idx; --depth_idx) {
+  for (QuadtreeIndexElement depth_idx = depth - 1; 0 <= depth_idx;
+       --depth_idx) {
     child_indices[depth_idx] = node_index.computeRelativeChildIndex();
     node_index = node_index.computeParentIndex();
   }
