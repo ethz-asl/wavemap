@@ -49,8 +49,9 @@ repos:
       - name: Run cppcheck
         id: cppcheck
         args: [ --std=c++17, --language=c++, --force, --quiet,
-                "--enable=performance,portability",
                 --library=googletest, --library=tools/cppcheck/gazebo,
+                "--enable=warning,performance,portability",
+                "--suppress=constStatement",
                 "--suppress=syntaxError:*test/src/*/test_*.cc" ]
 
   - repo: https://github.com/cheshirekow/cmake-format-precommit

@@ -5,14 +5,10 @@ find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 # Configure
-if (CATKIN_ENABLE_TESTING AND ENABLE_COVERAGE_TESTING)
-  find_package(code_coverage REQUIRED)
-  append_coverage_compiler_flags()
-endif ()
-
 set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -std=c++17 \
-    -Wall -Wextra -Wno-deprecated-copy -Wno-class-memaccess \
+    -Wall -Wextra -Wsuggest-attribute=const \
+    -Wno-deprecated-copy -Wno-class-memaccess \
     -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN")
 
 if (USE_UBSAN)
