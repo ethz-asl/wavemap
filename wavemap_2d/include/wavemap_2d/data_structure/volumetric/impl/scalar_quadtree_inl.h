@@ -20,7 +20,7 @@ void ScalarQuadtree<CellT>::averageAndPrune() {
 
 template <typename CellT>
 Index ScalarQuadtree<CellT>::getMinPossibleIndex() const {
-  return nodeIndexToIndex(QuadtreeIndex{max_depth_, Index::Constant(0)});
+  return nodeIndexToIndex(QuadtreeIndex{max_depth_, Index::Zero()});
 }
 
 template <typename CellT>

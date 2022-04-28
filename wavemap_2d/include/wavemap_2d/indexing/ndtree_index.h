@@ -23,7 +23,9 @@ struct NdtreeIndex {
   bool operator==(const NdtreeIndex& other) const {
     return depth == other.depth && position == other.position;
   }
-  bool operator!=(const NdtreeIndex& other) const { return !(*this == other); }
+  bool operator!=(const NdtreeIndex& other) const {
+    return !(*this == other);  // NOLINT
+  }
 
   NdtreeIndex computeParentIndex() const;
   NdtreeIndex computeParentIndex(Element parent_depth) const;

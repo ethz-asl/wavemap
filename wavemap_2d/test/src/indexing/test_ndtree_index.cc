@@ -57,19 +57,22 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, TestFixture::kMaxDepth,
           TestFixture::kMaxDepth);
-  random_indices.emplace_back(TypeParam{.depth = 0, .position = {0, 0}});
-  for (typename TypeParam::Element index_depth = 1;
-       index_depth < TestFixture::kMaxDepth; ++index_depth) {
-    for (typename TypeParam::Element index_x = 0; index_x <= 1; ++index_x) {
-      for (typename TypeParam::Element index_y = 0; index_y <= 1; ++index_y) {
-        random_indices.emplace_back(
-            TypeParam{.depth = index_depth, .position = {index_x, index_y}});
+  random_indices.emplace_back(
+      TypeParam{.depth = 0, .position = TypeParam::Position::Zero()});
+  for (typename TypeParam::Element depth_idx = 1;
+       depth_idx < TestFixture::kMaxDepth; ++depth_idx) {
+    for (int relative_child_idx = 0;
+         relative_child_idx < TypeParam::kNumChildren; ++relative_child_idx) {
+      typename TypeParam::Position position_index = TypeParam::Position::Zero();
+      for (int dim_idx = 0; dim_idx < TypeParam::kDim; ++dim_idx) {
+        position_index[dim_idx] = (relative_child_idx >> dim_idx) & 0b1;
       }
+      random_indices.emplace_back(
+          TypeParam{.depth = depth_idx, .position = position_index});
     }
   }
 
   // Test parent <-> child conversions
-  const TypeParam root_index{.depth = 0, .position = {0, 0}};
   for (const TypeParam& node_index : random_indices) {
     // Check all parents from the random node up to the root of the tree
     const std::vector<TypeParam> parent_index_list =
