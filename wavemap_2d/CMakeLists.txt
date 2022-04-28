@@ -111,9 +111,9 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_index_conversions PRIVATE test/include)
   target_link_libraries(test_index_conversions ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_quadtree_index test/src/indexing/test_ndtree_index.cc)
-  target_include_directories(test_quadtree_index PRIVATE test/include)
-  target_link_libraries(test_quadtree_index ${PROJECT_NAME} testing_main)
+  catkin_add_gtest(test_ndtree_index test/src/indexing/test_ndtree_index.cc)
+  target_include_directories(test_ndtree_index PRIVATE test/include)
+  target_link_libraries(test_ndtree_index ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_grid_iterator test/src/iterator/test_grid_iterator.cc)
   target_include_directories(test_grid_iterator PRIVATE test/include)

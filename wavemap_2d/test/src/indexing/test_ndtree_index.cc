@@ -68,17 +68,27 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
     }
   }
 
-  // Test round trips between children and parents
+  // Test parent <-> child conversions
   const TypeParam root_index{.depth = 0, .position = {0, 0}};
   for (const TypeParam& node_index : random_indices) {
-    if (node_index.depth != 0) {
-      const TypeParam top_parent_index = node_index.computeParentIndex(0);
-      EXPECT_EQ(top_parent_index, root_index)
-          << "The index of the highest parent of node " << node_index.toString()
-          << " is " << top_parent_index.toString()
-          << " while it should equal the root node index "
-          << root_index.toString() << ".";
+    // Check all parents from the random node up to the root of the tree
+    const std::vector<TypeParam> parent_index_list =
+        node_index.computeParentIndices();
+    TypeParam parent_index_iterative = node_index;
+    for (typename TypeParam::Element depth = node_index.depth - 1; 0 <= depth;
+         --depth) {
+      parent_index_iterative = parent_index_iterative.computeParentIndex();
+      EXPECT_EQ(parent_index_list[depth], parent_index_iterative);
+      EXPECT_EQ(node_index.computeParentIndex(depth), parent_index_iterative);
     }
+    if (node_index.depth == 0) {
+      EXPECT_EQ(parent_index_list.size(), 0)
+          << "The list of parent indices for the root node should be empty.";
+    }
+
+    // Test round trips between children and parents
+    const std::vector<TypeParam> child_indices =
+        node_index.computeChildIndices();
     for (typename TypeParam::RelativeChild relative_child_idx = 0;
          relative_child_idx < TypeParam::kNumChildren; ++relative_child_idx) {
       const TypeParam child_index =
@@ -88,6 +98,14 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
           << std::to_string(child_index.computeRelativeChildIndex())
           << "\" should match the requested relative child index \""
           << std::to_string(relative_child_idx) << "\".";
+      EXPECT_EQ(child_index, child_indices[relative_child_idx])
+          << "The child indices obtained through "
+             "node_index.computeChildIndex(relative_child_idx) and "
+             "node_index.computeChildIndices()[relative_child_idx] should be "
+             "equal and appear in the same order. But for relative child idx "
+          << std::to_string(relative_child_idx) << " we got "
+          << child_index.toString() << " and "
+          << child_indices[relative_child_idx].toString() << " instead.";
       EXPECT_EQ(child_index.computeParentIndex(), node_index)
           << "The current child's parent "
           << child_index.computeParentIndex().toString()
