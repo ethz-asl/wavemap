@@ -98,17 +98,35 @@ Index ScalarQuadtree<CellT>::getMaxIndex() const {
 
 template <typename CellT>
 bool ScalarQuadtree<CellT>::hasCell(const Index& index) const {
-  const QuadtreeIndex node_index = indexToNodeIndex(index);
-  const Node<CellDataSpecialized>* node = quadtree_.getNode(node_index);
-  return node;
+  const Node<CellDataSpecialized>* deepest_node_at_index =
+      getDeepestNodeAtIndex(index);
+  return deepest_node_at_index;
+}
+
+template <typename CellT>
+QuadtreeIndex::Element ScalarQuadtree<CellT>::getDepthAtIndex(
+    const Index& index) {
+  QuadtreeIndex::Element depth = 0;
+  const QuadtreeIndex deepest_possible_node_index = indexToNodeIndex(index);
+  const Node<CellDataSpecialized>* node = &quadtree_.getRootNode();
+  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
+      deepest_possible_node_index.computeRelativeChildIndices();
+  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
+    if (!node->hasChild(child_index)) {
+      break;
+    }
+    node = node->getChild(child_index);
+    ++depth;
+  }
+  return depth;
 }
 
 template <typename CellT>
 FloatingPoint ScalarQuadtree<CellT>::getCellValue(const Index& index) const {
-  const QuadtreeIndex node_index = indexToNodeIndex(index);
-  const Node<CellDataSpecialized>* node = quadtree_.getNode(node_index);
-  if (node) {
-    return node->data();
+  const Node<CellDataSpecialized>* deepest_node_at_index =
+      getDeepestNodeAtIndex(index);
+  if (deepest_node_at_index) {
+    return deepest_node_at_index->data();
   } else {
     return 0.f;
   }
@@ -129,6 +147,19 @@ void ScalarQuadtree<CellT>::setCellValue(const Index& index,
 }
 
 template <typename CellT>
+void ScalarQuadtree<CellT>::setCellValue(const QuadtreeIndex& node_index,
+                                         FloatingPoint new_value) {
+  constexpr bool kAutoAllocate = true;
+  Node<CellDataSpecialized>* node =
+      quadtree_.getNode(node_index, kAutoAllocate);
+  if (node) {
+    node->data() = new_value;
+  } else {
+    LOG(ERROR) << "Failed to allocate cell at index: " << node_index.toString();
+  }
+}
+
+template <typename CellT>
 void ScalarQuadtree<CellT>::addToCellValue(const Index& index,
                                            FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
@@ -139,6 +170,19 @@ void ScalarQuadtree<CellT>::addToCellValue(const Index& index,
     node->data() = CellT::add(node->data(), update);
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << index;
+  }
+}
+
+template <typename CellT>
+void ScalarQuadtree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
+                                           FloatingPoint update) {
+  constexpr bool kAutoAllocate = true;
+  Node<CellDataSpecialized>* node =
+      quadtree_.getNode(node_index, kAutoAllocate);
+  if (node) {
+    node->data() = CellT::add(node->data(), update);
+  } else {
+    LOG(ERROR) << "Failed to allocate cell at index: " << node_index.toString();
   }
 }
 
@@ -172,6 +216,22 @@ template <typename CellT>
 Vector ScalarQuadtree<CellT>::computeNodeHalvedDiagonalAtDepth(
     QuadtreeIndex::Element depth) {
   return Vector::Constant(0.5f) * computeNodeWidthAtDepth(depth);
+}
+
+template <typename CellT>
+const Node<typename CellT::Specialized>*
+ScalarQuadtree<CellT>::getDeepestNodeAtIndex(const Index& index) const {
+  const QuadtreeIndex deepest_possible_node_index = indexToNodeIndex(index);
+  const Node<CellDataSpecialized>* node = &quadtree_.getRootNode();
+  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
+      deepest_possible_node_index.computeRelativeChildIndices();
+  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
+    if (!node->hasChild(child_index)) {
+      break;
+    }
+    node = node->getChild(child_index);
+  }
+  return node;
 }
 }  // namespace wavemap_2d
 

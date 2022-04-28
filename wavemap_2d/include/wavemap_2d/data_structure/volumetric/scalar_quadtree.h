@@ -34,9 +34,12 @@ class ScalarQuadtree : public VolumetricDataStructure {
   QuadtreeIndex::Element getMaxDepth() const { return max_depth_; }
 
   bool hasCell(const Index& index) const override;
+  QuadtreeIndex::Element getDepthAtIndex(const Index& index);
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
+  void setCellValue(const QuadtreeIndex& index, FloatingPoint new_value);
   void addToCellValue(const Index& index, FloatingPoint update) override;
+  void addToCellValue(const QuadtreeIndex& index, FloatingPoint update);
 
   template <TraversalOrder traversal_order>
   auto getIterator() {
@@ -74,6 +77,9 @@ class ScalarQuadtree : public VolumetricDataStructure {
   QuadtreeIndex::Element max_depth_;
   FloatingPoint root_node_width_;
   Index root_node_offset_;
+
+  const Node<CellDataSpecialized>* getDeepestNodeAtIndex(
+      const Index& index) const;
 };
 }  // namespace wavemap_2d
 

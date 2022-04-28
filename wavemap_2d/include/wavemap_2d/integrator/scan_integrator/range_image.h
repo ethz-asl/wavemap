@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_RANGE_IMAGE_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_RANGE_IMAGE_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
+#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
 
 namespace wavemap_2d {
 using RangeImageIndex = Eigen::Index;
@@ -27,6 +27,7 @@ class RangeImage {
   FloatingPoint getMinAngle() const { return min_angle_; }
   FloatingPoint getMaxAngle() const { return max_angle_; }
   Eigen::Index getNBeams() const { return data_.cols(); }
+  const RangeImageData& getData() const { return data_; }
 
   FloatingPoint& operator[](RangeImageIndex index) {
     DCHECK_GE(index, 0);
@@ -82,4 +83,4 @@ class RangeImage {
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_RANGE_IMAGE_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_

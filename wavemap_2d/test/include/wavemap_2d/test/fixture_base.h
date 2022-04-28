@@ -91,27 +91,34 @@ class FixtureBase : public ::testing::Test {
     return random_indices;
   }
 
-  QuadtreeIndex::Element getRandomQuadtreeIndexDepth(
+  QuadtreeIndex::Element getRandomNdtreeIndexDepth(
       const QuadtreeIndex::Element min_depth = 0,
       const QuadtreeIndex::Element max_depth = 14) const {
     return random_number_generator_->getRandomInteger(min_depth, max_depth);
   }
 
-  std::vector<QuadtreeIndex> getRandomQuadtreeIndexVector(
-      const Index& min_index, const Index& max_index,
-      QuadtreeIndex::Element min_depth, QuadtreeIndex::Element max_depth,
-      size_t min_num_indices = 2u, size_t max_num_indices = 100u) const {
-    CHECK((min_index.array() < max_index.array()).all());
+  template <typename NdtreeIndexT>
+  std::vector<NdtreeIndexT> getRandomNdtreeIndexVector(
+      typename NdtreeIndexT::Position min_index,
+      typename NdtreeIndexT::Position max_index,
+      typename NdtreeIndexT::Element min_depth,
+      typename NdtreeIndexT::Element max_depth, size_t min_num_indices = 2u,
+      size_t max_num_indices = 100u) const {
+    CHECK((min_index.array() <= max_index.array()).all());
     CHECK_LE(min_depth, max_depth);
 
     const size_t num_indices = random_number_generator_->getRandomInteger(
         min_num_indices, max_num_indices);
 
-    std::vector<QuadtreeIndex> random_indices(num_indices);
+    std::vector<NdtreeIndexT> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(), [&]() {
-      return QuadtreeIndex{
-          .depth = getRandomQuadtreeIndexDepth(min_depth, max_depth),
-          .position = getRandomIndex(min_index, max_index)};
+      typename NdtreeIndexT::Position position_index;
+      for (int i = 0; i < NdtreeIndexT::kDim; ++i) {
+        position_index[i] = getRandomIndexElement(min_index[i], max_index[i]);
+      }
+      return NdtreeIndexT{
+          .depth = getRandomNdtreeIndexDepth(min_depth, max_depth),
+          .position = position_index};
     });
     return random_indices;
   }

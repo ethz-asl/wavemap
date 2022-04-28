@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/data_structure/generic/range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/range_image.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {

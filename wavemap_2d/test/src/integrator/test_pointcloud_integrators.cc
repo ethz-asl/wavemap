@@ -11,7 +11,7 @@
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
 #include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/scan_integrator.h"
+#include "wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_scan_integrator.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
 #include "wavemap_2d/utils/eigen_format.h"
@@ -115,7 +115,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndScanIntegratorEquivalence) {
     VolumetricDataStructure::Ptr scan_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(resolution);
     PointcloudIntegrator::Ptr scan_integrator =
-        std::make_shared<ScanIntegrator>(scan_occupancy_map);
+        std::make_shared<FixedResolutionScanIntegrator>(scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       scan_occupancy_map->showImage(true, 1000);

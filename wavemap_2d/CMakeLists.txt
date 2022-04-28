@@ -91,8 +91,7 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_pointcloud PRIVATE test/include)
   target_link_libraries(test_pointcloud ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_range_image
-                   test/src/data_structure/generic/test_range_image.cc)
+  catkin_add_gtest(test_range_image test/src/integrator/test_range_image.cc)
   target_include_directories(test_range_image PRIVATE test/include)
   target_link_libraries(test_range_image ${PROJECT_NAME} testing_main)
 
@@ -132,6 +131,13 @@ if (CATKIN_ENABLE_TESTING)
                    test/src/integrator/test_pointcloud_integrators.cc)
   target_include_directories(test_pointcloud_integrators PRIVATE test/include)
   target_link_libraries(test_pointcloud_integrators ${PROJECT_NAME}
+                        testing_main)
+
+  catkin_add_gtest(test_coarse_to_fine_integrator
+                   test/src/integrator/test_coarse_to_fine_integrator.cc)
+  target_include_directories(test_coarse_to_fine_integrator
+                             PRIVATE test/include)
+  target_link_libraries(test_coarse_to_fine_integrator ${PROJECT_NAME}
                         testing_main)
 
   catkin_add_gtest(test_measurement_models

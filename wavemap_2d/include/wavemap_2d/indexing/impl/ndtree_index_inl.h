@@ -104,7 +104,7 @@ std::string NdtreeIndex<dim>::toString() const {
   std::stringstream ss;
   ss << "[depth=";
   ss << depth << ", position=[";
-  for (int i = 0; i < kMapDimension; ++i) {
+  for (int i = 0; i < dim; ++i) {
     if (i) {
       ss << ", ";
     }

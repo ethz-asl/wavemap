@@ -1,10 +1,11 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_IMPL_SCAN_INTEGRATOR_INL_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_IMPL_SCAN_INTEGRATOR_INL_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_FIXED_RESOLUTION_IMPL_FIXED_RESOLUTION_SCAN_INTEGRATOR_INL_H_
+#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_FIXED_RESOLUTION_IMPL_FIXED_RESOLUTION_SCAN_INTEGRATOR_INL_H_
 
 #include <algorithm>
 
 namespace wavemap_2d {
-void ScanIntegrator::integratePointcloud(const PosedPointcloud<>& pointcloud) {
+void FixedResolutionScanIntegrator::integratePointcloud(
+    const PosedPointcloud<>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
   }
@@ -37,7 +38,7 @@ void ScanIntegrator::integratePointcloud(const PosedPointcloud<>& pointcloud) {
   }
 }
 
-void ScanIntegrator::computeRangeImageAndAABB(
+void FixedResolutionScanIntegrator::computeRangeImageAndAABB(
     const PosedPointcloud<>& pointcloud, RangeImage& range_image, AABB& aabb) {
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
@@ -55,6 +56,8 @@ void ScanIntegrator::computeRangeImageAndAABB(
     // Add the point to the range image
     const RangeImageIndex range_image_index =
         range_image.bearingToNearestIndex(C_point);
+    CHECK_GE(range_image_index, 0);
+    CHECK_LT(range_image_index, range_image.getNBeams());
     range_image[range_image_index] = range;
 
     // Update the AABB (in world frame)
@@ -75,7 +78,7 @@ void ScanIntegrator::computeRangeImageAndAABB(
   aabb.max += Vector::Constant(max_lateral_component);
 }
 
-FloatingPoint ScanIntegrator::computeUpdateForCell(
+FloatingPoint FixedResolutionScanIntegrator::computeUpdateForCell(
     const RangeImage& range_image, const Point& C_cell_center) {
   const FloatingPoint cell_to_sensor_distance = C_cell_center.norm();
   const FloatingPoint cell_azimuth_angle =
@@ -115,4 +118,4 @@ FloatingPoint ScanIntegrator::computeUpdateForCell(
 }
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_IMPL_SCAN_INTEGRATOR_INL_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_FIXED_RESOLUTION_IMPL_FIXED_RESOLUTION_SCAN_INTEGRATOR_INL_H_

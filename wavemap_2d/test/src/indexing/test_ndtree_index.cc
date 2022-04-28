@@ -19,31 +19,6 @@ class NdtreeIndexTest : public FixtureBase {
   FloatingPoint getRandomRootNodeWidth() {
     return random_number_generator_->getRandomRealNumber(0.1f, 1e3f);
   }
-
-  std::vector<NdtreeIndexT> getRandomNdtreeIndexVector(
-      typename NdtreeIndexT::Position min_index,
-      typename NdtreeIndexT::Position max_index,
-      typename NdtreeIndexT::Element min_depth,
-      typename NdtreeIndexT::Element max_depth, size_t min_num_indices = 2u,
-      size_t max_num_indices = 100u) const {
-    CHECK((min_index.array() <= max_index.array()).all());
-    CHECK_LE(min_depth, max_depth);
-
-    const size_t num_indices = random_number_generator_->getRandomInteger(
-        min_num_indices, max_num_indices);
-
-    std::vector<NdtreeIndexT> random_indices(num_indices);
-    std::generate(random_indices.begin(), random_indices.end(), [&]() {
-      typename NdtreeIndexT::Position position_index;
-      for (int i = 0; i < NdtreeIndexT::kDim; ++i) {
-        position_index[i] = getRandomIndexElement(min_index[i], max_index[i]);
-      }
-      return NdtreeIndexT{
-          .depth = getRandomQuadtreeIndexDepth(min_depth, max_depth),
-          .position = position_index};
-    });
-    return random_indices;
-  }
 };
 
 using Dimensions =
@@ -53,7 +28,7 @@ TYPED_TEST_SUITE(NdtreeIndexTest, Dimensions);
 TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
   // Generate a combination of random and handpicked node indices for testing
   std::vector<TypeParam> random_indices =
-      TestFixture::getRandomNdtreeIndexVector(
+      TestFixture::template getRandomNdtreeIndexVector<TypeParam>(
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, TestFixture::kMaxDepth,
           TestFixture::kMaxDepth);
@@ -72,7 +47,7 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
     }
   }
 
-  // Test parent <-> child conversions
+  // Test parent and child conversions
   for (const TypeParam& node_index : random_indices) {
     // Check all parents from the random node up to the root of the tree
     const std::vector<TypeParam> parent_index_list =

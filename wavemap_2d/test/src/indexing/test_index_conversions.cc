@@ -24,8 +24,9 @@ class IndexConversionsTest : public FixtureBase {
 
 TEST_F(IndexConversionsTest, NodeIndexConversions) {
   // Generate a combination of random and handpicked node indices for testing
-  std::vector<QuadtreeIndex> random_indices = getRandomQuadtreeIndexVector(
-      kMinQuadtreePositionIndex, kMaxQuadtreePositionIndex, 1, kMaxDepth);
+  std::vector<QuadtreeIndex> random_indices =
+      getRandomNdtreeIndexVector<QuadtreeIndex>(
+          kMinQuadtreePositionIndex, kMaxQuadtreePositionIndex, 1, kMaxDepth);
   random_indices.emplace_back(QuadtreeIndex{.depth = 0, .position = {0, 0}});
   for (QuadtreeIndex::Element index_depth = 1; index_depth < kMaxDepth;
        ++index_depth) {
