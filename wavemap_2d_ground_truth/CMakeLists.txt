@@ -7,7 +7,8 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # Configure
 set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -std=c++17 \
-    -Wall -Wextra -Wno-deprecated-copy -Wno-class-memaccess \
+    -Wall -Wextra -Wsuggest-attribute=const \
+    -Wno-deprecated-copy -Wno-class-memaccess \
     -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN")
 
 if (USE_CLANG_TIDY)

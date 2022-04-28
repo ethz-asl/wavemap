@@ -5,6 +5,7 @@
 #include <stack>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "wavemap_2d/transform/tree/child_averaging.h"
 
@@ -13,7 +14,7 @@ template <typename CellT>
 void ScalarQuadtree<CellT>::averageAndPrune() {
   for (auto& node :
        quadtree_.template getIterator<TraversalOrder::kDepthFirstPostorder>()) {
-    AverageAndPruneChildren<UnboundedOccupancyCell::Specialized>(node);
+    AverageAndPruneChildren<CellDataSpecialized>(node);
   }
 }
 
@@ -42,7 +43,7 @@ Index ScalarQuadtree<CellT>::getMinIndex() const {
     stack.pop();
 
     if (node->hasChildrenArray()) {
-      for (QuadtreeRelativeChildIndex child_idx = 0;
+      for (QuadtreeIndex::RelativeChild child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           const QuadtreeIndex child_node_index =
@@ -76,7 +77,7 @@ Index ScalarQuadtree<CellT>::getMaxIndex() const {
     stack.pop();
 
     if (node->hasChildrenArray()) {
-      for (QuadtreeRelativeChildIndex child_idx = 0;
+      for (QuadtreeIndex::RelativeChild child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           const QuadtreeIndex child_node_index =
@@ -163,13 +164,13 @@ bool ScalarQuadtree<CellT>::load(const std::string& /*file_path_prefix*/,
 
 template <typename CellT>
 FloatingPoint ScalarQuadtree<CellT>::computeNodeWidthAtDepth(
-    QuadtreeIndexElement depth) {
+    QuadtreeIndex::Element depth) {
   return root_node_width_ / std::exp2(depth);
 }
 
 template <typename CellT>
 Vector ScalarQuadtree<CellT>::computeNodeHalvedDiagonalAtDepth(
-    QuadtreeIndexElement depth) {
+    QuadtreeIndex::Element depth) {
   return Vector::Constant(0.5f) * computeNodeWidthAtDepth(depth);
 }
 }  // namespace wavemap_2d

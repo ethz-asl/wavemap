@@ -5,7 +5,7 @@
 
 #include "wavemap_2d/data_structure/generic/quadtree/quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
-#include "wavemap_2d/indexing/quadtree_index.h"
+#include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
 template <typename CellT>
@@ -31,7 +31,7 @@ class ScalarQuadtree : public VolumetricDataStructure {
   Index getMaxPossibleIndex() const;
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
-  QuadtreeIndexElement getMaxDepth() const { return max_depth_; }
+  QuadtreeIndex::Element getMaxDepth() const { return max_depth_; }
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
@@ -64,14 +64,14 @@ class ScalarQuadtree : public VolumetricDataStructure {
            root_node_offset_;
   }
 
-  FloatingPoint computeNodeWidthAtDepth(QuadtreeIndexElement depth);
-  Vector computeNodeHalvedDiagonalAtDepth(QuadtreeIndexElement depth);
+  FloatingPoint computeNodeWidthAtDepth(QuadtreeIndex::Element depth);
+  Vector computeNodeHalvedDiagonalAtDepth(QuadtreeIndex::Element depth);
 
  private:
   using CellDataSpecialized = typename CellT::Specialized;
 
   Quadtree<CellDataSpecialized> quadtree_;
-  QuadtreeIndexElement max_depth_;
+  QuadtreeIndex::Element max_depth_;
   FloatingPoint root_node_width_;
   Index root_node_offset_;
 };

@@ -8,7 +8,7 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/indexing/index.h"
-#include "wavemap_2d/indexing/quadtree_index.h"
+#include "wavemap_2d/indexing/ndtree_index.h"
 #include "wavemap_2d/utils/random_number_generator.h"
 
 namespace wavemap_2d {
@@ -91,15 +91,15 @@ class FixtureBase : public ::testing::Test {
     return random_indices;
   }
 
-  QuadtreeIndexElement getRandomQuadtreeIndexDepth(
-      const QuadtreeIndexElement min_depth = 0,
-      const QuadtreeIndexElement max_depth = 14) const {
+  QuadtreeIndex::Element getRandomQuadtreeIndexDepth(
+      const QuadtreeIndex::Element min_depth = 0,
+      const QuadtreeIndex::Element max_depth = 14) const {
     return random_number_generator_->getRandomInteger(min_depth, max_depth);
   }
 
   std::vector<QuadtreeIndex> getRandomQuadtreeIndexVector(
       const Index& min_index, const Index& max_index,
-      QuadtreeIndexElement min_depth, QuadtreeIndexElement max_depth,
+      QuadtreeIndex::Element min_depth, QuadtreeIndex::Element max_depth,
       size_t min_num_indices = 2u, size_t max_num_indices = 100u) const {
     CHECK((min_index.array() < max_index.array()).all());
     CHECK_LE(min_depth, max_depth);

@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/indexing/quadtree_index.h"
+#include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
 template <typename NodeDataType>
@@ -26,14 +26,14 @@ class Node {
   void allocateChildrenArrayIfNeeded();
   void deleteChildrenArray();
 
-  bool hasChild(QuadtreeRelativeChildIndex child_index) const;
+  bool hasChild(QuadtreeIndex::RelativeChild child_index) const;
   bool hasAtLeastOneChild() const;
   template <typename... NodeConstructorArgs>
-  Node* allocateChild(QuadtreeRelativeChildIndex child_index,
+  Node* allocateChild(QuadtreeIndex::RelativeChild child_index,
                       NodeConstructorArgs&&... args);
-  bool deleteChild(QuadtreeRelativeChildIndex child_index);
-  Node* getChild(QuadtreeRelativeChildIndex child_index);
-  const Node* getChild(QuadtreeRelativeChildIndex child_index) const;
+  bool deleteChild(QuadtreeIndex::RelativeChild child_index);
+  Node* getChild(QuadtreeIndex::RelativeChild child_index);
+  const Node* getChild(QuadtreeIndex::RelativeChild child_index) const;
 
   size_t getMemoryUsage() const;
 

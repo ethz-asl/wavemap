@@ -43,7 +43,6 @@ endif ()
 cs_add_library(
   ${PROJECT_NAME}
   src/data_structure/volumetric_data_structure.cc
-  src/indexing/quadtree_index.cc
   src/integrator/pointcloud_integrator.cc
   src/integrator/measurement_model/beam_model.cc
   src/integrator/measurement_model/fixed_logodds_model.cc
@@ -112,7 +111,7 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_index_conversions PRIVATE test/include)
   target_link_libraries(test_index_conversions ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_quadtree_index test/src/indexing/test_quadtree_index.cc)
+  catkin_add_gtest(test_quadtree_index test/src/indexing/test_ndtree_index.cc)
   target_include_directories(test_quadtree_index PRIVATE test/include)
   target_link_libraries(test_quadtree_index ${PROJECT_NAME} testing_main)
 

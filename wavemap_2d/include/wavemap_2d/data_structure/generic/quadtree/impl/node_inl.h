@@ -19,7 +19,7 @@ void Node<NodeDataType>::deleteChildrenArray() {
 
 template <typename NodeDataType>
 bool Node<NodeDataType>::hasChild(
-    QuadtreeRelativeChildIndex child_index) const {
+    QuadtreeIndex::RelativeChild child_index) const {
   return getChild(child_index);
 }
 
@@ -39,7 +39,7 @@ bool Node<NodeDataType>::hasAtLeastOneChild() const {
 template <typename NodeDataType>
 template <typename... NodeConstructorArgs>
 Node<NodeDataType>* Node<NodeDataType>::allocateChild(
-    QuadtreeRelativeChildIndex child_index, NodeConstructorArgs&&... args) {
+    QuadtreeIndex::RelativeChild child_index, NodeConstructorArgs&&... args) {
   allocateChildrenArrayIfNeeded();
   children_->operator[](child_index) =
       std::make_unique<Node>(std::forward<NodeConstructorArgs>(args)...);
@@ -47,7 +47,7 @@ Node<NodeDataType>* Node<NodeDataType>::allocateChild(
 }
 
 template <typename NodeDataType>
-bool Node<NodeDataType>::deleteChild(QuadtreeRelativeChildIndex child_index) {
+bool Node<NodeDataType>::deleteChild(QuadtreeIndex::RelativeChild child_index) {
   if (hasChild(child_index)) {
     children_->operator[](child_index).reset();
     return true;
@@ -57,7 +57,7 @@ bool Node<NodeDataType>::deleteChild(QuadtreeRelativeChildIndex child_index) {
 
 template <typename NodeDataType>
 Node<NodeDataType>* Node<NodeDataType>::getChild(
-    QuadtreeRelativeChildIndex child_index) {
+    QuadtreeIndex::RelativeChild child_index) {
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }
@@ -66,7 +66,7 @@ Node<NodeDataType>* Node<NodeDataType>::getChild(
 
 template <typename NodeDataType>
 const Node<NodeDataType>* Node<NodeDataType>::getChild(
-    QuadtreeRelativeChildIndex child_index) const {
+    QuadtreeIndex::RelativeChild child_index) const {
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }

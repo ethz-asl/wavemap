@@ -11,7 +11,7 @@
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/indexing/index_conversions.h"
-#include "wavemap_2d/indexing/quadtree_index.h"
+#include "wavemap_2d/indexing/ndtree_index.h"
 #include "wavemap_2d/iterator/subtree_iterator.h"
 
 namespace wavemap_2d {

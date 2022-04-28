@@ -4,7 +4,7 @@
 #include <deque>
 
 #include "wavemap_2d/data_structure/generic/quadtree/node.h"
-#include "wavemap_2d/indexing/quadtree_index.h"
+#include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
 enum class TraversalOrder {
@@ -172,7 +172,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
    private:
     struct NodeAndState {
       NodeType* node_ptr;
-      QuadtreeRelativeChildIndex last_expanded_child_idx;
+      QuadtreeIndex::RelativeChild last_expanded_child_idx;
       bool operator==(const NodeAndState& rhs) const {
         return node_ptr == rhs.node_ptr &&
                last_expanded_child_idx == rhs.last_expanded_child_idx;
@@ -183,7 +183,7 @@ class Subtree<NodeType, TraversalOrder::kDepthFirstPostorder> {
       if (parent_ptr->hasChildrenArray()) {
         // If the node has descendants, recursively enqueue all of its
         // descendants that have the lowest index on their respective level
-        for (QuadtreeRelativeChildIndex child_idx = 0;
+        for (QuadtreeIndex::RelativeChild child_idx = 0;
              child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
           NodeType* child_ptr = parent_ptr->getChild(child_idx);
           if (child_ptr) {

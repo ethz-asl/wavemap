@@ -80,7 +80,7 @@ TYPED_TEST(ScalarQuadtreeTest, Resizing) {
   EXPECT_GE(map.size(), map.getMaxDepth());
   size_t max_unique_nodes = 0u;
   const size_t num_inserted_nodes = random_indices.size();
-  for (QuadtreeIndexElement depth = 0u; depth <= map.getMaxDepth(); ++depth) {
+  for (QuadtreeIndex::Element depth = 0u; depth <= map.getMaxDepth(); ++depth) {
     const size_t max_unique_nodes_at_depth = std::exp2(kMapDimension * depth);
     if (max_unique_nodes_at_depth < num_inserted_nodes) {
       max_unique_nodes += max_unique_nodes_at_depth;
