@@ -33,7 +33,7 @@ class CoarseToFineScanIntegrator : public PointcloudIntegrator {
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
                                             const Point& C_cell_center);
 
-  FRIEND_TEST(CoarseToFineIntegratorTest, HierarchicalRangeImage);
+  friend class CoarseToFineIntegratorTest_HierarchicalRangeImage_Test;
 };
 }  // namespace wavemap_2d
 
