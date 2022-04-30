@@ -118,8 +118,8 @@ FloatingPoint CoarseToFineScanIntegrator::computeUpdateForCell(
       RangeImage::bearingToAngle(C_cell_center);
 
   const auto first_idx =
-      std::max(0l, range_image.angleToCeilIndex(cell_azimuth_angle -
-                                                BeamModel::kAngleThresh));
+      std::max(0, range_image.angleToCeilIndex(cell_azimuth_angle -
+                                               BeamModel::kAngleThresh));
   const auto last_idx =
       std::min(range_image.getNBeams() - 1,
                range_image.angleToFloorIndex(cell_azimuth_angle +

@@ -2,7 +2,7 @@
 #define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
 
 namespace wavemap_2d {
-using RangeImageIndex = Eigen::Index;
+using RangeImageIndex = int;
 
 class RangeImage {
  public:
@@ -26,7 +26,9 @@ class RangeImage {
 
   FloatingPoint getMinAngle() const { return min_angle_; }
   FloatingPoint getMaxAngle() const { return max_angle_; }
-  Eigen::Index getNBeams() const { return data_.cols(); }
+  RangeImageIndex getNBeams() const {
+    return static_cast<RangeImageIndex>(data_.cols());
+  }
   const RangeImageData& getData() const { return data_; }
 
   FloatingPoint& operator[](RangeImageIndex index) {

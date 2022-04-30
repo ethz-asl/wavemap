@@ -8,23 +8,59 @@
 #include "wavemap_2d/integrator/scan_integrator/range_image.h"
 
 namespace wavemap_2d {
+struct Bounds {
+  FloatingPoint lower;
+  FloatingPoint upper;
+};
+
 class HierarchicalRangeImage {
  public:
   explicit HierarchicalRangeImage(const RangeImage& range_image)
-      : lower_bounds_(computeReducedPyramid(
-            range_image, [](auto a, auto b) { return std::min(a, b); })),
+      : range_image_(range_image),
+        lower_bounds_(computeReducedPyramid(
+            range_image_, [](auto a, auto b) { return std::min(a, b); })),
         upper_bounds_(computeReducedPyramid(
-            range_image, [](auto a, auto b) { return std::max(a, b); })) {}
+            range_image_, [](auto a, auto b) { return std::max(a, b); })) {
+    DCHECK_EQ(lower_bounds_.size(), upper_bounds_.size());
+  }
 
   FloatingPoint getLowerBound(const BinaryTreeIndex& index) const {
-    return lower_bounds_[index.depth](0, index.position.x());
+    DCHECK_GE(index.depth, 0);
+    DCHECK_LE(index.depth, lower_bounds_.size());
+    if (index.depth ==
+        static_cast<BinaryTreeIndex::Element>(lower_bounds_.size())) {
+      return range_image_[index.position.x()];
+    } else {
+      return lower_bounds_[index.depth][index.position.x()];
+    }
   }
   FloatingPoint getUpperBound(const BinaryTreeIndex& index) const {
-    return upper_bounds_[index.depth](0, index.position.x());
+    DCHECK_GE(index.depth, 0);
+    DCHECK_LE(index.depth, upper_bounds_.size());
+    if (index.depth ==
+        static_cast<BinaryTreeIndex::Element>(upper_bounds_.size())) {
+      return range_image_[index.position.x()];
+    } else {
+      return upper_bounds_[index.depth][index.position.x()];
+    }
   }
-  size_t getMaxDepth() { return lower_bounds_.size() - 1; }
+  Bounds getBounds(const BinaryTreeIndex& index) const {
+    DCHECK_GE(index.depth, 0);
+    DCHECK_LE(index.depth, lower_bounds_.size());
+    if (index.depth ==
+        static_cast<BinaryTreeIndex::Element>(lower_bounds_.size())) {
+      const FloatingPoint range_image_value = range_image_[index.position.x()];
+      return {.lower = range_image_value, .upper = range_image_value};
+    } else {
+      return {.lower = lower_bounds_[index.depth][index.position.x()],
+              .upper = upper_bounds_[index.depth][index.position.x()]};
+    }
+  }
+  size_t getMaxDepth() const { return lower_bounds_.size(); }
+  size_t getPyramidDepth() const { return lower_bounds_.size() - 1; }
 
  private:
+  const RangeImage& range_image_;
   const std::vector<RangeImage::RangeImageData> lower_bounds_;
   const std::vector<RangeImage::RangeImageData> upper_bounds_;
 

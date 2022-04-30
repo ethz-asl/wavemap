@@ -8,6 +8,10 @@
 namespace wavemap_2d {
 class CoarseToFineIntegratorTest : public FixtureBase {
  protected:
+  Transformation getRandomTransformation() const {
+    return {Transformation::Rotation(getRandomAngle()), getRandomTranslation()};
+  }
+
   PosedPointcloud<> getRandomPointcloud(FloatingPoint min_angle,
                                         FloatingPoint max_angle, int n_beams,
                                         FloatingPoint min_distance,
@@ -29,22 +33,22 @@ class CoarseToFineIntegratorTest : public FixtureBase {
       pointcloud[index] = range * RangeImage::angleToBearing(angle);
     }
 
-    return {Transformation(), pointcloud};
+    return {getRandomTransformation(), pointcloud};
   }
 };
 
 TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
   for (int repetition = 0; repetition < 10; ++repetition) {
-    // Config
+    // Generate a random pointcloud
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
     const int n_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-
-    // Generate the hierarchical range image
     const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
         kMinAngle, kMaxAngle, n_beams, kMinDistance, kMaxDistance);
+
+    // Create the hierarchical range image
     RangeImage range_image(kMinAngle, kMaxAngle, n_beams);
     CoarseToFineScanIntegrator::computeRangeImage(random_pointcloud,
                                                   range_image);
@@ -53,6 +57,8 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     // Test all the bounds from top to bottom
     const auto max_depth = static_cast<BinaryTreeIndex::Element>(
         hierarchical_range_image.getMaxDepth());
+    const auto pyramid_max_depth = static_cast<BinaryTreeIndex::Element>(
+        hierarchical_range_image.getPyramidDepth());
     BinaryTreeIndex index;
     for (index.depth = 0; index.depth <= max_depth; ++index.depth) {
       const BinaryTreeIndex::Element num_elements_at_level = 1 << index.depth;
@@ -60,7 +66,18 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
            ++index.position[0]) {
         EXPECT_LE(hierarchical_range_image.getLowerBound(index),
                   hierarchical_range_image.getUpperBound(index));
+        EXPECT_EQ(hierarchical_range_image.getBounds(index).lower,
+                  hierarchical_range_image.getLowerBound(index));
+        EXPECT_EQ(hierarchical_range_image.getBounds(index).upper,
+                  hierarchical_range_image.getUpperBound(index));
         if (index.depth == max_depth) {
+          if (index.position[0] < range_image.getNBeams()) {
+            EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
+                            range_image[index.position[0]]);
+            EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
+                            range_image[index.position[0]]);
+          }
+        } else if (index.depth == pyramid_max_depth) {
           const BinaryTreeIndex::Element first_child_idx =
               index.computeChildIndex(0).position[0];
           const BinaryTreeIndex::Element second_child_idx =
@@ -77,6 +94,9 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
                             range_image[first_child_idx]);
             EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
                             range_image[first_child_idx]);
+          } else {
+            EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index), 0.f);
+            EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index), 0.f);
           }
         } else {
           const BinaryTreeIndex first_child_idx = index.computeChildIndex(0);

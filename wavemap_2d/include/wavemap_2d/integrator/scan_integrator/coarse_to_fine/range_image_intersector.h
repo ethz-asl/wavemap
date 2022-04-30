@@ -41,7 +41,7 @@ class RangeImageIntersector {
     }
 
     const RangeImageIndex lower_idx =
-        std::max(range_image.angleToFloorIndex(min_angle), 0l);
+        std::max(range_image.angleToFloorIndex(min_angle), 0);
     const RangeImageIndex upper_idx = std::min(
         range_image.angleToCeilIndex(max_angle), range_image.getNBeams() - 1);
 
