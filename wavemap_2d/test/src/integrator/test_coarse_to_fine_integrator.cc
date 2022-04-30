@@ -62,26 +62,37 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     BinaryTreeIndex index;
     for (index.depth = 0; index.depth <= max_depth; ++index.depth) {
       const BinaryTreeIndex::Element num_elements_at_level = 1 << index.depth;
-      for (index.position[0] = 0; index.position[0] < num_elements_at_level;
-           ++index.position[0]) {
+      for (index.position.x() = 0; index.position.x() < num_elements_at_level;
+           ++index.position.x()) {
+        // Avoid out-of-bounds range image access when we're at the leaf level
+        if (index.depth == max_depth) {
+          if (range_image.getNBeams() <= index.position.x()) {
+            continue;
+          }
+        }
+
+        // Check if the different accessors return the same values
         EXPECT_LE(hierarchical_range_image.getLowerBound(index),
                   hierarchical_range_image.getUpperBound(index));
         EXPECT_EQ(hierarchical_range_image.getBounds(index).lower,
                   hierarchical_range_image.getLowerBound(index));
         EXPECT_EQ(hierarchical_range_image.getBounds(index).upper,
                   hierarchical_range_image.getUpperBound(index));
+
+        // Check if the values returned by the accessors are correct
         if (index.depth == max_depth) {
-          if (index.position[0] < range_image.getNBeams()) {
-            EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
-                            range_image[index.position[0]]);
-            EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
-                            range_image[index.position[0]]);
-          }
+          // At the leaf level the bounds should match range image itself
+          EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
+                          range_image[index.position.x()]);
+          EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
+                          range_image[index.position.x()]);
         } else if (index.depth == pyramid_max_depth) {
+          // At the first pyramid level, the bounds should correspond to min/max
+          // pooling the range image with a downsampling factor of 2
           const BinaryTreeIndex::Element first_child_idx =
-              index.computeChildIndex(0).position[0];
+              index.computeChildIndex(0).position.x();
           const BinaryTreeIndex::Element second_child_idx =
-              index.computeChildIndex(1).position[0];
+              index.computeChildIndex(1).position.x();
           if (second_child_idx < range_image.getNBeams()) {
             EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
                             std::min(range_image[first_child_idx],
@@ -99,6 +110,8 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
             EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index), 0.f);
           }
         } else {
+          // At all other levels, the bounds correspond to min/max the bounds of
+          // the previous level
           const BinaryTreeIndex first_child_idx = index.computeChildIndex(0);
           const BinaryTreeIndex second_child_idx = index.computeChildIndex(1);
           EXPECT_FLOAT_EQ(
