@@ -209,7 +209,7 @@ bool ScalarQuadtree<CellT>::load(const std::string& /*file_path_prefix*/,
 template <typename CellT>
 FloatingPoint ScalarQuadtree<CellT>::computeNodeWidthAtDepth(
     QuadtreeIndex::Element depth) {
-  return root_node_width_ / std::exp2(depth);
+  return root_node_width_ / std::exp2f(static_cast<FloatingPoint>(depth));
 }
 
 template <typename CellT>

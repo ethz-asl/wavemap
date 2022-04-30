@@ -40,7 +40,7 @@ class FixtureBase : public ::testing::Test {
                                                          max_distance);
   }
 
-  Vector getRandomTranslation() {
+  Vector getRandomTranslation() const {
     return {getRandomSignedDistance(), getRandomSignedDistance()};
   }
 

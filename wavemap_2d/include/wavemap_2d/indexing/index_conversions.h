@@ -46,10 +46,10 @@ inline QuadtreeIndex computeNodeIndexFromCenter(const Point& center,
 }
 
 inline Point computeNodeCenterFromNodeIndex(const QuadtreeIndex& node_index,
-                                            FloatingPoint root_node_width,
-                                            QuadtreeIndex::Element depth) {
+                                            FloatingPoint root_node_width) {
   const FloatingPoint width =
-      root_node_width / std::exp2f(static_cast<FloatingPoint>(depth));
+      root_node_width /
+      std::exp2f(static_cast<FloatingPoint>(node_index.depth));
   // TODO(victorr): This offset is data structure specific (move it to the ds)
   const Vector root_node_halved_diagonal =
       root_node_width * Vector::Constant(0.5f);

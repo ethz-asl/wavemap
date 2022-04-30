@@ -18,7 +18,8 @@ class FixedResolutionScanIntegrator : public PointcloudIntegrator {
 
  private:
   static void computeRangeImageAndAABB(const PosedPointcloud<>& pointcloud,
-                                       RangeImage& range_image, AABB& aabb);
+                                       RangeImage& range_image,
+                                       AABB<Point>& aabb);
 
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
                                             const Point& C_cell_center);

@@ -22,7 +22,7 @@ template <int dim>
 NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex(
     Element parent_depth) const {
   DCHECK_GE(parent_depth, 0);
-  DCHECK_LT(parent_depth, depth);
+  DCHECK_LE(parent_depth, depth);
   const Element depth_difference = depth - parent_depth;
 
   NdtreeIndex parent_index = *this;

@@ -14,7 +14,7 @@ void FixedResolutionScanIntegrator::integratePointcloud(
   // TODO(victorr): Make this configurable
   // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
   RangeImage range_image(-M_PI_2f32, M_PI_2f32, pointcloud.size());
-  AABB aabb;
+  AABB<Point> aabb;
   computeRangeImageAndAABB(pointcloud, range_image, aabb);
 
   // Compute the min and max map indices that could be affected by the cloud
@@ -39,7 +39,8 @@ void FixedResolutionScanIntegrator::integratePointcloud(
 }
 
 void FixedResolutionScanIntegrator::computeRangeImageAndAABB(
-    const PosedPointcloud<>& pointcloud, RangeImage& range_image, AABB& aabb) {
+    const PosedPointcloud<>& pointcloud, RangeImage& range_image,
+    AABB<Point>& aabb) {
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
     if (C_point.hasNaN()) {

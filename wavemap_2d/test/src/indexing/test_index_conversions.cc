@@ -69,8 +69,8 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
     // Roundtrip through real valued coordinates
     {
       const FloatingPoint random_root_node_width = getRandomRootNodeWidth();
-      const Point node_center = computeNodeCenterFromNodeIndex(
-          node_index, random_root_node_width, node_index.depth);
+      const Point node_center =
+          computeNodeCenterFromNodeIndex(node_index, random_root_node_width);
       const QuadtreeIndex roundtrip_node_index = computeNodeIndexFromCenter(
           node_center, random_root_node_width, node_index.depth);
       EXPECT_EQ(roundtrip_node_index, node_index)
