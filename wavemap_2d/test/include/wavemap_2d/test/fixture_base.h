@@ -116,9 +116,8 @@ class FixtureBase : public ::testing::Test {
       for (int i = 0; i < NdtreeIndexT::kDim; ++i) {
         position_index[i] = getRandomIndexElement(min_index[i], max_index[i]);
       }
-      return NdtreeIndexT{
-          .depth = getRandomNdtreeIndexDepth(min_depth, max_depth),
-          .position = position_index};
+      return NdtreeIndexT{getRandomNdtreeIndexDepth(min_depth, max_depth),
+                          position_index};
     });
     return random_indices;
   }
