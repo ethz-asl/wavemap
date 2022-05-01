@@ -20,35 +20,20 @@ class HierarchicalRangeImage {
         lower_bounds_(computeReducedPyramid(
             range_image_, [](auto a, auto b) { return std::min(a, b); })),
         upper_bounds_(computeReducedPyramid(
-            range_image_, [](auto a, auto b) { return std::max(a, b); })) {
-    DCHECK_EQ(lower_bounds_.size(), upper_bounds_.size());
+            range_image_, [](auto a, auto b) { return std::max(a, b); })),
+        max_depth_(
+            static_cast<BinaryTreeIndex::Element>(lower_bounds_.size())) {
+    DCHECK_EQ(lower_bounds_.size(), max_depth_);
+    DCHECK_EQ(upper_bounds_.size(), max_depth_);
   }
 
-  FloatingPoint getLowerBound(const BinaryTreeIndex& index) const {
-    DCHECK_GE(index.depth, 0);
-    DCHECK_LE(index.depth, lower_bounds_.size());
-    if (index.depth ==
-        static_cast<BinaryTreeIndex::Element>(lower_bounds_.size())) {
-      return range_image_[index.position.x()];
-    } else {
-      return lower_bounds_[index.depth][index.position.x()];
-    }
-  }
-  FloatingPoint getUpperBound(const BinaryTreeIndex& index) const {
-    DCHECK_GE(index.depth, 0);
-    DCHECK_LE(index.depth, upper_bounds_.size());
-    if (index.depth ==
-        static_cast<BinaryTreeIndex::Element>(upper_bounds_.size())) {
-      return range_image_[index.position.x()];
-    } else {
-      return upper_bounds_[index.depth][index.position.x()];
-    }
-  }
+  BinaryTreeIndex::Element getMaxDepth() const { return max_depth_; }
+  BinaryTreeIndex::Element getNumBoundLevels() const { return max_depth_ - 1; }
+
   Bounds getBounds(const BinaryTreeIndex& index) const {
     DCHECK_GE(index.depth, 0);
-    DCHECK_LE(index.depth, lower_bounds_.size());
-    if (index.depth ==
-        static_cast<BinaryTreeIndex::Element>(lower_bounds_.size())) {
+    DCHECK_LE(index.depth, max_depth_);
+    if (index.depth == max_depth_) {
       const FloatingPoint range_image_value = range_image_[index.position.x()];
       return {.lower = range_image_value, .upper = range_image_value};
     } else {
@@ -56,13 +41,86 @@ class HierarchicalRangeImage {
               .upper = upper_bounds_[index.depth][index.position.x()]};
     }
   }
-  size_t getMaxDepth() const { return lower_bounds_.size(); }
-  size_t getPyramidDepth() const { return lower_bounds_.size() - 1; }
+  FloatingPoint getLowerBound(const BinaryTreeIndex& index) const {
+    return getBounds(index).lower;
+  }
+  FloatingPoint getUpperBound(const BinaryTreeIndex& index) const {
+    return getBounds(index).upper;
+  }
+  // NOTE: We reuse getBounds() to get .upper/.lower and trust the compiler to
+  //       optimize out unused (return) values during inlining.
+
+  Bounds getRangeBounds(RangeImageIndex left_idx,
+                        RangeImageIndex right_idx) const {
+    DCHECK_LE(left_idx, right_idx);
+    if (left_idx == right_idx) {
+      const FloatingPoint range_image_value = range_image_[left_idx];
+      return {.lower = range_image_value, .upper = range_image_value};
+    }
+
+    const RangeImageIndex min_level_up =
+        32 - __builtin_clz(right_idx - left_idx) - 1;
+    const RangeImageIndex left_idx_shifted = left_idx >> min_level_up;
+    const RangeImageIndex right_idx_shifted = right_idx >> min_level_up;
+
+    // Check if the nodes at min_level_up are direct neighbors
+    if (left_idx_shifted + 1 == right_idx_shifted) {
+      // Check if they even share the same parent (node at min_level_up + 1)
+      if ((left_idx_shifted & 0b10) == (right_idx_shifted & 0b10)) {
+        // Since they do, we only need to check the parent which is equivalent
+        // to checking both nodes at min_level_up but cheaper
+        const BinaryTreeIndex::Element parent_depth =
+            getMaxDepth() - min_level_up - 1;
+        const BinaryTreeIndex::Element parent_idx = left_idx_shifted >> 1;
+        return {.lower = lower_bounds_[parent_depth][parent_idx],
+                .upper = upper_bounds_[parent_depth][parent_idx]};
+      } else {
+        // Check both nodes at min_level_up
+        const BinaryTreeIndex::Element depth = getMaxDepth() - min_level_up;
+        const RangeImageIndex left_node_idx = left_idx_shifted;
+        const RangeImageIndex right_node_idx = right_idx_shifted;
+        if (min_level_up == 0) {
+          return {.lower = std::min(range_image_[left_node_idx],
+                                    range_image_[right_node_idx]),
+                  .upper = std::max(range_image_[left_node_idx],
+                                    range_image_[right_node_idx])};
+        } else {
+          return {.lower = std::min(lower_bounds_[depth][left_node_idx],
+                                    lower_bounds_[depth][right_node_idx]),
+                  .upper = std::max(upper_bounds_[depth][left_node_idx],
+                                    upper_bounds_[depth][right_node_idx])};
+        }
+      }
+    } else {
+      // Since the nodes at min_level_up are not direct neighbors we need to go
+      // one level up and check both parents there
+      DCHECK(left_idx_shifted + 2 == right_idx_shifted);
+      const BinaryTreeIndex::Element parent_depth =
+          getMaxDepth() - min_level_up - 1;
+      const RangeImageIndex left_parent_idx = left_idx_shifted >> 1;
+      const RangeImageIndex right_parent_idx = right_idx_shifted >> 1;
+      return {.lower = std::min(lower_bounds_[parent_depth][left_parent_idx],
+                                lower_bounds_[parent_depth][right_parent_idx]),
+              .upper = std::max(upper_bounds_[parent_depth][left_parent_idx],
+                                upper_bounds_[parent_depth][right_parent_idx])};
+    }
+  }
+  FloatingPoint getRangeLowerBound(RangeImageIndex left_idx,
+                                   RangeImageIndex right_idx) const {
+    return getRangeBounds(left_idx, right_idx).lower;
+  }
+  FloatingPoint getRangeUpperBound(RangeImageIndex left_idx,
+                                   RangeImageIndex right_idx) const {
+    return getRangeBounds(left_idx, right_idx).upper;
+  }
+  // NOTE: We reuse getRangeBoundsApprox() to get .upper/.lower and trust the
+  //       compiler to optimize out unused (return) values during inlining.
 
  private:
   const RangeImage& range_image_;
   const std::vector<RangeImage::RangeImageData> lower_bounds_;
   const std::vector<RangeImage::RangeImageData> upper_bounds_;
+  const BinaryTreeIndex::Element max_depth_;
 
   template <typename BinaryFunctor>
   static std::vector<RangeImage::RangeImageData> computeReducedPyramid(

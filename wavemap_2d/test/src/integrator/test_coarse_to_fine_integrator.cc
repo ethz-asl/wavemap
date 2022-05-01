@@ -38,7 +38,7 @@ class CoarseToFineIntegratorTest : public FixtureBase {
 };
 
 TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
-  for (int repetition = 0; repetition < 10; ++repetition) {
+  for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
@@ -58,9 +58,10 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     const auto max_depth = static_cast<BinaryTreeIndex::Element>(
         hierarchical_range_image.getMaxDepth());
     const auto pyramid_max_depth = static_cast<BinaryTreeIndex::Element>(
-        hierarchical_range_image.getPyramidDepth());
-    BinaryTreeIndex index;
-    for (index.depth = 0; index.depth <= max_depth; ++index.depth) {
+        hierarchical_range_image.getNumBoundLevels());
+    for (BinaryTreeIndex index{.depth = 0,
+                         .position = BinaryTreeIndex::Position::Zero()};
+         index.depth <= max_depth; ++index.depth) {
       const BinaryTreeIndex::Element num_elements_at_level = 1 << index.depth;
       for (index.position.x() = 0; index.position.x() < num_elements_at_level;
            ++index.position.x()) {
@@ -125,6 +126,33 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
                   hierarchical_range_image.getUpperBound(first_child_idx),
                   hierarchical_range_image.getUpperBound(second_child_idx)));
         }
+      }
+    }
+
+    // Test range bounds on all subintervals and compare to brute force
+    for (int start_idx = 0; start_idx < range_image.getNBeams(); ++start_idx) {
+      for (int end_idx = start_idx; end_idx < range_image.getNBeams();
+           ++end_idx) {
+        // Check if the different accessors return the same values
+        const Bounds bounds =
+            hierarchical_range_image.getRangeBounds(start_idx, end_idx);
+        const FloatingPoint lower_bound =
+            hierarchical_range_image.getRangeLowerBound(start_idx, end_idx);
+        const FloatingPoint upper_bound =
+            hierarchical_range_image.getRangeUpperBound(start_idx, end_idx);
+        EXPECT_LE(lower_bound, upper_bound);
+        EXPECT_EQ(bounds.lower, lower_bound);
+        EXPECT_EQ(bounds.upper, upper_bound);
+
+        // Compare against brute force
+        const int range_length = end_idx - start_idx + 1;
+        CHECK_GE(range_length, 1);
+        const RangeImage::RangeImageData::ConstBlockXpr range =
+            range_image.getData().block(0, start_idx, 1, range_length);
+        const FloatingPoint lower_bound_brute_force = range.minCoeff();
+        const FloatingPoint upper_bound_brute_force = range.maxCoeff();
+        EXPECT_LE(lower_bound, lower_bound_brute_force);
+        EXPECT_GE(upper_bound, upper_bound_brute_force);
       }
     }
   }
