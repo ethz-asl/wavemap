@@ -12,7 +12,7 @@ using DenseGridTest = FixtureBase;
 
 using CellTypes =
     ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
-TYPED_TEST_SUITE(DenseGridTest, CellTypes);
+TYPED_TEST_SUITE(DenseGridTest, CellTypes, );
 
 // NOTE: Insertion tests are performed as part of the test suite for the
 //       VolumetricDataStructure interface.

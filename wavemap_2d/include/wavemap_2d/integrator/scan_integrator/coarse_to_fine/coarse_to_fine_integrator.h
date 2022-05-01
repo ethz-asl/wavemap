@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_COARSE_TO_FINE_SCAN_INTEGRATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_COARSE_TO_FINE_SCAN_INTEGRATOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_COARSE_TO_FINE_INTEGRATOR_H_
+#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_COARSE_TO_FINE_INTEGRATOR_H_
 
 #include <algorithm>
 #include <utility>
@@ -9,10 +9,9 @@
 #include "wavemap_2d/integrator/scan_integrator/range_image.h"
 
 namespace wavemap_2d {
-class CoarseToFineScanIntegrator : public PointcloudIntegrator {
+class CoarseToFineIntegrator : public PointcloudIntegrator {
  public:
-  explicit CoarseToFineScanIntegrator(
-      VolumetricDataStructure::Ptr occupancy_map)
+  explicit CoarseToFineIntegrator(VolumetricDataStructure::Ptr occupancy_map)
       : PointcloudIntegrator(std::move(occupancy_map)) {}
 
   void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
@@ -37,6 +36,6 @@ class CoarseToFineScanIntegrator : public PointcloudIntegrator {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/impl/coarse_to_fine_scan_integrator_inl.h"
+#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/impl/coarse_to_fine_integrator_inl.h"
 
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_COARSE_TO_FINE_SCAN_INTEGRATOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_COARSE_TO_FINE_INTEGRATOR_H_

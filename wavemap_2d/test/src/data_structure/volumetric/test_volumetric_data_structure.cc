@@ -17,7 +17,7 @@ using VolumetricDataStructureTypes = ::testing::Types<
     HashedBlocks<UnboundedOccupancyCell>, HashedBlocks<SaturatingOccupancyCell>,
     ScalarQuadtree<UnboundedOccupancyCell>,
     ScalarQuadtree<SaturatingOccupancyCell>>;
-TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes);
+TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 // TODO(victorr): Test remaining interfaces of VolumetricDataStructure
 

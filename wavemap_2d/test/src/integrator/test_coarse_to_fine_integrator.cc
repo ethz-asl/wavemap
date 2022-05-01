@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_scan_integrator.h"
+#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
 #include "wavemap_2d/test/fixture_base.h"
 
@@ -50,8 +50,7 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
 
     // Create the hierarchical range image
     RangeImage range_image(kMinAngle, kMaxAngle, n_beams);
-    CoarseToFineScanIntegrator::computeRangeImage(random_pointcloud,
-                                                  range_image);
+    CoarseToFineIntegrator::computeRangeImage(random_pointcloud, range_image);
     HierarchicalRangeImage hierarchical_range_image(range_image);
 
     // Test all the bounds from top to bottom

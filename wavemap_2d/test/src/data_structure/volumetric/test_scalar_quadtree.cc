@@ -28,7 +28,7 @@ class ScalarQuadtreeTest : public FixtureBase {
 
 using CellTypes =
     ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
-TYPED_TEST_SUITE(ScalarQuadtreeTest, CellTypes);
+TYPED_TEST_SUITE(ScalarQuadtreeTest, CellTypes, );
 
 // NOTE: Insertion tests are performed as part of the test suite for the
 //       VolumetricDataStructure interface.

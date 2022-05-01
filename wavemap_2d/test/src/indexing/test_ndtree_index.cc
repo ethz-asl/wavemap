@@ -23,7 +23,7 @@ class NdtreeIndexTest : public FixtureBase {
 
 using Dimensions =
     ::testing::Types<BinaryTreeIndex, QuadtreeIndex, OctreeIndex>;
-TYPED_TEST_SUITE(NdtreeIndexTest, Dimensions);
+TYPED_TEST_SUITE(NdtreeIndexTest, Dimensions, );
 
 TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
   // Generate a combination of random and handpicked node indices for testing

@@ -15,7 +15,7 @@ class DiscreteWaveletTransformTest : public FixtureWaveletTransform {
 using WaveletTypes =
     ::testing::Types<NaiveHaar<FloatingPoint>, LiftedCDF53<FloatingPoint>,
                      LiftedCDF97<FloatingPoint>>;
-TYPED_TEST_SUITE(DiscreteWaveletTransformTest, WaveletTypes);
+TYPED_TEST_SUITE(DiscreteWaveletTransformTest, WaveletTypes, );
 
 TYPED_TEST(DiscreteWaveletTransformTest, Reconstruction) {
   const TypeParam dwt;
