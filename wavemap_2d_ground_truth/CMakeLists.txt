@@ -5,11 +5,34 @@ find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 # Configure
-set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=c++17 \
-    -Wall -Wextra -Wsuggest-attribute=const \
-    -Wno-deprecated-copy -Wno-class-memaccess \
-    -fPIC -DEIGEN_INITIALIZE_MATRICES_BY_NAN")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+add_compile_definitions(EIGEN_INITIALIZE_MATRICES_BY_NAN)
+add_compile_options(
+  -march=native
+  -Wall
+  -Wextra
+  -Wpedantic
+  -Wsuggest-attribute=const
+  -Wno-deprecated-copy
+  -Wno-class-memaccess)
+
+if (USE_UBSAN)
+  add_compile_options(
+    -fsanitize=undefined
+    -fsanitize=float-divide-by-zero
+    -fsanitize=float-cast-overflow
+    -fno-omit-frame-pointer
+    -g)
+endif ()
+if (USE_ASAN)
+  add_compile_options(-fsanitize=address -fsanitize-address-use-after-scope
+                      -fno-omit-frame-pointer -g)
+endif ()
+if (USE_TSAN)
+  add_compile_options(-fsanitize=thread -fno-omit-frame-pointer -g)
+endif ()
 
 if (USE_CLANG_TIDY)
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

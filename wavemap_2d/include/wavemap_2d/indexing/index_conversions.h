@@ -42,7 +42,7 @@ inline QuadtreeIndex computeNodeIndexFromCenter(const Point& center,
       root_node_width * Vector::Constant(0.5f);
   Index position_index = computeNearestIndexForScaledPoint(
       (center + root_node_halved_diagonal) / width);
-  return {.depth = depth, .position = position_index};
+  return {depth, position_index};
 }
 
 inline Point computeNodeCenterFromNodeIndex(const QuadtreeIndex& node_index,
@@ -62,7 +62,7 @@ inline QuadtreeIndex computeNodeIndexFromIndexAndDepth(
     const Index& index, QuadtreeIndex::Element depth,
     QuadtreeIndex::Element max_depth) {
   const QuadtreeIndex::Element node_height = max_depth - depth;
-  QuadtreeIndex node_index{.depth = depth, .position = index};
+  QuadtreeIndex node_index{depth, index};
   node_index.position.x() >>= node_height;
   node_index.position.y() >>= node_height;
   return node_index;

@@ -27,13 +27,13 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
   std::vector<QuadtreeIndex> random_indices =
       getRandomNdtreeIndexVector<QuadtreeIndex>(
           kMinQuadtreePositionIndex, kMaxQuadtreePositionIndex, 1, kMaxDepth);
-  random_indices.emplace_back(QuadtreeIndex{.depth = 0, .position = {0, 0}});
+  random_indices.emplace_back(QuadtreeIndex{0, {0, 0}});
   for (QuadtreeIndex::Element index_depth = 1; index_depth < kMaxDepth;
        ++index_depth) {
     for (QuadtreeIndex::Element index_x = -1; index_x <= 1; ++index_x) {
       for (QuadtreeIndex::Element index_y = -1; index_y <= 1; ++index_y) {
-        random_indices.emplace_back(QuadtreeIndex{
-            .depth = index_depth, .position = {index_x, index_y}});
+        random_indices.emplace_back(
+            QuadtreeIndex{index_depth, {index_x, index_y}});
       }
     }
   }

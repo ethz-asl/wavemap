@@ -32,8 +32,7 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, TestFixture::kMaxDepth,
           TestFixture::kMaxDepth);
-  random_indices.emplace_back(
-      TypeParam{.depth = 0, .position = TypeParam::Position::Zero()});
+  random_indices.emplace_back(TypeParam{0, TypeParam::Position::Zero()});
   for (typename TypeParam::Element depth_idx = 1;
        depth_idx < TestFixture::kMaxDepth; ++depth_idx) {
     for (int relative_child_idx = 0;
@@ -42,8 +41,7 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
       for (int dim_idx = 0; dim_idx < TypeParam::kDim; ++dim_idx) {
         position_index[dim_idx] = (relative_child_idx >> dim_idx) & 0b1;
       }
-      random_indices.emplace_back(
-          TypeParam{.depth = depth_idx, .position = position_index});
+      random_indices.emplace_back(TypeParam{depth_idx, position_index});
     }
   }
 

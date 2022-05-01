@@ -59,8 +59,7 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
         hierarchical_range_image.getMaxDepth());
     const auto pyramid_max_depth = static_cast<BinaryTreeIndex::Element>(
         hierarchical_range_image.getNumBoundLevels());
-    for (BinaryTreeIndex index{.depth = 0,
-                         .position = BinaryTreeIndex::Position::Zero()};
+    for (BinaryTreeIndex index{0, BinaryTreeIndex::Position::Zero()};
          index.depth <= max_depth; ++index.depth) {
       const BinaryTreeIndex::Element num_elements_at_level = 1 << index.depth;
       for (index.position.x() = 0; index.position.x() < num_elements_at_level;

@@ -35,10 +35,10 @@ class HierarchicalRangeImage {
     DCHECK_LE(index.depth, max_depth_);
     if (index.depth == max_depth_) {
       const FloatingPoint range_image_value = range_image_[index.position.x()];
-      return {.lower = range_image_value, .upper = range_image_value};
+      return {range_image_value, range_image_value};
     } else {
-      return {.lower = lower_bounds_[index.depth][index.position.x()],
-              .upper = upper_bounds_[index.depth][index.position.x()]};
+      return {lower_bounds_[index.depth][index.position.x()],
+              upper_bounds_[index.depth][index.position.x()]};
     }
   }
   FloatingPoint getLowerBound(const BinaryTreeIndex& index) const {
@@ -55,7 +55,7 @@ class HierarchicalRangeImage {
     DCHECK_LE(left_idx, right_idx);
     if (left_idx == right_idx) {
       const FloatingPoint range_image_value = range_image_[left_idx];
-      return {.lower = range_image_value, .upper = range_image_value};
+      return {range_image_value, range_image_value};
     }
 
     const RangeImageIndex min_level_up =
@@ -72,23 +72,23 @@ class HierarchicalRangeImage {
         const BinaryTreeIndex::Element parent_depth =
             getMaxDepth() - min_level_up - 1;
         const BinaryTreeIndex::Element parent_idx = left_idx_shifted >> 1;
-        return {.lower = lower_bounds_[parent_depth][parent_idx],
-                .upper = upper_bounds_[parent_depth][parent_idx]};
+        return {lower_bounds_[parent_depth][parent_idx],
+                upper_bounds_[parent_depth][parent_idx]};
       } else {
         // Check both nodes at min_level_up
         const BinaryTreeIndex::Element depth = getMaxDepth() - min_level_up;
         const RangeImageIndex left_node_idx = left_idx_shifted;
         const RangeImageIndex right_node_idx = right_idx_shifted;
         if (min_level_up == 0) {
-          return {.lower = std::min(range_image_[left_node_idx],
-                                    range_image_[right_node_idx]),
-                  .upper = std::max(range_image_[left_node_idx],
-                                    range_image_[right_node_idx])};
+          return {std::min(range_image_[left_node_idx],
+                           range_image_[right_node_idx]),
+                  std::max(range_image_[left_node_idx],
+                           range_image_[right_node_idx])};
         } else {
-          return {.lower = std::min(lower_bounds_[depth][left_node_idx],
-                                    lower_bounds_[depth][right_node_idx]),
-                  .upper = std::max(upper_bounds_[depth][left_node_idx],
-                                    upper_bounds_[depth][right_node_idx])};
+          return {std::min(lower_bounds_[depth][left_node_idx],
+                           lower_bounds_[depth][right_node_idx]),
+                  std::max(upper_bounds_[depth][left_node_idx],
+                           upper_bounds_[depth][right_node_idx])};
         }
       }
     } else {
@@ -99,10 +99,10 @@ class HierarchicalRangeImage {
           getMaxDepth() - min_level_up - 1;
       const RangeImageIndex left_parent_idx = left_idx_shifted >> 1;
       const RangeImageIndex right_parent_idx = right_idx_shifted >> 1;
-      return {.lower = std::min(lower_bounds_[parent_depth][left_parent_idx],
-                                lower_bounds_[parent_depth][right_parent_idx]),
-              .upper = std::max(upper_bounds_[parent_depth][left_parent_idx],
-                                upper_bounds_[parent_depth][right_parent_idx])};
+      return {std::min(lower_bounds_[parent_depth][left_parent_idx],
+                       lower_bounds_[parent_depth][right_parent_idx]),
+              std::max(upper_bounds_[parent_depth][left_parent_idx],
+                       upper_bounds_[parent_depth][right_parent_idx])};
     }
   }
   FloatingPoint getRangeLowerBound(RangeImageIndex left_idx,
