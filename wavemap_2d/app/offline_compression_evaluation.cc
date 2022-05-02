@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
   // Compress
   constexpr FloatingPoint kThreshold = kEpsilon;
   const Index map_size = estimated_map->dimensions();
-  const int max_num_passes = std::floor(std::log2(map_size.minCoeff()));
+  const int max_num_passes = int_math::log2_floor(map_size.minCoeff());
 
   const auto min_divisor = static_cast<int>(std::exp2(max_num_passes));
   Index new_max_index = estimated_map->getMinIndex();

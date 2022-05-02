@@ -15,7 +15,7 @@ class IndexConversionsTest : public FixtureBase {
   const QuadtreeIndex::Position kMinQuadtreePositionIndex =
       QuadtreeIndex::Position::Zero();
   const QuadtreeIndex::Position kMaxQuadtreePositionIndex =
-      QuadtreeIndex::Position::Constant(constexpr_functions::exp2(kMaxDepth));
+      QuadtreeIndex::Position::Constant(int_math::exp2(kMaxDepth));
 
   FloatingPoint getRandomRootNodeWidth() {
     return random_number_generator_->getRandomRealNumber(0.1f, 1e3f);

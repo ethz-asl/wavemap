@@ -25,8 +25,8 @@ Index ScalarQuadtree<CellT>::getMinPossibleIndex() const {
 
 template <typename CellT>
 Index ScalarQuadtree<CellT>::getMaxPossibleIndex() const {
-  return nodeIndexToIndex(QuadtreeIndex{
-      max_depth_, Index::Constant(constexpr_functions::exp2(max_depth_))});
+  return nodeIndexToIndex(
+      QuadtreeIndex{max_depth_, Index::Constant(int_math::exp2(max_depth_))});
 }
 
 // TODO(victorr): Replace this with an implementation that only expands

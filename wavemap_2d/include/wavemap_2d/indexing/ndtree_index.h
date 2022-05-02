@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/utils/constexpr_functions.h"
+#include "wavemap_2d/utils/int_math.h"
 
 namespace wavemap_2d {
 template <int dim>
@@ -15,7 +15,7 @@ struct NdtreeIndex {
   using Position = Eigen::Matrix<Element, dim, 1>;
 
   static constexpr Element kDim = dim;
-  static constexpr RelativeChild kNumChildren = constexpr_functions::exp2(dim);
+  static constexpr RelativeChild kNumChildren = int_math::exp2(dim);
 
   Element depth = 0;
   Position position = Position::Zero();

@@ -158,10 +158,9 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(test_measurement_models PRIVATE test/include)
   target_link_libraries(test_measurement_models ${PROJECT_NAME} testing_main)
 
-  catkin_add_gtest(test_constexpr_functions
-                   test/src/utils/test_constexpr_functions.cc)
-  target_include_directories(test_constexpr_functions PRIVATE test/include)
-  target_link_libraries(test_constexpr_functions ${PROJECT_NAME} testing_main)
+  catkin_add_gtest(test_int_math test/src/utils/test_int_math.cc)
+  target_include_directories(test_int_math PRIVATE test/include)
+  target_link_libraries(test_int_math ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_discrete_wavelet_transform
                    test/src/transform/test_discrete_wavelet_transform.cc)

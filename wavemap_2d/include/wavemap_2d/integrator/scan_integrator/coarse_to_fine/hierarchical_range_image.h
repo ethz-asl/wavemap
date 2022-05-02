@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "wavemap_2d/integrator/scan_integrator/range_image.h"
+#include "wavemap_2d/utils/int_math.h"
 
 namespace wavemap_2d {
 struct Bounds {
@@ -59,7 +60,7 @@ class HierarchicalRangeImage {
     }
 
     const RangeImageIndex min_level_up =
-        32 - __builtin_clz(right_idx - left_idx) - 1;
+        int_math::log2_floor(right_idx - left_idx);
     const RangeImageIndex left_idx_shifted = left_idx >> min_level_up;
     const RangeImageIndex right_idx_shifted = right_idx >> min_level_up;
 
@@ -126,7 +127,7 @@ class HierarchicalRangeImage {
   static std::vector<RangeImage::RangeImageData> computeReducedPyramid(
       const RangeImage& range_image, BinaryFunctor reduction_functor) {
     const int original_width = static_cast<int>(range_image.getNBeams());
-    const int max_num_halvings = std::ceil(std::log2(original_width));
+    const int max_num_halvings = int_math::log2_ceil(original_width);
     std::vector<RangeImage::RangeImageData> pyramid(max_num_halvings);
 
     const int first_reduction_level = max_num_halvings - 1;
