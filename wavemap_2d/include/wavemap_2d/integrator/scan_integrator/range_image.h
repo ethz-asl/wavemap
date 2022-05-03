@@ -9,8 +9,8 @@ class RangeImage {
   using RangeImageData = Eigen::Matrix<FloatingPoint, 1, Eigen::Dynamic>;
 
   RangeImage(FloatingPoint min_angle, FloatingPoint max_angle,
-             Eigen::Index n_beams)
-      : data_(RangeImageData::Zero(1, n_beams)),
+             Eigen::Index num_beams)
+      : data_(RangeImageData::Zero(1, num_beams)),
         min_angle_(min_angle),
         max_angle_(max_angle),
         angle_increment_((max_angle_ - min_angle_) /
@@ -26,7 +26,7 @@ class RangeImage {
 
   FloatingPoint getMinAngle() const { return min_angle_; }
   FloatingPoint getMaxAngle() const { return max_angle_; }
-  RangeImageIndex getNBeams() const {
+  RangeImageIndex getNumBeams() const {
     return static_cast<RangeImageIndex>(data_.cols());
   }
   const RangeImageData& getData() const { return data_; }

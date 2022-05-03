@@ -20,18 +20,18 @@ namespace wavemap_2d {
 class PointcloudIntegratorTest : public FixtureBase {
  protected:
   PosedPointcloud<> getRandomPointcloud(FloatingPoint min_angle,
-                                        FloatingPoint max_angle, int n_beams,
+                                        FloatingPoint max_angle, int num_beams,
                                         FloatingPoint min_distance,
                                         FloatingPoint max_distance) const {
     CHECK_LT(min_angle, max_angle);
     CHECK_LT(min_distance, max_distance);
 
     const FloatingPoint angle_increment =
-        (max_angle - min_angle) / static_cast<FloatingPoint>(n_beams - 1);
+        (max_angle - min_angle) / static_cast<FloatingPoint>(num_beams - 1);
 
     Pointcloud<> pointcloud;
-    pointcloud.resize(n_beams);
-    for (int index = 0; index < n_beams; ++index) {
+    pointcloud.resize(num_beams);
+    for (int index = 0; index < num_beams; ++index) {
       const FloatingPoint range =
           getRandomSignedDistance(min_distance, max_distance);
       const FloatingPoint angle =
@@ -51,14 +51,14 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
 
     const FloatingPoint min_angle = -M_PIf32;
     const FloatingPoint max_angle = M_PIf32;
-    const int n_beams = getRandomIndexElement(10, 100);
-    const FloatingPoint min_distance = static_cast<FloatingPoint>(n_beams) *
+    const int num_beams = getRandomIndexElement(10, 100);
+    const FloatingPoint min_distance = static_cast<FloatingPoint>(num_beams) *
                                        resolution / (max_angle - min_angle);
     constexpr FloatingPoint kMaxDistance = 400.f;
 
     // Generate a random point cloud and save its end points in a hashed set
     const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
-        min_angle, max_angle, n_beams, min_distance, kMaxDistance);
+        min_angle, max_angle, num_beams, min_distance, kMaxDistance);
     std::unordered_set<Index, VoxbloxIndexHash> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index index =
@@ -97,11 +97,11 @@ TEST_F(PointcloudIntegratorTest, BeamAndScanIntegratorEquivalence) {
     const FloatingPoint resolution = getRandomResolution(0.02, 0.5);
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
-    const int n_beams = getRandomIndexElement(100, 2048);
+    const int num_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
     const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, n_beams, kMinDistance, kMaxDistance);
+        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 
     VolumetricDataStructure::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(resolution);

@@ -12,25 +12,25 @@ TEST_F(RangeImageTest, ConstructorAndAccessors) {
     const FloatingPoint min_angle = getRandomAngle(-M_PIf32, M_PI_2f32);
     const FloatingPoint max_angle =
         getRandomAngle(min_angle + kEpsilon, M_PIf32);
-    const Eigen::Index n_beams = getRandomIndexElement(1, 2048);
-    RangeImage range_image(min_angle, max_angle, n_beams);
+    const Eigen::Index num_beams = getRandomIndexElement(1, 2048);
+    RangeImage range_image(min_angle, max_angle, num_beams);
 
     EXPECT_FALSE(range_image.empty());
-    EXPECT_EQ(range_image.size(), n_beams);
+    EXPECT_EQ(range_image.size(), num_beams);
 
     EXPECT_EQ(range_image.getMinAngle(), min_angle);
     EXPECT_EQ(range_image.getMaxAngle(), max_angle);
-    EXPECT_EQ(range_image.getNBeams(), n_beams);
+    EXPECT_EQ(range_image.getNumBeams(), num_beams);
 
     range_image.clear();
     EXPECT_TRUE(range_image.empty());
     EXPECT_EQ(range_image.size(), 0);
-    EXPECT_EQ(range_image.getNBeams(), 0);
+    EXPECT_EQ(range_image.getNumBeams(), 0);
 
-    const Eigen::Index new_n_beams = getRandomIndexElement(1, 1024);
-    range_image.resize(new_n_beams);
-    EXPECT_EQ(range_image.size(), new_n_beams);
-    EXPECT_EQ(range_image.getNBeams(), new_n_beams);
+    const Eigen::Index new_num_beams = getRandomIndexElement(1, 1024);
+    range_image.resize(new_num_beams);
+    EXPECT_EQ(range_image.size(), new_num_beams);
+    EXPECT_EQ(range_image.getNumBeams(), new_num_beams);
   }
 }
 
@@ -55,11 +55,11 @@ TEST_F(RangeImageTest, IndexConversions) {
     const FloatingPoint min_angle = getRandomAngle(-M_PIf32, M_PI_2f32);
     const FloatingPoint max_angle =
         getRandomAngle(min_angle + kEpsilon, M_PIf32);
-    const Eigen::Index n_beams = getRandomIndexElement(2, 2048);
-    RangeImage range_image(min_angle, max_angle, n_beams);
+    const Eigen::Index num_beams = getRandomIndexElement(2, 2048);
+    RangeImage range_image(min_angle, max_angle, num_beams);
 
     // Precompute commonly used values
-    const RangeImageIndex max_index = n_beams - 1;
+    const RangeImageIndex max_index = num_beams - 1;
     const FloatingPoint mid_angle = min_angle + (max_angle - min_angle) / 2.f;
     const RangeImageIndex mid_index_floor = max_index / 2;
     const RangeImageIndex mid_index_ceil =

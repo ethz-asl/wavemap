@@ -31,6 +31,5 @@ TEST(ConstexprFunctionsTest, Log2) {
           << "For value " << value;
     }
   }
-  std::cout << std::endl;
 }
 }  // namespace wavemap_2d

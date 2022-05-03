@@ -43,7 +43,7 @@ class RangeImageIntersector {
     const RangeImageIndex lower_idx =
         std::max(range_image.angleToFloorIndex(min_angle), 0);
     const RangeImageIndex upper_idx = std::min(
-        range_image.angleToCeilIndex(max_angle), range_image.getNBeams() - 1);
+        range_image.angleToCeilIndex(max_angle), range_image.getNumBeams() - 1);
 
     // TODO(victorr): Make this fast using the range bound pyramid
     const FloatingPoint max_image_distance =

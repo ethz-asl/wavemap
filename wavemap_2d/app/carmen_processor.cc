@@ -64,16 +64,16 @@ int main(int argc, char** argv) {
     std::istringstream iss(line);
     std::string msg_type;
     if ((iss >> msg_type) && (msg_type == "FLASER")) {
-      int n_beams;
-      if (iss >> n_beams) {
+      int num_beams;
+      if (iss >> num_beams) {
         // Parse the pointcloud
         Pointcloud pointcloud;
-        pointcloud.resize(n_beams);
+        pointcloud.resize(num_beams);
         {
           bool success = true;
           constexpr auto PI = static_cast<float>(M_PI);
-          const float angle_increment = PI / static_cast<float>(n_beams);
-          for (int beam_idx = 0; beam_idx < n_beams; ++beam_idx) {
+          const float angle_increment = PI / static_cast<float>(num_beams);
+          for (int beam_idx = 0; beam_idx < num_beams; ++beam_idx) {
             float distance;
             if (!(iss >> distance)) {
               success = false;

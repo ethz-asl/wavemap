@@ -126,7 +126,7 @@ class HierarchicalRangeImage {
   template <typename BinaryFunctor>
   static std::vector<RangeImage::RangeImageData> computeReducedPyramid(
       const RangeImage& range_image, BinaryFunctor reduction_functor) {
-    const int original_width = static_cast<int>(range_image.getNBeams());
+    const int original_width = static_cast<int>(range_image.getNumBeams());
     const int max_num_halvings = int_math::log2_ceil(original_width);
     std::vector<RangeImage::RangeImageData> pyramid(max_num_halvings);
 
@@ -139,7 +139,7 @@ class HierarchicalRangeImage {
       // Reduce
       if (level_idx == first_reduction_level) {
         // For the first level, reduce from the original range image
-        const int image_width = static_cast<int>(range_image.getNBeams());
+        const int image_width = static_cast<int>(range_image.getNumBeams());
         const int half_image_width = image_width >> 1;  // Always rounded down
         for (int idx = 0; idx < half_image_width; ++idx) {
           const int first_child_idx = 2 * idx;

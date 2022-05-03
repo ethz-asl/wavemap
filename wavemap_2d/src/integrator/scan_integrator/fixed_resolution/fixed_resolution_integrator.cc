@@ -12,9 +12,8 @@ void FixedResolutionIntegrator::integratePointcloud(
   // Compute the range image and the scan's AABB
   // TODO(victorr): Make this configurable
   // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
-  RangeImage range_image(-M_PI_2f32, M_PI_2f32, pointcloud.size());
-  AABB<Point> aabb;
-  computeRangeImageAndAABB(pointcloud, range_image, aabb);
+  const auto [range_image, aabb] = computeRangeImageAndAABB(
+      pointcloud, -M_PI_2f32, M_PI_2f32, pointcloud.size());
 
   // Compute the min and max map indices that could be affected by the cloud
   const FloatingPoint resolution = occupancy_map_->getResolution();
@@ -37,9 +36,13 @@ void FixedResolutionIntegrator::integratePointcloud(
   }
 }
 
-void FixedResolutionIntegrator::computeRangeImageAndAABB(
-    const PosedPointcloud<>& pointcloud, RangeImage& range_image,
-    AABB<Point>& aabb) {
+std::pair<RangeImage, AABB<Point>>
+FixedResolutionIntegrator::computeRangeImageAndAABB(
+    const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
+    FloatingPoint max_angle, Eigen::Index num_beams) {
+  RangeImage range_image(min_angle, max_angle, num_beams);
+  AABB<Point> aabb;
+
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
     if (C_point.hasNaN()) {
@@ -57,7 +60,7 @@ void FixedResolutionIntegrator::computeRangeImageAndAABB(
     const RangeImageIndex range_image_index =
         range_image.bearingToNearestIndex(C_point);
     CHECK_GE(range_image_index, 0);
-    CHECK_LT(range_image_index, range_image.getNBeams());
+    CHECK_LT(range_image_index, range_image.getNumBeams());
     range_image[range_image_index] = range;
 
     // Update the AABB (in world frame)
@@ -76,5 +79,7 @@ void FixedResolutionIntegrator::computeRangeImageAndAABB(
                BeamModel::kRangeDeltaThresh);
   aabb.min -= Vector::Constant(max_lateral_component);
   aabb.max += Vector::Constant(max_lateral_component);
+
+  return {range_image, aabb};
 }
 }  // namespace wavemap_2d

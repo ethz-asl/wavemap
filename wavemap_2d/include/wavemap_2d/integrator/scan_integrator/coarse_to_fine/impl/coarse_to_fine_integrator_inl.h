@@ -30,7 +30,7 @@ inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
       std::max(0, range_image.angleToCeilIndex(cell_azimuth_angle -
                                                BeamModel::kAngleThresh));
   const auto last_idx =
-      std::min(range_image.getNBeams() - 1,
+      std::min(range_image.getNumBeams() - 1,
                range_image.angleToFloorIndex(cell_azimuth_angle +
                                              BeamModel::kAngleThresh));
   FloatingPoint total_update = 0.f;

@@ -16,14 +16,16 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
 
   void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
 
+  static RangeImage computeRangeImage(const PosedPointcloud<>& pointcloud,
+                                      FloatingPoint min_angle,
+                                      FloatingPoint max_angle,
+                                      Eigen::Index num_beams);
+
  private:
   static constexpr QuadtreeIndex::Element kMaxDepth = 14;
   static constexpr FloatingPoint kMaxAcceptableError = 1e-2;
   static constexpr FloatingPoint kMaxGradientOverRangeFullyInside = 1e-3;
   static constexpr FloatingPoint kMaxGradientOverRangeOnBoundary = 1e-3;
-
-  static void computeRangeImage(const PosedPointcloud<>& pointcloud,
-                                RangeImage& range_image);
 
   static FloatingPoint computeMaxApproximationError(
       RangeImageIntersector::IntersectionType intersection_type,
@@ -31,8 +33,6 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
 
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
                                             const Point& C_cell_center);
-
-  friend class CoarseToFineIntegratorTest_HierarchicalRangeImage_Test;
 };
 }  // namespace wavemap_2d
 

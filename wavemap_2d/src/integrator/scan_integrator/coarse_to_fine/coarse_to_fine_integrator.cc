@@ -12,8 +12,10 @@ void CoarseToFineIntegrator::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  RangeImage range_image(-M_PI_2f32, M_PI_2f32, pointcloud.size());
-  computeRangeImage(pointcloud, range_image);
+  // TODO(victorr): Make this configurable
+  // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
+  const RangeImage range_image =
+      computeRangeImage(pointcloud, -M_PI_2f32, M_PI_2f32, pointcloud.size());
   RangeImageIntersector range_image_intersector(range_image);
 
   // Recursively update all relevant cells
@@ -69,8 +71,11 @@ void CoarseToFineIntegrator::integratePointcloud(
   //  occupancy_map_->showImage(true, 1000);
 }
 
-void CoarseToFineIntegrator::computeRangeImage(
-    const PosedPointcloud<>& pointcloud, RangeImage& range_image) {
+RangeImage CoarseToFineIntegrator::computeRangeImage(
+    const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
+    FloatingPoint max_angle, Eigen::Index num_beams) {
+  RangeImage range_image(min_angle, max_angle, num_beams);
+
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
     if (C_point.hasNaN()) {
@@ -89,5 +94,7 @@ void CoarseToFineIntegrator::computeRangeImage(
         range_image.bearingToNearestIndex(C_point);
     range_image[range_image_index] = range;
   }
+
+  return range_image;
 }
 }  // namespace wavemap_2d

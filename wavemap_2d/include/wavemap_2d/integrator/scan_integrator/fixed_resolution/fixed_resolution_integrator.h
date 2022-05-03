@@ -15,11 +15,11 @@ class FixedResolutionIntegrator : public PointcloudIntegrator {
 
   void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
 
- private:
-  static void computeRangeImageAndAABB(const PosedPointcloud<>& pointcloud,
-                                       RangeImage& range_image,
-                                       AABB<Point>& aabb);
+  static std::pair<RangeImage, AABB<Point>> computeRangeImageAndAABB(
+      const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
+      FloatingPoint max_angle, Eigen::Index num_beams);
 
+ private:
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
                                             const Point& C_cell_center);
 };
