@@ -20,8 +20,14 @@ if (USE_UBSAN)
     -fsanitize=integer-divide-by-zero
     -fsanitize=null
     -fsanitize=return
+    -fsanitize=signed-integer-overflow
+    -fsanitize=bounds-strict
+    -fsanitize=alignment
     -fsanitize=float-divide-by-zero
     -fsanitize=float-cast-overflow
+    -fsanitize=enum
+    -fsanitize=vptr
+    -fsanitize=pointer-overflow
     -fsanitize=builtin
     -fno-omit-frame-pointer
     -g)
