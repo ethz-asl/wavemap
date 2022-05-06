@@ -3,6 +3,7 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {
@@ -157,5 +158,120 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
   }
 }
 
-TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {}
+TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
+  for (int repetition = 0; repetition < 3; ++repetition) {
+    // Generate a random pointcloud
+    const FloatingPoint resolution = getRandomResolution();
+    constexpr FloatingPoint kMinAngle = -M_PI_2f32;
+    constexpr FloatingPoint kMaxAngle = M_PI_2f32;
+    const int num_beams = getRandomIndexElement(100, 2048);
+    constexpr FloatingPoint kMinDistance = 20.f;
+    constexpr FloatingPoint kMaxDistance = 30.f;
+    const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
+        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
+
+    // Create the hierarchical range image
+    const RangeImage range_image = CoarseToFineIntegrator::computeRangeImage(
+        random_pointcloud, kMinAngle, kMaxAngle, num_beams);
+    RangeImageIntersector range_image_intersector(range_image);
+
+    const FloatingPoint resolution_inv = 1.f / resolution;
+    constexpr QuadtreeIndex::Element kMaxDepth = 10;
+    const Index min_index = computeCeilIndexForPoint(
+        random_pointcloud.getOrigin() - Vector::Constant(kMaxDistance),
+        resolution_inv);
+    const Index max_index = computeCeilIndexForPoint(
+        random_pointcloud.getOrigin() + Vector::Constant(kMaxDistance),
+        resolution_inv);
+    for (const Index& index :
+         getRandomIndexVector(min_index, max_index, 50, 100)) {
+      const QuadtreeIndex::Element depth =
+          getRandomNdtreeIndexDepth(kMaxDepth - 2, kMaxDepth);
+      const QuadtreeIndex query_index =
+          computeNodeIndexFromIndexAndDepth(index, depth, kMaxDepth);
+      const QuadtreeIndex::Element depth_diff = kMaxDepth - query_index.depth;
+      const Index min_reference_index{query_index.position.x() << depth_diff,
+                                      query_index.position.y() << depth_diff};
+      const QuadtreeIndex::Element max_child_offset =
+          int_math::exp2(depth_diff) - 1;
+      const Index max_reference_index{
+          min_reference_index.x() + max_child_offset,
+          min_reference_index.y() + max_child_offset};
+      bool has_inside = false;
+      bool has_outside = false;
+      const Transformation T_C_W = random_pointcloud.getPose().inverse();
+      for (const Index& reference_index :
+           Grid(min_reference_index, max_reference_index)) {
+        const Point W_cell_center =
+            computeCenterFromIndex(reference_index, resolution);
+        const Point C_cell_center = T_C_W * W_cell_center;
+        const FloatingPoint cell_to_sensor_distance = C_cell_center.norm();
+
+        const RangeImageIndex range_image_index =
+            range_image.bearingToNearestIndex(C_cell_center);
+        if (range_image_index < 0 ||
+            range_image.getNumBeams() <= range_image_index) {
+          has_outside = true;
+          continue;
+        }
+
+        const FloatingPoint range_image_distance =
+            range_image[range_image_index];
+        if (cell_to_sensor_distance <= range_image_distance) {
+          has_inside = true;
+        } else {
+          has_outside = true;
+        }
+      }
+      ASSERT_TRUE(has_inside || has_outside);
+      RangeImageIntersector::IntersectionType reference_intersection_type;
+      if (has_inside && has_outside) {
+        reference_intersection_type =
+            RangeImageIntersector::IntersectionType::kIntersectsBoundary;
+      } else if (has_inside) {
+        reference_intersection_type =
+            RangeImageIntersector::IntersectionType::kFullyInside;
+      } else if (has_outside) {
+        reference_intersection_type =
+            RangeImageIntersector::IntersectionType::kFullyOutside;
+      }
+
+      const FloatingPoint node_width =
+          resolution *
+          std::exp2f(static_cast<FloatingPoint>(kMaxDepth - query_index.depth));
+      const Point W_node_center =
+          computeCenterFromIndex(query_index.position, node_width);
+
+      const Point W_node_bottom_left =
+          W_node_center - Vector::Constant(node_width / 2.f);
+      const Point& t_W_C = random_pointcloud.getOrigin();
+      Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
+          W_node_bottom_left.replicate<1, 4>();
+      for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
+        for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
+          if (corner_idx & (0b1 << dim_idx)) {
+            W_cell_corners(dim_idx, corner_idx) += node_width;
+          }
+        }
+      }
+      const AABB<Point> W_cell_aabb{W_cell_corners.col(0),
+                                    W_cell_corners.col(3)};
+      const Eigen::Matrix<FloatingPoint, 2, 4> C_cell_corners =
+          T_C_W.transformVectorized(W_cell_corners);
+      const RangeImageIntersector::IntersectionType returned_intersection_type =
+          range_image_intersector.determineIntersectionType(
+              range_image, t_W_C, W_cell_aabb, C_cell_corners);
+      EXPECT_TRUE(
+          returned_intersection_type == reference_intersection_type ||
+          returned_intersection_type ==
+              RangeImageIntersector::IntersectionType::kIntersectsBoundary)
+          << "Expected "
+          << RangeImageIntersector::getIntersectionTypeStr(
+                 reference_intersection_type)
+          << " but got "
+          << RangeImageIntersector::getIntersectionTypeStr(
+                 returned_intersection_type);
+    }
+  }
+}
 }  // namespace wavemap_2d

@@ -27,22 +27,38 @@ void CoarseToFineIntegrator::integratePointcloud(
             test_quadtree.computeNodeWidthAtDepth(node_idx.depth);
         const Point W_node_center =
             computeCenterFromIndex(node_idx.position, node_width);
-        const Point C_node_center =
-            pointcloud.getPose().inverse() * W_node_center;
-        const FloatingPoint node_center_distance = C_node_center.norm();
 
-        constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
-        const FloatingPoint bounding_sphere_radius =
-            kUnitCubeHalfDiagonal * node_width;
+        const Point W_node_bottom_left =
+            W_node_center - Vector::Constant(node_width / 2.f);
+        const Point& t_W_C = pointcloud.getOrigin();
+        Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
+            W_node_bottom_left.replicate<1, 4>();
+        for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
+          for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
+            if (corner_idx & (0b1 << dim_idx)) {
+              W_cell_corners(dim_idx, corner_idx) += node_width;
+            }
+          }
+        }
+        const AABB<Point> W_cell_aabb{W_cell_corners.col(0),
+                                      W_cell_corners.col(3)};
+        const Eigen::Matrix<FloatingPoint, 2, 4> C_cell_corners =
+            pointcloud.getPose().transformVectorized(W_cell_corners);
         const RangeImageIntersector::IntersectionType intersection_type =
             range_image_intersector.determineIntersectionType(
-                range_image, C_node_center, node_center_distance,
-                bounding_sphere_radius);
+                range_image, t_W_C, W_cell_aabb, C_cell_corners);
 
         if (intersection_type ==
             RangeImageIntersector::IntersectionType::kFullyOutside) {
           return;
         }
+
+        const Point C_node_center =
+            pointcloud.getPose().inverse() * W_node_center;
+        const FloatingPoint node_center_distance = C_node_center.norm();
+        constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
+        const FloatingPoint bounding_sphere_radius =
+            kUnitCubeHalfDiagonal * node_width;
 
         if (kMaxDepth <= node_idx.depth ||
             computeMaxApproximationError(

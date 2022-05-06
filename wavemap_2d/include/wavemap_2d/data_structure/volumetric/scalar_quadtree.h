@@ -17,7 +17,7 @@ class ScalarQuadtree : public VolumetricDataStructure {
   explicit ScalarQuadtree(FloatingPoint resolution)
       : VolumetricDataStructure(resolution),
         max_depth_(14),
-        root_node_width_(std::exp2(max_depth_) * resolution),
+        root_node_width_(std::exp2f(max_depth_) * resolution),
         root_node_offset_(Index::Constant(std::exp2(max_depth_ - 1))) {}
   ~ScalarQuadtree() override = default;
 
