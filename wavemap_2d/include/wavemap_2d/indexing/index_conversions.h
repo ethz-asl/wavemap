@@ -61,7 +61,7 @@ inline Point computeNodeCenterFromNodeIndex(const QuadtreeIndex& node_index,
 inline QuadtreeIndex computeNodeIndexFromIndexAndDepth(
     const Index& index, QuadtreeIndex::Element depth,
     QuadtreeIndex::Element max_depth) {
-  CHECK_GE(depth, max_depth);
+  DCHECK_LE(depth, max_depth);
   const QuadtreeIndex::Element node_height = max_depth - depth;
   QuadtreeIndex node_index{depth, index};
   node_index.position.x() >>= node_height;
@@ -71,7 +71,7 @@ inline QuadtreeIndex computeNodeIndexFromIndexAndDepth(
 
 inline Index computeIndexFromNodeIndex(const QuadtreeIndex& node_index,
                                        QuadtreeIndex::Element max_depth) {
-  CHECK_GE(node_index.depth, max_depth);
+  DCHECK_LE(node_index.depth, max_depth);
   const QuadtreeIndex::Element node_height = max_depth - node_index.depth;
   Index index = node_index.position * (1 << node_height);
   return index;
