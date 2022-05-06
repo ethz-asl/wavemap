@@ -51,6 +51,22 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
                      Point::Zero());
   tests.emplace_back(-Point::Ones(), Point::Zero(), Point::Ones());
   tests.emplace_back(Point::Constant(2.f), Point::Ones(), Point::Zero());
+  tests.emplace_back(Point::UnitX(), Point::UnitX(), Point::UnitY());
+  tests.emplace_back(0.4f * Point::UnitX(), 0.4f * Point::UnitX(),
+                     Point::Ones());
+  tests.emplace_back(0.6f * Point::UnitX(), 0.6f * Point::UnitX(),
+                     Point::UnitY());
+  tests.emplace_back(2.f * Point::UnitX(), Point::UnitX(), Point::UnitY());
+  tests.emplace_back(Point{2.f, 0.4f}, Point{1.f, 0.4f}, Point::UnitY());
+  tests.emplace_back(Point{2.f, 0.6f}, Point{1.f, 0.6f}, Point::Zero());
+  tests.emplace_back(Point::UnitY(), Point::UnitY(), Point::UnitX());
+  tests.emplace_back(0.4f * Point::UnitY(), 0.4f * Point::UnitY(),
+                     Point::Ones());
+  tests.emplace_back(0.6f * Point::UnitY(), 0.6f * Point::UnitY(),
+                     Point::UnitX());
+  tests.emplace_back(2.f * Point::UnitY(), Point::UnitY(), Point::UnitX());
+  tests.emplace_back(Point{0.4f, 2.f}, Point{0.4f, 1.f}, Point::UnitX());
+  tests.emplace_back(Point{0.6f, 2.f}, Point{0.6f, 1.f}, Point::Zero());
 
   for (const QueryAndExpectedResults& test : tests) {
     if ((test.query_point - test.closest_point).norm() <= 0) {

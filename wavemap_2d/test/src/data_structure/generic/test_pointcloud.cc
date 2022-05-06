@@ -35,18 +35,6 @@ class PointcloudTest : public FixtureBase {
     }
   }
 
-  unsigned int getRandomPointcloudSize(unsigned int min_size = 1u,
-                                       unsigned int max_size = 1000u) const {
-    return random_number_generator_->getRandomInteger(min_size, max_size);
-  }
-
-  std::vector<Point> getRandomPointVector() const {
-    std::vector<Point> random_point_vector(getRandomPointcloudSize());
-    std::generate(random_point_vector.begin(), random_point_vector.end(),
-                  []() { return getRandomPoint(); });
-    return random_point_vector;
-  }
-
   Pointcloud<>::PointcloudData getRandomPointMatrix() const {
     constexpr FloatingPoint kMaxCoordinate = 1e3;
     const Eigen::Index random_length = getRandomPointcloudSize();
