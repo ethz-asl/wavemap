@@ -99,6 +99,10 @@ if (CATKIN_ENABLE_TESTING)
   target_link_libraries(test_volumetric_data_structure ${PROJECT_NAME}
                         testing_main)
 
+  catkin_add_gtest(test_aabb test/src/data_structure/generic/test_aabb.cc)
+  target_include_directories(test_aabb PRIVATE test/include)
+  target_link_libraries(test_aabb ${PROJECT_NAME} testing_main)
+
   catkin_add_gtest(test_pointcloud
                    test/src/data_structure/generic/test_pointcloud.cc)
   target_include_directories(test_pointcloud PRIVATE test/include)

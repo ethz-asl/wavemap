@@ -21,6 +21,31 @@ struct AABB {
     return (min.array() <= point.array() && point.array() <= max.array()).all();
   }
 
+  T closestPointTo(const T& point) const {
+    T closest_point = point.cwiseMax(min);
+    closest_point = closest_point.cwiseMin(max);
+    return closest_point;
+  }
+  T furthestPointFrom(const T& point) const {
+    const T aabb_center = (max - min) / static_cast<typename T::Scalar>(2);
+    const T furthest_point =
+        (aabb_center.array() < point.array()).select(min, max);
+    return furthest_point;
+  }
+
+  FloatingPoint minSquaredDistanceTo(const T& point) const {
+    return (point - closestPointTo(point)).squaredNorm();
+  }
+  FloatingPoint maxSquaredDistanceFrom(const T& point) const {
+    return (point - furthestPointFrom(point)).squaredNorm();
+  }
+  FloatingPoint minDistanceTo(const T& point) const {
+    return (point - closestPointTo(point)).norm();
+  }
+  FloatingPoint maxDistanceFrom(const T& point) const {
+    return (point - furthestPointFrom(point)).norm();
+  }
+
   std::string toString() const {
     std::stringstream ss;
     ss << "[min =" << EigenFormat::oneLine(min)
