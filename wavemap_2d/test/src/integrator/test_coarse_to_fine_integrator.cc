@@ -190,8 +190,8 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
       const QuadtreeIndex query_index =
           computeNodeIndexFromIndexAndDepth(index, depth, kMaxDepth);
       const QuadtreeIndex::Element depth_diff = kMaxDepth - query_index.depth;
-      const Index min_reference_index{query_index.position.x() << depth_diff,
-                                      query_index.position.y() << depth_diff};
+      const Index min_reference_index =
+          int_math::exp2(depth_diff) * query_index.position;
       const QuadtreeIndex::Element max_child_offset =
           int_math::exp2(depth_diff) - 1;
       const Index max_reference_index{
