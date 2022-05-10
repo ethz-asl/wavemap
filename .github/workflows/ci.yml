@@ -442,7 +442,7 @@ jobs:
         env:
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
           ASAN_OPTIONS: halt_on_error=1:detect_leaks=1:detect_stack_use_after_return=1
-          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1:suppressions=src/wavemap_2d/.tsan_suppressions
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc-sanitizers.json"
