@@ -98,9 +98,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN . /opt/ros/noetic/setup.sh && \
     catkin init && \
     catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-    catkin build --no-status --force-color \
-      $(catkin list --deps --directory $(catkin locate $PACKAGE_NAME) -u | \
-        grep -oP '(?<= - ).*?(?=$)')
+    dependencies=$(catkin list --deps --directory $(catkin locate $PACKAGE_NAME) -u | grep -oP '(?<= - ).*?(?=$)' | sort -u) && \
+    catkin_packages=$(catkin list -u | sort -u) && \
+    dependencies_to_catkin_build=$(comm -12 <(echo "$dependencies") <(echo "$catkin_packages")) && \
+    catkin build --no-status --force-color $(echo "$dependencies_to_catkin_build")
 
 
 FROM workspace-deps-builder AS workspace-full-builder
