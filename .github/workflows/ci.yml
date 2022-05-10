@@ -442,7 +442,7 @@ jobs:
         env:
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
           ASAN_OPTIONS: halt_on_error=1:detect_leaks=1:detect_stack_use_after_return=1
-          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1:suppressions=src/wavemap_2d/.tsan_suppressions
+          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc-sanitizers.json"
@@ -497,7 +497,7 @@ jobs:
           echo "::add-matcher::./.github/problem-matchers/valgrind.json"
           all_tests_passed=1
           for f in devel/lib/wavemap_2d/test_*
-            do G_DEBUG=gc-friendly G_SLICE=always-malloc valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible --suppressions=/usr/share/glib-2.0/valgrind/glib.supp --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
+            do valgrind --exit-on-first-error=yes --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=definite,indirect,possible --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
             grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml || true
           done
           if [ $all_tests_passed -ne 1 ]; then

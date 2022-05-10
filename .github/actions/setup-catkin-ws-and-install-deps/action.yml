@@ -45,6 +45,13 @@ runs:
         catkin build catkin_simple --no-status
         echo "::endgroup::"
 
+    # TODO(victorr): Fix this upstream
+    - shell: bash
+      run: |
+        echo "::group::Manually install opencv_viz (missing opencv3 dependency)"
+        apt-get install -y libopencv-viz-dev
+        echo "::endgroup::"
+
     - shell: bash
       working-directory: ${{ env.CATKIN_WS_PATH }}
       run: |

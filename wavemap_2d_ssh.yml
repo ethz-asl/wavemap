@@ -27,3 +27,7 @@ repositories:
     type: git
     url: git@github.com:ethz-asl/minkindr_ros.git
     version: master
+  opencv3_catkin:
+    type: git
+    url: git@github.com:ethz-asl/opencv3_catkin.git
+    version: master

@@ -35,8 +35,8 @@ inline void ShowImage(const cv::Mat& image, int delay_ms = 1) {
   }
 
   cv::namedWindow("Grid map", cv::WINDOW_NORMAL);
-  cv::setWindowProperty("Grid map", cv::WND_PROP_FULLSCREEN,
-                        cv::WINDOW_FULLSCREEN);
+  cv::setWindowProperty("Grid map", CV_WND_PROP_FULLSCREEN,
+                        CV_WINDOW_FULLSCREEN);
   cv::imshow("Grid map", image);
   cv::waitKey(delay_ms);
 }
