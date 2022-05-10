@@ -57,15 +57,12 @@ WORKDIR $CATKIN_WS_PATH
 COPY --from=cacher /tmp/manifests .
 
 # Install general and ROS-related system dependencies
-# NOTE: Manually installing opencv_viz is a temporary workaround to satisfy
-#       opencv3's dependencies (required but seemingly missing on headless
-#       systems and not declared through rosdep).
 ARG DEBIAN_FRONTEND=noninteractive
 ARG ROS_HOME
 ENV ROS_HOME=$ROS_HOME
 # hadolint ignore=DL3008
 RUN apt-get update && \
-    apt-get install -q -y --no-install-recommends git python3-catkin-tools ccache libopencv-viz-dev && \
+    apt-get install -q -y --no-install-recommends git python3-catkin-tools ccache && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src \
       --skip-keys="numpy_eigen catkin_boost_python_buildtool" -q -y && \
