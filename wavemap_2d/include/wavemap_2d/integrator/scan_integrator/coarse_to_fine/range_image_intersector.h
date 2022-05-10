@@ -34,7 +34,7 @@ class RangeImageIntersector {
       const AABB<Point>& W_cell_aabb,
       const Eigen::Matrix<FloatingPoint, 2, 4>& C_cell_corners) const {
     const FloatingPoint d_C_cell_closest = W_cell_aabb.minDistanceTo(t_W_C);
-    const FloatingPoint d_C_cell_furthest = W_cell_aabb.maxDistanceFrom(t_W_C);
+    const FloatingPoint d_C_cell_furthest = W_cell_aabb.maxDistanceTo(t_W_C);
     if (d_C_cell_closest < kEpsilon) {
       return IntersectionType::kIntersectsBoundary;
     }

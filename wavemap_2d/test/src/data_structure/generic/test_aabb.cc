@@ -93,10 +93,10 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
         << test.getDescription();
     EXPECT_NEAR(returned_furthest_point.y(), test.furthest_point.y(), kEpsilon)
         << test.getDescription();
-    EXPECT_NEAR(unit_aabb.maxDistanceFrom(test.query_point),
+    EXPECT_NEAR(unit_aabb.maxDistanceTo(test.query_point),
                 (test.query_point - test.furthest_point).norm(), kEpsilon)
         << test.getDescription();
-    EXPECT_NEAR(unit_aabb.maxSquaredDistanceFrom(test.query_point),
+    EXPECT_NEAR(unit_aabb.maxSquaredDistanceTo(test.query_point),
                 (test.query_point - test.furthest_point).squaredNorm(),
                 kEpsilon)
         << test.getDescription();

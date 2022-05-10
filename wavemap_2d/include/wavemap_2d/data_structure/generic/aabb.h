@@ -36,13 +36,13 @@ struct AABB {
   FloatingPoint minSquaredDistanceTo(const T& point) const {
     return (point - closestPointTo(point)).squaredNorm();
   }
-  FloatingPoint maxSquaredDistanceFrom(const T& point) const {
+  FloatingPoint maxSquaredDistanceTo(const T& point) const {
     return (point - furthestPointFrom(point)).squaredNorm();
   }
   FloatingPoint minDistanceTo(const T& point) const {
     return (point - closestPointTo(point)).norm();
   }
-  FloatingPoint maxDistanceFrom(const T& point) const {
+  FloatingPoint maxDistanceTo(const T& point) const {
     return (point - furthestPointFrom(point)).norm();
   }
 
