@@ -17,5 +17,5 @@
   <depend>glog_catkin</depend>
   <depend>eigen_catkin</depend>
   <depend>minkindr</depend>
-  <depend>opencv3_catkin</depend>
+  <depend>cv_bridge</depend>
 </package>
