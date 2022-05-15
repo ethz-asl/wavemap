@@ -28,9 +28,10 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
   static constexpr FloatingPoint kMaxGradientOnBoundary =
       BeamModel::kScaling * 14.9999999999997f;
 
-  static FloatingPoint computeMaxApproximationError(
+  static bool isApproximationErrorAcceptable(
       RangeImageIntersector::IntersectionType intersection_type,
-      FloatingPoint sphere_center_distance, FloatingPoint sphere_diameter);
+      FloatingPoint sphere_center_distance,
+      FloatingPoint bounding_sphere_radius);
 
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
                                             const Point& C_cell_center);

@@ -63,13 +63,13 @@ void CoarseToFineIntegrator::integratePointcloud(
 
         const Point C_node_center = T_CW * W_node_center;
         const FloatingPoint node_center_distance = C_node_center.norm();
-        constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
+        constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
         const FloatingPoint bounding_sphere_radius =
             kUnitCubeHalfDiagonal * node_width;
         if (max_depth <= node_idx.depth ||
-            computeMaxApproximationError(
-                intersection_type, node_center_distance,
-                bounding_sphere_radius) <= kMaxAcceptableUpdateError) {
+            isApproximationErrorAcceptable(intersection_type,
+                                           node_center_distance,
+                                           bounding_sphere_radius)) {
           FloatingPoint sample =
               computeUpdateForCell(range_image, C_node_center);
           occupancy_map->addToCellValue(node_idx, sample);

@@ -4,18 +4,20 @@
 #include <algorithm>
 
 namespace wavemap_2d {
-inline FloatingPoint CoarseToFineIntegrator::computeMaxApproximationError(
+inline bool CoarseToFineIntegrator::isApproximationErrorAcceptable(
     RangeImageIntersector::IntersectionType intersection_type,
-    FloatingPoint sphere_center_distance, FloatingPoint sphere_diameter) {
+    FloatingPoint sphere_center_distance,
+    FloatingPoint bounding_sphere_radius) {
   switch (intersection_type) {
     case RangeImageIntersector::IntersectionType::kFreeOrUnknown:
-      return kMaxGradientOverRangeFullyInside / sphere_center_distance *
-             sphere_diameter;
+      return bounding_sphere_radius / sphere_center_distance <
+             kMaxAcceptableUpdateError / kMaxGradientOverRangeFullyInside;
     case RangeImageIntersector::IntersectionType::kPossiblyOccupied:
-      return kMaxGradientOnBoundary * sphere_diameter;
+      return bounding_sphere_radius <
+             kMaxAcceptableUpdateError / kMaxGradientOnBoundary;
     case RangeImageIntersector::IntersectionType::kFullyUnknown:
     default:
-      return 0.f;
+      return true;
   }
 }
 
