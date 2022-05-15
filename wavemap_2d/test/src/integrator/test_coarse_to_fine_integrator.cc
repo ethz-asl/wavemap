@@ -165,7 +165,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
     const int num_beams = getRandomIndexElement(100, 2048);
-    constexpr FloatingPoint kMinDistance = 20.f;
+    constexpr FloatingPoint kMinDistance = 10.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
     const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
         kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
@@ -197,43 +197,51 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
       const Index max_reference_index{
           min_reference_index.x() + max_child_offset,
           min_reference_index.y() + max_child_offset};
-      bool has_inside = false;
-      bool has_outside = false;
+      bool has_free = false;
+      bool has_occupied = false;
+      bool has_unknown = false;
       const Transformation T_C_W = random_pointcloud.getPose().inverse();
       for (const Index& reference_index :
            Grid(min_reference_index, max_reference_index)) {
         const Point W_cell_center =
             computeCenterFromIndex(reference_index, resolution);
         const Point C_cell_center = T_C_W * W_cell_center;
-        const FloatingPoint cell_to_sensor_distance = C_cell_center.norm();
+        const FloatingPoint d_C_cell = C_cell_center.norm();
+        if (BeamModel::kRangeMax < d_C_cell) {
+          has_unknown = true;
+          continue;
+        }
 
         const RangeImageIndex range_image_index =
             range_image.bearingToNearestIndex(C_cell_center);
         if (range_image_index < 0 ||
             range_image.getNumBeams() <= range_image_index) {
-          has_outside = true;
+          has_unknown = true;
           continue;
         }
 
         const FloatingPoint range_image_distance =
             range_image[range_image_index];
-        if (cell_to_sensor_distance <= range_image_distance) {
-          has_inside = true;
+        if (d_C_cell < range_image_distance) {
+          has_free = true;
+        } else if (d_C_cell <=
+                   range_image_distance + BeamModel::kRangeDeltaThresh) {
+          has_occupied = true;
         } else {
-          has_outside = true;
+          has_unknown = true;
         }
       }
-      ASSERT_TRUE(has_inside || has_outside);
+      ASSERT_TRUE(has_free || has_occupied || has_unknown);
       RangeImageIntersector::IntersectionType reference_intersection_type;
-      if (has_inside && has_outside) {
+      if (has_occupied) {
         reference_intersection_type =
-            RangeImageIntersector::IntersectionType::kIntersectsBoundary;
-      } else if (has_inside) {
+            RangeImageIntersector::IntersectionType::kPossiblyOccupied;
+      } else if (has_free) {
         reference_intersection_type =
-            RangeImageIntersector::IntersectionType::kFullyInside;
-      } else if (has_outside) {
+            RangeImageIntersector::IntersectionType::kFreeOrUnknown;
+      } else {
         reference_intersection_type =
-            RangeImageIntersector::IntersectionType::kFullyOutside;
+            RangeImageIntersector::IntersectionType::kFullyUnknown;
       }
 
       const FloatingPoint node_width =
@@ -261,10 +269,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
       const RangeImageIntersector::IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
               range_image, t_W_C, W_cell_aabb, C_cell_corners);
-      EXPECT_TRUE(
-          returned_intersection_type == reference_intersection_type ||
-          returned_intersection_type ==
-              RangeImageIntersector::IntersectionType::kIntersectsBoundary)
+      EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected "
           << RangeImageIntersector::getIntersectionTypeStr(
                  reference_intersection_type)

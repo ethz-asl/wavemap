@@ -6,7 +6,11 @@
 namespace wavemap_2d {
 inline FloatingPoint FixedResolutionIntegrator::computeUpdateForCell(
     const RangeImage& range_image, const Point& C_cell_center) {
-  const FloatingPoint cell_to_sensor_distance = C_cell_center.norm();
+  const FloatingPoint d_C_cell = C_cell_center.norm();
+  if (d_C_cell < kEpsilon || BeamModel::kRangeMax < d_C_cell) {
+    return 0.f;
+  }
+
   const FloatingPoint cell_azimuth_angle =
       RangeImage::bearingToAngle(C_cell_center);
 
@@ -20,12 +24,7 @@ inline FloatingPoint FixedResolutionIntegrator::computeUpdateForCell(
   FloatingPoint total_update = 0.f;
   for (RangeImageIndex idx = first_idx; idx <= last_idx; ++idx) {
     const FloatingPoint measured_distance = range_image[idx];
-    if (BeamModel::kRangeMax < cell_to_sensor_distance) {
-      continue;
-    }
-    if (cell_to_sensor_distance < kEpsilon ||
-        measured_distance + BeamModel::kRangeDeltaThresh <
-            cell_to_sensor_distance) {
+    if (measured_distance + BeamModel::kRangeDeltaThresh < d_C_cell) {
       continue;
     }
 
@@ -36,8 +35,8 @@ inline FloatingPoint FixedResolutionIntegrator::computeUpdateForCell(
       continue;
     }
 
-    total_update += BeamModel::computeUpdate(
-        cell_to_sensor_distance, cell_to_beam_angle, measured_distance);
+    total_update += BeamModel::computeUpdate(d_C_cell, cell_to_beam_angle,
+                                             measured_distance);
   }
 
   return total_update;

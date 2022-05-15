@@ -123,13 +123,19 @@ QuadtreeIndex::Element ScalarQuadtree<CellT>::getDepthAtIndex(
 
 template <typename CellT>
 FloatingPoint ScalarQuadtree<CellT>::getCellValue(const Index& index) const {
-  const Node<CellDataSpecialized>* deepest_node_at_index =
-      getDeepestNodeAtIndex(index);
-  if (deepest_node_at_index) {
-    return deepest_node_at_index->data();
-  } else {
-    return 0.f;
+  const QuadtreeIndex deepest_possible_node_index = indexToNodeIndex(index);
+  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
+      deepest_possible_node_index.computeRelativeChildIndices();
+  const Node<CellDataSpecialized>* node = &quadtree_.getRootNode();
+  FloatingPoint value = node->data();
+  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
+    if (!node->hasChild(child_index)) {
+      break;
+    }
+    node = node->getChild(child_index);
+    value = CellT::add(value, node->data());
   }
+  return value;
 }
 
 template <typename CellT>

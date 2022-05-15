@@ -18,19 +18,28 @@ void CoarseToFineIntegrator::integratePointcloud(
       computeRangeImage(pointcloud, -M_PI_2f32, M_PI_2f32, pointcloud.size());
   RangeImageIntersector range_image_intersector(range_image);
 
+  // Get a pointer to the underlying specialized quadtree data structure
+  auto occupancy_map = dynamic_cast<ScalarQuadtree<SaturatingOccupancyCell>*>(
+      occupancy_map_.get());
+  if (!occupancy_map) {
+    LOG(FATAL) << "Coarse to fine integrator can only be used with quadtree "
+                  "data structure.";
+    return;
+  }
+
   // Recursively update all relevant cells
-  const FloatingPoint resolution = occupancy_map_->getResolution();
-  ScalarQuadtree<UnboundedOccupancyCell> test_quadtree(resolution);
+  const QuadtreeIndex::Element max_depth = occupancy_map->getMaxDepth();
+  const Transformation T_CW = pointcloud.getPose().inverse();
+  const Point& t_W_C = pointcloud.getOrigin();
   std::function<void(const QuadtreeIndex&)> recursive_fn =
       [&](const QuadtreeIndex& node_idx) {
         const FloatingPoint node_width =
-            test_quadtree.computeNodeWidthAtDepth(node_idx.depth);
+            occupancy_map->computeNodeWidthAtDepth(node_idx.depth);
+        const Point W_node_bottom_left = computeNodeCenterFromNodeIndex(
+            node_idx, occupancy_map->getRootNodeWidth());
         const Point W_node_center =
-            computeCenterFromIndex(node_idx.position, node_width);
+            W_node_bottom_left + Vector::Constant(node_width / 2);
 
-        const Point W_node_bottom_left =
-            W_node_center - Vector::Constant(node_width / 2.f);
-        const Point& t_W_C = pointcloud.getOrigin();
         Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
             W_node_bottom_left.replicate<1, 4>();
         for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
@@ -43,31 +52,27 @@ void CoarseToFineIntegrator::integratePointcloud(
         const AABB<Point> W_cell_aabb{W_cell_corners.col(0),
                                       W_cell_corners.col(3)};
         const Eigen::Matrix<FloatingPoint, 2, 4> C_cell_corners =
-            pointcloud.getPose().transformVectorized(W_cell_corners);
+            T_CW.transformVectorized(W_cell_corners);
         const RangeImageIntersector::IntersectionType intersection_type =
             range_image_intersector.determineIntersectionType(
                 range_image, t_W_C, W_cell_aabb, C_cell_corners);
-
         if (intersection_type ==
-            RangeImageIntersector::IntersectionType::kFullyOutside) {
+            RangeImageIntersector::IntersectionType::kFullyUnknown) {
           return;
         }
 
-        const Point C_node_center =
-            pointcloud.getPose().inverse() * W_node_center;
+        const Point C_node_center = T_CW * W_node_center;
         const FloatingPoint node_center_distance = C_node_center.norm();
         constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
         const FloatingPoint bounding_sphere_radius =
             kUnitCubeHalfDiagonal * node_width;
-
-        if (kMaxDepth <= node_idx.depth ||
+        if (max_depth <= node_idx.depth ||
             computeMaxApproximationError(
                 intersection_type, node_center_distance,
-                bounding_sphere_radius) <= kMaxAcceptableError) {
-          //          LOG(INFO) << "Sampling: " << node_idx.toString();
+                bounding_sphere_radius) <= kMaxAcceptableUpdateError) {
           FloatingPoint sample =
               computeUpdateForCell(range_image, C_node_center);
-          test_quadtree.setCellValue(node_idx, sample);
+          occupancy_map->addToCellValue(node_idx, sample);
           return;
         }
 
@@ -77,14 +82,6 @@ void CoarseToFineIntegrator::integratePointcloud(
       };
 
   recursive_fn(QuadtreeIndex{});
-
-  const Index min_index = test_quadtree.getMinIndex();
-  const Index max_index = test_quadtree.getMaxIndex();
-  for (const Index& index : Grid(min_index, max_index)) {
-    const FloatingPoint update = test_quadtree.getCellValue(index);
-    occupancy_map_->addToCellValue(index, update);
-  }
-  //  occupancy_map_->showImage(true, 1000);
 }
 
 RangeImage CoarseToFineIntegrator::computeRangeImage(

@@ -8,10 +8,10 @@
 namespace wavemap_2d {
 class BeamModel : public MeasurementModel {
  public:
-  static constexpr FloatingPoint kAngleThresh = 0.007853982f;
-  static constexpr FloatingPoint kRangeDeltaThresh = 0.1f;
-  static constexpr FloatingPoint kAngleSigma = kAngleThresh / 6.f;
-  static constexpr FloatingPoint kRangeSigma = kRangeDeltaThresh / 6.f;
+  static constexpr FloatingPoint kAngleSigma = M_PIf32 / 400.f / 5.f;
+  static constexpr FloatingPoint kRangeSigma = 0.1f / 4.f;
+  static constexpr FloatingPoint kAngleThresh = 6.f * kAngleSigma;
+  static constexpr FloatingPoint kRangeDeltaThresh = 6.f * kRangeSigma;
   static constexpr FloatingPoint kScaling = 0.5f;
   // NOTE: The angle and upper range thresholds have a width of 6 sigmas because
   //       the ground truth surface thickness is 3 sigma, and the angular/range

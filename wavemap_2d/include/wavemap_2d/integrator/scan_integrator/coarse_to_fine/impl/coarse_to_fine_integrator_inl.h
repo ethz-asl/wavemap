@@ -8,13 +8,12 @@ inline FloatingPoint CoarseToFineIntegrator::computeMaxApproximationError(
     RangeImageIntersector::IntersectionType intersection_type,
     FloatingPoint sphere_center_distance, FloatingPoint sphere_diameter) {
   switch (intersection_type) {
-    case RangeImageIntersector::IntersectionType::kFullyInside:
-      return kMaxGradientOverRangeFullyInside * sphere_center_distance *
+    case RangeImageIntersector::IntersectionType::kFreeOrUnknown:
+      return kMaxGradientOverRangeFullyInside / sphere_center_distance *
              sphere_diameter;
-    case RangeImageIntersector::IntersectionType::kIntersectsBoundary:
-      return kMaxGradientOverRangeOnBoundary * sphere_center_distance *
-             sphere_diameter;
-    case RangeImageIntersector::IntersectionType::kFullyOutside:
+    case RangeImageIntersector::IntersectionType::kPossiblyOccupied:
+      return kMaxGradientOnBoundary * sphere_diameter;
+    case RangeImageIntersector::IntersectionType::kFullyUnknown:
     default:
       return 0.f;
   }
@@ -22,7 +21,10 @@ inline FloatingPoint CoarseToFineIntegrator::computeMaxApproximationError(
 
 inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
     const RangeImage& range_image, const Point& C_cell_center) {
-  const FloatingPoint cell_to_sensor_distance = C_cell_center.norm();
+  const FloatingPoint d_C_cell = C_cell_center.norm();
+  if (d_C_cell < kEpsilon || BeamModel::kRangeMax < d_C_cell) {
+    return 0.f;
+  }
   const FloatingPoint cell_azimuth_angle =
       RangeImage::bearingToAngle(C_cell_center);
 
@@ -36,12 +38,7 @@ inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
   FloatingPoint total_update = 0.f;
   for (RangeImageIndex idx = first_idx; idx <= last_idx; ++idx) {
     const FloatingPoint measured_distance = range_image[idx];
-    if (BeamModel::kRangeMax < cell_to_sensor_distance) {
-      continue;
-    }
-    if (cell_to_sensor_distance < kEpsilon ||
-        measured_distance + BeamModel::kRangeDeltaThresh <
-            cell_to_sensor_distance) {
+    if (measured_distance + BeamModel::kRangeDeltaThresh < d_C_cell) {
       continue;
     }
 
@@ -52,8 +49,8 @@ inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
       continue;
     }
 
-    total_update += BeamModel::computeUpdate(
-        cell_to_sensor_distance, cell_to_beam_angle, measured_distance);
+    total_update += BeamModel::computeUpdate(d_C_cell, cell_to_beam_angle,
+                                             measured_distance);
   }
 
   return total_update;

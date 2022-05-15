@@ -22,10 +22,11 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
                                       Eigen::Index num_beams);
 
  private:
-  static constexpr QuadtreeIndex::Element kMaxDepth = 14;
-  static constexpr FloatingPoint kMaxAcceptableError = 1e-2;
-  static constexpr FloatingPoint kMaxGradientOverRangeFullyInside = 1e-3;
-  static constexpr FloatingPoint kMaxGradientOverRangeOnBoundary = 1e-3;
+  static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
+  static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
+      BeamModel::kScaling * 238.732414637843f;
+  static constexpr FloatingPoint kMaxGradientOnBoundary =
+      BeamModel::kScaling * 14.9999999999997f;
 
   static FloatingPoint computeMaxApproximationError(
       RangeImageIntersector::IntersectionType intersection_type,

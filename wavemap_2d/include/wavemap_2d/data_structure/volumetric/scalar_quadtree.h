@@ -32,6 +32,7 @@ class ScalarQuadtree : public VolumetricDataStructure {
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
   QuadtreeIndex::Element getMaxDepth() const { return max_depth_; }
+  FloatingPoint getRootNodeWidth() const { return root_node_width_; }
 
   bool hasCell(const Index& index) const override;
   QuadtreeIndex::Element getDepthAtIndex(const Index& index);

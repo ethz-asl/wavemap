@@ -42,7 +42,7 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
     ROS_INFO("Using ray integrator");
     pointcloud_integrator_ = std::make_shared<RayIntegrator>(occupancy_map_);
   } else if (config_.measurement_model_type == "coarse_to_fine") {
-    ROS_INFO("Using beam integrator");
+    ROS_INFO("Using coarse to fine integrator");
     pointcloud_integrator_ =
         std::make_shared<CoarseToFineIntegrator>(occupancy_map_);
   } else {
