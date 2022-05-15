@@ -21,84 +21,107 @@ TEST_F(AabbTest, InitializationAndInclusion) {
 
 TEST_F(AabbTest, ClosestPointsAndDistances) {
   struct QueryAndExpectedResults {
+    AABB<Point> aabb;
     Point query_point;
-    Point closest_point;
-    Point furthest_point;
 
-    QueryAndExpectedResults(Point _query_point, Point _closest_point,
-                            Point _furthest_point)
-        : query_point(std::move(_query_point)),
-          closest_point(std::move(_closest_point)),
-          furthest_point(std::move(_furthest_point)) {}
+    QueryAndExpectedResults(AABB<Point> _aabb, Point _query_point)
+        : aabb(std::move(_aabb)), query_point(std::move(_query_point)) {}
 
     std::string getDescription() const {
       std::stringstream ss;
-      ss << "For query_point " << EigenFormat::oneLine(query_point)
-         << ", closest_point " << EigenFormat::oneLine(closest_point)
-         << "and furthest_point " << EigenFormat::oneLine(furthest_point)
-         << ".";
+      ss << "For aabb " << aabb.toString() << " and query_point "
+         << EigenFormat::oneLine(query_point) << ".";
       return ss.str();
     }
   };
 
-  AABB<Point> unit_aabb{Point::Zero(), Point::Ones()};
+  // Generate test set
   std::vector<QueryAndExpectedResults> tests;
-  tests.emplace_back(Point::Zero(), Point::Zero(), Point::Ones());
-  tests.emplace_back(Point::Ones(), Point::Ones(), Point::Zero());
-  tests.emplace_back(Point::Constant(0.4f), Point::Constant(0.4f),
-                     Point::Ones());
-  tests.emplace_back(Point::Constant(0.6f), Point::Constant(0.6f),
-                     Point::Zero());
-  tests.emplace_back(-Point::Ones(), Point::Zero(), Point::Ones());
-  tests.emplace_back(Point::Constant(2.f), Point::Ones(), Point::Zero());
-  tests.emplace_back(Point::UnitX(), Point::UnitX(), Point::UnitY());
-  tests.emplace_back(0.4f * Point::UnitX(), 0.4f * Point::UnitX(),
-                     Point::Ones());
-  tests.emplace_back(0.6f * Point::UnitX(), 0.6f * Point::UnitX(),
-                     Point::UnitY());
-  tests.emplace_back(2.f * Point::UnitX(), Point::UnitX(), Point::UnitY());
-  tests.emplace_back(Point{2.f, 0.4f}, Point{1.f, 0.4f}, Point::UnitY());
-  tests.emplace_back(Point{2.f, 0.6f}, Point{1.f, 0.6f}, Point::Zero());
-  tests.emplace_back(Point::UnitY(), Point::UnitY(), Point::UnitX());
-  tests.emplace_back(0.4f * Point::UnitY(), 0.4f * Point::UnitY(),
-                     Point::Ones());
-  tests.emplace_back(0.6f * Point::UnitY(), 0.6f * Point::UnitY(),
-                     Point::UnitX());
-  tests.emplace_back(2.f * Point::UnitY(), Point::UnitY(), Point::UnitX());
-  tests.emplace_back(Point{0.4f, 2.f}, Point{0.4f, 1.f}, Point::UnitX());
-  tests.emplace_back(Point{0.6f, 2.f}, Point{0.6f, 1.f}, Point::Zero());
+  {
+    std::vector<AABB<Point>> aabbs{{Point::Zero(), Point::Ones()},
+                                   {Point::Zero(), Point{0.5f, 1.f}},
+                                   {Point::Zero(), Point{1.f, 0.5f}}};
+    for (const auto& aabb : aabbs) {
+      tests.emplace_back(aabb, Point::Zero());
+    }
+    for (int direction = 1; direction < 4; ++direction) {
+      for (const FloatingPoint scale : {0.1f, 1.f, 3.f, 30.f}) {
+        for (const FloatingPoint sign : {-1.f, 1.f}) {
+          const Vector translation =
+              sign * scale * Vector{direction & 0b01, direction & 0b10};
+          for (const auto& aabb : aabbs) {
+            const AABB<Point> aabb_translated{aabb.min + translation,
+                                              aabb.max + translation};
+            tests.emplace_back(aabb, translation);
+            tests.emplace_back(aabb_translated, Point::Zero());
+            tests.emplace_back(aabb_translated, translation);
+          }
+        }
+      }
+    }
+  }
 
+  // Run tests
   for (const QueryAndExpectedResults& test : tests) {
-    if ((test.query_point - test.closest_point).norm() <= 0) {
-      EXPECT_TRUE(unit_aabb.containsPoint(test.query_point))
+    // Find the closest and furthest point
+    Point closest_point;
+    Point furthest_point;
+    // Check for closest/furthest points on the AABB's edges
+    for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
+      const FloatingPoint query_coord = test.query_point[dim_idx];
+      const FloatingPoint aabb_min_coord = test.aabb.min[dim_idx];
+      const FloatingPoint aabb_max_coord = test.aabb.max[dim_idx];
+      closest_point[dim_idx] =
+          std::clamp(query_coord, aabb_min_coord, aabb_max_coord);
+      if (std::abs(aabb_min_coord - query_coord) <
+          std::abs(aabb_max_coord - query_coord)) {
+        furthest_point[dim_idx] = aabb_max_coord;
+      } else {
+        furthest_point[dim_idx] = aabb_min_coord;
+      }
+    }
+    const FloatingPoint min_distance =
+        (closest_point - test.query_point).norm();
+    const FloatingPoint max_distance =
+        (furthest_point - test.query_point).norm();
+    if ((test.aabb.min.array() <= test.query_point.array() &&
+         test.query_point.array() <= test.aabb.max.array())
+            .all()) {
+      ASSERT_LE(min_distance, kEpsilon);
+      ASSERT_NEAR(closest_point.x(), test.query_point.x(), kEpsilon);
+      ASSERT_NEAR(closest_point.y(), test.query_point.y(), kEpsilon);
+    }
+
+    // Check closest and furthest point queries and distances
+    if (min_distance <= 0) {
+      EXPECT_TRUE(test.aabb.containsPoint(test.query_point))
           << test.getDescription();
     }
 
     const Point returned_closest_point =
-        unit_aabb.closestPointTo(test.query_point);
-    EXPECT_NEAR(returned_closest_point.x(), test.closest_point.x(), kEpsilon)
+        test.aabb.closestPointTo(test.query_point);
+    EXPECT_NEAR(returned_closest_point.x(), closest_point.x(), kEpsilon)
         << test.getDescription();
-    EXPECT_NEAR(returned_closest_point.y(), test.closest_point.y(), kEpsilon)
+    EXPECT_NEAR(returned_closest_point.y(), closest_point.y(), kEpsilon)
         << test.getDescription();
-    EXPECT_NEAR(unit_aabb.minDistanceTo(test.query_point),
-                (test.query_point - test.closest_point).norm(), kEpsilon)
+    EXPECT_NEAR(test.aabb.minDistanceTo(test.query_point), min_distance,
+                kEpsilon)
         << test.getDescription();
-    EXPECT_NEAR(unit_aabb.minSquaredDistanceTo(test.query_point),
-                (test.query_point - test.closest_point).squaredNorm(), kEpsilon)
+    EXPECT_NEAR(test.aabb.minSquaredDistanceTo(test.query_point),
+                (test.query_point - closest_point).squaredNorm(), kEpsilon)
         << test.getDescription();
 
     const Point returned_furthest_point =
-        unit_aabb.furthestPointFrom(test.query_point);
-    EXPECT_NEAR(returned_furthest_point.x(), test.furthest_point.x(), kEpsilon)
+        test.aabb.furthestPointFrom(test.query_point);
+    EXPECT_NEAR(returned_furthest_point.x(), furthest_point.x(), kEpsilon)
         << test.getDescription();
-    EXPECT_NEAR(returned_furthest_point.y(), test.furthest_point.y(), kEpsilon)
+    EXPECT_NEAR(returned_furthest_point.y(), furthest_point.y(), kEpsilon)
         << test.getDescription();
-    EXPECT_NEAR(unit_aabb.maxDistanceTo(test.query_point),
-                (test.query_point - test.furthest_point).norm(), kEpsilon)
-        << test.getDescription();
-    EXPECT_NEAR(unit_aabb.maxSquaredDistanceTo(test.query_point),
-                (test.query_point - test.furthest_point).squaredNorm(),
+    EXPECT_NEAR(test.aabb.maxDistanceTo(test.query_point), max_distance,
                 kEpsilon)
+        << test.getDescription();
+    EXPECT_NEAR(test.aabb.maxSquaredDistanceTo(test.query_point),
+                (test.query_point - furthest_point).squaredNorm(), kEpsilon)
         << test.getDescription();
   }
 }

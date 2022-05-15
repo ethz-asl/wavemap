@@ -27,7 +27,7 @@ struct AABB {
     return closest_point;
   }
   T furthestPointFrom(const T& point) const {
-    const T aabb_center = (max - min) / static_cast<typename T::Scalar>(2);
+    const T aabb_center = (min + max) / static_cast<typename T::Scalar>(2);
     const T furthest_point =
         (aabb_center.array() < point.array()).select(min, max);
     return furthest_point;
