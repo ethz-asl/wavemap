@@ -11,6 +11,8 @@
 namespace wavemap_2d {
 class CoarseToFineIntegrator : public PointcloudIntegrator {
  public:
+  static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
+
   explicit CoarseToFineIntegrator(VolumetricDataStructure::Ptr occupancy_map)
       : PointcloudIntegrator(std::move(occupancy_map)) {}
 
@@ -22,7 +24,6 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
                                       Eigen::Index num_beams);
 
  private:
-  static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
   static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
       BeamModel::kScaling * 238.732414637843f;
   static constexpr FloatingPoint kMaxGradientOnBoundary =

@@ -33,6 +33,9 @@ class RangeImageIntersector {
       const RangeImage& range_image, const Point& t_W_C,
       const AABB<Point>& W_cell_aabb,
       const Eigen::Matrix<FloatingPoint, 2, 4>& C_cell_corners) const {
+    // Get the min and max distances from any point in the cell (which is an
+    // axis-aligned cube) to the sensor's center
+    // NOTE: The min distance is 0 if the cell contains the sensor's center.
     const FloatingPoint d_C_cell_closest = W_cell_aabb.minDistanceTo(t_W_C);
     const FloatingPoint d_C_cell_furthest = W_cell_aabb.maxDistanceTo(t_W_C);
     if (d_C_cell_closest < kEpsilon) {
@@ -41,6 +44,8 @@ class RangeImageIntersector {
       return IntersectionType::kFullyUnknown;
     }
 
+    // Get the min and max angles for any point in the cell projected into the
+    // range image
     FloatingPoint min_angle = std::numeric_limits<FloatingPoint>::max();
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
     for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
@@ -49,6 +54,12 @@ class RangeImageIntersector {
       min_angle = std::min(min_angle, corner_angle);
       max_angle = std::max(max_angle, corner_angle);
     }
+
+    // Convert the angles to range image indices
+    // NOTE: We pad the min and max angles with the BeamModel's angle threshold
+    //       to account for the beam's non-zero width (angular uncertainty).
+    min_angle -= BeamModel::kAngleThresh;
+    max_angle += BeamModel::kAngleThresh;
     if (max_angle < range_image.getMinAngle() ||
         range_image.getMaxAngle() < min_angle) {
       return IntersectionType::kFullyUnknown;
@@ -58,13 +69,15 @@ class RangeImageIntersector {
     const RangeImageIndex max_image_idx = std::min(
         range_image.getNumBeams() - 1, range_image.angleToCeilIndex(max_angle));
 
+    // Check if the cell overlaps with the approximate but conservative distance
+    // bounds of the hierarchical range image
     const Bounds distance_bounds =
         hierarchical_range_image_.getRangeBounds(min_image_idx, max_image_idx);
     if (distance_bounds.upper + BeamModel::kRangeDeltaThresh <
         d_C_cell_closest) {
       return IntersectionType::kFullyUnknown;
-    } else if (d_C_cell_furthest + BeamModel::kRangeDeltaThresh <
-               distance_bounds.lower) {
+    } else if (d_C_cell_furthest <
+               distance_bounds.lower - BeamModel::kRangeDeltaThresh) {
       return IntersectionType::kFreeOrUnknown;
     } else {
       return IntersectionType::kPossiblyOccupied;

@@ -43,8 +43,6 @@ void CoarseToFineIntegrator::integratePointcloud(
         occupancy_map->computeNodeWidthAtDepth(current_node.idx.depth);
     const Point W_node_bottom_left =
         computeNodeCenterFromNodeIndex(current_node.idx, root_node_width);
-    const Point W_node_center =
-        W_node_bottom_left + Vector::Constant(node_width / 2);
     Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
         W_node_bottom_left.replicate<1, 4>();
     for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
@@ -66,6 +64,8 @@ void CoarseToFineIntegrator::integratePointcloud(
       continue;
     }
 
+    const Point W_node_center =
+        W_node_bottom_left + Vector::Constant(node_width / 2.f);
     const Point C_node_center = T_CW * W_node_center;
     const FloatingPoint node_center_distance = C_node_center.norm();
     constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
@@ -95,6 +95,8 @@ void CoarseToFineIntegrator::integratePointcloud(
       stack.emplace(std::move(child_node_packet));
     }
   }
+
+  occupancy_map->prune();
 }
 
 RangeImage CoarseToFineIntegrator::computeRangeImage(
