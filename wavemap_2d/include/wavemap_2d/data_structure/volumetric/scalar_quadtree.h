@@ -13,6 +13,10 @@ class ScalarQuadtree : public VolumetricDataStructure {
  public:
   using CellType = CellT;
   using NodeType = Node<typename CellT::Specialized>;
+  struct NodeIndexPtrPair {
+    QuadtreeIndex idx;
+    Node<SaturatingOccupancyCell::Specialized>* ptr = nullptr;
+  };
 
   explicit ScalarQuadtree(FloatingPoint resolution)
       : VolumetricDataStructure(resolution),
@@ -27,12 +31,15 @@ class ScalarQuadtree : public VolumetricDataStructure {
   void prune() { return quadtree_.prune(); }
   void averageAndPrune();
 
-  Index getMinPossibleIndex() const;
-  Index getMaxPossibleIndex() const;
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
+  Index getMinPossibleIndex() const;
+  Index getMaxPossibleIndex() const;
   QuadtreeIndex::Element getMaxDepth() const { return max_depth_; }
   FloatingPoint getRootNodeWidth() const { return root_node_width_; }
+  NodeIndexPtrPair getRootNodeIndexPtrPair() {
+    return {QuadtreeIndex{}, &quadtree_.getRootNode()};
+  }
 
   bool hasCell(const Index& index) const override;
   QuadtreeIndex::Element getDepthAtIndex(const Index& index);
