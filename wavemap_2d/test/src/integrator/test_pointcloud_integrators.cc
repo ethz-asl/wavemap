@@ -64,7 +64,7 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     std::unordered_set<Index, VoxbloxIndexHash> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index index =
-          computeNearestIndexFromPoint(end_point, resolution_inv);
+          convert::pointToNearestIndex(end_point, resolution_inv);
       ray_end_points.emplace(index);
     }
 

@@ -19,8 +19,11 @@ class OccupancyState {
   bool isFree() const { return observed_ && !occupied_; }
   bool isOccupied() const { return observed_ && occupied_; }
 
+  static bool isObserved(FloatingPoint cell_value) {
+    return 1e-3 < std::abs(cell_value);
+  }
   static OccupancyState fromValue(FloatingPoint cell_value) {
-    if (std::abs(cell_value) < kEpsilon) {
+    if (isObserved(cell_value)) {
       return Unknown();
     } else if (cell_value < 0.f) {
       return Free();

@@ -5,63 +5,63 @@
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
 
-namespace wavemap_2d {
+namespace wavemap_2d::convert {
 // TODO(victorr): Check styleguide on whether these classless methods names
 //                should start with a capital
-inline Index computeNearestIndexFromScaledPoint(const Point& point) {
+inline Index scaledPointToNearestIndex(const Point& point) {
   return (point - Vector::Constant(0.5f)).array().round().cast<IndexElement>();
 }
 
-inline Index computeFloorIndexFromScaledPoint(const Point& point) {
+inline Index scaledPointToFloorIndex(const Point& point) {
   return (point - Vector::Constant(0.5f)).array().floor().cast<IndexElement>();
 }
 
-inline Index computeCeilIndexFromScaledPoint(const Point& point) {
+inline Index scaledPointToCeilIndex(const Point& point) {
   return (point - Vector::Constant(0.5f)).array().ceil().cast<IndexElement>();
 }
 
-inline Index computeNearestIndexFromPoint(const Point& point,
-                                          FloatingPoint resolution_inv) {
-  return computeNearestIndexFromScaledPoint(point * resolution_inv);
+inline Index pointToNearestIndex(const Point& point,
+                                 FloatingPoint resolution_inv) {
+  return scaledPointToNearestIndex(point * resolution_inv);
 }
 
-inline Index computeFloorIndexFromPoint(const Point& point,
-                                        FloatingPoint resolution_inv) {
-  return computeFloorIndexFromScaledPoint(point * resolution_inv);
+inline Index pointToFloorIndex(const Point& point,
+                               FloatingPoint resolution_inv) {
+  return scaledPointToFloorIndex(point * resolution_inv);
 }
 
-inline Index computeCeilIndexFromPoint(const Point& point,
-                                       FloatingPoint resolution_inv) {
-  return computeCeilIndexFromScaledPoint(point * resolution_inv);
+inline Index pointToCeilIndex(const Point& point,
+                              FloatingPoint resolution_inv) {
+  return scaledPointToCeilIndex(point * resolution_inv);
 }
 
-inline Point computeCenterFromIndex(const Index& index,
-                                    FloatingPoint resolution) {
+inline Point indexToCenterPoint(const Index& index, FloatingPoint resolution) {
   return (index.cast<FloatingPoint>() + Vector::Constant(0.5f)) * resolution;
 }
 
-inline Index convertIndex(const Index& src_index, FloatingPoint src_resolution,
-                          FloatingPoint dst_resolution) {
-  const Point center_point = computeCenterFromIndex(src_index, src_resolution);
-  return computeNearestIndexFromPoint(center_point, 1.f / dst_resolution);
+inline Index indexToNewResolution(const Index& src_index,
+                                  FloatingPoint src_resolution,
+                                  FloatingPoint dst_resolution) {
+  const Point center_point = indexToCenterPoint(src_index, src_resolution);
+  return pointToNearestIndex(center_point, 1.f / dst_resolution);
 }
 
-inline QuadtreeIndex computeNodeIndexFromPoint(const Point& center,
-                                               FloatingPoint root_node_width,
-                                               QuadtreeIndex::Element depth) {
+inline QuadtreeIndex pointToNodeIndex(const Point& point,
+                                      FloatingPoint root_node_width,
+                                      QuadtreeIndex::Element depth) {
   const auto exp2_depth = static_cast<FloatingPoint>(1 << depth);
   const FloatingPoint node_width_inv = exp2_depth / root_node_width;
   const FloatingPoint half_root_width_scaled = 0.5f * exp2_depth;
   constexpr FloatingPoint half_node_width_scaled = 0.5f;
   const Point scaled_point =
-      center * node_width_inv +
+      point * node_width_inv +
       Vector::Constant(half_root_width_scaled - half_node_width_scaled);
   Index position_index = scaled_point.array().round().cast<IndexElement>();
   return {depth, position_index};
 }
 
-inline Point computeNodeMinCornerFromNodeIndex(const QuadtreeIndex& node_index,
-                                               FloatingPoint root_node_width) {
+inline Point nodeIndexToMinCorner(const QuadtreeIndex& node_index,
+                                  FloatingPoint root_node_width) {
   const FloatingPoint half_root_width = 0.5f * root_node_width;
   const FloatingPoint node_width =
       root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
@@ -69,8 +69,8 @@ inline Point computeNodeMinCornerFromNodeIndex(const QuadtreeIndex& node_index,
          Vector::Constant(half_root_width);
 }
 
-inline Point computeNodeCenterFromNodeIndex(const QuadtreeIndex& node_index,
-                                            FloatingPoint root_node_width) {
+inline Point nodeIndexToCenterPoint(const QuadtreeIndex& node_index,
+                                    FloatingPoint root_node_width) {
   const FloatingPoint half_root_width = 0.5f * root_node_width;
   const FloatingPoint node_width =
       root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
@@ -80,7 +80,7 @@ inline Point computeNodeCenterFromNodeIndex(const QuadtreeIndex& node_index,
 }
 
 // TODO(victorr): Consider parameterizing nodes on height ipv depth
-inline QuadtreeIndex computeNodeIndexFromIndexAndDepth(
+inline QuadtreeIndex indexAndDepthToNodeIndex(
     const Index& index, QuadtreeIndex::Element depth,
     QuadtreeIndex::Element max_depth) {
   DCHECK_LE(depth, max_depth);
@@ -91,13 +91,13 @@ inline QuadtreeIndex computeNodeIndexFromIndexAndDepth(
   return node_index;
 }
 
-inline Index computeIndexFromNodeIndex(const QuadtreeIndex& node_index,
-                                       QuadtreeIndex::Element max_depth) {
+inline Index nodeIndexToIndex(const QuadtreeIndex& node_index,
+                              QuadtreeIndex::Element max_depth) {
   DCHECK_LE(node_index.depth, max_depth);
   const QuadtreeIndex::Element node_height = max_depth - node_index.depth;
   Index index = node_index.position * (1 << node_height);
   return index;
 }
-}  // namespace wavemap_2d
+}  // namespace wavemap_2d::convert
 
 #endif  // WAVEMAP_2D_INDEXING_INDEX_CONVERSIONS_H_

@@ -177,10 +177,10 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
 
     const FloatingPoint resolution_inv = 1.f / resolution;
     constexpr QuadtreeIndex::Element kMaxDepth = 10;
-    const Index min_index = computeCeilIndexFromPoint(
+    const Index min_index = convert::pointToCeilIndex(
         random_pointcloud.getOrigin() - Vector::Constant(kMaxDistance),
         resolution_inv);
-    const Index max_index = computeCeilIndexFromPoint(
+    const Index max_index = convert::pointToCeilIndex(
         random_pointcloud.getOrigin() + Vector::Constant(kMaxDistance),
         resolution_inv);
     for (const Index& index :
@@ -188,7 +188,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
       const QuadtreeIndex::Element depth =
           getRandomNdtreeIndexDepth(kMaxDepth - 2, kMaxDepth);
       const QuadtreeIndex query_index =
-          computeNodeIndexFromIndexAndDepth(index, depth, kMaxDepth);
+          convert::indexAndDepthToNodeIndex(index, depth, kMaxDepth);
       const QuadtreeIndex::Element depth_diff = kMaxDepth - query_index.depth;
       const Index min_reference_index =
           int_math::exp2(depth_diff) * query_index.position;
@@ -204,7 +204,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
       for (const Index& reference_index :
            Grid(min_reference_index, max_reference_index)) {
         const Point W_cell_center =
-            computeCenterFromIndex(reference_index, resolution);
+            convert::indexToCenterPoint(reference_index, resolution);
         const Point C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
         if (BeamModel::kRangeMax < d_C_cell) {
@@ -248,7 +248,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
           resolution *
           std::exp2f(static_cast<FloatingPoint>(kMaxDepth - query_index.depth));
       const Point W_node_center =
-          computeCenterFromIndex(query_index.position, node_width);
+          convert::indexToCenterPoint(query_index.position, node_width);
 
       const Point W_node_bottom_left =
           W_node_center - Vector::Constant(node_width / 2.f);

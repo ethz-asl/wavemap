@@ -42,7 +42,7 @@ void CoarseToFineIntegrator::integratePointcloud(
     const FloatingPoint node_width =
         occupancy_map->computeNodeWidthAtDepth(current_node.depth);
     const Point W_node_bottom_left =
-        computeNodeMinCornerFromNodeIndex(current_node, root_node_width);
+        convert::nodeIndexToMinCorner(current_node, root_node_width);
     Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
         W_node_bottom_left.replicate<1, 4>();
     for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {

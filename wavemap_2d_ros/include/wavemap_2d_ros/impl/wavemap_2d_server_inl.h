@@ -3,7 +3,8 @@
 
 #include <string>
 
-#include "wavemap_2d/iterator/grid_iterator.h"
+#include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_state.h>
+#include <wavemap_2d/iterator/grid_iterator.h>
 
 namespace wavemap_2d {
 template <typename Map>
@@ -28,7 +29,7 @@ visualization_msgs::Marker Wavemap2DServer::gridToMarker(
 
   for (const Index& index : Grid(grid.getMinIndex(), grid.getMaxIndex())) {
     const FloatingPoint cell_value = grid.getCellValue(index);
-    if (kEpsilon < std::abs(cell_value)) {
+    if (OccupancyState::isObserved(cell_value)) {
       const Point cell_position = index.cast<FloatingPoint>() * resolution;
       geometry_msgs::Point position_msg;
       position_msg.x = cell_position.x();

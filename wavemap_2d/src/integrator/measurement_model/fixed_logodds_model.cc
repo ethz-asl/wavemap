@@ -5,11 +5,11 @@
 namespace wavemap_2d {
 Index FixedLogOddsModel::getBottomLeftUpdateIndex() const {
   const Point bottom_left_point = W_start_point_.cwiseMin(W_end_point_);
-  return computeFloorIndexFromPoint(bottom_left_point, resolution_inv_);
+  return convert::pointToFloorIndex(bottom_left_point, resolution_inv_);
 }
 
 Index FixedLogOddsModel::getTopRightUpdateIndex() const {
   const Point top_right_point = W_start_point_.cwiseMax(W_end_point_);
-  return computeCeilIndexFromPoint(top_right_point, resolution_inv_);
+  return convert::pointToCeilIndex(top_right_point, resolution_inv_);
 }
 }  // namespace wavemap_2d

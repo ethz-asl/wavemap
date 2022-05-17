@@ -94,11 +94,11 @@ class ScalarQuadtree : public VolumetricQuadtree {
             bool used_floating_precision) override;
 
   QuadtreeIndex indexToNodeIndex(const Index& index) const {
-    return computeNodeIndexFromIndexAndDepth(index + root_node_offset_,
+    return convert::indexAndDepthToNodeIndex(index + root_node_offset_,
                                              max_depth_, max_depth_);
   }
   Index nodeIndexToIndex(const QuadtreeIndex& node_index) const {
-    return computeIndexFromNodeIndex(node_index, max_depth_) -
+    return convert::nodeIndexToIndex(node_index, max_depth_) -
            root_node_offset_;
   }
 

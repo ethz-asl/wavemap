@@ -29,25 +29,25 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
       min_index = reference_map.getMinIndex();
       max_index = reference_map.getMaxIndex();
     } else {
-      min_index =
-          convertIndex(reference_map.getMinIndex(), reference_map_resolution,
-                       predicted_map_resolution) +
-          Index::Ones();
-      max_index =
-          convertIndex(reference_map.getMaxIndex(), reference_map_resolution,
-                       predicted_map_resolution) -
-          Index::Ones();
+      min_index = convert::indexToNewResolution(reference_map.getMinIndex(),
+                                                reference_map_resolution,
+                                                predicted_map_resolution) +
+                  Index::Ones();
+      max_index = convert::indexToNewResolution(reference_map.getMaxIndex(),
+                                                reference_map_resolution,
+                                                predicted_map_resolution) -
+                  Index::Ones();
     }
   } else {
     if (iterate_over_reference) {
-      min_index =
-          convertIndex(predicted_map.getMinIndex(), predicted_map_resolution,
-                       reference_map_resolution) +
-          Index::Ones();
-      max_index =
-          convertIndex(predicted_map.getMaxIndex(), predicted_map_resolution,
-                       reference_map_resolution) -
-          Index::Ones();
+      min_index = convert::indexToNewResolution(predicted_map.getMinIndex(),
+                                                predicted_map_resolution,
+                                                reference_map_resolution) +
+                  Index::Ones();
+      max_index = convert::indexToNewResolution(predicted_map.getMaxIndex(),
+                                                predicted_map_resolution,
+                                                reference_map_resolution) -
+                  Index::Ones();
     } else {
       min_index = predicted_map.getMinIndex();
       max_index = predicted_map.getMaxIndex();
@@ -57,9 +57,10 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
   // Evaluate all cells in the box, at the resolution set by config.iterate_over
   for (const Index& index : Grid(min_index, max_index)) {
     const Index reference_index =
-        iterate_over_reference ? index
-                               : convertIndex(index, predicted_map_resolution,
-                                              reference_map_resolution);
+        iterate_over_reference
+            ? index
+            : convert::indexToNewResolution(index, predicted_map_resolution,
+                                            reference_map_resolution);
     OccupancyState reference_state = GetCellState(
         reference_map, reference_index, config.reference.cell_selector,
         config.reference.treat_unknown_cells_as);
@@ -69,9 +70,10 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
     }
 
     const Index predicted_index =
-        iterate_over_reference ? convertIndex(index, reference_map_resolution,
-                                              predicted_map_resolution)
-                               : index;
+        iterate_over_reference
+            ? convert::indexToNewResolution(index, reference_map_resolution,
+                                            predicted_map_resolution)
+            : index;
     const OccupancyState predicted_state = GetCellState(
         predicted_map, predicted_index, config.predicted.cell_selector,
         config.predicted.treat_unknown_cells_as);

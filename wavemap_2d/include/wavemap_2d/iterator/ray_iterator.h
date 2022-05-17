@@ -20,8 +20,8 @@ class Ray {
       return;
     }
 
-    start_index_ = computeNearestIndexFromScaledPoint(start_point_scaled);
-    end_index_ = computeNearestIndexFromScaledPoint(end_point_scaled);
+    start_index_ = convert::scaledPointToNearestIndex(start_point_scaled);
+    end_index_ = convert::scaledPointToNearestIndex(end_point_scaled);
     const Index diff_index = end_index_ - start_index_;
     ray_length_in_steps_ = diff_index.cwiseAbs().sum() + 1u;
 

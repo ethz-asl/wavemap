@@ -45,7 +45,8 @@ TEST_F(MeasurementModelTest, BeamModel) {
             << "Update queries outside the bounding box should return 0.";
       }
 
-      const Point W_cell_center = computeCenterFromIndex(index, resolution);
+      const Point W_cell_center =
+          convert::indexToCenterPoint(index, resolution);
       const Point C_cell_center = W_cell_center - W_start_point;
       const FloatingPoint distance = C_cell_center.norm();
       const FloatingPoint dot_prod_normalized =
@@ -96,9 +97,9 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
     fixed_log_odds_model.setStartPoint(start_point);
     fixed_log_odds_model.setEndPoint(end_point);
     const Index start_point_index =
-        computeNearestIndexFromPoint(start_point, resolution_inv);
+        convert::pointToNearestIndex(start_point, resolution_inv);
     const Index end_point_index =
-        computeNearestIndexFromPoint(end_point, resolution_inv);
+        convert::pointToNearestIndex(end_point, resolution_inv);
 
     const Index bottom_left_idx = start_point_index.cwiseMin(end_point_index);
     const Index top_right_idx = start_point_index.cwiseMin(end_point_index);

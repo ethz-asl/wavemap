@@ -43,7 +43,7 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
     // Compare to coordinate convention
     {
       const Index index_from_quadtree =
-          computeIndexFromNodeIndex(node_index, kMaxDepth);
+          convert::nodeIndexToIndex(node_index, kMaxDepth);
       const Index index_from_convention =
           (node_index.position.template cast<FloatingPoint>() *
            std::exp2(kMaxDepth - node_index.depth))
@@ -59,9 +59,9 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
 
     // Roundtrip through regular indices (integer coordinates)
     {
-      const Index index = computeIndexFromNodeIndex(node_index, kMaxDepth);
+      const Index index = convert::nodeIndexToIndex(node_index, kMaxDepth);
       const QuadtreeIndex roundtrip_node_index =
-          computeNodeIndexFromIndexAndDepth(index, node_index.depth, kMaxDepth);
+          convert::indexAndDepthToNodeIndex(index, node_index.depth, kMaxDepth);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
           << " to regular index " << EigenFormat::oneLine(index)
@@ -73,8 +73,8 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
     {
       const FloatingPoint random_root_node_width = getRandomRootNodeWidth();
       const Point node_center =
-          computeNodeCenterFromNodeIndex(node_index, random_root_node_width);
-      const QuadtreeIndex roundtrip_node_index = computeNodeIndexFromPoint(
+          convert::nodeIndexToCenterPoint(node_index, random_root_node_width);
+      const QuadtreeIndex roundtrip_node_index = convert::pointToNodeIndex(
           node_center, random_root_node_width, node_index.depth);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
