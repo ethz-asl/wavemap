@@ -29,6 +29,7 @@ class DenseGrid : public VolumetricDataStructure {
 
   bool empty() const override { return !data_.size(); }
   size_t size() const override { return data_.size(); }
+  void prune() override {}
   void clear() override;
 
   size_t getMemoryUsage() const override {

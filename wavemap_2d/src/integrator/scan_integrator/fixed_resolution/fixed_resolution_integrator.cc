@@ -19,9 +19,9 @@ void FixedResolutionIntegrator::integratePointcloud(
   const FloatingPoint resolution = occupancy_map_->getResolution();
   const FloatingPoint resolution_inv = 1.f / resolution;
   const Index aabb_min_index =
-      computeFloorIndexForPoint(aabb.min, resolution_inv);
+      computeFloorIndexFromPoint(aabb.min, resolution_inv);
   const Index aabb_max_index =
-      computeCeilIndexForPoint(aabb.max, resolution_inv);
+      computeCeilIndexFromPoint(aabb.max, resolution_inv);
 
   // Iterate over all the cells in the AABB and update the map when needed
   const Transformation T_C_W = pointcloud.getPose().inverse();

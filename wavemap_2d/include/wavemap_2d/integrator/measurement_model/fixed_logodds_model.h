@@ -33,7 +33,7 @@ class FixedLogOddsModel : public MeasurementModel {
 
   void updateCachedVariablesDerived() override {
     end_point_index_ =
-        computeNearestIndexForPoint(W_end_point_, resolution_inv_);
+        computeNearestIndexFromPoint(W_end_point_, resolution_inv_);
   }
 };
 }  // namespace wavemap_2d

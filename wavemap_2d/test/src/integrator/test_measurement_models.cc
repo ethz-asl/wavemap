@@ -96,9 +96,9 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
     fixed_log_odds_model.setStartPoint(start_point);
     fixed_log_odds_model.setEndPoint(end_point);
     const Index start_point_index =
-        computeNearestIndexForPoint(start_point, resolution_inv);
+        computeNearestIndexFromPoint(start_point, resolution_inv);
     const Index end_point_index =
-        computeNearestIndexForPoint(end_point, resolution_inv);
+        computeNearestIndexFromPoint(end_point, resolution_inv);
 
     const Index bottom_left_idx = start_point_index.cwiseMin(end_point_index);
     const Index top_right_idx = start_point_index.cwiseMin(end_point_index);

@@ -44,9 +44,12 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
     {
       const Index index_from_quadtree =
           computeIndexFromNodeIndex(node_index, kMaxDepth);
-      const Index index_from_convention = computeNearestIndexForScaledPoint(
-          node_index.position.template cast<FloatingPoint>() *
-          std::exp2(kMaxDepth - node_index.depth));
+      const Index index_from_convention =
+          (node_index.position.template cast<FloatingPoint>() *
+           std::exp2(kMaxDepth - node_index.depth))
+              .array()
+              .round()
+              .cast<IndexElement>();
       EXPECT_EQ(index_from_quadtree, index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
           << " to regular index " << EigenFormat::oneLine(index_from_quadtree)
@@ -71,7 +74,7 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
       const FloatingPoint random_root_node_width = getRandomRootNodeWidth();
       const Point node_center =
           computeNodeCenterFromNodeIndex(node_index, random_root_node_width);
-      const QuadtreeIndex roundtrip_node_index = computeNodeIndexFromCenter(
+      const QuadtreeIndex roundtrip_node_index = computeNodeIndexFromPoint(
           node_center, random_root_node_width, node_index.depth);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()

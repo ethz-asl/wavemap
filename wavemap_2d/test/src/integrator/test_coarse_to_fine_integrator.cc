@@ -177,10 +177,10 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
 
     const FloatingPoint resolution_inv = 1.f / resolution;
     constexpr QuadtreeIndex::Element kMaxDepth = 10;
-    const Index min_index = computeCeilIndexForPoint(
+    const Index min_index = computeCeilIndexFromPoint(
         random_pointcloud.getOrigin() - Vector::Constant(kMaxDistance),
         resolution_inv);
-    const Index max_index = computeCeilIndexForPoint(
+    const Index max_index = computeCeilIndexFromPoint(
         random_pointcloud.getOrigin() + Vector::Constant(kMaxDistance),
         resolution_inv);
     for (const Index& index :

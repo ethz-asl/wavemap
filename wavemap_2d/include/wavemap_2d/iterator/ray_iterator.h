@@ -20,8 +20,8 @@ class Ray {
       return;
     }
 
-    start_index_ = computeNearestIndexForScaledPoint(start_point_scaled);
-    end_index_ = computeNearestIndexForScaledPoint(end_point_scaled);
+    start_index_ = computeNearestIndexFromScaledPoint(start_point_scaled);
+    end_index_ = computeNearestIndexFromScaledPoint(end_point_scaled);
     const Index diff_index = end_index_ - start_index_;
     ray_length_in_steps_ = diff_index.cwiseAbs().sum() + 1u;
 
@@ -29,9 +29,8 @@ class Ray {
     ray_step_signs_ = ray_scaled.cwiseSign().cast<IndexElement>();
 
     const Index corrected_step = ray_step_signs_.cwiseMax(0);
-    const Point start_scaled_shifted = start_point_scaled +
-                                       Vector::Constant(0.5f) -
-                                       start_index_.cast<FloatingPoint>();
+    const Point start_scaled_shifted =
+        start_point_scaled - start_index_.cast<FloatingPoint>();
     const Vector distance_to_boundaries =
         corrected_step.cast<FloatingPoint>() - start_scaled_shifted;
 

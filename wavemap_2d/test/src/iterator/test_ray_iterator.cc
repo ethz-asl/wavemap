@@ -4,6 +4,7 @@
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/iterator/ray_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
+#include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap_2d {
 using RayIteratorTest = FixtureBase;
@@ -33,9 +34,9 @@ TEST_F(RayIteratorTest, IterationOrderAndCompleteness) {
     const FloatingPoint resolution = getRandomResolution();
     const FloatingPoint resolution_inv = 1.f / resolution;
     const Index start_point_index =
-        computeNearestIndexForPoint(start_point, resolution_inv);
+        computeNearestIndexFromPoint(start_point, resolution_inv);
     const Index end_point_index =
-        computeNearestIndexForPoint(end_point, resolution_inv);
+        computeNearestIndexFromPoint(end_point, resolution_inv);
     const Index direction =
         (end_point_index - start_point_index).cwiseSign().cast<IndexElement>();
 
@@ -64,8 +65,16 @@ TEST_F(RayIteratorTest, IterationOrderAndCompleteness) {
             std::abs(t_start_end.x() * t_start_current.y() -
                      t_start_current.x() * t_start_end.y()) /
             ray_length;
-        EXPECT_LE(distance, std::sqrt(0.5f) * resolution)
-            << "Ray iterator updated cell that is not traversed by the ray";
+        constexpr FloatingPoint kMaxAcceptableMultiplicativeError = 1.f + 1e-4f;
+        EXPECT_LE(distance, kMaxAcceptableMultiplicativeError *
+                                std::sqrt(0.5f) * resolution)
+            << "Ray iterator updated cell that is not traversed by the ray, "
+               "for cell with index"
+            << EigenFormat::oneLine(index) << " and center point"
+            << EigenFormat::oneLine(current_point) << " on ray from"
+            << EigenFormat::oneLine(start_point) << " to"
+            << EigenFormat::oneLine(end_point) << " at resolution "
+            << resolution << ".";
       }
       last_index = index;
       ++step_idx;

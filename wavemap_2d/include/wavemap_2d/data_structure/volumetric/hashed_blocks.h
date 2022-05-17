@@ -20,6 +20,7 @@ class HashedBlocks : public VolumetricDataStructure {
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override { return kCellsPerBlock * blocks_.size(); }
+  void prune() override {}
   void clear() override { blocks_.clear(); }
 
   size_t getMemoryUsage() const override {

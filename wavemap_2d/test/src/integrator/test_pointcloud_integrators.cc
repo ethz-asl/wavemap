@@ -5,12 +5,14 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
+#include "wavemap_2d/data_structure/volumetric/scalar_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/indexing/index_conversions.h"
 #include "wavemap_2d/indexing/index_hashes.h"
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
 #include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
+#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
@@ -62,7 +64,7 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     std::unordered_set<Index, VoxbloxIndexHash> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index index =
-          computeNearestIndexForPoint(end_point, resolution_inv);
+          computeNearestIndexFromPoint(end_point, resolution_inv);
       ray_end_points.emplace(index);
     }
 
@@ -91,7 +93,7 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
   }
 }
 
-TEST_F(PointcloudIntegratorTest, BeamAndScanIntegratorEquivalence) {
+TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
     const FloatingPoint resolution = getRandomResolution(0.02, 0.5);
@@ -147,6 +149,66 @@ TEST_F(PointcloudIntegratorTest, BeamAndScanIntegratorEquivalence) {
     }
     if (error_grid) {
       error_grid->showImage(true, 2000);
+    }
+  }
+}
+
+TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
+  constexpr bool kShowVisuals = false;
+  for (int idx = 0; idx < 10; ++idx) {
+    const FloatingPoint resolution = getRandomResolution(0.02, 0.5);
+    constexpr FloatingPoint kMinAngle = -M_PI_2f32;
+    constexpr FloatingPoint kMaxAngle = M_PI_2f32;
+    const int num_beams = getRandomIndexElement(100, 2048);
+    constexpr FloatingPoint kMinDistance = 0.f;
+    constexpr FloatingPoint kMaxDistance = 30.f;
+    const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
+        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
+
+    VolumetricDataStructure::Ptr beam_occupancy_map =
+        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(resolution);
+    PointcloudIntegrator::Ptr beam_integrator =
+        std::make_shared<BeamIntegrator>(beam_occupancy_map);
+    beam_integrator->integratePointcloud(random_pointcloud);
+    if (kShowVisuals) {
+      beam_occupancy_map->showImage(true, 2000);
+    }
+
+    VolumetricDataStructure::Ptr scan_occupancy_map =
+        std::make_shared<ScalarQuadtree<UnboundedOccupancyCell>>(resolution);
+    PointcloudIntegrator::Ptr scan_integrator =
+        std::make_shared<CoarseToFineIntegrator>(scan_occupancy_map);
+    scan_integrator->integratePointcloud(random_pointcloud);
+    if (kShowVisuals) {
+      scan_occupancy_map->showImage(true, 2000);
+    }
+
+    scan_occupancy_map->prune();
+    const Index min_index = beam_occupancy_map->getMinIndex().cwiseMin(
+        scan_occupancy_map->getMinIndex());
+    const Index max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
+        scan_occupancy_map->getMaxIndex());
+
+    VolumetricDataStructure::Ptr error_grid;
+    if (kShowVisuals) {
+      error_grid =
+          std::make_shared<DenseGrid<SaturatingOccupancyCell>>(resolution);
+    }
+    for (const Index& index : Grid(min_index, max_index)) {
+      const FloatingPoint cell_value_in_beam_map =
+          beam_occupancy_map->getCellValue(index);
+      const FloatingPoint cell_value_in_scan_map =
+          scan_occupancy_map->getCellValue(index);
+      EXPECT_NEAR(cell_value_in_scan_map, cell_value_in_beam_map,
+                  CoarseToFineIntegrator::kMaxAcceptableUpdateError);
+      if (error_grid) {
+        error_grid->setCellValue(
+            index, (cell_value_in_scan_map - cell_value_in_beam_map) /
+                       CoarseToFineIntegrator::kMaxAcceptableUpdateError);
+      }
+    }
+    if (error_grid) {
+      error_grid->showImage(true, 10000);
     }
   }
 }

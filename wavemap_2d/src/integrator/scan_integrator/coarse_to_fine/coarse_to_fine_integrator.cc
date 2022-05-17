@@ -19,11 +19,11 @@ void CoarseToFineIntegrator::integratePointcloud(
   RangeImageIntersector range_image_intersector(range_image);
 
   // Get a pointer to the underlying specialized quadtree data structure
-  using QuadtreeType = ScalarQuadtree<SaturatingOccupancyCell>;
-  auto occupancy_map = dynamic_cast<QuadtreeType*>(occupancy_map_.get());
+  //  using QuadtreeType = ScalarQuadtree<UnboundedOccupancyCell>;
+  auto occupancy_map = dynamic_cast<VolumetricQuadtree*>(occupancy_map_.get());
   if (!occupancy_map) {
-    LOG(FATAL) << "Coarse to fine integrator can only be used with quadtree "
-                  "data structure.";
+    LOG(FATAL) << "Coarse to fine integrator can only be used with "
+                  "quadtree-based volumetric data structures.";
     return;
   }
 
@@ -33,16 +33,16 @@ void CoarseToFineIntegrator::integratePointcloud(
   const Point& t_W_C = pointcloud.getOrigin();
   const FloatingPoint root_node_width = occupancy_map->getRootNodeWidth();
 
-  std::stack<QuadtreeType::NodeIndexPtrPair> stack;
-  stack.emplace(occupancy_map->getRootNodeIndexPtrPair());
+  std::stack<QuadtreeIndex> stack;
+  stack.emplace(QuadtreeIndex{});
   while (!stack.empty()) {
     const auto current_node = std::move(stack.top());
     stack.pop();
 
     const FloatingPoint node_width =
-        occupancy_map->computeNodeWidthAtDepth(current_node.idx.depth);
+        occupancy_map->computeNodeWidthAtDepth(current_node.depth);
     const Point W_node_bottom_left =
-        computeNodeCenterFromNodeIndex(current_node.idx, root_node_width);
+        computeNodeMinCornerFromNodeIndex(current_node, root_node_width);
     Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
         W_node_bottom_left.replicate<1, 4>();
     for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
@@ -71,28 +71,18 @@ void CoarseToFineIntegrator::integratePointcloud(
     constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
-    if (max_depth <= current_node.idx.depth ||
+    if (max_depth <= current_node.depth ||
         isApproximationErrorAcceptable(intersection_type, node_center_distance,
                                        bounding_sphere_radius)) {
       FloatingPoint sample = computeUpdateForCell(range_image, C_node_center);
-      current_node.ptr->data() =
-          QuadtreeType::CellType::add(current_node.ptr->data(), sample);
+      occupancy_map->addToCellValue(current_node, sample);
       continue;
     }
 
     for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
          relative_child_idx < QuadtreeIndex::kNumChildren;
          ++relative_child_idx) {
-      // TODO(victorr): Create an "allocateAllChildren" method or consider
-      //                postponing the child allocation until needed
-      if (!current_node.ptr->hasChild(relative_child_idx)) {
-        current_node.ptr->allocateChild(relative_child_idx);
-      }
-      QuadtreeType::NodeIndexPtrPair child_node_packet;
-      child_node_packet.idx =
-          current_node.idx.computeChildIndex(relative_child_idx);
-      child_node_packet.ptr = current_node.ptr->getChild(relative_child_idx);
-      stack.emplace(std::move(child_node_packet));
+      stack.emplace(current_node.computeChildIndex(relative_child_idx));
     }
   }
 
