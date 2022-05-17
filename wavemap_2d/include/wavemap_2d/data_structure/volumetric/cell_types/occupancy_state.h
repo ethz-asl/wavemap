@@ -23,7 +23,7 @@ class OccupancyState {
     return 1e-3 < std::abs(cell_value);
   }
   static OccupancyState fromValue(FloatingPoint cell_value) {
-    if (isObserved(cell_value)) {
+    if (!isObserved(cell_value)) {
       return Unknown();
     } else if (cell_value < 0.f) {
       return Free();
