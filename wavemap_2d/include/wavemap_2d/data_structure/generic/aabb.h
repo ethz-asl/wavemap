@@ -6,10 +6,15 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/utils/eigen_format.h"
+#include "wavemap_2d/utils/int_math.h"
 
 namespace wavemap_2d {
 template <typename T>
 struct AABB {
+  static constexpr int kNumCorners = int_math::exp2(T::RowsAtCompileTime);
+  using Corners =
+      Eigen::Matrix<typename T::value_type, T::RowsAtCompileTime, kNumCorners>;
+
   T min = T::Constant(std::numeric_limits<typename T::value_type>::max());
   T max = T::Constant(std::numeric_limits<typename T::value_type>::lowest());
 
@@ -44,6 +49,26 @@ struct AABB {
   }
   FloatingPoint maxDistanceTo(const T& point) const {
     return (point - furthestPointFrom(point)).norm();
+  }
+
+  template <int dim>
+  typename T::value_type width() const {
+    return max[dim] - min[dim];
+  }
+
+  Corners corners() const {
+    // TODO(victorr): Vectorize this
+    Eigen::Matrix<FloatingPoint, 2, 4> corners;
+    for (int corner_idx = 0; corner_idx < kNumCorners; ++corner_idx) {
+      for (int dim_idx = 0; dim_idx < T::RowsAtCompileTime; ++dim_idx) {
+        if (corner_idx & (0b1 << dim_idx)) {
+          corners(dim_idx, corner_idx) = min[dim_idx];
+        } else {
+          corners(dim_idx, corner_idx) = max[dim_idx];
+        }
+      }
+    }
+    return corners;
   }
 
   std::string toString() const {

@@ -2,6 +2,7 @@
 #define WAVEMAP_2D_INDEXING_INDEX_CONVERSIONS_H_
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/data_structure/generic/aabb.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
 
@@ -60,6 +61,16 @@ inline QuadtreeIndex pointToNodeIndex(const Point& point,
   return {depth, position_index};
 }
 
+inline Point nodeIndexToCenterPoint(const QuadtreeIndex& node_index,
+                                    FloatingPoint root_node_width) {
+  const FloatingPoint half_root_width = 0.5f * root_node_width;
+  const FloatingPoint node_width =
+      root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
+  const FloatingPoint half_node_width = 0.5f * node_width;
+  return node_index.position.cast<FloatingPoint>() * node_width +
+         Vector::Constant(half_node_width - half_root_width);
+}
+
 inline Point nodeIndexToMinCorner(const QuadtreeIndex& node_index,
                                   FloatingPoint root_node_width) {
   const FloatingPoint half_root_width = 0.5f * root_node_width;
@@ -69,14 +80,25 @@ inline Point nodeIndexToMinCorner(const QuadtreeIndex& node_index,
          Vector::Constant(half_root_width);
 }
 
-inline Point nodeIndexToCenterPoint(const QuadtreeIndex& node_index,
-                                    FloatingPoint root_node_width) {
+inline Point nodeIndexToMaxCorner(const QuadtreeIndex& node_index,
+                                  FloatingPoint root_node_width) {
   const FloatingPoint half_root_width = 0.5f * root_node_width;
   const FloatingPoint node_width =
       root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
-  const FloatingPoint half_node_width = 0.5f * node_width;
   return node_index.position.cast<FloatingPoint>() * node_width +
-         Vector::Constant(half_node_width - half_root_width);
+         Vector::Constant(node_width - half_root_width);
+}
+
+inline AABB<Point> nodeIndexToAABB(const QuadtreeIndex& node_index,
+                                   FloatingPoint root_node_width) {
+  const FloatingPoint half_root_width = 0.5f * root_node_width;
+  const FloatingPoint node_width =
+      root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
+  const Point min_corner =
+      node_index.position.cast<FloatingPoint>() * node_width -
+      Vector::Constant(half_root_width);
+  const Point max_corner = min_corner + Vector::Constant(node_width);
+  return {min_corner, max_corner};
 }
 
 // TODO(victorr): Consider parameterizing nodes on height ipv depth

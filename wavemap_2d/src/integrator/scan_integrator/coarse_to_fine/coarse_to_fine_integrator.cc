@@ -39,22 +39,10 @@ void CoarseToFineIntegrator::integratePointcloud(
     const auto current_node = std::move(stack.top());
     stack.pop();
 
-    const FloatingPoint node_width =
-        occupancy_map->computeNodeWidthAtDepth(current_node.depth);
-    const Point W_node_bottom_left =
-        convert::nodeIndexToMinCorner(current_node, root_node_width);
-    Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
-        W_node_bottom_left.replicate<1, 4>();
-    for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
-      for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
-        if (corner_idx & (0b1 << dim_idx)) {
-          W_cell_corners(dim_idx, corner_idx) += node_width;
-        }
-      }
-    }
-    const AABB<Point> W_cell_aabb{W_cell_corners.col(0), W_cell_corners.col(3)};
-    const Eigen::Matrix<FloatingPoint, 2, 4> C_cell_corners =
-        T_CW.transformVectorized(W_cell_corners);
+    const AABB<Point> W_cell_aabb =
+        convert::nodeIndexToAABB(current_node, root_node_width);
+    const AABB<Point>::Corners C_cell_corners =
+        T_CW.transformVectorized(W_cell_aabb.corners());
 
     const RangeImageIntersector::IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(
@@ -64,8 +52,9 @@ void CoarseToFineIntegrator::integratePointcloud(
       continue;
     }
 
+    const FloatingPoint node_width = W_cell_aabb.width<0>();
     const Point W_node_center =
-        W_node_bottom_left + Vector::Constant(node_width / 2.f);
+        W_cell_aabb.min + Vector::Constant(node_width / 2.f);
     const Point C_node_center = T_CW * W_node_center;
     const FloatingPoint node_center_distance = C_node_center.norm();
     constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
