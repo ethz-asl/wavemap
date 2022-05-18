@@ -48,11 +48,19 @@ class RangeImageIntersector {
     // range image
     FloatingPoint min_angle = std::numeric_limits<FloatingPoint>::max();
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
-    for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
-      const FloatingPoint corner_angle =
-          RangeImage::bearingToAngle(C_cell_corners.col(corner_idx));
-      min_angle = std::min(min_angle, corner_angle);
-      max_angle = std::max(max_angle, corner_angle);
+    if ((0.f < C_cell_corners.row(0).array()).all()) {
+      const Eigen::Matrix<FloatingPoint, 4, 1> tans =
+          C_cell_corners.row(1).array() / C_cell_corners.row(0).array();
+      min_angle = std::atan(tans.minCoeff());
+      max_angle = std::atan(tans.maxCoeff());
+    } else {
+      Eigen::Matrix<FloatingPoint, 4, 1> angles;
+      for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
+        angles[corner_idx] =
+            RangeImage::bearingToAngle(C_cell_corners.col(corner_idx));
+      }
+      min_angle = angles.minCoeff();
+      max_angle = angles.maxCoeff();
     }
 
     // Convert the angles to range image indices
