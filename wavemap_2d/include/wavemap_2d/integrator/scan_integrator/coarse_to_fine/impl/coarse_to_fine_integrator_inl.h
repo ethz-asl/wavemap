@@ -24,6 +24,10 @@ inline bool CoarseToFineIntegrator::isApproximationErrorAcceptable(
 inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
     const RangeImage& range_image, FloatingPoint d_C_cell,
     FloatingPoint azimuth_angle_C_cell) {
+  if (d_C_cell < kEpsilon || BeamModel::kRangeMax < d_C_cell) {
+    return 0.f;
+  }
+
   const auto first_idx =
       std::max(0, range_image.angleToNearestIndex(azimuth_angle_C_cell -
                                                   BeamModel::kAngleThresh));
