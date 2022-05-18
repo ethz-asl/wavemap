@@ -42,6 +42,8 @@ class Wavemap2DServer {
     float map_autosave_period_s = -1.f;
     std::string map_autosave_path;
 
+    bool publish_performance_stats = false;
+
     float pointcloud_queue_processing_period_s = 0.1f;
     float pointcloud_queue_max_wait_for_transform_s = 1.f;
 

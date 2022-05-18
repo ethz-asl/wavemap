@@ -118,18 +118,23 @@ void Wavemap2DServer::processPointcloudQueue() {
     const double pointcloud_integration_time = integration_timer.stop();
     const double total_pointcloud_integration_time =
         integration_timer.getTotal();
-    const size_t map_memory_usage = occupancy_map_->getMemoryUsage();
     ROS_INFO_STREAM("Integrated new pointcloud in "
                     << pointcloud_integration_time
                     << "s. Total integration time: "
                     << total_pointcloud_integration_time << "s.");
-    ROS_INFO_STREAM("Current map memory usage: " << map_memory_usage / 1e6
-                                                 << "MB.");
-    wavemap_2d_msgs::PerformanceStats performance_stats_msg;
-    performance_stats_msg.map_memory_usage = map_memory_usage;
-    performance_stats_msg.total_pointcloud_integration_time =
-        total_pointcloud_integration_time;
-    performance_stats_pub_.publish(performance_stats_msg);
+
+    if (config_.publish_performance_stats) {
+      occupancy_map_->prune();
+      const size_t map_memory_usage = occupancy_map_->getMemoryUsage();
+      ROS_INFO_STREAM("Current map memory usage: " << map_memory_usage / 1e6
+                                                   << "MB.");
+
+      wavemap_2d_msgs::PerformanceStats performance_stats_msg;
+      performance_stats_msg.map_memory_usage = map_memory_usage;
+      performance_stats_msg.total_pointcloud_integration_time =
+          total_pointcloud_integration_time;
+      performance_stats_pub_.publish(performance_stats_msg);
+    }
 
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();
@@ -340,6 +345,9 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
   nh.param(NAMEOF(config.map_autosave_path), config.map_autosave_path,
            config.map_autosave_path);
 
+  nh.param(NAMEOF(config.publish_performance_stats),
+           config.publish_performance_stats, config.publish_performance_stats);
+
   nh.param(NAMEOF(config.pointcloud_queue_processing_period_s),
            config.pointcloud_queue_processing_period_s,
            config.pointcloud_queue_processing_period_s);
@@ -375,12 +383,6 @@ bool Wavemap2DServer::Config::isValid(const bool verbose) {
     LOG_IF(WARNING, verbose)
         << "Param " << NAMEOF(pointcloud_topic_queue_length)
         << " must be a positive integer";
-  }
-
-  if (map_visualization_period_s < 0.f) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose) << "Param " << NAMEOF(map_visualization_period_s)
-                             << " must be a non-negative float";
   }
 
   if (pointcloud_queue_processing_period_s <= 0.f) {

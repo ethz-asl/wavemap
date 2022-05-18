@@ -74,8 +74,6 @@ void CoarseToFineIntegrator::integratePointcloud(
       stack.emplace(current_node.computeChildIndex(relative_child_idx));
     }
   }
-
-  occupancy_map->prune();
 }
 
 RangeImage CoarseToFineIntegrator::computeRangeImage(
