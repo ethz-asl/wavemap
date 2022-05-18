@@ -35,7 +35,8 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
       FloatingPoint bounding_sphere_radius);
 
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
-                                            const Point& C_cell_center);
+                                            FloatingPoint d_C_cell,
+                                            FloatingPoint azimuth_angle_C_cell);
 };
 }  // namespace wavemap_2d
 

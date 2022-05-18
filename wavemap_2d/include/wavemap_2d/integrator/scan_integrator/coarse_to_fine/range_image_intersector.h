@@ -37,12 +37,12 @@ class RangeImageIntersector {
     // axis-aligned cube) to the sensor's center
     // NOTE: The min distance is 0 if the cell contains the sensor's center.
     const FloatingPoint d_C_cell_closest = W_cell_aabb.minDistanceTo(t_W_C);
-    const FloatingPoint d_C_cell_furthest = W_cell_aabb.maxDistanceTo(t_W_C);
-    if (d_C_cell_closest < kEpsilon) {
-      return IntersectionType::kPossiblyOccupied;
-    } else if (BeamModel::kRangeMax < d_C_cell_closest) {
+    if (BeamModel::kRangeMax < d_C_cell_closest) {
       return IntersectionType::kFullyUnknown;
+    } else if (d_C_cell_closest < kEpsilon) {
+      return IntersectionType::kPossiblyOccupied;
     }
+    const FloatingPoint d_C_cell_furthest = W_cell_aabb.maxDistanceTo(t_W_C);
 
     // Get the min and max angles for any point in the cell projected into the
     // range image
@@ -51,8 +51,10 @@ class RangeImageIntersector {
     if ((0.f < C_cell_corners.row(0).array()).all()) {
       const Eigen::Matrix<FloatingPoint, 4, 1> tans =
           C_cell_corners.row(1).array() / C_cell_corners.row(0).array();
-      min_angle = std::atan(tans.minCoeff());
-      max_angle = std::atan(tans.maxCoeff());
+      const FloatingPoint min_tan = tans.minCoeff();
+      const FloatingPoint max_tan = tans.maxCoeff();
+      min_angle = std::atan(min_tan);
+      max_angle = std::atan(max_tan);
     } else {
       Eigen::Matrix<FloatingPoint, 4, 1> angles;
       for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {

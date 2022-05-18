@@ -67,14 +67,16 @@ inline FloatingPoint BeamModel::computeUpdate(
 }
 
 inline FloatingPoint BeamModel::Qcdf(FloatingPoint t) {
+  const FloatingPoint t_plus_three = t + 3.f;
+  const FloatingPoint three_min_t = 3.f - t;
   if (t < -3.f) {
     return 0.f;
   } else if (t <= -1.f) {
-    return 1.f / 48.f * static_cast<FloatingPoint>(std::pow(t + 3.f, 3));
+    return 1.f / 48.f * t_plus_three * t_plus_three * t_plus_three;
   } else if (t < 1.f) {
-    return 1.f / 2.f + 1.f / 24.f * t * (3.f + t) * (3.f - t);
+    return 1.f / 2.f + 1.f / 24.f * t * t_plus_three * three_min_t;
   } else if (t <= 3.f) {
-    return 1.f - 1.f / 48.f * static_cast<FloatingPoint>(std::pow(3.f - t, 3));
+    return 1.f - 1.f / 48.f * three_min_t * three_min_t * three_min_t;
   } else {
     return 1.f;
   }

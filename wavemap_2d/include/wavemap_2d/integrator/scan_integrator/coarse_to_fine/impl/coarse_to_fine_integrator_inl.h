@@ -22,21 +22,15 @@ inline bool CoarseToFineIntegrator::isApproximationErrorAcceptable(
 }
 
 inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
-    const RangeImage& range_image, const Point& C_cell_center) {
-  const FloatingPoint d_C_cell = C_cell_center.norm();
-  if (d_C_cell < kEpsilon || BeamModel::kRangeMax < d_C_cell) {
-    return 0.f;
-  }
-  const FloatingPoint cell_azimuth_angle =
-      RangeImage::bearingToAngle(C_cell_center);
-
+    const RangeImage& range_image, FloatingPoint d_C_cell,
+    FloatingPoint azimuth_angle_C_cell) {
   const auto first_idx =
-      std::max(0, range_image.angleToCeilIndex(cell_azimuth_angle -
-                                               BeamModel::kAngleThresh));
+      std::max(0, range_image.angleToNearestIndex(azimuth_angle_C_cell -
+                                                  BeamModel::kAngleThresh));
   const auto last_idx =
       std::min(range_image.getNumBeams() - 1,
-               range_image.angleToFloorIndex(cell_azimuth_angle +
-                                             BeamModel::kAngleThresh));
+               range_image.angleToNearestIndex(azimuth_angle_C_cell +
+                                               BeamModel::kAngleThresh));
   FloatingPoint total_update = 0.f;
   for (RangeImageIndex idx = first_idx; idx <= last_idx; ++idx) {
     const FloatingPoint measured_distance = range_image[idx];
@@ -46,7 +40,7 @@ inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
 
     const FloatingPoint beam_azimuth_angle = range_image.indexToAngle(idx);
     const FloatingPoint cell_to_beam_angle =
-        std::abs(cell_azimuth_angle - beam_azimuth_angle);
+        std::abs(azimuth_angle_C_cell - beam_azimuth_angle);
     if (BeamModel::kAngleThresh < cell_to_beam_angle) {
       continue;
     }
