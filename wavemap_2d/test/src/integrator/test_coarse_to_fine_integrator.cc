@@ -177,24 +177,33 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   // Generate test set
   std::vector<QueryAndExpectedResults> tests;
   {
-    std::vector<AABB<Point>> aabbs{{Point::Zero(), Point::Ones()},
-                                   {Point::Zero(), Point{0.5f, 1.f}},
-                                   {Point::Zero(), Point{1.f, 0.5f}}};
-    for (const auto& aabb : aabbs) {
-      aabbs.emplace_back(aabb);
-      AABB<Point> aabb_mirrored_x;
-      aabb_mirrored_x.includePoint({-aabb.min.x(), aabb.min.y()});
-      aabb_mirrored_x.includePoint({-aabb.max.x(), aabb.max.y()});
-      aabbs.emplace_back(aabb_mirrored_x);
-      AABB<Point> aabb_mirrored_y;
-      aabb_mirrored_y.includePoint({aabb.min.x(), -aabb.min.y()});
-      aabb_mirrored_y.includePoint({aabb.max.x(), -aabb.max.y()});
-      aabbs.emplace_back(aabb_mirrored_y);
-      AABB<Point> aabb_mirrored_xy;
-      aabb_mirrored_xy.includePoint({-aabb.min.x(), -aabb.min.y()});
-      aabb_mirrored_xy.includePoint({-aabb.max.x(), -aabb.max.y()});
-      aabbs.emplace_back(aabb_mirrored_xy);
-    }
+    // Manually define initial AABBs
+    std::list<AABB<Point>> aabbs{{Point::Zero(), Point::Ones()},
+                                 {Point::Zero(), Point{0.5f, 1.f}},
+                                 {Point::Zero(), Point{1.f, 0.5f}}};
+    // Insert copies of the initial AABBs flipped across the Y-axis
+    std::generate_n(std::back_inserter(aabbs), aabbs.size(),
+                    [aabbs_it = aabbs.cbegin()]() mutable {
+                      AABB<Point> aabb_flipped{
+                          {-aabbs_it->max.x(), aabbs_it->min.y()},
+                          {-aabbs_it->min.x(), aabbs_it->max.y()}};
+                      ++aabbs_it;
+                      return aabb_flipped;
+                    });
+    // Insert copies of all above AABBs flipped across the X-axis
+    std::generate_n(std::back_inserter(aabbs), aabbs.size(),
+                    [aabbs_it = aabbs.cbegin()]() mutable {
+                      AABB<Point> aabb_flipped{
+                          {aabbs_it->min.x(), -aabbs_it->max.y()},
+                          {aabbs_it->max.x(), -aabbs_it->min.y()}};
+                      ++aabbs_it;
+                      return aabb_flipped;
+                    });
+    // NOTE: The AABB set now consists of the initial AABBs and Y-flipped,
+    //       X-flipped, and XY-flipped copies.
+
+    // Create tests by combining the above AABBs (incl. random rescaling and
+    // translations) with identity and random sensor poses
     for (const auto& aabb : aabbs) {
       for (int i = 0; i < 1000; ++i) {
         const FloatingPoint random_scale = 1.f / getRandomResolution();
