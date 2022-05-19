@@ -55,51 +55,41 @@ class RangeImageIntersector {
       //       addressed at the start of the method.
       if (aabb_fully_in_upper_quadrants) {
         // AABB crosses both upper quadrants
-        angle_pair.min_angle = safe_atan(W_t_C_min.y(), W_t_C_min.x());
-        angle_pair.max_angle = safe_atan(W_t_C_max.y(), W_t_C_min.x());
+        angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
+        angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
       } else {
         // AABB crosses both lower quadrants
-        angle_pair.min_angle =
-            safe_atan(W_t_C_max.y(), W_t_C_max.x()) + M_PIf32;
-        angle_pair.max_angle =
-            safe_atan(W_t_C_min.y(), W_t_C_max.x()) - M_PIf32;
+        angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
+        angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
       }
     } else {
       if (aabb_fully_in_left_quadrants) {
         if (aabb_crosses_y_axis) {
           // AABB crosses both left quadrants
-          angle_pair.min_angle =
-              M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_min.y());
-          angle_pair.max_angle =
-              M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_min.y());
+          angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
+          angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
         } else if (aabb_fully_in_upper_quadrants) {
           // AABB is fully in the upper left quadrant
-          angle_pair.min_angle = safe_atan(W_t_C_min.y(), W_t_C_max.x());
-          angle_pair.max_angle = safe_atan(W_t_C_max.y(), W_t_C_min.x());
+          angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
+          angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
         } else {
           // AABB is fully in the bottom left quadrant
-          angle_pair.min_angle =
-              M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_max.y());
-          angle_pair.max_angle =
-              M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_min.y());
+          angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
+          angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
         }
       } else {
         if (aabb_crosses_y_axis) {
           // AABB crosses both right quadrants
-          angle_pair.min_angle =
-              -M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_max.y());
-          angle_pair.max_angle =
-              -M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_max.y());
+          angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
+          angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
         } else if (aabb_fully_in_upper_quadrants) {
           // AABB is fully in the upper right quadrant
-          angle_pair.min_angle = safe_atan(W_t_C_min.y(), W_t_C_min.x());
-          angle_pair.max_angle = safe_atan(W_t_C_max.y(), W_t_C_max.x());
+          angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
+          angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
         } else {
           // AABB is fully in the bottom right quadrant
-          angle_pair.min_angle =
-              -M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_max.y());
-          angle_pair.max_angle =
-              -M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_min.y());
+          angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
+          angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
         }
       }
     }

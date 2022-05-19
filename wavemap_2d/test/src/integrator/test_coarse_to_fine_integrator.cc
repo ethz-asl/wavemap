@@ -234,47 +234,49 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
     RangeImageIntersector::MinMaxAnglePair reference_angle_pair;
     const AABB<Point>::Corners C_cell_corners =
         test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
-    using AngleMatrix = Eigen::Matrix<FloatingPoint, 1, 4>;
-    AngleMatrix angles;
+    std::array<FloatingPoint, 4> angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
       reference_angle_pair.min_angle = -M_PIf32;
       reference_angle_pair.max_angle = M_PIf32;
     } else {
       for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
-        angles(1, corner_idx) =
+        angles[corner_idx] =
             RangeImage::bearingToAngle(C_cell_corners.col(corner_idx));
       }
-      const bool angle_range_wraps_around =
-          M_PIf32 <
-          (angles.leftCols(3) - angles.rightCols(3)).cwiseAbs().maxCoeff();
+      std::sort(angles.begin(), angles.end());
+      const bool angle_range_wraps_around = M_PIf32 < angles[3] - angles[0];
       if (angle_range_wraps_around) {
         reference_angle_pair.min_angle =
-            (0.f < angles.array())
-                .select(angles, AngleMatrix::Constant(M_PIf32))
-                .minCoeff();
+            *std::upper_bound(angles.begin(), angles.end(), 0.f);
         reference_angle_pair.max_angle =
-            (angles.array() < 0.f)
-                .select(angles, AngleMatrix::Constant(-M_PIf32))
-                .maxCoeff();
+            *std::prev(std::upper_bound(angles.begin(), angles.end(), 0.f));
       } else {
-        reference_angle_pair.min_angle = angles.minCoeff();
-        reference_angle_pair.max_angle = angles.maxCoeff();
+        reference_angle_pair.min_angle = angles[0];
+        reference_angle_pair.max_angle = angles[3];
       }
     }
     const RangeImageIntersector::MinMaxAnglePair returned_angle_pair =
         RangeImageIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
                                                            test.W_aabb);
-    constexpr FloatingPoint kOneThousandthDegree = 0.0000174533f;
+    constexpr FloatingPoint kOneHundredthDegree = 0.000174533f;
     EXPECT_NEAR(returned_angle_pair.min_angle, reference_angle_pair.min_angle,
-                kOneThousandthDegree)
+                kOneHundredthDegree)
         << test.getDescription() << "\nC_cell_corners:\n"
         << C_cell_corners << "\nangles_C_cell_corners:\n"
-        << angles;
+        << std::accumulate(std::next(angles.begin()), angles.end(),
+                           std::to_string(angles[0]),
+                           [](auto str, const auto& el) -> std::string {
+                             return std::move(str) + ", " + std::to_string(el);
+                           });
     EXPECT_NEAR(returned_angle_pair.max_angle, reference_angle_pair.max_angle,
-                kOneThousandthDegree)
+                kOneHundredthDegree)
         << test.getDescription() << "\nC_cell_corners:\n"
         << C_cell_corners << "\nangles_C_cell_corners:\n"
-        << angles;
+        << std::accumulate(std::next(angles.begin()), angles.end(),
+                           std::to_string(angles[0]),
+                           [](auto str, const auto& el) -> std::string {
+                             return std::move(str) + ", " + std::to_string(el);
+                           });
   }
 }
 
