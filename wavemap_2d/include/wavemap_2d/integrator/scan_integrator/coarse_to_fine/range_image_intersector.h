@@ -19,51 +19,128 @@ class RangeImageIntersector {
     kFreeOrUnknown,
     kPossiblyOccupied
   };
-  static std::string getIntersectionTypeStr(
-      IntersectionType intersection_type) {
-    const std::vector<std::string> kIntersectionTypeStrs(
-        {"kFullyUnknown", "kFreeOrUnknown", "kPossiblyOccupied"});
-    return kIntersectionTypeStrs[to_underlying(intersection_type)];
-  }
+  struct MinMaxAnglePair {
+    FloatingPoint min_angle = std::numeric_limits<FloatingPoint>::max();
+    FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
+  };
 
   explicit RangeImageIntersector(const RangeImage& range_image)
       : hierarchical_range_image_(range_image) {}
 
+  // NOTE: When the AABB is right behind the sensor, the angle range will wrap
+  //       around at +-PI and a min_angle >= max_angle will be returned.
+  static MinMaxAnglePair getAabbMinMaxProjectedAngle(
+      const Transformation& T_W_C, const AABB<Point>& W_aabb) {
+    // If the sensor is contained in the AABB, it overlaps with the full range
+    if (W_aabb.containsPoint(T_W_C.getPosition())) {
+      return {-M_PIf32, M_PIf32};
+    }
+
+    // Translate the AABB into frame C, but do not yet rotate it
+    const Point W_t_C_min = W_aabb.min - T_W_C.getPosition();
+    const Point W_t_C_max = W_aabb.max - T_W_C.getPosition();
+
+    // Find the min and max angles for the AABB's corners
+    MinMaxAnglePair angle_pair;
+    const bool aabb_crosses_x_axis =
+        std::signbit(W_t_C_min.y()) != std::signbit(W_t_C_max.y());
+    const bool aabb_crosses_y_axis =
+        std::signbit(W_t_C_min.x()) != std::signbit(W_t_C_max.x());
+    const bool aabb_fully_in_left_quadrants =
+        !std::signbit(W_t_C_min.y()) && !std::signbit(W_t_C_max.y());
+    const bool aabb_fully_in_upper_quadrants =
+        !std::signbit(W_t_C_min.x()) && !std::signbit(W_t_C_max.x());
+    if (aabb_crosses_x_axis) {
+      // NOTE: The AABB cannot overlap with the origin as this case was already
+      //       addressed at the start of the method.
+      if (aabb_fully_in_upper_quadrants) {
+        // AABB crosses both upper quadrants
+        angle_pair.min_angle = std::atan(W_t_C_min.y() / W_t_C_min.x());
+        angle_pair.max_angle = std::atan(W_t_C_max.y() / W_t_C_min.x());
+      } else {
+        // AABB crosses both lower quadrants
+        angle_pair.min_angle =
+            std::atan(W_t_C_max.y() / W_t_C_max.x()) + M_PIf32;
+        angle_pair.max_angle =
+            std::atan(W_t_C_min.y() / W_t_C_max.x()) - M_PIf32;
+      }
+    } else {
+      if (aabb_fully_in_left_quadrants) {
+        if (aabb_crosses_y_axis) {
+          // AABB crosses both left quadrants
+          angle_pair.min_angle =
+              M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_min.y());
+          angle_pair.max_angle =
+              M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_min.y());
+        } else if (aabb_fully_in_upper_quadrants) {
+          // AABB is fully in the upper left quadrant
+          angle_pair.min_angle = std::atan(W_t_C_min.y() / W_t_C_max.x());
+          angle_pair.max_angle = std::atan(W_t_C_max.y() / W_t_C_min.x());
+        } else {
+          // AABB is fully in the bottom left quadrant
+          angle_pair.min_angle =
+              M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_max.y());
+          angle_pair.max_angle =
+              M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_min.y());
+        }
+      } else {
+        if (aabb_crosses_y_axis) {
+          // AABB crosses both right quadrants
+          angle_pair.min_angle =
+              -M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_max.y());
+          angle_pair.max_angle =
+              -M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_max.y());
+        } else if (aabb_fully_in_upper_quadrants) {
+          // AABB is fully in the upper right quadrant
+          angle_pair.min_angle = std::atan(W_t_C_min.y() / W_t_C_min.x());
+          angle_pair.max_angle = std::atan(W_t_C_max.y() / W_t_C_max.x());
+        } else {
+          // AABB is fully in the bottom right quadrant
+          angle_pair.min_angle =
+              -M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_max.y());
+          angle_pair.max_angle =
+              -M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_min.y());
+        }
+      }
+    }
+
+    // Rotate the min/max angles we found into frame C
+    angle_pair.min_angle -= T_W_C.getRotation().angle();
+    angle_pair.max_angle -= T_W_C.getRotation().angle();
+
+    // Normalize the angles to [-Pi, Pi]
+    if (angle_pair.min_angle < -M_PIf32) {
+      angle_pair.min_angle += 2.f * M_PIf32;
+    } else if (M_PIf32 < angle_pair.min_angle) {
+      angle_pair.min_angle -= 2.f * M_PIf32;
+    }
+    if (angle_pair.max_angle < -M_PIf32) {
+      angle_pair.max_angle += 2.f * M_PIf32;
+    } else if (M_PIf32 < angle_pair.max_angle) {
+      angle_pair.max_angle -= 2.f * M_PIf32;
+    }
+
+    return angle_pair;
+  }
+
   IntersectionType determineIntersectionType(
-      const RangeImage& range_image, const Point& t_W_C,
-      const AABB<Point>& W_cell_aabb,
-      const Eigen::Matrix<FloatingPoint, 2, 4>& C_cell_corners) const {
+      const RangeImage& range_image, const Transformation& T_W_C,
+      const AABB<Point>& W_cell_aabb) const {
     // Get the min and max distances from any point in the cell (which is an
     // axis-aligned cube) to the sensor's center
     // NOTE: The min distance is 0 if the cell contains the sensor's center.
-    const FloatingPoint d_C_cell_closest = W_cell_aabb.minDistanceTo(t_W_C);
+    const FloatingPoint d_C_cell_closest =
+        W_cell_aabb.minDistanceTo(T_W_C.getPosition());
     if (BeamModel::kRangeMax < d_C_cell_closest) {
       return IntersectionType::kFullyUnknown;
-    } else if (d_C_cell_closest < kEpsilon) {
-      return IntersectionType::kPossiblyOccupied;
     }
-    const FloatingPoint d_C_cell_furthest = W_cell_aabb.maxDistanceTo(t_W_C);
+    const FloatingPoint d_C_cell_furthest =
+        W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
 
     // Get the min and max angles for any point in the cell projected into the
     // range image
-    FloatingPoint min_angle = std::numeric_limits<FloatingPoint>::max();
-    FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
-    if ((0.f < C_cell_corners.row(0).array()).all()) {
-      const Eigen::Matrix<FloatingPoint, 4, 1> tans =
-          C_cell_corners.row(1).array() / C_cell_corners.row(0).array();
-      const FloatingPoint min_tan = tans.minCoeff();
-      const FloatingPoint max_tan = tans.maxCoeff();
-      min_angle = std::atan(min_tan);
-      max_angle = std::atan(max_tan);
-    } else {
-      Eigen::Matrix<FloatingPoint, 4, 1> angles;
-      for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
-        angles[corner_idx] =
-            RangeImage::bearingToAngle(C_cell_corners.col(corner_idx));
-      }
-      min_angle = angles.minCoeff();
-      max_angle = angles.maxCoeff();
-    }
+    auto [min_angle, max_angle] =
+        getAabbMinMaxProjectedAngle(T_W_C, W_cell_aabb);
 
     // Convert the angles to range image indices
     // NOTE: We pad the min and max angles with the BeamModel's angle threshold
@@ -92,6 +169,13 @@ class RangeImageIntersector {
     } else {
       return IntersectionType::kPossiblyOccupied;
     }
+  }
+
+  static std::string getIntersectionTypeStr(
+      IntersectionType intersection_type) {
+    const std::vector<std::string> kIntersectionTypeStrs(
+        {"kFullyUnknown", "kFreeOrUnknown", "kPossiblyOccupied"});
+    return kIntersectionTypeStrs[to_underlying(intersection_type)];
   }
 
  private:

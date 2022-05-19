@@ -158,7 +158,118 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
   }
 }
 
-TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
+TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
+  struct QueryAndExpectedResults {
+    AABB<Point> W_aabb;
+    Transformation T_W_C;
+
+    QueryAndExpectedResults(AABB<Point> W_aabb, const Transformation& T_W_C)
+        : W_aabb(std::move(W_aabb)), T_W_C(T_W_C) {}
+
+    std::string getDescription() const {
+      std::stringstream ss;
+      ss << "For aabb " << W_aabb.toString() << " and query sensor pose "
+         << T_W_C;
+      return ss.str();
+    }
+  };
+
+  // Generate test set
+  std::vector<QueryAndExpectedResults> tests;
+  {
+    std::vector<AABB<Point>> aabbs{{Point::Zero(), Point::Ones()},
+                                   {Point::Zero(), Point{0.5f, 1.f}},
+                                   {Point::Zero(), Point{1.f, 0.5f}}};
+    for (const auto& aabb : aabbs) {
+      aabbs.emplace_back(aabb);
+      AABB<Point> aabb_mirrored_x;
+      aabb_mirrored_x.includePoint({-aabb.min.x(), aabb.min.y()});
+      aabb_mirrored_x.includePoint({-aabb.max.x(), aabb.max.y()});
+      aabbs.emplace_back(aabb_mirrored_x);
+      AABB<Point> aabb_mirrored_y;
+      aabb_mirrored_y.includePoint({aabb.min.x(), -aabb.min.y()});
+      aabb_mirrored_y.includePoint({aabb.max.x(), -aabb.max.y()});
+      aabbs.emplace_back(aabb_mirrored_y);
+      AABB<Point> aabb_mirrored_xy;
+      aabb_mirrored_xy.includePoint({-aabb.min.x(), -aabb.min.y()});
+      aabb_mirrored_xy.includePoint({-aabb.max.x(), -aabb.max.y()});
+      aabbs.emplace_back(aabb_mirrored_xy);
+    }
+    for (const auto& aabb : aabbs) {
+      for (int i = 0; i < 1000; ++i) {
+        const FloatingPoint random_scale = 1.f / getRandomResolution();
+        for (const Vector& t_random :
+             {getRandomTranslation(), Vector{getRandomSignedDistance(), 0.f},
+              Vector{0.f, getRandomSignedDistance()}}) {
+          const AABB<Point> aabb_scaled{random_scale * aabb.min,
+                                        random_scale * aabb.max};
+          const AABB<Point> aabb_translated{aabb.min + t_random,
+                                            aabb.max + t_random};
+          const AABB<Point> aabb_scaled_translated{aabb_scaled.min + t_random,
+                                                   aabb_scaled.max + t_random};
+          const Transformation T_W_C_random = getRandomTransformation();
+          tests.emplace_back(aabb_scaled, Transformation());
+          tests.emplace_back(aabb_translated, Transformation());
+          tests.emplace_back(aabb_scaled_translated, Transformation());
+          tests.emplace_back(aabb, T_W_C_random);
+          tests.emplace_back(aabb_scaled, T_W_C_random);
+          tests.emplace_back(aabb_translated, T_W_C_random);
+          tests.emplace_back(aabb_scaled_translated, T_W_C_random);
+        }
+      }
+    }
+  }
+
+  // Run tests
+  for (const auto& test : tests) {
+    RangeImageIntersector::MinMaxAnglePair reference_angle_pair;
+    const AABB<Point>::Corners C_cell_corners =
+        test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
+    using AngleMatrix = Eigen::Matrix<FloatingPoint, 1, 4>;
+    AngleMatrix angles;
+    if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
+      reference_angle_pair.min_angle = -M_PIf32;
+      reference_angle_pair.max_angle = M_PIf32;
+    } else {
+      for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
+        angles(1, corner_idx) =
+            RangeImage::bearingToAngle(C_cell_corners.col(corner_idx));
+      }
+      const bool angle_range_wraps_around =
+          M_PIf32 <
+          (angles.leftCols(3) - angles.rightCols(3)).cwiseAbs().maxCoeff();
+      if (angle_range_wraps_around) {
+        reference_angle_pair.min_angle =
+            (0.f < angles.array())
+                .select(angles, AngleMatrix::Constant(M_PIf32))
+                .minCoeff();
+        reference_angle_pair.max_angle =
+            (angles.array() < 0.f)
+                .select(angles, AngleMatrix::Constant(-M_PIf32))
+                .maxCoeff();
+      } else {
+        reference_angle_pair.min_angle = angles.minCoeff();
+        reference_angle_pair.max_angle = angles.maxCoeff();
+      }
+    }
+    const RangeImageIntersector::MinMaxAnglePair returned_angle_pair =
+        RangeImageIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
+                                                           test.W_aabb);
+    constexpr FloatingPoint kOneThousandthDegree = 0.0000174533f;
+    EXPECT_NEAR(returned_angle_pair.min_angle, reference_angle_pair.min_angle,
+                kOneThousandthDegree)
+        << test.getDescription() << "\nC_cell_corners:\n"
+        << C_cell_corners << "\nangles_C_cell_corners:\n"
+        << angles;
+    EXPECT_NEAR(returned_angle_pair.max_angle, reference_angle_pair.max_angle,
+                kOneThousandthDegree)
+        << test.getDescription() << "\nC_cell_corners:\n"
+        << C_cell_corners << "\nangles_C_cell_corners:\n"
+        << angles;
+  }
+}
+
+TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
     const FloatingPoint resolution = getRandomResolution();
@@ -252,23 +363,12 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersector) {
 
       const Point W_node_bottom_left =
           W_node_center - Vector::Constant(node_width / 2.f);
-      const Point& t_W_C = random_pointcloud.getOrigin();
-      Eigen::Matrix<FloatingPoint, 2, 4> W_cell_corners =
-          W_node_bottom_left.replicate<1, 4>();
-      for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
-        for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
-          if (corner_idx & (0b1 << dim_idx)) {
-            W_cell_corners(dim_idx, corner_idx) += node_width;
-          }
-        }
-      }
-      const AABB<Point> W_cell_aabb{W_cell_corners.col(0),
-                                    W_cell_corners.col(3)};
-      const Eigen::Matrix<FloatingPoint, 2, 4> C_cell_corners =
-          T_C_W.transformVectorized(W_cell_corners);
+      const AABB<Point> W_cell_aabb{
+          W_node_bottom_left,
+          W_node_bottom_left + Vector::Constant(node_width)};
       const RangeImageIntersector::IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
-              range_image, t_W_C, W_cell_aabb, C_cell_corners);
+              range_image, random_pointcloud.getPose(), W_cell_aabb);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected "
           << RangeImageIntersector::getIntersectionTypeStr(

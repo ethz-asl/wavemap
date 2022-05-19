@@ -24,8 +24,8 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
     AABB<Point> aabb;
     Point query_point;
 
-    QueryAndExpectedResults(AABB<Point> _aabb, Point _query_point)
-        : aabb(std::move(_aabb)), query_point(std::move(_query_point)) {}
+    QueryAndExpectedResults(AABB<Point> aabb, Point query_point)
+        : aabb(std::move(aabb)), query_point(std::move(query_point)) {}
 
     std::string getDescription() const {
       std::stringstream ss;

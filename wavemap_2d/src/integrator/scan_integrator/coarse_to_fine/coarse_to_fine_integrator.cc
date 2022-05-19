@@ -30,7 +30,6 @@ void CoarseToFineIntegrator::integratePointcloud(
   // Recursively update all relevant cells
   const QuadtreeIndex::Element max_depth = occupancy_map->getMaxDepth();
   const Transformation T_CW = pointcloud.getPose().inverse();
-  const Point& t_W_C = pointcloud.getOrigin();
   const FloatingPoint root_node_width = occupancy_map->getRootNodeWidth();
 
   std::stack<QuadtreeIndex> stack;
@@ -41,12 +40,9 @@ void CoarseToFineIntegrator::integratePointcloud(
 
     const AABB<Point> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, root_node_width);
-    const AABB<Point>::Corners C_cell_corners =
-        T_CW.transformVectorized(W_cell_aabb.corners());
-
     const RangeImageIntersector::IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(
-            range_image, t_W_C, W_cell_aabb, C_cell_corners);
+            range_image, pointcloud.getPose(), W_cell_aabb);
     if (intersection_type ==
         RangeImageIntersector::IntersectionType::kFullyUnknown) {
       continue;
