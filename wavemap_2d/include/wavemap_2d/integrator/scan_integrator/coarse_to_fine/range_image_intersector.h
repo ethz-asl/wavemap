@@ -55,51 +55,51 @@ class RangeImageIntersector {
       //       addressed at the start of the method.
       if (aabb_fully_in_upper_quadrants) {
         // AABB crosses both upper quadrants
-        angle_pair.min_angle = std::atan(W_t_C_min.y() / W_t_C_min.x());
-        angle_pair.max_angle = std::atan(W_t_C_max.y() / W_t_C_min.x());
+        angle_pair.min_angle = safe_atan(W_t_C_min.y(), W_t_C_min.x());
+        angle_pair.max_angle = safe_atan(W_t_C_max.y(), W_t_C_min.x());
       } else {
         // AABB crosses both lower quadrants
         angle_pair.min_angle =
-            std::atan(W_t_C_max.y() / W_t_C_max.x()) + M_PIf32;
+            safe_atan(W_t_C_max.y(), W_t_C_max.x()) + M_PIf32;
         angle_pair.max_angle =
-            std::atan(W_t_C_min.y() / W_t_C_max.x()) - M_PIf32;
+            safe_atan(W_t_C_min.y(), W_t_C_max.x()) - M_PIf32;
       }
     } else {
       if (aabb_fully_in_left_quadrants) {
         if (aabb_crosses_y_axis) {
           // AABB crosses both left quadrants
           angle_pair.min_angle =
-              M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_min.y());
+              M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_min.y());
           angle_pair.max_angle =
-              M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_min.y());
+              M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_min.y());
         } else if (aabb_fully_in_upper_quadrants) {
           // AABB is fully in the upper left quadrant
-          angle_pair.min_angle = std::atan(W_t_C_min.y() / W_t_C_max.x());
-          angle_pair.max_angle = std::atan(W_t_C_max.y() / W_t_C_min.x());
+          angle_pair.min_angle = safe_atan(W_t_C_min.y(), W_t_C_max.x());
+          angle_pair.max_angle = safe_atan(W_t_C_max.y(), W_t_C_min.x());
         } else {
           // AABB is fully in the bottom left quadrant
           angle_pair.min_angle =
-              M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_max.y());
+              M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_max.y());
           angle_pair.max_angle =
-              M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_min.y());
+              M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_min.y());
         }
       } else {
         if (aabb_crosses_y_axis) {
           // AABB crosses both right quadrants
           angle_pair.min_angle =
-              -M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_max.y());
+              -M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_max.y());
           angle_pair.max_angle =
-              -M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_max.y());
+              -M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_max.y());
         } else if (aabb_fully_in_upper_quadrants) {
           // AABB is fully in the upper right quadrant
-          angle_pair.min_angle = std::atan(W_t_C_min.y() / W_t_C_min.x());
-          angle_pair.max_angle = std::atan(W_t_C_max.y() / W_t_C_max.x());
+          angle_pair.min_angle = safe_atan(W_t_C_min.y(), W_t_C_min.x());
+          angle_pair.max_angle = safe_atan(W_t_C_max.y(), W_t_C_max.x());
         } else {
           // AABB is fully in the bottom right quadrant
           angle_pair.min_angle =
-              -M_PI_2f32 - std::atan(W_t_C_min.x() / W_t_C_max.y());
+              -M_PI_2f32 - safe_atan(W_t_C_min.x(), W_t_C_max.y());
           angle_pair.max_angle =
-              -M_PI_2f32 - std::atan(W_t_C_max.x() / W_t_C_min.y());
+              -M_PI_2f32 - safe_atan(W_t_C_max.x(), W_t_C_min.y());
         }
       }
     }
@@ -180,6 +180,33 @@ class RangeImageIntersector {
 
  private:
   HierarchicalRangeImage hierarchical_range_image_;
+
+  // TODO(victorr): Consider replacing this method with conservative
+  //                approximations (slightly smaller or equal for min_angle and
+  //                slightly greater or equal for max_angle).
+  //                This could be worth it as the atan calls currently make up a
+  //                very large portion of the program's runtime, but its results
+  //                are only used to query the hierarchical range image, which
+  //                only returns approximate (but conservative) results.
+  static FloatingPoint safe_atan(FloatingPoint y, FloatingPoint x) {
+    if (x == 0.f) {
+      if (y == 0.f) {
+        if (std::signbit(x)) {
+          return M_PIf32;
+        } else {
+          return 0.f;
+        }
+      } else {
+        if (std::signbit(y)) {
+          return -M_PI_2f32;
+        } else {
+          return M_PI_2f32;
+        }
+      }
+    } else {
+      return std::atan(y / x);
+    }
+  }
 };
 }  // namespace wavemap_2d
 
