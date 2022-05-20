@@ -131,16 +131,33 @@ class RangeImageIntersector {
     // range image
     auto [min_angle, max_angle] =
         getAabbMinMaxProjectedAngle(T_W_C, W_cell_aabb);
+    const bool angle_range_wraps_pi = max_angle < min_angle;
 
-    // Convert the angles to range image indices
-    // NOTE: We pad the min and max angles with the BeamModel's angle threshold
-    //       to account for the beam's non-zero width (angular uncertainty).
+    // Pad the min and max angles with the BeamModel's angle threshold to
+    // account for the beam's non-zero width (angular uncertainty)
     min_angle -= BeamModel::kAngleThresh;
     max_angle += BeamModel::kAngleThresh;
-    if (max_angle < range_image.getMinAngle() ||
-        range_image.getMaxAngle() < min_angle) {
+
+    // If the angle wraps around Pi, we can't use the hierarchical range image
+    if (angle_range_wraps_pi) {
+      if (max_angle < range_image.getMinAngle() &&
+          range_image.getMaxAngle() < min_angle) {
+        // No parts of the cell can be affected by the measurement update
+        return IntersectionType::kFullyUnknown;
+      } else {
+        // Make sure the cell gets enqueued for refinement, as we can't
+        // guarantee anything about its children
+        return IntersectionType::kPossiblyOccupied;
+      }
+    }
+
+    // Check if the cell is outside the observed range
+    if (range_image.getMaxAngle() < min_angle ||
+        max_angle < range_image.getMinAngle()) {
       return IntersectionType::kFullyUnknown;
     }
+
+    // Convert the angles to range image indices
     const RangeImageIndex min_image_idx =
         std::max(0, range_image.angleToFloorIndex(min_angle));
     const RangeImageIndex max_image_idx = std::min(

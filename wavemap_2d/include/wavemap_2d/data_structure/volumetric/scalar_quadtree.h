@@ -14,6 +14,7 @@ class VolumetricQuadtree : public VolumetricDataStructure {
   template <typename... ConstructorArgs>
   explicit VolumetricQuadtree(ConstructorArgs&&... args)
       : VolumetricDataStructure(std::forward<ConstructorArgs>(args)...) {}
+  ~VolumetricQuadtree() override = default;
 
   virtual Index getMinPossibleIndex() const = 0;
   virtual Index getMaxPossibleIndex() const = 0;
