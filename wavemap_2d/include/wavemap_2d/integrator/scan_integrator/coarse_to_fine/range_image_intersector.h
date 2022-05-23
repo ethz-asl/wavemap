@@ -9,6 +9,7 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/data_structure/generic/aabb.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
+#include "wavemap_2d/utils/angle_utils.h"
 #include "wavemap_2d/utils/type_utils.h"
 
 namespace wavemap_2d {
@@ -29,6 +30,11 @@ class RangeImageIntersector {
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
   //       around at +-PI and a min_angle >= max_angle will be returned.
+  // NOTE: Despite being branch-heavy, this implementation still outperforms all
+  //       fully vectorized branch-free versions we tried. Possibly because we
+  //       always only really need 2 of the 4 angles and branch-prediction works
+  //       reasonably well for our query pattern. This might change for 3D
+  //       and/or if we batch queries together.
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
       const Transformation& T_W_C, const AABB<Point>& W_aabb) {
     // If the sensor is contained in the AABB, it overlaps with the full range
@@ -55,60 +61,62 @@ class RangeImageIntersector {
       //       addressed at the start of the method.
       if (aabb_fully_in_upper_quadrants) {
         // AABB crosses both upper quadrants
-        angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
-        angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
+        angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
+        angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
       } else {
         // AABB crosses both lower quadrants
-        angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
-        angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
+        angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
+        angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
       }
     } else {
       if (aabb_fully_in_left_quadrants) {
         if (aabb_crosses_y_axis) {
           // AABB crosses both left quadrants
-          angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
-          angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
+          angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
+          angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
         } else if (aabb_fully_in_upper_quadrants) {
           // AABB is fully in the upper left quadrant
-          angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
-          angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
+          angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
+          angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
         } else {
           // AABB is fully in the bottom left quadrant
-          angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
-          angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
+          angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
+          angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
         }
       } else {
         if (aabb_crosses_y_axis) {
           // AABB crosses both right quadrants
-          angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
-          angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
+          angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
+          angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
         } else if (aabb_fully_in_upper_quadrants) {
           // AABB is fully in the upper right quadrant
-          angle_pair.min_angle = std::atan2(W_t_C_min.y(), W_t_C_min.x());
-          angle_pair.max_angle = std::atan2(W_t_C_max.y(), W_t_C_max.x());
+          angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
+          angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
         } else {
           // AABB is fully in the bottom right quadrant
-          angle_pair.min_angle = std::atan2(W_t_C_max.y(), W_t_C_min.x());
-          angle_pair.max_angle = std::atan2(W_t_C_min.y(), W_t_C_max.x());
+          angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
+          angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
         }
       }
+    }
+
+    // Make the angle range conservative by padding it with the worst-case error
+    // of our atan approximation (in the direction that makes the range largest)
+    if (M_PIf32 < angle_pair.max_angle - angle_pair.min_angle) {
+      angle_pair.min_angle += kWorstCaseAtan2ApproxError;
+      angle_pair.max_angle -= kWorstCaseAtan2ApproxError;
+    } else {
+      angle_pair.min_angle -= kWorstCaseAtan2ApproxError;
+      angle_pair.max_angle += kWorstCaseAtan2ApproxError;
     }
 
     // Rotate the min/max angles we found into frame C
     angle_pair.min_angle -= T_W_C.getRotation().angle();
     angle_pair.max_angle -= T_W_C.getRotation().angle();
 
-    // Normalize the angles to [-Pi, Pi]
-    if (angle_pair.min_angle < -M_PIf32) {
-      angle_pair.min_angle += 2.f * M_PIf32;
-    } else if (M_PIf32 < angle_pair.min_angle) {
-      angle_pair.min_angle -= 2.f * M_PIf32;
-    }
-    if (angle_pair.max_angle < -M_PIf32) {
-      angle_pair.max_angle += 2.f * M_PIf32;
-    } else if (M_PIf32 < angle_pair.max_angle) {
-      angle_pair.max_angle -= 2.f * M_PIf32;
-    }
+    // Make sure the angles are still normalized within [-Pi, Pi]
+    angle_pair.min_angle = angle_math::normalize_near(angle_pair.min_angle);
+    angle_pair.max_angle = angle_math::normalize_near(angle_pair.max_angle);
 
     return angle_pair;
   }
@@ -188,32 +196,21 @@ class RangeImageIntersector {
  private:
   HierarchicalRangeImage hierarchical_range_image_;
 
-  // TODO(victorr): Consider replacing this method with conservative
-  //                approximations (slightly smaller or equal for min_angle and
-  //                slightly greater or equal for max_angle).
-  //                This could be worth it as the atan calls currently make up a
-  //                very large portion of the program's runtime, but its results
-  //                are only used to query the hierarchical range image, which
-  //                only returns approximate (but conservative) results.
-  static FloatingPoint safe_atan(FloatingPoint y, FloatingPoint x) {
-    if (x == 0.f) {
-      if (y == 0.f) {
-        if (std::signbit(x)) {
-          return M_PIf32;
-        } else {
-          return 0.f;
-        }
-      } else {
-        if (std::signbit(y)) {
-          return -M_PI_2f32;
-        } else {
-          return M_PI_2f32;
-        }
-      }
-    } else {
-      return std::atan(y / x);
-    }
+  // NOTE: Aside from generally being faster than std::atan2, a major advantage
+  //       of this atan2 approximation is that it's branch-free and easily gets
+  //       vectorized by GCC (e.g. nearby calls and calls in loops).
+  static constexpr FloatingPoint kWorstCaseAtan2ApproxError = 0.011f;
+  static FloatingPoint atan2_approx(FloatingPoint y, FloatingPoint x) {
+    FloatingPoint abs_y =
+        std::abs(y) + std::numeric_limits<FloatingPoint>::epsilon();
+    FloatingPoint r =
+        (x - std::copysign(abs_y, x)) / (abs_y + std::abs(x));  // NOLINT
+    FloatingPoint angle = M_PIf32 / 2.f - std::copysign(M_PIf32 / 4.f, x);
+    angle += (0.1963f * r * r - 0.9817f) * r;
+    return std::copysign(angle, y);
   }
+
+  friend class CoarseToFineIntegratorTest_ApproxAtan2_Test;
 };
 }  // namespace wavemap_2d
 

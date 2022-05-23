@@ -62,9 +62,9 @@ struct AABB {
     for (int corner_idx = 0; corner_idx < kNumCorners; ++corner_idx) {
       for (int dim_idx = 0; dim_idx < T::RowsAtCompileTime; ++dim_idx) {
         if (corner_idx & (0b1 << dim_idx)) {
-          corners(dim_idx, corner_idx) = min[dim_idx];
-        } else {
           corners(dim_idx, corner_idx) = max[dim_idx];
+        } else {
+          corners(dim_idx, corner_idx) = min[dim_idx];
         }
       }
     }

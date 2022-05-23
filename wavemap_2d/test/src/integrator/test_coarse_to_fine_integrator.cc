@@ -5,6 +5,7 @@
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
+#include "wavemap_2d/utils/angle_utils.h"
 
 namespace wavemap_2d {
 class CoarseToFineIntegratorTest : public FixtureBase {
@@ -158,6 +159,18 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
   }
 }
 
+TEST_F(CoarseToFineIntegratorTest, ApproxAtan2) {
+  constexpr int kNumAngles = 360 * 1000;
+  for (int i = 0; i <= kNumAngles; ++i) {
+    const FloatingPoint angle = 2.f * M_PIf32 * static_cast<FloatingPoint>(i) /
+                                static_cast<FloatingPoint>(kNumAngles);
+    const Vector bearing{std::cos(angle), std::sin(angle)};
+    EXPECT_NEAR(RangeImageIntersector::atan2_approx(bearing.y(), bearing.x()),
+                std::atan2(bearing.y(), bearing.x()),
+                RangeImageIntersector::kWorstCaseAtan2ApproxError);
+  }
+}
+
 TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   struct QueryAndExpectedResults {
     AABB<Point> W_aabb;
@@ -165,13 +178,6 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
 
     QueryAndExpectedResults(AABB<Point> W_aabb, const Transformation& T_W_C)
         : W_aabb(std::move(W_aabb)), T_W_C(T_W_C) {}
-
-    std::string getDescription() const {
-      std::stringstream ss;
-      ss << "For aabb " << W_aabb.toString() << " and query sensor pose "
-         << T_W_C;
-      return ss.str();
-    }
   };
 
   // Generate test set
@@ -230,6 +236,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   }
 
   // Run tests
+  int error_count = 0;
   for (const auto& test : tests) {
     RangeImageIntersector::MinMaxAnglePair reference_angle_pair;
     const AABB<Point>::Corners C_cell_corners =
@@ -244,39 +251,81 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
             RangeImage::bearingToAngle(C_cell_corners.col(corner_idx));
       }
       std::sort(angles.begin(), angles.end());
-      const bool angle_range_wraps_around = M_PIf32 < angles[3] - angles[0];
+      const FloatingPoint min_angle = angles[0];
+      const FloatingPoint max_angle = angles[3];
+      const bool angle_range_wraps_around = M_PIf32 < max_angle - min_angle;
       if (angle_range_wraps_around) {
-        reference_angle_pair.min_angle =
+        const FloatingPoint smallest_angle_above_zero =
             *std::upper_bound(angles.begin(), angles.end(), 0.f);
-        reference_angle_pair.max_angle =
+        const FloatingPoint greatest_angle_below_zero =
             *std::prev(std::upper_bound(angles.begin(), angles.end(), 0.f));
+        reference_angle_pair.min_angle = smallest_angle_above_zero;
+        reference_angle_pair.max_angle = greatest_angle_below_zero;
       } else {
-        reference_angle_pair.min_angle = angles[0];
-        reference_angle_pair.max_angle = angles[3];
+        reference_angle_pair.min_angle = min_angle;
+        reference_angle_pair.max_angle = max_angle;
       }
     }
     const RangeImageIntersector::MinMaxAnglePair returned_angle_pair =
         RangeImageIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
                                                            test.W_aabb);
-    constexpr FloatingPoint kOneHundredthDegree = 0.000174533f;
-    EXPECT_NEAR(returned_angle_pair.min_angle, reference_angle_pair.min_angle,
-                kOneHundredthDegree)
-        << test.getDescription() << "\nC_cell_corners:\n"
-        << C_cell_corners << "\nangles_C_cell_corners:\n"
-        << std::accumulate(std::next(angles.begin()), angles.end(),
-                           std::to_string(angles[0]),
-                           [](auto str, const auto& el) -> std::string {
-                             return std::move(str) + ", " + std::to_string(el);
-                           });
-    EXPECT_NEAR(returned_angle_pair.max_angle, reference_angle_pair.max_angle,
-                kOneHundredthDegree)
-        << test.getDescription() << "\nC_cell_corners:\n"
-        << C_cell_corners << "\nangles_C_cell_corners:\n"
-        << std::accumulate(std::next(angles.begin()), angles.end(),
-                           std::to_string(angles[0]),
-                           [](auto str, const auto& el) -> std::string {
-                             return std::move(str) + ", " + std::to_string(el);
-                           });
+    constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
+    const bool angle_range_wraps_around =
+        M_PIf32 <
+        reference_angle_pair.max_angle - reference_angle_pair.min_angle;
+    bool check_failed = false;
+    if (angle_range_wraps_around) {
+      EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
+                                      reference_angle_pair.min_angle),
+                0.f)
+          << (check_failed = true);
+      EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
+                                      reference_angle_pair.min_angle),
+                kOneAndAHalfDegree);
+      EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
+                                      reference_angle_pair.max_angle),
+                0.f)
+          << (check_failed = true);
+      EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
+                                      reference_angle_pair.max_angle),
+                -kOneAndAHalfDegree)
+          << (check_failed = true);
+    } else {
+      EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
+                                      reference_angle_pair.min_angle),
+                0.f)
+          << (check_failed = true);
+      EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
+                                      reference_angle_pair.min_angle),
+                -kOneAndAHalfDegree)
+          << (check_failed = true);
+      EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
+                                      reference_angle_pair.max_angle),
+                0.f)
+          << (check_failed = true);
+      EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
+                                      reference_angle_pair.max_angle),
+                kOneAndAHalfDegree)
+          << (check_failed = true);
+    }
+    if (check_failed) {
+      std::cerr << "For\n-W_aabb: " << test.W_aabb.toString()
+                << "\n-T_W_C: " << test.T_W_C << "\nWith C_cell_corners:\n"
+                << C_cell_corners << "\nangles_C_cell_corners:\n"
+                << std::accumulate(std::next(angles.begin()), angles.end(),
+                                   std::to_string(angles[0]),
+                                   [](auto str, const auto& el) -> std::string {
+                                     return std::move(str) + ", " +
+                                            std::to_string(el);
+                                   })
+                << "\nand reference min/max angles: "
+                << reference_angle_pair.min_angle << ", "
+                << reference_angle_pair.max_angle
+                << "\nWe got min/max angles: " << returned_angle_pair.min_angle
+                << ", " << returned_angle_pair.max_angle
+                << "\nThis is error nr " << ++error_count << "\n"
+                << std::endl;
+    }
   }
 }
 
