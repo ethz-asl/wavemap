@@ -7,46 +7,48 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0
     hooks:
-      - name: Block commits to master
-        id: no-commit-to-branch
       - name: Trim trailing whitespaces
         id: trailing-whitespace
       - name: Add empty line to end of file
         id: end-of-file-fixer
       - name: Check that exectuables have shebangs
         id: check-executables-have-shebangs
-      - name: Check XML
+      - name: Check XML file syntax parseability
         id: check-xml
-      - name: Check JSON
+      - name: Check JSON file syntax parseability
         id: check-json
-      - name: Check YAML
+      - name: Check YAML file syntax parseability
         id: check-yaml
         args: [ --allow-multiple-documents ]
+      - name: Block commits to master
+        id: no-commit-to-branch
       - name: Check that no large files were added (>500kB)
         id: check-added-large-files
         args: [ "--maxkb=500" ]
+      - name: Checks that no unresolved merge conflict are committed
+        id: check-merge-conflict
 
   - repo: https://github.com/google/yapf
     rev: v0.31.0
     hooks:
-      - name: Run yapf
+      - name: Format python files with yapf
         id: yapf
 
   - repo: https://github.com/PyCQA/pylint
     rev: v2.12.2
     hooks:
-      - name: Run pylint
+      - name: Lint python files with pylint
         id: pylint
 
   - repo: https://github.com/bmorcos/pre-commit-hooks-cpp
     rev: 9a5aa38207bf557961110d6a4f7e3a9d352911f9
     hooks:
-      - name: Run clang-format
+      - name: Format C++ files with clang-format
         id: clang-format
         args: [ -style=file ]
-      - name: Run cpplint
+      - name: Lint C++ files with cpplint
         id: cpplint
-      - name: Run cppcheck
+      - name: Check C++ files with cppcheck
         id: cppcheck
         args: [ --std=c++17, --language=c++, --force, --quiet,
                 --library=googletest, --library=tools/cppcheck/gazebo,
@@ -57,57 +59,63 @@ repos:
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
-      - name: Run cmake-format
+      - name: Format CMake files with cmake-format
         id: cmake-format
         additional_dependencies: [ pyyaml>=5.1 ]
-      - name: Run cmake-lint
+      - name: Lint CMake files with cmake-lint
         id: cmake-lint
         additional_dependencies: [ pyyaml>=5.1 ]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.8.0.3
     hooks:
-      - name: Run shellcheck
+      - name: Check shell scripts with shellcheck
         id: shellcheck
 
   - repo: https://github.com/hadolint/hadolint
     rev: v2.8.0
     hooks:
-      - name: Check dockerfiles with hadolint
+      - name: Lint dockerfiles with hadolint
         id: hadolint
 
   - repo: https://github.com/sirosen/check-jsonschema
     rev: 0.10.1
     hooks:
-      - name: Check GitHub workflow files
+      - name: Check GitHub workflow file schema conformance
         id: check-github-workflows
-      - name: Check GitHub action files
+      - name: Check GitHub action files schema conformance
         id: check-github-actions
+
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.11.0
+    hooks:
+      - name: Lint markdown files with markdownlint
+        id: markdownlint
 
   - repo: local
     hooks:
-      - name: Check package manifests
+      - name: Check ROS package manifest schema conformance
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: (package.xml)$
         args: [ --schema, tools/xml_schemas/package_format2.xsd ]
-      - name: Check launch files
+      - name: Check ROS launch file schema conformance
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(launch)$
         args: [ --schema, tools/xml_schemas/roslaunch.xsd ]
-      - name: Check URDF files
+      - name: Check (ROS) URDF file schema conformance
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(urdf)$
         args: [ --schema, tools/xml_schemas/package_format2.xsd ]
-    # - name: Check SDF files
+    # - name: Check (ROS) SDF file schema conformance
     #   id: xmllint
     #   entry: xmllint --noout
     #   language: system
