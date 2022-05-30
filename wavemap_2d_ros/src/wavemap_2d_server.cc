@@ -3,8 +3,9 @@
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_2d/data_structure/volumetric/dense_grid.h>
+#include <wavemap_2d/data_structure/volumetric/differencing_quadtree.h>
 #include <wavemap_2d/data_structure/volumetric/hashed_blocks.h>
-#include <wavemap_2d/data_structure/volumetric/scalar_quadtree.h>
+#include <wavemap_2d/data_structure/volumetric/simple_quadtree.h>
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
 #include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h>
@@ -21,10 +22,15 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Setup integrator
   // TODO(victorr): Move this to a factory class
-  if (config_.data_structure_type == "quadtree") {
-    ROS_INFO("Using quadtree datastructure");
-    occupancy_map_ = std::make_shared<ScalarQuadtree<SaturatingOccupancyCell>>(
+  if (config_.data_structure_type == "simple_quadtree") {
+    ROS_INFO("Using simple quadtree datastructure");
+    occupancy_map_ = std::make_shared<SimpleQuadtree<SaturatingOccupancyCell>>(
         config_.map_resolution);
+  } else if (config_.data_structure_type == "differencing_quadtree") {
+    ROS_INFO("Using differencing quadtree datastructure");
+    occupancy_map_ =
+        std::make_shared<DifferencingQuadtree<SaturatingOccupancyCell>>(
+            config_.map_resolution);
   } else if (config_.data_structure_type == "hashed_blocks") {
     ROS_INFO("Using hashed blocks datastructure");
     occupancy_map_ = std::make_shared<HashedBlocks<SaturatingOccupancyCell>>(
@@ -124,10 +130,8 @@ void Wavemap2DServer::processPointcloudQueue() {
                     << total_pointcloud_integration_time << "s.");
 
     if (config_.publish_performance_stats) {
-      occupancy_map_->prune();
       const size_t map_memory_usage = occupancy_map_->getMemoryUsage();
-      ROS_INFO_STREAM("Current map memory usage: " << map_memory_usage / 1e6
-                                                   << "MB.");
+      ROS_INFO_STREAM("Map memory usage: " << map_memory_usage / 1e6 << "MB.");
 
       wavemap_2d_msgs::PerformanceStats performance_stats_msg;
       performance_stats_msg.map_memory_usage = map_memory_usage;
@@ -146,6 +150,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
     ROS_ERROR("The occupancy map has not yet been created.");
     return false;
   }
+  occupancy_map_->prune();
 
   // TODO(victorr): Make it possible to load maps without knowing the resolution
   //                on beforehand (e.g. through a static method)
@@ -296,6 +301,7 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
 
 void Wavemap2DServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
+    occupancy_map_->prune();
     visualization_msgs::Marker occupancy_grid_marker = gridToMarker(
         *occupancy_map_, config_.world_frame, "occupancy_grid",
         [](FloatingPoint cell_log_odds) {

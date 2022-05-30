@@ -22,8 +22,9 @@ struct UnboundedScalarCell : ScalarCell {
   static constexpr bool isFullyBounded = false;
   static constexpr Specialized kSpecializedToBaseIntScalingFactor = 1.f;
 
+  static Specialized threshold(Specialized cell_value) { return cell_value; }
   static Specialized add(Specialized cell_value, Specialized update) {
-    return cell_value + update;
+    return threshold(cell_value + update);
   }
 };
 
@@ -39,8 +40,11 @@ struct LowerBoundedScalarCell : ScalarCell {
   static constexpr bool isFullyBounded = false;
   static constexpr Specialized kSpecializedToBaseIntScalingFactor = 1.f;
 
+  static Specialized threshold(Specialized cell_value) {
+    return std::max(kLowerBound, cell_value);
+  }
   static Specialized add(Specialized cell_value, Specialized update) {
-    return std::max(kLowerBound, cell_value + update);
+    return threshold(cell_value + update);
   }
 };
 
@@ -56,8 +60,11 @@ struct UpperBoundedScalarCell : ScalarCell {
   static constexpr bool isFullyBounded = false;
   static constexpr Specialized kSpecializedToBaseIntScalingFactor = 1.f;
 
+  static Specialized threshold(Specialized cell_value) {
+    return std::min(cell_value, kUpperBound);
+  }
   static Specialized add(Specialized cell_value, Specialized update) {
-    return std::min(cell_value + update, kUpperBound);
+    return threshold(cell_value + update);
   }
 };
 
@@ -76,8 +83,11 @@ struct BoundedScalarCell : ScalarCell {
        static_cast<Specialized>(std::numeric_limits<BaseInt>::lowest())) /
       (kUpperBound - kLowerBound);
 
+  static Specialized threshold(Specialized cell_value) {
+    return std::clamp(cell_value, kLowerBound, kUpperBound);
+  }
   static Specialized add(Specialized cell_value, Specialized update) {
-    return std::clamp(cell_value + update, kLowerBound, kUpperBound);
+    return threshold(cell_value + update);
   }
 };
 }  // namespace wavemap_2d

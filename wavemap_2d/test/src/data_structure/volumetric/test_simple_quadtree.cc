@@ -2,17 +2,17 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
-#include "wavemap_2d/data_structure/volumetric/scalar_quadtree.h"
+#include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/test/fixture_base.h"
 #include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap_2d {
 template <typename CellType>
-class ScalarQuadtreeTest : public FixtureBase {
+class SimpleQuadtreeTest : public FixtureBase {
  protected:
-  ScalarQuadtree<CellType> getRandomMap() {
-    ScalarQuadtree<CellType> random_map(getRandomResolution());
+  SimpleQuadtree<CellType> getRandomMap() {
+    SimpleQuadtree<CellType> random_map(getRandomResolution());
     const Index min_index = -getRandomIndex().cwiseAbs();
     const Index max_index = getRandomIndex().cwiseAbs();
     random_map.addToCellValue(min_index, 0.f);
@@ -28,23 +28,23 @@ class ScalarQuadtreeTest : public FixtureBase {
 
 using CellTypes =
     ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
-TYPED_TEST_SUITE(ScalarQuadtreeTest, CellTypes, );
+TYPED_TEST_SUITE(SimpleQuadtreeTest, CellTypes, );
 
 // NOTE: Insertion tests are performed as part of the test suite for the
 //       VolumetricDataStructure interface.
 // TODO(victorr): Test whether out of bounds accesses/insertions are handled
 //                correctly (e.g. throw error or do nothing and print error).
 
-TYPED_TEST(ScalarQuadtreeTest, Initialization) {
+TYPED_TEST(SimpleQuadtreeTest, Initialization) {
   const FloatingPoint random_resolution = TestFixture::getRandomResolution();
-  ScalarQuadtree<TypeParam> map(random_resolution);
+  SimpleQuadtree<TypeParam> map(random_resolution);
   EXPECT_EQ(map.getResolution(), random_resolution);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);
 }
 
-TYPED_TEST(ScalarQuadtreeTest, IndexConversions) {
-  ScalarQuadtree<TypeParam> map(TestFixture::getRandomResolution());
+TYPED_TEST(SimpleQuadtreeTest, IndexConversions) {
+  SimpleQuadtree<TypeParam> map(TestFixture::getRandomResolution());
   std::vector<Index> random_indices = TestFixture::getRandomIndexVector(
       map.getMinPossibleIndex(), map.getMaxPossibleIndex());
   random_indices.template emplace_back(map.getMinPossibleIndex());
@@ -54,8 +54,8 @@ TYPED_TEST(ScalarQuadtreeTest, IndexConversions) {
   }
 }
 
-TYPED_TEST(ScalarQuadtreeTest, Resizing) {
-  ScalarQuadtree<TypeParam> map(TestFixture::getRandomResolution());
+TYPED_TEST(SimpleQuadtreeTest, Resizing) {
+  SimpleQuadtree<TypeParam> map(TestFixture::getRandomResolution());
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), 0u);
 
@@ -101,10 +101,10 @@ TYPED_TEST(ScalarQuadtreeTest, Resizing) {
   EXPECT_EQ(map.size(), 0u);
 }
 
-TYPED_TEST(ScalarQuadtreeTest, Pruning) {
+TYPED_TEST(SimpleQuadtreeTest, Pruning) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    ScalarQuadtree<TypeParam> map(TestFixture::getRandomResolution());
+    SimpleQuadtree<TypeParam> map(TestFixture::getRandomResolution());
     const std::vector<Index> random_indices = TestFixture::getRandomIndexVector(
         map.getMinPossibleIndex(), map.getMaxPossibleIndex());
 

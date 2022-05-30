@@ -3,8 +3,9 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
+#include "wavemap_2d/data_structure/volumetric/differencing_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/hashed_blocks.h"
-#include "wavemap_2d/data_structure/volumetric/scalar_quadtree.h"
+#include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/test/fixture_base.h"
 
@@ -15,8 +16,10 @@ using VolumetricDataStructureTest = FixtureBase;
 using VolumetricDataStructureTypes = ::testing::Types<
     DenseGrid<UnboundedOccupancyCell>, DenseGrid<SaturatingOccupancyCell>,
     HashedBlocks<UnboundedOccupancyCell>, HashedBlocks<SaturatingOccupancyCell>,
-    ScalarQuadtree<UnboundedOccupancyCell>,
-    ScalarQuadtree<SaturatingOccupancyCell>>;
+    SimpleQuadtree<UnboundedOccupancyCell>,
+    SimpleQuadtree<SaturatingOccupancyCell>,
+    DifferencingQuadtree<UnboundedOccupancyCell>,
+    DifferencingQuadtree<SaturatingOccupancyCell>>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 // TODO(victorr): Test remaining interfaces of VolumetricDataStructure
@@ -34,12 +37,12 @@ TYPED_TEST(VolumetricDataStructureTest, Insertion) {
       for (const FloatingPoint random_update :
            TestFixture::getRandomUpdateVector()) {
         map_base_ptr->addToCellValue(random_index, random_update);
-        expected_value = std::max(TypeParam::CellType::kLowerBound,
-                                  std::min(expected_value + random_update,
-                                           TypeParam::CellType::kUpperBound));
+        map_base_ptr->prune();
+        expected_value =
+            TypeParam::CellType::add(expected_value, random_update);
       }
       EXPECT_NEAR(map_base_ptr->getCellValue(random_index), expected_value,
-                  expected_value * 1e-6);
+                  kEpsilon + expected_value * kEpsilon);
     }
   }
 }

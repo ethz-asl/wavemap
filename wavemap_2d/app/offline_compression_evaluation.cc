@@ -6,7 +6,7 @@
 
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
-#include "wavemap_2d/data_structure/volumetric/scalar_quadtree.h"
+#include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_9_7.h"
 #include "wavemap_2d/transform/dense/naive_haar.h"
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
   }
 
   // Evaluate compression in a quadtree
-  ScalarQuadtree<UnboundedOccupancyCell> quadtree(estimated_map_resolution);
+  SimpleQuadtree<UnboundedOccupancyCell> quadtree(estimated_map_resolution);
   for (const Index& index :
        Grid(estimated_map->getMinIndex(), estimated_map->getMaxIndex())) {
     quadtree.setCellValue(index, estimated_map->getCellValue(index));
@@ -161,7 +161,10 @@ int main(int argc, char** argv) {
   quadtree.prune();
   LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
             << " KB.";
-  quadtree.averageAndPrune();
+  for (auto& node :
+       quadtree.getIterator<TraversalOrder::kDepthFirstPostorder>()) {
+    AverageAndPruneChildren<UnboundedOccupancyCell::Specialized>(node);
+  }
   LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
             << " KB.";
   LOG(INFO) << "Size: " << quadtree.size();

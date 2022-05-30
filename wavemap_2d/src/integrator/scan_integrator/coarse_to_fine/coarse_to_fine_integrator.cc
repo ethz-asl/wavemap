@@ -1,7 +1,7 @@
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
 
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
-#include "wavemap_2d/data_structure/volumetric/scalar_quadtree.h"
+#include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d {
@@ -19,8 +19,8 @@ void CoarseToFineIntegrator::integratePointcloud(
   RangeImageIntersector range_image_intersector(range_image);
 
   // Get a pointer to the underlying specialized quadtree data structure
-  //  using QuadtreeType = ScalarQuadtree<UnboundedOccupancyCell>;
-  auto occupancy_map = dynamic_cast<VolumetricQuadtree*>(occupancy_map_.get());
+  auto occupancy_map =
+      dynamic_cast<VolumetricQuadtreeInterface*>(occupancy_map_.get());
   if (!occupancy_map) {
     LOG(FATAL) << "Coarse to fine integrator can only be used with "
                   "quadtree-based volumetric data structures.";

@@ -5,7 +5,8 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
-#include "wavemap_2d/data_structure/volumetric/scalar_quadtree.h"
+#include "wavemap_2d/data_structure/volumetric/differencing_quadtree.h"
+#include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/indexing/index_conversions.h"
 #include "wavemap_2d/indexing/index_hashes.h"
@@ -175,7 +176,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
     }
 
     VolumetricDataStructure::Ptr scan_occupancy_map =
-        std::make_shared<ScalarQuadtree<UnboundedOccupancyCell>>(resolution);
+        std::make_shared<SimpleQuadtree<UnboundedOccupancyCell>>(resolution);
     PointcloudIntegrator::Ptr scan_integrator =
         std::make_shared<CoarseToFineIntegrator>(scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);

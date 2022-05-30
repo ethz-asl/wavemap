@@ -1,61 +1,31 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_SCALAR_QUADTREE_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_SCALAR_QUADTREE_H_
+#ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_DIFFERENCING_QUADTREE_H_
+#define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_DIFFERENCING_QUADTREE_H_
 
 #include <string>
 #include <utility>
 
 #include "wavemap_2d/data_structure/generic/quadtree/quadtree.h"
-#include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
+#include "wavemap_2d/data_structure/volumetric/volumetric_quadtree_interface.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
-class VolumetricQuadtree : public VolumetricDataStructure {
- public:
-  template <typename... ConstructorArgs>
-  explicit VolumetricQuadtree(ConstructorArgs&&... args)
-      : VolumetricDataStructure(std::forward<ConstructorArgs>(args)...) {}
-  ~VolumetricQuadtree() override = default;
-
-  virtual Index getMinPossibleIndex() const = 0;
-  virtual Index getMaxPossibleIndex() const = 0;
-  virtual QuadtreeIndex::Element getMaxDepth() const = 0;
-  virtual FloatingPoint getRootNodeWidth() const = 0;
-
-  using VolumetricDataStructure::setCellValue;
-  virtual void setCellValue(const QuadtreeIndex& index,
-                            FloatingPoint new_value) = 0;
-  using VolumetricDataStructure::addToCellValue;
-  virtual void addToCellValue(const QuadtreeIndex& index,
-                              FloatingPoint update) = 0;
-
-  virtual FloatingPoint computeNodeWidthAtDepth(
-      QuadtreeIndex::Element depth) = 0;
-  virtual Vector computeNodeHalvedDiagonalAtDepth(
-      QuadtreeIndex::Element depth) = 0;
-};
-
 template <typename CellT>
-class ScalarQuadtree : public VolumetricQuadtree {
+class DifferencingQuadtree : public VolumetricQuadtreeInterface {
  public:
   using CellType = CellT;
   using NodeType = Node<typename CellT::Specialized>;
-  struct NodeIndexPtrPair {
-    QuadtreeIndex idx;
-    Node<SaturatingOccupancyCell::Specialized>* ptr = nullptr;
-  };
 
-  explicit ScalarQuadtree(FloatingPoint resolution)
-      : VolumetricQuadtree(resolution),
+  explicit DifferencingQuadtree(FloatingPoint resolution)
+      : VolumetricQuadtreeInterface(resolution),
         max_depth_(14),
         root_node_width_(std::exp2f(max_depth_) * resolution),
         root_node_offset_(Index::Constant(std::exp2(max_depth_ - 1))) {}
-  ~ScalarQuadtree() override = default;
+  ~DifferencingQuadtree() override = default;
 
   bool empty() const override { return quadtree_.empty(); }
   size_t size() const override { return quadtree_.size(); }
-  void prune() override { return quadtree_.prune(); }
+  void prune() override;
   void clear() override { return quadtree_.clear(); }
-  void averageAndPrune();
 
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
@@ -63,9 +33,6 @@ class ScalarQuadtree : public VolumetricQuadtree {
   Index getMaxPossibleIndex() const override;
   QuadtreeIndex::Element getMaxDepth() const override { return max_depth_; }
   FloatingPoint getRootNodeWidth() const override { return root_node_width_; }
-  NodeIndexPtrPair getRootNodeIndexPtrPair() {
-    return {QuadtreeIndex{}, &quadtree_.getRootNode()};
-  }
 
   bool hasCell(const Index& index) const override;
   QuadtreeIndex::Element getDepthAtIndex(const Index& index);
@@ -120,6 +87,6 @@ class ScalarQuadtree : public VolumetricQuadtree {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/data_structure/volumetric/impl/scalar_quadtree_inl.h"
+#include "wavemap_2d/data_structure/volumetric/impl/differencing_quadtree_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_SCALAR_QUADTREE_H_
+#endif  // WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_DIFFERENCING_QUADTREE_H_
