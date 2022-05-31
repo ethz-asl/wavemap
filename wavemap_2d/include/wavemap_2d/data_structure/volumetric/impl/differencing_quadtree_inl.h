@@ -40,11 +40,13 @@ void DifferencingQuadtree<CellT>::prune() {
               static_cast<CellDataSpecialized>(QuadtreeIndex::kNumChildren);
           const bool child_average_is_non_zero =
               kEpsilon < std::abs(child_average);
+
+          // Propagate the averages from the children to their parents
           if (child_average_is_non_zero) {
             node.data() += child_average;
           }
 
-          // Prune away leaves whose value is identical to the parent node
+          // Subtract the average from the children and prune away zero leaves
           bool has_non_empty_child = false;
           for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
                ++child_idx) {
