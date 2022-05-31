@@ -68,45 +68,14 @@ class SubtreeIterator
       Base::upcoming_nodes_.template emplace_front(root_node);
     }
   }
-
-  SubtreeIterator& operator++() {  // prefix ++
-    NodeT* node_ptr = getFrontPtr();
-    Base::upcoming_nodes_.pop_front();
-    enqueueNodeChildren(node_ptr);
-
-    return *this;
-  }
+  SubtreeIterator& operator++() override;
 
  private:
   using Base = SubtreeIteratorBase<NodeT, NodeT*,
                                    SubtreeIterator<NodeT, traversal_order>>;
 
   NodeT* getFrontPtr() override { return Base::upcoming_nodes_.front(); }
-
-  void enqueueNodeChildren(NodeT* parent_ptr) {
-    if (parent_ptr->hasChildrenArray()) {
-      switch (traversal_order) {
-        case TraversalOrder::kDepthFirstPreorder:
-          for (int child_idx = QuadtreeIndex::kNumChildren - 1; 0 <= child_idx;
-               --child_idx) {
-            NodeT* child_ptr = parent_ptr->getChild(child_idx);
-            if (child_ptr) {
-              Base::upcoming_nodes_.template emplace_front(child_ptr);
-            }
-          }
-          break;
-        case TraversalOrder::kBreadthFirst:
-          for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
-               ++child_idx) {
-            NodeT* child_ptr = parent_ptr->getChild(child_idx);
-            if (child_ptr) {
-              Base::upcoming_nodes_.template emplace_back(child_ptr);
-            }
-          }
-          break;
-      }
-    }
-  }
+  void enqueueNodeChildren(NodeT* parent_ptr);
 };
 
 // Use template specialization to define the post-order subtree iterator
@@ -130,30 +99,7 @@ class SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>
       enqueueNodeAndFirstChildren(root_node);
     }
   }
-
-  SubtreeIterator& operator++() {  // prefix ++
-    Base::upcoming_nodes_.pop_front();
-
-    // Stop here if all nodes have already been visited
-    if (Base::upcoming_nodes_.empty()) {
-      return *this;
-    }
-
-    // Otherwise enqueue the next node and its first children
-    DepthFirstPostorderStackElement<NodeT>& node_and_state =
-        Base::upcoming_nodes_.front();
-    for (++node_and_state.last_expanded_child_idx;
-         node_and_state.last_expanded_child_idx < QuadtreeIndex::kNumChildren;
-         ++node_and_state.last_expanded_child_idx) {
-      NodeT* child_ptr = node_and_state.node_ptr->getChild(
-          node_and_state.last_expanded_child_idx);
-      if (child_ptr) {
-        enqueueNodeAndFirstChildren(child_ptr);
-        break;
-      }
-    }
-    return *this;
-  }
+  SubtreeIterator& operator++() override;
 
  private:
   using Base = SubtreeIteratorBase<
@@ -163,28 +109,7 @@ class SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>
   NodeT* getFrontPtr() override {
     return Base::upcoming_nodes_.front().node_ptr;
   }
-
-  void enqueueNodeAndFirstChildren(NodeT* parent_ptr) {
-    if (parent_ptr->hasChildrenArray()) {
-      // If the node has descendants, recursively enqueue all of its
-      // descendants that have the lowest index on their respective level
-      for (QuadtreeIndex::RelativeChild child_idx = 0;
-           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-        NodeT* child_ptr = parent_ptr->getChild(child_idx);
-        if (child_ptr) {
-          Base::upcoming_nodes_.template emplace_front(
-              DepthFirstPostorderStackElement<NodeT>{parent_ptr, child_idx});
-          enqueueNodeAndFirstChildren(child_ptr);
-          return;
-        }
-      }
-    } else {
-      // Otherwise, only enqueue the node itself
-      Base::upcoming_nodes_.template emplace_front(
-          DepthFirstPostorderStackElement<NodeT>{parent_ptr,
-                                                 QuadtreeIndex::kNumChildren});
-    }
-  }
+  void enqueueNodeAndFirstChildren(NodeT* parent_ptr);
 };
 
 template <typename NodeT, TraversalOrder traversal_order>
@@ -199,5 +124,7 @@ class Subtree {
   NodeT* const root_node_;
 };
 }  // namespace wavemap_2d
+
+#include "wavemap_2d/iterator/impl/subtree_iterator_inl.h"
 
 #endif  // WAVEMAP_2D_ITERATOR_SUBTREE_ITERATOR_H_
