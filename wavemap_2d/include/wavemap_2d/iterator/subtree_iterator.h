@@ -15,7 +15,7 @@ enum class TraversalOrder {
   kBreadthFirst
 };
 
-template <typename ValueT, typename DequeueElementT, typename DerivedT>
+template <typename ValueT, typename DerivedT>
 class SubtreeIteratorBase {
  public:
   using difference_type = std::ptrdiff_t;
@@ -24,15 +24,15 @@ class SubtreeIteratorBase {
   using reference = ValueT&;
   using iterator_category = std::forward_iterator_tag;
 
-  ValueT& operator*() { return *getFrontPtr(); }
-  const ValueT& operator*() const { return *getFrontPtr(); }
-  ValueT* operator->() { return getFrontPtr(); }
+  ValueT& operator*() { return *getFrontValuePtr(); }
+  const ValueT& operator*() const { return *getFrontValuePtr(); }
+  ValueT* operator->() { return getFrontValuePtr(); }
 
   friend bool operator==(const SubtreeIteratorBase& lhs,
                          const SubtreeIteratorBase& rhs) {
-    return (lhs.upcoming_nodes_.empty() && rhs.upcoming_nodes_.empty()) ||
-           (lhs.upcoming_nodes_.size() == rhs.upcoming_nodes_.size() &&
-            lhs.upcoming_nodes_.front() == rhs.upcoming_nodes_.front());
+    return (lhs.dequeSize() == rhs.dequeSize()) &&
+           (lhs.dequeSize() == 0 ||
+            *lhs.getFrontValuePtr() == *rhs.getFrontValuePtr());
   }
   friend bool operator!=(const SubtreeIteratorBase& lhs,
                          const SubtreeIteratorBase& rhs) {
@@ -46,53 +46,37 @@ class SubtreeIteratorBase {
     return retval;
   }
 
- protected:
-  std::deque<DequeueElementT> upcoming_nodes_;
-  virtual pointer getFrontPtr() = 0;
+ private:
+  virtual size_t dequeSize() const = 0;
+  virtual ValueT* getFrontValuePtr() const = 0;
 };
 
 template <typename NodeT, TraversalOrder traversal_order>
-class SubtreeIterator
-    : public SubtreeIteratorBase<NodeT, NodeT*,
-                                 SubtreeIterator<NodeT, traversal_order>> {
- public:
-  static_assert(
-      traversal_order != TraversalOrder::kDepthFirstPostorder,
-      "This version of the class should only be compiled when using "
-      "kDepthFirstPreorder or kBreadthFirst traversal. Depth first postorder "
-      "traversal is implemented separately through template specialization. If "
-      "this message appears, the specialization must have broken.");
+class SubtreeIterator;
 
+template <typename NodeT>
+class SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPreorder>
+    : public SubtreeIteratorBase<
+          NodeT, SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPreorder>> {
+ public:
   explicit SubtreeIterator(NodeT* root_node) {
     if (root_node) {
-      Base::upcoming_nodes_.template emplace_front(root_node);
+      upcoming_nodes_.template emplace_front(root_node);
     }
   }
   SubtreeIterator& operator++() override;
 
  private:
-  using Base = SubtreeIteratorBase<NodeT, NodeT*,
-                                   SubtreeIterator<NodeT, traversal_order>>;
-
-  NodeT* getFrontPtr() override { return Base::upcoming_nodes_.front(); }
+  std::deque<NodeT*> upcoming_nodes_;
+  size_t dequeSize() const override { return upcoming_nodes_.size(); }
+  NodeT* getFrontValuePtr() const override { return upcoming_nodes_.front(); }
   void enqueueNodeChildren(NodeT* parent_ptr);
 };
 
-// Use template specialization to define the post-order subtree iterator
-template <typename NodeT>
-struct DepthFirstPostorderStackElement {
-  NodeT* node_ptr;
-  QuadtreeIndex::RelativeChild last_expanded_child_idx;
-  bool operator==(const DepthFirstPostorderStackElement& rhs) const {
-    return node_ptr == rhs.node_ptr &&
-           last_expanded_child_idx == rhs.last_expanded_child_idx;
-  }
-};
 template <typename NodeT>
 class SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>
     : public SubtreeIteratorBase<
-          NodeT, DepthFirstPostorderStackElement<NodeT>,
-          SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>> {
+          NodeT, SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>> {
  public:
   explicit SubtreeIterator(NodeT* root_node) {
     if (root_node) {
@@ -102,14 +86,39 @@ class SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>
   SubtreeIterator& operator++() override;
 
  private:
-  using Base = SubtreeIteratorBase<
-      NodeT, DepthFirstPostorderStackElement<NodeT>,
-      SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>>;
-
-  NodeT* getFrontPtr() override {
-    return Base::upcoming_nodes_.front().node_ptr;
+  struct StackElement {
+    NodeT* node_ptr;
+    QuadtreeIndex::RelativeChild last_expanded_child_idx;
+    bool operator==(const StackElement& rhs) const {
+      return node_ptr == rhs.node_ptr &&
+             last_expanded_child_idx == rhs.last_expanded_child_idx;
+    }
+  };
+  std::deque<StackElement> upcoming_nodes_;
+  size_t dequeSize() const override { return upcoming_nodes_.size(); }
+  NodeT* getFrontValuePtr() const override {
+    return upcoming_nodes_.front().node_ptr;
   }
   void enqueueNodeAndFirstChildren(NodeT* parent_ptr);
+};
+
+template <typename NodeT>
+class SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>
+    : public SubtreeIteratorBase<
+          NodeT, SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>> {
+ public:
+  explicit SubtreeIterator(NodeT* root_node) {
+    if (root_node) {
+      upcoming_nodes_.template emplace_front(root_node);
+    }
+  }
+  SubtreeIterator& operator++() override;
+
+ private:
+  std::deque<NodeT*> upcoming_nodes_;
+  size_t dequeSize() const override { return upcoming_nodes_.size(); }
+  NodeT* getFrontValuePtr() const override { return upcoming_nodes_.front(); }
+  void enqueueNodeChildren(NodeT* parent_ptr);
 };
 
 template <typename NodeT, TraversalOrder traversal_order>

@@ -19,6 +19,10 @@ class Node {
     return data_ == NodeDataType{} && !hasAtLeastOneChild();
   }
 
+  friend bool operator==(const Node& lhs, const Node& rhs) {
+    return &rhs == &lhs;
+  }
+
   NodeDataType& data() { return data_; }
   const NodeDataType& data() const { return data_; }
 
