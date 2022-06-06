@@ -7,6 +7,8 @@
 #include <opencv2/core/eigen.hpp>
 
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
+#include "wavemap_2d/indexing/index_conversions.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/utils/image_utils.h"
 
 namespace wavemap_2d {
@@ -59,6 +61,33 @@ void DenseGrid<CellT>::addToCellValue(const Index& index,
     *cell_data = CellT::add(*cell_data, update);
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << index;
+  }
+}
+
+template <typename CellT>
+void DenseGrid<CellT>::forEachLeaf(
+    VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
+  // TODO(victorr): Consider parameterizing everything on height instead of
+  //                depth, s.t. non-hierarchical data structures can simply
+  //                always operate at depth 0.
+  //                Also consider renaming QuadtreeIndex to something like
+  //                Hierarchical2DIndex, since it can represent hierarchical
+  //                quadtrant/octant subvolumes regardless of the exact data
+  //                structure that's being indexed.
+  // TODO(victorr): Remove these hard-coded values and change the quadtree
+  //                classes to expose offset free indexes, instead of
+  //                compensating here.
+  constexpr QuadtreeIndex::Element kMaxDepth = 14;
+  const Index root_node_offset = Index::Constant(int_math::exp2(kMaxDepth - 1));
+
+  for (const Index& cell_index : Grid(getMinIndex(), getMaxIndex())) {
+    const CellDataSpecialized* cell_data = accessCellData(cell_index);
+    if (cell_data) {
+      const QuadtreeIndex hierarchical_cell_index =
+          convert::indexAndDepthToNodeIndex(cell_index + root_node_offset,
+                                            kMaxDepth, kMaxDepth);
+      visitor_fn(hierarchical_cell_index, *cell_data);
+    }
   }
 }
 

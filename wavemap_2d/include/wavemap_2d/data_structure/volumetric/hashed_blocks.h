@@ -35,6 +35,8 @@ class HashedBlocks : public VolumetricDataStructure {
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
 
+  void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const override;
+
   cv::Mat getImage(bool use_color) const override;
   bool save(const std::string& file_path_prefix,
             bool use_floating_precision) const override;

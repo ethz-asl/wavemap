@@ -44,6 +44,8 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
   void addToCellValue(const QuadtreeIndex& index,
                       FloatingPoint update) override;
 
+  void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const override;
+
   template <TraversalOrder traversal_order>
   auto getIterator() {
     return quadtree_.template getIterator<traversal_order>();

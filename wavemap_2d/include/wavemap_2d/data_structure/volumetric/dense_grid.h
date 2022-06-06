@@ -44,6 +44,9 @@ class DenseGrid : public VolumetricDataStructure {
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
+
+  void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const override;
+
   DataGridSpecialized& getData() { return data_; }
   const DataGridSpecialized& getData() const { return data_; }
 

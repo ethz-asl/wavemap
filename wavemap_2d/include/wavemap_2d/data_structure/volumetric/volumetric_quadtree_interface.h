@@ -26,6 +26,8 @@ class VolumetricQuadtreeInterface : public VolumetricDataStructure {
   virtual void addToCellValue(const QuadtreeIndex& index,
                               FloatingPoint update) = 0;
 
+  using VolumetricDataStructure::forEachLeaf;
+
   virtual FloatingPoint computeNodeWidthAtDepth(
       QuadtreeIndex::Element depth) = 0;
   virtual Vector computeNodeHalvedDiagonalAtDepth(

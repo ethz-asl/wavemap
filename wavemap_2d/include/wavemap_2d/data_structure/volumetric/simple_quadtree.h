@@ -19,7 +19,7 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
       : VolumetricQuadtreeInterface(resolution),
         max_depth_(14),
         root_node_width_(std::exp2f(max_depth_) * resolution),
-        root_node_offset_(Index::Constant(std::exp2(max_depth_ - 1))) {}
+        root_node_offset_(Index::Constant(int_math::exp2(max_depth_ - 1))) {}
   ~SimpleQuadtree() override = default;
 
   bool empty() const override { return quadtree_.empty(); }
@@ -44,12 +44,14 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
   void addToCellValue(const QuadtreeIndex& index,
                       FloatingPoint update) override;
 
+  void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const override;
+
   template <TraversalOrder traversal_order>
-  auto getIterator() {
+  auto getNodeIterator() {
     return quadtree_.template getIterator<traversal_order>();
   }
   template <TraversalOrder traversal_order>
-  auto getIterator() const {
+  auto getNodeIterator() const {
     return quadtree_.template getIterator<traversal_order>();
   }
 

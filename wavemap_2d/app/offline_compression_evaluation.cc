@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
             << " KB.";
   for (auto& node :
-       quadtree.getIterator<TraversalOrder::kDepthFirstPostorder>()) {
+       quadtree.getNodeIterator<TraversalOrder::kDepthFirstPostorder>()) {
     AverageAndPruneChildren<UnboundedOccupancyCell::Specialized>(node);
   }
   LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000

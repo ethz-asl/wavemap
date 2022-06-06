@@ -4,50 +4,91 @@
 #include <string>
 
 #include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_state.h>
-#include <wavemap_2d/iterator/grid_iterator.h>
 
 namespace wavemap_2d {
-template <typename Map>
-visualization_msgs::Marker Wavemap2DServer::gridToMarker(
+template <typename Map, typename ScalarToRGBAFunction>
+visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
     const Map& grid, const std::string& world_frame,
-    const std::string& marker_namespace,
-    const std::function<RGBAColor(FloatingPoint)>& color_map) {
+    const std::string& marker_namespace, ScalarToRGBAFunction color_map) {
+  // TODO(victorr): Parameterize on height and max_resolution instead of depth
+  //                and max_depth
   const FloatingPoint resolution = grid.getResolution();
+  constexpr QuadtreeIndex::Element kMaxDepth = 14;
+  const FloatingPoint root_node_width = resolution * int_math::exp2(kMaxDepth);
 
-  visualization_msgs::Marker grid_marker;
-  grid_marker.header.frame_id = world_frame;
-  grid_marker.header.stamp = ros::Time();
-  grid_marker.ns = marker_namespace;
-  grid_marker.id = 0;
-  grid_marker.type = visualization_msgs::Marker::POINTS;
-  grid_marker.action = visualization_msgs::Marker::MODIFY;
-  grid_marker.pose.orientation.w = 1.0;
-  grid_marker.scale.x = resolution;
-  grid_marker.scale.y = resolution;
-  grid_marker.scale.z = resolution;
-  grid_marker.color.a = 1.0;
+  // Default marker
+  visualization_msgs::Marker default_marker;
+  default_marker.header.frame_id = world_frame;
+  default_marker.header.stamp = ros::Time();
+  default_marker.ns = marker_namespace;
+  default_marker.id = 0;
+  default_marker.type = visualization_msgs::Marker::CUBE_LIST;
+  default_marker.pose.orientation.w = 1.0;
+  default_marker.pose.position.x = 0.0;
+  default_marker.pose.position.y = 0.0;
+  default_marker.pose.position.z = 0.0;
+  default_marker.scale.z = 0.1;
 
-  for (const Index& index : Grid(grid.getMinIndex(), grid.getMaxIndex())) {
-    const FloatingPoint cell_value = grid.getCellValue(index);
-    if (OccupancyState::isObserved(cell_value)) {
-      const Point cell_position = index.cast<FloatingPoint>() * resolution;
-      geometry_msgs::Point position_msg;
-      position_msg.x = cell_position.x();
-      position_msg.y = cell_position.y();
-      position_msg.z = 0.0;
-      grid_marker.points.emplace_back(position_msg);
+  // Delete the previous visuals
+  visualization_msgs::MarkerArray marker_array;
+  default_marker.action = visualization_msgs::Marker::DELETEALL;
+  marker_array.markers.emplace_back(default_marker);
 
-      const RGBAColor color = color_map(cell_value);
-      std_msgs::ColorRGBA color_msg;
-      color_msg.a = color.a;
-      color_msg.r = color.r;
-      color_msg.g = color.g;
-      color_msg.b = color.b;
-      grid_marker.colors.emplace_back(color_msg);
-    }
+  // Add a marker for each scale
+  default_marker.action = visualization_msgs::Marker::MODIFY;
+  for (QuadtreeIndex::Element depth = 0; depth <= kMaxDepth; ++depth) {
+    ++default_marker.id;
+    const FloatingPoint cell_width =
+        resolution *
+        static_cast<FloatingPoint>(int_math::exp2(kMaxDepth - depth));
+    default_marker.scale.x = cell_width;
+    default_marker.scale.y = cell_width;
+    marker_array.markers.emplace_back(default_marker);
   }
 
-  return grid_marker;
+  // Add a colored square for each leaf
+  grid.forEachLeaf([&marker_array, &color_map, root_node_width](
+                       const QuadtreeIndex& cell_index,
+                       FloatingPoint cell_value) {
+    // Skip fully transparent cells
+    // NOTE: This provides a flexible way to prescribe which cells are shown
+    //       and hidden through the color_map. For example, unobserved
+    //       occupancy cells can be skipped by mapping them to color.a = 0.
+    const RGBAColor color = color_map(cell_value);
+    if (std::abs(color.a) < kEpsilon) {
+      return;
+    }
+
+    // Determine the cell's position
+    const Point cell_center =
+        convert::nodeIndexToCenterPoint(cell_index, root_node_width);
+
+    // Create the colored square
+    geometry_msgs::Point position_msg;
+    std_msgs::ColorRGBA color_msg;
+    position_msg.x = cell_center.x();
+    position_msg.y = cell_center.y();
+    color_msg.a = color.a;
+    color_msg.r = color.r;
+    color_msg.g = color.g;
+    color_msg.b = color.b;
+
+    // Add the colored square at the right scale
+    // NOTE: We add 1 to the depth since the cube list markers for each scale
+    //       start at 1 (marker 0 only clears the previous visuals).
+    const size_t scale_marker_idx = cell_index.depth + 1;
+    marker_array.markers[scale_marker_idx].points.emplace_back(position_msg);
+    marker_array.markers[scale_marker_idx].colors.emplace_back(color_msg);
+  });
+
+  // Prune away empty scale markers
+  marker_array.markers.erase(
+      std::remove_if(std::next(marker_array.markers.begin()),
+                     marker_array.markers.end(),
+                     [](const auto& marker) { return marker.points.empty(); }),
+      marker_array.markers.end());
+
+  return marker_array;
 }
 }  // namespace wavemap_2d
 

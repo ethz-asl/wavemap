@@ -257,6 +257,49 @@ void DifferencingQuadtree<CellT>::addToCellValue(
 }
 
 template <typename CellT>
+void DifferencingQuadtree<CellT>::forEachLeaf(
+    VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
+  struct StackElement {
+    const QuadtreeIndex node_index;
+    const Node<CellDataSpecialized>& node;
+    const FloatingPoint parent_value = 0.f;
+  };
+  std::stack<StackElement> stack;
+
+  stack.template emplace(
+      StackElement{QuadtreeIndex{}, quadtree_.getRootNode(), 0.f});
+  while (!stack.empty()) {
+    const QuadtreeIndex node_index = stack.top().node_index;
+    const Node<CellDataSpecialized>& node = stack.top().node;
+    const FloatingPoint node_value = stack.top().parent_value + node.data();
+    stack.pop();
+
+    if (node.hasChildrenArray()) {
+      for (QuadtreeIndex::RelativeChild child_idx = 0;
+           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
+        const QuadtreeIndex child_node_index =
+            node_index.computeChildIndex(child_idx);
+        if (node.hasChild(child_idx)) {
+          const Node<CellDataSpecialized>& child_node =
+              *node.getChild(child_idx);
+          stack.template emplace(
+              StackElement{child_node_index, child_node, node_value});
+        } else {
+          // Hallucinate the missing leaves
+          // NOTE: This is necessary since the inner nodes in the data structure
+          //       can overlap with each other and with leaves, but we want the
+          //       visuals to be non-overlapping while still covering all
+          //       observed space.
+          visitor_fn(child_node_index, node_value);
+        }
+      }
+    } else {
+      visitor_fn(node_index, node_value);
+    }
+  }
+}
+
+template <typename CellT>
 cv::Mat DifferencingQuadtree<CellT>::getImage(bool /*use_color*/) const {
   // TODO(victorr): Implement this
   return {};

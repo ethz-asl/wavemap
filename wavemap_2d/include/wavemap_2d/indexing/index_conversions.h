@@ -61,6 +61,7 @@ inline QuadtreeIndex pointToNodeIndex(const Point& point,
   return {depth, position_index};
 }
 
+// TODO(victorr): Parameterize on height and max_resolution instead
 inline Point nodeIndexToCenterPoint(const QuadtreeIndex& node_index,
                                     FloatingPoint root_node_width) {
   const FloatingPoint half_root_width = 0.5f * root_node_width;

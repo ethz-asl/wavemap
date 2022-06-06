@@ -234,6 +234,33 @@ void SimpleQuadtree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
 }
 
 template <typename CellT>
+void SimpleQuadtree<CellT>::forEachLeaf(
+    VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
+  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>&>> stack;
+  stack.template emplace(QuadtreeIndex{}, quadtree_.getRootNode());
+  while (!stack.empty()) {
+    const QuadtreeIndex node_index = stack.top().first;
+    const Node<CellDataSpecialized>& node = stack.top().second;
+    stack.pop();
+
+    if (node.hasChildrenArray()) {
+      for (QuadtreeIndex::RelativeChild child_idx = 0;
+           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
+        if (node.hasChild(child_idx)) {
+          const QuadtreeIndex child_node_index =
+              node_index.computeChildIndex(child_idx);
+          const Node<CellDataSpecialized>& child_node =
+              *node.getChild(child_idx);
+          stack.template emplace(child_node_index, child_node);
+        }
+      }
+    } else {
+      visitor_fn(node_index, node.data());
+    }
+  }
+}
+
+template <typename CellT>
 cv::Mat SimpleQuadtree<CellT>::getImage(bool /*use_color*/) const {
   // TODO(victorr): Implement this
   return {};

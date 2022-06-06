@@ -10,6 +10,7 @@
 
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/indexing/index.h"
+#include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
 class VolumetricDataStructure {
@@ -35,6 +36,10 @@ class VolumetricDataStructure {
   virtual FloatingPoint getCellValue(const Index& index) const = 0;
   virtual void setCellValue(const Index& index, FloatingPoint new_value) = 0;
   virtual void addToCellValue(const Index& index, FloatingPoint update) = 0;
+
+  using IndexedLeafVisitorFunction =
+      std::function<void(const QuadtreeIndex& index, FloatingPoint value)>;
+  virtual void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const = 0;
 
   void printSize() const { LOG(INFO) << "Size:\n" << size(); }
 
