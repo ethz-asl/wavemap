@@ -59,11 +59,11 @@ TEST_F(RangeImageTest, IndexConversions) {
     RangeImage range_image(min_angle, max_angle, num_beams);
 
     // Precompute commonly used values
-    const RangeImageIndex max_index = num_beams - 1;
+    const auto max_index = static_cast<RangeImageIndex>((num_beams - 1));
     const FloatingPoint mid_angle = min_angle + (max_angle - min_angle) / 2.f;
     const RangeImageIndex mid_index_floor = max_index / 2;
-    const RangeImageIndex mid_index_ceil =
-        mid_index_floor + (max_index % 2 != 0);
+    // If the max_index is uneven, the ceil of the middle index is rounded up
+    const RangeImageIndex mid_index_ceil = mid_index_floor + (max_index & 0b1);
 
     // Test angle <-> index
     {

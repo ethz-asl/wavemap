@@ -97,7 +97,7 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
 TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
-    const FloatingPoint resolution = getRandomResolution(0.02, 0.5);
+    const FloatingPoint resolution = getRandomResolution(0.02f, 0.5f);
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
     const int num_beams = getRandomIndexElement(100, 2048);
@@ -129,7 +129,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
     const Index max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
         scan_occupancy_map->getMaxIndex());
 
-    constexpr FloatingPoint kTolerableError = 5e-2;
+    constexpr FloatingPoint kTolerableError = 5e-2f;
     VolumetricDataStructure::Ptr error_grid;
     if (kShowVisuals) {
       error_grid =
@@ -157,7 +157,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
 TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
-    const FloatingPoint resolution = getRandomResolution(0.02, 0.5);
+    const FloatingPoint resolution = getRandomResolution(0.02f, 0.5f);
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
     const int num_beams = getRandomIndexElement(100, 2048);

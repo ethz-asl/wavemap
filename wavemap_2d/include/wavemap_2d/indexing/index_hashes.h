@@ -9,7 +9,7 @@ struct VoxbloxIndexHash {
   static constexpr size_t sl = 17191;
 
   size_t operator()(const Index& index) const {
-    return static_cast<size_t>(index.x() + index.y() * sl);
+    return index.x() + index.y() * sl;
   }
 };
 

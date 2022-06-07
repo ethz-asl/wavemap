@@ -31,8 +31,9 @@ struct CellSelector {
         return cell_state.isFree();
       case Categories::kOccupied:
         return cell_state.isOccupied();
+      default:
+        return false;
     }
-    return false;
   }
 };
 

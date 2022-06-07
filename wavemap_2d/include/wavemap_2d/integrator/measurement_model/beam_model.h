@@ -17,8 +17,8 @@ class BeamModel : public MeasurementModel {
   //       the ground truth surface thickness is 3 sigma, and the angular/range
   //       uncertainty extends the non-zero regions with another 3 sigma.
 
-  explicit BeamModel(FloatingPoint resolution)
-      : MeasurementModel(resolution), max_lateral_component_(0.f) {}
+  // Use the base class' constructor
+  using MeasurementModel::MeasurementModel;
 
   Index getBottomLeftUpdateIndex() const override;
   Index getTopRightUpdateIndex() const override;
@@ -31,7 +31,7 @@ class BeamModel : public MeasurementModel {
  private:
   Point C_end_point_;
   Point C_end_point_normalized_;
-  FloatingPoint max_lateral_component_;
+  FloatingPoint max_lateral_component_ = 0.f;
 
   void updateCachedVariablesDerived() override {
     C_end_point_ = W_end_point_ - W_start_point_;

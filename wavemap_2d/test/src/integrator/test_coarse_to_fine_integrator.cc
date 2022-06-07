@@ -56,20 +56,19 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     HierarchicalRangeImage hierarchical_range_image(range_image);
 
     // Test all the bounds from top to bottom
-    const auto max_depth = static_cast<BinaryTreeIndex::Element>(
-        hierarchical_range_image.getMaxDepth());
-    const auto pyramid_max_depth = static_cast<BinaryTreeIndex::Element>(
-        hierarchical_range_image.getNumBoundLevels());
+    const BinaryTreeIndex::Element max_depth =
+        hierarchical_range_image.getMaxDepth();
+    const BinaryTreeIndex::Element pyramid_max_depth =
+        hierarchical_range_image.getNumBoundLevels();
     for (BinaryTreeIndex index{0, BinaryTreeIndex::Position::Zero()};
          index.depth <= max_depth; ++index.depth) {
       const BinaryTreeIndex::Element num_elements_at_level = 1 << index.depth;
       for (index.position.x() = 0; index.position.x() < num_elements_at_level;
            ++index.position.x()) {
         // Avoid out-of-bounds range image access when we're at the leaf level
-        if (index.depth == max_depth) {
-          if (range_image.getNumBeams() <= index.position.x()) {
-            continue;
-          }
+        if (index.depth == max_depth &&
+            range_image.getNumBeams() <= index.position.x()) {
+          continue;
         }
 
         // Check if the different accessors return the same values

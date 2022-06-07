@@ -17,7 +17,6 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
 
   explicit DifferencingQuadtree(FloatingPoint resolution)
       : VolumetricQuadtreeInterface(resolution),
-        max_depth_(14),
         root_node_width_(std::exp2f(max_depth_) * resolution),
         root_node_offset_(Index::Constant(std::exp2(max_depth_ - 1))) {}
   ~DifferencingQuadtree() override = default;
@@ -80,7 +79,7 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
   using CellDataSpecialized = typename CellT::Specialized;
 
   Quadtree<CellDataSpecialized> quadtree_;
-  QuadtreeIndex::Element max_depth_;
+  QuadtreeIndex::Element max_depth_ = 14;
   FloatingPoint root_node_width_;
   Index root_node_offset_;
 

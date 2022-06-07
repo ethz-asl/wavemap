@@ -49,7 +49,6 @@ class Ray {
    public:
     explicit Iterator(const Ray& ray)
         : ray_(ray),
-          current_step_(0u),
           current_index_(ray_.start_index_),
           t_to_next_boundary_(ray_.t_to_next_boundary_init_) {}
     Iterator(const Ray& ray, bool end) : Iterator(ray) {
@@ -59,7 +58,7 @@ class Ray {
       }
     }
 
-    Index operator*() { return current_index_; }
+    Index operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
       int t_min_idx;
       t_to_next_boundary_.minCoeff(&t_min_idx);
@@ -85,7 +84,7 @@ class Ray {
 
    private:
     const Ray& ray_;
-    unsigned int current_step_;
+    unsigned int current_step_ = 0u;
     Index current_index_;
     Vector t_to_next_boundary_;
   };

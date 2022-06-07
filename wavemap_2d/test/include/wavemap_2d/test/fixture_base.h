@@ -23,8 +23,8 @@ class FixtureBase : public ::testing::Test {
         std::make_unique<RandomNumberGenerator>(kFixedRandomSeed);
   }
 
-  FloatingPoint getRandomResolution(FloatingPoint min_resolution = 1e-3,
-                                    FloatingPoint max_resolution = 1e0) const {
+  FloatingPoint getRandomResolution(FloatingPoint min_resolution = 1e-3f,
+                                    FloatingPoint max_resolution = 1e0f) const {
     return random_number_generator_->getRandomRealNumber(min_resolution,
                                                          max_resolution);
   }
@@ -56,8 +56,8 @@ class FixtureBase : public ::testing::Test {
     return {getRandomSignedDistance(), getRandomSignedDistance()};
   }
 
-  FloatingPoint getRandomAngle(FloatingPoint min_angle = -M_PI,
-                               FloatingPoint max_angle = M_PI) const {
+  FloatingPoint getRandomAngle(FloatingPoint min_angle = -M_PIf32,
+                               FloatingPoint max_angle = M_PIf32) const {
     return random_number_generator_->getRandomRealNumber(min_angle, max_angle);
   }
 
@@ -134,8 +134,8 @@ class FixtureBase : public ::testing::Test {
     return random_indices;
   }
 
-  FloatingPoint getRandomUpdate(FloatingPoint min_update = 1e-2,
-                                FloatingPoint max_update = 1e2) const {
+  FloatingPoint getRandomUpdate(FloatingPoint min_update = 1e-2f,
+                                FloatingPoint max_update = 1e2f) const {
     return random_number_generator_->getRandomRealNumber(min_update,
                                                          max_update);
   }

@@ -15,11 +15,7 @@ class MeasurementModel {
   static constexpr FloatingPoint kRangeMax = 20.f;
 
   explicit MeasurementModel(FloatingPoint resolution)
-      : resolution_(resolution),
-        resolution_inv_(1.f / resolution),
-        W_start_point_(Point::Zero()),
-        W_end_point_(Point::Zero()),
-        measured_distance_(0.f) {}
+      : resolution_(resolution), resolution_inv_(1.f / resolution) {}
   virtual ~MeasurementModel() = default;
 
   void setStartPoint(const Point& start_point) {
@@ -32,8 +28,8 @@ class MeasurementModel {
     measured_distance_ = (W_end_point_ - W_start_point_).norm();
     updateCachedVariablesDerived();
   }
-  const Point& getStartPoint() { return W_start_point_; }
-  const Point& getEndPoint() { return W_end_point_; }
+  const Point& getStartPoint() const { return W_start_point_; }
+  const Point& getEndPoint() const { return W_end_point_; }
   FloatingPoint getLength() const { return measured_distance_; }
 
   bool isMeasurementValid() const;
@@ -58,11 +54,15 @@ class MeasurementModel {
   const FloatingPoint resolution_;
   const FloatingPoint resolution_inv_;
 
-  Point W_start_point_;
-  Point W_end_point_;
-  FloatingPoint measured_distance_;
+  Point W_start_point_ = Point::Zero();
+  Point W_end_point_ = Point::Zero();
+  FloatingPoint measured_distance_ = 0.f;
 
-  virtual void updateCachedVariablesDerived() {}
+  virtual void updateCachedVariablesDerived() {
+    // NOTE: This method is called when the start and end points are updated. It
+    //       can optionally be used by derived classes to update their dependent
+    //       cached variables.
+  }
 };
 }  // namespace wavemap_2d
 

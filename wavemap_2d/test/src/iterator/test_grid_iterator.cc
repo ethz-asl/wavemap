@@ -15,8 +15,8 @@ TEST_F(GridIteratorTest, EquivalenceToNestedLoops) {
     const Index top_right_idx = getRandomIndex().cwiseAbs();
 
     Grid grid(bottom_left_idx, top_right_idx);
-    Grid::Iterator grid_it = grid.begin();
-    const Grid::Iterator grid_it_end = grid.end();
+    auto grid_it = grid.begin();
+    const auto grid_it_end = grid.end();
 
     size_t count = 0u;
     for (Index index = bottom_left_idx; index.x() <= top_right_idx.x();

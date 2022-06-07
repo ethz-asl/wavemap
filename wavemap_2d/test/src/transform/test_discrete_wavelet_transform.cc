@@ -9,7 +9,7 @@ namespace wavemap_2d {
 template <typename WaveletType>
 class DiscreteWaveletTransformTest : public FixtureWaveletTransform {
  protected:
-  static constexpr FloatingPoint kReconstructionErrorTolerance = 1e-5;
+  static constexpr FloatingPoint kReconstructionErrorTolerance = 1e-5f;
 };
 
 using WaveletTypes =
@@ -62,19 +62,17 @@ TYPED_TEST(DiscreteWaveletTransformTest, Transposes) {
 
     // Transposing before or after encoding should yield same matrix
     for (int pass_idx = 1; pass_idx <= size_idx; ++pass_idx) {
-      for (int pass_idx = 1; pass_idx <= size_idx; ++pass_idx) {
-        const Matrix original_matrix = Matrix::Random(rows, cols);
-        Matrix matrix = original_matrix;
-        Matrix matrix_transposed = original_matrix.transpose();
-        dwt.forward(matrix, pass_idx);
-        dwt.forward(matrix_transposed, pass_idx);
-        // TODO(victorr): Check why the energy is not accurately preserved.
-        // EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
-        // EXPECT_FLOAT_EQ(matrix_transposed.norm(), original_matrix.norm());
-        EXPECT_TRUE(
-            TestFixture::cwiseNear(matrix - matrix_transposed.transpose(), 0.f,
-                                   TestFixture::kReconstructionErrorTolerance));
-      }
+      const Matrix original_matrix = Matrix::Random(rows, cols);
+      Matrix matrix = original_matrix;
+      Matrix matrix_transposed = original_matrix.transpose();
+      dwt.forward(matrix, pass_idx);
+      dwt.forward(matrix_transposed, pass_idx);
+      // TODO(victorr): Check why the energy is not accurately preserved.
+      // EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
+      // EXPECT_FLOAT_EQ(matrix_transposed.norm(), original_matrix.norm());
+      EXPECT_TRUE(
+          TestFixture::cwiseNear(matrix - matrix_transposed.transpose(), 0.f,
+                                 TestFixture::kReconstructionErrorTolerance));
     }
   }
 }

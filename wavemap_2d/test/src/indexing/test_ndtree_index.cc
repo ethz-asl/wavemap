@@ -16,7 +16,7 @@ class NdtreeIndexTest : public FixtureBase {
   const typename NdtreeIndexT::Position kMaxNdtreePositionIndex =
       NdtreeIndexT::Position::Constant(int_math::exp2(kMaxDepth));
 
-  FloatingPoint getRandomRootNodeWidth() {
+  FloatingPoint getRandomRootNodeWidth() const {
     return random_number_generator_->getRandomRealNumber(0.1f, 1e3f);
   }
 };

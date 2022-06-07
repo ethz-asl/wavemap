@@ -22,7 +22,7 @@ class Grid {
         : grid_(grid),
           current_index_(end ? grid_.max_index_.x() : grid_.min_index_.x(),
                          grid_.min_index_.y()) {}
-    Index operator*() { return current_index_; }
+    Index operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
       if (++current_index_.y() == grid_.max_index_.y()) {
         current_index_.y() = grid_.min_index_.y();

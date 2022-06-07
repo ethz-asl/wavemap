@@ -9,7 +9,7 @@
 
 namespace wavemap_2d {
 using FloatingPoint = float;
-constexpr FloatingPoint kEpsilon = 1e-6;
+constexpr FloatingPoint kEpsilon = 1e-6f;
 constexpr int kMapDimension = 2;
 
 template <typename T>

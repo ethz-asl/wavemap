@@ -11,7 +11,7 @@ class SparseVector {
   static constexpr uint8_t kMaxSize = max_size;
   static constexpr T kDefaultValue = default_value;
 
-  SparseVector() : bitmask_(kZeros) {}
+  SparseVector() = default;
 
   size_t size() { return bitmask_.count(); }
   size_t capacity() { return compacted_vector_.capacity(); }
@@ -47,7 +47,7 @@ class SparseVector {
   // NOTE: Unfortunately std::bitset does not (yet) have a constexpr constructor
   //       that makes it possible to set more than the first 64 bits.
 
-  std::bitset<max_size> bitmask_;
+  std::bitset<max_size> bitmask_ = kZeros;
   std::vector<T> compacted_vector_;
 };
 

@@ -46,8 +46,7 @@ TEST_F(NaiveHaarTest, KnownPatterns) {
       }
 
       // Ramp patterns
-      const bool is_last_pass = (pass_idx == size_idx);
-      if (is_last_pass) {
+      if (const bool is_last_pass = (pass_idx == size_idx); is_last_pass) {
         for (bool transpose : {false, true}) {
           // Setup the matrix
           Matrix matrix = Matrix::Zero(rows, cols);

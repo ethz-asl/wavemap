@@ -12,8 +12,8 @@ class FixedLogOddsModel : public MeasurementModel {
   static constexpr FloatingPoint kLogOddsOccupied = 0.85f;
   static constexpr FloatingPoint kLogOddsFree = -0.4f;
 
-  explicit FixedLogOddsModel(FloatingPoint resolution)
-      : MeasurementModel(resolution) {}
+  // Use the base class' constructor
+  using MeasurementModel::MeasurementModel;
 
   Index getBottomLeftUpdateIndex() const override;
   Index getTopRightUpdateIndex() const override;

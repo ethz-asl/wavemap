@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
           LOG(WARNING) << "Could not parse pose... skipping.";
           continue;
         }
-        pose.getRotation().angle() -= M_PI;
+        pose.getRotation().angle() -= M_PIf32;
 
         // Integrate the pointcloud
         PosedPointcloud posed_pointcloud(pose, pointcloud);

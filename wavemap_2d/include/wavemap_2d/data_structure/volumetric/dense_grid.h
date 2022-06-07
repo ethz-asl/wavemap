@@ -22,14 +22,14 @@ class DenseGrid : public VolumetricDataStructure {
   using DataGridBaseFloat = DataGrid<CellDataBaseFloat>;
   using DataGridBaseInt = DataGrid<CellDataBaseInt>;
 
-  explicit DenseGrid(const FloatingPoint resolution)
-      : VolumetricDataStructure(resolution),
-        min_index_(Index::Zero()),
-        max_index_(Index::Zero()) {}
+  // Use the base class' constructor
+  using VolumetricDataStructure::VolumetricDataStructure;
 
   bool empty() const override { return !data_.size(); }
   size_t size() const override { return data_.size(); }
-  void prune() override {}
+  void prune() override {
+    // TODO(victorr): Implement this
+  }
   void clear() override;
 
   size_t getMemoryUsage() const override {
@@ -57,8 +57,8 @@ class DenseGrid : public VolumetricDataStructure {
             bool used_floating_precision) override;
 
  private:
-  Index min_index_;
-  Index max_index_;
+  Index min_index_ = Index::Zero();
+  Index max_index_ = Index::Zero();
   DataGridSpecialized data_;
 
   CellDataSpecialized* accessCellData(const Index& index,

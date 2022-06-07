@@ -50,10 +50,10 @@ TEST_F(PointcloudTest, DefaultInitialize) {
   Pointcloud<> default_pointcloud;
   EXPECT_TRUE(default_pointcloud.empty());
   EXPECT_EQ(default_pointcloud.size(), 0u);
-  for (auto it = default_pointcloud.begin(); it != default_pointcloud.end();
-       ++it) {
-    ADD_FAILURE();
-  }
+
+  // Ensure that the iterator range is also empty
+  std::for_each(default_pointcloud.begin(), default_pointcloud.end(),
+                [](const auto&) { ADD_FAILURE(); });
 }
 
 TEST_F(PointcloudTest, GetAndSetSize) {
@@ -151,7 +151,7 @@ class PosedPointcloudTest : public PointcloudTest {
                             pointcloud_to_test.getPointsGlobal());
   }
 
-  Transformation getRandomTransformation() {
+  Transformation getRandomTransformation() const {
     const Rotation random_rotation(getRandomAngle());
     const Vector random_translation(Point().setRandom());
     return {random_rotation, random_translation};
