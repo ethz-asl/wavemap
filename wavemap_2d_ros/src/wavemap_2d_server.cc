@@ -155,7 +155,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
 
   // TODO(victorr): Make it possible to load maps without knowing the resolution
   //                on beforehand (e.g. through a static method)
-  const FloatingPoint kGroundTruthMapResolution = 1e-2;
+  const FloatingPoint kGroundTruthMapResolution = 1e-2f;
   using GTDataStructureType = DenseGrid<UnboundedScalarCell>;
   GTDataStructureType ground_truth_map(kGroundTruthMapResolution);
   if (!ground_truth_map.load(file_path, true)) {

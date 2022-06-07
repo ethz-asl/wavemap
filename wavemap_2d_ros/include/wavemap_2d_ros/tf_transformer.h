@@ -12,14 +12,12 @@ class TfTransformer {
  public:
   explicit TfTransformer(FloatingPoint tf_buffer_cache_time = 10.f)
       : tf_buffer_(ros::Duration(tf_buffer_cache_time)),
-        tf_listener_(tf_buffer_),
-        transform_lookup_retry_period_(0.02),
-        transform_lookup_max_time_(0.25) {}
+        tf_listener_(tf_buffer_) {}
 
   // Check whether a transform is available
   bool isTransformAvailable(const std::string& to_frame_id,
                             const std::string& from_frame_id,
-                            const ros::Time& frame_timestamp);
+                            const ros::Time& frame_timestamp) const;
 
   // Waits for a transform to become available, while doing less aggressive
   // polling that ROS's standard tf2_ros::Buffer::canTransform(...)
@@ -39,14 +37,14 @@ class TfTransformer {
 
   // Transform lookup timers
   // Timeout between each update attempt
-  const ros::WallDuration transform_lookup_retry_period_;
+  const ros::WallDuration transform_lookup_retry_period_{0.02};
   // Maximum time to wait before giving up
-  const ros::WallDuration transform_lookup_max_time_;
+  const ros::WallDuration transform_lookup_max_time_{0.25};
 
   static std::string sanitizeFrameId(const std::string& string);
   bool waitForTransformImpl(const std::string& to_frame_id,
                             const std::string& from_frame_id,
-                            const ros::Time& frame_timestamp);
+                            const ros::Time& frame_timestamp) const;
   bool lookupTransformImpl(const std::string& to_frame_id,
                            const std::string& from_frame_id,
                            const ros::Time& frame_timestamp,

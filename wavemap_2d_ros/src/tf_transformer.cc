@@ -5,9 +5,9 @@
 #include <minkindr_conversions/kindr_msg.h>
 
 namespace wavemap_2d {
-bool TfTransformer::isTransformAvailable(const std::string& to_frame_id,
-                                         const std::string& from_frame_id,
-                                         const ros::Time& frame_timestamp) {
+bool TfTransformer::isTransformAvailable(
+    const std::string& to_frame_id, const std::string& from_frame_id,
+    const ros::Time& frame_timestamp) const {
   return tf_buffer_.canTransform(to_frame_id, from_frame_id, frame_timestamp);
 }
 
@@ -36,9 +36,9 @@ std::string TfTransformer::sanitizeFrameId(const std::string& string) {
   }
 }
 
-bool TfTransformer::waitForTransformImpl(const std::string& to_frame_id,
-                                         const std::string& from_frame_id,
-                                         const ros::Time& frame_timestamp) {
+bool TfTransformer::waitForTransformImpl(
+    const std::string& to_frame_id, const std::string& from_frame_id,
+    const ros::Time& frame_timestamp) const {
   // Total time spent waiting for the updated pose
   ros::WallDuration t_waited(0.0);
   while (t_waited < transform_lookup_max_time_) {

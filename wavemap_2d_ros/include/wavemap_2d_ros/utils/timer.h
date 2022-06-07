@@ -4,7 +4,7 @@
 namespace wavemap_2d {
 class CpuTimer {
  public:
-  CpuTimer() : running(false), cpu_time_total(0.0) {}  // NOLINT
+  CpuTimer() = default;
 
   void start() {
     pthread_getcpuclockid(pthread_self(), &thread_clock_id_start_);
@@ -41,8 +41,8 @@ class CpuTimer {
   double getTotal() const { return cpu_time_total; }
 
  private:
-  bool running;
-  double cpu_time_total;
+  bool running = false;
+  double cpu_time_total = 0.0;
 
   struct timespec cpu_time_start_;
   clockid_t thread_clock_id_start_;

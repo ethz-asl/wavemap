@@ -6,21 +6,22 @@
 
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
-template <typename M>
+template <typename MessageT>
 std::function<void(const rosbag::MessageInstance&)> callbackAdapter(
-    std::function<void(M)> function_ptr) {
+    std::function<void(MessageT)> function_ptr) {
   return [function_ptr](const rosbag::MessageInstance& msg) {
-    typedef typename ros::ParameterAdapter<M>::Message MessageType;
+    using MessageType = typename ros::ParameterAdapter<MessageT>::Message;
     auto msg_instance = msg.instantiate<MessageType>();
     function_ptr(*msg_instance);
   };
 }
 
-template <typename M, typename T>
+template <typename MessageT, typename CallbackObjectT>
 std::function<void(const rosbag::MessageInstance&)> callbackAdapter(
-    void (T::*function_ptr)(M), T* object_ptr) {
+    void (CallbackObjectT::*function_ptr)(MessageT),
+    CallbackObjectT* object_ptr) {
   return [function_ptr, object_ptr](const rosbag::MessageInstance& msg) {
-    typedef typename ros::ParameterAdapter<M>::Message MessageType;
+    using MessageType = typename ros::ParameterAdapter<MessageT>::Message;
     auto msg_instance = msg.instantiate<MessageType>();
     ((*object_ptr).*function_ptr)(*msg_instance);
   };
@@ -69,31 +70,32 @@ int main(int argc, char** argv) {
   }
 
   // Set the callbacks for the rosbag's topics of interest
-  std::map<std::string, std::function<void(const rosbag::MessageInstance&)>>
+  std::map<std::string, std::function<void(const rosbag::MessageInstance&)>,
+           std::less<>>
       callbacks;
   // Pointclouds
-  callbacks.emplace(
+  callbacks.try_emplace(
       pointcloud_topic,
       callbackAdapter(&wavemap_2d::Wavemap2DServer::pointcloudCallback,
                       &wavemap_server));
   // TFs
   ros::Publisher tf_pub = nh.advertise<tf::tfMessage>("/tf", 10);
-  callbacks.emplace("/tf", [&tf_pub](const rosbag::MessageInstance& msg) {
+  callbacks.try_emplace("/tf", [&tf_pub](const rosbag::MessageInstance& msg) {
     tf_pub.publish(msg);
   });
   ros::Publisher tf_static_pub = nh.advertise<tf::tfMessage>("/tf_static", 10);
-  callbacks.emplace("/tf_static",
-                    [&tf_static_pub](const rosbag::MessageInstance& msg) {
-                      tf_static_pub.publish(msg);
-                    });
+  callbacks.try_emplace("/tf_static",
+                        [&tf_static_pub](const rosbag::MessageInstance& msg) {
+                          tf_static_pub.publish(msg);
+                        });
   // Clock
   ros::Publisher clock_pub = nh.advertise<rosgraph_msgs::Clock>("/clock", 1);
   const bool bag_has_clock = bagHasTopic("/clock", &bag_view);
   if (bag_has_clock) {
-    callbacks.emplace("/clock",
-                      [&clock_pub](const rosbag::MessageInstance& msg) {
-                        clock_pub.publish(msg);
-                      });
+    callbacks.try_emplace("/clock",
+                          [&clock_pub](const rosbag::MessageInstance& msg) {
+                            clock_pub.publish(msg);
+                          });
   }
 
   // Playback the bag

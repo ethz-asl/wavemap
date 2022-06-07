@@ -79,13 +79,12 @@ class Wavemap2DServer {
   }
 
   void visualizeMap();
-  bool saveMap(const std::string& file_path) {
+  bool saveMap(const std::string& file_path) const {
     return !occupancy_map_->empty() &&
            occupancy_map_->save(file_path, kSaveWithFloatingPointPrecision);
   }
   bool loadMap(const std::string& file_path) {
-    return !occupancy_map_->empty() &&
-           occupancy_map_->save(file_path, kSaveWithFloatingPointPrecision);
+    return occupancy_map_->load(file_path, kSaveWithFloatingPointPrecision);
   }
   bool evaluateMap(const std::string& file_path);
 
