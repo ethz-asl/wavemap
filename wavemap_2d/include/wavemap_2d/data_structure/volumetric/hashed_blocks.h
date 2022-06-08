@@ -67,6 +67,8 @@ class HashedBlocks : public VolumetricDataStructure {
   BlockIndex computeBlockIndexFromIndex(const Index& index) const;
   CellIndex computeCellIndexFromBlockIndexAndIndex(
       const BlockIndex& block_index, const Index& index) const;
+  Index computeIndexFromBlockIndexAndCellIndex(
+      const BlockIndex& block_index, const CellIndex& cell_index) const;
 };
 }  // namespace wavemap_2d
 

@@ -76,21 +76,21 @@ void HashedBlocks<CellT>::addToCellValue(const Index& index,
 template <typename CellT>
 void HashedBlocks<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  const Index min_local_cell_index = Index{};
-  const Index max_local_cell_index = Index{kCellsPerSide, kCellsPerSide};
+  const Index min_local_cell_index = Index::Zero();
+  const Index max_local_cell_index = Index::Constant(kCellsPerSide - 1);
 
   for (const auto& block_kv : blocks_) {
     const BlockIndex& block_index = block_kv.first;
     const Block& block_data = block_kv.second;
 
-    for (const Index& local_cell_index :
+    for (const Index& cell_index :
          Grid(min_local_cell_index, max_local_cell_index)) {
       const FloatingPoint cell_data =
-          block_data(local_cell_index.x(), local_cell_index.y());
-      const Index cell_index =
-          computeCellIndexFromBlockIndexAndIndex(block_index, local_cell_index);
+          block_data(cell_index.x(), cell_index.y());
+      const Index index =
+          computeIndexFromBlockIndexAndCellIndex(block_index, cell_index);
       const QuadtreeIndex hierarchical_cell_index =
-          convert::indexAndHeightToNodeIndex(cell_index, 0);
+          convert::indexAndHeightToNodeIndex(index, 0);
       visitor_fn(hierarchical_cell_index, cell_data);
     }
   }
@@ -163,7 +163,7 @@ template <typename CellT>
 typename HashedBlocks<CellT>::CellIndex
 HashedBlocks<CellT>::computeCellIndexFromBlockIndexAndIndex(
     const HashedBlocks::BlockIndex& block_index, const Index& index) const {
-  Index origin = kCellsPerSide * block_index;
+  const Index origin = kCellsPerSide * block_index;
   Index cell_index = index - origin;
 
   DCHECK((0 <= cell_index.array() && cell_index.array() < kCellsPerSide).all())
@@ -172,6 +172,13 @@ HashedBlocks<CellT>::computeCellIndexFromBlockIndexAndIndex(
       << cell_index << " instead.";
 
   return cell_index;
+}
+
+template <typename CellT>
+Index HashedBlocks<CellT>::computeIndexFromBlockIndexAndCellIndex(
+    const HashedBlocks::BlockIndex& block_index,
+    const HashedBlocks::CellIndex& cell_index) const {
+  return kCellsPerSide * block_index + cell_index;
 }
 }  // namespace wavemap_2d
 
