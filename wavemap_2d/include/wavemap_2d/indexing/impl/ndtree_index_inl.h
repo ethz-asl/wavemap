@@ -7,46 +7,33 @@
 namespace wavemap_2d {
 template <int dim>
 NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex() const {
-  DCHECK_GT(depth, 0);
-
-  NdtreeIndex parent_index = *this;
-  for (int i = 0; i < dim; ++i) {
-    parent_index.position[i] >>= 1;
-  }
-  parent_index.depth = depth - 1;
-
-  return parent_index;
+  return {height + 1, int_math::div_exp2(position, 1)};
 }
 
 template <int dim>
 NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex(
-    Element parent_depth) const {
-  DCHECK_GE(parent_depth, 0);
-  DCHECK_LE(parent_depth, depth);
-  const Element depth_difference = depth - parent_depth;
-
-  NdtreeIndex parent_index = *this;
-  for (int i = 0; i < dim; ++i) {
-    parent_index.position[i] >>= depth_difference;
-  }
-  parent_index.depth = parent_depth;
-
-  return parent_index;
+    Element parent_height) const {
+  DCHECK_GE(parent_height, height);
+  const Element height_difference = parent_height - height;
+  return {parent_height, int_math::div_exp2(position, height_difference)};
 }
 
 template <int dim>
+template <typename NdtreeIndex<dim>::Element max_height>
 std::vector<NdtreeIndex<dim>> NdtreeIndex<dim>::computeParentIndices() const {
-  if (depth == 0) {
+  DCHECK_LE(height, max_height);
+  const int height_difference = max_height - height;
+  if (height_difference == 0) {
     return {};
   }
 
-  std::vector<NdtreeIndex> parent_indices(depth);
-  parent_indices[depth - 1] = computeParentIndex();
-  for (Element depth_idx = depth - 2; 0 <= depth_idx; --depth_idx) {
-    parent_indices[depth_idx] =
-        parent_indices[depth_idx + 1].computeParentIndex();
+  std::vector<NdtreeIndex> parent_indices(height_difference);
+  parent_indices[height_difference - 1] = computeParentIndex();
+  for (Element ancestor_idx = height_difference - 2; 0 <= ancestor_idx;
+       --ancestor_idx) {
+    parent_indices[ancestor_idx] =
+        parent_indices[ancestor_idx + 1].computeParentIndex();
   }
-
   return parent_indices;
 }
 
@@ -57,7 +44,7 @@ NdtreeIndex<dim> NdtreeIndex<dim>::computeChildIndex(
 
   // Compute index of first child
   child_index.position *= 2;
-  child_index.depth += 1;
+  child_index.height -= 1;
 
   // Add offset to current child
   for (int i = 0; i < dim; ++i) {
@@ -68,8 +55,9 @@ NdtreeIndex<dim> NdtreeIndex<dim>::computeChildIndex(
 }
 
 template <int dim>
-std::vector<NdtreeIndex<dim>> NdtreeIndex<dim>::computeChildIndices() const {
-  std::vector<NdtreeIndex> child_indices(kNumChildren);
+typename NdtreeIndex<dim>::ChildArray NdtreeIndex<dim>::computeChildIndices()
+    const {
+  ChildArray child_indices;
   for (RelativeChild relative_child_idx = 0; relative_child_idx < kNumChildren;
        ++relative_child_idx) {
     child_indices[relative_child_idx] = computeChildIndex(relative_child_idx);
@@ -88,8 +76,12 @@ NdtreeIndex<dim>::computeRelativeChildIndex() const {
 }
 
 template <int dim>
+template <typename NdtreeIndex<dim>::Element max_height>
 std::vector<typename NdtreeIndex<dim>::RelativeChild>
 NdtreeIndex<dim>::computeRelativeChildIndices() const {
+  DCHECK_LE(height, max_height);
+
+  const int depth = max_height - height;
   std::vector<RelativeChild> child_indices(depth);
   NdtreeIndex node_index = *this;
   for (Element depth_idx = depth - 1; 0 <= depth_idx; --depth_idx) {
@@ -102,8 +94,8 @@ NdtreeIndex<dim>::computeRelativeChildIndices() const {
 template <int dim>
 std::string NdtreeIndex<dim>::toString() const {
   std::stringstream ss;
-  ss << "[depth=";
-  ss << depth << ", position=[";
+  ss << "[height=";
+  ss << height << ", position=[";
   for (int i = 0; i < dim; ++i) {
     if (i) {
       ss << ", ";

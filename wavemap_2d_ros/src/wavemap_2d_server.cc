@@ -26,20 +26,20 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   if (config_.data_structure_type == "simple_quadtree") {
     ROS_INFO("Using simple quadtree datastructure");
     occupancy_map_ = std::make_shared<SimpleQuadtree<SaturatingOccupancyCell>>(
-        config_.map_resolution);
+        config_.min_cell_width);
   } else if (config_.data_structure_type == "differencing_quadtree") {
     ROS_INFO("Using differencing quadtree datastructure");
     occupancy_map_ =
         std::make_shared<DifferencingQuadtree<SaturatingOccupancyCell>>(
-            config_.map_resolution);
+            config_.min_cell_width);
   } else if (config_.data_structure_type == "hashed_blocks") {
     ROS_INFO("Using hashed blocks datastructure");
     occupancy_map_ = std::make_shared<HashedBlocks<SaturatingOccupancyCell>>(
-        config_.map_resolution);
+        config_.min_cell_width);
   } else {
     ROS_INFO("Using dense grid datastructure");
     occupancy_map_ = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
-        config_.map_resolution);
+        config_.min_cell_width);
   }
   if (config_.measurement_model_type == "scan_integrator") {
     ROS_INFO("Using scan integrator");
@@ -187,7 +187,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   evaluation_config.predicted.cell_selector = {
       utils::CellSelector::Categories::kAnyObserved};
 
-  GTDataStructureType error_grid(occupancy_map_->getResolution());
+  GTDataStructureType error_grid(occupancy_map_->getMinCellWidth());
   utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
       ground_truth_map, *occupancy_map_, evaluation_config, &error_grid);
 
@@ -326,8 +326,8 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
     ros::NodeHandle nh) {
   Config config;
 
-  nh.param(NAMEOF(config.map_resolution), config.map_resolution,
-           config.map_resolution);
+  nh.param(NAMEOF(config.min_cell_width), config.min_cell_width,
+           config.min_cell_width);
 
   nh.param(NAMEOF(config.world_frame), config.world_frame, config.world_frame);
 
@@ -372,10 +372,10 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
 bool Wavemap2DServer::Config::isValid(const bool verbose) {
   bool all_valid = true;
 
-  if (map_resolution <= 0.f) {
+  if (min_cell_width <= 0.f) {
     all_valid = false;
     LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(map_resolution) << " must be a positive float";
+        << "Param " << NAMEOF(min_cell_width) << " must be a positive float";
   }
 
   if (world_frame.empty()) {

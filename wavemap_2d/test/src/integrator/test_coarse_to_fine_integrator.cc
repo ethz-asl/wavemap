@@ -56,17 +56,16 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     HierarchicalRangeImage hierarchical_range_image(range_image);
 
     // Test all the bounds from top to bottom
-    const BinaryTreeIndex::Element max_depth =
-        hierarchical_range_image.getMaxDepth();
-    const BinaryTreeIndex::Element pyramid_max_depth =
-        hierarchical_range_image.getNumBoundLevels();
+    const BinaryTreeIndex::Element max_height =
+        hierarchical_range_image.getMaxHeight();
     for (BinaryTreeIndex index{0, BinaryTreeIndex::Position::Zero()};
-         index.depth <= max_depth; ++index.depth) {
-      const BinaryTreeIndex::Element num_elements_at_level = 1 << index.depth;
+         index.height <= max_height; ++index.height) {
+      const BinaryTreeIndex::Element num_elements_at_level =
+          int_math::exp2(max_height - index.height);
       for (index.position.x() = 0; index.position.x() < num_elements_at_level;
            ++index.position.x()) {
         // Avoid out-of-bounds range image access when we're at the leaf level
-        if (index.depth == max_depth &&
+        if (index.height == 0 &&
             range_image.getNumBeams() <= index.position.x()) {
           continue;
         }
@@ -80,13 +79,13 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
                   hierarchical_range_image.getUpperBound(index));
 
         // Check if the values returned by the accessors are correct
-        if (index.depth == max_depth) {
+        if (index.height == 0) {
           // At the leaf level the bounds should match range image itself
           EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
                           range_image[index.position.x()]);
           EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
                           range_image[index.position.x()]);
-        } else if (index.depth == pyramid_max_depth) {
+        } else if (index.height == 1) {
           // At the first pyramid level, the bounds should correspond to min/max
           // pooling the range image with a downsampling factor of 2
           const BinaryTreeIndex::Element first_child_idx =
@@ -211,7 +210,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
     // translations) with identity and random sensor poses
     for (const auto& aabb : aabbs) {
       for (int i = 0; i < 1000; ++i) {
-        const FloatingPoint random_scale = 1.f / getRandomResolution();
+        const FloatingPoint random_scale = 1.f / getRandomMinCellWidth();
         for (const Vector& t_random :
              {getRandomTranslation(), Vector{getRandomSignedDistance(), 0.f},
               Vector{0.f, getRandomSignedDistance()}}) {
@@ -240,7 +239,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
     RangeImageIntersector::MinMaxAnglePair reference_angle_pair;
     const AABB<Point>::Corners C_cell_corners =
         test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
-    std::array<FloatingPoint, 4> angles{};
+    std::array<FloatingPoint, AABB<Point>::kNumCorners> angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
       reference_angle_pair.min_angle = -M_PIf32;
       reference_angle_pair.max_angle = M_PIf32;
@@ -331,7 +330,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
 TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
-    const FloatingPoint resolution = getRandomResolution();
+    const FloatingPoint min_cell_width = getRandomMinCellWidth();
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
     const int num_beams = getRandomIndexElement(100, 2048);
@@ -345,28 +344,25 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
         random_pointcloud, kMinAngle, kMaxAngle, num_beams);
     RangeImageIntersector range_image_intersector(range_image);
 
-    const FloatingPoint resolution_inv = 1.f / resolution;
-    constexpr QuadtreeIndex::Element kMaxDepth = 10;
+    const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
+    constexpr QuadtreeIndex::Element kMaxHeight = 10;
     const Index min_index = convert::pointToCeilIndex(
         random_pointcloud.getOrigin() - Vector::Constant(kMaxDistance),
-        resolution_inv);
+        min_cell_width_inv);
     const Index max_index = convert::pointToCeilIndex(
         random_pointcloud.getOrigin() + Vector::Constant(kMaxDistance),
-        resolution_inv);
+        min_cell_width_inv);
     for (const Index& index :
          getRandomIndexVector(min_index, max_index, 50, 100)) {
-      const QuadtreeIndex::Element depth =
-          getRandomNdtreeIndexDepth(kMaxDepth - 2, kMaxDepth);
+      const QuadtreeIndex::Element height =
+          getRandomNdtreeIndexHeight(2, kMaxHeight);
       const QuadtreeIndex query_index =
-          convert::indexAndDepthToNodeIndex(index, depth, kMaxDepth);
-      const QuadtreeIndex::Element depth_diff = kMaxDepth - query_index.depth;
-      const Index min_reference_index =
-          int_math::exp2(depth_diff) * query_index.position;
+          convert::indexAndHeightToNodeIndex(index, height);
+      const Index min_reference_index = convert::nodeIndexToIndex(query_index);
       const QuadtreeIndex::Element max_child_offset =
-          int_math::exp2(depth_diff) - 1;
-      const Index max_reference_index{
-          min_reference_index.x() + max_child_offset,
-          min_reference_index.y() + max_child_offset};
+          int_math::exp2(height) - 1;
+      const Index max_reference_index =
+          min_reference_index + Index::Constant(max_child_offset);
       bool has_free = false;
       bool has_occupied = false;
       bool has_unknown = false;
@@ -374,7 +370,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
       for (const Index& reference_index :
            Grid(min_reference_index, max_reference_index)) {
         const Point W_cell_center =
-            convert::indexToCenterPoint(reference_index, resolution);
+            convert::indexToCenterPoint(reference_index, min_cell_width);
         const Point C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
         if (BeamModel::kRangeMax < d_C_cell) {
@@ -415,8 +411,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
       }
 
       const FloatingPoint node_width =
-          resolution *
-          std::exp2f(static_cast<FloatingPoint>(kMaxDepth - query_index.depth));
+          convert::heightToCellWidth(min_cell_width, query_index.height);
       const Point W_node_center =
           convert::indexToCenterPoint(query_index.position, node_width);
 

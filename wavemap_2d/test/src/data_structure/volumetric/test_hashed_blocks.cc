@@ -18,9 +18,10 @@ TYPED_TEST_SUITE(DenseGridTest, CellTypes, );
 //       VolumetricDataStructure interface.
 
 TYPED_TEST(DenseGridTest, Initialization) {
-  const FloatingPoint random_resolution = TestFixture::getRandomResolution();
-  HashedBlocks<TypeParam> map(random_resolution);
-  EXPECT_EQ(map.getResolution(), random_resolution);
+  const FloatingPoint random_min_cell_width =
+      TestFixture::getRandomMinCellWidth();
+  HashedBlocks<TypeParam> map(random_min_cell_width);
+  EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);
   EXPECT_EQ(map.getMinIndex(), Index::Zero());

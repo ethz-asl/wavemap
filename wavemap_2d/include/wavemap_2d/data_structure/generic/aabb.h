@@ -11,12 +11,13 @@
 namespace wavemap_2d {
 template <typename T>
 struct AABB {
-  static constexpr int kNumCorners = int_math::exp2(T::RowsAtCompileTime);
-  using Corners =
-      Eigen::Matrix<typename T::value_type, T::RowsAtCompileTime, kNumCorners>;
+  static constexpr int kDim = T::RowsAtCompileTime;
+  static constexpr int kNumCorners = int_math::exp2(kDim);
+  using ValueType = typename T::Scalar;
+  using Corners = Eigen::Matrix<ValueType, kDim, kNumCorners>;
 
-  T min = T::Constant(std::numeric_limits<typename T::value_type>::max());
-  T max = T::Constant(std::numeric_limits<typename T::value_type>::lowest());
+  T min = T::Constant(std::numeric_limits<ValueType>::max());
+  T max = T::Constant(std::numeric_limits<ValueType>::lowest());
 
   void includePoint(const T& point) {
     min = min.cwiseMin(point);
@@ -32,7 +33,7 @@ struct AABB {
     return closest_point;
   }
   T furthestPointFrom(const T& point) const {
-    const T aabb_center = (min + max) / static_cast<typename T::Scalar>(2);
+    const T aabb_center = (min + max) / static_cast<ValueType>(2);
     const T furthest_point =
         (aabb_center.array() < point.array()).select(min, max);
     return furthest_point;
@@ -52,15 +53,15 @@ struct AABB {
   }
 
   template <int dim>
-  typename T::value_type width() const {
+  ValueType width() const {
     return max[dim] - min[dim];
   }
 
   Corners corners() const {
     // TODO(victorr): Vectorize this
-    Eigen::Matrix<FloatingPoint, 2, 4> corners;
+    Eigen::Matrix<FloatingPoint, kDim, kNumCorners> corners;
     for (int corner_idx = 0; corner_idx < kNumCorners; ++corner_idx) {
-      for (int dim_idx = 0; dim_idx < T::RowsAtCompileTime; ++dim_idx) {
+      for (int dim_idx = 0; dim_idx < kDim; ++dim_idx) {
         if (corner_idx & (0b1 << dim_idx)) {
           corners(dim_idx, corner_idx) = max[dim_idx];
         } else {

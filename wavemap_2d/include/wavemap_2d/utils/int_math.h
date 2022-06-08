@@ -3,6 +3,8 @@
 
 #include <limits>
 
+#include "wavemap_2d/common.h"
+
 namespace wavemap_2d::int_math {
 constexpr int exp2(int exponent) { return 1 << exponent; }
 
@@ -17,6 +19,22 @@ constexpr int log2_ceil(int value) {
   } else {
     return log2_floored + 1;
   }
+}
+
+template <typename T>
+T mult_exp2(T value, int exp) {
+  return value * exp2(exp);
+}
+
+constexpr int div_exp2(int value, int exp) { return value >> exp; }
+
+template <int dim>
+Eigen::Matrix<int, dim, 1> div_exp2(Eigen::Matrix<int, dim, 1> vector,
+                                    int exp) {
+  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+    vector[dim_idx] >>= exp;
+  }
+  return vector;
 }
 }  // namespace wavemap_2d::int_math
 

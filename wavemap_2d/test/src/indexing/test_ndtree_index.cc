@@ -10,11 +10,11 @@ namespace wavemap_2d {
 template <typename NdtreeIndexT>
 class NdtreeIndexTest : public FixtureBase {
  protected:
-  static constexpr typename NdtreeIndexT::Element kMaxDepth = 14;
+  static constexpr typename NdtreeIndexT::Element kMaxHeight = 14;
   const typename NdtreeIndexT::Position kMinNdtreePositionIndex =
       NdtreeIndexT::Position::Zero();
   const typename NdtreeIndexT::Position kMaxNdtreePositionIndex =
-      NdtreeIndexT::Position::Constant(int_math::exp2(kMaxDepth));
+      NdtreeIndexT::Position::Constant(int_math::exp2(kMaxHeight));
 
   FloatingPoint getRandomRootNodeWidth() const {
     return random_number_generator_->getRandomRealNumber(0.1f, 1e3f);
@@ -30,18 +30,17 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
   std::vector<TypeParam> random_indices =
       TestFixture::template getRandomNdtreeIndexVector<TypeParam>(
           TestFixture::kMinNdtreePositionIndex,
-          TestFixture::kMaxNdtreePositionIndex, TestFixture::kMaxDepth,
-          TestFixture::kMaxDepth);
+          TestFixture::kMaxNdtreePositionIndex, 0, 0);
   random_indices.emplace_back(TypeParam{0, TypeParam::Position::Zero()});
-  for (typename TypeParam::Element depth_idx = 1;
-       depth_idx < TestFixture::kMaxDepth; ++depth_idx) {
+  for (typename TypeParam::Element height_idx = 0;
+       height_idx < TestFixture::kMaxHeight; ++height_idx) {
     for (int relative_child_idx = 0;
          relative_child_idx < TypeParam::kNumChildren; ++relative_child_idx) {
       typename TypeParam::Position position_index = TypeParam::Position::Zero();
       for (int dim_idx = 0; dim_idx < TypeParam::kDim; ++dim_idx) {
         position_index[dim_idx] = (relative_child_idx >> dim_idx) & 0b1;
       }
-      random_indices.emplace_back(TypeParam{depth_idx, position_index});
+      random_indices.emplace_back(TypeParam{height_idx, position_index});
     }
   }
 
@@ -49,22 +48,31 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
   for (const TypeParam& node_index : random_indices) {
     // Check all parents from the random node up to the root of the tree
     const std::vector<TypeParam> parent_index_list =
-        node_index.computeParentIndices();
+        node_index.template computeParentIndices<TestFixture::kMaxHeight>();
     TypeParam parent_index_iterative = node_index;
-    for (typename TypeParam::Element depth = node_index.depth - 1; 0 <= depth;
-         --depth) {
+    for (typename TypeParam::Element height = node_index.height + 1;
+         height <= TestFixture::kMaxHeight; ++height) {
       parent_index_iterative = parent_index_iterative.computeParentIndex();
-      EXPECT_EQ(parent_index_list[depth], parent_index_iterative);
-      EXPECT_EQ(node_index.computeParentIndex(depth), parent_index_iterative);
+      const typename TypeParam::Element ancestor_idx =
+          TestFixture::kMaxHeight - height;
+      EXPECT_EQ(parent_index_list[ancestor_idx], parent_index_iterative)
+          << "For parent_index_list[ancestor_idx] "
+          << parent_index_list[ancestor_idx].toString()
+          << " and parent_index_iterative "
+          << parent_index_iterative.toString();
+      EXPECT_EQ(node_index.computeParentIndex(height), parent_index_iterative)
+          << "For node_index.computeParentIndex(height) "
+          << node_index.computeParentIndex(height).toString()
+          << " and parent_index_iterative "
+          << parent_index_iterative.toString();
     }
-    if (node_index.depth == 0) {
+    if (node_index.height == TestFixture::kMaxHeight) {
       EXPECT_EQ(parent_index_list.size(), 0)
           << "The list of parent indices for the root node should be empty.";
     }
 
     // Test round trips between children and parents
-    const std::vector<TypeParam> child_indices =
-        node_index.computeChildIndices();
+    const auto child_indices = node_index.computeChildIndices();
     for (typename TypeParam::RelativeChild relative_child_idx = 0;
          relative_child_idx < TypeParam::kNumChildren; ++relative_child_idx) {
       const TypeParam child_index =

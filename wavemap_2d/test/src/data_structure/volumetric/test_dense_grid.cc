@@ -17,7 +17,7 @@ class DenseGridTest : public FixtureBase {
     ASSERT_EQ(map_reference.size(), map_to_test.size());
     ASSERT_EQ(map_reference.getMinIndex(), map_to_test.getMinIndex());
     ASSERT_EQ(map_reference.getMaxIndex(), map_to_test.getMaxIndex());
-    ASSERT_EQ(map_reference.getResolution(), map_to_test.getResolution());
+    ASSERT_EQ(map_reference.getMinCellWidth(), map_to_test.getMinCellWidth());
 
     int reported_error_count = 0;
     constexpr int kMaxNumReportedErrors = 10;
@@ -45,7 +45,7 @@ class DenseGridTest : public FixtureBase {
   }
 
   DenseGrid<CellType> getRandomMap() {
-    DenseGrid<CellType> random_map(getRandomResolution());
+    DenseGrid<CellType> random_map(getRandomMinCellWidth());
     const Index min_index = -getRandomIndex().cwiseAbs();
     const Index max_index = getRandomIndex().cwiseAbs();
     random_map.addToCellValue(min_index, 0.f);
@@ -67,9 +67,10 @@ TYPED_TEST_SUITE(DenseGridTest, CellTypes, );
 //       VolumetricDataStructure interface.
 
 TYPED_TEST(DenseGridTest, Initialization) {
-  const FloatingPoint random_resolution = TestFixture::getRandomResolution();
-  DenseGrid<TypeParam> map(random_resolution);
-  EXPECT_EQ(map.getResolution(), random_resolution);
+  const FloatingPoint random_min_cell_width =
+      TestFixture::getRandomMinCellWidth();
+  DenseGrid<TypeParam> map(random_min_cell_width);
+  EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);
   EXPECT_EQ(map.dimensions(), Index(0, 0));
@@ -80,7 +81,7 @@ TYPED_TEST(DenseGridTest, Initialization) {
 TYPED_TEST(DenseGridTest, Resizing) {
   constexpr int kNumRepetitions = 5;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    DenseGrid<TypeParam> map(TestFixture::getRandomResolution());
+    DenseGrid<TypeParam> map(TestFixture::getRandomMinCellWidth());
     ASSERT_TRUE(map.empty());
     ASSERT_EQ(map.dimensions(), Index(0, 0));
 
@@ -136,7 +137,7 @@ TYPED_TEST(DenseGridTest, Serialization) {
       DenseGrid<TypeParam> map = TestFixture::getRandomMap();
       ASSERT_TRUE(map.save(kTempFilePath, use_floating_precision));
 
-      DenseGrid<TypeParam> loaded_map(map.getResolution());
+      DenseGrid<TypeParam> loaded_map(map.getMinCellWidth());
       ASSERT_TRUE(loaded_map.load(kTempFilePath, use_floating_precision));
 
       if (TypeParam::isFullyBounded) {

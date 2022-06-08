@@ -31,16 +31,16 @@ TEST_F(RayIteratorTest, IterationOrderAndCompleteness) {
     const Vector t_start_end = end_point - start_point;
     const FloatingPoint ray_length = t_start_end.norm();
 
-    const FloatingPoint resolution = getRandomResolution();
-    const FloatingPoint resolution_inv = 1.f / resolution;
+    const FloatingPoint min_cell_width = getRandomMinCellWidth();
+    const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
     const Index start_point_index =
-        convert::pointToNearestIndex(start_point, resolution_inv);
+        convert::pointToNearestIndex(start_point, min_cell_width_inv);
     const Index end_point_index =
-        convert::pointToNearestIndex(end_point, resolution_inv);
+        convert::pointToNearestIndex(end_point, min_cell_width_inv);
     const Index direction =
         (end_point_index - start_point_index).cwiseSign().cast<IndexElement>();
 
-    Ray ray(start_point, end_point, resolution);
+    Ray ray(start_point, end_point, min_cell_width);
     EXPECT_EQ(*ray.begin(), start_point_index);
     EXPECT_EQ(*ray.end(), end_point_index);
 
@@ -60,7 +60,7 @@ TEST_F(RayIteratorTest, IterationOrderAndCompleteness) {
             << "Ray iterator stepped into an unexpected direction.";
 
         const Point current_point =
-            convert::indexToCenterPoint(index, resolution);
+            convert::indexToCenterPoint(index, min_cell_width);
         const Vector t_start_current = current_point - start_point;
         const FloatingPoint distance =
             std::abs(t_start_end.x() * t_start_current.y() -
@@ -68,14 +68,14 @@ TEST_F(RayIteratorTest, IterationOrderAndCompleteness) {
             ray_length;
         constexpr FloatingPoint kMaxAcceptableMultiplicativeError = 1.f + 1e-4f;
         EXPECT_LE(distance, kMaxAcceptableMultiplicativeError *
-                                std::sqrt(0.5f) * resolution)
+                                std::sqrt(0.5f) * min_cell_width)
             << "Ray iterator updated cell that is not traversed by the ray, "
                "for cell with index"
             << EigenFormat::oneLine(index) << " and center point"
             << EigenFormat::oneLine(current_point) << " on ray from"
             << EigenFormat::oneLine(start_point) << " to"
-            << EigenFormat::oneLine(end_point) << " at resolution "
-            << resolution << ".";
+            << EigenFormat::oneLine(end_point) << " at min cell width "
+            << min_cell_width << ".";
       }
       last_index = index;
       ++step_idx;

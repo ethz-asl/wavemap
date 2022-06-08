@@ -11,29 +11,25 @@ namespace wavemap_2d {
 //                - Point
 class IndexConversionsTest : public FixtureBase {
  protected:
-  static constexpr QuadtreeIndex::Element kMaxDepth = 14;
+  static constexpr QuadtreeIndex::Element kMaxHeight = 14;
   const QuadtreeIndex::Position kMinQuadtreePositionIndex =
       QuadtreeIndex::Position::Zero();
   const QuadtreeIndex::Position kMaxQuadtreePositionIndex =
-      QuadtreeIndex::Position::Constant(int_math::exp2(kMaxDepth));
-
-  FloatingPoint getRandomRootNodeWidth() const {
-    return random_number_generator_->getRandomRealNumber(0.1f, 1e3f);
-  }
+      QuadtreeIndex::Position::Constant(int_math::exp2(kMaxHeight));
 };
 
 TEST_F(IndexConversionsTest, NodeIndexConversions) {
   // Generate a combination of random and handpicked node indices for testing
   std::vector<QuadtreeIndex> random_indices =
       getRandomNdtreeIndexVector<QuadtreeIndex>(
-          kMinQuadtreePositionIndex, kMaxQuadtreePositionIndex, 1, kMaxDepth);
+          kMinQuadtreePositionIndex, kMaxQuadtreePositionIndex, 1, kMaxHeight);
   random_indices.emplace_back(QuadtreeIndex{0, {0, 0}});
-  for (QuadtreeIndex::Element index_depth = 1; index_depth < kMaxDepth;
-       ++index_depth) {
+  for (QuadtreeIndex::Element index_height = 0; index_height < kMaxHeight;
+       ++index_height) {
     for (QuadtreeIndex::Element index_x = -1; index_x <= 1; ++index_x) {
       for (QuadtreeIndex::Element index_y = -1; index_y <= 1; ++index_y) {
         random_indices.emplace_back(
-            QuadtreeIndex{index_depth, {index_x, index_y}});
+            QuadtreeIndex{index_height, {index_x, index_y}});
       }
     }
   }
@@ -42,11 +38,10 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
   for (const QuadtreeIndex& node_index : random_indices) {
     // Compare to coordinate convention
     {
-      const Index index_from_quadtree =
-          convert::nodeIndexToIndex(node_index, kMaxDepth);
+      const Index index_from_quadtree = convert::nodeIndexToIndex(node_index);
       const Index index_from_convention =
           (node_index.position.template cast<FloatingPoint>() *
-           std::exp2(kMaxDepth - node_index.depth))
+           std::exp2(node_index.height))
               .array()
               .round()
               .cast<IndexElement>();
@@ -59,9 +54,9 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
 
     // Roundtrip through regular indices (integer coordinates)
     {
-      const Index index = convert::nodeIndexToIndex(node_index, kMaxDepth);
+      const Index index = convert::nodeIndexToIndex(node_index);
       const QuadtreeIndex roundtrip_node_index =
-          convert::indexAndDepthToNodeIndex(index, node_index.depth, kMaxDepth);
+          convert::indexAndHeightToNodeIndex(index, node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
           << " to regular index " << EigenFormat::oneLine(index)
@@ -71,11 +66,11 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
 
     // Roundtrip through real valued coordinates
     {
-      const FloatingPoint random_root_node_width = getRandomRootNodeWidth();
+      const FloatingPoint random_min_cell_width = getRandomMinCellWidth();
       const Point node_center =
-          convert::nodeIndexToCenterPoint(node_index, random_root_node_width);
+          convert::nodeIndexToCenterPoint(node_index, random_min_cell_width);
       const QuadtreeIndex roundtrip_node_index = convert::pointToNodeIndex(
-          node_center, random_root_node_width, node_index.depth);
+          node_center, random_min_cell_width, node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
           << " to node center " << EigenFormat::oneLine(node_center)

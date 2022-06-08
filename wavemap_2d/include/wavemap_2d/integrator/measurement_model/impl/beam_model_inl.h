@@ -6,7 +6,8 @@
 
 namespace wavemap_2d {
 inline FloatingPoint BeamModel::computeUpdateAt(const Index& index) const {
-  const Point W_cell_center = convert::indexToCenterPoint(index, resolution_);
+  const Point W_cell_center =
+      convert::indexToCenterPoint(index, min_cell_width_);
   const Point C_cell_center = W_cell_center - W_start_point_;
 
   // Compute the distance to the sensor

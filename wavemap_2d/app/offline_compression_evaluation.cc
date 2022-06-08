@@ -14,7 +14,7 @@
 #include "wavemap_2d/utils/evaluation_utils.h"
 
 DEFINE_string(estimated_map_file_path, "", "Path to the estimated map.");
-DEFINE_double(estimated_map_resolution, 0.01,
+DEFINE_double(estimated_map_min_cell_width, 0.01,
               "Resolution of the estimated map in meters.");
 DEFINE_bool(
     estimated_map_saved_with_floating_precision, true,
@@ -22,7 +22,7 @@ DEFINE_bool(
 DEFINE_string(ground_truth_map_file_path, "",
               "Path to the ground truth map (e.g. generated with "
               "wavemap_2d_ground_truth).");
-DEFINE_double(ground_truth_map_resolution, 0.01,
+DEFINE_double(ground_truth_map_min_cell_width, 0.01,
               "Resolution of the ground truth map in meters.");
 DEFINE_bool(
     ground_truth_map_saved_with_floating_precision, true,
@@ -38,17 +38,17 @@ int main(int argc, char** argv) {
   google::InstallFailureSignalHandler();
 
   // Load the estimated map
-  const auto estimated_map_resolution =
-      static_cast<FloatingPoint>(FLAGS_estimated_map_resolution);
+  const auto estimated_map_min_cell_width =
+      static_cast<FloatingPoint>(FLAGS_estimated_map_min_cell_width);
   auto estimated_map =
-      std::make_shared<DataStructureType>(estimated_map_resolution);
+      std::make_shared<DataStructureType>(estimated_map_min_cell_width);
   CHECK(estimated_map->load(FLAGS_estimated_map_file_path,
                             FLAGS_estimated_map_saved_with_floating_precision));
 
   // Load the ground truth map
-  const auto ground_truth_map_resolution =
-      static_cast<FloatingPoint>(FLAGS_ground_truth_map_resolution);
-  GTDataStructureType ground_truth_map(ground_truth_map_resolution);
+  const auto ground_truth_map_min_cell_width =
+      static_cast<FloatingPoint>(FLAGS_ground_truth_map_min_cell_width);
+  GTDataStructureType ground_truth_map(ground_truth_map_min_cell_width);
   CHECK(ground_truth_map.load(
       FLAGS_ground_truth_map_file_path,
       FLAGS_ground_truth_map_saved_with_floating_precision));
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     for (int pass_idx = 1; pass_idx < std::min(max_num_passes, 9); ++pass_idx) {
       // Compress
       DataStructureType reconstructed_map(*estimated_map);
-      GTDataStructureType error_map(estimated_map->getResolution());
+      GTDataStructureType error_map(estimated_map->getMinCellWidth());
       dwt->forward(reconstructed_map.getData(), pass_idx);
 
       // Truncate
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
   }
 
   // Evaluate compression in a quadtree
-  SimpleQuadtree<UnboundedOccupancyCell> quadtree(estimated_map_resolution);
+  SimpleQuadtree<UnboundedOccupancyCell> quadtree(estimated_map_min_cell_width);
   for (const Index& index :
        Grid(estimated_map->getMinIndex(), estimated_map->getMaxIndex())) {
     quadtree.setCellValue(index, estimated_map->getCellValue(index));

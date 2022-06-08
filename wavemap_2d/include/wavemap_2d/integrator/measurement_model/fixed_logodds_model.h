@@ -33,7 +33,7 @@ class FixedLogOddsModel : public MeasurementModel {
 
   void updateCachedVariablesDerived() override {
     end_point_index_ =
-        convert::pointToNearestIndex(W_end_point_, resolution_inv_);
+        convert::pointToNearestIndex(W_end_point_, min_cell_width_inv_);
   }
 };
 }  // namespace wavemap_2d

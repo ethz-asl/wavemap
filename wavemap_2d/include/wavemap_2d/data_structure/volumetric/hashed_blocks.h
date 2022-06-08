@@ -15,8 +15,8 @@ class HashedBlocks : public VolumetricDataStructure {
  public:
   using CellType = CellT;
 
-  explicit HashedBlocks(const FloatingPoint resolution)
-      : VolumetricDataStructure(resolution) {}
+  explicit HashedBlocks(const FloatingPoint min_cell_width)
+      : VolumetricDataStructure(min_cell_width) {}
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override { return kCellsPerBlock * blocks_.size(); }

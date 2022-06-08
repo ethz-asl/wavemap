@@ -15,10 +15,7 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
   using CellType = CellT;
   using NodeType = Node<typename CellT::Specialized>;
 
-  explicit SimpleQuadtree(FloatingPoint resolution)
-      : VolumetricQuadtreeInterface(resolution),
-        root_node_width_(std::exp2f(max_depth_) * resolution),
-        root_node_offset_(Index::Constant(int_math::exp2(max_depth_ - 1))) {}
+  using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
   ~SimpleQuadtree() override = default;
 
   bool empty() const override { return quadtree_.empty(); }
@@ -26,15 +23,14 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
   void prune() override;
   void clear() override { return quadtree_.clear(); }
 
+  QuadtreeIndex::ChildArray getFirstChildIndices() const override;
+
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
   Index getMinPossibleIndex() const override;
   Index getMaxPossibleIndex() const override;
-  QuadtreeIndex::Element getMaxDepth() const override { return max_depth_; }
-  FloatingPoint getRootNodeWidth() const override { return root_node_width_; }
 
   bool hasCell(const Index& index) const override;
-  QuadtreeIndex::Element getDepthAtIndex(const Index& index);
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void setCellValue(const QuadtreeIndex& index,
@@ -62,29 +58,43 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
   bool load(const std::string& file_path_prefix,
             bool used_floating_precision) override;
 
-  QuadtreeIndex indexToNodeIndex(const Index& index) const {
-    return convert::indexAndDepthToNodeIndex(index + root_node_offset_,
-                                             max_depth_, max_depth_);
-  }
-  Index nodeIndexToIndex(const QuadtreeIndex& node_index) const {
-    return convert::nodeIndexToIndex(node_index, max_depth_) -
-           root_node_offset_;
-  }
-
-  FloatingPoint computeNodeWidthAtDepth(QuadtreeIndex::Element depth) override;
-  Vector computeNodeHalvedDiagonalAtDepth(
-      QuadtreeIndex::Element depth) override;
-
  private:
   using CellDataSpecialized = typename CellT::Specialized;
 
-  Quadtree<CellDataSpecialized> quadtree_;
-  QuadtreeIndex::Element max_depth_ = 14;
-  FloatingPoint root_node_width_;
-  Index root_node_offset_;
+  Quadtree<CellDataSpecialized, kMaxHeight> quadtree_;
+
+  static QuadtreeIndex getInternalRootNodeIndex() {
+    return QuadtreeIndex{kMaxHeight, QuadtreeIndex::Position::Zero()};
+  }
+  const QuadtreeIndex root_node_index_offset_{kMaxHeight - 1,
+                                              QuadtreeIndex::Position::Ones()};
+  const Index root_index_offset_ =
+      convert::nodeIndexToIndex(root_node_index_offset_);
+
+  QuadtreeIndex toInternal(const Index& index) const {
+    return convert::indexAndHeightToNodeIndex(index + root_index_offset_, 0);
+  }
+  QuadtreeIndex toInternal(const QuadtreeIndex& node_index) const {
+    DCHECK_LE(node_index.height, root_node_index_offset_.height);
+    const Index height_adjusted_offset =
+        int_math::div_exp2(root_index_offset_, node_index.height);
+    return {node_index.height, node_index.position + height_adjusted_offset};
+  }
+  Index toExternalIndex(const QuadtreeIndex& node_index) const {
+    return convert::nodeIndexToIndex(node_index) - root_index_offset_;
+  }
+  QuadtreeIndex toExternalNodeIndex(const QuadtreeIndex& node_index) const {
+    DCHECK_LE(node_index.height, root_node_index_offset_.height);
+    const Index height_adjusted_offset =
+        int_math::div_exp2(root_index_offset_, node_index.height);
+    return {node_index.height, node_index.position - height_adjusted_offset};
+  }
 
   const Node<CellDataSpecialized>* getDeepestNodeAtIndex(
       const Index& index) const;
+
+  template <typename T>
+  friend class SimpleQuadtreeTest_IndexConversions_Test;
 };
 }  // namespace wavemap_2d
 

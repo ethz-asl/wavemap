@@ -22,24 +22,24 @@ class HierarchicalRangeImage {
             range_image_, [](auto a, auto b) { return std::min(a, b); })),
         upper_bounds_(computeReducedPyramid(
             range_image_, [](auto a, auto b) { return std::max(a, b); })),
-        max_depth_(
+        max_height_(
             static_cast<BinaryTreeIndex::Element>(lower_bounds_.size())) {
-    DCHECK_EQ(lower_bounds_.size(), max_depth_);
-    DCHECK_EQ(upper_bounds_.size(), max_depth_);
+    DCHECK_EQ(lower_bounds_.size(), max_height_);
+    DCHECK_EQ(upper_bounds_.size(), max_height_);
   }
 
-  BinaryTreeIndex::Element getMaxDepth() const { return max_depth_; }
-  BinaryTreeIndex::Element getNumBoundLevels() const { return max_depth_ - 1; }
+  BinaryTreeIndex::Element getMaxHeight() const { return max_height_; }
+  BinaryTreeIndex::Element getNumBoundLevels() const { return max_height_ - 1; }
 
   Bounds getBounds(const BinaryTreeIndex& index) const {
-    DCHECK_GE(index.depth, 0);
-    DCHECK_LE(index.depth, max_depth_);
-    if (index.depth == max_depth_) {
+    DCHECK_GE(index.height, 0);
+    DCHECK_LE(index.height, max_height_);
+    if (index.height == 0) {
       const FloatingPoint range_image_value = range_image_[index.position.x()];
       return {range_image_value, range_image_value};
     } else {
-      return {lower_bounds_[index.depth][index.position.x()],
-              upper_bounds_[index.depth][index.position.x()]};
+      return {lower_bounds_[index.height - 1][index.position.x()],
+              upper_bounds_[index.height - 1][index.position.x()]};
     }
   }
   FloatingPoint getLowerBound(const BinaryTreeIndex& index) const {
@@ -70,14 +70,13 @@ class HierarchicalRangeImage {
       if ((left_idx_shifted & 0b10) == (right_idx_shifted & 0b10)) {
         // Since they do, we only need to check the parent which is equivalent
         // to checking both nodes at min_level_up but cheaper
-        const BinaryTreeIndex::Element parent_depth =
-            getMaxDepth() - min_level_up - 1;
+        const BinaryTreeIndex::Element parent_height = min_level_up;
         const BinaryTreeIndex::Element parent_idx = left_idx_shifted >> 1;
-        return {lower_bounds_[parent_depth][parent_idx],
-                upper_bounds_[parent_depth][parent_idx]};
+        return {lower_bounds_[parent_height][parent_idx],
+                upper_bounds_[parent_height][parent_idx]};
       } else {
         // Check both nodes at min_level_up
-        const BinaryTreeIndex::Element depth = getMaxDepth() - min_level_up;
+        const BinaryTreeIndex::Element height = min_level_up - 1;
         const RangeImageIndex left_node_idx = left_idx_shifted;
         const RangeImageIndex right_node_idx = right_idx_shifted;
         if (min_level_up == 0) {
@@ -86,24 +85,23 @@ class HierarchicalRangeImage {
                   std::max(range_image_[left_node_idx],
                            range_image_[right_node_idx])};
         } else {
-          return {std::min(lower_bounds_[depth][left_node_idx],
-                           lower_bounds_[depth][right_node_idx]),
-                  std::max(upper_bounds_[depth][left_node_idx],
-                           upper_bounds_[depth][right_node_idx])};
+          return {std::min(lower_bounds_[height][left_node_idx],
+                           lower_bounds_[height][right_node_idx]),
+                  std::max(upper_bounds_[height][left_node_idx],
+                           upper_bounds_[height][right_node_idx])};
         }
       }
     } else {
       // Since the nodes at min_level_up are not direct neighbors we need to go
       // one level up and check both parents there
       DCHECK(left_idx_shifted + 2 == right_idx_shifted);
-      const BinaryTreeIndex::Element parent_depth =
-          getMaxDepth() - min_level_up - 1;
+      const BinaryTreeIndex::Element parent_height = min_level_up;
       const RangeImageIndex left_parent_idx = left_idx_shifted >> 1;
       const RangeImageIndex right_parent_idx = right_idx_shifted >> 1;
-      return {std::min(lower_bounds_[parent_depth][left_parent_idx],
-                       lower_bounds_[parent_depth][right_parent_idx]),
-              std::max(upper_bounds_[parent_depth][left_parent_idx],
-                       upper_bounds_[parent_depth][right_parent_idx])};
+      return {std::min(lower_bounds_[parent_height][left_parent_idx],
+                       lower_bounds_[parent_height][right_parent_idx]),
+              std::max(upper_bounds_[parent_height][left_parent_idx],
+                       upper_bounds_[parent_height][right_parent_idx])};
     }
   }
   FloatingPoint getRangeLowerBound(RangeImageIndex left_idx,
@@ -121,7 +119,7 @@ class HierarchicalRangeImage {
   const RangeImage& range_image_;
   const std::vector<RangeImage::RangeImageData> lower_bounds_;
   const std::vector<RangeImage::RangeImageData> upper_bounds_;
-  const BinaryTreeIndex::Element max_depth_;
+  const BinaryTreeIndex::Element max_height_;
 
   template <typename BinaryFunctor>
   static std::vector<RangeImage::RangeImageData> computeReducedPyramid(
@@ -130,14 +128,14 @@ class HierarchicalRangeImage {
     const int max_num_halvings = int_math::log2_ceil(original_width);
     std::vector<RangeImage::RangeImageData> pyramid(max_num_halvings);
 
-    const int first_reduction_level = max_num_halvings - 1;
-    for (int level_idx = first_reduction_level; 0 <= level_idx; --level_idx) {
+    const int last_reduction_level = max_num_halvings - 1;
+    for (int level_idx = 0; level_idx <= last_reduction_level; ++level_idx) {
       // Zero initialize the current level
       RangeImage::RangeImageData& current_level = pyramid[level_idx];
-      const int level_width = 1 << level_idx;
+      const int level_width = int_math::exp2(last_reduction_level - level_idx);
       current_level = RangeImage::RangeImageData::Zero(1, level_width);
       // Reduce
-      if (level_idx == first_reduction_level) {
+      if (level_idx == 0) {
         // For the first level, reduce from the original range image
         const int image_width = range_image.getNumBeams();
         const int half_image_width = image_width >> 1;  // Always rounded down
@@ -155,7 +153,7 @@ class HierarchicalRangeImage {
       } else {
         // Continue reducing from the previous reduction level otherwise
         const RangeImage::RangeImageData& previous_level =
-            pyramid[level_idx + 1];
+            pyramid[level_idx - 1];
         for (int idx = 0; idx < level_width; ++idx) {
           const int first_child_idx = 2 * idx;
           const int second_child_idx = first_child_idx + 1;

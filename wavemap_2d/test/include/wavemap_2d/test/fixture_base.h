@@ -23,10 +23,11 @@ class FixtureBase : public ::testing::Test {
         std::make_unique<RandomNumberGenerator>(kFixedRandomSeed);
   }
 
-  FloatingPoint getRandomResolution(FloatingPoint min_resolution = 1e-3f,
-                                    FloatingPoint max_resolution = 1e0f) const {
-    return random_number_generator_->getRandomRealNumber(min_resolution,
-                                                         max_resolution);
+  FloatingPoint getRandomMinCellWidth(
+      FloatingPoint min_min_cell_width = 1e-3f,
+      FloatingPoint max_min_cell_width = 1e0f) const {
+    return random_number_generator_->getRandomRealNumber(min_min_cell_width,
+                                                         max_min_cell_width);
   }
 
   static Point getRandomPoint(FloatingPoint max_distance = 5e2) {
@@ -103,21 +104,21 @@ class FixtureBase : public ::testing::Test {
     return random_indices;
   }
 
-  QuadtreeIndex::Element getRandomNdtreeIndexDepth(
-      const QuadtreeIndex::Element min_depth = 0,
-      const QuadtreeIndex::Element max_depth = 14) const {
-    return random_number_generator_->getRandomInteger(min_depth, max_depth);
+  QuadtreeIndex::Element getRandomNdtreeIndexHeight(
+      const QuadtreeIndex::Element min_height = 0,
+      const QuadtreeIndex::Element max_height = 14) const {
+    return random_number_generator_->getRandomInteger(min_height, max_height);
   }
 
   template <typename NdtreeIndexT>
   std::vector<NdtreeIndexT> getRandomNdtreeIndexVector(
       typename NdtreeIndexT::Position min_index,
       typename NdtreeIndexT::Position max_index,
-      typename NdtreeIndexT::Element min_depth,
-      typename NdtreeIndexT::Element max_depth, size_t min_num_indices = 2u,
+      typename NdtreeIndexT::Element min_height,
+      typename NdtreeIndexT::Element max_height, size_t min_num_indices = 2u,
       size_t max_num_indices = 100u) const {
     CHECK((min_index.array() <= max_index.array()).all());
-    CHECK_LE(min_depth, max_depth);
+    CHECK_LE(min_height, max_height);
 
     const size_t num_indices = random_number_generator_->getRandomInteger(
         min_num_indices, max_num_indices);
@@ -128,7 +129,7 @@ class FixtureBase : public ::testing::Test {
       for (int i = 0; i < NdtreeIndexT::kDim; ++i) {
         position_index[i] = getRandomIndexElement(min_index[i], max_index[i]);
       }
-      return NdtreeIndexT{getRandomNdtreeIndexDepth(min_depth, max_depth),
+      return NdtreeIndexT{getRandomNdtreeIndexHeight(min_height, max_height),
                           position_index};
     });
     return random_indices;

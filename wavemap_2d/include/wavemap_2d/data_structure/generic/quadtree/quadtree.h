@@ -15,7 +15,7 @@
 #include "wavemap_2d/iterator/subtree_iterator.h"
 
 namespace wavemap_2d {
-template <typename NodeDataType>
+template <typename NodeDataType, QuadtreeIndex::Element max_height>
 class Quadtree {
  public:
   using NodeType = Node<NodeDataType>;

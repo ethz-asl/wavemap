@@ -67,25 +67,15 @@ void DenseGrid<CellT>::addToCellValue(const Index& index,
 template <typename CellT>
 void DenseGrid<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  // TODO(victorr): Consider parameterizing everything on height instead of
-  //                depth, s.t. non-hierarchical data structures can simply
-  //                always operate at depth 0.
-  //                Also consider renaming QuadtreeIndex to something like
+  // TODO(victorr): Consider renaming QuadtreeIndex to something like
   //                Hierarchical2DIndex, since it can represent hierarchical
   //                quadtrant/octant subvolumes regardless of the exact data
   //                structure that's being indexed.
-  // TODO(victorr): Remove these hard-coded values and change the quadtree
-  //                classes to expose offset free indexes, instead of
-  //                compensating here.
-  constexpr QuadtreeIndex::Element kMaxDepth = 14;
-  const Index root_node_offset = Index::Constant(int_math::exp2(kMaxDepth - 1));
-
   for (const Index& cell_index : Grid(getMinIndex(), getMaxIndex())) {
     const CellDataSpecialized* cell_data = accessCellData(cell_index);
     if (cell_data) {
       const QuadtreeIndex hierarchical_cell_index =
-          convert::indexAndDepthToNodeIndex(cell_index + root_node_offset,
-                                            kMaxDepth, kMaxDepth);
+          convert::indexAndHeightToNodeIndex(cell_index, 0);
       visitor_fn(hierarchical_cell_index, *cell_data);
     }
   }
@@ -116,7 +106,7 @@ bool DenseGrid<CellT>::save(const std::string& file_path_prefix,
                << "\" for writing.";
     return false;
   }
-  header_file << resolution_ << "\n" << min_index_ << "\n" << max_index_;
+  header_file << min_cell_width_ << "\n" << min_index_ << "\n" << max_index_;
   header_file.close();
 
   cv::Mat image;
@@ -156,12 +146,13 @@ bool DenseGrid<CellT>::load(const std::string& file_path_prefix,
     return false;
   }
 
-  FloatingPoint resolution;
-  header_file >> resolution;
-  if (1e-3 < std::abs(resolution - resolution_)) {
-    LOG(ERROR) << "Tried to load a map whose resolution (" << resolution
-               << ") does not match the configured resolution (" << resolution_
-               << ").";
+  FloatingPoint min_cell_width;
+  header_file >> min_cell_width;
+  if (1e-3f < std::abs(min_cell_width - min_cell_width_)) {
+    LOG(ERROR) << "Tried to load a map whose minimum cell width ("
+               << min_cell_width
+               << ") does not match the configured minimum cell width ("
+               << min_cell_width_ << ").";
     return false;
   }
   header_file >> min_index_.x() >> min_index_.y();

@@ -28,18 +28,20 @@ void CoarseToFineIntegrator::integratePointcloud(
   }
 
   // Recursively update all relevant cells
-  const QuadtreeIndex::Element max_depth = occupancy_map->getMaxDepth();
   const Transformation T_CW = pointcloud.getPose().inverse();
-  const FloatingPoint root_node_width = occupancy_map->getRootNodeWidth();
+  const FloatingPoint min_cell_width = occupancy_map->getMinCellWidth();
 
   std::stack<QuadtreeIndex> stack;
-  stack.emplace(QuadtreeIndex{});
+  for (const QuadtreeIndex& node_index :
+       occupancy_map->getFirstChildIndices()) {
+    stack.emplace(node_index);
+  }
   while (!stack.empty()) {
     const auto current_node = std::move(stack.top());
     stack.pop();
 
     const AABB<Point> W_cell_aabb =
-        convert::nodeIndexToAABB(current_node, root_node_width);
+        convert::nodeIndexToAABB(current_node, min_cell_width);
     const RangeImageIntersector::IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(
             range_image, pointcloud.getPose(), W_cell_aabb);
@@ -56,7 +58,7 @@ void CoarseToFineIntegrator::integratePointcloud(
     constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
-    if (max_depth <= current_node.depth ||
+    if (current_node.height == 0 ||
         isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                        bounding_sphere_radius)) {
       FloatingPoint angle_C_cell = RangeImage::bearingToAngle(C_node_center);

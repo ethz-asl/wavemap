@@ -12,7 +12,7 @@ template <typename CellType>
 class SimpleQuadtreeTest : public FixtureBase {
  protected:
   SimpleQuadtree<CellType> getRandomMap() {
-    SimpleQuadtree<CellType> random_map(getRandomResolution());
+    SimpleQuadtree<CellType> random_map(getRandomMinCellWidth());
     const Index min_index = -getRandomIndex().cwiseAbs();
     const Index max_index = getRandomIndex().cwiseAbs();
     random_map.addToCellValue(min_index, 0.f);
@@ -36,26 +36,27 @@ TYPED_TEST_SUITE(SimpleQuadtreeTest, CellTypes, );
 //                correctly (e.g. throw error or do nothing and print error).
 
 TYPED_TEST(SimpleQuadtreeTest, Initialization) {
-  const FloatingPoint random_resolution = TestFixture::getRandomResolution();
-  SimpleQuadtree<TypeParam> map(random_resolution);
-  EXPECT_EQ(map.getResolution(), random_resolution);
+  const FloatingPoint random_min_cell_width =
+      TestFixture::getRandomMinCellWidth();
+  SimpleQuadtree<TypeParam> map(random_min_cell_width);
+  EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);
 }
 
 TYPED_TEST(SimpleQuadtreeTest, IndexConversions) {
-  SimpleQuadtree<TypeParam> map(TestFixture::getRandomResolution());
+  SimpleQuadtree<TypeParam> map(TestFixture::getRandomMinCellWidth());
   std::vector<Index> random_indices = TestFixture::getRandomIndexVector(
       map.getMinPossibleIndex(), map.getMaxPossibleIndex());
   random_indices.template emplace_back(map.getMinPossibleIndex());
   random_indices.template emplace_back(map.getMaxPossibleIndex());
   for (const Index& index : random_indices) {
-    EXPECT_EQ(map.nodeIndexToIndex(map.indexToNodeIndex(index)), index);
+    EXPECT_EQ(map.toExternalIndex(map.toInternal(index)), index);
   }
 }
 
 TYPED_TEST(SimpleQuadtreeTest, Resizing) {
-  SimpleQuadtree<TypeParam> map(TestFixture::getRandomResolution());
+  SimpleQuadtree<TypeParam> map(TestFixture::getRandomMinCellWidth());
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), 0u);
 
@@ -67,7 +68,7 @@ TYPED_TEST(SimpleQuadtreeTest, Resizing) {
   const Index& first_random_index = random_indices[0];
   map.addToCellValue(first_random_index, 0.f);
   EXPECT_FALSE(map.empty());
-  EXPECT_EQ(map.size(), map.getMaxDepth());
+  EXPECT_EQ(map.size(), map.kMaxHeight);
 
   Index min_index = first_random_index;
   Index max_index = first_random_index;
@@ -77,10 +78,10 @@ TYPED_TEST(SimpleQuadtreeTest, Resizing) {
     max_index = max_index.cwiseMax(*index_it);
     map.addToCellValue(*index_it, 0.f);
   }
-  EXPECT_GE(map.size(), map.getMaxDepth());
+  EXPECT_GE(map.size(), map.kMaxHeight);
   size_t max_unique_nodes = 0u;
   const size_t num_inserted_nodes = random_indices.size();
-  for (QuadtreeIndex::Element depth = 0u; depth <= map.getMaxDepth(); ++depth) {
+  for (QuadtreeIndex::Element depth = 0u; depth <= map.kMaxHeight; ++depth) {
     const size_t max_unique_nodes_at_depth =
         int_math::exp2(kMapDimension * depth);
     if (max_unique_nodes_at_depth < num_inserted_nodes) {
@@ -105,7 +106,7 @@ TYPED_TEST(SimpleQuadtreeTest, Resizing) {
 TYPED_TEST(SimpleQuadtreeTest, Pruning) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    SimpleQuadtree<TypeParam> map(TestFixture::getRandomResolution());
+    SimpleQuadtree<TypeParam> map(TestFixture::getRandomMinCellWidth());
     const std::vector<Index> random_indices = TestFixture::getRandomIndexVector(
         map.getMinPossibleIndex(), map.getMaxPossibleIndex());
 

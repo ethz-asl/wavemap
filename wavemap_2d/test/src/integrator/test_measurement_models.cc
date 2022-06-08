@@ -14,8 +14,8 @@ using MeasurementModelTest = FixtureBase;
 TEST_F(MeasurementModelTest, BeamModel) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const FloatingPoint resolution = getRandomResolution();
-    BeamModel beam_model(resolution);
+    const FloatingPoint min_cell_width = getRandomMinCellWidth();
+    BeamModel beam_model(min_cell_width);
 
     const Point W_start_point = getRandomPoint();
     const Point W_end_point = W_start_point + getRandomTranslation();
@@ -46,7 +46,7 @@ TEST_F(MeasurementModelTest, BeamModel) {
       }
 
       const Point W_cell_center =
-          convert::indexToCenterPoint(index, resolution);
+          convert::indexToCenterPoint(index, min_cell_width);
       const Point C_cell_center = W_cell_center - W_start_point;
       const FloatingPoint distance = C_cell_center.norm();
       const FloatingPoint dot_prod_normalized =
@@ -90,16 +90,16 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
   for (int i = 0; i < kNumRepetitions; ++i) {
     const Point start_point = getRandomPoint();
     const Point end_point = start_point + getRandomTranslation();
-    const FloatingPoint resolution = getRandomResolution();
-    const FloatingPoint resolution_inv = 1.f / resolution;
+    const FloatingPoint min_cell_width = getRandomMinCellWidth();
+    const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
 
-    FixedLogOddsModel fixed_log_odds_model(resolution);
+    FixedLogOddsModel fixed_log_odds_model(min_cell_width);
     fixed_log_odds_model.setStartPoint(start_point);
     fixed_log_odds_model.setEndPoint(end_point);
     const Index start_point_index =
-        convert::pointToNearestIndex(start_point, resolution_inv);
+        convert::pointToNearestIndex(start_point, min_cell_width_inv);
     const Index end_point_index =
-        convert::pointToNearestIndex(end_point, resolution_inv);
+        convert::pointToNearestIndex(end_point, min_cell_width_inv);
 
     const Index bottom_left_idx = start_point_index.cwiseMin(end_point_index);
     const Index top_right_idx = start_point_index.cwiseMin(end_point_index);
@@ -113,7 +113,7 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
 
     size_t step_idx = 0u;
     bool updated_end_point = false;
-    const Ray ray(start_point, end_point, resolution);
+    const Ray ray(start_point, end_point, min_cell_width);
     for (const auto& index : ray) {
       const FloatingPoint update = fixed_log_odds_model.computeUpdateAt(index);
       if (index == end_point_index) {

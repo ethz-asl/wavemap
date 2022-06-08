@@ -28,7 +28,7 @@ TYPED_TEST(VolumetricDataStructureTest, Insertion) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
     std::unique_ptr<VolumetricDataStructure> map_base_ptr =
-        std::make_unique<TypeParam>(TestFixture::getRandomResolution());
+        std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
     const std::vector<Index> random_indices =
         TestFixture::getRandomIndexVector();
     for (const Index& random_index : random_indices) {

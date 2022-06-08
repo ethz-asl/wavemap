@@ -17,23 +17,27 @@ struct NdtreeIndex {
   static constexpr Element kDim = dim;
   static constexpr RelativeChild kNumChildren = int_math::exp2(dim);
 
-  Element depth = 0;
+  Element height = 0;
   Position position = Position::Zero();
 
   bool operator==(const NdtreeIndex& other) const {
-    return depth == other.depth && position == other.position;
+    return height == other.height && position == other.position;
   }
   bool operator!=(const NdtreeIndex& other) const {
     return !(*this == other);  // NOLINT
   }
 
   NdtreeIndex computeParentIndex() const;
-  NdtreeIndex computeParentIndex(Element parent_depth) const;
+  NdtreeIndex computeParentIndex(Element parent_height) const;
+  template <Element max_height>
   std::vector<NdtreeIndex> computeParentIndices() const;
 
   NdtreeIndex computeChildIndex(RelativeChild relative_child_index) const;
-  std::vector<NdtreeIndex> computeChildIndices() const;
+  using ChildArray = std::array<NdtreeIndex, kNumChildren>;
+  ChildArray computeChildIndices() const;
+
   RelativeChild computeRelativeChildIndex() const;
+  template <typename NdtreeIndex<dim>::Element max_height>
   std::vector<RelativeChild> computeRelativeChildIndices() const;
 
   std::string toString() const;

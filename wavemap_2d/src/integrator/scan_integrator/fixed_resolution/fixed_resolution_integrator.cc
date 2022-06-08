@@ -16,17 +16,18 @@ void FixedResolutionIntegrator::integratePointcloud(
       pointcloud, -M_PI_2f32, M_PI_2f32, pointcloud.size());
 
   // Compute the min and max map indices that could be affected by the cloud
-  const FloatingPoint resolution = occupancy_map_->getResolution();
-  const FloatingPoint resolution_inv = 1.f / resolution;
+  const FloatingPoint min_cell_width = occupancy_map_->getMinCellWidth();
+  const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
   const Index aabb_min_index =
-      convert::pointToFloorIndex(aabb.min, resolution_inv);
+      convert::pointToFloorIndex(aabb.min, min_cell_width_inv);
   const Index aabb_max_index =
-      convert::pointToCeilIndex(aabb.max, resolution_inv);
+      convert::pointToCeilIndex(aabb.max, min_cell_width_inv);
 
   // Iterate over all the cells in the AABB and update the map when needed
   const Transformation T_C_W = pointcloud.getPose().inverse();
   for (const Index& index : Grid(aabb_min_index, aabb_max_index)) {
-    const Point W_cell_center = convert::indexToCenterPoint(index, resolution);
+    const Point W_cell_center =
+        convert::indexToCenterPoint(index, min_cell_width);
     const Point C_cell_center = T_C_W * W_cell_center;
     const FloatingPoint update =
         computeUpdateForCell(range_image, C_cell_center);

@@ -25,7 +25,7 @@ void OccupancyGridCreator::integrateTriangle(const Triangle& triangle) {
     CHECK_NEAR(intersecting_segment.end_point.z(), slice_height_, kEpsilon);
     Ray intersection_ray(intersecting_segment.start_point.head<2>(),
                          intersecting_segment.end_point.head<2>(),
-                         occupancy_grid_.getResolution());
+                         occupancy_grid_.getMinCellWidth());
     for (const Index& index : intersection_ray) {
       occupancy_grid_.setCellValue(index, 1.f);
     }

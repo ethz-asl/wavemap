@@ -23,7 +23,7 @@ namespace wavemap_2d {
 class Wavemap2DServer {
  public:
   struct Config {
-    float map_resolution = 0.f;
+    float min_cell_width = 0.f;
 
     std::string world_frame = "odom";
 

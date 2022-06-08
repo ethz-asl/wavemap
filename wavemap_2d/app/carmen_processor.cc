@@ -14,7 +14,8 @@ DEFINE_string(carmen_log_file_path, "",
 DEFINE_string(output_log_dir, "",
               "Path to the directory where the logs should be stored. Leave "
               "blank to disable logging.");
-DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
+DEFINE_double(map_min_cell_width, 0.01,
+              "Grid map minimum cell width in meters.");
 
 using namespace wavemap_2d;  // NOLINT
 int main(int argc, char** argv) {
@@ -30,13 +31,14 @@ int main(int argc, char** argv) {
   CHECK(!carmen_log_file_path.empty())
       << "The carmen_log_file_path flag must be set to a non-empty string.";
   const std::string output_log_dir = FLAGS_output_log_dir;
-  const auto map_resolution = static_cast<FloatingPoint>(FLAGS_map_resolution);
-  CHECK_GT(map_resolution, 0.f)
-      << "The map_resolution flag must be set to a positive number.";
+  const auto map_min_cell_width =
+      static_cast<FloatingPoint>(FLAGS_map_min_cell_width);
+  CHECK_GT(map_min_cell_width, 0.f)
+      << "The map_min_cell_width flag must be set to a positive number.";
 
   // Set up the mapper
   VolumetricDataStructure::Ptr occupancy_map =
-      std::make_shared<DataStructureType>(map_resolution);
+      std::make_shared<DataStructureType>(map_min_cell_width);
   PointcloudIntegratorType pointcloud_integrator(occupancy_map);
 
   // Open the log file

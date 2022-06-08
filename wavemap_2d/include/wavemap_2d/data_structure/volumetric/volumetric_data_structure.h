@@ -17,8 +17,8 @@ class VolumetricDataStructure {
  public:
   using Ptr = std::shared_ptr<VolumetricDataStructure>;
 
-  explicit VolumetricDataStructure(const FloatingPoint resolution)
-      : resolution_(resolution) {}
+  explicit VolumetricDataStructure(const FloatingPoint min_cell_width)
+      : min_cell_width_(min_cell_width) {}
   virtual ~VolumetricDataStructure() = default;
 
   virtual bool empty() const = 0;
@@ -26,7 +26,7 @@ class VolumetricDataStructure {
   virtual void prune() = 0;
   virtual void clear() = 0;
 
-  FloatingPoint getResolution() const { return resolution_; }
+  FloatingPoint getMinCellWidth() const { return min_cell_width_; }
   virtual size_t getMemoryUsage() const = 0;
 
   virtual Index getMinIndex() const = 0;
@@ -54,7 +54,7 @@ class VolumetricDataStructure {
                     bool used_floating_precision) = 0;
 
  protected:
-  const FloatingPoint resolution_;
+  const FloatingPoint min_cell_width_;
 
   static std::string getHeaderFilePath(const std::string& file_path_prefix) {
     return file_path_prefix + "_header";

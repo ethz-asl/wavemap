@@ -14,8 +14,9 @@ class MeasurementModel {
 
   static constexpr FloatingPoint kRangeMax = 20.f;
 
-  explicit MeasurementModel(FloatingPoint resolution)
-      : resolution_(resolution), resolution_inv_(1.f / resolution) {}
+  explicit MeasurementModel(FloatingPoint min_cell_width)
+      : min_cell_width_(min_cell_width),
+        min_cell_width_inv_(1.f / min_cell_width) {}
   virtual ~MeasurementModel() = default;
 
   void setStartPoint(const Point& start_point) {
@@ -51,8 +52,8 @@ class MeasurementModel {
  protected:
   static constexpr bool kUseClearing = true;
 
-  const FloatingPoint resolution_;
-  const FloatingPoint resolution_inv_;
+  const FloatingPoint min_cell_width_;
+  const FloatingPoint min_cell_width_inv_;
 
   Point W_start_point_ = Point::Zero();
   Point W_end_point_ = Point::Zero();

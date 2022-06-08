@@ -10,11 +10,8 @@ template <typename Map, typename ScalarToRGBAFunction>
 visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
     const Map& grid, const std::string& world_frame,
     const std::string& marker_namespace, ScalarToRGBAFunction color_map) {
-  // TODO(victorr): Parameterize on height and max_resolution instead of depth
-  //                and max_depth
-  const FloatingPoint resolution = grid.getResolution();
-  constexpr QuadtreeIndex::Element kMaxDepth = 14;
-  const FloatingPoint root_node_width = resolution * int_math::exp2(kMaxDepth);
+  const FloatingPoint min_cell_width = grid.getMinCellWidth();
+  constexpr QuadtreeIndex::Element kMaxHeight = 14;
 
   // Default marker
   visualization_msgs::Marker default_marker;
@@ -36,18 +33,17 @@ visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
 
   // Add a marker for each scale
   default_marker.action = visualization_msgs::Marker::MODIFY;
-  for (QuadtreeIndex::Element depth = 0; depth <= kMaxDepth; ++depth) {
+  for (QuadtreeIndex::Element height = 0; height <= kMaxHeight; ++height) {
     ++default_marker.id;
     const FloatingPoint cell_width =
-        resolution *
-        static_cast<FloatingPoint>(int_math::exp2(kMaxDepth - depth));
+        convert::heightToCellWidth(min_cell_width, height);
     default_marker.scale.x = cell_width;
     default_marker.scale.y = cell_width;
     marker_array.markers.emplace_back(default_marker);
   }
 
   // Add a colored square for each leaf
-  grid.forEachLeaf([&marker_array, &color_map, root_node_width](
+  grid.forEachLeaf([&marker_array, &color_map, min_cell_width](
                        const QuadtreeIndex& cell_index,
                        FloatingPoint cell_value) {
     // Skip fully transparent cells
@@ -61,7 +57,7 @@ visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
 
     // Determine the cell's position
     const Point cell_center =
-        convert::nodeIndexToCenterPoint(cell_index, root_node_width);
+        convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
 
     // Create the colored square
     geometry_msgs::Point position_msg;
@@ -74,9 +70,9 @@ visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
     color_msg.b = color.b;
 
     // Add the colored square at the right scale
-    // NOTE: We add 1 to the depth since the cube list markers for each scale
+    // NOTE: We add 1 to the height since the cube list markers for each scale
     //       start at 1 (marker 0 only clears the previous visuals).
-    const size_t scale_marker_idx = cell_index.depth + 1;
+    const size_t scale_marker_idx = cell_index.height + 1;
     marker_array.markers[scale_marker_idx].points.emplace_back(position_msg);
     marker_array.markers[scale_marker_idx].colors.emplace_back(color_msg);
   });

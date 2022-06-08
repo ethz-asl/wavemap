@@ -17,7 +17,7 @@ class BeamIntegrator : public PointcloudIntegrator {
       return;
     }
 
-    MeasurementModelType measurement_model(occupancy_map_->getResolution());
+    MeasurementModelType measurement_model(occupancy_map_->getMinCellWidth());
     measurement_model.setStartPoint(pointcloud.getOrigin());
 
     for (const auto& end_point : pointcloud.getPointsGlobal()) {

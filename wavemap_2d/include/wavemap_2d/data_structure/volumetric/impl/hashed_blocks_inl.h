@@ -76,12 +76,6 @@ void HashedBlocks<CellT>::addToCellValue(const Index& index,
 template <typename CellT>
 void HashedBlocks<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  // TODO(victorr): Remove these hard-coded values and change the quadtree
-  //                classes to expose offset free indexes, instead of
-  //                compensating here.
-  constexpr QuadtreeIndex::Element kMaxDepth = 14;
-  const Index root_node_offset = Index::Constant(int_math::exp2(kMaxDepth - 1));
-
   const Index min_local_cell_index = Index{};
   const Index max_local_cell_index = Index{kCellsPerSide, kCellsPerSide};
 
@@ -96,8 +90,7 @@ void HashedBlocks<CellT>::forEachLeaf(
       const Index cell_index =
           computeCellIndexFromBlockIndexAndIndex(block_index, local_cell_index);
       const QuadtreeIndex hierarchical_cell_index =
-          convert::indexAndDepthToNodeIndex(cell_index + root_node_offset,
-                                            kMaxDepth, kMaxDepth);
+          convert::indexAndHeightToNodeIndex(cell_index, 0);
       visitor_fn(hierarchical_cell_index, cell_data);
     }
   }
@@ -105,7 +98,7 @@ void HashedBlocks<CellT>::forEachLeaf(
 
 template <typename CellT>
 cv::Mat HashedBlocks<CellT>::getImage(bool use_color) const {
-  DenseGrid<CellT> dense_grid(resolution_);
+  DenseGrid<CellT> dense_grid(min_cell_width_);
   for (const Index& index : Grid(getMinIndex(), getMaxIndex())) {
     const FloatingPoint cell_value = getCellValue(index);
     dense_grid.setCellValue(index, cell_value);

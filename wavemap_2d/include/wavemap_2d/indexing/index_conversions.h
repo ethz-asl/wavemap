@@ -5,6 +5,7 @@
 #include "wavemap_2d/data_structure/generic/aabb.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
+#include "wavemap_2d/utils/int_math.h"
 
 namespace wavemap_2d::convert {
 // TODO(victorr): Check styleguide on whether these classless methods names
@@ -22,103 +23,90 @@ inline Index scaledPointToCeilIndex(const Point& point) {
 }
 
 inline Index pointToNearestIndex(const Point& point,
-                                 FloatingPoint resolution_inv) {
-  return scaledPointToNearestIndex(point * resolution_inv);
+                                 FloatingPoint cell_width_inv) {
+  return scaledPointToNearestIndex(point * cell_width_inv);
 }
 
 inline Index pointToFloorIndex(const Point& point,
-                               FloatingPoint resolution_inv) {
-  return scaledPointToFloorIndex(point * resolution_inv);
+                               FloatingPoint cell_width_inv) {
+  return scaledPointToFloorIndex(point * cell_width_inv);
 }
 
 inline Index pointToCeilIndex(const Point& point,
-                              FloatingPoint resolution_inv) {
-  return scaledPointToCeilIndex(point * resolution_inv);
+                              FloatingPoint cell_width_inv) {
+  return scaledPointToCeilIndex(point * cell_width_inv);
 }
 
-inline Point indexToCenterPoint(const Index& index, FloatingPoint resolution) {
-  return (index.cast<FloatingPoint>() + Vector::Constant(0.5f)) * resolution;
+inline Point indexToMinCorner(const Index& index, FloatingPoint cell_width) {
+  return index.cast<FloatingPoint>() * cell_width;
+}
+
+inline Point indexToCenterPoint(const Index& index, FloatingPoint cell_width) {
+  return (index.cast<FloatingPoint>() + Vector::Constant(0.5f)) * cell_width;
 }
 
 inline Index indexToNewResolution(const Index& src_index,
-                                  FloatingPoint src_resolution,
-                                  FloatingPoint dst_resolution) {
-  const Point center_point = indexToCenterPoint(src_index, src_resolution);
-  return pointToNearestIndex(center_point, 1.f / dst_resolution);
+                                  FloatingPoint src_cell_width,
+                                  FloatingPoint dst_cell_width) {
+  const Point center_point = indexToCenterPoint(src_index, src_cell_width);
+  return pointToNearestIndex(center_point, 1.f / dst_cell_width);
+}
+
+inline FloatingPoint heightToCellWidth(FloatingPoint min_cell_width,
+                                       QuadtreeIndex::Element height) {
+  return min_cell_width * static_cast<FloatingPoint>(int_math::exp2(height));
 }
 
 inline QuadtreeIndex pointToNodeIndex(const Point& point,
-                                      FloatingPoint root_node_width,
-                                      QuadtreeIndex::Element depth) {
-  const auto exp2_depth = static_cast<FloatingPoint>(1 << depth);
-  const FloatingPoint node_width_inv = exp2_depth / root_node_width;
-  const FloatingPoint half_root_width_scaled = 0.5f * exp2_depth;
-  constexpr FloatingPoint half_node_width_scaled = 0.5f;
-  const Point scaled_point =
-      point * node_width_inv +
-      Vector::Constant(half_root_width_scaled - half_node_width_scaled);
-  Index position_index = scaled_point.array().round().cast<IndexElement>();
-  return {depth, position_index};
+                                      FloatingPoint min_cell_width,
+                                      QuadtreeIndex::Element height) {
+  const FloatingPoint node_width = heightToCellWidth(min_cell_width, height);
+  const Index position_index = pointToNearestIndex(point, 1.f / node_width);
+  return {height, position_index};
 }
 
-// TODO(victorr): Parameterize on height and max_resolution instead
 inline Point nodeIndexToCenterPoint(const QuadtreeIndex& node_index,
-                                    FloatingPoint root_node_width) {
-  const FloatingPoint half_root_width = 0.5f * root_node_width;
+                                    FloatingPoint min_cell_width) {
   const FloatingPoint node_width =
-      root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
-  const FloatingPoint half_node_width = 0.5f * node_width;
-  return node_index.position.cast<FloatingPoint>() * node_width +
-         Vector::Constant(half_node_width - half_root_width);
+      heightToCellWidth(min_cell_width, node_index.height);
+  return indexToCenterPoint(node_index.position, node_width);
 }
 
 inline Point nodeIndexToMinCorner(const QuadtreeIndex& node_index,
-                                  FloatingPoint root_node_width) {
-  const FloatingPoint half_root_width = 0.5f * root_node_width;
+                                  FloatingPoint min_cell_width) {
   const FloatingPoint node_width =
-      root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
-  return node_index.position.cast<FloatingPoint>() * node_width -
-         Vector::Constant(half_root_width);
+      heightToCellWidth(min_cell_width, node_index.height);
+  return indexToMinCorner(node_index.position, node_width);
 }
 
 inline Point nodeIndexToMaxCorner(const QuadtreeIndex& node_index,
-                                  FloatingPoint root_node_width) {
-  const FloatingPoint half_root_width = 0.5f * root_node_width;
+                                  FloatingPoint min_cell_width) {
   const FloatingPoint node_width =
-      root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
+      heightToCellWidth(min_cell_width, node_index.height);
   return node_index.position.cast<FloatingPoint>() * node_width +
-         Vector::Constant(node_width - half_root_width);
+         Vector::Constant(node_width);
 }
 
 inline AABB<Point> nodeIndexToAABB(const QuadtreeIndex& node_index,
-                                   FloatingPoint root_node_width) {
-  const FloatingPoint half_root_width = 0.5f * root_node_width;
+                                   FloatingPoint min_cell_width) {
   const FloatingPoint node_width =
-      root_node_width / static_cast<FloatingPoint>(1 << node_index.depth);
-  const Point min_corner =
-      node_index.position.cast<FloatingPoint>() * node_width -
-      Vector::Constant(half_root_width);
+      heightToCellWidth(min_cell_width, node_index.height);
+  const Point min_corner = indexToMinCorner(node_index.position, node_width);
   const Point max_corner = min_corner + Vector::Constant(node_width);
   return {min_corner, max_corner};
 }
 
-// TODO(victorr): Consider parameterizing nodes on height ipv depth
-inline QuadtreeIndex indexAndDepthToNodeIndex(
-    const Index& index, QuadtreeIndex::Element depth,
-    QuadtreeIndex::Element max_depth) {
-  DCHECK_LE(depth, max_depth);
-  const QuadtreeIndex::Element node_height = max_depth - depth;
-  QuadtreeIndex node_index{depth, index};
-  node_index.position.x() >>= node_height;
-  node_index.position.y() >>= node_height;
+inline QuadtreeIndex indexAndHeightToNodeIndex(const Index& index,
+                                               QuadtreeIndex::Element height) {
+  DCHECK_GE(height, 0);
+  QuadtreeIndex node_index{height, index};
+  node_index.position = int_math::div_exp2(node_index.position, height);
   return node_index;
 }
 
-inline Index nodeIndexToIndex(const QuadtreeIndex& node_index,
-                              QuadtreeIndex::Element max_depth) {
-  DCHECK_LE(node_index.depth, max_depth);
-  const QuadtreeIndex::Element node_height = max_depth - node_index.depth;
-  Index index = node_index.position * (1 << node_height);
+inline Index nodeIndexToIndex(const QuadtreeIndex& node_index) {
+  DCHECK_GE(node_index.height, 0);
+  Index index = int_math::mult_exp2(node_index.position, node_index.height);
   return index;
 }
 }  // namespace wavemap_2d::convert

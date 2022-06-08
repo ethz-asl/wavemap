@@ -9,15 +9,15 @@
 namespace wavemap_2d {
 class VolumetricQuadtreeInterface : public VolumetricDataStructure {
  public:
-  template <typename... ConstructorArgs>
-  explicit VolumetricQuadtreeInterface(ConstructorArgs&&... args)
-      : VolumetricDataStructure(std::forward<ConstructorArgs>(args)...) {}
+  static constexpr QuadtreeIndex::Element kMaxHeight = 14;
+
+  using VolumetricDataStructure::VolumetricDataStructure;
   ~VolumetricQuadtreeInterface() override = default;
+
+  virtual QuadtreeIndex::ChildArray getFirstChildIndices() const = 0;
 
   virtual Index getMinPossibleIndex() const = 0;
   virtual Index getMaxPossibleIndex() const = 0;
-  virtual QuadtreeIndex::Element getMaxDepth() const = 0;
-  virtual FloatingPoint getRootNodeWidth() const = 0;
 
   using VolumetricDataStructure::setCellValue;
   virtual void setCellValue(const QuadtreeIndex& index,
@@ -27,11 +27,6 @@ class VolumetricQuadtreeInterface : public VolumetricDataStructure {
                               FloatingPoint update) = 0;
 
   using VolumetricDataStructure::forEachLeaf;
-
-  virtual FloatingPoint computeNodeWidthAtDepth(
-      QuadtreeIndex::Element depth) = 0;
-  virtual Vector computeNodeHalvedDiagonalAtDepth(
-      QuadtreeIndex::Element depth) = 0;
 };
 }  // namespace wavemap_2d
 

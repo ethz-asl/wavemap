@@ -17,7 +17,7 @@ class RayIntegrator : public PointcloudIntegrator {
       return;
     }
 
-    MeasurementModelType measurement_model(occupancy_map_->getResolution());
+    MeasurementModelType measurement_model(occupancy_map_->getMinCellWidth());
     measurement_model.setStartPoint(pointcloud.getOrigin());
 
     for (const auto& end_point : pointcloud.getPointsGlobal()) {
@@ -28,7 +28,7 @@ class RayIntegrator : public PointcloudIntegrator {
 
       const Ray ray(measurement_model.getStartPoint(),
                     measurement_model.getEndPointOrMaxRange(),
-                    occupancy_map_->getResolution());
+                    occupancy_map_->getMinCellWidth());
       for (const auto& index : ray) {
         const FloatingPoint update = measurement_model.computeUpdateAt(index);
         occupancy_map_->addToCellValue(index, update);
