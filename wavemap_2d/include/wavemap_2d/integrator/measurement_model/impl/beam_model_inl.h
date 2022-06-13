@@ -73,11 +73,11 @@ inline FloatingPoint BeamModel::Qcdf(FloatingPoint t) {
   if (t < -3.f) {
     return 0.f;
   } else if (t <= -1.f) {
-    return 1.f / 48.f * t_plus_three * t_plus_three * t_plus_three;
+    return (1.f / 48.f) * t_plus_three * t_plus_three * t_plus_three;
   } else if (t < 1.f) {
-    return 1.f / 2.f + 1.f / 24.f * t * t_plus_three * three_min_t;
+    return (1.f / 2.f) + (1.f / 24.f) * t * t_plus_three * three_min_t;
   } else if (t <= 3.f) {
-    return 1.f - 1.f / 48.f * three_min_t * three_min_t * three_min_t;
+    return 1.f - (1.f / 48.f) * three_min_t * three_min_t * three_min_t;
   } else {
     return 1.f;
   }

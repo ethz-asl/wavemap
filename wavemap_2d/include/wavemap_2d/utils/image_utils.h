@@ -17,8 +17,8 @@ static cv::Mat MatrixToImage(const MatrixT<T>& matrix,
 
   cv::Mat image;
   cv::eigen2cv(matrix, image);
-  image.convertTo(image, CV_8UC1, 255.f / (upper_bound - lower_bound),
-                  -lower_bound);
+  const FloatingPoint scale_factor = 255.f / (upper_bound - lower_bound);
+  image.convertTo(image, CV_8UC1, scale_factor, -lower_bound * scale_factor);
   cv::flip(image, image, -1);
   cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
 
