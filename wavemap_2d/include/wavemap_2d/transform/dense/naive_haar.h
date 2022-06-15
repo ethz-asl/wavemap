@@ -7,8 +7,6 @@ namespace wavemap_2d {
 template <typename T>
 class NaiveHaar : public DiscreteWaveletTransform<T> {
  private:
-  static constexpr T kSqrt2Inv = 1 / M_SQRT2;
-
   MatrixT<T> singleForwardPass(MatrixT<T> matrix) const override {
     const Eigen::Index rows = matrix.rows();
     const Eigen::Index cols = matrix.cols();
@@ -21,8 +19,8 @@ class NaiveHaar : public DiscreteWaveletTransform<T> {
     typename MatrixT<T>::BlockXpr V1 = matrix.block(0, 0, rows, cols / 2);
     typename MatrixT<T>::BlockXpr V2 =
         matrix.block(0, cols / 2, rows, cols / 2);
-    V1 = (even_cols + odd_cols) * kSqrt2Inv;
-    V2 = (even_cols - odd_cols) * kSqrt2Inv;
+    V1 = (even_cols + odd_cols) * constants<T>::kSqrt2Inv;
+    V2 = (even_cols - odd_cols) * constants<T>::kSqrt2Inv;
 
     using RowStride = Eigen::Stride<Eigen::Dynamic, 2>;
     MatrixT<T> even_rows = Eigen::Map<MatrixT<T>, 0, RowStride>(
@@ -32,8 +30,8 @@ class NaiveHaar : public DiscreteWaveletTransform<T> {
     typename MatrixT<T>::BlockXpr H1 = matrix.block(0, 0, rows / 2, cols);
     typename MatrixT<T>::BlockXpr H2 =
         matrix.block(rows / 2, 0, rows / 2, cols);
-    H1 = (even_rows + odd_rows) * kSqrt2Inv;
-    H2 = (even_rows - odd_rows) * kSqrt2Inv;
+    H1 = (even_rows + odd_rows) * constants<T>::kSqrt2Inv;
+    H2 = (even_rows - odd_rows) * constants<T>::kSqrt2Inv;
 
     return matrix;
   }
@@ -49,8 +47,8 @@ class NaiveHaar : public DiscreteWaveletTransform<T> {
         matrix.data() + rows, rows, cols / 2, ColStride(2 * rows));
     MatrixT<T> V1 = matrix.block(0, 0, rows, cols / 2);
     MatrixT<T> V2 = matrix.block(0, cols / 2, rows, cols / 2);
-    even_cols = (V1 + V2) * kSqrt2Inv;
-    odd_cols = (V1 - V2) * kSqrt2Inv;
+    even_cols = (V1 + V2) * constants<T>::kSqrt2Inv;
+    odd_cols = (V1 - V2) * constants<T>::kSqrt2Inv;
 
     using RowStride = Eigen::Stride<Eigen::Dynamic, 2>;
     Eigen::Map<MatrixT<T>, 0, RowStride> even_rows(matrix.data(), rows / 2,
@@ -59,8 +57,8 @@ class NaiveHaar : public DiscreteWaveletTransform<T> {
                                                   cols, RowStride(rows, 2));
     MatrixT<T> H1 = matrix.block(0, 0, rows / 2, cols);
     MatrixT<T> H2 = matrix.block(rows / 2, 0, rows / 2, cols);
-    even_rows = (H1 + H2) * kSqrt2Inv;
-    odd_rows = (H1 - H2) * kSqrt2Inv;
+    even_rows = (H1 + H2) * constants<T>::kSqrt2Inv;
+    odd_rows = (H1 - H2) * constants<T>::kSqrt2Inv;
 
     return matrix;
   }

@@ -57,8 +57,8 @@ class FixtureBase : public ::testing::Test {
     return {getRandomSignedDistance(), getRandomSignedDistance()};
   }
 
-  FloatingPoint getRandomAngle(FloatingPoint min_angle = -M_PIf32,
-                               FloatingPoint max_angle = M_PIf32) const {
+  FloatingPoint getRandomAngle(FloatingPoint min_angle = -kPi,
+                               FloatingPoint max_angle = kPi) const {
     return random_number_generator_->getRandomRealNumber(min_angle, max_angle);
   }
 

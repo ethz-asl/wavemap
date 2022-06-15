@@ -21,7 +21,7 @@ void CoarseToFineIntegrator::integratePointcloud(
   // TODO(victorr): Make this configurable
   // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
   const RangeImage range_image =
-      computeRangeImage(pointcloud, -M_PI_2f32, M_PI_2f32, pointcloud.size());
+      computeRangeImage(pointcloud, -kHalfPi, kHalfPi, pointcloud.size());
   RangeImageIntersector range_image_intersector(range_image);
 
   // Get a pointer to the underlying specialized quadtree data structure

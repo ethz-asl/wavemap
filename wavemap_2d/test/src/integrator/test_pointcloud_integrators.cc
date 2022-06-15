@@ -52,8 +52,8 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
 
-    const FloatingPoint min_angle = -M_PIf32;
-    const FloatingPoint max_angle = M_PIf32;
+    const FloatingPoint min_angle = -kPi;
+    const FloatingPoint max_angle = kPi;
     const int num_beams = getRandomIndexElement(10, 100);
     const FloatingPoint min_distance = static_cast<FloatingPoint>(num_beams) *
                                        min_cell_width / (max_angle - min_angle);
@@ -100,8 +100,8 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
     // TODO(victorr): Use random FoVs and numbers of beams once these are
     //                configurable
-    constexpr FloatingPoint kMinAngle = -M_PI_2f32;
-    constexpr FloatingPoint kMaxAngle = M_PI_2f32;
+    constexpr FloatingPoint kMinAngle = -kHalfPi;
+    constexpr FloatingPoint kMaxAngle = kHalfPi;
     constexpr int kNumBeams = 400;
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
@@ -162,8 +162,8 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
     // TODO(victorr): Use random FoVs and numbers of beams once these are
     //                configurable
-    constexpr FloatingPoint kMinAngle = -M_PI_2f32;
-    constexpr FloatingPoint kMaxAngle = M_PI_2f32;
+    constexpr FloatingPoint kMinAngle = -kHalfPi;
+    constexpr FloatingPoint kMaxAngle = kHalfPi;
     constexpr int kNumBeams = 400;
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;

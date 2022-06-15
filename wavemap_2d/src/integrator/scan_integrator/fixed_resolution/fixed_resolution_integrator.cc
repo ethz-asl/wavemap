@@ -19,7 +19,7 @@ void FixedResolutionIntegrator::integratePointcloud(
   // TODO(victorr): Make this configurable
   // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
   const auto [range_image, aabb] = computeRangeImageAndAABB(
-      pointcloud, -M_PI_2f32, M_PI_2f32, pointcloud.size());
+      pointcloud, -kHalfPi, kHalfPi, pointcloud.size());
 
   // Compute the min and max map indices that could be affected by the cloud
   const FloatingPoint min_cell_width = occupancy_map_->getMinCellWidth();

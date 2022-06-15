@@ -73,8 +73,7 @@ int main(int argc, char** argv) {
         pointcloud.resize(num_beams);
         {
           bool success = true;
-          constexpr auto PI = static_cast<float>(M_PI);
-          const float angle_increment = PI / static_cast<float>(num_beams);
+          const float angle_increment = kPi / static_cast<float>(num_beams);
           for (int beam_idx = 0; beam_idx < num_beams; ++beam_idx) {
             float distance;
             if (!(iss >> distance)) {
@@ -84,7 +83,7 @@ int main(int argc, char** argv) {
             max_distance = std::max(distance, max_distance);
 
             const float angle =
-                static_cast<float>(beam_idx) * angle_increment + (PI / 2.f);
+                static_cast<float>(beam_idx) * angle_increment + kHalfPi;
             float x = distance * std::cos(angle);
             float y = distance * std::sin(angle);
             pointcloud[beam_idx] << x, y;
@@ -102,7 +101,7 @@ int main(int argc, char** argv) {
           LOG(WARNING) << "Could not parse pose... skipping.";
           continue;
         }
-        pose.getRotation().angle() -= M_PIf32;
+        pose.getRotation().angle() -= kPi;
 
         // Integrate the pointcloud
         PosedPointcloud posed_pointcloud(pose, pointcloud);

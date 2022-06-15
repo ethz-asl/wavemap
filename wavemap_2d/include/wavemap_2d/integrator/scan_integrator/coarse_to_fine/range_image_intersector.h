@@ -39,7 +39,7 @@ class RangeImageIntersector {
       const Transformation& T_W_C, const AABB<Point>& W_aabb) {
     // If the sensor is contained in the AABB, it overlaps with the full range
     if (W_aabb.containsPoint(T_W_C.getPosition())) {
-      return {-M_PIf32, M_PIf32};
+      return {-kPi, kPi};
     }
 
     // Translate the AABB into frame C, but do not yet rotate it
@@ -102,7 +102,7 @@ class RangeImageIntersector {
 
     // Make the angle range conservative by padding it with the worst-case error
     // of our atan approximation (in the direction that makes the range largest)
-    if (M_PIf32 < angle_pair.max_angle - angle_pair.min_angle) {
+    if (kPi < angle_pair.max_angle - angle_pair.min_angle) {
       angle_pair.min_angle += kWorstCaseAtan2ApproxError;
       angle_pair.max_angle -= kWorstCaseAtan2ApproxError;
     } else {
@@ -205,7 +205,7 @@ class RangeImageIntersector {
         std::abs(y) + std::numeric_limits<FloatingPoint>::epsilon();
     FloatingPoint r =
         (x - std::copysign(abs_y, x)) / (abs_y + std::abs(x));  // NOLINT
-    FloatingPoint angle = M_PIf32 / 2.f - std::copysign(M_PIf32 / 4.f, x);
+    FloatingPoint angle = kHalfPi - std::copysign(kQuarterPi, x);
     angle += (0.1963f * r * r - 0.9817f) * r;
     return std::copysign(angle, y);
   }

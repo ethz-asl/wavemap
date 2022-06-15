@@ -9,9 +9,8 @@ using RangeImageTest = FixtureBase;
 
 TEST_F(RangeImageTest, ConstructorAndAccessors) {
   for (int idx = 0; idx < 10; ++idx) {
-    const FloatingPoint min_angle = getRandomAngle(-M_PIf32, M_PI_2f32);
-    const FloatingPoint max_angle =
-        getRandomAngle(min_angle + kEpsilon, M_PIf32);
+    const FloatingPoint min_angle = getRandomAngle(-kPi, kHalfPi);
+    const FloatingPoint max_angle = getRandomAngle(min_angle + kEpsilon, kPi);
     const Eigen::Index num_beams = getRandomIndexElement(1, 2048);
     RangeImage range_image(min_angle, max_angle, num_beams);
 
@@ -52,9 +51,8 @@ TEST_F(RangeImageTest, IndexConversions) {
     }
 
     // Construct a random range image
-    const FloatingPoint min_angle = getRandomAngle(-M_PIf32, M_PI_2f32);
-    const FloatingPoint max_angle =
-        getRandomAngle(min_angle + kEpsilon, M_PIf32);
+    const FloatingPoint min_angle = getRandomAngle(-kPi, kHalfPi);
+    const FloatingPoint max_angle = getRandomAngle(min_angle + kEpsilon, kPi);
     const Eigen::Index num_beams = getRandomIndexElement(2, 2048);
     RangeImage range_image(min_angle, max_angle, num_beams);
 

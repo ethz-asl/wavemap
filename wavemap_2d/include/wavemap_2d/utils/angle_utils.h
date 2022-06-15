@@ -3,14 +3,14 @@
 
 namespace wavemap_2d::angle_math {
 inline FloatingPoint normalize(FloatingPoint angle) {
-  return std::remainder(angle, M_PIf32);
+  return std::remainder(angle, kPi);
 }
 
 inline FloatingPoint normalize_near(FloatingPoint angle) {
-  if (angle < -M_PIf32) {
-    angle += 2.f * M_PIf32;
-  } else if (M_PIf32 < angle) {
-    angle -= 2.f * M_PIf32;
+  if (angle < -kPi) {
+    angle += kTwoPi;
+  } else if (kPi < angle) {
+    angle -= kTwoPi;
   }
   return angle;
 }

@@ -8,7 +8,7 @@
 namespace wavemap_2d {
 class BeamModel : public MeasurementModel {
  public:
-  static constexpr FloatingPoint kAngleSigma = M_PIf32 / 400.f / 2.f / 6.f;
+  static constexpr FloatingPoint kAngleSigma = kPi / 400.f / 2.f / 6.f;
   static constexpr FloatingPoint kRangeSigma = 0.15f / 6.f;
   static constexpr FloatingPoint kAngleThresh = 6.f * kAngleSigma;
   static constexpr FloatingPoint kRangeDeltaThresh = 6.f * kRangeSigma;

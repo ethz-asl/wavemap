@@ -42,8 +42,8 @@ class CoarseToFineIntegratorTest : public FixtureBase {
 TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
-    constexpr FloatingPoint kMinAngle = -M_PI_2f32;
-    constexpr FloatingPoint kMaxAngle = M_PI_2f32;
+    constexpr FloatingPoint kMinAngle = -kHalfPi;
+    constexpr FloatingPoint kMaxAngle = kHalfPi;
     const int num_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
@@ -160,7 +160,7 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
 TEST_F(CoarseToFineIntegratorTest, ApproxAtan2) {
   constexpr int kNumAngles = 360 * 1000;
   for (int i = 0; i <= kNumAngles; ++i) {
-    const FloatingPoint angle = 2.f * M_PIf32 * static_cast<FloatingPoint>(i) /
+    const FloatingPoint angle = kTwoPi * static_cast<FloatingPoint>(i) /
                                 static_cast<FloatingPoint>(kNumAngles);
     const Vector bearing{std::cos(angle), std::sin(angle)};
     EXPECT_NEAR(RangeImageIntersector::atan2_approx(bearing.y(), bearing.x()),
@@ -241,8 +241,8 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
         test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
     std::array<FloatingPoint, AABB<Point>::kNumCorners> angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
-      reference_angle_pair.min_angle = -M_PIf32;
-      reference_angle_pair.max_angle = M_PIf32;
+      reference_angle_pair.min_angle = -kPi;
+      reference_angle_pair.max_angle = kPi;
     } else {
       for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
         angles[corner_idx] =
@@ -251,7 +251,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
       std::sort(angles.begin(), angles.end());
       const FloatingPoint min_angle = angles[0];
       const FloatingPoint max_angle = angles[3];
-      const bool angle_range_wraps_around = M_PIf32 < max_angle - min_angle;
+      const bool angle_range_wraps_around = kPi < max_angle - min_angle;
       if (angle_range_wraps_around) {
         const FloatingPoint smallest_angle_above_zero =
             *std::upper_bound(angles.begin(), angles.end(), 0.f);
@@ -269,8 +269,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
                                                            test.W_aabb);
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
     const bool angle_range_wraps_around =
-        M_PIf32 <
-        reference_angle_pair.max_angle - reference_angle_pair.min_angle;
+        kPi < reference_angle_pair.max_angle - reference_angle_pair.min_angle;
     bool check_failed = false;
     if (angle_range_wraps_around) {
       EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
@@ -331,8 +330,8 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
-    constexpr FloatingPoint kMinAngle = -M_PI_2f32;
-    constexpr FloatingPoint kMaxAngle = M_PI_2f32;
+    constexpr FloatingPoint kMinAngle = -kHalfPi;
+    constexpr FloatingPoint kMaxAngle = kHalfPi;
     const int num_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 10.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
