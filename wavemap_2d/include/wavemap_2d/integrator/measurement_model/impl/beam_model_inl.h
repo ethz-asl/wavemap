@@ -11,43 +11,28 @@ inline FloatingPoint BeamModel::computeUpdateAt(const Index& index) const {
   const Point C_cell_center = W_cell_center - W_start_point_;
 
   // Compute the distance to the sensor
-  const FloatingPoint cell_to_sensor_distance = C_cell_center.norm();
-  // Return early if the point is beyond the beam's max range
-  if (kRangeMax < cell_to_sensor_distance) {
-    return 0.f;
-  }
-  // Return early if the point is inside the sensor or far behind the surface
-  if (cell_to_sensor_distance < kEpsilon ||
-      measured_distance_ + kRangeDeltaThresh < cell_to_sensor_distance) {
+  const FloatingPoint d_C_cell = C_cell_center.norm();
+  // Return early if the point is inside the sensor, beyond the beam's max
+  // range, or far behind the surface
+  if (d_C_cell < kEpsilon || kRangeMax < d_C_cell ||
+      measured_distance_ + kRangeDeltaThresh < d_C_cell) {
     return 0.f;
   }
 
   // Compute the angle w.r.t. the ray
-  // NOTE: This relative angle computation method works in 2D and 3D.
-  const FloatingPoint dot_prod_normalized =
-      C_cell_center.dot(C_end_point_normalized_) / cell_to_sensor_distance;
-  // Return early if the point is behind the sensor
-  if (dot_prod_normalized < 0.f) {
-    return 0.f;
-  }
-  FloatingPoint cell_to_beam_angle;
-  if (dot_prod_normalized <= 1.f) {
-    // The normalized dot product is within the arc cosine's valid range
-    cell_to_beam_angle = std::acos(dot_prod_normalized);
-  } else {
-    // Due to floating point precision, the normalized dot product can slightly
-    // exceed 1.0 for points on the beam's centerline (i.e. if the angle is 0).
-    cell_to_beam_angle = 0.f;
-  }
-  DCHECK(!std::isnan(cell_to_beam_angle));
+  // NOTE: For a method that works in 3D as well as 2D, see commit
+  //       4abe1af9fc66cc069697727cc14577ade3abe092 or earlier.
+  const FloatingPoint cell_angle =
+      std::atan2(C_cell_center.y(), C_cell_center.x());
+  const FloatingPoint cell_to_beam_angle = std::abs(cell_angle - beam_angle_);
+
   // Return early if the point is outside the beam's non-zero angular region
   if (kAngleThresh < cell_to_beam_angle) {
     return 0.f;
   }
 
   // Compute the full measurement update
-  return computeUpdate(cell_to_sensor_distance, cell_to_beam_angle,
-                       measured_distance_);
+  return computeUpdate(d_C_cell, cell_to_beam_angle, measured_distance_);
 }
 
 inline FloatingPoint BeamModel::computeUpdate(

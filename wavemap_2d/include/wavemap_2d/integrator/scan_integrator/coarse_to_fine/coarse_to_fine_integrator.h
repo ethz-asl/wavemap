@@ -25,7 +25,7 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
 
  private:
   static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
-      BeamModel::kScaling * 238.732414637843f;
+      BeamModel::kScaling * 572.957795130823f;
   static constexpr FloatingPoint kMaxGradientOnBoundary =
       BeamModel::kScaling * 14.9999999999997f;
 

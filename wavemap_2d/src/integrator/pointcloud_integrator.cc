@@ -9,6 +9,7 @@ bool PointcloudIntegrator::isPointcloudValid(
                  << origin;
     return false;
   }
+
   return true;
 }
 }  // namespace wavemap_2d

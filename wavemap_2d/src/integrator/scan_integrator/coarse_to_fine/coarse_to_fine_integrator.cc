@@ -11,6 +11,12 @@ void CoarseToFineIntegrator::integratePointcloud(
     return;
   }
 
+  // TODO(victorr): Check that the pointcloud's angular resolution is lower than
+  //                the angular uncertainty of the beam model. This is necessary
+  //                since this measurement integrator assumes the beams don't
+  //                overlap, i.e. for each sample point we only evaluate the
+  //                contribution from the nearest beam.
+
   // Compute the range image and the scan's AABB
   // TODO(victorr): Make this configurable
   // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)

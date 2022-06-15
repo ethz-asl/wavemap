@@ -23,8 +23,9 @@ TEST_F(MeasurementModelTest, BeamModel) {
     beam_model.setEndPoint(W_end_point);
 
     const Point C_end_point = W_end_point - W_start_point;
-    const FloatingPoint measured_distance = C_end_point.norm();
-    const Point C_end_point_normalized = C_end_point / measured_distance;
+    const FloatingPoint beam_length = C_end_point.norm();
+    const FloatingPoint beam_angle =
+        std::atan2(C_end_point.y(), C_end_point.x());
 
     const Index bottom_left_idx = beam_model.getBottomLeftUpdateIndex();
     const Index top_right_idx = beam_model.getTopRightUpdateIndex();
@@ -48,18 +49,17 @@ TEST_F(MeasurementModelTest, BeamModel) {
       const Point W_cell_center =
           convert::indexToCenterPoint(index, min_cell_width);
       const Point C_cell_center = W_cell_center - W_start_point;
-      const FloatingPoint distance = C_cell_center.norm();
-      const FloatingPoint dot_prod_normalized =
-          C_cell_center.dot(C_end_point_normalized) / distance;
-      const FloatingPoint angle =
-          std::acos(std::clamp(dot_prod_normalized, 0.f, 1.f));
+      const FloatingPoint cell_distance = C_cell_center.norm();
+      const FloatingPoint cell_angle =
+          std::atan2(C_cell_center.y(), C_cell_center.x());
+      const FloatingPoint angle = std::abs(cell_angle - beam_angle);
 
       const FloatingPoint non_zero_range =
-          measured_distance + BeamModel::kRangeDeltaThresh;
-      const bool within_range = distance <= non_zero_range;
+          beam_length + BeamModel::kRangeDeltaThresh;
+      const bool within_range = cell_distance <= non_zero_range;
       const bool within_angle = angle <= BeamModel::kAngleThresh;
       if (within_range && within_angle) {
-        if (distance < measured_distance) {
+        if (cell_distance < beam_length) {
           EXPECT_LE(update, 0.f)
               << "Logodds occupancy updates in front of the sensor should be "
                  "non-positive (free or unknown space)";
@@ -72,9 +72,10 @@ TEST_F(MeasurementModelTest, BeamModel) {
         EXPECT_FLOAT_EQ(update, 0.f)
             << "Encountered non-zero update for cell that is not within the "
                "beam's "
-            << (!within_range ? "range (" + std::to_string(distance) + " !<= " +
-                                    std::to_string(non_zero_range) + ") "
-                              : "")
+            << (!within_range
+                    ? "range (" + std::to_string(cell_distance) +
+                          " !<= " + std::to_string(non_zero_range) + ") "
+                    : "")
             << (!within_range && !within_angle ? " and " : "")
             << (!within_angle
                     ? "angle (" + std::to_string(angle) + " !<= " +

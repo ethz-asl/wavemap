@@ -28,32 +28,24 @@ inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
     return 0.f;
   }
 
-  const auto first_idx =
-      std::max(0, range_image.angleToNearestIndex(azimuth_angle_C_cell -
-                                                  BeamModel::kAngleThresh));
-  const auto last_idx =
-      std::min(range_image.getNumBeams() - 1,
-               range_image.angleToNearestIndex(azimuth_angle_C_cell +
-                                               BeamModel::kAngleThresh));
-  FloatingPoint total_update = 0.f;
-  for (RangeImageIndex idx = first_idx; idx <= last_idx; ++idx) {
-    const FloatingPoint measured_distance = range_image[idx];
-    if (measured_distance + BeamModel::kRangeDeltaThresh < d_C_cell) {
-      continue;
-    }
-
-    const FloatingPoint beam_azimuth_angle = range_image.indexToAngle(idx);
-    const FloatingPoint cell_to_beam_angle =
-        std::abs(azimuth_angle_C_cell - beam_azimuth_angle);
-    if (BeamModel::kAngleThresh < cell_to_beam_angle) {
-      continue;
-    }
-
-    total_update += BeamModel::computeUpdate(d_C_cell, cell_to_beam_angle,
-                                             measured_distance);
+  const auto idx = range_image.angleToNearestIndex(azimuth_angle_C_cell);
+  if (idx < 0 || range_image.getNumBeams() <= idx) {
+    return 0.f;
+  }
+  const FloatingPoint measured_distance = range_image[idx];
+  if (measured_distance + BeamModel::kRangeDeltaThresh < d_C_cell) {
+    return 0.f;
   }
 
-  return total_update;
+  const FloatingPoint beam_azimuth_angle = range_image.indexToAngle(idx);
+  const FloatingPoint cell_to_beam_angle =
+      std::abs(azimuth_angle_C_cell - beam_azimuth_angle);
+  if (BeamModel::kAngleThresh < cell_to_beam_angle) {
+    return 0.f;
+  }
+
+  return BeamModel::computeUpdate(d_C_cell, cell_to_beam_angle,
+                                  measured_distance);
 }
 }  // namespace wavemap_2d
 

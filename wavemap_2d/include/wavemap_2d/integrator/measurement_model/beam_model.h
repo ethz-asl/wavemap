@@ -8,8 +8,8 @@
 namespace wavemap_2d {
 class BeamModel : public MeasurementModel {
  public:
-  static constexpr FloatingPoint kAngleSigma = M_PIf32 / 400.f / 5.f;
-  static constexpr FloatingPoint kRangeSigma = 0.1f / 4.f;
+  static constexpr FloatingPoint kAngleSigma = M_PIf32 / 400.f / 2.f / 6.f;
+  static constexpr FloatingPoint kRangeSigma = 0.15f / 6.f;
   static constexpr FloatingPoint kAngleThresh = 6.f * kAngleSigma;
   static constexpr FloatingPoint kRangeDeltaThresh = 6.f * kRangeSigma;
   static constexpr FloatingPoint kScaling = 0.5f;
@@ -29,16 +29,15 @@ class BeamModel : public MeasurementModel {
                                      FloatingPoint measured_distance);
 
  private:
-  Point C_end_point_;
-  Point C_end_point_normalized_;
+  FloatingPoint beam_angle_;
   FloatingPoint max_lateral_component_ = 0.f;
 
   void updateCachedVariablesDerived() override {
-    C_end_point_ = W_end_point_ - W_start_point_;
     if (measured_distance_ < kEpsilon) {
-      C_end_point_normalized_ = Point::Zero();
+      beam_angle_ = 0.f;
     } else {
-      C_end_point_normalized_ = C_end_point_ / measured_distance_;
+      const Point C_end_point = W_end_point_ - W_start_point_;
+      beam_angle_ = std::atan2(C_end_point.y(), C_end_point.x());
     }
     // TODO(victorr): Calculate this properly
     max_lateral_component_ = std::max(

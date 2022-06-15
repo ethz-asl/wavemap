@@ -98,13 +98,15 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
+    // TODO(victorr): Use random FoVs and numbers of beams once these are
+    //                configurable
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
-    const int num_beams = getRandomIndexElement(100, 2048);
+    constexpr int kNumBeams = 400;
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
     const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
+        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
 
     VolumetricDataStructure::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
@@ -158,13 +160,15 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
+    // TODO(victorr): Use random FoVs and numbers of beams once these are
+    //                configurable
     constexpr FloatingPoint kMinAngle = -M_PI_2f32;
     constexpr FloatingPoint kMaxAngle = M_PI_2f32;
-    const int num_beams = getRandomIndexElement(100, 2048);
+    constexpr int kNumBeams = 400;
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
     const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
+        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
 
     VolumetricDataStructure::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
