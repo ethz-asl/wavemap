@@ -104,9 +104,18 @@ inline QuadtreeIndex indexAndHeightToNodeIndex(const Index& index,
   return node_index;
 }
 
-inline Index nodeIndexToIndex(const QuadtreeIndex& node_index) {
+inline Index nodeIndexToMinCornerIndex(const QuadtreeIndex& node_index) {
   DCHECK_GE(node_index.height, 0);
   Index index = int_math::mult_exp2(node_index.position, node_index.height);
+  return index;
+}
+
+inline Index nodeIndexToMaxCornerIndex(const QuadtreeIndex& node_index) {
+  DCHECK_GE(node_index.height, 0);
+  const QuadtreeIndex::Element max_child_offset =
+      int_math::exp2(node_index.height) - 1;
+  Index index =
+      nodeIndexToMinCornerIndex(node_index).array() + max_child_offset;
   return index;
 }
 }  // namespace wavemap_2d::convert

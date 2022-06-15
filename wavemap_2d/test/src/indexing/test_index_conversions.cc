@@ -38,28 +38,52 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
   for (const QuadtreeIndex& node_index : random_indices) {
     // Compare to coordinate convention
     {
-      const Index index_from_quadtree = convert::nodeIndexToIndex(node_index);
-      const Index index_from_convention =
-          (node_index.position.template cast<FloatingPoint>() *
-           std::exp2(node_index.height))
-              .array()
-              .round()
-              .cast<IndexElement>();
-      EXPECT_EQ(index_from_quadtree, index_from_convention)
+      const Index min_corner_index =
+          convert::nodeIndexToMinCornerIndex(node_index);
+      const Index min_corner_index_from_convention =
+          node_index.position * int_math::exp2(node_index.height);
+      EXPECT_EQ(min_corner_index, min_corner_index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
-          << " to regular index " << EigenFormat::oneLine(index_from_quadtree)
+          << " to regular index " << EigenFormat::oneLine(min_corner_index)
           << " does not match convention "
-          << EigenFormat::oneLine(index_from_convention);
+          << EigenFormat::oneLine(min_corner_index_from_convention);
+    }
+    {
+      const Index max_corner_index =
+          convert::nodeIndexToMaxCornerIndex(node_index);
+      const Index max_corner_index_from_convention =
+          (node_index.position + Index::Ones()) *
+              int_math::exp2(node_index.height) -
+          Index::Ones();
+      EXPECT_EQ(max_corner_index, max_corner_index_from_convention)
+          << "Quadtree converts node index " << node_index.toString()
+          << " to regular index " << EigenFormat::oneLine(max_corner_index)
+          << " does not match convention "
+          << EigenFormat::oneLine(max_corner_index_from_convention);
     }
 
     // Roundtrip through regular indices (integer coordinates)
     {
-      const Index index = convert::nodeIndexToIndex(node_index);
+      const Index min_corner_index =
+          convert::nodeIndexToMinCornerIndex(node_index);
       const QuadtreeIndex roundtrip_node_index =
-          convert::indexAndHeightToNodeIndex(index, node_index.height);
+          convert::indexAndHeightToNodeIndex(min_corner_index,
+                                             node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
-          << " to regular index " << EigenFormat::oneLine(index)
+          << " to min corner index " << EigenFormat::oneLine(min_corner_index)
+          << " and back should yield the same node index, but got "
+          << roundtrip_node_index.toString() << " instead.";
+    }
+    {
+      const Index max_corner_index =
+          convert::nodeIndexToMaxCornerIndex(node_index);
+      const QuadtreeIndex roundtrip_node_index =
+          convert::indexAndHeightToNodeIndex(max_corner_index,
+                                             node_index.height);
+      EXPECT_EQ(roundtrip_node_index, node_index)
+          << "Going from node index " << node_index.toString()
+          << " to max corner index " << EigenFormat::oneLine(max_corner_index)
           << " and back should yield the same node index, but got "
           << roundtrip_node_index.toString() << " instead.";
     }

@@ -51,7 +51,14 @@ TYPED_TEST(SimpleQuadtreeTest, IndexConversions) {
   random_indices.template emplace_back(map.getMinPossibleIndex());
   random_indices.template emplace_back(map.getMaxPossibleIndex());
   for (const Index& index : random_indices) {
-    EXPECT_EQ(map.toExternalIndex(map.toInternal(index)), index);
+    // NOTE: Since the Index is converted into an internal NodeIndex at height
+    //       0, the NodeIndex's min and max corner Indexes should be the same.
+    EXPECT_EQ(map.toExternalIndex(
+                  convert::nodeIndexToMinCornerIndex(map.toInternal(index))),
+              index);
+    EXPECT_EQ(map.toExternalIndex(
+                  convert::nodeIndexToMaxCornerIndex(map.toInternal(index))),
+              index);
   }
 }
 

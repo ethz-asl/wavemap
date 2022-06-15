@@ -68,7 +68,7 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
   const QuadtreeIndex root_node_index_offset_{kMaxHeight - 1,
                                               QuadtreeIndex::Position::Ones()};
   const Index root_index_offset_ =
-      convert::nodeIndexToIndex(root_node_index_offset_);
+      convert::nodeIndexToMinCornerIndex(root_node_index_offset_);
 
   QuadtreeIndex toInternal(const Index& index) const {
     return convert::indexAndHeightToNodeIndex(index + root_index_offset_, 0);
@@ -79,8 +79,8 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
         int_math::div_exp2(root_index_offset_, node_index.height);
     return {node_index.height, node_index.position + height_adjusted_offset};
   }
-  Index toExternalIndex(const QuadtreeIndex& node_index) const {
-    return convert::nodeIndexToIndex(node_index) - root_index_offset_;
+  Index toExternalIndex(const Index& index) const {
+    return index - root_index_offset_;
   }
   QuadtreeIndex toExternalNodeIndex(const QuadtreeIndex& node_index) const {
     DCHECK_LE(node_index.height, root_node_index_offset_.height);

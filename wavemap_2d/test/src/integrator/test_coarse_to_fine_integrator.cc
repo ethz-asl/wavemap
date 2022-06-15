@@ -358,11 +358,10 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
           getRandomNdtreeIndexHeight(2, kMaxHeight);
       const QuadtreeIndex query_index =
           convert::indexAndHeightToNodeIndex(index, height);
-      const Index min_reference_index = convert::nodeIndexToIndex(query_index);
-      const QuadtreeIndex::Element max_child_offset =
-          int_math::exp2(height) - 1;
+      const Index min_reference_index =
+          convert::nodeIndexToMinCornerIndex(query_index);
       const Index max_reference_index =
-          min_reference_index + Index::Constant(max_child_offset);
+          convert::nodeIndexToMaxCornerIndex(query_index);
       bool has_free = false;
       bool has_occupied = false;
       bool has_unknown = false;

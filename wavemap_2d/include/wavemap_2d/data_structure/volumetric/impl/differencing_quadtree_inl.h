@@ -83,13 +83,14 @@ void DifferencingQuadtree<CellT>::prune() {
 
 template <typename CellT>
 Index DifferencingQuadtree<CellT>::getMinPossibleIndex() const {
-  return toExternalIndex(QuadtreeIndex{0u, Index::Zero()});
+  return toExternalIndex(
+      convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
 Index DifferencingQuadtree<CellT>::getMaxPossibleIndex() const {
   return toExternalIndex(
-      QuadtreeIndex{0u, Index::Constant(int_math::exp2(kMaxHeight) - 1)});
+      convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
@@ -109,31 +110,35 @@ template <typename CellT>
 Index DifferencingQuadtree<CellT>::getMinIndex() const {
   Index min_index = Index::Constant(std::numeric_limits<IndexElement>::max());
 
-  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>&>> stack;
-  stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
+  std::stack<StackElement> stack;
+  stack.template emplace(
+      StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().first;
-    const Node<CellDataSpecialized>& node = stack.top().second;
+    const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
+    const Node<CellDataSpecialized>& node = stack.top().node;
+    const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
 
     if (node.hasChildrenArray()) {
       for (QuadtreeIndex::RelativeChild child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node.hasChild(child_idx)) {
-          const QuadtreeIndex child_node_index =
+          const QuadtreeIndex internal_child_node_index =
               internal_node_index.computeChildIndex(child_idx);
           const Node<CellDataSpecialized>& child_node =
               *node.getChild(child_idx);
-          stack.template emplace(child_node_index, child_node);
+          stack.template emplace(
+              StackElement{internal_child_node_index, child_node, node_value});
         }
       }
-    } else if (OccupancyState::isObserved(node.data())) {
-      const Index index = toExternalIndex(internal_node_index);
+    } else if (OccupancyState::isObserved(node_value)) {
+      const Index index =
+          convert::nodeIndexToMinCornerIndex(internal_node_index);
       min_index = min_index.cwiseMin(index);
     }
   }
 
-  return min_index;
+  return toExternalIndex(min_index);
 }
 
 // TODO(victorr): Replace this with an implementation that only expands
@@ -143,31 +148,35 @@ Index DifferencingQuadtree<CellT>::getMaxIndex() const {
   Index max_index =
       Index::Constant(std::numeric_limits<IndexElement>::lowest());
 
-  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>&>> stack;
-  stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
+  std::stack<StackElement> stack;
+  stack.template emplace(
+      StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().first;
-    const Node<CellDataSpecialized>& node = stack.top().second;
+    const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
+    const Node<CellDataSpecialized>& node = stack.top().node;
+    const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
 
     if (node.hasChildrenArray()) {
       for (QuadtreeIndex::RelativeChild child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
         if (node.hasChild(child_idx)) {
-          const QuadtreeIndex child_node_index =
+          const QuadtreeIndex internal_child_node_index =
               internal_node_index.computeChildIndex(child_idx);
           const Node<CellDataSpecialized>& child_node =
               *node.getChild(child_idx);
-          stack.template emplace(child_node_index, child_node);
+          stack.template emplace(
+              StackElement{internal_child_node_index, child_node, node_value});
         }
       }
-    } else if (OccupancyState::isObserved(node.data())) {
-      const Index index = toExternalIndex(internal_node_index);
+    } else if (OccupancyState::isObserved(node_value)) {
+      const Index index =
+          convert::nodeIndexToMaxCornerIndex(internal_node_index);
       max_index = max_index.cwiseMax(index);
     }
   }
 
-  return max_index;
+  return toExternalIndex(max_index);
 }
 
 template <typename CellT>
@@ -247,13 +256,7 @@ void DifferencingQuadtree<CellT>::addToCellValue(
 template <typename CellT>
 void DifferencingQuadtree<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  struct StackElement {
-    const QuadtreeIndex internal_node_index;
-    const Node<CellDataSpecialized>& node;
-    const FloatingPoint parent_value = 0.f;
-  };
   std::stack<StackElement> stack;
-
   stack.template emplace(
       StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {

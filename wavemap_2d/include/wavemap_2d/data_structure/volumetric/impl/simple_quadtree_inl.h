@@ -69,13 +69,14 @@ void SimpleQuadtree<CellT>::prune() {
 
 template <typename CellT>
 Index SimpleQuadtree<CellT>::getMinPossibleIndex() const {
-  return toExternalIndex(QuadtreeIndex{0, Index::Zero()});
+  return toExternalIndex(
+      convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
 Index SimpleQuadtree<CellT>::getMaxPossibleIndex() const {
   return toExternalIndex(
-      QuadtreeIndex{0, Index::Constant(int_math::exp2(kMaxHeight) - 1)});
+      convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
@@ -113,12 +114,13 @@ Index SimpleQuadtree<CellT>::getMinIndex() const {
         }
       }
     } else if (OccupancyState::isObserved(node.data())) {
-      const Index index = toExternalIndex(internal_node_index);
+      const Index index =
+          convert::nodeIndexToMinCornerIndex(internal_node_index);
       min_index = min_index.cwiseMin(index);
     }
   }
 
-  return min_index;
+  return toExternalIndex(min_index);
 }
 
 // TODO(victorr): Replace this with an implementation that only expands
@@ -147,12 +149,13 @@ Index SimpleQuadtree<CellT>::getMaxIndex() const {
         }
       }
     } else if (OccupancyState::isObserved(node.data())) {
-      const Index index = toExternalIndex(internal_node_index);
+      const Index index =
+          convert::nodeIndexToMaxCornerIndex(internal_node_index);
       max_index = max_index.cwiseMax(index);
     }
   }
 
-  return max_index;
+  return toExternalIndex(max_index);
 }
 
 template <typename CellT>
