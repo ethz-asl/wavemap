@@ -32,7 +32,6 @@ class HashedBlocks : public VolumetricDataStructure {
   Index getMinIndex() const override;
   Index getMaxIndex() const override;
 
-  bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;

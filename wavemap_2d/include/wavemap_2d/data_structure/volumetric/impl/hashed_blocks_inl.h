@@ -35,11 +35,6 @@ Index HashedBlocks<CellT>::getMaxIndex() const {
 }
 
 template <typename CellT>
-bool HashedBlocks<CellT>::hasCell(const Index& index) const {
-  return blocks_.count(computeBlockIndexFromIndex(index));
-}
-
-template <typename CellT>
 FloatingPoint HashedBlocks<CellT>::getCellValue(const Index& index) const {
   const CellDataSpecialized* cell_data = accessCellData(index);
   if (cell_data) {

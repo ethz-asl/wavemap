@@ -40,7 +40,7 @@ class DenseGrid : public VolumetricDataStructure {
   Index getMinIndex() const override { return min_index_; }
   Index getMaxIndex() const override { return max_index_; }
 
-  bool hasCell(const Index& index) const override;
+  bool hasCell(const Index& index) const;
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;

@@ -30,7 +30,6 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
   Index getMinPossibleIndex() const override;
   Index getMaxPossibleIndex() const override;
 
-  bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void setCellValue(const QuadtreeIndex& index,
@@ -89,9 +88,6 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
         int_math::div_exp2(root_index_offset_, node_index.height);
     return {node_index.height, node_index.position - height_adjusted_offset};
   }
-
-  const Node<CellDataSpecialized>* getDeepestNodeAtIndex(
-      const Index& index) const;
 };
 }  // namespace wavemap_2d
 

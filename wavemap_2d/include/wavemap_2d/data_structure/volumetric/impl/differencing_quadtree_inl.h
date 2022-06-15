@@ -171,13 +171,6 @@ Index DifferencingQuadtree<CellT>::getMaxIndex() const {
 }
 
 template <typename CellT>
-bool DifferencingQuadtree<CellT>::hasCell(const Index& index) const {
-  const Node<CellDataSpecialized>* deepest_node_at_index =
-      getDeepestNodeAtIndex(index);
-  return deepest_node_at_index;
-}
-
-template <typename CellT>
 FloatingPoint DifferencingQuadtree<CellT>::getCellValue(
     const Index& index) const {
   const QuadtreeIndex deepest_possible_node_index = toInternal(index);
@@ -315,23 +308,6 @@ bool DifferencingQuadtree<CellT>::load(const std::string& /*file_path_prefix*/,
                                        bool /*used_floating_precision*/) {
   // TODO(victorr): Implement this
   return false;
-}
-
-template <typename CellT>
-const Node<typename CellT::Specialized>*
-DifferencingQuadtree<CellT>::getDeepestNodeAtIndex(const Index& index) const {
-  const QuadtreeIndex deepest_possible_internal_node_index = toInternal(index);
-  const Node<CellDataSpecialized>* node = &quadtree_.getRootNode();
-  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
-      deepest_possible_internal_node_index
-          .computeRelativeChildIndices<kMaxHeight>();
-  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
-    if (!node->hasChild(child_index)) {
-      break;
-    }
-    node = node->getChild(child_index);
-  }
-  return node;
 }
 }  // namespace wavemap_2d
 

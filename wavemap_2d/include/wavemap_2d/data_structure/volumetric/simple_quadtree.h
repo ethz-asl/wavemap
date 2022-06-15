@@ -30,7 +30,6 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
   Index getMinPossibleIndex() const override;
   Index getMaxPossibleIndex() const override;
 
-  bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void setCellValue(const QuadtreeIndex& index,

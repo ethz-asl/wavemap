@@ -156,13 +156,6 @@ Index SimpleQuadtree<CellT>::getMaxIndex() const {
 }
 
 template <typename CellT>
-bool SimpleQuadtree<CellT>::hasCell(const Index& index) const {
-  const Node<CellDataSpecialized>* deepest_node_at_index =
-      getDeepestNodeAtIndex(index);
-  return deepest_node_at_index;
-}
-
-template <typename CellT>
 FloatingPoint SimpleQuadtree<CellT>::getCellValue(const Index& index) const {
   const NodeType* deepest_node_at_index = getDeepestNodeAtIndex(index);
   if (deepest_node_at_index) {
