@@ -10,7 +10,6 @@
 #include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_9_7.h"
 #include "wavemap_2d/transform/dense/naive_haar.h"
-#include "wavemap_2d/transform/tree/child_averaging.h"
 #include "wavemap_2d/utils/evaluation_utils.h"
 
 DEFINE_string(estimated_map_file_path, "", "Path to the estimated map.");
@@ -159,13 +158,7 @@ int main(int argc, char** argv) {
             << " KB.";
   LOG(INFO) << "Size: " << quadtree.size();
   quadtree.prune();
-  LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
-            << " KB.";
-  for (auto& node :
-       quadtree.getNodeIterator<TraversalOrder::kDepthFirstPostorder>()) {
-    AverageAndPruneChildren<UnboundedOccupancyCell::Specialized>(node);
-  }
-  LOG(INFO) << "Quadtree memory usage: " << quadtree.getMemoryUsage() / 1000
-            << " KB.";
+  LOG(INFO) << "Pruned quadtree memory usage: "
+            << quadtree.getMemoryUsage() / 1000 << " KB.";
   LOG(INFO) << "Size: " << quadtree.size();
 }
