@@ -8,15 +8,16 @@
 namespace wavemap_2d {
 class HaarCellTest : public FixtureBase {
  protected:
-  using WaveletType = Wavelet<FloatingPoint>;
+  using HaarWaveletType = HaarWavelet<FloatingPoint>;
   static constexpr FloatingPoint kReconstructionErrorTolerance = 1e-3f;
 
   FloatingPoint getRandomWaveletCoefficient() const {
     return random_number_generator_->getRandomRealNumber(-1e2f, 1e2f);
   }
 
-  WaveletType::ChildScaleCoefficients getRandomChildScaleCoefficients() const {
-    WaveletType::ChildScaleCoefficients child_scale_coefficients;
+  HaarWaveletType::ChildScaleCoefficients getRandomChildScaleCoefficients()
+      const {
+    HaarWaveletType::ChildScaleCoefficients child_scale_coefficients;
     for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
          relative_child_idx < QuadtreeIndex::kNumChildren;
          ++relative_child_idx) {
@@ -26,8 +27,8 @@ class HaarCellTest : public FixtureBase {
     return child_scale_coefficients;
   }
 
-  WaveletType::ParentCoefficients getRandomParentCoefficients() const {
-    WaveletType::ParentCoefficients parent_coefficients;
+  HaarWaveletType::ParentCoefficients getRandomParentCoefficients() const {
+    HaarWaveletType::ParentCoefficients parent_coefficients;
     parent_coefficients.scale = getRandomWaveletCoefficient();
     parent_coefficients.details.xx = getRandomWaveletCoefficient();
     parent_coefficients.details.yy = getRandomWaveletCoefficient();
@@ -37,16 +38,17 @@ class HaarCellTest : public FixtureBase {
 };
 
 TEST_F(HaarCellTest, Initialization) {
-  WaveletType::DetailCoefficients detail_coefficients;
+  using WaveletCoefficientsType = WaveletCoefficients<FloatingPoint>;
+  WaveletCoefficientsType::Details detail_coefficients;
   EXPECT_EQ(detail_coefficients.xx, 0.f);
   EXPECT_EQ(detail_coefficients.yy, 0.f);
   EXPECT_EQ(detail_coefficients.xy, 0.f);
 
-  WaveletType::ParentCoefficients parent_coefficients;
+  HaarWaveletType::ParentCoefficients parent_coefficients;
   EXPECT_EQ(parent_coefficients.scale, 0.f);
-  EXPECT_EQ(parent_coefficients.details, WaveletType::DetailCoefficients{});
+  EXPECT_EQ(parent_coefficients.details, WaveletCoefficientsType::Details{});
 
-  WaveletType::ChildScaleCoefficients child_scale_coefficients;
+  HaarWaveletType::ChildScaleCoefficients child_scale_coefficients;
   ASSERT_EQ(child_scale_coefficients.size(), QuadtreeIndex::kNumChildren);
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {
@@ -55,15 +57,14 @@ TEST_F(HaarCellTest, Initialization) {
 }
 
 TEST_F(HaarCellTest, LosslessReconstruction) {
-  using HaarWavelet = NaiveHaarWavelet<WaveletType::CoefficientType>;
   for (int repetition = 0; repetition < 1000; ++repetition) {
-    const WaveletType::ChildScaleCoefficients child_scale_coefficients =
+    const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
         getRandomChildScaleCoefficients();
-    const WaveletType::ParentCoefficients parent_coefficients =
-        HaarWavelet::forward(child_scale_coefficients);
-    const WaveletType::ChildScaleCoefficients
+    const HaarWaveletType::ParentCoefficients parent_coefficients =
+        HaarWaveletType::forward(child_scale_coefficients);
+    const HaarWaveletType::ChildScaleCoefficients
         roundtrip_child_scale_coefficients =
-            HaarWavelet::backward(parent_coefficients);
+            HaarWaveletType::backward(parent_coefficients);
 
     bool check_failed = false;
     for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
@@ -85,12 +86,11 @@ TEST_F(HaarCellTest, LosslessReconstruction) {
 }
 
 TEST_F(HaarCellTest, ConservationOfEnergy) {
-  using HaarWavelet = NaiveHaarWavelet<WaveletType::CoefficientType>;
   for (int repetition = 0; repetition < 1000; ++repetition) {
-    const WaveletType::ChildScaleCoefficients child_scale_coefficients =
+    const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
         getRandomChildScaleCoefficients();
-    const WaveletType::ParentCoefficients parent_coefficients =
-        HaarWavelet::forward(child_scale_coefficients);
+    const HaarWaveletType::ParentCoefficients parent_coefficients =
+        HaarWaveletType::forward(child_scale_coefficients);
 
     // Check that the parent's scale matches the average of its children
     // NOTE: The average of the children's scale coefficients corresponds to 0.5
@@ -120,15 +120,13 @@ TEST_F(HaarCellTest, ConservationOfEnergy) {
 }
 
 TEST_F(HaarCellTest, LiftedImplementationEquivalence) {
-  using NaiveHaarWavelet = NaiveHaarWavelet<WaveletType::CoefficientType>;
-  using LiftedHaarWavelet = LiftedHaarWavelet<WaveletType::CoefficientType>;
   for (int repetition = 0; repetition < 1000; ++repetition) {
-    const WaveletType::ChildScaleCoefficients child_scale_coefficients =
+    const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
         getRandomChildScaleCoefficients();
-    const WaveletType::ParentCoefficients naive_parent_coefficients =
-        NaiveHaarWavelet::forward(child_scale_coefficients);
-    const WaveletType::ParentCoefficients lifted_parent_coefficients =
-        LiftedHaarWavelet::forward(child_scale_coefficients);
+    const HaarWaveletType::ParentCoefficients naive_parent_coefficients =
+        HaarWaveletType::forwardNaive(child_scale_coefficients);
+    const HaarWaveletType::ParentCoefficients lifted_parent_coefficients =
+        HaarWaveletType::forwardLifted(child_scale_coefficients);
 
     bool check_failed = false;
     EXPECT_NEAR(lifted_parent_coefficients.scale,
@@ -154,12 +152,14 @@ TEST_F(HaarCellTest, LiftedImplementationEquivalence) {
     }
   }
   for (int repetition = 0; repetition < 1000; ++repetition) {
-    const WaveletType::ParentCoefficients parent_coefficients =
+    const HaarWaveletType::ParentCoefficients parent_coefficients =
         getRandomParentCoefficients();
-    const WaveletType::ChildScaleCoefficients naive_child_scale_coefficients =
-        NaiveHaarWavelet::backward(parent_coefficients);
-    const WaveletType::ChildScaleCoefficients lifted_child_scale_coefficients =
-        LiftedHaarWavelet::backward(parent_coefficients);
+    const HaarWaveletType::ChildScaleCoefficients
+        naive_child_scale_coefficients =
+            HaarWaveletType::backwardNaive(parent_coefficients);
+    const HaarWaveletType::ChildScaleCoefficients
+        lifted_child_scale_coefficients =
+            HaarWaveletType::backwardLifted(parent_coefficients);
 
     bool check_failed = false;
     for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
