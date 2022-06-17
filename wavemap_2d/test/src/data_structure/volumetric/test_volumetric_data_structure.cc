@@ -7,6 +7,7 @@
 #include "wavemap_2d/data_structure/volumetric/hashed_blocks.h"
 #include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
+#include "wavemap_2d/data_structure/volumetric/wavelet_tree.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {
@@ -19,7 +20,7 @@ using VolumetricDataStructureTypes = ::testing::Types<
     SimpleQuadtree<UnboundedOccupancyCell>,
     SimpleQuadtree<SaturatingOccupancyCell>,
     DifferencingQuadtree<UnboundedOccupancyCell>,
-    DifferencingQuadtree<SaturatingOccupancyCell>>;
+    DifferencingQuadtree<SaturatingOccupancyCell>, WaveletTree>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 // TODO(victorr): Test remaining interfaces of VolumetricDataStructure
@@ -42,7 +43,7 @@ TYPED_TEST(VolumetricDataStructureTest, Insertion) {
             TypeParam::CellType::add(expected_value, random_update);
       }
       EXPECT_NEAR(map_base_ptr->getCellValue(random_index), expected_value,
-                  kEpsilon + expected_value * kEpsilon);
+                  kEpsilon * (1.f + expected_value));
     }
   }
 }

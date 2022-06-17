@@ -5,7 +5,6 @@
 #include "wavemap_2d/common.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
-#include "wavemap_2d/data_structure/volumetric/differencing_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/indexing/index_conversions.h"
