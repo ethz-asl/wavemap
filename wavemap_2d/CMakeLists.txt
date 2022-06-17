@@ -182,6 +182,10 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_naive_haar test/src/transform/test_naive_haar.cc)
   target_include_directories(test_naive_haar PRIVATE test/include)
   target_link_libraries(test_naive_haar ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_haar_cell test/src/transform/test_haar_cell.cc)
+  target_include_directories(test_haar_cell PRIVATE test/include)
+  target_link_libraries(test_haar_cell ${PROJECT_NAME} testing_main)
 endif ()
 
 # Benchmarks

@@ -32,10 +32,15 @@ TYPED_TEST(DiscreteWaveletTransformTest, Reconstruction) {
 
       // Transform back and forth
       dwt.forward(matrix, pass_idx);
-      // TODO(victorr): Check why the energy is not accurately preserved in
-      //                wavelet space.
-      // EXPECT_NEAR(matrix.norm(), original_matrix.norm(),
-      //             1e-3 * original_matrix.norm());
+      if (std::is_same_v<TypeParam, NaiveHaar<typename TypeParam::ValueType>>) {
+        // Check if the energy is conserved
+        // NOTE: This property is currently only satisfied by the Haar wavelet
+        //       implementation. For the other wavelet types, the numerical
+        //       errors seem to be too large (or there might be a bug or
+        //       incorrect lifting coefficients).
+        EXPECT_NEAR(matrix.norm(), original_matrix.norm(),
+                    1e-3f * original_matrix.norm());
+      }
       dwt.backward(matrix, pass_idx);
       EXPECT_TRUE(
           TestFixture::cwiseNear(matrix - original_matrix, 0,
@@ -67,9 +72,15 @@ TYPED_TEST(DiscreteWaveletTransformTest, Transposes) {
       Matrix matrix_transposed = original_matrix.transpose();
       dwt.forward(matrix, pass_idx);
       dwt.forward(matrix_transposed, pass_idx);
-      // TODO(victorr): Check why the energy is not accurately preserved.
-      // EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
-      // EXPECT_FLOAT_EQ(matrix_transposed.norm(), original_matrix.norm());
+      if (std::is_same_v<TypeParam, NaiveHaar<typename TypeParam::ValueType>>) {
+        // Check if the energy is conserved
+        // NOTE: This property is currently only satisfied by the Haar wavelet
+        //       implementation. For the other wavelet types, the numerical
+        //       errors seem to be too large (or there might be a bug or
+        //       incorrect lifting coefficients).
+        EXPECT_FLOAT_EQ(matrix.norm(), original_matrix.norm());
+        EXPECT_FLOAT_EQ(matrix_transposed.norm(), original_matrix.norm());
+      }
       EXPECT_TRUE(
           TestFixture::cwiseNear(matrix - matrix_transposed.transpose(), 0.f,
                                  TestFixture::kReconstructionErrorTolerance));

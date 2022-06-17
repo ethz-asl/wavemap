@@ -11,6 +11,8 @@ namespace wavemap_2d {
 template <typename T>
 class DiscreteWaveletTransform {
  public:
+  using ValueType = T;
+
   virtual ~DiscreteWaveletTransform() = default;
 
   void forward(MatrixT<T>& matrix, int n_passes) const {

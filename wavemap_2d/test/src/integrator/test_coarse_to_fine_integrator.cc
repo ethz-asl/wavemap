@@ -6,6 +6,7 @@
 #include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
 #include "wavemap_2d/utils/angle_utils.h"
+#include "wavemap_2d/utils/container_print_utils.h"
 
 namespace wavemap_2d {
 class CoarseToFineIntegratorTest : public FixtureBase {
@@ -309,13 +310,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
       std::cerr << "For\n-W_aabb: " << test.W_aabb.toString()
                 << "\n-T_W_C: " << test.T_W_C << "\nWith C_cell_corners:\n"
                 << C_cell_corners << "\nangles_C_cell_corners:\n"
-                << std::accumulate(std::next(angles.begin()), angles.end(),
-                                   std::to_string(angles[0]),
-                                   [](auto str, const auto& el) -> std::string {
-                                     return std::move(str) + ", " +
-                                            std::to_string(el);
-                                   })
-                << "\nand reference min/max angles: "
+                << ToString(angles) << "\nand reference min/max angles: "
                 << reference_angle_pair.min_angle << ", "
                 << reference_angle_pair.max_angle
                 << "\nWe got min/max angles: " << returned_angle_pair.min_angle
