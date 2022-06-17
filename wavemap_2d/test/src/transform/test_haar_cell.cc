@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/data_structure/volumetric/cell_types/wavelet.h"
+#include "wavemap_2d/data_structure/volumetric/cell_types/haar_wavelet.h"
 #include "wavemap_2d/test/fixture_base.h"
 #include "wavemap_2d/utils/container_print_utils.h"
 
@@ -176,6 +176,45 @@ TEST_F(HaarCellTest, LiftedImplementationEquivalence) {
                 << " } and the lifted coefficients are { "
                 << ToString(lifted_child_scale_coefficients) << " }"
                 << std::endl;
+    }
+  }
+}
+
+TEST_F(HaarCellTest, SingleChildTransforms) {
+  for (int repetition = 0; repetition < 1000; ++repetition) {
+    for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
+         relative_child_idx < QuadtreeIndex::kNumChildren;
+         ++relative_child_idx) {
+      const HaarWaveletType::Coefficients::Scale child_scale_coefficient =
+          getRandomWaveletCoefficient();
+
+      const HaarWaveletType::ParentCoefficients parent_from_single_child =
+          HaarWaveletType::forwardSingleChild(child_scale_coefficient,
+                                              relative_child_idx);
+
+      HaarWaveletType::Coefficients::ChildScales child_scale_coefficients{};
+      child_scale_coefficients[relative_child_idx] = child_scale_coefficient;
+      const HaarWaveletType::ParentCoefficients parent_from_sparse_array =
+          HaarWaveletType::forward(child_scale_coefficients);
+
+      EXPECT_EQ(parent_from_single_child, parent_from_sparse_array);
+    }
+  }
+
+  for (int repetition = 0; repetition < 1000; ++repetition) {
+    const HaarWaveletType::ParentCoefficients parent_coefficients =
+        getRandomParentCoefficients();
+
+    const HaarWaveletType::ChildScaleCoefficients child_scale_array =
+        HaarWaveletType::backward(parent_coefficients);
+
+    for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
+         relative_child_idx < QuadtreeIndex::kNumChildren;
+         ++relative_child_idx) {
+      const HaarWaveletType::Coefficients::Scale single_child_scale =
+          HaarWaveletType::backwardSingleChild(parent_coefficients,
+                                               relative_child_idx);
+      EXPECT_EQ(single_child_scale, child_scale_array[relative_child_idx]);
     }
   }
 }
