@@ -167,14 +167,8 @@ FloatingPoint SimpleQuadtree<CellT>::getCellValue(const Index& index) const {
 template <typename CellT>
 void SimpleQuadtree<CellT>::setCellValue(const Index& index,
                                          FloatingPoint new_value) {
-  constexpr bool kAutoAllocate = true;
-  const QuadtreeIndex internal_node_index = toInternal(index);
-  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
-  if (node) {
-    node->data() = new_value;
-  } else {
-    LOG(ERROR) << "Failed to allocate cell at index: " << index;
-  }
+  const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
+  setCellValue(node_index, new_value);
 }
 
 template <typename CellT>
@@ -193,14 +187,8 @@ void SimpleQuadtree<CellT>::setCellValue(const QuadtreeIndex& node_index,
 template <typename CellT>
 void SimpleQuadtree<CellT>::addToCellValue(const Index& index,
                                            FloatingPoint update) {
-  constexpr bool kAutoAllocate = true;
-  const QuadtreeIndex internal_node_index = toInternal(index);
-  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
-  if (node) {
-    node->data() += update;
-  } else {
-    LOG(ERROR) << "Failed to allocate cell at index: " << index;
-  }
+  const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
+  addToCellValue(node_index, update);
 }
 
 template <typename CellT>
