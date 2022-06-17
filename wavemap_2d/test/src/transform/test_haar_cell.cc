@@ -48,7 +48,7 @@ TEST_F(HaarCellTest, Initialization) {
   EXPECT_EQ(parent_coefficients.scale, 0.f);
   EXPECT_EQ(parent_coefficients.details, WaveletCoefficientsType::Details{});
 
-  HaarWaveletType::ChildScaleCoefficients child_scale_coefficients;
+  HaarWaveletType::ChildScaleCoefficients child_scale_coefficients{};
   ASSERT_EQ(child_scale_coefficients.size(), QuadtreeIndex::kNumChildren);
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {
