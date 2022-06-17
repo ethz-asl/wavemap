@@ -58,14 +58,13 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
-  using CellDataSpecialized = typename CellT::Specialized;
   struct StackElement {
     const QuadtreeIndex internal_node_index;
-    const Node<CellDataSpecialized>& node;
+    const NodeType& node;
     const FloatingPoint parent_value = 0.f;
   };
 
-  Quadtree<CellDataSpecialized, kMaxHeight> quadtree_;
+  Quadtree<typename CellT::Specialized, kMaxHeight> quadtree_;
 
   static QuadtreeIndex getInternalRootNodeIndex() {
     return QuadtreeIndex{kMaxHeight, QuadtreeIndex::Position::Zero()};

@@ -12,9 +12,8 @@
 namespace wavemap_2d {
 template <typename CellT>
 void SimpleQuadtree<CellT>::prune() {
-  std::function<void(FloatingPoint, Node<CellDataSpecialized>&)> recursive_fn =
-      [&recursive_fn](FloatingPoint parent_value,
-                      Node<CellDataSpecialized>& node) {
+  std::function<void(FloatingPoint, NodeType&)> recursive_fn =
+      [&recursive_fn](FloatingPoint parent_value, NodeType& node) {
         // Process the children first
         const FloatingPoint node_value = parent_value + node.data();
         if (node.hasChildrenArray()) {
@@ -37,7 +36,7 @@ void SimpleQuadtree<CellT>::prune() {
           for (QuadtreeIndex::RelativeChild child_idx = 0;
                child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
             // Check whether the child has children (i.e. is not a leaf)
-            const Node<CellDataSpecialized>* child = node.getChild(child_idx);
+            const NodeType* child = node.getChild(child_idx);
             if (child && child->hasChildrenArray()) {
               all_children_are_identical_leaves = false;
               break;
@@ -95,11 +94,11 @@ template <typename CellT>
 Index SimpleQuadtree<CellT>::getMinIndex() const {
   Index min_index = Index::Constant(std::numeric_limits<IndexElement>::max());
 
-  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>&>> stack;
+  std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
   stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().first;
-    const Node<CellDataSpecialized>& node = stack.top().second;
+    const NodeType& node = stack.top().second;
     stack.pop();
 
     if (node.hasChildrenArray()) {
@@ -108,8 +107,7 @@ Index SimpleQuadtree<CellT>::getMinIndex() const {
         if (node.hasChild(child_idx)) {
           const QuadtreeIndex child_node_index =
               internal_node_index.computeChildIndex(child_idx);
-          const Node<CellDataSpecialized>& child_node =
-              *node.getChild(child_idx);
+          const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(child_node_index, child_node);
         }
       }
@@ -130,11 +128,11 @@ Index SimpleQuadtree<CellT>::getMaxIndex() const {
   Index max_index =
       Index::Constant(std::numeric_limits<IndexElement>::lowest());
 
-  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>&>> stack;
+  std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
   stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().first;
-    const Node<CellDataSpecialized>& node = stack.top().second;
+    const NodeType& node = stack.top().second;
     stack.pop();
 
     if (node.hasChildrenArray()) {
@@ -143,8 +141,7 @@ Index SimpleQuadtree<CellT>::getMaxIndex() const {
         if (node.hasChild(child_idx)) {
           const QuadtreeIndex child_node_index =
               internal_node_index.computeChildIndex(child_idx);
-          const Node<CellDataSpecialized>& child_node =
-              *node.getChild(child_idx);
+          const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(child_node_index, child_node);
         }
       }
@@ -172,8 +169,7 @@ void SimpleQuadtree<CellT>::setCellValue(const Index& index,
                                          FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() = new_value;
   } else {
@@ -186,8 +182,7 @@ void SimpleQuadtree<CellT>::setCellValue(const QuadtreeIndex& node_index,
                                          FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(node_index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() = new_value;
   } else {
@@ -200,8 +195,7 @@ void SimpleQuadtree<CellT>::addToCellValue(const Index& index,
                                            FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() += update;
   } else {
@@ -214,8 +208,7 @@ void SimpleQuadtree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
                                            FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(node_index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() += update;
   } else {
@@ -226,11 +219,11 @@ void SimpleQuadtree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
 template <typename CellT>
 void SimpleQuadtree<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  std::stack<std::pair<QuadtreeIndex, const Node<CellDataSpecialized>&>> stack;
+  std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
   stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().first;
-    const Node<CellDataSpecialized>& node = stack.top().second;
+    const NodeType& node = stack.top().second;
     stack.pop();
 
     if (node.hasChildrenArray()) {
@@ -239,8 +232,7 @@ void SimpleQuadtree<CellT>::forEachLeaf(
         if (node.hasChild(child_idx)) {
           const QuadtreeIndex child_node_index =
               internal_node_index.computeChildIndex(child_idx);
-          const Node<CellDataSpecialized>& child_node =
-              *node.getChild(child_idx);
+          const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(child_node_index, child_node);
         }
       }
@@ -275,7 +267,7 @@ template <typename CellT>
 const Node<typename CellT::Specialized>*
 SimpleQuadtree<CellT>::getDeepestNodeAtIndex(const Index& index) const {
   const QuadtreeIndex deepest_possible_internal_node_index = toInternal(index);
-  const Node<CellDataSpecialized>* node = &quadtree_.getRootNode();
+  const NodeType* node = &quadtree_.getRootNode();
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       deepest_possible_internal_node_index
           .computeRelativeChildIndices<kMaxHeight>();

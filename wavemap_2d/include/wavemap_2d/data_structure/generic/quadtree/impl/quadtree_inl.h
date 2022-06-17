@@ -45,10 +45,10 @@ template <typename NodeDataType, QuadtreeIndex::Element max_height>
 size_t Quadtree<NodeDataType, max_height>::getMemoryUsage() const {
   size_t memory_usage = 0u;
 
-  std::stack<const Node<NodeDataType>*> stack;
+  std::stack<const NodeType*> stack;
   stack.template emplace(&root_node_);
   while (!stack.empty()) {
-    const Node<NodeDataType>* node = stack.top();
+    const NodeType* node = stack.top();
     stack.pop();
     memory_usage += node->getMemoryUsage();
 
@@ -69,8 +69,7 @@ template <typename NodeDataType, QuadtreeIndex::Element max_height>
 bool Quadtree<NodeDataType, max_height>::removeNode(
     const QuadtreeIndex& index) {
   QuadtreeIndex parent_index = index.computeParentIndex();
-  Node<NodeDataType>* parent_node =
-      getNode(parent_index, /*auto_allocate*/ false);
+  NodeType* parent_node = getNode(parent_index, /*auto_allocate*/ false);
   if (parent_node) {
     return parent_node->deleteChild(index.computeRelativeChildIndex());
   }
@@ -80,7 +79,7 @@ bool Quadtree<NodeDataType, max_height>::removeNode(
 template <typename NodeDataType, QuadtreeIndex::Element max_height>
 Node<NodeDataType>* Quadtree<NodeDataType, max_height>::getNode(
     const QuadtreeIndex& index, bool auto_allocate) {
-  Node<NodeDataType>* current_parent = &root_node_;
+  NodeType* current_parent = &root_node_;
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       index.computeRelativeChildIndices<max_height>();
   for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
@@ -102,7 +101,7 @@ Node<NodeDataType>* Quadtree<NodeDataType, max_height>::getNode(
 template <typename NodeDataType, QuadtreeIndex::Element max_height>
 const Node<NodeDataType>* Quadtree<NodeDataType, max_height>::getNode(
     const QuadtreeIndex& index) const {
-  const Node<NodeDataType>* current_parent = &root_node_;
+  const NodeType* current_parent = &root_node_;
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       index.computeRelativeChildIndices<max_height>();
   for (const QuadtreeIndex::RelativeChild child_index : child_indices) {

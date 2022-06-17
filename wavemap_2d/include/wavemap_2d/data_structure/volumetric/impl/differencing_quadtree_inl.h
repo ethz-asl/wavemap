@@ -12,9 +12,8 @@
 namespace wavemap_2d {
 template <typename CellT>
 void DifferencingQuadtree<CellT>::prune() {
-  std::function<void(FloatingPoint, Node<CellDataSpecialized>&)> recursive_fn =
-      [&recursive_fn](FloatingPoint parent_value,
-                      Node<CellDataSpecialized>& node) {
+  std::function<void(FloatingPoint, NodeType&)> recursive_fn =
+      [&recursive_fn](FloatingPoint parent_value, NodeType& node) {
         // Process the children first
         const FloatingPoint node_value = parent_value + node.data();
         if (node.hasChildrenArray()) {
@@ -31,13 +30,13 @@ void DifferencingQuadtree<CellT>::prune() {
           FloatingPoint child_average = 0.f;
           for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
                ++child_idx) {
-            Node<CellDataSpecialized>* child = node.getChild(child_idx);
+            NodeType* child = node.getChild(child_idx);
             if (child) {
               child_average += child->data();
             }
           }
-          child_average /=
-              static_cast<CellDataSpecialized>(QuadtreeIndex::kNumChildren);
+          child_average /= static_cast<typename CellT::Specialized>(
+              QuadtreeIndex::kNumChildren);
           const bool child_average_is_non_zero =
               kEpsilon < std::abs(child_average);
 
@@ -50,7 +49,7 @@ void DifferencingQuadtree<CellT>::prune() {
           bool has_non_empty_child = false;
           for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
                ++child_idx) {
-            Node<CellDataSpecialized>* child = node.getChild(child_idx);
+            NodeType* child = node.getChild(child_idx);
             if (child_average_is_non_zero) {
               if (child) {
                 child->data() -= child_average;
@@ -115,7 +114,7 @@ Index DifferencingQuadtree<CellT>::getMinIndex() const {
       StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
-    const Node<CellDataSpecialized>& node = stack.top().node;
+    const NodeType& node = stack.top().node;
     const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
 
@@ -125,8 +124,7 @@ Index DifferencingQuadtree<CellT>::getMinIndex() const {
         if (node.hasChild(child_idx)) {
           const QuadtreeIndex internal_child_node_index =
               internal_node_index.computeChildIndex(child_idx);
-          const Node<CellDataSpecialized>& child_node =
-              *node.getChild(child_idx);
+          const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(
               StackElement{internal_child_node_index, child_node, node_value});
         }
@@ -153,7 +151,7 @@ Index DifferencingQuadtree<CellT>::getMaxIndex() const {
       StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
-    const Node<CellDataSpecialized>& node = stack.top().node;
+    const NodeType& node = stack.top().node;
     const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
 
@@ -163,8 +161,7 @@ Index DifferencingQuadtree<CellT>::getMaxIndex() const {
         if (node.hasChild(child_idx)) {
           const QuadtreeIndex internal_child_node_index =
               internal_node_index.computeChildIndex(child_idx);
-          const Node<CellDataSpecialized>& child_node =
-              *node.getChild(child_idx);
+          const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(
               StackElement{internal_child_node_index, child_node, node_value});
         }
@@ -185,7 +182,7 @@ FloatingPoint DifferencingQuadtree<CellT>::getCellValue(
   const QuadtreeIndex deepest_possible_node_index = toInternal(index);
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       deepest_possible_node_index.computeRelativeChildIndices<kMaxHeight>();
-  const Node<CellDataSpecialized>* node = &quadtree_.getRootNode();
+  const NodeType* node = &quadtree_.getRootNode();
   FloatingPoint value = node->data();
   for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
     if (!node->hasChild(child_index)) {
@@ -202,8 +199,7 @@ void DifferencingQuadtree<CellT>::setCellValue(const Index& index,
                                                FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() = new_value;
   } else {
@@ -216,8 +212,7 @@ void DifferencingQuadtree<CellT>::setCellValue(const QuadtreeIndex& node_index,
                                                FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(node_index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() = new_value;
   } else {
@@ -230,8 +225,7 @@ void DifferencingQuadtree<CellT>::addToCellValue(const Index& index,
                                                  FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() += update;
   } else {
@@ -244,8 +238,7 @@ void DifferencingQuadtree<CellT>::addToCellValue(
     const QuadtreeIndex& node_index, FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   const QuadtreeIndex internal_node_index = toInternal(node_index);
-  Node<CellDataSpecialized>* node =
-      quadtree_.getNode(internal_node_index, kAutoAllocate);
+  NodeType* node = quadtree_.getNode(internal_node_index, kAutoAllocate);
   if (node) {
     node->data() += update;
   } else {
@@ -261,7 +254,7 @@ void DifferencingQuadtree<CellT>::forEachLeaf(
       StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
-    const Node<CellDataSpecialized>& node = stack.top().node;
+    const NodeType& node = stack.top().node;
     const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
 
@@ -271,8 +264,7 @@ void DifferencingQuadtree<CellT>::forEachLeaf(
         const QuadtreeIndex internal_child_node_index =
             internal_node_index.computeChildIndex(child_idx);
         if (node.hasChild(child_idx)) {
-          const Node<CellDataSpecialized>& child_node =
-              *node.getChild(child_idx);
+          const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(
               StackElement{internal_child_node_index, child_node, node_value});
         } else {

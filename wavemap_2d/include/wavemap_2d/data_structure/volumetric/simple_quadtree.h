@@ -58,9 +58,7 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
-  using CellDataSpecialized = typename CellT::Specialized;
-
-  Quadtree<CellDataSpecialized, kMaxHeight> quadtree_;
+  Quadtree<typename CellT::Specialized, kMaxHeight> quadtree_;
 
   static QuadtreeIndex getInternalRootNodeIndex() {
     return QuadtreeIndex{kMaxHeight, QuadtreeIndex::Position::Zero()};
@@ -89,8 +87,7 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
     return {node_index.height, node_index.position - height_adjusted_offset};
   }
 
-  const Node<CellDataSpecialized>* getDeepestNodeAtIndex(
-      const Index& index) const;
+  const NodeType* getDeepestNodeAtIndex(const Index& index) const;
 
   template <typename T>
   friend class SimpleQuadtreeTest_IndexConversions_Test;
