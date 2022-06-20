@@ -127,6 +127,10 @@ Index DifferencingQuadtree<CellT>::getMinIndex() const {
           const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(
               StackElement{internal_child_node_index, child_node, node_value});
+        } else if (OccupancyState::isObserved(node_value)) {
+          const Index index =
+              convert::nodeIndexToMinCornerIndex(internal_node_index);
+          min_index = min_index.cwiseMin(index);
         }
       }
     } else if (OccupancyState::isObserved(node_value)) {
@@ -164,6 +168,10 @@ Index DifferencingQuadtree<CellT>::getMaxIndex() const {
           const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(
               StackElement{internal_child_node_index, child_node, node_value});
+        } else if (OccupancyState::isObserved(node_value)) {
+          const Index index =
+              convert::nodeIndexToMaxCornerIndex(internal_node_index);
+          max_index = max_index.cwiseMax(index);
         }
       }
     } else if (OccupancyState::isObserved(node_value)) {

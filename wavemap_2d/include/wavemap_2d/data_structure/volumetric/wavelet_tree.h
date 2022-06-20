@@ -12,7 +12,7 @@
 namespace wavemap_2d {
 class WaveletTree : public VolumetricQuadtreeInterface {
  public:
-  using CellType = UnboundedOccupancyCell;
+  using CellType = SaturatingOccupancyCell;
   using HaarWaveletType = HaarWavelet<FloatingPoint>;
   using NodeType = Node<HaarWaveletType::Coefficients::Details>;
 
@@ -62,6 +62,12 @@ class WaveletTree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
+  struct StackElement {
+    const QuadtreeIndex internal_node_index;
+    const NodeType& node;
+    const FloatingPoint scale_coefficient = 0.f;
+  };
+
   HaarWaveletType::Coefficients::Scale root_scale_coefficient_ = 0.f;
   Quadtree<HaarWaveletType::Coefficients::Details, kMaxHeight> quadtree_;
 

@@ -47,6 +47,9 @@ class HaarWavelet {
       QuadtreeIndex::RelativeChild relative_child_idx);
 
  private:
+  static constexpr auto kOneHalf = static_cast<ValueT>(0.5);
+  static constexpr auto kOneQuarter = static_cast<ValueT>(0.25);
+
   static ParentCoefficients forwardNaive(
       const ChildScaleCoefficients& child_scale_coefficients);
 

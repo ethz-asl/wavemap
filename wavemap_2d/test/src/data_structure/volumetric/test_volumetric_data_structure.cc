@@ -12,7 +12,10 @@
 
 namespace wavemap_2d {
 template <typename VolumetricDataStructureType>
-using VolumetricDataStructureTest = FixtureBase;
+class VolumetricDataStructureTest : public FixtureBase {
+ protected:
+  static constexpr FloatingPoint kAcceptableReconstructionError = 1e-3f;
+};
 
 using VolumetricDataStructureTypes = ::testing::Types<
     DenseGrid<UnboundedOccupancyCell>, DenseGrid<SaturatingOccupancyCell>,
@@ -23,7 +26,11 @@ using VolumetricDataStructureTypes = ::testing::Types<
     DifferencingQuadtree<SaturatingOccupancyCell>, WaveletTree>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
-// TODO(victorr): Test remaining interfaces of VolumetricDataStructure
+// TODO(victorr): Also test clear, prune, getMin/MaxPossibleIndex,
+//                getMin/MaxIndex and forEachLeaf methods
+// TODO(victorr): For classes derived from VolumetricQuadtreeInterface, test
+//                NodeIndex based setters and getters (incl. whether values of
+//                all children are updated but nothing spills to the neighbors)
 
 TYPED_TEST(VolumetricDataStructureTest, Insertion) {
   constexpr int kNumRepetitions = 10;
@@ -42,8 +49,9 @@ TYPED_TEST(VolumetricDataStructureTest, Insertion) {
         expected_value =
             TypeParam::CellType::add(expected_value, random_update);
       }
-      EXPECT_NEAR(map_base_ptr->getCellValue(random_index), expected_value,
-                  kEpsilon * (1.f + expected_value));
+      EXPECT_NEAR(
+          map_base_ptr->getCellValue(random_index), expected_value,
+          TestFixture::kAcceptableReconstructionError * (1.f + expected_value));
     }
   }
 }

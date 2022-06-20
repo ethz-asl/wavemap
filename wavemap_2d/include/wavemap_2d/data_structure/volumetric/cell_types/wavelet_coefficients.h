@@ -27,6 +27,13 @@ struct WaveletCoefficients {
       *this = *this + rhs;
       return *this;
     }
+    friend Details operator-(const Details& lhs, const Details& rhs) {
+      return {lhs.xx - rhs.xx, lhs.yy - rhs.yy, lhs.xy - rhs.xy};
+    }
+    Details& operator-=(const Details& rhs) {
+      *this = *this - rhs;
+      return *this;
+    }
     friend Details operator*(ValueType lhs, const Details& rhs) {
       return {lhs * rhs.xx, lhs * rhs.yy, lhs * rhs.xy};
     }
@@ -66,6 +73,13 @@ struct WaveletCoefficients {
     }
     Parent& operator+=(const Parent& rhs) {
       *this = *this + rhs;
+      return *this;
+    }
+    friend Parent operator-(const Parent& lhs, const Parent& rhs) {
+      return {lhs.scale - rhs.scale, lhs.details - rhs.details};
+    }
+    Parent& operator-=(const Parent& rhs) {
+      *this = *this - rhs;
       return *this;
     }
     friend Parent operator*(ValueType lhs, const Parent& rhs) {

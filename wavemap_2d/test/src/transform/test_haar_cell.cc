@@ -93,27 +93,30 @@ TEST_F(HaarCellTest, ConservationOfEnergy) {
         HaarWaveletType::forward(child_scale_coefficients);
 
     // Check that the parent's scale matches the average of its children
-    // NOTE: The average of the children's scale coefficients corresponds to 0.5
-    //       times scale coefficient of the parent since we use the orthonormal
-    //       2D Haar basis whose scaling function magnitude is 0.5 (i.e. it is
-    //       orthogonal and satisfies 4 * 0.5^2 = 1). More generally, in N
-    //       dimensions, the scaling function magnitude is (1 / sqrt(2))^N.
     const FloatingPoint average_of_children =
         std::accumulate(child_scale_coefficients.begin(),
                         child_scale_coefficients.end(), 0.f) /
         static_cast<FloatingPoint>(QuadtreeIndex::kNumChildren);
-    EXPECT_NEAR(0.5f * parent_coefficients.scale, average_of_children,
+    EXPECT_NEAR(parent_coefficients.scale, average_of_children,
                 kReconstructionErrorTolerance);
 
     // Check that the parent's coefficients preserve the energy of its children
     const FloatingPoint child_scale_coefficients_energy = std::inner_product(
         child_scale_coefficients.begin(), child_scale_coefficients.end(),
-        child_scale_coefficients.begin(), 1.f);
-    const FloatingPoint parent_coefficients_energy =
-        parent_coefficients.scale * parent_coefficients.scale +
-        parent_coefficients.details.xx * parent_coefficients.details.xx +
-        parent_coefficients.details.yy * parent_coefficients.details.yy +
-        parent_coefficients.details.xy * parent_coefficients.details.xy;
+        child_scale_coefficients.begin(), 0.f);
+    const HaarWaveletType::Coefficients::Array parent_coefficients_array{
+        parent_coefficients.scale, parent_coefficients.details.xx,
+        parent_coefficients.details.yy, parent_coefficients.details.xy};
+    const auto basis_fn_cell_magnitudes =
+        HaarWaveletType::Coefficients::Array{1.f, 0.5f, 0.5f, 0.25f};
+    const FloatingPoint parent_coefficients_energy = std::transform_reduce(
+        parent_coefficients_array.begin(), parent_coefficients_array.end(),
+        basis_fn_cell_magnitudes.begin(), 0.f, std::plus<>(),
+        [](auto coeff, auto basis_fn_cell_mag) {
+          constexpr auto kNumCells = 4.f;
+          const auto projected_cell_mag = coeff * basis_fn_cell_mag;
+          return kNumCells * projected_cell_mag * projected_cell_mag;
+        });
     EXPECT_NEAR(parent_coefficients_energy, child_scale_coefficients_energy,
                 1e-2f * child_scale_coefficients_energy);
   }
