@@ -15,8 +15,10 @@ class Node {
   explicit Node(NodeDataType data) : data_(data) {}
   ~Node() = default;
 
-  bool empty() const {
-    return data_ == NodeDataType{} && !hasAtLeastOneChild();
+  bool empty() const { return data_ == NodeDataType{} && !hasChildrenArray(); }
+  void clear() {
+    deleteChildrenArray();
+    data() = NodeDataType{};
   }
 
   friend bool operator==(const Node& lhs, const Node& rhs) {

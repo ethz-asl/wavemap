@@ -15,6 +15,7 @@ class WaveletTree : public VolumetricQuadtreeInterface {
   using CellType = SaturatingOccupancyCell;
   using HaarWaveletType = HaarWavelet<FloatingPoint>;
   using NodeType = Node<HaarWaveletType::Coefficients::Details>;
+  static constexpr bool kRequiresPruningForThresholding = true;
 
   using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
   ~WaveletTree() override = default;

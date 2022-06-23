@@ -25,7 +25,7 @@ class Quadtree {
 
   bool empty() const { return root_node_.empty(); }
   size_t size() const;
-  void clear() { root_node_.deleteChildrenArray(); }
+  void clear() { root_node_.clear(); }
   void prune();
 
   bool hasNode(const QuadtreeIndex& index) { return getNode(index); }

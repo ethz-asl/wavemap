@@ -14,15 +14,14 @@ template <typename CellT>
 class HashedBlocks : public VolumetricDataStructure {
  public:
   using CellType = CellT;
+  static constexpr bool kRequiresPruningForThresholding = false;
 
   explicit HashedBlocks(const FloatingPoint min_cell_width)
       : VolumetricDataStructure(min_cell_width) {}
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override { return kCellsPerBlock * blocks_.size(); }
-  void prune() override {
-    // TODO(victorr): Implement this
-  }
+  void prune() override;
   void clear() override { blocks_.clear(); }
 
   size_t getMemoryUsage() const override {

@@ -14,6 +14,7 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
  public:
   using CellType = CellT;
   using NodeType = Node<typename CellT::Specialized>;
+  static constexpr bool kRequiresPruningForThresholding = true;
 
   using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
   ~SimpleQuadtree() override = default;

@@ -14,6 +14,7 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
  public:
   using CellType = CellT;
   using NodeType = Node<typename CellT::Specialized>;
+  static constexpr bool kRequiresPruningForThresholding = true;
 
   using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
   ~DifferencingQuadtree() override = default;

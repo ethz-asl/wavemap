@@ -3,11 +3,33 @@
 
 #include <limits>
 #include <string>
+#include <unordered_set>
 
 #include "wavemap_2d/data_structure/volumetric/dense_grid.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d {
+template <typename CellT>
+void HashedBlocks<CellT>::prune() {
+  const Index min_local_cell_index = Index::Zero();
+  const Index max_local_cell_index = Index::Constant(kCellsPerSide - 1);
+  const Grid local_grid(min_local_cell_index, max_local_cell_index);
+
+  std::unordered_set<BlockIndex, VoxbloxIndexHash> blocks_to_delete;
+  for (const auto& [block_index, block_data] : blocks_) {
+    if (!std::any_of(local_grid.begin(), local_grid.end(),
+                     [&block_data = block_data](const auto& cell_index) {
+                       const FloatingPoint cell_value =
+                           block_data(cell_index.x(), cell_index.y());
+                       return cell_value != typename CellT::Specialized{};
+                     })) {
+      blocks_to_delete.template emplace(block_index);
+    }
+  }
+  std::for_each(blocks_to_delete.begin(), blocks_to_delete.end(),
+                [&](const auto& block_index) { blocks_.erase(block_index); });
+}
+
 template <typename CellT>
 Index HashedBlocks<CellT>::getMinIndex() const {
   if (!empty()) {
@@ -74,10 +96,7 @@ void HashedBlocks<CellT>::forEachLeaf(
   const Index min_local_cell_index = Index::Zero();
   const Index max_local_cell_index = Index::Constant(kCellsPerSide - 1);
 
-  for (const auto& block_kv : blocks_) {
-    const BlockIndex& block_index = block_kv.first;
-    const Block& block_data = block_kv.second;
-
+  for (const auto& [block_index, block_data] : blocks_) {
     for (const Index& cell_index :
          Grid(min_local_cell_index, max_local_cell_index)) {
       const FloatingPoint cell_data =

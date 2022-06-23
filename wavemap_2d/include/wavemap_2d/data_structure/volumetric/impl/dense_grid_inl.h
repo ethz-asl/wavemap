@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 
 #include <opencv2/core/eigen.hpp>
 
@@ -15,15 +16,49 @@ namespace wavemap_2d {
 template <typename CellT>
 void DenseGrid<CellT>::clear() {
   data_.resize(0, 0);
-  min_index_ = Index::Zero();
-  max_index_ = Index::Zero();
+  min_external_index_ = Index::Zero();
+  max_external_index_ = Index::Zero();
+}
+
+template <typename CellT>
+void DenseGrid<CellT>::prune() {
+  if (empty()) {
+    return;
+  }
+
+  bool has_non_zero_cell = false;
+  Index min_non_zero_index = getMaxInternalIndex();
+  Index max_non_zero_index = getMinInternalIndex();
+  for (const Index& cell_index :
+       Grid(getMinInternalIndex(), getMaxInternalIndex())) {
+    const CellDataSpecialized& cell_value =
+        data_(cell_index.x(), cell_index.y());
+    if (cell_value != typename CellT::Specialized{}) {
+      has_non_zero_cell = true;
+      min_non_zero_index = min_non_zero_index.cwiseMin(cell_index);
+      max_non_zero_index = max_non_zero_index.cwiseMax(cell_index);
+    }
+  }
+
+  if (has_non_zero_cell) {
+    const Index new_size =
+        max_non_zero_index - min_non_zero_index + Index::Ones();
+    DataGridSpecialized new_grid_map =
+        data_.block(min_non_zero_index.x(), min_non_zero_index.y(),
+                    new_size.x(), new_size.y());
+    data_.template swap(new_grid_map);
+    min_external_index_ += min_non_zero_index;
+    max_external_index_ = min_external_index_ + max_non_zero_index;
+  } else {
+    clear();
+  }
 }
 
 template <typename CellT>
 bool DenseGrid<CellT>::hasCell(const Index& index) const {
   if (!empty()) {
-    return (min_index_.array() <= index.array() &&
-            index.array() <= max_index_.array())
+    return (min_external_index_.array() <= index.array() &&
+            index.array() <= max_external_index_.array())
         .all();
   }
   return false;
@@ -67,17 +102,14 @@ void DenseGrid<CellT>::addToCellValue(const Index& index,
 template <typename CellT>
 void DenseGrid<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  // TODO(victorr): Consider renaming QuadtreeIndex to something like
-  //                Hierarchical2DIndex, since it can represent hierarchical
-  //                quadtrant/octant subvolumes regardless of the exact data
-  //                structure that's being indexed.
-  for (const Index& cell_index : Grid(getMinIndex(), getMaxIndex())) {
-    const CellDataSpecialized* cell_data = accessCellData(cell_index);
-    if (cell_data) {
-      const QuadtreeIndex hierarchical_cell_index =
-          convert::indexAndHeightToNodeIndex(cell_index, 0);
-      visitor_fn(hierarchical_cell_index, *cell_data);
-    }
+  for (const Index& internal_cell_index :
+       Grid(getMinInternalIndex(), getMaxInternalIndex())) {
+    const CellDataSpecialized& cell_data =
+        data_(internal_cell_index.x(), internal_cell_index.y());
+    const Index cell_index = toExternal(internal_cell_index);
+    const QuadtreeIndex hierarchical_cell_index =
+        convert::indexAndHeightToNodeIndex(cell_index, 0);
+    visitor_fn(hierarchical_cell_index, cell_data);
   }
 }
 
@@ -106,7 +138,9 @@ bool DenseGrid<CellT>::save(const std::string& file_path_prefix,
                << "\" for writing.";
     return false;
   }
-  header_file << min_cell_width_ << "\n" << min_index_ << "\n" << max_index_;
+  header_file << min_cell_width_ << "\n"
+              << min_external_index_ << "\n"
+              << max_external_index_;
   header_file.close();
 
   cv::Mat image;
@@ -155,8 +189,8 @@ bool DenseGrid<CellT>::load(const std::string& file_path_prefix,
                << min_cell_width_ << ").";
     return false;
   }
-  header_file >> min_index_.x() >> min_index_.y();
-  header_file >> max_index_.x() >> max_index_.y();
+  header_file >> min_external_index_.x() >> min_external_index_.y();
+  header_file >> max_external_index_.x() >> max_external_index_.y();
   header_file.close();
 
   cv::Mat image = cv::imread(data_file_path, cv::IMREAD_ANYDEPTH);
@@ -189,8 +223,8 @@ typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
     const Index& index, bool auto_allocate) {
   if (empty()) {
     if (auto_allocate) {
-      min_index_ = index;
-      max_index_ = index;
+      min_external_index_ = index;
+      max_external_index_ = index;
       data_ = DataGridSpecialized::Zero(1, 1);
     } else {
       // TODO(victorr): Add unit test
@@ -200,9 +234,9 @@ typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
 
   if (!hasCell(index)) {
     if (auto_allocate) {
-      const Index new_grid_map_max_index = max_index_.cwiseMax(index);
-      const Index new_grid_map_min_index = min_index_.cwiseMin(index);
-      const Index min_index_diff = min_index_ - new_grid_map_min_index;
+      const Index new_grid_map_max_index = max_external_index_.cwiseMax(index);
+      const Index new_grid_map_min_index = min_external_index_.cwiseMin(index);
+      const Index min_index_diff = min_external_index_ - new_grid_map_min_index;
 
       const Index new_grid_map_dim =
           new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
@@ -213,29 +247,25 @@ typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
                          data_.cols()) = data_;
 
       data_.swap(new_grid_map);
-      min_index_ = new_grid_map_min_index;
-      max_index_ = new_grid_map_max_index;
+      min_external_index_ = new_grid_map_min_index;
+      max_external_index_ = new_grid_map_max_index;
     } else {
-      // TODO(victorr): Add unit test
       return nullptr;
     }
   }
 
-  // TODO(victorr): Add check for overflows
-  const Index data_index = index - min_index_;
-  return &data_.coeffRef(data_index.x(), data_index.y());
+  const Index internal_index = toInternal(index);
+  return &data_.coeffRef(internal_index.x(), internal_index.y());
 }
 
 template <typename CellT>
 const typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
     const Index& index) const {
   if (empty() || !hasCell(index)) {
-    // TODO(victorr): Add unit test
     return nullptr;
   }
-  // TODO(victorr): Add check for overflows
-  const Index data_index = index - min_index_;
-  return &data_.coeff(data_index.x(), data_index.y());
+  const Index internal_index = toInternal(index);
+  return &data_.coeff(internal_index.x(), internal_index.y());
 }
 }  // namespace wavemap_2d
 

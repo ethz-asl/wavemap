@@ -15,6 +15,7 @@ class DenseGrid : public VolumetricDataStructure {
   using CellDataSpecialized = typename CellT::Specialized;
   using CellDataBaseFloat = typename CellT::BaseFloat;
   using CellDataBaseInt = typename CellT::BaseInt;
+  static constexpr bool kRequiresPruningForThresholding = false;
 
   template <typename T>
   using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
@@ -27,9 +28,7 @@ class DenseGrid : public VolumetricDataStructure {
 
   bool empty() const override { return !data_.size(); }
   size_t size() const override { return data_.size(); }
-  void prune() override {
-    // TODO(victorr): Implement this
-  }
+  void prune() override;
   void clear() override;
 
   size_t getMemoryUsage() const override {
@@ -37,8 +36,8 @@ class DenseGrid : public VolumetricDataStructure {
   }
 
   Index dimensions() const { return {data_.rows(), data_.cols()}; }
-  Index getMinIndex() const override { return min_index_; }
-  Index getMaxIndex() const override { return max_index_; }
+  Index getMinIndex() const override { return min_external_index_; }
+  Index getMaxIndex() const override { return max_external_index_; }
 
   bool hasCell(const Index& index) const;
   FloatingPoint getCellValue(const Index& index) const override;
@@ -57,9 +56,22 @@ class DenseGrid : public VolumetricDataStructure {
             bool used_floating_precision) override;
 
  private:
-  Index min_index_ = Index::Zero();
-  Index max_index_ = Index::Zero();
+  Index min_external_index_ = Index::Zero();
+  Index max_external_index_ = Index::Zero();
   DataGridSpecialized data_;
+
+  Index getMinInternalIndex() const { return Index::Zero(); }
+  Index getMaxInternalIndex() const {
+    return {data_.rows() - 1, data_.cols() - 1};
+  }
+
+  // TODO(victorr): Add check for overflows
+  Index toInternal(const Index& index) const {
+    return index - min_external_index_;
+  }
+  Index toExternal(const Index& index) const {
+    return index + min_external_index_;
+  }
 
   CellDataSpecialized* accessCellData(const Index& index,
                                       bool auto_allocate = false);

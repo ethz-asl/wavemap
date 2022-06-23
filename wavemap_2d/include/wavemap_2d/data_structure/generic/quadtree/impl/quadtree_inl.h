@@ -11,9 +11,7 @@ namespace wavemap_2d {
 template <typename NodeDataType, QuadtreeIndex::Element max_height>
 size_t Quadtree<NodeDataType, max_height>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
-  // NOTE: 1 is subtracted from the count to account for the fact that the root
-  //       node is even allocated when the quadtree is empty.
-  return std::distance(subtree_iterator.begin(), subtree_iterator.end()) - 1u;
+  return std::distance(subtree_iterator.begin(), subtree_iterator.end());
 }
 
 template <typename NodeDataType, QuadtreeIndex::Element max_height>

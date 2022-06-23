@@ -15,6 +15,12 @@ class Grid {
 
   class Iterator {
    public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = Index;
+    using pointer = Index*;
+    using reference = Index&;
+    using iterator_category = std::forward_iterator_tag;
+
     explicit Iterator(const Grid& grid)
         : grid_(grid),
           current_index_(grid_.min_index_.x(), grid_.min_index_.y()) {}
@@ -22,7 +28,8 @@ class Grid {
         : grid_(grid),
           current_index_(end ? grid_.max_index_.x() : grid_.min_index_.x(),
                          grid_.min_index_.y()) {}
-    Index operator*() const { return current_index_; }
+
+    const Index& operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
       if (++current_index_.y() == grid_.max_index_.y()) {
         current_index_.y() = grid_.min_index_.y();
