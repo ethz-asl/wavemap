@@ -69,17 +69,16 @@ class FixtureBase : public ::testing::Test {
                                                       max_coordinate);
   }
 
-  Index getRandomIndex() const {
-    return {getRandomIndexElement(), getRandomIndexElement()};
-  }
-
-  Index getRandomIndex(const Index& min_index, const Index& max_index) const {
+  Index getRandomIndex(Index min_index = Index::Constant(-1e3),
+                       Index max_index = Index::Constant(1e3)) const {
     return {getRandomIndexElement(min_index.x(), max_index.x()),
             getRandomIndexElement(min_index.y(), max_index.y())};
   }
 
-  std::vector<Index> getRandomIndexVector(size_t min_num_indices = 2u,
-                                          size_t max_num_indices = 100u) const {
+  std::vector<Index> getRandomIndexVector(
+      size_t min_num_indices = 2u, size_t max_num_indices = 100u,
+      Index min_index = Index::Constant(-1e3),
+      Index max_index = Index::Constant(1e3)) const {
     const size_t num_indices = random_number_generator_->getRandomInteger(
         min_num_indices, max_num_indices);
 

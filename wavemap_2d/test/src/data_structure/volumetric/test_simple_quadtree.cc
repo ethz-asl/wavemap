@@ -41,7 +41,7 @@ TYPED_TEST(SimpleQuadtreeTest, Initialization) {
   SimpleQuadtree<TypeParam> map(random_min_cell_width);
   EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
-  EXPECT_EQ(map.size(), 0u);
+  EXPECT_EQ(map.size(), 1u);  // Contains exactly 1 node (the root)
 }
 
 TYPED_TEST(SimpleQuadtreeTest, IndexConversions) {
@@ -65,7 +65,7 @@ TYPED_TEST(SimpleQuadtreeTest, IndexConversions) {
 TYPED_TEST(SimpleQuadtreeTest, Resizing) {
   SimpleQuadtree<TypeParam> map(TestFixture::getRandomMinCellWidth());
   ASSERT_TRUE(map.empty());
-  ASSERT_EQ(map.size(), 0u);
+  ASSERT_EQ(map.size(), 1u);
 
   const Index kMinIndex{-2e3, -1e3};
   const Index kMaxIndex{1e3, 2e3};
@@ -75,7 +75,7 @@ TYPED_TEST(SimpleQuadtreeTest, Resizing) {
   const Index& first_random_index = random_indices[0];
   map.addToCellValue(first_random_index, 0.f);
   EXPECT_FALSE(map.empty());
-  EXPECT_EQ(map.size(), map.kMaxHeight);
+  EXPECT_EQ(map.size(), map.kMaxHeight + 1);
 
   Index min_index = first_random_index;
   Index max_index = first_random_index;
@@ -107,7 +107,7 @@ TYPED_TEST(SimpleQuadtreeTest, Resizing) {
 
   map.clear();
   EXPECT_TRUE(map.empty());
-  EXPECT_EQ(map.size(), 0u);
+  EXPECT_EQ(map.size(), 1u);
 }
 
 TYPED_TEST(SimpleQuadtreeTest, Pruning) {
