@@ -7,65 +7,56 @@
 #include <vector>
 
 namespace wavemap_2d {
-
-void WaveletTree::prune() {
-  // TODO(victorr): Finish testing/debugging this
-  std::function<HaarWaveletType::Coefficients::Scale(
-      HaarWaveletType::Coefficients::Scale, NodeType&)>
-      recursive_fn = [&recursive_fn](
-                         HaarWaveletType::Coefficients::Scale scale_coefficient,
-                         NodeType& node) {
-        const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
+template <typename CellT>
+void WaveletTree<CellT>::prune() {
+  std::function<ScaleCoefficient(NodeType&, ScaleCoefficient)> recursive_fn =
+      [&recursive_fn](NodeType& node, ScaleCoefficient scale_coefficient) {
+        ChildScaleCoefficients child_scale_coefficients =
             HaarWaveletType::backward({scale_coefficient, node.data()});
-        HaarWaveletType::ChildScaleCoefficients
-            child_scale_coefficient_updates{};
 
-        if (node.hasChildrenArray()) {
-          bool has_at_least_one_child = false;
-          for (QuadtreeIndex::RelativeChild child_idx = 0;
-               child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-            if (node.hasChild(child_idx)) {
-              NodeType& child_node = *node.getChild(child_idx);
-              const HaarWaveletType::Coefficients::Scale
-                  child_scale_coefficient = child_scale_coefficients[child_idx];
-              child_scale_coefficient_updates[child_idx] =
-                  recursive_fn(child_scale_coefficient, child_node);
-              if (!child_node.hasChildrenArray() &&
-                  std::abs(child_node.data().xx) < kEpsilon &&
-                  std::abs(child_node.data().yy) < kEpsilon &&
-                  std::abs(child_node.data().xy) < kEpsilon) {
-                node.deleteChild(child_idx);
-              } else {
-                has_at_least_one_child = true;
-              }
+        bool has_at_least_one_child = false;
+        for (QuadtreeIndex::RelativeChild child_idx = 0;
+             child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
+          if (node.hasChild(child_idx)) {
+            NodeType& child_node = *node.getChild(child_idx);
+            child_scale_coefficients[child_idx] =
+                recursive_fn(child_node, child_scale_coefficients[child_idx]);
+            if (!child_node.hasChildrenArray() &&
+                std::abs(child_node.data().xx) < kEpsilon &&
+                std::abs(child_node.data().yy) < kEpsilon &&
+                std::abs(child_node.data().xy) < kEpsilon) {
+              node.deleteChild(child_idx);
+            } else {
+              has_at_least_one_child = true;
             }
-          }
-          if (!has_at_least_one_child) {
-            node.deleteChildrenArray();
-          }
-        } else {
-          for (QuadtreeIndex::RelativeChild child_idx = 0;
-               child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-            const HaarWaveletType::Coefficients::Scale child_scale_coefficient =
-                child_scale_coefficients[child_idx];
-            child_scale_coefficient_updates[child_idx] =
-                child_scale_coefficient -
-                CellType::threshold(child_scale_coefficient);
+          } else {
+            child_scale_coefficients[child_idx] -=
+                CellType::threshold(child_scale_coefficients[child_idx]);
           }
         }
+        if (!has_at_least_one_child) {
+          node.deleteChildrenArray();
+        }
 
-        const HaarWaveletType::ParentCoefficients child_coefficients_update =
-            HaarWaveletType::forward(child_scale_coefficient_updates);
-        node.data() -= child_coefficients_update.details;
+        const auto [scale_update, detail_updates] =
+            HaarWaveletType::forward(child_scale_coefficients);
+        node.data() -= detail_updates;
 
-        return child_coefficients_update.scale;
+        return scale_update;
       };
 
   root_scale_coefficient_ -=
-      recursive_fn(root_scale_coefficient_, quadtree_.getRootNode());
+      recursive_fn(quadtree_.getRootNode(), root_scale_coefficient_);
 }
 
-QuadtreeIndex::ChildArray WaveletTree::getFirstChildIndices() const {
+template <typename CellT>
+void WaveletTree<CellT>::clear() {
+  quadtree_.clear();
+  root_scale_coefficient_ = 0.f;
+}
+
+template <typename CellT>
+QuadtreeIndex::ChildArray WaveletTree<CellT>::getFirstChildIndices() const {
   QuadtreeIndex::ChildArray first_child_indices =
       getInternalRootNodeIndex().computeChildIndices();
   for (auto& child : first_child_indices) {
@@ -74,7 +65,8 @@ QuadtreeIndex::ChildArray WaveletTree::getFirstChildIndices() const {
   return first_child_indices;
 }
 
-Index WaveletTree::getMinIndex() const {
+template <typename CellT>
+Index WaveletTree<CellT>::getMinIndex() const {
   if (empty()) {
     return {};
   }
@@ -90,7 +82,8 @@ Index WaveletTree::getMinIndex() const {
   return min_index;
 }
 
-Index WaveletTree::getMaxIndex() const {
+template <typename CellT>
+Index WaveletTree<CellT>::getMaxIndex() const {
   if (empty()) {
     return {};
   }
@@ -106,17 +99,20 @@ Index WaveletTree::getMaxIndex() const {
   return max_index;
 }
 
-Index WaveletTree::getMinPossibleIndex() const {
+template <typename CellT>
+Index WaveletTree<CellT>::getMinPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
 }
 
-Index WaveletTree::getMaxPossibleIndex() const {
+template <typename CellT>
+Index WaveletTree<CellT>::getMaxPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
-FloatingPoint WaveletTree::getCellValue(const Index& index) const {
+template <typename CellT>
+FloatingPoint WaveletTree<CellT>::getCellValue(const Index& index) const {
   const QuadtreeIndex deepest_possible_node_index = toInternal(index);
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       deepest_possible_node_index.computeRelativeChildIndices<kMaxHeight>();
@@ -133,13 +129,16 @@ FloatingPoint WaveletTree::getCellValue(const Index& index) const {
   return value;
 }
 
-void WaveletTree::setCellValue(const Index& index, FloatingPoint new_value) {
+template <typename CellT>
+void WaveletTree<CellT>::setCellValue(const Index& index,
+                                      FloatingPoint new_value) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   setCellValue(node_index, new_value);
 }
 
-void WaveletTree::setCellValue(const QuadtreeIndex& node_index,
-                               FloatingPoint new_value) {
+template <typename CellT>
+void WaveletTree<CellT>::setCellValue(const QuadtreeIndex& node_index,
+                                      FloatingPoint new_value) {
   const QuadtreeIndex internal_node_index = toInternal(node_index);
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       internal_node_index.computeRelativeChildIndices<kMaxHeight>();
@@ -158,8 +157,7 @@ void WaveletTree::setCellValue(const QuadtreeIndex& node_index,
     node_ptrs.emplace_back(current_parent->getChild(child_index));
   }
 
-  HaarWaveletType::ParentCoefficients coefficients{new_value - current_value,
-                                                   {}};
+  ParentCoefficients coefficients{new_value - current_value, {}};
   for (int depth = static_cast<int>(child_indices.size()) - 1; 0 <= depth;
        --depth) {
     const QuadtreeIndex::RelativeChild relative_child_idx =
@@ -172,13 +170,16 @@ void WaveletTree::setCellValue(const QuadtreeIndex& node_index,
   root_scale_coefficient_ += coefficients.scale;
 }
 
-void WaveletTree::addToCellValue(const Index& index, FloatingPoint update) {
+template <typename CellT>
+void WaveletTree<CellT>::addToCellValue(const Index& index,
+                                        FloatingPoint update) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   addToCellValue(node_index, update);
 }
 
-void WaveletTree::addToCellValue(const QuadtreeIndex& node_index,
-                                 FloatingPoint update) {
+template <typename CellT>
+void WaveletTree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
+                                        FloatingPoint update) {
   const QuadtreeIndex internal_node_index = toInternal(node_index);
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       internal_node_index.computeRelativeChildIndices<kMaxHeight>();
@@ -194,7 +195,7 @@ void WaveletTree::addToCellValue(const QuadtreeIndex& node_index,
     node_ptrs.emplace_back(current_parent->getChild(child_index));
   }
 
-  HaarWaveletType::ParentCoefficients coefficients{update, {}};
+  ParentCoefficients coefficients{update, {}};
   for (int depth = static_cast<int>(child_indices.size()) - 1; 0 <= depth;
        --depth) {
     NodeType* current_node = node_ptrs[depth];
@@ -207,8 +208,13 @@ void WaveletTree::addToCellValue(const QuadtreeIndex& node_index,
   root_scale_coefficient_ += coefficients.scale;
 }
 
-void WaveletTree::forEachLeaf(
+template <typename CellT>
+void WaveletTree<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
+  if (empty()) {
+    return;
+  }
+
   std::stack<StackElement> stack;
   stack.template emplace(StackElement{getInternalRootNodeIndex(),
                                       quadtree_.getRootNode(),
@@ -219,50 +225,43 @@ void WaveletTree::forEachLeaf(
     const FloatingPoint node_scale_coefficient = stack.top().scale_coefficient;
     stack.pop();
 
-    if (node.hasChildrenArray()) {
-      const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
-          HaarWaveletType::backward({node_scale_coefficient, {node.data()}});
-      for (QuadtreeIndex::RelativeChild child_idx = 0;
-           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-        const QuadtreeIndex internal_child_node_index =
-            internal_node_index.computeChildIndex(child_idx);
-        const FloatingPoint child_scale_coefficient =
-            child_scale_coefficients[child_idx];
-        if (node.hasChild(child_idx)) {
-          const NodeType& child_node = *node.getChild(child_idx);
-          stack.template emplace(StackElement{
-              internal_child_node_index, child_node, child_scale_coefficient});
-        } else {
-          // Hallucinate the missing leaves
-          // NOTE: This is necessary since the inner nodes in the data structure
-          //       can overlap with each other and with leaves, but we want the
-          //       visuals to be non-overlapping while still covering all
-          //       observed space.
-          const QuadtreeIndex node_index =
-              toExternalNodeIndex(internal_child_node_index);
-          visitor_fn(node_index, child_scale_coefficient);
-        }
+    const ChildScaleCoefficients child_scale_coefficients =
+        HaarWaveletType::backward({node_scale_coefficient, {node.data()}});
+    for (QuadtreeIndex::RelativeChild child_idx = 0;
+         child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
+      const QuadtreeIndex internal_child_node_index =
+          internal_node_index.computeChildIndex(child_idx);
+      const FloatingPoint child_scale_coefficient =
+          child_scale_coefficients[child_idx];
+      if (node.hasChild(child_idx)) {
+        const NodeType& child_node = *node.getChild(child_idx);
+        stack.template emplace(StackElement{
+            internal_child_node_index, child_node, child_scale_coefficient});
+      } else {
+        const QuadtreeIndex node_index =
+            toExternalNodeIndex(internal_child_node_index);
+        visitor_fn(node_index, child_scale_coefficient);
       }
-    } else {
-      const QuadtreeIndex node_index = toExternalNodeIndex(internal_node_index);
-      visitor_fn(node_index, node_scale_coefficient);
     }
   }
 }
 
-cv::Mat WaveletTree::getImage(bool /*use_color*/) const {
+template <typename CellT>
+cv::Mat WaveletTree<CellT>::getImage(bool /*use_color*/) const {
   // TODO(victorr): Implement this
   return {};
 }
 
-bool WaveletTree::save(const std::string& /*file_path_prefix*/,
-                       bool /*use_floating_precision*/) const {
+template <typename CellT>
+bool WaveletTree<CellT>::save(const std::string& /*file_path_prefix*/,
+                              bool /*use_floating_precision*/) const {
   // TODO(victorr): Implement this
   return false;
 }
 
-bool WaveletTree::load(const std::string& /*file_path_prefix*/,
-                       bool /*used_floating_precision*/) {
+template <typename CellT>
+bool WaveletTree<CellT>::load(const std::string& /*file_path_prefix*/,
+                              bool /*used_floating_precision*/) {
   // TODO(victorr): Implement this
   return false;
 }

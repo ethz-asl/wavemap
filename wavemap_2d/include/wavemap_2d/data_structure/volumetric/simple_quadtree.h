@@ -13,7 +13,6 @@ template <typename CellT>
 class SimpleQuadtree : public VolumetricQuadtreeInterface {
  public:
   using CellType = CellT;
-  using NodeType = Node<typename CellT::Specialized>;
   static constexpr bool kRequiresPruningForThresholding = true;
 
   using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
@@ -59,6 +58,7 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
+  using NodeType = Node<typename CellT::Specialized>;
   Quadtree<typename CellT::Specialized, kMaxHeight> quadtree_;
 
   static QuadtreeIndex getInternalRootNodeIndex() {

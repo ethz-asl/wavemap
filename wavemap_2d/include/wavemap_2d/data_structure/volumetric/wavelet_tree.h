@@ -10,11 +10,10 @@
 #include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
+template <typename CellT>
 class WaveletTree : public VolumetricQuadtreeInterface {
  public:
-  using CellType = SaturatingOccupancyCell;
-  using HaarWaveletType = HaarWavelet<FloatingPoint>;
-  using NodeType = Node<HaarWaveletType::Coefficients::Details>;
+  using CellType = CellT;
   static constexpr bool kRequiresPruningForThresholding = true;
 
   using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
@@ -23,10 +22,7 @@ class WaveletTree : public VolumetricQuadtreeInterface {
   bool empty() const override { return quadtree_.empty(); }
   size_t size() const override { return quadtree_.size(); }
   void prune() override;
-  void clear() override {
-    quadtree_.clear();
-    root_scale_coefficient_ = 0.f;
-  }
+  void clear() override;
 
   QuadtreeIndex::ChildArray getFirstChildIndices() const override;
 
@@ -63,14 +59,22 @@ class WaveletTree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
+  using HaarWaveletType = HaarWavelet<typename CellT::Specialized>;
+  using ScaleCoefficient = typename HaarWaveletType::Coefficients::Scale;
+  using DetailCoefficients = typename HaarWaveletType::Coefficients::Details;
+  using ChildScaleCoefficients =
+      typename HaarWaveletType::ChildScaleCoefficients;
+  using ParentCoefficients = typename HaarWaveletType::ParentCoefficients;
+  using NodeType = Node<DetailCoefficients>;
+
   struct StackElement {
     const QuadtreeIndex internal_node_index;
     const NodeType& node;
-    const FloatingPoint scale_coefficient = 0.f;
+    const ScaleCoefficient scale_coefficient = 0.f;
   };
 
-  HaarWaveletType::Coefficients::Scale root_scale_coefficient_ = 0.f;
-  Quadtree<HaarWaveletType::Coefficients::Details, kMaxHeight> quadtree_;
+  ScaleCoefficient root_scale_coefficient_ = 0.f;
+  Quadtree<DetailCoefficients, kMaxHeight> quadtree_;
 
   static QuadtreeIndex getInternalRootNodeIndex() {
     return QuadtreeIndex{kMaxHeight, QuadtreeIndex::Position::Zero()};

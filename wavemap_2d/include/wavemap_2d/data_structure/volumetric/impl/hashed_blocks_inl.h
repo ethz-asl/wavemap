@@ -27,7 +27,9 @@ void HashedBlocks<CellT>::prune() {
     }
   }
   std::for_each(blocks_to_delete.begin(), blocks_to_delete.end(),
-                [&](const auto& block_index) { blocks_.erase(block_index); });
+                [&blocks = blocks_](const auto& block_index) {
+                  blocks.erase(block_index);
+                });
 }
 
 template <typename CellT>

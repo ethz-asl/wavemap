@@ -13,7 +13,6 @@ template <typename CellT>
 class DifferencingQuadtree : public VolumetricQuadtreeInterface {
  public:
   using CellType = CellT;
-  using NodeType = Node<typename CellT::Specialized>;
   static constexpr bool kRequiresPruningForThresholding = true;
 
   using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
@@ -59,6 +58,7 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
+  using NodeType = Node<typename CellT::Specialized>;
   struct StackElement {
     const QuadtreeIndex internal_node_index;
     const NodeType& node;

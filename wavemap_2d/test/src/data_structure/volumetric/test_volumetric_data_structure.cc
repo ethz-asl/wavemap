@@ -25,7 +25,8 @@ using VolumetricDataStructureTypes = ::testing::Types<
     SimpleQuadtree<UnboundedOccupancyCell>,
     SimpleQuadtree<SaturatingOccupancyCell>,
     DifferencingQuadtree<UnboundedOccupancyCell>,
-    DifferencingQuadtree<SaturatingOccupancyCell>, WaveletTree>;
+    DifferencingQuadtree<SaturatingOccupancyCell>,
+    WaveletTree<UnboundedOccupancyCell>, WaveletTree<SaturatingOccupancyCell>>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
@@ -163,8 +164,8 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
 
     // Check that the indexed leaf value visitor visits all non-zero cells
     const size_t reference_map_size = reference_map.size();
-    map_base_ptr->forEachLeaf([&](const QuadtreeIndex& node_index,
-                                  FloatingPoint value) {
+    map_base_ptr->forEachLeaf([&reference_map](const QuadtreeIndex& node_index,
+                                               FloatingPoint value) {
       const Index index = convert::nodeIndexToMinCornerIndex(node_index);
       // Check that the values are correct
       if (reference_map.count(index)) {
@@ -200,5 +201,6 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
 
 // TODO(victorr): For classes derived from VolumetricQuadtreeInterface, test
 //                NodeIndex based setters and getters (incl. whether values of
-//                all children are updated but nothing spills to the neighbors)
+//                all children are updated but nothing spills to the
+//                neighbors)
 }  // namespace wavemap_2d
