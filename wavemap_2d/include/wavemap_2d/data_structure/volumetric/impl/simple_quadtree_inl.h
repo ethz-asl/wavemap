@@ -54,7 +54,7 @@ void SimpleQuadtree<CellT>::prune() {
             node.deleteChildrenArray();
           } else {
             // After pruning, all internal node values are zero
-            node.data() = 0.f;
+            node.data() = {};
           }
         } else {
           // Threshold the leaf values

@@ -26,7 +26,7 @@ void DifferencingQuadtree<CellT>::prune() {
 
         if (node.hasChildrenArray()) {
           // Compute the average of all children
-          FloatingPoint child_average = 0.f;
+          typename CellT::Specialized child_average{};
           for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
                ++child_idx) {
             NodeType* child = node.getChild(child_idx);
@@ -201,7 +201,7 @@ void DifferencingQuadtree<CellT>::forEachLeaf(
   stack.template emplace(
       StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
+    const QuadtreeIndex node_index = stack.top().node_index;
     const NodeType& node = stack.top().node;
     const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
@@ -209,26 +209,26 @@ void DifferencingQuadtree<CellT>::forEachLeaf(
     if (node.hasChildrenArray()) {
       for (QuadtreeIndex::RelativeChild child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-        const QuadtreeIndex internal_child_node_index =
-            internal_node_index.computeChildIndex(child_idx);
+        const QuadtreeIndex child_node_index =
+            node_index.computeChildIndex(child_idx);
         if (node.hasChild(child_idx)) {
           const NodeType& child_node = *node.getChild(child_idx);
           stack.template emplace(
-              StackElement{internal_child_node_index, child_node, node_value});
+              StackElement{child_node_index, child_node, node_value});
         } else {
           // Hallucinate the missing leaves
           // NOTE: This is necessary since the inner nodes in the data structure
           //       can overlap with each other and with leaves, but we want the
           //       visuals to be non-overlapping while still covering all
           //       observed space.
-          const QuadtreeIndex node_index =
-              toExternalNodeIndex(internal_child_node_index);
-          visitor_fn(node_index, node_value);
+          const QuadtreeIndex external_node_index =
+              toExternalNodeIndex(child_node_index);
+          visitor_fn(external_node_index, node_value);
         }
       }
     } else {
-      const QuadtreeIndex node_index = toExternalNodeIndex(internal_node_index);
-      visitor_fn(node_index, node_value);
+      const QuadtreeIndex external_node_index = toExternalNodeIndex(node_index);
+      visitor_fn(external_node_index, node_value);
     }
   }
 }

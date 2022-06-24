@@ -72,13 +72,13 @@ class WaveletTree : public WaveletTreeInterface {
 
  private:
   struct StackElement {
-    const QuadtreeIndex internal_node_index;
+    const QuadtreeIndex node_index;
     const NodeType& node;
-    const ScaleCoefficient scale_coefficient = 0.f;
+    const ScaleCoefficient scale_coefficient{};
   };
 
-  ScaleCoefficient root_scale_coefficient_ = 0.f;
-  Quadtree<DetailCoefficients, kMaxHeight> quadtree_;
+  ScaleCoefficient root_scale_coefficient_{};
+  Quadtree<DetailCoefficients, kMaxHeight - 1> quadtree_;
 
   static QuadtreeIndex getInternalRootNodeIndex() {
     return QuadtreeIndex{kMaxHeight, QuadtreeIndex::Position::Zero()};

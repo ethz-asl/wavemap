@@ -59,9 +59,9 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
  private:
   using NodeType = Node<typename CellT::Specialized>;
   struct StackElement {
-    QuadtreeIndex node_index;
+    const QuadtreeIndex node_index;
     const NodeType& node;
-    const FloatingPoint parent_value{};
+    const typename CellT::Specialized parent_value{};
   };
 
   Quadtree<typename CellT::Specialized, kMaxHeight> quadtree_;

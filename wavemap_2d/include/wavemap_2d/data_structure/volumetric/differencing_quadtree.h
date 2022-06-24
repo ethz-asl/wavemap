@@ -59,9 +59,9 @@ class DifferencingQuadtree : public VolumetricQuadtreeInterface {
  private:
   using NodeType = Node<typename CellT::Specialized>;
   struct StackElement {
-    const QuadtreeIndex internal_node_index;
+    const QuadtreeIndex node_index;
     const NodeType& node;
-    const FloatingPoint parent_value = 0.f;
+    const typename CellT::Specialized parent_value{};
   };
 
   Quadtree<typename CellT::Specialized, kMaxHeight> quadtree_;

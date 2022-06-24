@@ -47,7 +47,8 @@ inline FloatingPoint WaveletIntegrator::sampleUpdateAtPoint(
 
 FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const QuadtreeIndex& node_index,
-    typename WaveletTreeInterface::NodeType& node) {
+    typename WaveletTreeInterface::NodeType& parent_node,
+    QuadtreeIndex::RelativeChild relative_child_index) {
   const AABB<Point> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const RangeImageIntersector::IntersectionType intersection_type =
@@ -73,22 +74,26 @@ FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     return sampleUpdateAtPoint(*posed_range_image_, d_C_cell, angle_C_cell);
   }
 
+  WaveletTreeInterface::NodeType* node =
+      parent_node.getChild(relative_child_index);
+  if (!node) {
+    node = parent_node.allocateChild(relative_child_index);
+  }
+
   WaveletTreeInterface::ChildScaleCoefficients child_scale_coefficient_updates;
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {
-    WaveletTreeInterface::NodeType* child_node =
-        node.getChild(relative_child_idx);
-    if (!child_node) {
-      child_node = node.allocateChild(relative_child_idx);
-    }
+    const QuadtreeIndex child_index =
+        node_index.computeChildIndex(relative_child_idx);
     child_scale_coefficient_updates[relative_child_idx] =
-        recursiveSamplerCompressor(
-            node_index.computeChildIndex(relative_child_idx), *child_node);
+        recursiveSamplerCompressor(child_index, *node, relative_child_idx);
   }
+
   const auto [scale_update, detail_updates] =
       WaveletTreeInterface::HaarWaveletType::forward(
           child_scale_coefficient_updates);
-  node.data() += detail_updates;
+  node->data() += detail_updates;
+
   return scale_update;
 }
 }  // namespace wavemap_2d

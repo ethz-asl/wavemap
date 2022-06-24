@@ -31,6 +31,7 @@ constexpr int div_exp2(int value, int exp) { return value >> exp; }
 template <int dim>
 Eigen::Matrix<int, dim, 1> div_exp2(Eigen::Matrix<int, dim, 1> vector,
                                     int exp) {
+  DCHECK_GE(exp, 0);
   for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
     vector[dim_idx] >>= exp;
   }

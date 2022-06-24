@@ -38,10 +38,9 @@ void WaveletIntegrator::integratePointcloud(
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {
     const QuadtreeIndex& child_index = first_child_indices[relative_child_idx];
-    WaveletTreeInterface::NodeType* child_node =
-        wavelet_tree_->getNode(child_index);
     child_scale_coefficient_updates[relative_child_idx] =
-        recursiveSamplerCompressor(child_index, *child_node);
+        recursiveSamplerCompressor(child_index, wavelet_tree_->getRootNode(),
+                                   relative_child_idx);
   }
   const auto [scale_update, detail_updates] =
       WaveletTreeInterface::HaarWaveletType::forward(

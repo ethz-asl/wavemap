@@ -33,7 +33,9 @@ class WaveletIntegrator : public PointcloudIntegrator {
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
 
   WaveletTreeInterface::ScaleCoefficient recursiveSamplerCompressor(
-      const QuadtreeIndex& node_index, WaveletTreeInterface::NodeType& node);
+      const QuadtreeIndex& node_index,
+      WaveletTreeInterface::NodeType& parent_node,
+      QuadtreeIndex ::RelativeChild relative_child_index);
 
   static bool isApproximationErrorAcceptable(
       RangeImageIntersector::IntersectionType intersection_type,

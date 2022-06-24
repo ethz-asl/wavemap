@@ -55,7 +55,7 @@ void WaveletTree<CellT>::prune() {
 template <typename CellT>
 void WaveletTree<CellT>::clear() {
   quadtree_.clear();
-  root_scale_coefficient_ = 0.f;
+  root_scale_coefficient_ = {};
 }
 
 template <typename CellT>
@@ -223,7 +223,7 @@ void WaveletTree<CellT>::forEachLeaf(
                                       quadtree_.getRootNode(),
                                       root_scale_coefficient_});
   while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
+    const QuadtreeIndex node_index = stack.top().node_index;
     const NodeType& node = stack.top().node;
     const FloatingPoint node_scale_coefficient = stack.top().scale_coefficient;
     stack.pop();
@@ -232,18 +232,18 @@ void WaveletTree<CellT>::forEachLeaf(
         HaarWaveletType::backward({node_scale_coefficient, {node.data()}});
     for (QuadtreeIndex::RelativeChild child_idx = 0;
          child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-      const QuadtreeIndex internal_child_node_index =
-          internal_node_index.computeChildIndex(child_idx);
+      const QuadtreeIndex child_node_index =
+          node_index.computeChildIndex(child_idx);
       const FloatingPoint child_scale_coefficient =
           child_scale_coefficients[child_idx];
       if (node.hasChild(child_idx)) {
         const NodeType& child_node = *node.getChild(child_idx);
-        stack.template emplace(StackElement{
-            internal_child_node_index, child_node, child_scale_coefficient});
+        stack.template emplace(StackElement{child_node_index, child_node,
+                                            child_scale_coefficient});
       } else {
-        const QuadtreeIndex node_index =
-            toExternalNodeIndex(internal_child_node_index);
-        visitor_fn(node_index, child_scale_coefficient);
+        const QuadtreeIndex external_node_index =
+            toExternalNodeIndex(child_node_index);
+        visitor_fn(external_node_index, child_scale_coefficient);
       }
     }
   }
