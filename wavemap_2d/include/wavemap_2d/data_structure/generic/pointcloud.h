@@ -69,7 +69,7 @@ class PosedPointcloud {
   bool empty() const { return !size(); }
   size_t size() const { return points_C_.size(); }
 
-  Point getOrigin() const { return T_W_C_.getPosition(); }
+  const Point& getOrigin() const { return T_W_C_.getPosition(); }
   const Transformation& getPose() const { return T_W_C_; }
 
   const Pointcloud<point_dimensions>& getPointsLocal() const {

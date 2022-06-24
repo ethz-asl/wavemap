@@ -18,7 +18,7 @@ inline bool CoarseToFineIntegrator::isApproximationErrorAcceptable(
   }
 }
 
-inline FloatingPoint CoarseToFineIntegrator::computeUpdateForCell(
+inline FloatingPoint CoarseToFineIntegrator::sampleUpdateAtPoint(
     const RangeImage& range_image, FloatingPoint d_C_cell,
     FloatingPoint azimuth_angle_C_cell) {
   if (d_C_cell < kEpsilon || BeamModel::kRangeMax < d_C_cell) {

@@ -65,6 +65,8 @@ cs_add_library(
   src/integrator/measurement_model/fixed_logodds_model.cc
   src/integrator/measurement_model/measurement_model.cc
   src/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.cc
+  src/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.cc
+  src/integrator/scan_integrator/range_image.cc
   src/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.cc
   src/utils/eigen_format.cc
   src/utils/evaluation_utils.cc)

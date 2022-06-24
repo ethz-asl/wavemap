@@ -11,6 +11,7 @@
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
 #include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h>
+#include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
@@ -57,6 +58,10 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
     ROS_INFO("Using coarse to fine integrator");
     pointcloud_integrator_ =
         std::make_shared<CoarseToFineIntegrator>(occupancy_map_);
+  } else if (config_.measurement_model_type == "wavelet_integrator") {
+    ROS_INFO("Using wavelet integrator");
+    pointcloud_integrator_ =
+        std::make_shared<WaveletIntegrator>(occupancy_map_);
   } else {
     ROS_INFO("Using beam integrator");
     pointcloud_integrator_ = std::make_shared<BeamIntegrator>(occupancy_map_);

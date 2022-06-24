@@ -2,10 +2,21 @@
 
 #include <stack>
 
-#include "wavemap_2d/data_structure/volumetric/volumetric_quadtree_interface.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
+CoarseToFineIntegrator::CoarseToFineIntegrator(
+    VolumetricDataStructure::Ptr occupancy_map)
+    : PointcloudIntegrator(std::move(occupancy_map)),
+      min_cell_width_(occupancy_map_->getMinCellWidth()) {
+  // Get a pointer to the underlying specialized quadtree data structure
+  volumetric_quadtree_ =
+      dynamic_cast<VolumetricQuadtreeInterface*>(occupancy_map_.get());
+  CHECK(volumetric_quadtree_)
+      << "Coarse to fine integrator can only be used with quadtree-based "
+         "volumetric data structures.";
+}
+
 void CoarseToFineIntegrator::integratePointcloud(
     const PosedPointcloud<>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
@@ -19,28 +30,18 @@ void CoarseToFineIntegrator::integratePointcloud(
   //                contribution from the nearest beam.
 
   // Compute the range image and the scan's AABB
-  // TODO(victorr): Make this configurable
-  // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
-  const auto range_image = std::make_shared<RangeImage>(
-      computeRangeImage(pointcloud, -kHalfPi, kHalfPi, pointcloud.size()));
-  RangeImageIntersector range_image_intersector(range_image);
-
-  // Get a pointer to the underlying specialized quadtree data structure
-  auto occupancy_map =
-      dynamic_cast<VolumetricQuadtreeInterface*>(occupancy_map_.get());
-  if (!occupancy_map) {
-    LOG(FATAL) << "Coarse to fine integrator can only be used with "
-                  "quadtree-based volumetric data structures.";
-    return;
+  // TODO(victorr): Make the FoV and number of beams configurable
+  if (!posed_range_image_) {
+    posed_range_image_ =
+        std::make_shared<PosedRangeImage>(-kHalfPi, kHalfPi, pointcloud.size());
   }
+  posed_range_image_->importPointcloud(pointcloud);
+  RangeImageIntersector range_image_intersector(posed_range_image_);
 
   // Recursively update all relevant cells
-  const Transformation T_CW = pointcloud.getPose().inverse();
-  const FloatingPoint min_cell_width = occupancy_map->getMinCellWidth();
-
   std::stack<QuadtreeIndex> stack;
   for (const QuadtreeIndex& node_index :
-       occupancy_map->getFirstChildIndices()) {
+       volumetric_quadtree_->getFirstChildIndices()) {
     stack.emplace(node_index);
   }
   while (!stack.empty()) {
@@ -48,7 +49,7 @@ void CoarseToFineIntegrator::integratePointcloud(
     stack.pop();
 
     const AABB<Point> W_cell_aabb =
-        convert::nodeIndexToAABB(current_node, min_cell_width);
+        convert::nodeIndexToAABB(current_node, min_cell_width_);
     const RangeImageIntersector::IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(pointcloud.getPose(),
                                                           W_cell_aabb);
@@ -60,9 +61,9 @@ void CoarseToFineIntegrator::integratePointcloud(
     const FloatingPoint node_width = W_cell_aabb.width<0>();
     const Point W_node_center =
         W_cell_aabb.min + Vector::Constant(node_width / 2.f);
-    const Point C_node_center = T_CW * W_node_center;
+    const Point C_node_center =
+        posed_range_image_->getPoseInverse() * W_node_center;
     FloatingPoint d_C_cell = C_node_center.norm();
-    constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
     if (current_node.height == 0 ||
@@ -70,8 +71,8 @@ void CoarseToFineIntegrator::integratePointcloud(
                                        bounding_sphere_radius)) {
       FloatingPoint angle_C_cell = RangeImage::bearingToAngle(C_node_center);
       FloatingPoint sample =
-          computeUpdateForCell(*range_image, d_C_cell, angle_C_cell);
-      occupancy_map->addToCellValue(current_node, sample);
+          sampleUpdateAtPoint(*posed_range_image_, d_C_cell, angle_C_cell);
+      volumetric_quadtree_->addToCellValue(current_node, sample);
       continue;
     }
 
@@ -81,32 +82,5 @@ void CoarseToFineIntegrator::integratePointcloud(
       stack.emplace(current_node.computeChildIndex(relative_child_idx));
     }
   }
-}
-
-RangeImage CoarseToFineIntegrator::computeRangeImage(
-    const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
-    FloatingPoint max_angle, Eigen::Index num_beams) {
-  RangeImage range_image(min_angle, max_angle, num_beams);
-
-  for (const auto& C_point : pointcloud.getPointsLocal()) {
-    // Filter out noisy points and compute point's range
-    if (C_point.hasNaN()) {
-      LOG(WARNING) << "Skipping measurement whose endpoint contains NaNs:\n"
-                   << C_point;
-      continue;
-    }
-    const FloatingPoint range = C_point.norm();
-    if (1e3 < range) {
-      LOG(INFO) << "Skipping measurement with suspicious length: " << range;
-      continue;
-    }
-
-    // Add the point to the range image
-    const RangeImageIndex range_image_index =
-        range_image.bearingToNearestIndex(C_point);
-    range_image[range_image_index] = range;
-  }
-
-  return range_image;
 }
 }  // namespace wavemap_2d

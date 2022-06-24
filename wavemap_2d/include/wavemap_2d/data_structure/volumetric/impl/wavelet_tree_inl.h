@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_state.h"
+
 namespace wavemap_2d {
 template <typename CellT>
 void WaveletTree<CellT>::prune() {
@@ -21,10 +23,11 @@ void WaveletTree<CellT>::prune() {
             NodeType& child_node = *node.getChild(child_idx);
             child_scale_coefficients[child_idx] =
                 recursive_fn(child_node, child_scale_coefficients[child_idx]);
+            constexpr FloatingPoint kNegligibleDetailCoefficient = 1e-4f;
             if (!child_node.hasChildrenArray() &&
-                std::abs(child_node.data().xx) < kEpsilon &&
-                std::abs(child_node.data().yy) < kEpsilon &&
-                std::abs(child_node.data().xy) < kEpsilon) {
+                std::abs(child_node.data().xx) < kNegligibleDetailCoefficient &&
+                std::abs(child_node.data().yy) < kNegligibleDetailCoefficient &&
+                std::abs(child_node.data().xy) < kNegligibleDetailCoefficient) {
               node.deleteChild(child_idx);
             } else {
               has_at_least_one_child = true;
@@ -244,6 +247,38 @@ void WaveletTree<CellT>::forEachLeaf(
       }
     }
   }
+}
+
+template <typename CellT>
+typename WaveletTree<CellT>::NodeType* WaveletTree<CellT>::getNode(
+    const QuadtreeIndex& node_index) {
+  const QuadtreeIndex internal_node_index = toInternal(node_index);
+  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
+      internal_node_index.computeRelativeChildIndices<kMaxHeight>();
+  NodeType* node = &quadtree_.getRootNode();
+  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
+    if (!node->hasChild(child_index)) {
+      node->template allocateChild(child_index);
+    }
+    node = node->getChild(child_index);
+  }
+  return node;
+}
+
+template <typename CellT>
+const typename WaveletTree<CellT>::NodeType* WaveletTree<CellT>::getNode(
+    const QuadtreeIndex& node_index) const {
+  const QuadtreeIndex internal_node_index = toInternal(node_index);
+  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
+      internal_node_index.computeRelativeChildIndices<kMaxHeight>();
+  const NodeType* node = &quadtree_.getRootNode();
+  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
+    if (!node->hasChild(child_index)) {
+      return nullptr;
+    }
+    node = node->getChild(child_index);
+  }
+  return node;
 }
 
 template <typename CellT>

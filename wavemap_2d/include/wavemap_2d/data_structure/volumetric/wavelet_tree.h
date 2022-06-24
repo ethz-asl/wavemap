@@ -2,21 +2,22 @@
 #define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_H_
 
 #include <string>
-#include <utility>
 
 #include "wavemap_2d/data_structure/generic/quadtree/quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/haar_wavelet.h"
-#include "wavemap_2d/data_structure/volumetric/volumetric_quadtree_interface.h"
+#include "wavemap_2d/data_structure/volumetric/wavelet_tree_interface.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
 template <typename CellT>
-class WaveletTree : public VolumetricQuadtreeInterface {
+class WaveletTree : public WaveletTreeInterface {
  public:
+  static_assert(std::is_same_v<typename CellT::Specialized, FloatingPoint>);
+
   using CellType = CellT;
   static constexpr bool kRequiresPruningForThresholding = true;
 
-  using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
+  using WaveletTreeInterface::WaveletTreeInterface;
   ~WaveletTree() override = default;
 
   bool empty() const override { return quadtree_.empty(); }
@@ -41,6 +42,17 @@ class WaveletTree : public VolumetricQuadtreeInterface {
 
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const override;
 
+  ScaleCoefficient& getRootScale() override { return root_scale_coefficient_; }
+  const ScaleCoefficient& getRootScale() const override {
+    return root_scale_coefficient_;
+  }
+  NodeType& getRootNode() override { return quadtree_.getRootNode(); }
+  const NodeType& getRootNode() const override {
+    return quadtree_.getRootNode();
+  }
+  NodeType* getNode(const QuadtreeIndex& node_index) override;
+  const NodeType* getNode(const QuadtreeIndex& node_index) const override;
+
   template <TraversalOrder traversal_order>
   auto getNodeIterator() {
     return quadtree_.template getIterator<traversal_order>();
@@ -59,14 +71,6 @@ class WaveletTree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
-  using HaarWaveletType = HaarWavelet<typename CellT::Specialized>;
-  using ScaleCoefficient = typename HaarWaveletType::Coefficients::Scale;
-  using DetailCoefficients = typename HaarWaveletType::Coefficients::Details;
-  using ChildScaleCoefficients =
-      typename HaarWaveletType::ChildScaleCoefficients;
-  using ParentCoefficients = typename HaarWaveletType::ParentCoefficients;
-  using NodeType = Node<DetailCoefficients>;
-
   struct StackElement {
     const QuadtreeIndex internal_node_index;
     const NodeType& node;

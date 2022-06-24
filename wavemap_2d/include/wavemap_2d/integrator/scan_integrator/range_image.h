@@ -1,6 +1,9 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
 #define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
 
+#include "wavemap_2d/common.h"
+#include "wavemap_2d/data_structure/generic/pointcloud.h"
+
 namespace wavemap_2d {
 using RangeImageIndex = int;
 
@@ -9,15 +12,15 @@ class RangeImage {
   using RangeImageData = Eigen::Matrix<FloatingPoint, 1, Eigen::Dynamic>;
 
   RangeImage(FloatingPoint min_angle, FloatingPoint max_angle,
-             Eigen::Index num_beams)
-      : data_(RangeImageData::Zero(1, num_beams)),
-        min_angle_(min_angle),
-        max_angle_(max_angle),
-        angle_increment_((max_angle_ - min_angle_) /
-                         static_cast<FloatingPoint>(data_.cols() - 1)),
-        angle_increment_inv_(1.f / angle_increment_) {
-    CHECK_LT(min_angle_, max_angle_);
+             Eigen::Index num_beams);
+
+  RangeImage(FloatingPoint min_angle, FloatingPoint max_angle,
+             Eigen::Index num_beams, const Pointcloud<>& pointcloud)
+      : RangeImage(min_angle, max_angle, num_beams) {
+    importPointcloud(pointcloud);
   }
+
+  void importPointcloud(const Pointcloud<>& pointcloud);
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }

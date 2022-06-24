@@ -52,9 +52,8 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
         kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 
     // Create the hierarchical range image
-    const auto range_image =
-        std::make_shared<RangeImage>(CoarseToFineIntegrator::computeRangeImage(
-            random_pointcloud, kMinAngle, kMaxAngle, num_beams));
+    const auto range_image = std::make_shared<PosedRangeImage>(
+        kMinAngle, kMaxAngle, num_beams, random_pointcloud);
     HierarchicalRangeImage hierarchical_range_image(range_image);
 
     // Test all the bounds from top to bottom
@@ -337,9 +336,8 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
         kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 
     // Create the hierarchical range image
-    const auto range_image =
-        std::make_shared<RangeImage>(CoarseToFineIntegrator::computeRangeImage(
-            random_pointcloud, kMinAngle, kMaxAngle, num_beams));
+    const auto range_image = std::make_shared<PosedRangeImage>(
+        kMinAngle, kMaxAngle, num_beams, random_pointcloud);
     RangeImageIntersector range_image_intersector(range_image);
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
