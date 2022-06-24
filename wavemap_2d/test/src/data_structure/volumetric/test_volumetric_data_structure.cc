@@ -28,10 +28,6 @@ using VolumetricDataStructureTypes = ::testing::Types<
     DifferencingQuadtree<SaturatingOccupancyCell>, WaveletTree>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
-// TODO(victorr): For classes derived from VolumetricQuadtreeInterface, test
-//                NodeIndex based setters and getters (incl. whether values of
-//                all children are updated but nothing spills to the neighbors)
-
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
   std::unique_ptr<VolumetricDataStructure> map_base_ptr =
       std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
@@ -201,4 +197,8 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
                });
   }
 }
+
+// TODO(victorr): For classes derived from VolumetricQuadtreeInterface, test
+//                NodeIndex based setters and getters (incl. whether values of
+//                all children are updated but nothing spills to the neighbors)
 }  // namespace wavemap_2d

@@ -66,18 +66,6 @@ void SimpleQuadtree<CellT>::prune() {
 }
 
 template <typename CellT>
-Index SimpleQuadtree<CellT>::getMinPossibleIndex() const {
-  return toExternalIndex(
-      convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
-}
-
-template <typename CellT>
-Index SimpleQuadtree<CellT>::getMaxPossibleIndex() const {
-  return toExternalIndex(
-      convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
-}
-
-template <typename CellT>
 QuadtreeIndex::ChildArray SimpleQuadtree<CellT>::getFirstChildIndices() const {
   QuadtreeIndex::ChildArray first_child_indices =
       getInternalRootNodeIndex().computeChildIndices();
@@ -87,76 +75,50 @@ QuadtreeIndex::ChildArray SimpleQuadtree<CellT>::getFirstChildIndices() const {
   return first_child_indices;
 }
 
-// TODO(victorr): Replace this with an implementation that only expands
-//                potential min candidates
 template <typename CellT>
 Index SimpleQuadtree<CellT>::getMinIndex() const {
   if (empty()) {
     return {};
   }
 
-  std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
-  stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
   Index min_index = getMaxPossibleIndex();
-  while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().first;
-    const NodeType& node = stack.top().second;
-    stack.pop();
-
-    if (node.hasChildrenArray()) {
-      for (QuadtreeIndex::RelativeChild child_idx = 0;
-           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-        if (node.hasChild(child_idx)) {
-          const QuadtreeIndex child_node_index =
-              internal_node_index.computeChildIndex(child_idx);
-          const NodeType& child_node = *node.getChild(child_idx);
-          stack.template emplace(child_node_index, child_node);
+  forEachLeaf(
+      [&min_index](const QuadtreeIndex& node_index, FloatingPoint value) {
+        if (OccupancyState::isObserved(value)) {
+          const Index index = convert::nodeIndexToMinCornerIndex(node_index);
+          min_index = min_index.cwiseMin(index);
         }
-      }
-    } else if (OccupancyState::isObserved(node.data())) {
-      const Index index =
-          convert::nodeIndexToMinCornerIndex(internal_node_index);
-      min_index = min_index.cwiseMin(index);
-    }
-  }
-
-  return toExternalIndex(min_index);
+      });
+  return min_index;
 }
 
-// TODO(victorr): Replace this with an implementation that only expands
-//                potential max candidates
 template <typename CellT>
 Index SimpleQuadtree<CellT>::getMaxIndex() const {
   if (empty()) {
     return {};
   }
 
-  std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
-  stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
   Index max_index = getMinPossibleIndex();
-  while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().first;
-    const NodeType& node = stack.top().second;
-    stack.pop();
-
-    if (node.hasChildrenArray()) {
-      for (QuadtreeIndex::RelativeChild child_idx = 0;
-           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-        if (node.hasChild(child_idx)) {
-          const QuadtreeIndex child_node_index =
-              internal_node_index.computeChildIndex(child_idx);
-          const NodeType& child_node = *node.getChild(child_idx);
-          stack.template emplace(child_node_index, child_node);
+  forEachLeaf(
+      [&max_index](const QuadtreeIndex& node_index, FloatingPoint value) {
+        if (OccupancyState::isObserved(value)) {
+          const Index index = convert::nodeIndexToMaxCornerIndex(node_index);
+          max_index = max_index.cwiseMax(index);
         }
-      }
-    } else if (OccupancyState::isObserved(node.data())) {
-      const Index index =
-          convert::nodeIndexToMaxCornerIndex(internal_node_index);
-      max_index = max_index.cwiseMax(index);
-    }
-  }
+      });
+  return max_index;
+}
 
-  return toExternalIndex(max_index);
+template <typename CellT>
+Index SimpleQuadtree<CellT>::getMinPossibleIndex() const {
+  return toExternalIndex(
+      convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
+}
+
+template <typename CellT>
+Index SimpleQuadtree<CellT>::getMaxPossibleIndex() const {
+  return toExternalIndex(
+      convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>

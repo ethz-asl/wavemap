@@ -65,16 +65,6 @@ void WaveletTree::prune() {
       recursive_fn(root_scale_coefficient_, quadtree_.getRootNode());
 }
 
-Index WaveletTree::getMinPossibleIndex() const {
-  return toExternalIndex(
-      convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
-}
-
-Index WaveletTree::getMaxPossibleIndex() const {
-  return toExternalIndex(
-      convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
-}
-
 QuadtreeIndex::ChildArray WaveletTree::getFirstChildIndices() const {
   QuadtreeIndex::ChildArray first_child_indices =
       getInternalRootNodeIndex().computeChildIndices();
@@ -89,44 +79,15 @@ Index WaveletTree::getMinIndex() const {
     return {};
   }
 
-  std::stack<StackElement> stack;
-  stack.template emplace(StackElement{getInternalRootNodeIndex(),
-                                      quadtree_.getRootNode(),
-                                      root_scale_coefficient_});
   Index min_index = getMaxPossibleIndex();
-  while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
-    const NodeType& node = stack.top().node;
-    const FloatingPoint node_scale_coefficient = stack.top().scale_coefficient;
-    stack.pop();
-
-    if (node.hasChildrenArray()) {
-      const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
-          HaarWaveletType::backward({node_scale_coefficient, {node.data()}});
-      for (QuadtreeIndex::RelativeChild child_idx = 0;
-           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-        const QuadtreeIndex internal_child_node_index =
-            internal_node_index.computeChildIndex(child_idx);
-        const FloatingPoint child_scale_coefficient =
-            child_scale_coefficients[child_idx];
-        if (node.hasChild(child_idx)) {
-          const NodeType& child_node = *node.getChild(child_idx);
-          stack.template emplace(StackElement{
-              internal_child_node_index, child_node, child_scale_coefficient});
-        } else if (OccupancyState::isObserved(child_scale_coefficient)) {
-          const Index index =
-              convert::nodeIndexToMaxCornerIndex(internal_node_index);
+  forEachLeaf(
+      [&min_index](const QuadtreeIndex& node_index, FloatingPoint value) {
+        if (OccupancyState::isObserved(value)) {
+          const Index index = convert::nodeIndexToMinCornerIndex(node_index);
           min_index = min_index.cwiseMin(index);
         }
-      }
-    } else if (OccupancyState::isObserved(node_scale_coefficient)) {
-      const Index index =
-          convert::nodeIndexToMaxCornerIndex(internal_node_index);
-      min_index = min_index.cwiseMin(index);
-    }
-  }
-
-  return toExternalIndex(min_index);
+      });
+  return min_index;
 }
 
 Index WaveletTree::getMaxIndex() const {
@@ -134,44 +95,25 @@ Index WaveletTree::getMaxIndex() const {
     return {};
   }
 
-  std::stack<StackElement> stack;
-  stack.template emplace(StackElement{getInternalRootNodeIndex(),
-                                      quadtree_.getRootNode(),
-                                      root_scale_coefficient_});
   Index max_index = getMinPossibleIndex();
-  while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
-    const NodeType& node = stack.top().node;
-    const FloatingPoint node_scale_coefficient = stack.top().scale_coefficient;
-    stack.pop();
-
-    if (node.hasChildrenArray()) {
-      const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
-          HaarWaveletType::backward({node_scale_coefficient, {node.data()}});
-      for (QuadtreeIndex::RelativeChild child_idx = 0;
-           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
-        const QuadtreeIndex internal_child_node_index =
-            internal_node_index.computeChildIndex(child_idx);
-        const FloatingPoint child_scale_coefficient =
-            child_scale_coefficients[child_idx];
-        if (node.hasChild(child_idx)) {
-          const NodeType& child_node = *node.getChild(child_idx);
-          stack.template emplace(StackElement{
-              internal_child_node_index, child_node, child_scale_coefficient});
-        } else if (OccupancyState::isObserved(child_scale_coefficient)) {
-          const Index index =
-              convert::nodeIndexToMaxCornerIndex(internal_node_index);
+  forEachLeaf(
+      [&max_index](const QuadtreeIndex& node_index, FloatingPoint value) {
+        if (OccupancyState::isObserved(value)) {
+          const Index index = convert::nodeIndexToMaxCornerIndex(node_index);
           max_index = max_index.cwiseMax(index);
         }
-      }
-    } else if (OccupancyState::isObserved(node_scale_coefficient)) {
-      const Index index =
-          convert::nodeIndexToMaxCornerIndex(internal_node_index);
-      max_index = max_index.cwiseMax(index);
-    }
-  }
+      });
+  return max_index;
+}
 
-  return toExternalIndex(max_index);
+Index WaveletTree::getMinPossibleIndex() const {
+  return toExternalIndex(
+      convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
+}
+
+Index WaveletTree::getMaxPossibleIndex() const {
+  return toExternalIndex(
+      convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 FloatingPoint WaveletTree::getCellValue(const Index& index) const {
