@@ -30,8 +30,8 @@ void SimpleQuadtree<CellT>::prune() {
         if (node.hasChildrenArray()) {
           // Check whether the node's children are all identical leaves
           bool all_children_are_identical_leaves = true;
-          const FloatingPoint first_child_value =
-              node.getChild(0) ? node.getChild(0)->data() : 0.f;
+          typename CellT::Specialized first_child_value = CellT::add(
+              node_value, node.getChild(0) ? node.getChild(0)->data() : 0.f);
           for (QuadtreeIndex::RelativeChild child_idx = 0;
                child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
             // Check whether the child has children (i.e. is not a leaf)
@@ -173,26 +173,33 @@ void SimpleQuadtree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
 template <typename CellT>
 void SimpleQuadtree<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
-  stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
+  std::stack<StackElement> stack;
+  stack.template emplace(
+      StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
-    const QuadtreeIndex internal_node_index = stack.top().first;
-    const NodeType& node = stack.top().second;
+    const QuadtreeIndex node_index = stack.top().node_index;
+    const NodeType& node = stack.top().node;
+    const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
-
     if (node.hasChildrenArray()) {
       for (QuadtreeIndex::RelativeChild child_idx = 0;
            child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
+        const QuadtreeIndex child_node_index =
+            node_index.computeChildIndex(child_idx);
         if (node.hasChild(child_idx)) {
-          const QuadtreeIndex child_node_index =
-              internal_node_index.computeChildIndex(child_idx);
           const NodeType& child_node = *node.getChild(child_idx);
-          stack.template emplace(child_node_index, child_node);
+          const FloatingPoint child_value = node_value + child_node.data();
+          stack.template emplace(
+              StackElement{child_node_index, child_node, child_value});
+        } else {
+          const QuadtreeIndex external_node_index =
+              toExternalNodeIndex(child_node_index);
+          visitor_fn(external_node_index, node_value);
         }
       }
     } else {
-      const QuadtreeIndex node_index = toExternalNodeIndex(internal_node_index);
-      visitor_fn(node_index, node.data());
+      const QuadtreeIndex external_node_index = toExternalNodeIndex(node_index);
+      visitor_fn(external_node_index, node_value);
     }
   }
 }

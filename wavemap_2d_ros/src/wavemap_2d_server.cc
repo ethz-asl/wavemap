@@ -315,7 +315,6 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
 
 void Wavemap2DServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
-    occupancy_map_->prune();
     visualization_msgs::MarkerArray occupancy_grid_marker = gridToMarkerArray(
         *occupancy_map_, config_.world_frame, "occupancy_grid",
         [](FloatingPoint cell_log_odds) {
