@@ -35,7 +35,8 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
             config_.min_cell_width);
   } else if (config_.data_structure_type == "wavelet_tree") {
     ROS_INFO("Using wavelet tree datastructure");
-    occupancy_map_ = std::make_shared<WaveletTree>(config_.min_cell_width);
+    occupancy_map_ = std::make_shared<WaveletTree<SaturatingOccupancyCell>>(
+        config_.min_cell_width);
   } else if (config_.data_structure_type == "hashed_blocks") {
     ROS_INFO("Using hashed blocks datastructure");
     occupancy_map_ = std::make_shared<HashedBlocks<SaturatingOccupancyCell>>(
