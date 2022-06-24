@@ -2,7 +2,6 @@
 #define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_DIFFERENCING_QUADTREE_H_
 
 #include <string>
-#include <utility>
 
 #include "wavemap_2d/data_structure/generic/quadtree/quadtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_quadtree_interface.h"

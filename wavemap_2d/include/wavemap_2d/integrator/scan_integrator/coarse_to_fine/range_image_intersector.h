@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "wavemap_2d/common.h"
@@ -25,8 +27,9 @@ class RangeImageIntersector {
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
   };
 
-  explicit RangeImageIntersector(const RangeImage& range_image)
-      : hierarchical_range_image_(range_image) {}
+  explicit RangeImageIntersector(std::shared_ptr<RangeImage> range_image)
+      : range_image_(std::move(range_image)),
+        hierarchical_range_image_(range_image_) {}
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
   //       around at +-PI and a min_angle >= max_angle will be returned.
@@ -122,8 +125,7 @@ class RangeImageIntersector {
   }
 
   IntersectionType determineIntersectionType(
-      const RangeImage& range_image, const Transformation& T_W_C,
-      const AABB<Point>& W_cell_aabb) const {
+      const Transformation& T_W_C, const AABB<Point>& W_cell_aabb) const {
     // Get the min and max distances from any point in the cell (which is an
     // axis-aligned cube) to the sensor's center
     // NOTE: The min distance is 0 if the cell contains the sensor's center.
@@ -148,8 +150,8 @@ class RangeImageIntersector {
     // If the angle wraps around Pi, we can't use the hierarchical range image
     if (const bool angle_range_wraps_pi = max_angle < min_angle;
         angle_range_wraps_pi) {
-      if (max_angle < range_image.getMinAngle() &&
-          range_image.getMaxAngle() < min_angle) {
+      if (max_angle < range_image_->getMinAngle() &&
+          range_image_->getMaxAngle() < min_angle) {
         // No parts of the cell can be affected by the measurement update
         return IntersectionType::kFullyUnknown;
       } else {
@@ -160,16 +162,17 @@ class RangeImageIntersector {
     }
 
     // Check if the cell is outside the observed range
-    if (range_image.getMaxAngle() < min_angle ||
-        max_angle < range_image.getMinAngle()) {
+    if (range_image_->getMaxAngle() < min_angle ||
+        max_angle < range_image_->getMinAngle()) {
       return IntersectionType::kFullyUnknown;
     }
 
     // Convert the angles to range image indices
     const RangeImageIndex min_image_idx =
-        std::max(0, range_image.angleToFloorIndex(min_angle));
-    const RangeImageIndex max_image_idx = std::min(
-        range_image.getNumBeams() - 1, range_image.angleToCeilIndex(max_angle));
+        std::max(0, range_image_->angleToFloorIndex(min_angle));
+    const RangeImageIndex max_image_idx =
+        std::min(range_image_->getNumBeams() - 1,
+                 range_image_->angleToCeilIndex(max_angle));
 
     // Check if the cell overlaps with the approximate but conservative distance
     // bounds of the hierarchical range image
@@ -194,6 +197,7 @@ class RangeImageIntersector {
   }
 
  private:
+  std::shared_ptr<RangeImage> range_image_;
   HierarchicalRangeImage hierarchical_range_image_;
 
   // NOTE: Aside from generally being faster than std::atan2, a major advantage

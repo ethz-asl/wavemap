@@ -2,7 +2,9 @@
 #define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
 
 #include <algorithm>
+#include <memory>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 #include "wavemap_2d/integrator/scan_integrator/range_image.h"
@@ -16,12 +18,12 @@ struct Bounds {
 
 class HierarchicalRangeImage {
  public:
-  explicit HierarchicalRangeImage(const RangeImage& range_image)
-      : range_image_(range_image),
+  explicit HierarchicalRangeImage(std::shared_ptr<RangeImage> range_image)
+      : range_image_(std::move(range_image)),
         lower_bounds_(computeReducedPyramid(
-            range_image_, [](auto a, auto b) { return std::min(a, b); })),
+            *range_image_, [](auto a, auto b) { return std::min(a, b); })),
         upper_bounds_(computeReducedPyramid(
-            range_image_, [](auto a, auto b) { return std::max(a, b); })),
+            *range_image_, [](auto a, auto b) { return std::max(a, b); })),
         max_height_(
             static_cast<BinaryTreeIndex::Element>(lower_bounds_.size())) {
     DCHECK_EQ(lower_bounds_.size(), max_height_);
@@ -35,7 +37,8 @@ class HierarchicalRangeImage {
     DCHECK_GE(index.height, 0);
     DCHECK_LE(index.height, max_height_);
     if (index.height == 0) {
-      const FloatingPoint range_image_value = range_image_[index.position.x()];
+      const FloatingPoint range_image_value =
+          range_image_->operator[](index.position.x());
       return {range_image_value, range_image_value};
     } else {
       return {lower_bounds_[index.height - 1][index.position.x()],
@@ -55,7 +58,8 @@ class HierarchicalRangeImage {
                         RangeImageIndex right_idx) const {
     DCHECK_LE(left_idx, right_idx);
     if (left_idx == right_idx) {
-      const FloatingPoint range_image_value = range_image_[left_idx];
+      const FloatingPoint range_image_value =
+          range_image_->operator[](left_idx);
       return {range_image_value, range_image_value};
     }
 
@@ -80,10 +84,10 @@ class HierarchicalRangeImage {
         const RangeImageIndex left_node_idx = left_idx_shifted;
         const RangeImageIndex right_node_idx = right_idx_shifted;
         if (min_level_up == 0) {
-          return {std::min(range_image_[left_node_idx],
-                           range_image_[right_node_idx]),
-                  std::max(range_image_[left_node_idx],
-                           range_image_[right_node_idx])};
+          return {std::min(range_image_->operator[](left_node_idx),
+                           range_image_->operator[](right_node_idx)),
+                  std::max(range_image_->operator[](left_node_idx),
+                           range_image_->operator[](right_node_idx))};
         } else {
           return {std::min(lower_bounds_[height][left_node_idx],
                            lower_bounds_[height][right_node_idx]),
@@ -116,7 +120,7 @@ class HierarchicalRangeImage {
   //       compiler to optimize out unused (return) values during inlining.
 
  private:
-  const RangeImage& range_image_;
+  std::shared_ptr<RangeImage> range_image_;
   const std::vector<RangeImage::RangeImageData> lower_bounds_;
   const std::vector<RangeImage::RangeImageData> upper_bounds_;
   const BinaryTreeIndex::Element max_height_;

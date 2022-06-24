@@ -1,8 +1,6 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_IMPL_COARSE_TO_FINE_INTEGRATOR_INL_H_
 #define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_IMPL_COARSE_TO_FINE_INTEGRATOR_INL_H_
 
-#include <algorithm>
-
 namespace wavemap_2d {
 inline bool CoarseToFineIntegrator::isApproximationErrorAcceptable(
     RangeImageIntersector::IntersectionType intersection_type,
@@ -15,7 +13,6 @@ inline bool CoarseToFineIntegrator::isApproximationErrorAcceptable(
     case RangeImageIntersector::IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
              kMaxAcceptableUpdateError / kMaxGradientOnBoundary;
-    case RangeImageIntersector::IntersectionType::kFullyUnknown:
     default:
       return true;
   }

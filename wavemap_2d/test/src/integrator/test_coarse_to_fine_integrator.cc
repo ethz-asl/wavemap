@@ -52,8 +52,9 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
         kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 
     // Create the hierarchical range image
-    const RangeImage range_image = CoarseToFineIntegrator::computeRangeImage(
-        random_pointcloud, kMinAngle, kMaxAngle, num_beams);
+    const auto range_image =
+        std::make_shared<RangeImage>(CoarseToFineIntegrator::computeRangeImage(
+            random_pointcloud, kMinAngle, kMaxAngle, num_beams));
     HierarchicalRangeImage hierarchical_range_image(range_image);
 
     // Test all the bounds from top to bottom
@@ -67,7 +68,7 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
            ++index.position.x()) {
         // Avoid out-of-bounds range image access when we're at the leaf level
         if (index.height == 0 &&
-            range_image.getNumBeams() <= index.position.x()) {
+            range_image->getNumBeams() <= index.position.x()) {
           continue;
         }
 
@@ -83,9 +84,9 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
         if (index.height == 0) {
           // At the leaf level the bounds should match range image itself
           EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
-                          range_image[index.position.x()]);
+                          range_image->operator[](index.position.x()));
           EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
-                          range_image[index.position.x()]);
+                          range_image->operator[](index.position.x()));
         } else if (index.height == 1) {
           // At the first pyramid level, the bounds should correspond to min/max
           // pooling the range image with a downsampling factor of 2
@@ -93,18 +94,20 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
               index.computeChildIndex(0).position.x();
           const BinaryTreeIndex::Element second_child_idx =
               index.computeChildIndex(1).position.x();
-          if (second_child_idx < range_image.getNumBeams()) {
+          if (second_child_idx < range_image->getNumBeams()) {
+            EXPECT_FLOAT_EQ(
+                hierarchical_range_image.getLowerBound(index),
+                std::min(range_image->operator[](first_child_idx),
+                         range_image->operator[](second_child_idx)));
+            EXPECT_FLOAT_EQ(
+                hierarchical_range_image.getUpperBound(index),
+                std::max(range_image->operator[](first_child_idx),
+                         range_image->operator[](second_child_idx)));
+          } else if (first_child_idx < range_image->getNumBeams()) {
             EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
-                            std::min(range_image[first_child_idx],
-                                     range_image[second_child_idx]));
+                            range_image->operator[](first_child_idx));
             EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
-                            std::max(range_image[first_child_idx],
-                                     range_image[second_child_idx]));
-          } else if (first_child_idx < range_image.getNumBeams()) {
-            EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
-                            range_image[first_child_idx]);
-            EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
-                            range_image[first_child_idx]);
+                            range_image->operator[](first_child_idx));
           } else {
             EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index), 0.f);
             EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index), 0.f);
@@ -129,9 +132,9 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     }
 
     // Test range bounds on all subintervals and compare to brute force
-    for (int start_idx = 0; start_idx < range_image.getNumBeams();
+    for (int start_idx = 0; start_idx < range_image->getNumBeams();
          ++start_idx) {
-      for (int end_idx = start_idx; end_idx < range_image.getNumBeams();
+      for (int end_idx = start_idx; end_idx < range_image->getNumBeams();
            ++end_idx) {
         // Check if the different accessors return the same values
         const Bounds bounds =
@@ -148,7 +151,7 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
         const int range_length = end_idx - start_idx + 1;
         CHECK_GE(range_length, 1);
         const RangeImage::RangeImageData::ConstBlockXpr range =
-            range_image.getData().block(0, start_idx, 1, range_length);
+            range_image->getData().block(0, start_idx, 1, range_length);
         const FloatingPoint lower_bound_brute_force = range.minCoeff();
         const FloatingPoint upper_bound_brute_force = range.maxCoeff();
         EXPECT_LE(lower_bound, lower_bound_brute_force);
@@ -334,8 +337,9 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
         kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 
     // Create the hierarchical range image
-    const RangeImage range_image = CoarseToFineIntegrator::computeRangeImage(
-        random_pointcloud, kMinAngle, kMaxAngle, num_beams);
+    const auto range_image =
+        std::make_shared<RangeImage>(CoarseToFineIntegrator::computeRangeImage(
+            random_pointcloud, kMinAngle, kMaxAngle, num_beams));
     RangeImageIntersector range_image_intersector(range_image);
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
@@ -372,15 +376,15 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
         }
 
         const RangeImageIndex range_image_index =
-            range_image.bearingToNearestIndex(C_cell_center);
+            range_image->bearingToNearestIndex(C_cell_center);
         if (range_image_index < 0 ||
-            range_image.getNumBeams() <= range_image_index) {
+            range_image->getNumBeams() <= range_image_index) {
           has_unknown = true;
           continue;
         }
 
         const FloatingPoint range_image_distance =
-            range_image[range_image_index];
+            range_image->operator[](range_image_index);
         if (d_C_cell < range_image_distance) {
           has_free = true;
         } else if (d_C_cell <=
@@ -415,7 +419,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
           W_node_bottom_left + Vector::Constant(node_width)};
       const RangeImageIntersector::IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
-              range_image, random_pointcloud.getPose(), W_cell_aabb);
+              random_pointcloud.getPose(), W_cell_aabb);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected "
           << RangeImageIntersector::getIntersectionTypeStr(

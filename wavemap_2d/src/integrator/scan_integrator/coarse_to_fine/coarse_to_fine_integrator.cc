@@ -1,8 +1,9 @@
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
 
-#include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
-#include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
-#include "wavemap_2d/iterator/grid_iterator.h"
+#include <stack>
+
+#include "wavemap_2d/data_structure/volumetric/volumetric_quadtree_interface.h"
+#include "wavemap_2d/indexing/ndtree_index.h"
 
 namespace wavemap_2d {
 void CoarseToFineIntegrator::integratePointcloud(
@@ -20,8 +21,8 @@ void CoarseToFineIntegrator::integratePointcloud(
   // Compute the range image and the scan's AABB
   // TODO(victorr): Make this configurable
   // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
-  const RangeImage range_image =
-      computeRangeImage(pointcloud, -kHalfPi, kHalfPi, pointcloud.size());
+  const auto range_image = std::make_shared<RangeImage>(
+      computeRangeImage(pointcloud, -kHalfPi, kHalfPi, pointcloud.size()));
   RangeImageIntersector range_image_intersector(range_image);
 
   // Get a pointer to the underlying specialized quadtree data structure
@@ -49,8 +50,8 @@ void CoarseToFineIntegrator::integratePointcloud(
     const AABB<Point> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width);
     const RangeImageIntersector::IntersectionType intersection_type =
-        range_image_intersector.determineIntersectionType(
-            range_image, pointcloud.getPose(), W_cell_aabb);
+        range_image_intersector.determineIntersectionType(pointcloud.getPose(),
+                                                          W_cell_aabb);
     if (intersection_type ==
         RangeImageIntersector::IntersectionType::kFullyUnknown) {
       continue;
@@ -69,7 +70,7 @@ void CoarseToFineIntegrator::integratePointcloud(
                                        bounding_sphere_radius)) {
       FloatingPoint angle_C_cell = RangeImage::bearingToAngle(C_node_center);
       FloatingPoint sample =
-          computeUpdateForCell(range_image, d_C_cell, angle_C_cell);
+          computeUpdateForCell(*range_image, d_C_cell, angle_C_cell);
       occupancy_map->addToCellValue(current_node, sample);
       continue;
     }
