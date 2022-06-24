@@ -188,9 +188,8 @@ void SimpleQuadtree<CellT>::forEachLeaf(
             node_index.computeChildIndex(child_idx);
         if (node.hasChild(child_idx)) {
           const NodeType& child_node = *node.getChild(child_idx);
-          const FloatingPoint child_value = node_value + child_node.data();
           stack.template emplace(
-              StackElement{child_node_index, child_node, child_value});
+              StackElement{child_node_index, child_node, node_value});
         } else {
           const QuadtreeIndex external_node_index =
               toExternalNodeIndex(child_node_index);
