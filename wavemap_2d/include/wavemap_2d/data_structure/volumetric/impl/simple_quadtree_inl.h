@@ -1,7 +1,6 @@
 #ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_IMPL_SIMPLE_QUADTREE_INL_H_
 #define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_IMPL_SIMPLE_QUADTREE_INL_H_
 
-#include <limits>
 #include <stack>
 #include <string>
 #include <utility>
@@ -92,10 +91,13 @@ QuadtreeIndex::ChildArray SimpleQuadtree<CellT>::getFirstChildIndices() const {
 //                potential min candidates
 template <typename CellT>
 Index SimpleQuadtree<CellT>::getMinIndex() const {
-  Index min_index = Index::Constant(std::numeric_limits<IndexElement>::max());
+  if (empty()) {
+    return {};
+  }
 
   std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
   stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
+  Index min_index = getMaxPossibleIndex();
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().first;
     const NodeType& node = stack.top().second;
@@ -125,11 +127,13 @@ Index SimpleQuadtree<CellT>::getMinIndex() const {
 //                potential max candidates
 template <typename CellT>
 Index SimpleQuadtree<CellT>::getMaxIndex() const {
-  Index max_index =
-      Index::Constant(std::numeric_limits<IndexElement>::lowest());
+  if (empty()) {
+    return {};
+  }
 
   std::stack<std::pair<QuadtreeIndex, const NodeType&>> stack;
   stack.template emplace(getInternalRootNodeIndex(), quadtree_.getRootNode());
+  Index max_index = getMinPossibleIndex();
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().first;
     const NodeType& node = stack.top().second;

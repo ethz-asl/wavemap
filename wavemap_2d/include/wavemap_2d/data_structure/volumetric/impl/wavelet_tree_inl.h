@@ -1,7 +1,6 @@
 #ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_IMPL_WAVELET_TREE_INL_H_
 #define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_IMPL_WAVELET_TREE_INL_H_
 
-#include <limits>
 #include <stack>
 #include <string>
 #include <utility>
@@ -86,13 +85,15 @@ QuadtreeIndex::ChildArray WaveletTree::getFirstChildIndices() const {
 }
 
 Index WaveletTree::getMinIndex() const {
-  Index min_index =
-      Index::Constant(std::numeric_limits<IndexElement>::lowest());
+  if (empty()) {
+    return {};
+  }
 
   std::stack<StackElement> stack;
   stack.template emplace(StackElement{getInternalRootNodeIndex(),
                                       quadtree_.getRootNode(),
                                       root_scale_coefficient_});
+  Index min_index = getMaxPossibleIndex();
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
     const NodeType& node = stack.top().node;
@@ -129,13 +130,15 @@ Index WaveletTree::getMinIndex() const {
 }
 
 Index WaveletTree::getMaxIndex() const {
-  Index max_index =
-      Index::Constant(std::numeric_limits<IndexElement>::lowest());
+  if (empty()) {
+    return {};
+  }
 
   std::stack<StackElement> stack;
   stack.template emplace(StackElement{getInternalRootNodeIndex(),
                                       quadtree_.getRootNode(),
                                       root_scale_coefficient_});
+  Index max_index = getMinPossibleIndex();
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
     const NodeType& node = stack.top().node;

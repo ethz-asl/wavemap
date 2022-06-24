@@ -7,7 +7,7 @@
 namespace wavemap_2d {
 template <typename SequenceContainerT>
 inline std::string ToString(const SequenceContainerT& container) {
-  return std::accumulate(std::next(container.begin()), container.end(),
+  return std::accumulate(std::next(container.cbegin()), container.cend(),
                          std::to_string(container[0]),
                          [](auto str, const auto& el) -> std::string {
                            return std::move(str) + ", " + std::to_string(el);

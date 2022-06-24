@@ -1,7 +1,6 @@
 #ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_IMPL_DIFFERENCING_QUADTREE_INL_H_
 #define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_IMPL_DIFFERENCING_QUADTREE_INL_H_
 
-#include <limits>
 #include <stack>
 #include <string>
 #include <utility>
@@ -107,11 +106,14 @@ QuadtreeIndex::ChildArray DifferencingQuadtree<CellT>::getFirstChildIndices()
 //                potential min candidates
 template <typename CellT>
 Index DifferencingQuadtree<CellT>::getMinIndex() const {
-  Index min_index = Index::Constant(std::numeric_limits<IndexElement>::max());
+  if (empty()) {
+    return {};
+  }
 
   std::stack<StackElement> stack;
   stack.template emplace(
       StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
+  Index min_index = getMaxPossibleIndex();
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
     const NodeType& node = stack.top().node;
@@ -147,12 +149,14 @@ Index DifferencingQuadtree<CellT>::getMinIndex() const {
 //                potential max candidates
 template <typename CellT>
 Index DifferencingQuadtree<CellT>::getMaxIndex() const {
-  Index max_index =
-      Index::Constant(std::numeric_limits<IndexElement>::lowest());
+  if (empty()) {
+    return {};
+  }
 
   std::stack<StackElement> stack;
   stack.template emplace(
       StackElement{getInternalRootNodeIndex(), quadtree_.getRootNode(), 0.f});
+  Index max_index = getMinPossibleIndex();
   while (!stack.empty()) {
     const QuadtreeIndex internal_node_index = stack.top().internal_node_index;
     const NodeType& node = stack.top().node;

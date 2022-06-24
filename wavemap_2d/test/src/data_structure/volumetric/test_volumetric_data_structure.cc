@@ -90,7 +90,40 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
 }
 
 TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
-  // TODO(victorr): Test the min/max index getters
+  constexpr int kNumRepetitions = 3;
+  for (int i = 0; i < kNumRepetitions; ++i) {
+    std::unique_ptr<VolumetricDataStructure> map_base_ptr =
+        std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
+    {
+      const Index map_min_index = map_base_ptr->getMinIndex();
+      const Index map_max_index = map_base_ptr->getMaxIndex();
+      for (QuadtreeIndex::Element dim = 0; dim < QuadtreeIndex::kDim; ++dim) {
+        EXPECT_EQ(map_min_index[dim], 0) << " along dimension " << dim;
+        EXPECT_EQ(map_max_index[dim], 0) << " along dimension " << dim;
+      }
+    }
+    const std::vector<Index> random_indices =
+        TestFixture::getRandomIndexVector();
+    Index reference_min_index =
+        Index::Constant(std::numeric_limits<IndexElement>::max());
+    Index reference_max_index =
+        Index::Constant(std::numeric_limits<IndexElement>::lowest());
+    for (const Index& index : random_indices) {
+      map_base_ptr->addToCellValue(index, 1.f);
+      reference_min_index = reference_min_index.cwiseMin(index);
+      reference_max_index = reference_max_index.cwiseMax(index);
+    }
+    {
+      const Index map_min_index = map_base_ptr->getMinIndex();
+      const Index map_max_index = map_base_ptr->getMaxIndex();
+      for (QuadtreeIndex::Element dim = 0; dim < QuadtreeIndex::kDim; ++dim) {
+        EXPECT_LE(map_min_index[dim], reference_min_index[dim])
+            << " along dimension " << dim;
+        EXPECT_GE(map_max_index[dim], reference_max_index[dim])
+            << " along dimension " << dim;
+      }
+    }
+  }
 }
 
 TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
@@ -106,17 +139,16 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     Index reference_max_index =
         Index::Constant(std::numeric_limits<IndexElement>::lowest());
     std::unordered_map<Index, FloatingPoint, VoxbloxIndexHash> reference_map;
-    for (const Index& random_index : random_indices) {
-      for (const FloatingPoint random_update :
-           TestFixture::getRandomUpdateVector()) {
-        map_base_ptr->addToCellValue(random_index, random_update);
+    for (const Index& index : random_indices) {
+      for (const FloatingPoint update : TestFixture::getRandomUpdateVector()) {
+        map_base_ptr->addToCellValue(index, update);
         if (TypeParam::kRequiresPruningForThresholding) {
           map_base_ptr->prune();
         }
-        reference_map[random_index] = TypeParam::CellType::add(
-            reference_map[random_index], random_update);
-        reference_min_index = reference_min_index.cwiseMin(random_index);
-        reference_max_index = reference_max_index.cwiseMax(random_index);
+        reference_map[index] =
+            TypeParam::CellType::add(reference_map[index], update);
+        reference_min_index = reference_min_index.cwiseMin(index);
+        reference_max_index = reference_max_index.cwiseMax(index);
       }
     }
 
@@ -134,36 +166,38 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     }
 
     // Check that the indexed leaf value visitor visits all non-zero cells
-    map_base_ptr->forEachLeaf(
-        [&](const QuadtreeIndex& node_index, FloatingPoint value) {
-          const Index index = convert::nodeIndexToMinCornerIndex(node_index);
-          // Check that the values are correct
-          if (reference_map.count(index)) {
-            EXPECT_NEAR(map_base_ptr->getCellValue(index), reference_map[index],
-                        TestFixture::kAcceptableReconstructionError *
-                            (1.f + reference_map[index]));
-            // Remove cell from the reference map to indicate it was visited
-            reference_map.erase(index);
-          } else {
-            EXPECT_NEAR(map_base_ptr->getCellValue(index), 0.f,
-                        TestFixture::kAcceptableReconstructionError);
-          }
-        });
+    const size_t reference_map_size = reference_map.size();
+    map_base_ptr->forEachLeaf([&](const QuadtreeIndex& node_index,
+                                  FloatingPoint value) {
+      const Index index = convert::nodeIndexToMinCornerIndex(node_index);
+      // Check that the values are correct
+      if (reference_map.count(index)) {
+        EXPECT_NEAR(value, reference_map[index],
+                    TestFixture::kAcceptableReconstructionError *
+                        (1.f + reference_map[index]));
+        // Remove cell from the reference map to indicate it was visited
+        reference_map.erase(index);
+      } else {
+        EXPECT_NEAR(value, 0.f, TestFixture::kAcceptableReconstructionError);
+      }
+    });
     // If all non-zero values were visited, reference map should now be empty
     // TODO(victorr): Clean up the printing
-    auto indexToString = [](const Index& index) -> std::string {
+    auto IndexToString = [](const Index& index) -> std::string {
       std::stringstream ss;
-      ss << index;
+      ss << EigenFormat::oneLine(index);
       return ss.str();
     };
     EXPECT_TRUE(reference_map.empty())
-        << "Leaf visitor did not visit all non-zero reference map values, "
-           "missed cells:\n"
+        << "Leaf visitor missed " << reference_map.size() << " out of "
+        << reference_map_size << " non-zero reference map values:\n"
         << std::accumulate(
-               std::next(reference_map.begin()), reference_map.end(),
-               indexToString(reference_map.begin()->first),
-               [&indexToString](auto str, const auto& el) -> std::string {
-                 return std::move(str) + ", " + indexToString(el.first);
+               std::next(reference_map.cbegin()), reference_map.cend(),
+               IndexToString(reference_map.cbegin()->first) + ": " +
+                   std::to_string(reference_map.cbegin()->second) + "\n",
+               [&IndexToString](auto str, const auto& kv) -> std::string {
+                 return std::move(str) + IndexToString(kv.first) + ": " +
+                        std::to_string(kv.second) + "\n";
                });
   }
 }

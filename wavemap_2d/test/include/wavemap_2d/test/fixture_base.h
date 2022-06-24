@@ -84,7 +84,7 @@ class FixtureBase : public ::testing::Test {
 
     std::vector<Index> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(),
-                  [&]() { return getRandomIndex(); });
+                  [&]() { return getRandomIndex(min_index, max_index); });
     return random_indices;
   }
 
