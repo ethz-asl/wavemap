@@ -5,7 +5,6 @@
 #include "wavemap_2d/data_structure/volumetric/simple_quadtree.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/test/fixture_base.h"
-#include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap_2d {
 template <typename CellType>

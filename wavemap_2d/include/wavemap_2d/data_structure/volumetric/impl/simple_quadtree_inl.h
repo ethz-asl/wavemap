@@ -224,7 +224,7 @@ bool SimpleQuadtree<CellT>::load(const std::string& /*file_path_prefix*/,
 }
 
 template <typename CellT>
-const Node<typename CellT::Specialized>*
+const typename SimpleQuadtree<CellT>::NodeType*
 SimpleQuadtree<CellT>::getDeepestNodeAtIndex(const Index& index) const {
   const QuadtreeIndex deepest_possible_internal_node_index = toInternal(index);
   const NodeType* node = &quadtree_.getRootNode();

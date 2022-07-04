@@ -1,13 +1,13 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_QUADTREE_QUADTREE_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_QUADTREE_QUADTREE_H_
+#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_NDTREE_H_
+#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_NDTREE_H_
 
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/data_structure/generic/ndtree/ndtree_node.h"
 #include "wavemap_2d/data_structure/generic/pointcloud.h"
-#include "wavemap_2d/data_structure/generic/quadtree/node.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_data_structure.h"
 #include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/indexing/index_conversions.h"
@@ -15,27 +15,28 @@
 #include "wavemap_2d/iterator/subtree_iterator.h"
 
 namespace wavemap_2d {
-template <typename NodeDataType, QuadtreeIndex::Element max_height>
-class Quadtree {
+template <typename NodeDataType, int dim, int max_height>
+class Ndtree {
  public:
-  using NodeType = Node<NodeDataType>;
+  using IndexType = NdtreeIndex<dim>;
+  using NodeType = NdtreeNode<NodeDataType, dim>;
 
-  Quadtree() = default;
-  ~Quadtree() = default;
+  Ndtree() = default;
+  ~Ndtree() = default;
 
   bool empty() const { return root_node_.empty(); }
   size_t size() const;
   void clear() { root_node_.clear(); }
   void prune();
 
-  bool hasNode(const QuadtreeIndex& index) { return getNode(index); }
-  void allocateNode(const QuadtreeIndex& index) {
+  bool hasNode(const IndexType& index) { return getNode(index); }
+  void allocateNode(const IndexType& index) {
     constexpr bool kAutoAllocate = true;
     getNode(index, kAutoAllocate);
   }
-  bool removeNode(const QuadtreeIndex& index);
-  NodeType* getNode(const QuadtreeIndex& index, bool auto_allocate = false);
-  const NodeType* getNode(const QuadtreeIndex& index) const;
+  bool removeNode(const IndexType& index);
+  NodeType* getNode(const IndexType& index, bool auto_allocate = false);
+  const NodeType* getNode(const IndexType& index) const;
 
   NodeType& getRootNode() { return root_node_; }
   const NodeType& getRootNode() const { return root_node_; }
@@ -56,6 +57,6 @@ class Quadtree {
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d/data_structure/generic/quadtree/impl/quadtree_inl.h"
+#include "wavemap_2d/data_structure/generic/ndtree/impl/ndtree_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_QUADTREE_QUADTREE_H_
+#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_NDTREE_H_

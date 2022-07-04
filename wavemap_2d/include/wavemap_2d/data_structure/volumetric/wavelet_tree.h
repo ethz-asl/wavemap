@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "wavemap_2d/data_structure/generic/quadtree/quadtree.h"
+#include "wavemap_2d/data_structure/generic/ndtree/ndtree.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/haar_wavelet.h"
 #include "wavemap_2d/data_structure/volumetric/wavelet_tree_interface.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
@@ -78,7 +78,7 @@ class WaveletTree : public WaveletTreeInterface {
   };
 
   ScaleCoefficient root_scale_coefficient_{};
-  Quadtree<DetailCoefficients, kMaxHeight - 1> quadtree_;
+  Ndtree<DetailCoefficients, 2, kMaxHeight - 1> quadtree_;
 
   static QuadtreeIndex getInternalRootNodeIndex() {
     return QuadtreeIndex{kMaxHeight, QuadtreeIndex::Position::Zero()};

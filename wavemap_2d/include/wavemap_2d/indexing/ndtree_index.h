@@ -8,8 +8,8 @@
 #include "wavemap_2d/utils/int_math.h"
 
 namespace wavemap_2d {
-// TODO(victorr): Consider renaming QuadtreeIndex to something like
-//                Hierarchical2DIndex, since it can represent hierarchical
+// TODO(victorr): Consider renaming NdtreeIndex to something like
+//                HierarchicalNdIndex, since it can represent hierarchical
 //                quadtrant/octant subvolumes regardless of the exact data
 //                structure that's being indexed.
 template <int dim>

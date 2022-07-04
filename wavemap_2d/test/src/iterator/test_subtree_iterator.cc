@@ -1,14 +1,13 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/iterator/subtree_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {
 class SubtreeIteratorTest : public FixtureBase {
  protected:
-  using NodeType = Node<int>;
+  using NodeType = NdtreeNode<int, 2>;
 
   static std::unique_ptr<NodeType> demoTree() {
     auto root_node = std::make_unique<NodeType>(1);
@@ -34,7 +33,7 @@ class SubtreeIteratorTest : public FixtureBase {
 };
 
 TEST_F(SubtreeIteratorTest, DepthFirstPreorderTraversal) {
-  std::unique_ptr<const Node<int>> root_node = demoTree();
+  std::unique_ptr<const NodeType> root_node = demoTree();
   const std::vector<int> expected_nodes{1, 2,  4,  5,  9,  10, 6, 3,
                                         7, 11, 12, 13, 14, 8,  15};
   auto subtree_iterator =
@@ -54,7 +53,7 @@ TEST_F(SubtreeIteratorTest, DepthFirstPreorderTraversal) {
 }
 
 TEST_F(SubtreeIteratorTest, DepthFirstPostorderTraversal) {
-  std::unique_ptr<const Node<int>> root_node = demoTree();
+  std::unique_ptr<const NodeType> root_node = demoTree();
   const std::vector<int> expected_nodes{4,  9,  10, 5,  6, 2, 11, 12,
                                         13, 14, 7,  15, 8, 3, 1};
   auto subtree_iterator =
@@ -73,7 +72,7 @@ TEST_F(SubtreeIteratorTest, DepthFirstPostorderTraversal) {
             expected_nodes.size());
 }
 TEST_F(SubtreeIteratorTest, BreadthFirstTraversal) {
-  std::unique_ptr<const Node<int>> root_node = demoTree();
+  std::unique_ptr<const NodeType> root_node = demoTree();
   const std::vector<int> expected_nodes{1, 2,  3,  4,  5,  6,  7, 8,
                                         9, 10, 11, 12, 13, 14, 15};
   auto subtree_iterator =

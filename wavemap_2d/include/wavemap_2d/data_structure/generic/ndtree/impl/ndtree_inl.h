@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_QUADTREE_IMPL_QUADTREE_INL_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_QUADTREE_IMPL_QUADTREE_INL_H_
+#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_IMPL_NDTREE_INL_H_
+#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_IMPL_NDTREE_INL_H_
 
 #include <stack>
 #include <vector>
@@ -8,18 +8,18 @@
 #include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap_2d {
-template <typename NodeDataType, QuadtreeIndex::Element max_height>
-size_t Quadtree<NodeDataType, max_height>::size() const {
+template <typename NodeDataType, int dim, int max_height>
+size_t Ndtree<NodeDataType, dim, max_height>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
   return std::distance(subtree_iterator.begin(), subtree_iterator.end());
 }
 
-template <typename NodeDataType, QuadtreeIndex::Element max_height>
-void Quadtree<NodeDataType, max_height>::prune() {
+template <typename NodeDataType, int dim, int max_height>
+void Ndtree<NodeDataType, dim, max_height>::prune() {
   for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
     if (node.hasChildrenArray()) {
       bool has_non_empty_child = false;
-      for (int child_idx = 0; child_idx < QuadtreeIndex::kNumChildren;
+      for (int child_idx = 0; child_idx < IndexType::kNumChildren;
            ++child_idx) {
         NodeType* child_ptr = node.getChild(child_idx);
         if (child_ptr) {
@@ -39,8 +39,8 @@ void Quadtree<NodeDataType, max_height>::prune() {
   }
 }
 
-template <typename NodeDataType, QuadtreeIndex::Element max_height>
-size_t Quadtree<NodeDataType, max_height>::getMemoryUsage() const {
+template <typename NodeDataType, int dim, int max_height>
+size_t Ndtree<NodeDataType, dim, max_height>::getMemoryUsage() const {
   size_t memory_usage = 0u;
 
   std::stack<const NodeType*> stack;
@@ -51,8 +51,8 @@ size_t Quadtree<NodeDataType, max_height>::getMemoryUsage() const {
     memory_usage += node->getMemoryUsage();
 
     if (node->hasChildrenArray()) {
-      for (QuadtreeIndex::RelativeChild child_idx = 0;
-           child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
+      for (typename IndexType::RelativeChild child_idx = 0;
+           child_idx < IndexType::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           stack.template emplace(node->getChild(child_idx));
         }
@@ -63,10 +63,9 @@ size_t Quadtree<NodeDataType, max_height>::getMemoryUsage() const {
   return memory_usage;
 }
 
-template <typename NodeDataType, QuadtreeIndex::Element max_height>
-bool Quadtree<NodeDataType, max_height>::removeNode(
-    const QuadtreeIndex& index) {
-  QuadtreeIndex parent_index = index.computeParentIndex();
+template <typename NodeDataType, int dim, int max_height>
+bool Ndtree<NodeDataType, dim, max_height>::removeNode(const IndexType& index) {
+  IndexType parent_index = index.computeParentIndex();
   NodeType* parent_node = getNode(parent_index, /*auto_allocate*/ false);
   if (parent_node) {
     return parent_node->deleteChild(index.computeRelativeChildIndex());
@@ -74,13 +73,14 @@ bool Quadtree<NodeDataType, max_height>::removeNode(
   return false;
 }
 
-template <typename NodeDataType, QuadtreeIndex::Element max_height>
-Node<NodeDataType>* Quadtree<NodeDataType, max_height>::getNode(
-    const QuadtreeIndex& index, bool auto_allocate) {
+template <typename NodeDataType, int dim, int max_height>
+typename Ndtree<NodeDataType, dim, max_height>::NodeType*
+Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index,
+                                               bool auto_allocate) {
   NodeType* current_parent = &root_node_;
-  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
-      index.computeRelativeChildIndices<max_height>();
-  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
+  const std::vector<typename IndexType::RelativeChild> child_indices =
+      index.template computeRelativeChildIndices<max_height>();
+  for (const typename IndexType::RelativeChild child_index : child_indices) {
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       if (auto_allocate) {
@@ -96,13 +96,13 @@ Node<NodeDataType>* Quadtree<NodeDataType, max_height>::getNode(
   return current_parent;
 }
 
-template <typename NodeDataType, QuadtreeIndex::Element max_height>
-const Node<NodeDataType>* Quadtree<NodeDataType, max_height>::getNode(
-    const QuadtreeIndex& index) const {
+template <typename NodeDataType, int dim, int max_height>
+const typename Ndtree<NodeDataType, dim, max_height>::NodeType*
+Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
-  const std::vector<QuadtreeIndex::RelativeChild> child_indices =
-      index.computeRelativeChildIndices<max_height>();
-  for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
+  const std::vector<typename IndexType::RelativeChild> child_indices =
+      index.template computeRelativeChildIndices<max_height>();
+  for (const typename IndexType::RelativeChild child_index : child_indices) {
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       return nullptr;
@@ -115,4 +115,4 @@ const Node<NodeDataType>* Quadtree<NodeDataType, max_height>::getNode(
 }
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_QUADTREE_IMPL_QUADTREE_INL_H_
+#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_IMPL_NDTREE_INL_H_

@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "wavemap_2d/data_structure/generic/quadtree/quadtree.h"
+#include "wavemap_2d/data_structure/generic/ndtree/ndtree.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_quadtree_interface.h"
 #include "wavemap_2d/indexing/ndtree_index.h"
 
@@ -57,14 +57,14 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
             bool used_floating_precision) override;
 
  private:
-  using NodeType = Node<typename CellT::Specialized>;
+  using NodeType = NdtreeNode<typename CellT::Specialized, 2>;
   struct StackElement {
     const QuadtreeIndex node_index;
     const NodeType& node;
     const typename CellT::Specialized parent_value{};
   };
 
-  Quadtree<typename CellT::Specialized, kMaxHeight> quadtree_;
+  Ndtree<typename CellT::Specialized, 2, kMaxHeight> quadtree_;
 
   static QuadtreeIndex getInternalRootNodeIndex() {
     return QuadtreeIndex{kMaxHeight, QuadtreeIndex::Position::Zero()};

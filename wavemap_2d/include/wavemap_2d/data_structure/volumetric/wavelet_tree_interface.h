@@ -1,7 +1,7 @@
 #ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_
 #define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_
 
-#include "wavemap_2d/data_structure/generic/quadtree/node.h"
+#include "wavemap_2d/data_structure/generic/ndtree/ndtree_node.h"
 #include "wavemap_2d/data_structure/volumetric/cell_types/haar_wavelet.h"
 #include "wavemap_2d/data_structure/volumetric/volumetric_quadtree_interface.h"
 
@@ -14,7 +14,7 @@ class WaveletTreeInterface : public VolumetricQuadtreeInterface {
   using ChildScaleCoefficients =
       typename HaarWaveletType::ChildScaleCoefficients;
   using ParentCoefficients = typename HaarWaveletType::ParentCoefficients;
-  using NodeType = Node<DetailCoefficients>;
+  using NodeType = NdtreeNode<DetailCoefficients, 2>;
 
   using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
 
