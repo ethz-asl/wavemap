@@ -33,6 +33,8 @@ class Wavemap2DServer {
     std::string pointcloud_topic_name = "scan";
     int pointcloud_topic_queue_length = 10;
 
+    float map_pruning_period_s = 1.f;
+
     float map_visualization_period_s = 10.f;
 
     // NOTE: evaluation will only be performed if map_ground_truth_path is set
@@ -102,6 +104,7 @@ class Wavemap2DServer {
   CpuTimer integration_timer;
 
   ros::Timer pointcloud_queue_processing_timer_;
+  ros::Timer map_pruning_timer_;
   ros::Timer map_visualization_timer_;
   ros::Timer map_evaluation_timer_;
   ros::Timer map_autosave_timer_;

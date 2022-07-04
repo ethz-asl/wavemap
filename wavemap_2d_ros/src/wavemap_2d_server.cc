@@ -251,6 +251,14 @@ void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
       ros::Duration(config_.pointcloud_queue_processing_period_s),
       std::bind(&Wavemap2DServer::processPointcloudQueue, this));
 
+  if (0.f < config_.map_pruning_period_s) {
+    ROS_INFO_STREAM("Registering map pruning timer with period "
+                    << config_.map_pruning_period_s << "s");
+    map_pruning_timer_ = nh.createTimer(
+        ros::Duration(config_.map_pruning_period_s),
+        std::bind(&VolumetricDataStructure::prune, occupancy_map_.get()));
+  }
+
   if (0.f < config_.map_visualization_period_s) {
     ROS_INFO_STREAM("Registering map visualization timer with period "
                     << config_.map_visualization_period_s << "s");
@@ -350,6 +358,9 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
   nh.param(NAMEOF(config.pointcloud_topic_queue_length),
            config.pointcloud_topic_queue_length,
            config.pointcloud_topic_queue_length);
+
+  nh.param(NAMEOF(config.map_pruning_period_s), config.map_pruning_period_s,
+           config.map_pruning_period_s);
 
   nh.param(NAMEOF(config.map_visualization_period_s),
            config.map_visualization_period_s,
