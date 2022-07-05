@@ -62,7 +62,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
           target: ${{ env.DOCKER_TARGET }}
           build-args: |
             FROM_IMAGE=ros:noetic-ros-base-focal
@@ -95,7 +95,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
           target: ${{ env.DOCKER_TARGET }}
           build-args: |
             FROM_IMAGE=ros:noetic-ros-base-focal
@@ -113,7 +113,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/.github/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
           target: workspace-deps-builder-ccache-extractor
           build-args: |
             FROM_IMAGE=ros:noetic-ros-base-focal

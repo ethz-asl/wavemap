@@ -52,7 +52,7 @@ repos:
       - name: Check C++ files with cppcheck
         id: cppcheck
         args: [ --std=c++17, --language=c++, --force, --quiet,
-                --library=googletest, --library=tools/cppcheck/gazebo,
+                --library=googletest, --library=tooling/cppcheck/gazebo,
                 "--enable=warning,performance,portability",
                 "--suppress=constStatement",
                 "--suppress=syntaxError:*test/src/*/test_*.cc" ]
@@ -101,25 +101,25 @@ repos:
         language: system
         types: [ file ]
         files: (package.xml)$
-        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
+        args: [ --schema, tooling/xml_schemas/package_format2.xsd ]
       - name: Check ROS launch file schema conformance
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(launch)$
-        args: [ --schema, tools/xml_schemas/roslaunch.xsd ]
+        args: [ --schema, tooling/xml_schemas/roslaunch.xsd ]
       - name: Check (ROS) URDF file schema conformance
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(urdf)$
-        args: [ --schema, tools/xml_schemas/package_format2.xsd ]
+        args: [ --schema, tooling/xml_schemas/package_format2.xsd ]
     # - name: Check (ROS) SDF file schema conformance
     #   id: xmllint
     #   entry: xmllint --noout
     #   language: system
     #   types: [ file ]
     #   files: \.(sdf|model|world)$
-    #   args: [ --schema, tools/xml_schemas/sdf.xsd ]
+    #   args: [ --schema, tooling/xml_schemas/sdf.xsd ]
