@@ -82,11 +82,9 @@ FROM system-deps-installer AS workspace-deps-builder
 # to resolve which dependencies should be built
 ARG CATKIN_WS_PATH
 ARG REPOSITORY_NAME
-ARG PACKAGE_NAME
 WORKDIR $CATKIN_WS_PATH
 COPY --from=cacher /tmp/filtered_sources/src/dependencies src/dependencies
-COPY --from=cacher $CATKIN_WS_PATH/src/$REPOSITORY_NAME/$PACKAGE_NAME/package.xml \
-                   src/$REPOSITORY_NAME/$PACKAGE_NAME/package.xml
+COPY --from=cacher /tmp/manifests/src/$REPOSITORY_NAME src/$REPOSITORY_NAME
 
 # Pull in ccache's cache
 ARG CCACHE_DIR
@@ -98,7 +96,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN . /opt/ros/noetic/setup.sh && \
     catkin init && \
     catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-    dependencies=$(catkin list --deps --directory $(catkin locate $PACKAGE_NAME) -u | grep -oP '(?<= - ).*?(?=$)' | sort -u) && \
+    dependencies=$(catkin list --deps --directory src/$REPOSITORY_NAME -u | grep -oP '(?<= - ).*?(?=$)' | grep -v $REPOSITORY_NAME | sort -u) && \
     catkin_packages=$(catkin list -u | sort -u) && \
     dependencies_to_catkin_build=$(comm -12 <(echo "$dependencies") <(echo "$catkin_packages")) && \
     catkin build --no-status --force-color $(echo "$dependencies_to_catkin_build")

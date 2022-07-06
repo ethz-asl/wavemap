@@ -9,8 +9,8 @@ on:
 #       dir persists between jobs when using self-hosted GitHub Actions runners
 #       (/github/home is a docker volume mapped to the container's host).
 env:
-  REPOSITORY_NAME: wavemap_2d
-  DOCKER_REGISTRY: hub.wavemap2d.vwire.ch
+  REPOSITORY_NAME: wavemap
+  DOCKER_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_TARGET: workspace-built-deps
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
@@ -25,6 +25,9 @@ jobs:
       image: docker:20.10.9-dind
     outputs:
       image: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+    env:
+      DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
+      DOCKER_TARGET_ROS_PKG: wavemap_all
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -65,12 +68,12 @@ jobs:
           file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
           target: ${{ env.DOCKER_TARGET }}
           build-args: |
-            FROM_IMAGE=ros:noetic-ros-base-focal
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
             ROS_HOME=${{ env.ROS_HOME }}
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=wavemap_2d
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           load: true
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache,mode=max
@@ -98,12 +101,12 @@ jobs:
           file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
           target: ${{ env.DOCKER_TARGET }}
           build-args: |
-            FROM_IMAGE=ros:noetic-ros-base-focal
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
             ROS_HOME=${{ env.ROS_HOME }}
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=wavemap_2d
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
@@ -116,12 +119,12 @@ jobs:
           file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
           target: workspace-deps-builder-ccache-extractor
           build-args: |
-            FROM_IMAGE=ros:noetic-ros-base-focal
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
             ROS_HOME=${{ env.ROS_HOME }}
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=wavemap_2d
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
           outputs: type=local,dest=ccache
@@ -147,7 +150,7 @@ jobs:
           pip3 install pre-commit cpplint
           wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
           chmod +x /bin/hadolint
-        # TODO(victorr): Find a better way to install hadolint (and remove wget dep).
+        # TODO(victorr): Find a better way to install hadolint (and remove wget dep)
 
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -190,12 +193,21 @@ jobs:
           cache-group: noetic-gcc-release
           cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
+      # TODO(victorr): Automatically loop over all wavemap_* packages
+      - name: Build wavemap_common
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_common --no-status --force-color
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
       - name: Build wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_2d --no-status --force-color --no-deps
+          catkin build wavemap_2d --no-status --force-color
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Build wavemap_2d_ros
@@ -206,12 +218,12 @@ jobs:
           catkin build wavemap_2d_ros --no-status --force-color
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
-      - name: Build wavemap_2d_ground_truth
+      - name: Build wavemap_ground_truth
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_2d_ground_truth --no-status --force-color
+          catkin build wavemap_ground_truth --no-status --force-color
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Show statistics for ccache
@@ -244,7 +256,15 @@ jobs:
       - name: Build catkin package and dependencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d wavemap_2d_ros wavemap_2d_ground_truth --no-status --force-color --cmake-args -DUSE_CLANG_TIDY=ON
+        run: catkin build wavemap_all --no-status --force-color --cmake-args -DUSE_CLANG_TIDY=ON
+
+      # TODO(victorr): Automatically loop over all wavemap_* packages
+      - name: Run clang-tidy for wavemap_common
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_common
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap_common/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
       - name: Run clang-tidy for wavemap_2d
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
@@ -260,11 +280,11 @@ jobs:
           run-clang-tidy -header-filter="*include/wavemap_2d_ros/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
-      - name: Run clang-tidy for wavemap_2d_ground_truth
-        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d_ground_truth
+      - name: Run clang-tidy for wavemap_ground_truth
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_ground_truth
         run: |
           echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
-          run-clang-tidy -header-filter="*include/wavemap_2d_ground_truth/*" -quiet
+          run-clang-tidy -header-filter="*include/wavemap_ground_truth/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
   test:
@@ -291,7 +311,7 @@ jobs:
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_2d --no-status --force-color --no-deps --catkin-make-args tests
+          catkin build wavemap_all --no-status --force-color --no-deps --catkin-make-args tests
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Run unit tests
@@ -299,7 +319,7 @@ jobs:
         shell: bash
         run: |
           all_tests_passed=1
-          for f in devel/lib/wavemap_2d/test_*
+          for f in devel/lib/wavemap_*/test_*
             do $f --gtest_color=yes || all_tests_passed=0
           done
           if [ $all_tests_passed -ne 1 ]; then
@@ -312,6 +332,8 @@ jobs:
 
   coverage:
     name: Coverage
+    # TODO(victorr): Enable this again once it has been updated to work with the new package structure
+    if: ${{ false }}
     needs: [ workspace-container, test ]
     runs-on: self-hosted
     container:
@@ -341,12 +363,12 @@ jobs:
           catkin clean -y
           catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Build catkin package dependencies (in debug mode)
+      - name: Rebuild catkin package dependencies (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           source /opt/ros/noetic/setup.bash
-          dependencies=$(catkin list --deps --directory $(catkin locate wavemap_2d) -u | grep -oP '(?<= - ).*?(?=$)' | sort -u)
+          dependencies=$(catkin list --deps --directory src/${{ env.REPOSITORY_NAME }} -u | grep -oP '(?<= - ).*?(?=$)' | grep -v ${{ env.REPOSITORY_NAME }} | sort -u)
           catkin_packages=$(catkin list -u | sort -u)
           dependencies_to_catkin_build=$(comm -12 <(echo "$dependencies") <(echo "$catkin_packages"))
           catkin build --no-status --force-color $(echo "$dependencies_to_catkin_build")
@@ -354,7 +376,7 @@ jobs:
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color --no-deps --cmake-args -DENABLE_COVERAGE_TESTING=ON --catkin-make-args tests
+        run: catkin build wavemap_all --no-status --force-color --no-deps --cmake-args -DENABLE_COVERAGE_TESTING=ON --catkin-make-args tests
 
       - name: Set coverage counters to zero and create report base
         working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
@@ -364,11 +386,11 @@ jobs:
           lcov --capture --initial --directory . --output-file wavemap_2d_coverage_base.info
 
       - name: Run all tests while measuring coverage
-        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           all_tests_passed=1
-          for f in ../../devel/lib/wavemap_2d/test_*
+          for f in devel/lib/wavemap_*/test_*
           do
             $f --gtest_color=yes || all_tests_passed=0
           done
@@ -435,7 +457,7 @@ jobs:
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color --no-deps --cmake-args -DUSE_${{ matrix.sanitizer.name }}=ON --catkin-make-args tests
+        run: catkin build wavemap_all --no-status --force-color --no-deps --cmake-args -DUSE_${{ matrix.sanitizer.name }}=ON --catkin-make-args tests
 
       - name: Check unit tests with ${{ matrix.sanitizer.name }}
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -447,7 +469,7 @@ jobs:
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc-sanitizers.json"
           all_tests_passed=1
-          for f in devel/lib/wavemap_2d/test_*
+          for f in devel/lib/wavemap_*/test_*
             do $f --gtest_color=yes || all_tests_passed=0
           done
           if [ $all_tests_passed -ne 1 ]; then
@@ -488,7 +510,7 @@ jobs:
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
-        run: catkin build wavemap_2d --no-status --force-color --no-deps --catkin-make-args tests
+        run: catkin build wavemap_all --no-status --force-color --no-deps --catkin-make-args tests
 
       - name: Check unit tests with Valgrind memcheck
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -496,7 +518,7 @@ jobs:
         run: |
           echo "::add-matcher::./.github/problem-matchers/valgrind.json"
           all_tests_passed=1
-          for f in devel/lib/wavemap_2d/test_*
+          for f in devel/lib/wavemap_*/test_*
             do valgrind --tool=memcheck --leak-check=full --leak-resolution=high --num-callers=20 --track-origins=yes --show-possibly-lost=no --errors-for-leak-kinds=definite,indirect --error-exitcode=1 --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
             grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml || true
           done
