@@ -9,16 +9,16 @@
 #include <sensor_msgs/LaserScan.h>
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <wavemap_2d/common.h>
 #include <wavemap_2d/integrator/pointcloud_integrator.h>
-#include <wavemap_2d_msgs/FilePath.h>
-#include <wavemap_2d_msgs/MapEvaluationSummary.h>
-#include <wavemap_2d_msgs/PerformanceStats.h>
+#include <wavemap_common/common.h>
+#include <wavemap_msgs/FilePath.h>
+#include <wavemap_msgs/MapEvaluationSummary.h>
+#include <wavemap_msgs/PerformanceStats.h>
 
 #include "wavemap_2d_ros/tf_transformer.h"
 #include "wavemap_2d_ros/utils/timer.h"
 
-namespace wavemap_2d {
+namespace wavemap {
 
 class Wavemap2DServer {
  public:
@@ -64,18 +64,18 @@ class Wavemap2DServer {
     visualizeMap();
     return true;
   }
-  bool saveMapCallback(wavemap_2d_msgs::FilePath::Request& request,
-                       wavemap_2d_msgs::FilePath::Response& response) {
+  bool saveMapCallback(wavemap_msgs::FilePath::Request& request,
+                       wavemap_msgs::FilePath::Response& response) {
     response.success = saveMap(request.file_path);
     return true;
   }
-  bool loadMapCallback(wavemap_2d_msgs::FilePath::Request& request,
-                       wavemap_2d_msgs::FilePath::Response& response) {
+  bool loadMapCallback(wavemap_msgs::FilePath::Request& request,
+                       wavemap_msgs::FilePath::Response& response) {
     response.success = loadMap(request.file_path);
     return true;
   }
-  bool evaluateMapCallback(wavemap_2d_msgs::FilePath::Request& request,
-                           wavemap_2d_msgs::FilePath::Response& response) {
+  bool evaluateMapCallback(wavemap_msgs::FilePath::Request& request,
+                           wavemap_msgs::FilePath::Response& response) {
     response.success = evaluateMap(request.file_path);
     return true;
   }
@@ -138,7 +138,7 @@ class Wavemap2DServer {
       const Map& grid, const std::string& world_frame,
       const std::string& marker_namespace, ScalarToRGBAFunction color_map);
 };
-}  // namespace wavemap_2d
+}  // namespace wavemap
 
 #include "wavemap_2d_ros/impl/wavemap_2d_server_inl.h"
 

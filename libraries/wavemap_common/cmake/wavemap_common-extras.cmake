@@ -1,20 +1,18 @@
+# NOTE: For useful info about catkin and using CFG_EXTRAS:
+# http://wiki.ros.org/catkin/CMakeLists.txt
+# https://docs.ros.org/en/api/catkin/html/dev_guide/generated_cmake_api.html
+
 # Add the compiler definitions and options consistently across all wavemap pkgs
-function (add_wavemap_compile_definitions_and_options)
+macro (ADD_WAVEMAP_COMPILE_DEFINITIONS_AND_OPTIONS)
   option(USE_UBSAN "Compile with undefined behavior sanitizer enabled" OFF)
   option(USE_ASAN "Compile with address sanitizer enabled" OFF)
   option(USE_TSAN "Compile with thread sanitizer enabled" OFF)
   option(USE_CLANG_TIDY "Generate necessary files to run clang-tidy" OFF)
   option(ENABLE_BENCHMARKING "Compile benchmarking targets" OFF)
 
-  set(CMAKE_CXX_STANDARD
-      17
-      PARENT_SCOPE)
-  set(CMAKE_CXX_STANDARD_REQUIRED
-      ON
-      PARENT_SCOPE)
-  set(CMAKE_POSITION_INDEPENDENT_CODE
-      ON
-      PARENT_SCOPE)
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   add_compile_definitions(EIGEN_INITIALIZE_MATRICES_BY_NAN)
   add_compile_options(
     -march=native -Wall -Wextra -Wpedantic -Wsuggest-attribute=const
@@ -51,17 +49,11 @@ function (add_wavemap_compile_definitions_and_options)
   endif ()
 
   if (USE_CLANG_TIDY)
-    set(CMAKE_EXPORT_COMPILE_COMMANDS
-        ON
-        PARENT_SCOPE)
-  endif ()
-
-  if (ENABLE_BENCHMARKING)
-    find_package(benchmark REQUIRED)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
   endif ()
 
   if (CATKIN_ENABLE_TESTING AND ENABLE_COVERAGE_TESTING)
     add_compile_options(-fprofile-arcs -ftest-coverage -O0 -g)
     add_link_options(-fprofile-arcs)
   endif ()
-endfunction ()
+endmacro ()

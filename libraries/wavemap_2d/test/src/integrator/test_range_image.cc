@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/test/fixture_base.h>
 
 #include "wavemap_2d/integrator/scan_integrator/range_image.h"
-#include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap {
 using RangeImageTest = FixtureBase;

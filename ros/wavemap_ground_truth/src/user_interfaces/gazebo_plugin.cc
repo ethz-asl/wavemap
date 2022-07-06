@@ -1,9 +1,9 @@
-#include "wavemap_2d_ground_truth/user_interfaces/gazebo_plugin.h"
+#include "wavemap_ground_truth/user_interfaces/gazebo_plugin.h"
 
 #include <string>
 
-#include "wavemap_2d_ground_truth/common.h"
-#include "wavemap_2d_ground_truth/occupancy_grid_creator.h"
+#include "wavemap_ground_truth/common.h"
+#include "wavemap_ground_truth/occupancy_grid_creator.h"
 
 namespace gazebo {
 GZ_REGISTER_WORLD_PLUGIN(Wavemap2DGroundTruthPlugin)
@@ -23,8 +23,8 @@ void Wavemap2DGroundTruthPlugin::Load(physics::WorldPtr world,
 }
 
 bool Wavemap2DGroundTruthPlugin::serviceCallback(
-    wavemap_2d_msgs::FilePath::Request& request,
-    wavemap_2d_msgs::FilePath::Response& response) {
+    wavemap_msgs::FilePath::Request& request,
+    wavemap_msgs::FilePath::Response& response) {
   response.success = saveOccupancyGrid(request.file_path);
   return true;
 }
@@ -34,8 +34,8 @@ bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
   constexpr bool kDebug = true;
 
   // Read the resolution and slice height from ROS params
-  wavemap_2d::FloatingPoint resolution;
-  wavemap_2d::FloatingPoint slice_height;
+  wavemap::FloatingPoint resolution;
+  wavemap::FloatingPoint slice_height;
   if (!nh_private_.getParam("resolution", resolution)) {
     LOG(WARNING) << "ROS param " << nh_private_.resolveName("resolution")
                  << " must be set.";
@@ -48,7 +48,7 @@ bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
   }
 
   // Instantiate the ground truth SDF creator
-  wavemap_2d::ground_truth::OccupancyGridCreator occupancy_grid_creator(
+  wavemap::ground_truth::OccupancyGridCreator occupancy_grid_creator(
       resolution, slice_height);
 
   // Instantiate a Gazebo mesh manager
@@ -237,7 +237,7 @@ bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
             const unsigned int index_c = submesh.GetIndex(triangle_i * 3 + 2);
 
             // Get the coordinates of the vertices
-            wavemap_2d::ground_truth::Triangle triangle;
+            wavemap::ground_truth::Triangle triangle;
             triangle.vertex_a = {
                 static_cast<float>(submesh.Vertex(index_a).X()),
                 static_cast<float>(submesh.Vertex(index_a).Y()),
@@ -265,7 +265,7 @@ bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
                     floodfill_unoccupied);
   if (floodfill_unoccupied) {
     LOG_IF(INFO, kDebug) << "Floodfill unoccupied space";
-    occupancy_grid_creator.floodfillUnoccupied(wavemap_2d::Index::Zero());
+    occupancy_grid_creator.floodfillUnoccupied(wavemap::Index::Zero());
   }
 
   // Visualize the TSDF and intersection count layers
@@ -280,7 +280,7 @@ bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
   // Save the occupancy grid to a file
   LOG_IF(INFO, kDebug) << "Saving occupancy grid to file: " << file_path;
   occupancy_grid_creator.getOccupancyGrid().save(
-      file_path, wavemap_2d::ground_truth::kSaveWithFloatingPrecision);
+      file_path, wavemap::ground_truth::kSaveWithFloatingPrecision);
 
   return true;
 }

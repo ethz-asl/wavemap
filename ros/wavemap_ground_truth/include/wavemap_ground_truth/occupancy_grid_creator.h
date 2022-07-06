@@ -1,16 +1,15 @@
-#ifndef WAVEMAP_2D_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_
-#define WAVEMAP_2D_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_
+#ifndef WAVEMAP_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_
+#define WAVEMAP_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_
 
 #include <vector>
 
-#include <wavemap_2d/data_structure/volumetric/cell_types/scalar_cell.h>
-#include <wavemap_2d/data_structure/volumetric/dense_grid.h>
-#include <wavemap_2d/indexing/index.h>
+#include <wavemap_2d/data_structure/cell_types/scalar_cell.h>
+#include <wavemap_2d/data_structure/dense_grid.h>
 
-#include "wavemap_2d_ground_truth/common.h"
-#include "wavemap_2d_ground_truth/geometry.h"
+#include "wavemap_ground_truth/common.h"
+#include "wavemap_ground_truth/geometry.h"
 
-namespace wavemap_2d::ground_truth {
+namespace wavemap::ground_truth {
 class OccupancyGridCreator {
  public:
   explicit OccupancyGridCreator(FloatingPoint resolution,
@@ -31,6 +30,6 @@ class OccupancyGridCreator {
 
   static const std::vector<Index> kNeighborOffsets;
 };
-}  // namespace wavemap_2d::ground_truth
+}  // namespace wavemap::ground_truth
 
-#endif  // WAVEMAP_2D_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_
+#endif  // WAVEMAP_GROUND_TRUTH_OCCUPANCY_GRID_CREATOR_H_

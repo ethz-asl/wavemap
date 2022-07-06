@@ -38,7 +38,7 @@ bool bagHasTopic(const std::string& topic, rosbag::View* bag_view) {
 }
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "wavemap_2d");
+  ros::init(argc, argv, "wavemap_2d_rosbag_processor");
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
   // Setup the wavemap server node
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  wavemap_2d::Wavemap2DServer wavemap_server(nh, nh_private);
+  wavemap::Wavemap2DServer wavemap_server(nh, nh_private);
 
   // Read the required ROS params
   std::string pointcloud_topic;
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   // Pointclouds
   callbacks.try_emplace(
       pointcloud_topic,
-      callbackAdapter(&wavemap_2d::Wavemap2DServer::pointcloudCallback,
+      callbackAdapter(&wavemap::Wavemap2DServer::pointcloudCallback,
                       &wavemap_server));
   // TFs
   ros::Publisher tf_pub = nh.advertise<tf::tfMessage>("/tf", 10);

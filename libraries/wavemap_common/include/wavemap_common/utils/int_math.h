@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_UTILS_INT_MATH_H_
-#define WAVEMAP_2D_UTILS_INT_MATH_H_
+#ifndef WAVEMAP_COMMON_UTILS_INT_MATH_H_
+#define WAVEMAP_COMMON_UTILS_INT_MATH_H_
 
 #include <limits>
 
@@ -39,4 +39,4 @@ Eigen::Matrix<int, dim, 1> div_exp2(Eigen::Matrix<int, dim, 1> vector,
 }
 }  // namespace wavemap::int_math
 
-#endif  // WAVEMAP_2D_UTILS_INT_MATH_H_
+#endif  // WAVEMAP_COMMON_UTILS_INT_MATH_H_

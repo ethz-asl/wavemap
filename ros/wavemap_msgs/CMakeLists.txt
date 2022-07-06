@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(wavemap_2d_msgs)
+project(wavemap_msgs)
 
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)

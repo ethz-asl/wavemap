@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_CONSTANTS_H_
-#define WAVEMAP_2D_CONSTANTS_H_
+#ifndef WAVEMAP_COMMON_CONSTANTS_H_
+#define WAVEMAP_COMMON_CONSTANTS_H_
 
 namespace wavemap {
 // NOTE: We define commonly used constants here instead of directly using the
@@ -22,4 +22,4 @@ struct constants {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_CONSTANTS_H_
+#endif  // WAVEMAP_COMMON_CONSTANTS_H_

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_UTILS_EIGEN_FORMAT_H_
-#define WAVEMAP_2D_UTILS_EIGEN_FORMAT_H_
+#ifndef WAVEMAP_COMMON_UTILS_EIGEN_FORMAT_H_
+#define WAVEMAP_COMMON_UTILS_EIGEN_FORMAT_H_
 
 #include <Eigen/Eigen>
 
@@ -14,4 +14,4 @@ struct EigenFormat {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_UTILS_EIGEN_FORMAT_H_
+#endif  // WAVEMAP_COMMON_UTILS_EIGEN_FORMAT_H_

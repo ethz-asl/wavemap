@@ -1,10 +1,9 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/test/fixture_base.h>
+#include <wavemap_common/utils/eigen_format.h>
 
-#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/iterator/ray_iterator.h"
-#include "wavemap_2d/test/fixture_base.h"
-#include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap {
 using RayIteratorTest = FixtureBase;

@@ -4,10 +4,10 @@
 #include <string>
 
 #include <pcl/io/ply_io.h>
-#include <wavemap_2d/utils/eigen_format.h>
+#include <wavemap_common/utils/eigen_format.h>
 
-#include "wavemap_2d_ground_truth/common.h"
-#include "wavemap_2d_ground_truth/occupancy_grid_creator.h"
+#include "wavemap_ground_truth/common.h"
+#include "wavemap_ground_truth/occupancy_grid_creator.h"
 
 DEFINE_string(ply_input_filepath, "",
               "Path to the PLY file describing the geometry of the objects for "
@@ -46,7 +46,7 @@ DEFINE_double(Qw, 0.0,
               "Qw component of the quaternion of the rotation to apply to the "
               "geometry in the PLY file.");
 
-using namespace wavemap_2d;  // NOLINT
+using namespace wavemap;  // NOLINT
 int main(int argc, char* argv[]) {
   std::stringstream required_args;
   required_args << "ply_input_filepath occupancy_grid_output_filepath "
@@ -86,10 +86,9 @@ int main(int argc, char* argv[]) {
   LOG(INFO) << "Will apply transformation:\n"
             << "- scaling: " << FLAGS_scale_factor << "\n"
             << "- translation: "
-            << wavemap_2d::EigenFormat::oneLine(transform.getPosition()) << "\n"
+            << wavemap::EigenFormat::oneLine(transform.getPosition()) << "\n"
             << "- rotation: "
-            << wavemap_2d::EigenFormat::oneLine(
-                   transform.getRotation().vector());
+            << wavemap::EigenFormat::oneLine(transform.getRotation().vector());
 
   /* Load the PLY file */
   pcl::PolygonMesh mesh;
@@ -114,11 +113,11 @@ int main(int argc, char* argv[]) {
     triangle_i++;
     // Only print progress for each promile of completion, to reduce IO wait
     if (triangle_i % (num_triangles / 1000) == 0) {
-      wavemap_2d::Index occupancy_grid_dimensions =
+      wavemap::Index occupancy_grid_dimensions =
           occupancy_grid_creator.getOccupancyGrid().dimensions();
       printf("\rProgress: %3.1f%% - map dimensions [%i, %i]",
-             static_cast<wavemap_2d::FloatingPoint>(triangle_i) /
-                 static_cast<wavemap_2d::FloatingPoint>(num_triangles) * 100,
+             static_cast<wavemap::FloatingPoint>(triangle_i) /
+                 static_cast<wavemap::FloatingPoint>(num_triangles) * 100,
              occupancy_grid_dimensions.x(), occupancy_grid_dimensions.y());
       std::cout << std::flush;
     }
@@ -132,7 +131,7 @@ int main(int argc, char* argv[]) {
         vertex_coordinates[polygon.vertices[2]].getVector3fMap();
 
     // Transform the vertices from mesh frame into world frame
-    wavemap_2d::ground_truth::Triangle triangle;
+    wavemap::ground_truth::Triangle triangle;
     triangle.vertex_a = transform * (FLAGS_scale_factor * vertex_a);
     triangle.vertex_b = transform * (FLAGS_scale_factor * vertex_b);
     triangle.vertex_c = transform * (FLAGS_scale_factor * vertex_c);

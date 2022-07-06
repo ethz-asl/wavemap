@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INDEXING_IMPL_NDTREE_INDEX_INL_H_
-#define WAVEMAP_2D_INDEXING_IMPL_NDTREE_INDEX_INL_H_
+#ifndef WAVEMAP_COMMON_INDEXING_IMPL_NDTREE_INDEX_INL_H_
+#define WAVEMAP_COMMON_INDEXING_IMPL_NDTREE_INDEX_INL_H_
 
 #include <string>
 #include <vector>
@@ -107,4 +107,4 @@ std::string NdtreeIndex<dim>::toString() const {
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INDEXING_IMPL_NDTREE_INDEX_INL_H_
+#endif  // WAVEMAP_COMMON_INDEXING_IMPL_NDTREE_INDEX_INL_H_

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_DENSE_GRID_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_DENSE_GRID_H_
+#ifndef WAVEMAP_2D_DATA_STRUCTURE_DENSE_GRID_H_
+#define WAVEMAP_2D_DATA_STRUCTURE_DENSE_GRID_H_
 
 #include <string>
 
@@ -81,4 +81,4 @@ class DenseGrid : public VolumetricDataStructure {
 
 #include "wavemap_2d/data_structure/impl/dense_grid_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_DENSE_GRID_H_
+#endif  // WAVEMAP_2D_DATA_STRUCTURE_DENSE_GRID_H_

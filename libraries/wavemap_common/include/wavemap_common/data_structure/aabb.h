@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_AABB_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_AABB_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_AABB_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_AABB_H_
 
 #include <limits>
 #include <string>
@@ -81,4 +81,4 @@ struct AABB {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_AABB_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_AABB_H_

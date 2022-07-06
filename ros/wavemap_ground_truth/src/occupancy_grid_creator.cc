@@ -1,14 +1,13 @@
-#include "wavemap_2d_ground_truth/occupancy_grid_creator.h"
+#include "wavemap_ground_truth/occupancy_grid_creator.h"
 
 #include <unordered_set>
 
-#include <wavemap_2d/indexing/index.h>
 #include <wavemap_2d/indexing/index_hashes.h>
 #include <wavemap_2d/iterator/ray_iterator.h>
 
-#include "wavemap_2d_ground_truth/geometry.h"
+#include "wavemap_ground_truth/geometry.h"
 
-namespace wavemap_2d::ground_truth {
+namespace wavemap::ground_truth {
 const std::vector<Index> OccupancyGridCreator::kNeighborOffsets = {
     {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1},
 };
@@ -66,4 +65,4 @@ void OccupancyGridCreator::floodfillUnoccupied(const Index& start_index) {
     }
   }
 }
-}  // namespace wavemap_2d::ground_truth
+}  // namespace wavemap::ground_truth

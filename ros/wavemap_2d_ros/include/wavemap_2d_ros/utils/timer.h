@@ -1,7 +1,7 @@
 #ifndef WAVEMAP_2D_ROS_UTILS_TIMER_H_
 #define WAVEMAP_2D_ROS_UTILS_TIMER_H_
 
-namespace wavemap_2d {
+namespace wavemap {
 class CpuTimer {
  public:
   CpuTimer() = default;
@@ -47,6 +47,6 @@ class CpuTimer {
   struct timespec cpu_time_start_;
   clockid_t thread_clock_id_start_;
 };
-}  // namespace wavemap_2d
+}  // namespace wavemap
 
 #endif  // WAVEMAP_2D_ROS_UTILS_TIMER_H_

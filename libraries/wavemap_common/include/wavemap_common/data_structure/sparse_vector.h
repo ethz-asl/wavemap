@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_SPARSE_VECTOR_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_SPARSE_VECTOR_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_SPARSE_VECTOR_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_SPARSE_VECTOR_H_
 
 #include <bitset>
 #include <vector>
@@ -56,4 +56,4 @@ const std::bitset<max_size> SparseVector<T, max_size, default_value>::kOnes =
     std::bitset<max_size>{}.set();
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_SPARSE_VECTOR_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_SPARSE_VECTOR_H_

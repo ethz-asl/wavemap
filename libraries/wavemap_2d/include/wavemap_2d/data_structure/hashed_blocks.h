@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_HASHED_BLOCKS_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_HASHED_BLOCKS_H_
+#ifndef WAVEMAP_2D_DATA_STRUCTURE_HASHED_BLOCKS_H_
+#define WAVEMAP_2D_DATA_STRUCTURE_HASHED_BLOCKS_H_
 
 #include <string>
 #include <unordered_map>
@@ -72,4 +72,4 @@ class HashedBlocks : public VolumetricDataStructure {
 
 #include "wavemap_2d/data_structure/impl/hashed_blocks_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_HASHED_BLOCKS_H_
+#endif  // WAVEMAP_2D_DATA_STRUCTURE_HASHED_BLOCKS_H_

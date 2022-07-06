@@ -1,10 +1,10 @@
-#include "wavemap_2d_ground_truth/geometry.h"
+#include "wavemap_ground_truth/geometry.h"
 
 #include <sstream>
 
-#include <wavemap_2d/utils/eigen_format.h>
+#include <wavemap_common/utils/eigen_format.h>
 
-namespace wavemap_2d::ground_truth {
+namespace wavemap::ground_truth {
 bool Plane::intersectsLineSegment(
     const LineSegment& segment, Point3D& intersection_point,
     FloatingPoint& distance_to_intersection) const {
@@ -250,4 +250,4 @@ std::string Triangle::toString() const {
      << EigenFormat::oneLine(vertex_c);
   return ss.str();
 }
-}  // namespace wavemap_2d::ground_truth
+}  // namespace wavemap::ground_truth

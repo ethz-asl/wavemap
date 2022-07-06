@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_UTILS_TYPE_UTILS_H_
-#define WAVEMAP_2D_UTILS_TYPE_UTILS_H_
+#ifndef WAVEMAP_COMMON_UTILS_TYPE_UTILS_H_
+#define WAVEMAP_COMMON_UTILS_TYPE_UTILS_H_
 
 #include <type_traits>
 
@@ -10,4 +10,4 @@ constexpr auto to_underlying(T value) noexcept {
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_UTILS_TYPE_UTILS_H_
+#endif  // WAVEMAP_COMMON_UTILS_TYPE_UTILS_H_

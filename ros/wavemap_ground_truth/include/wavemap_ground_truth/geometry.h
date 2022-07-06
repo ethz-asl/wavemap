@@ -1,13 +1,13 @@
-#ifndef WAVEMAP_2D_GROUND_TRUTH_GEOMETRY_H_
-#define WAVEMAP_2D_GROUND_TRUTH_GEOMETRY_H_
+#ifndef WAVEMAP_GROUND_TRUTH_GEOMETRY_H_
+#define WAVEMAP_GROUND_TRUTH_GEOMETRY_H_
 
 #include <limits>
 #include <string>
 #include <utility>
 
-#include "wavemap_2d_ground_truth/common.h"
+#include "wavemap_ground_truth/common.h"
 
-namespace wavemap_2d::ground_truth {
+namespace wavemap::ground_truth {
 // NOTE: Many of the methods declared in this header are implemented based on
 //       the examples in "Real-time collision detection" by Christer Ericson
 
@@ -64,6 +64,6 @@ struct Triangle {
   static int getRelativeOrientation(const Point& vertex_one,
                                     const Point& vertex_two);
 };
-}  // namespace wavemap_2d::ground_truth
+}  // namespace wavemap::ground_truth
 
-#endif  // WAVEMAP_2D_GROUND_TRUTH_GEOMETRY_H_
+#endif  // WAVEMAP_GROUND_TRUTH_GEOMETRY_H_

@@ -13,18 +13,14 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
 
-  <depend>roscpp</depend>
-  <depend>glog_catkin</depend>
-  <depend>eigen_catkin</depend>
-
   <depend>wavemap_2d</depend>
 
-  <depend>minkindr</depend>
-  <depend>minkindr_conversions</depend>
+  <depend>roscpp</depend>
   <depend>rosbag</depend>
 
+  <depend>minkindr_conversions</depend>
   <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>
   <depend>visualization_msgs</depend>
-  <depend>wavemap_2d_msgs</depend>
+  <depend>wavemap_msgs</depend>
 </package>

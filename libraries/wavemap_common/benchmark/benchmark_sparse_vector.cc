@@ -48,3 +48,5 @@ static void AccessSparseArray(benchmark::State& state) {
 }
 BENCHMARK(AccessSparseArray)->DenseRange(0, 100, 10);
 }  // namespace wavemap
+
+BENCHMARK_MAIN();

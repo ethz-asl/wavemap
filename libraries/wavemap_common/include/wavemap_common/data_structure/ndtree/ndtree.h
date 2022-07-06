@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_NDTREE_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_NDTREE_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_NDTREE_NDTREE_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_NDTREE_NDTREE_H_
 
 #include <string>
 #include <utility>
@@ -56,4 +56,4 @@ class Ndtree {
 
 #include "wavemap_common/data_structure/ndtree/impl/ndtree_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_GENERIC_NDTREE_NDTREE_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_NDTREE_NDTREE_H_

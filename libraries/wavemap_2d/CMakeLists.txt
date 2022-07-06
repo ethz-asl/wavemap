@@ -1,14 +1,24 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_2d)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
+# Dependencies
+find_package(catkin REQUIRED COMPONENTS wavemap_common opencv3_catkin)
+if (ENABLE_BENCHMARKING)
+  find_package(benchmark REQUIRED)
+endif ()
 
-# Configure
+# Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
 
+# Setup catkin package
+catkin_package(INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS
+               wavemap_common opencv3_catkin)
+
+# For all targets
+include_directories(include ${catkin_INCLUDE_DIRS})
+
 # Libraries
-cs_add_library(
+add_library(
   ${PROJECT_NAME}
   src/data_structure/volumetric_data_structure.cc
   src/integrator/pointcloud_integrator.cc
@@ -20,13 +30,14 @@ cs_add_library(
   src/integrator/scan_integrator/range_image.cc
   src/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.cc
   src/utils/evaluation_utils.cc)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 # Binaries
-cs_add_executable(carmen_processor app/carmen_processor.cc)
+add_executable(carmen_processor app/carmen_processor.cc)
 target_link_libraries(carmen_processor ${PROJECT_NAME})
 
-cs_add_executable(offline_compression_evaluation
-                  app/offline_compression_evaluation.cc)
+add_executable(offline_compression_evaluation
+               app/offline_compression_evaluation.cc)
 target_link_libraries(offline_compression_evaluation ${PROJECT_NAME})
 
 # Tests
@@ -49,7 +60,7 @@ if (CATKIN_ENABLE_TESTING)
     test/src/transform/test_naive_haar.cc
     test/src/transform/test_haar_cell.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
-  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME})
+  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
 endif ()
 
 # Benchmarks
@@ -59,7 +70,3 @@ if (ENABLE_BENCHMARKING)
   target_link_libraries(benchmark_measurement_integrator ${PROJECT_NAME}
                         benchmark::benchmark)
 endif ()
-
-# Export
-cs_install()
-cs_export()

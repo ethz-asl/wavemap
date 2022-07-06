@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_GROUND_TRUTH_USER_INTERFACES_GAZEBO_PLUGIN_H_
-#define WAVEMAP_2D_GROUND_TRUTH_USER_INTERFACES_GAZEBO_PLUGIN_H_
+#ifndef WAVEMAP_GROUND_TRUTH_USER_INTERFACES_GAZEBO_PLUGIN_H_
+#define WAVEMAP_GROUND_TRUTH_USER_INTERFACES_GAZEBO_PLUGIN_H_
 
 #include <string>
 #include <vector>
@@ -9,8 +9,8 @@
 #include <gazebo/physics/physics.hh>
 #include <glog/logging.h>
 #include <ros/ros.h>
-#include <wavemap_2d/common.h>
-#include <wavemap_2d_msgs/FilePath.h>
+#include <wavemap_common/common.h>
+#include <wavemap_msgs/FilePath.h>
 
 namespace gazebo {
 class Wavemap2DGroundTruthPlugin : public WorldPlugin {
@@ -19,8 +19,8 @@ class Wavemap2DGroundTruthPlugin : public WorldPlugin {
 
   void Load(physics::WorldPtr world, sdf::ElementPtr _sdf) override;
 
-  bool serviceCallback(wavemap_2d_msgs::FilePath::Request& request,
-                       wavemap_2d_msgs::FilePath::Response& response);
+  bool serviceCallback(wavemap_msgs::FilePath::Request& request,
+                       wavemap_msgs::FilePath::Response& response);
 
   bool saveOccupancyGrid(const std::string& file_path);
 
@@ -38,4 +38,4 @@ class Wavemap2DGroundTruthPlugin : public WorldPlugin {
 };
 }  // namespace gazebo
 
-#endif  // WAVEMAP_2D_GROUND_TRUTH_USER_INTERFACES_GAZEBO_PLUGIN_H_
+#endif  // WAVEMAP_GROUND_TRUTH_USER_INTERFACES_GAZEBO_PLUGIN_H_

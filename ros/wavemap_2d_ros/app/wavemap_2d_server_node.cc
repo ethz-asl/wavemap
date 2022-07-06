@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  wavemap_2d::Wavemap2DServer wavemap_2d_server(nh, nh_private);
+  wavemap::Wavemap2DServer wavemap_2d_server(nh, nh_private);
 
   ros::spin();
   return 0;

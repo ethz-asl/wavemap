@@ -1,10 +1,9 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/test/fixture_base.h>
 
 #include "wavemap_2d/data_structure/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/hashed_blocks.h"
-#include "wavemap_2d/indexing/index.h"
-#include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap {
 template <typename CellType>

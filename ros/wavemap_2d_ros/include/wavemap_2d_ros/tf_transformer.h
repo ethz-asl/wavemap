@@ -5,9 +5,9 @@
 #include <string>
 
 #include <tf2_ros/transform_listener.h>
-#include <wavemap_2d/common.h>
+#include <wavemap_common/common.h>
 
-namespace wavemap_2d {
+namespace wavemap {
 class TfTransformer {
  public:
   explicit TfTransformer(FloatingPoint tf_buffer_cache_time = 10.f)
@@ -50,6 +50,6 @@ class TfTransformer {
                            const ros::Time& frame_timestamp,
                            Transformation3D& transform);
 };
-}  // namespace wavemap_2d
+}  // namespace wavemap
 
 #endif  // WAVEMAP_2D_ROS_TF_TRANSFORMER_H_

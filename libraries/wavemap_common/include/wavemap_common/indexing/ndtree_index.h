@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INDEXING_NDTREE_INDEX_H_
-#define WAVEMAP_2D_INDEXING_NDTREE_INDEX_H_
+#ifndef WAVEMAP_COMMON_INDEXING_NDTREE_INDEX_H_
+#define WAVEMAP_COMMON_INDEXING_NDTREE_INDEX_H_
 
 #include <string>
 #include <vector>
@@ -54,4 +54,4 @@ using OctreeIndex = NdtreeIndex<3>;
 
 #include "wavemap_common/indexing/impl/ndtree_index_inl.h"
 
-#endif  // WAVEMAP_2D_INDEXING_NDTREE_INDEX_H_
+#endif  // WAVEMAP_COMMON_INDEXING_NDTREE_INDEX_H_

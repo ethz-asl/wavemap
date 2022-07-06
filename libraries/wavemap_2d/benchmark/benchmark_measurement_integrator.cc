@@ -40,4 +40,7 @@ static void GridIterationRangeBasedLoop(benchmark::State& state) {
   }
 }
 BENCHMARK(GridIterationRangeBasedLoop);
+
 }  // namespace wavemap
+
+BENCHMARK_MAIN();

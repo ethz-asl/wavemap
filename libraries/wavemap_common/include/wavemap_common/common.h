@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_COMMON_H_
-#define WAVEMAP_2D_COMMON_H_
+#ifndef WAVEMAP_COMMON_COMMON_H_
+#define WAVEMAP_COMMON_COMMON_H_
 
 #include <vector>
 
@@ -42,4 +42,4 @@ constexpr auto kSqrt2 = constants<FloatingPoint>::kSqrt2;
 constexpr auto kSqrt2Inv = constants<FloatingPoint>::kSqrt2Inv;
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_COMMON_H_
+#endif  // WAVEMAP_COMMON_COMMON_H_

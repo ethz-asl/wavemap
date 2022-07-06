@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_TEST_INCLUDE_WAVEMAP_2D_TEST_FIXTURE_BASE_H_
-#define WAVEMAP_2D_TEST_INCLUDE_WAVEMAP_2D_TEST_FIXTURE_BASE_H_
+#ifndef WAVEMAP_COMMON_TEST_FIXTURE_BASE_H_
+#define WAVEMAP_COMMON_TEST_FIXTURE_BASE_H_
 
 #include <memory>
 #include <vector>
@@ -153,4 +153,4 @@ class FixtureBase : public ::testing::Test {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_TEST_INCLUDE_WAVEMAP_2D_TEST_FIXTURE_BASE_H_
+#endif  // WAVEMAP_COMMON_TEST_FIXTURE_BASE_H_

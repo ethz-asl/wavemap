@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_SIMPLE_QUADTREE_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_SIMPLE_QUADTREE_H_
+#ifndef WAVEMAP_2D_DATA_STRUCTURE_SIMPLE_QUADTREE_H_
+#define WAVEMAP_2D_DATA_STRUCTURE_SIMPLE_QUADTREE_H_
 
 #include <string>
 
@@ -7,6 +7,7 @@
 #include <wavemap_common/indexing/ndtree_index.h>
 
 #include "wavemap_2d/data_structure/volumetric_quadtree_interface.h"
+#include "wavemap_2d/indexing/index_conversions.h"
 
 namespace wavemap {
 template <typename CellT>
@@ -103,4 +104,4 @@ class SimpleQuadtree : public VolumetricQuadtreeInterface {
 
 #include "wavemap_2d/data_structure/impl/simple_quadtree_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_SIMPLE_QUADTREE_H_
+#endif  // WAVEMAP_2D_DATA_STRUCTURE_SIMPLE_QUADTREE_H_

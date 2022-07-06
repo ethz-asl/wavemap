@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_H_
+#ifndef WAVEMAP_2D_DATA_STRUCTURE_WAVELET_TREE_H_
+#define WAVEMAP_2D_DATA_STRUCTURE_WAVELET_TREE_H_
 
 #include <string>
 
@@ -112,4 +112,4 @@ class WaveletTree : public WaveletTreeInterface {
 
 #include "wavemap_2d/data_structure/impl/wavelet_tree_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_H_
+#endif  // WAVEMAP_2D_DATA_STRUCTURE_WAVELET_TREE_H_

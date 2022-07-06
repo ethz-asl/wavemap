@@ -4,7 +4,7 @@
 
 #include <minkindr_conversions/kindr_msg.h>
 
-namespace wavemap_2d {
+namespace wavemap {
 bool TfTransformer::isTransformAvailable(
     const std::string& to_frame_id, const std::string& from_frame_id,
     const ros::Time& frame_timestamp) const {
@@ -68,4 +68,4 @@ bool TfTransformer::lookupTransformImpl(const std::string& to_frame_id,
   tf::transformMsgToKindr(transform_msg.transform, &transform);
   return true;
 }
-}  // namespace wavemap_2d
+}  // namespace wavemap

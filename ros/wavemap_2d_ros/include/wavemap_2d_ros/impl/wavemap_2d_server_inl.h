@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_state.h>
+#include <wavemap_2d/data_structure/cell_types/occupancy_state.h>
 
-namespace wavemap_2d {
+namespace wavemap {
 template <typename Map, typename ScalarToRGBAFunction>
 visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
     const Map& grid, const std::string& world_frame,
@@ -86,6 +86,6 @@ visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
 
   return marker_array;
 }
-}  // namespace wavemap_2d
+}  // namespace wavemap
 
 #endif  // WAVEMAP_2D_ROS_IMPL_WAVEMAP_2D_SERVER_INL_H_

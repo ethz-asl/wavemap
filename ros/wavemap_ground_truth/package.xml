@@ -18,5 +18,5 @@
   <depend>pcl_conversions</depend>
   <depend>gazebo</depend>
   <depend>wavemap_2d</depend>
-  <depend>wavemap_2d_msgs</depend>
+  <depend>wavemap_msgs</depend>
 </package>

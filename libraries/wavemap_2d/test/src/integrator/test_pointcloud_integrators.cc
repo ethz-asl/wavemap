@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/test/fixture_base.h>
+#include <wavemap_common/utils/eigen_format.h>
 
 #include "wavemap_2d/data_structure/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/dense_grid.h"
@@ -17,8 +19,6 @@
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
-#include "wavemap_2d/test/fixture_base.h"
-#include "wavemap_2d/utils/eigen_format.h"
 
 namespace wavemap {
 class PointcloudIntegratorTest : public FixtureBase {

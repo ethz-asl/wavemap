@@ -30,13 +30,13 @@
 #ifndef WAVEMAP_2D_ROS_UTILS_NAMEOF_H_
 #define WAVEMAP_2D_ROS_UTILS_NAMEOF_H_
 
-#define NAMEOF(x) wavemap_2d::_nameof<0>(#x, sizeof(x))  // NOLINT
+#define NAMEOF(x) wavemap::_nameof<0>(#x, sizeof(x))  // NOLINT
 
 #include <regex>  // NOLINT
 #include <stdexcept>
 #include <string>
 
-namespace wavemap_2d {
+namespace wavemap {
 template <int a>
 std::string _nameof(const std::string& x, std::size_t) {
   std::regex regex(R"(^&?([_a-zA-Z]\w*(->|\.|::))*([_a-zA-Z]\w*)$)");
@@ -47,6 +47,6 @@ std::string _nameof(const std::string& x, std::size_t) {
   throw std::logic_error(
       "A bad expression x in nameof(x). The expression is \"" + x + "\".");
 }
-}  // namespace wavemap_2d
+}  // namespace wavemap
 
 #endif  // WAVEMAP_2D_ROS_UTILS_NAMEOF_H_

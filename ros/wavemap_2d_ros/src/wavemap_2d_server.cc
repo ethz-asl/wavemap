@@ -1,13 +1,13 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h>
-#include <wavemap_2d/data_structure/volumetric/cell_types/occupancy_state.h>
-#include <wavemap_2d/data_structure/volumetric/dense_grid.h>
-#include <wavemap_2d/data_structure/volumetric/differencing_quadtree.h>
-#include <wavemap_2d/data_structure/volumetric/hashed_blocks.h>
-#include <wavemap_2d/data_structure/volumetric/simple_quadtree.h>
-#include <wavemap_2d/data_structure/volumetric/wavelet_tree.h>
+#include <wavemap_2d/data_structure/cell_types/occupancy_cell.h>
+#include <wavemap_2d/data_structure/cell_types/occupancy_state.h>
+#include <wavemap_2d/data_structure/dense_grid.h>
+#include <wavemap_2d/data_structure/differencing_quadtree.h>
+#include <wavemap_2d/data_structure/hashed_blocks.h>
+#include <wavemap_2d/data_structure/simple_quadtree.h>
+#include <wavemap_2d/data_structure/wavelet_tree.h>
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
 #include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h>
@@ -16,7 +16,7 @@
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_2d_ros/utils/nameof.h>
 
-namespace wavemap_2d {
+namespace wavemap {
 Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                                  Wavemap2DServer::Config config)
     : config_(std::move(config)) {
@@ -144,7 +144,7 @@ void Wavemap2DServer::processPointcloudQueue() {
       const size_t map_memory_usage = occupancy_map_->getMemoryUsage();
       ROS_INFO_STREAM("Map memory usage: " << map_memory_usage / 1e6 << "MB.");
 
-      wavemap_2d_msgs::PerformanceStats performance_stats_msg;
+      wavemap_msgs::PerformanceStats performance_stats_msg;
       performance_stats_msg.map_memory_usage = map_memory_usage;
       performance_stats_msg.total_pointcloud_integration_time =
           total_pointcloud_integration_time;
@@ -205,7 +205,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
     ROS_INFO_STREAM("Map evaluation overview:\n"
                     << map_evaluation_summary.toString());
 
-    wavemap_2d_msgs::MapEvaluationSummary map_evaluation_summary_msg;
+    wavemap_msgs::MapEvaluationSummary map_evaluation_summary_msg;
     map_evaluation_summary_msg.is_valid = map_evaluation_summary.is_valid;
     map_evaluation_summary_msg.num_true_positive =
         map_evaluation_summary.num_true_positive;
@@ -303,11 +303,10 @@ void Wavemap2DServer::advertiseTopics(ros::NodeHandle& nh_private) {
       nh_private.advertise<visualization_msgs::MarkerArray>(
           "occupancy_grid_ground_truth", 10, true);
   map_evaluation_summary_pub_ =
-      nh_private.advertise<wavemap_2d_msgs::MapEvaluationSummary>(
+      nh_private.advertise<wavemap_msgs::MapEvaluationSummary>(
           "map_evaluation_summary", 10, true);
-  performance_stats_pub_ =
-      nh_private.advertise<wavemap_2d_msgs::PerformanceStats>(
-          "performance_stats", 10, true);
+  performance_stats_pub_ = nh_private.advertise<wavemap_msgs::PerformanceStats>(
+      "performance_stats", 10, true);
 }
 
 void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
@@ -433,4 +432,4 @@ bool Wavemap2DServer::Config::isValid(const bool verbose) {
   return all_valid;
 }
 
-}  // namespace wavemap_2d
+}  // namespace wavemap
