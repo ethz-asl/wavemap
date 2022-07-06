@@ -15,5 +15,5 @@
 
   <depend>gazebo</depend>
   <depend>gazebo_ros</depend>
-  <depend>wavemap_2d_ground_truth</depend>
+  <depend>wavemap_ground_truth</depend>
 </package>

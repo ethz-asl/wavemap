@@ -1,5 +1,5 @@
 <launch>
-  <arg name="ply_input_file_path" default="$(find wavemap_2d_ground_truth)/sample_data/ply/bun_zipper.ply"/>
+  <arg name="ply_input_file_path" default="$(find wavemap_ground_truth)/sample_data/ply/bun_zipper.ply"/>
   <arg name="occupancy_grid_output_file_path" default="$(env HOME)/bun_zipper.occ"/>
 
   <arg name="resolution" default="0.1" />
@@ -13,7 +13,7 @@
   <arg name="rotation_qz" default="0.7071068" />
   <arg name="rotation_qw" default="0.7071068" />
 
-  <node name="ply_to_occupancy_grid" pkg="wavemap_2d_ground_truth" type="ply_to_occupancy_grid" output="screen"
+  <node name="ply_to_occupancy_grid" pkg="wavemap_ground_truth" type="ply_to_occupancy_grid" output="screen"
         args="-ply_input_filepath=$(arg ply_input_file_path)
               -occupancy_grid_output_filepath=$(arg occupancy_grid_output_file_path)
               -resolution=$(arg resolution)

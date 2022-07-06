@@ -20,7 +20,7 @@ DEFINE_bool(
     "Whether the estimated map was saved with floating point precision.");
 DEFINE_string(ground_truth_map_file_path, "",
               "Path to the ground truth map (e.g. generated with "
-              "wavemap_2d_ground_truth).");
+              "wavemap_ground_truth).");
 DEFINE_double(ground_truth_map_min_cell_width, 0.01,
               "Resolution of the ground truth map in meters.");
 DEFINE_bool(

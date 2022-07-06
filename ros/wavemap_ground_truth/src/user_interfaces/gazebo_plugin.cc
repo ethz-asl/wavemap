@@ -9,7 +9,7 @@ namespace gazebo {
 GZ_REGISTER_WORLD_PLUGIN(Wavemap2DGroundTruthPlugin)
 
 Wavemap2DGroundTruthPlugin::Wavemap2DGroundTruthPlugin()
-    : WorldPlugin(), nh_private_("~/wavemap_2d_ground_truth_plugin") {}
+    : WorldPlugin(), nh_private_("~/wavemap_ground_truth_plugin") {}
 
 void Wavemap2DGroundTruthPlugin::Load(physics::WorldPtr world,
                                       sdf::ElementPtr _sdf) {
