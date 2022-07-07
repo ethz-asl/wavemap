@@ -56,7 +56,7 @@ visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
     }
 
     // Determine the cell's position
-    const Point cell_center =
+    const Point2D cell_center =
         convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
 
     // Create the colored square

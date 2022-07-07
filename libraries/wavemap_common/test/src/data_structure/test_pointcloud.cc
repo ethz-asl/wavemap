@@ -5,14 +5,17 @@
 #include "wavemap_common/test/fixture_base.h"
 
 namespace wavemap {
+// TODO(victorr): Also test for 3D
+constexpr int kDim = 2;
+
 class PointcloudTest : public FixtureBase {
  protected:
-  static void compare(const std::vector<Point>& point_vector,
+  static void compare(const std::vector<Point<kDim>>& point_vector,
                       const Pointcloud<>& pointcloud) {
     ASSERT_EQ(point_vector.empty(), pointcloud.empty());
     ASSERT_EQ(point_vector.size(), pointcloud.size());
     size_t point_idx = 0u;
-    for (const Point& point : point_vector) {
+    for (const Point<kDim>& point : point_vector) {
       EXPECT_EQ(point, pointcloud[point_idx++]);
     }
   }
@@ -75,13 +78,13 @@ TEST_F(PointcloudTest, GetAndSetSize) {
 }
 
 TEST_F(PointcloudTest, InitializeFromStl) {
-  std::vector<Point> empty_point_vector;
+  std::vector<Point<kDim>> empty_point_vector;
   Pointcloud<> empty_pointcloud(empty_point_vector);
   EXPECT_TRUE(empty_pointcloud.empty());
 
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    std::vector<Point> random_point_vector = getRandomPointVector();
+    const auto random_point_vector = getRandomPointVector<kDim>();
     Pointcloud<> random_pointcloud(random_point_vector);
     compare(random_point_vector, random_pointcloud);
   }
@@ -117,7 +120,7 @@ TEST_F(PointcloudTest, CopyInitializationAndAssignment) {
 TEST_F(PointcloudTest, Iterators) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    std::vector<Point> random_point_vector = getRandomPointVector();
+    const auto random_point_vector = getRandomPointVector<kDim>();
 
     Pointcloud<> random_pointcloud(random_point_vector);
     size_t point_idx = 0u;
@@ -151,9 +154,9 @@ class PosedPointcloudTest : public PointcloudTest {
                             pointcloud_to_test.getPointsGlobal());
   }
 
-  Transformation getRandomTransformation() const {
-    const Rotation random_rotation(getRandomAngle());
-    const Vector random_translation(Point().setRandom());
+  Transformation2D getRandomTransformation() const {
+    const Rotation2D random_rotation(getRandomAngle());
+    const auto random_translation = Vector<kDim>::Random();
     return {random_rotation, random_translation};
   }
 };
@@ -162,8 +165,8 @@ TEST_F(PosedPointcloudTest, InitializationAndCopying) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Initialize
-    const Transformation random_transformation = getRandomTransformation();
-    const Pointcloud<> random_pointcloud(getRandomPointVector());
+    const Transformation2D random_transformation = getRandomTransformation();
+    const Pointcloud<> random_pointcloud(getRandomPointVector<kDim>());
     PosedPointcloud random_posed_pointcloud(random_transformation,
                                             random_pointcloud);
 
@@ -184,22 +187,23 @@ TEST_F(PosedPointcloudTest, InitializationAndCopying) {
   }
 }
 
-TEST_F(PosedPointcloudTest, Transformation) {
+TEST_F(PosedPointcloudTest, Transformation2D) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const std::vector<Point> random_points_C = getRandomPointVector();
-    const Transformation random_T_W_C = getRandomTransformation();
+    const std::vector<Point<kDim>> random_points_C =
+        getRandomPointVector<kDim>();
+    const Transformation2D random_T_W_C = getRandomTransformation();
     PosedPointcloud random_posed_pointcloud(random_T_W_C,
                                             Pointcloud<>(random_points_C));
 
     Pointcloud<> pointcloud_W = random_posed_pointcloud.getPointsGlobal();
     ASSERT_EQ(pointcloud_W.size(), random_points_C.size());
     size_t point_idx = 0u;
-    for (const Point& point_C : random_points_C) {
-      const Point point_W = random_T_W_C * point_C;
-      const Point& posed_pointcloud_point_W = pointcloud_W[point_idx];
+    for (const Point<kDim>& point_C : random_points_C) {
+      const Point<kDim> point_W = random_T_W_C * point_C;
+      const Point<kDim>& posed_pointcloud_point_W = pointcloud_W[point_idx];
 
-      for (int axis = 0; axis < Point::Base::RowsAtCompileTime; ++axis) {
+      for (int axis = 0; axis < Point<kDim>::Base::RowsAtCompileTime; ++axis) {
         EXPECT_FLOAT_EQ(point_W[axis], posed_pointcloud_point_W[axis])
             << " mismatch for point " << point_idx << " along axis " << axis;
       }

@@ -20,9 +20,9 @@ class DenseGridTest : public FixtureBase {
 
     int reported_error_count = 0;
     constexpr int kMaxNumReportedErrors = 10;
-    const Index min_index = map_reference.getMinIndex();
-    const Index max_index = map_reference.getMaxIndex();
-    for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
+    const Index2D min_index = map_reference.getMinIndex();
+    const Index2D max_index = map_reference.getMaxIndex();
+    for (Index2D index = min_index; index.x() <= max_index.x(); ++index.x()) {
       for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
         auto reference_value = map_reference.getCellValue(index);
         auto test_value = map_to_test.getCellValue(index);
@@ -45,11 +45,11 @@ class DenseGridTest : public FixtureBase {
 
   DenseGrid<CellType> getRandomMap() {
     DenseGrid<CellType> random_map(getRandomMinCellWidth());
-    const Index min_index = -getRandomIndex().cwiseAbs();
-    const Index max_index = getRandomIndex().cwiseAbs();
+    const Index2D min_index = -getRandomIndex<2>().cwiseAbs();
+    const Index2D max_index = getRandomIndex<2>().cwiseAbs();
     random_map.addToCellValue(min_index, 0.f);
     random_map.addToCellValue(max_index, 0.f);
-    for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
+    for (Index2D index = min_index; index.x() <= max_index.x(); ++index.x()) {
       for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
         random_map.addToCellValue(index, getRandomUpdate());
       }
@@ -72,9 +72,9 @@ TYPED_TEST(DenseGridTest, Initialization) {
   EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);
-  EXPECT_EQ(map.dimensions(), Index(0, 0));
-  EXPECT_EQ(map.getMinIndex(), Index::Zero());
-  EXPECT_EQ(map.getMaxIndex(), Index::Zero());
+  EXPECT_EQ(map.dimensions(), Index2D(0, 0));
+  EXPECT_EQ(map.getMinIndex(), Index2D::Zero());
+  EXPECT_EQ(map.getMaxIndex(), Index2D::Zero());
 }
 
 TYPED_TEST(DenseGridTest, Resizing) {
@@ -82,32 +82,32 @@ TYPED_TEST(DenseGridTest, Resizing) {
   for (int i = 0; i < kNumRepetitions; ++i) {
     DenseGrid<TypeParam> map(TestFixture::getRandomMinCellWidth());
     ASSERT_TRUE(map.empty());
-    ASSERT_EQ(map.dimensions(), Index(0, 0));
+    ASSERT_EQ(map.dimensions(), Index2D(0, 0));
 
-    const std::vector<Index> random_indices =
-        TestFixture::getRandomIndexVector();
+    const std::vector<Index2D> random_indices =
+        TestFixture::template getRandomIndexVector<2>();
 
-    const Index& first_random_index = random_indices[0];
+    const Index2D& first_random_index = random_indices[0];
     map.addToCellValue(first_random_index, 0.f);
     EXPECT_FALSE(map.empty());
-    EXPECT_EQ(map.dimensions(), Index(1, 1));
+    EXPECT_EQ(map.dimensions(), Index2D(1, 1));
     EXPECT_EQ(map.getMinIndex(), first_random_index);
     EXPECT_EQ(map.getMaxIndex(), first_random_index);
 
-    Index min_index = first_random_index;
-    Index max_index = first_random_index;
+    Index2D min_index = first_random_index;
+    Index2D max_index = first_random_index;
     for (auto index_it = ++random_indices.begin();
          index_it != random_indices.end(); ++index_it) {
       min_index = min_index.cwiseMin(*index_it);
       max_index = max_index.cwiseMax(*index_it);
       map.addToCellValue(*index_it, 0.f);
     }
-    Index min_map_size = max_index - min_index + Index::Ones();
+    Index2D min_map_size = max_index - min_index + Index2D::Ones();
     EXPECT_EQ(map.dimensions(), min_map_size);
     EXPECT_EQ(map.getMinIndex(), min_index);
     EXPECT_EQ(map.getMaxIndex(), max_index);
 
-    for (Index index = min_index; index.x() <= max_index.x(); ++index.x()) {
+    for (Index2D index = min_index; index.x() <= max_index.x(); ++index.x()) {
       for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
         EXPECT_FLOAT_EQ(map.getCellValue(index), 0.f);
       }
@@ -115,9 +115,9 @@ TYPED_TEST(DenseGridTest, Resizing) {
 
     map.clear();
     EXPECT_TRUE(map.empty());
-    EXPECT_EQ(map.dimensions(), Index(0, 0));
-    EXPECT_EQ(map.getMinIndex(), Index::Zero());
-    EXPECT_EQ(map.getMaxIndex(), Index::Zero());
+    EXPECT_EQ(map.dimensions(), Index2D(0, 0));
+    EXPECT_EQ(map.getMinIndex(), Index2D::Zero());
+    EXPECT_EQ(map.getMaxIndex(), Index2D::Zero());
   }
 }
 

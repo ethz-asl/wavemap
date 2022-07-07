@@ -66,11 +66,11 @@ int main(int argc, char** argv) {
 
   // Compress
   constexpr FloatingPoint kThreshold = kEpsilon;
-  const Index map_size = estimated_map->dimensions();
+  const Index2D map_size = estimated_map->dimensions();
   const int max_num_passes = int_math::log2_floor(map_size.minCoeff());
 
   const auto min_divisor = static_cast<int>(std::exp2(max_num_passes));
-  Index new_max_index = estimated_map->getMinIndex();
+  Index2D new_max_index = estimated_map->getMinIndex();
   if (map_size.x() % min_divisor != 0) {
     const IndexElement new_x_size =
         (map_size.x() / min_divisor + 1) * min_divisor;
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
 
   // Evaluate compression in a quadtree
   SimpleQuadtree<UnboundedOccupancyCell> quadtree(estimated_map_min_cell_width);
-  for (const Index& index :
+  for (const Index2D& index :
        Grid(estimated_map->getMinIndex(), estimated_map->getMaxIndex())) {
     quadtree.setCellValue(index, estimated_map->getCellValue(index));
   }

@@ -29,8 +29,9 @@ class FixtureBase : public ::testing::Test {
                                                          max_min_cell_width);
   }
 
-  static Point getRandomPoint(FloatingPoint max_distance = 5e2) {
-    return max_distance * Point::Random();
+  template <int dim>
+  static Point<dim> getRandomPoint(FloatingPoint max_distance = 5e2) {
+    return max_distance * Point<dim>::Random();
   }
 
   unsigned int getRandomPointcloudSize(unsigned int min_size = 1u,
@@ -38,10 +39,11 @@ class FixtureBase : public ::testing::Test {
     return random_number_generator_->getRandomInteger(min_size, max_size);
   }
 
-  std::vector<Point> getRandomPointVector() const {
-    std::vector<Point> random_point_vector(getRandomPointcloudSize());
+  template <int dim>
+  std::vector<Point<dim>> getRandomPointVector() const {
+    std::vector<Point<dim>> random_point_vector(getRandomPointcloudSize());
     std::generate(random_point_vector.begin(), random_point_vector.end(),
-                  []() { return getRandomPoint(); });
+                  []() { return getRandomPoint<dim>(); });
     return random_point_vector;
   }
 
@@ -52,8 +54,13 @@ class FixtureBase : public ::testing::Test {
                                                          max_distance);
   }
 
-  Vector getRandomTranslation() const {
-    return {getRandomSignedDistance(), getRandomSignedDistance()};
+  template <int dim>
+  Vector<dim> getRandomTranslation() const {
+    Vector<dim> random_translation;
+    for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+      random_translation[dim_idx] = getRandomSignedDistance();
+    }
+    return random_translation;
   }
 
   FloatingPoint getRandomAngle(FloatingPoint min_angle = -kPi,
@@ -68,35 +75,42 @@ class FixtureBase : public ::testing::Test {
                                                       max_coordinate);
   }
 
-  Index getRandomIndex(Index min_index = Index::Constant(-1e3),
-                       Index max_index = Index::Constant(1e3)) const {
-    return {getRandomIndexElement(min_index.x(), max_index.x()),
-            getRandomIndexElement(min_index.y(), max_index.y())};
+  template <int dim>
+  Index<dim> getRandomIndex(
+      Index<dim> min_index = Index<dim>::Constant(-1e3),
+      Index<dim> max_index = Index<dim>::Constant(1e3)) const {
+    Index<dim> random_index;
+    for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+      random_index[dim_idx] =
+          getRandomIndexElement(min_index[dim_idx], max_index[dim_idx]);
+    }
+    return random_index;
   }
 
-  std::vector<Index> getRandomIndexVector(
+  template <int dim>
+  std::vector<Index<dim>> getRandomIndexVector(
       size_t min_num_indices = 2u, size_t max_num_indices = 100u,
-      Index min_index = Index::Constant(-1e3),
-      Index max_index = Index::Constant(1e3)) const {
+      Index<dim> min_index = Index<dim>::Constant(-1e3),
+      Index<dim> max_index = Index<dim>::Constant(1e3)) const {
     const size_t num_indices = random_number_generator_->getRandomInteger(
         min_num_indices, max_num_indices);
 
-    std::vector<Index> random_indices(num_indices);
+    std::vector<Index<dim>> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(),
                   [&]() { return getRandomIndex(min_index, max_index); });
     return random_indices;
   }
 
-  std::vector<Index> getRandomIndexVector(const Index& min_index,
-                                          const Index& max_index,
-                                          size_t min_num_indices = 2u,
-                                          size_t max_num_indices = 100u) const {
+  template <int dim>
+  std::vector<Index<dim>> getRandomIndexVector(
+      const Index<dim>& min_index, const Index<dim>& max_index,
+      size_t min_num_indices = 2u, size_t max_num_indices = 100u) const {
     CHECK((min_index.array() < max_index.array()).all());
 
     const size_t num_indices = random_number_generator_->getRandomInteger(
         min_num_indices, max_num_indices);
 
-    std::vector<Index> random_indices(num_indices);
+    std::vector<Index<dim>> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(),
                   [&]() { return getRandomIndex(min_index, max_index); });
     return random_indices;

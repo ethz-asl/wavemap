@@ -3,7 +3,7 @@
 namespace wavemap {
 bool PointcloudIntegrator::isPointcloudValid(
     const PosedPointcloud<>& pointcloud) {
-  if (const Point& origin = pointcloud.getOrigin(); origin.hasNaN()) {
+  if (const Point2D& origin = pointcloud.getOrigin(); origin.hasNaN()) {
     LOG(WARNING) << "Ignoring request to integrate pointcloud whose origin "
                     "contains NaNs:\n"
                  << origin;

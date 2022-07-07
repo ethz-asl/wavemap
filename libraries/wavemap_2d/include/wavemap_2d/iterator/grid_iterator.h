@@ -8,16 +8,16 @@
 namespace wavemap {
 class Grid {
  public:
-  Grid(Index min_index, const Index& max_index)
+  Grid(Index2D min_index, const Index2D& max_index)
       : min_index_(std::move(min_index)),
-        max_index_(max_index + Index::Ones()) {}
+        max_index_(max_index + Index2D::Ones()) {}
 
   class Iterator {
    public:
     using difference_type = std::ptrdiff_t;
-    using value_type = Index;
-    using pointer = Index*;
-    using reference = Index&;
+    using value_type = Index2D;
+    using pointer = Index2D*;
+    using reference = Index2D&;
     using iterator_category = std::forward_iterator_tag;
 
     explicit Iterator(const Grid& grid)
@@ -28,7 +28,7 @@ class Grid {
           current_index_(end ? grid_.max_index_.x() : grid_.min_index_.x(),
                          grid_.min_index_.y()) {}
 
-    const Index& operator*() const { return current_index_; }
+    const Index2D& operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
       if (++current_index_.y() == grid_.max_index_.y()) {
         current_index_.y() = grid_.min_index_.y();
@@ -50,15 +50,15 @@ class Grid {
 
    private:
     const Grid& grid_;
-    Index current_index_;
+    Index2D current_index_;
   };
 
   Iterator begin() const { return Iterator{*this}; }
   Iterator end() const { return Iterator{*this, /*end*/ true}; }
 
  private:
-  const Index min_index_;
-  const Index max_index_;
+  const Index2D min_index_;
+  const Index2D max_index_;
 };
 }  // namespace wavemap
 

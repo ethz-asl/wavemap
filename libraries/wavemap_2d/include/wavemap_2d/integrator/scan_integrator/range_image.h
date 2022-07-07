@@ -45,10 +45,10 @@ class RangeImage {
     return data_(0, index);
   }
 
-  static FloatingPoint bearingToAngle(const Vector& bearing) {
+  static FloatingPoint bearingToAngle(const Vector2D& bearing) {
     return std::atan2(bearing.y(), bearing.x());
   }
-  static Vector angleToBearing(FloatingPoint angle) {
+  static Vector2D angleToBearing(FloatingPoint angle) {
     return {std::cos(angle), std::sin(angle)};
   }
 
@@ -65,12 +65,12 @@ class RangeImage {
     return min_angle_ + static_cast<FloatingPoint>(index) * angle_increment_;
   }
 
-  RangeImageIndex bearingToNearestIndex(const Vector& bearing) const {
+  RangeImageIndex bearingToNearestIndex(const Vector2D& bearing) const {
     const FloatingPoint angle = bearingToAngle(bearing);
     const auto range_image_index = angleToNearestIndex(angle);
     return range_image_index;
   }
-  Vector indexToBearing(RangeImageIndex index) const {
+  Vector2D indexToBearing(RangeImageIndex index) const {
     const FloatingPoint angle = indexToAngle(index);
     return angleToBearing(angle);
   }

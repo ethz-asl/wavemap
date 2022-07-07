@@ -8,7 +8,7 @@
 #include "wavemap_ground_truth/geometry.h"
 
 namespace wavemap::ground_truth {
-const std::vector<Index> OccupancyGridCreator::kNeighborOffsets = {
+const std::vector<Index2D> OccupancyGridCreator::kNeighborOffsets = {
     {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1},
 };
 
@@ -25,26 +25,26 @@ void OccupancyGridCreator::integrateTriangle(const Triangle& triangle) {
     Ray intersection_ray(intersecting_segment.start_point.head<2>(),
                          intersecting_segment.end_point.head<2>(),
                          occupancy_grid_.getMinCellWidth());
-    for (const Index& index : intersection_ray) {
+    for (const Index2D& index : intersection_ray) {
       occupancy_grid_.setCellValue(index, 1.f);
     }
   }
 }
 
-void OccupancyGridCreator::floodfillUnoccupied(const Index& start_index) {
-  std::queue<Index> open_queue;
-  std::unordered_set<Index, VoxbloxIndexHash> closed_set;
+void OccupancyGridCreator::floodfillUnoccupied(const Index2D& start_index) {
+  std::queue<Index2D> open_queue;
+  std::unordered_set<Index2D, VoxbloxIndexHash> closed_set;
 
-  const Index min_index = occupancy_grid_.getMinIndex();
-  const Index max_index = occupancy_grid_.getMaxIndex();
+  const Index2D min_index = occupancy_grid_.getMinIndex();
+  const Index2D max_index = occupancy_grid_.getMaxIndex();
 
   open_queue.emplace(start_index);
   while (!open_queue.empty()) {
-    const Index current_index = open_queue.front();
+    const Index2D current_index = open_queue.front();
     open_queue.pop();
 
-    for (const Index& neighbor_offset : kNeighborOffsets) {
-      const Index neighbor_index = current_index + neighbor_offset;
+    for (const Index2D& neighbor_offset : kNeighborOffsets) {
+      const Index2D neighbor_index = current_index + neighbor_offset;
       if ((neighbor_index.array() < min_index.array() ||
            max_index.array() < neighbor_index.array())
               .any()) {

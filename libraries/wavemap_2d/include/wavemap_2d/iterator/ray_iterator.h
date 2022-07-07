@@ -11,10 +11,10 @@ namespace wavemap {
 //       https://github.com/ethz-asl/voxblox/blob/master/voxblox/include/voxblox/integrator/integrator_utils.h#L100
 class Ray {
  public:
-  Ray(const Point& start_point, const Point& end_point,
+  Ray(const Point2D& start_point, const Point2D& end_point,
       FloatingPoint min_cell_width) {
-    const Point start_point_scaled = start_point / min_cell_width;
-    const Point end_point_scaled = end_point / min_cell_width;
+    const Point2D start_point_scaled = start_point / min_cell_width;
+    const Point2D end_point_scaled = end_point / min_cell_width;
     if (start_point_scaled.hasNaN() || end_point_scaled.hasNaN()) {
       ray_length_in_steps_ = 0u;
       return;
@@ -22,16 +22,16 @@ class Ray {
 
     start_index_ = convert::scaledPointToNearestIndex(start_point_scaled);
     end_index_ = convert::scaledPointToNearestIndex(end_point_scaled);
-    const Index diff_index = end_index_ - start_index_;
+    const Index2D diff_index = end_index_ - start_index_;
     ray_length_in_steps_ = diff_index.cwiseAbs().sum() + 1u;
 
-    const Vector ray_scaled = end_point_scaled - start_point_scaled;
+    const Vector2D ray_scaled = end_point_scaled - start_point_scaled;
     ray_step_signs_ = ray_scaled.cwiseSign().cast<IndexElement>();
 
-    const Index corrected_step = ray_step_signs_.cwiseMax(0);
-    const Point start_scaled_shifted =
+    const Index2D corrected_step = ray_step_signs_.cwiseMax(0);
+    const Point2D start_scaled_shifted =
         start_point_scaled - start_index_.cast<FloatingPoint>();
-    const Vector distance_to_boundaries =
+    const Vector2D distance_to_boundaries =
         corrected_step.cast<FloatingPoint>() - start_scaled_shifted;
 
     t_to_next_boundary_init_ =
@@ -58,7 +58,7 @@ class Ray {
       }
     }
 
-    Index operator*() const { return current_index_; }
+    Index2D operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
       int t_min_idx;
       t_to_next_boundary_.minCoeff(&t_min_idx);
@@ -85,21 +85,21 @@ class Ray {
    private:
     const Ray& ray_;
     unsigned int current_step_ = 0u;
-    Index current_index_;
-    Vector t_to_next_boundary_;
+    Index2D current_index_;
+    Vector2D t_to_next_boundary_;
   };
 
   Iterator begin() const { return Iterator{*this}; }
   Iterator end() const { return Iterator{*this, /*end*/ true}; }
 
  private:
-  Index start_index_;
-  Index end_index_;
+  Index2D start_index_;
+  Index2D end_index_;
   unsigned int ray_length_in_steps_;
 
-  Index ray_step_signs_;
-  Vector t_step_size_;
-  Vector t_to_next_boundary_init_;
+  Index2D ray_step_signs_;
+  Vector2D t_step_size_;
+  Vector2D t_to_next_boundary_init_;
 };
 }  // namespace wavemap
 

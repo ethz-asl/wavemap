@@ -24,17 +24,17 @@ void FixedResolutionIntegrator::integratePointcloud(
   // Compute the min and max map indices that could be affected by the cloud
   const FloatingPoint min_cell_width = occupancy_map_->getMinCellWidth();
   const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
-  const Index aabb_min_index =
+  const Index2D aabb_min_index =
       convert::pointToFloorIndex(aabb.min, min_cell_width_inv);
-  const Index aabb_max_index =
+  const Index2D aabb_max_index =
       convert::pointToCeilIndex(aabb.max, min_cell_width_inv);
 
   // Iterate over all the cells in the AABB and update the map when needed
-  const Transformation T_C_W = pointcloud.getPose().inverse();
-  for (const Index& index : Grid(aabb_min_index, aabb_max_index)) {
-    const Point W_cell_center =
+  const Transformation2D T_C_W = pointcloud.getPose().inverse();
+  for (const Index2D& index : Grid(aabb_min_index, aabb_max_index)) {
+    const Point2D W_cell_center =
         convert::indexToCenterPoint(index, min_cell_width);
-    const Point C_cell_center = T_C_W * W_cell_center;
+    const Point2D C_cell_center = T_C_W * W_cell_center;
     const FloatingPoint update =
         computeUpdateForCell(range_image, C_cell_center);
     if (kEpsilon < std::abs(update)) {
@@ -43,12 +43,12 @@ void FixedResolutionIntegrator::integratePointcloud(
   }
 }
 
-std::pair<RangeImage, AABB<Point>>
+std::pair<RangeImage, AABB<Point2D>>
 FixedResolutionIntegrator::computeRangeImageAndAABB(
     const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
     FloatingPoint max_angle, Eigen::Index num_beams) {
   RangeImage range_image(min_angle, max_angle, num_beams);
-  AABB<Point> aabb;
+  AABB<Point2D> aabb;
 
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
@@ -71,11 +71,11 @@ FixedResolutionIntegrator::computeRangeImageAndAABB(
     range_image[range_image_index] = range;
 
     // Update the AABB (in world frame)
-    Point C_point_truncated = C_point;
+    Point2D C_point_truncated = C_point;
     if (BeamModel::kRangeMax < range) {
       C_point_truncated *= BeamModel::kRangeMax / range;
     }
-    const Point W_point_truncated = pointcloud.getPose() * C_point_truncated;
+    const Point2D W_point_truncated = pointcloud.getPose() * C_point_truncated;
     aabb.includePoint(W_point_truncated);
   }
 
@@ -84,8 +84,8 @@ FixedResolutionIntegrator::computeRangeImageAndAABB(
       std::max(std::sin(BeamModel::kAngleThresh) *
                    (BeamModel::kRangeMax + BeamModel::kRangeDeltaThresh),
                BeamModel::kRangeDeltaThresh);
-  aabb.min -= Vector::Constant(max_lateral_component);
-  aabb.max += Vector::Constant(max_lateral_component);
+  aabb.min -= Vector2D::Constant(max_lateral_component);
+  aabb.max += Vector2D::Constant(max_lateral_component);
 
   return {range_image, aabb};
 }

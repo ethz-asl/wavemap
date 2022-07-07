@@ -16,8 +16,8 @@ namespace wavemap {
 template <typename CellT>
 void DenseGrid<CellT>::clear() {
   data_.resize(0, 0);
-  min_external_index_ = Index::Zero();
-  max_external_index_ = Index::Zero();
+  min_external_index_ = Index2D::Zero();
+  max_external_index_ = Index2D::Zero();
 }
 
 template <typename CellT>
@@ -27,9 +27,9 @@ void DenseGrid<CellT>::prune() {
   }
 
   bool has_non_zero_cell = false;
-  Index min_non_zero_index = getMaxInternalIndex();
-  Index max_non_zero_index = getMinInternalIndex();
-  for (const Index& cell_index :
+  Index2D min_non_zero_index = getMaxInternalIndex();
+  Index2D max_non_zero_index = getMinInternalIndex();
+  for (const Index2D& cell_index :
        Grid(getMinInternalIndex(), getMaxInternalIndex())) {
     const CellDataSpecialized& cell_value =
         data_(cell_index.x(), cell_index.y());
@@ -41,8 +41,8 @@ void DenseGrid<CellT>::prune() {
   }
 
   if (has_non_zero_cell) {
-    const Index new_size =
-        max_non_zero_index - min_non_zero_index + Index::Ones();
+    const Index2D new_size =
+        max_non_zero_index - min_non_zero_index + Index2D::Ones();
     DataGridSpecialized new_grid_map =
         data_.block(min_non_zero_index.x(), min_non_zero_index.y(),
                     new_size.x(), new_size.y());
@@ -55,7 +55,7 @@ void DenseGrid<CellT>::prune() {
 }
 
 template <typename CellT>
-bool DenseGrid<CellT>::hasCell(const Index& index) const {
+bool DenseGrid<CellT>::hasCell(const Index2D& index) const {
   if (!empty()) {
     return (min_external_index_.array() <= index.array() &&
             index.array() <= max_external_index_.array())
@@ -65,7 +65,7 @@ bool DenseGrid<CellT>::hasCell(const Index& index) const {
 }
 
 template <typename CellT>
-FloatingPoint DenseGrid<CellT>::getCellValue(const Index& index) const {
+FloatingPoint DenseGrid<CellT>::getCellValue(const Index2D& index) const {
   const CellDataSpecialized* cell_data = accessCellData(index);
   if (cell_data) {
     return static_cast<FloatingPoint>(*cell_data);
@@ -75,7 +75,7 @@ FloatingPoint DenseGrid<CellT>::getCellValue(const Index& index) const {
 }
 
 template <typename CellT>
-void DenseGrid<CellT>::setCellValue(const Index& index,
+void DenseGrid<CellT>::setCellValue(const Index2D& index,
                                     FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
@@ -88,7 +88,7 @@ void DenseGrid<CellT>::setCellValue(const Index& index,
 }
 
 template <typename CellT>
-void DenseGrid<CellT>::addToCellValue(const Index& index,
+void DenseGrid<CellT>::addToCellValue(const Index2D& index,
                                       FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
@@ -102,11 +102,11 @@ void DenseGrid<CellT>::addToCellValue(const Index& index,
 template <typename CellT>
 void DenseGrid<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  for (const Index& internal_cell_index :
+  for (const Index2D& internal_cell_index :
        Grid(getMinInternalIndex(), getMaxInternalIndex())) {
     const CellDataSpecialized& cell_data =
         data_(internal_cell_index.x(), internal_cell_index.y());
-    const Index cell_index = toExternal(internal_cell_index);
+    const Index2D cell_index = toExternal(internal_cell_index);
     const QuadtreeIndex hierarchical_cell_index =
         convert::indexAndHeightToNodeIndex(cell_index, 0);
     visitor_fn(hierarchical_cell_index, cell_data);
@@ -220,7 +220,7 @@ bool DenseGrid<CellT>::load(const std::string& file_path_prefix,
 
 template <typename CellT>
 typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
-    const Index& index, bool auto_allocate) {
+    const Index2D& index, bool auto_allocate) {
   if (empty()) {
     if (auto_allocate) {
       min_external_index_ = index;
@@ -234,12 +234,15 @@ typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
 
   if (!hasCell(index)) {
     if (auto_allocate) {
-      const Index new_grid_map_max_index = max_external_index_.cwiseMax(index);
-      const Index new_grid_map_min_index = min_external_index_.cwiseMin(index);
-      const Index min_index_diff = min_external_index_ - new_grid_map_min_index;
+      const Index2D new_grid_map_max_index =
+          max_external_index_.cwiseMax(index);
+      const Index2D new_grid_map_min_index =
+          min_external_index_.cwiseMin(index);
+      const Index2D min_index_diff =
+          min_external_index_ - new_grid_map_min_index;
 
-      const Index new_grid_map_dim =
-          new_grid_map_max_index - new_grid_map_min_index + Index::Ones();
+      const Index2D new_grid_map_dim =
+          new_grid_map_max_index - new_grid_map_min_index + Index2D::Ones();
       DataGridSpecialized new_grid_map =
           DataGridSpecialized::Zero(new_grid_map_dim.x(), new_grid_map_dim.y());
 
@@ -254,17 +257,17 @@ typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
     }
   }
 
-  const Index internal_index = toInternal(index);
+  const Index2D internal_index = toInternal(index);
   return &data_.coeffRef(internal_index.x(), internal_index.y());
 }
 
 template <typename CellT>
 const typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
-    const Index& index) const {
+    const Index2D& index) const {
   if (empty() || !hasCell(index)) {
     return nullptr;
   }
-  const Index internal_index = toInternal(index);
+  const Index2D internal_index = toInternal(index);
   return &data_.coeff(internal_index.x(), internal_index.y());
 }
 }  // namespace wavemap

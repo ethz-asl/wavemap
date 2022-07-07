@@ -6,12 +6,12 @@
 namespace wavemap {
 static void GridIterationNestedForLoop(benchmark::State& state) {
   // Code before the loop is not measured
-  const Index bottom_left_idx{-1000, -1000};
-  const Index top_right_idx{1000, 1000};
+  const Index2D bottom_left_idx{-1000, -1000};
+  const Index2D top_right_idx{1000, 1000};
   for (auto _ : state) {
     // Code inside this loop is measured repeatedly
     int count = 0;
-    for (Index index = bottom_left_idx; index.x() <= top_right_idx.x();
+    for (Index2D index = bottom_left_idx; index.x() <= top_right_idx.x();
          ++index.x()) {
       for (index.y() = bottom_left_idx.y(); index.y() <= top_right_idx.y();
            ++index.y()) {
@@ -26,8 +26,8 @@ BENCHMARK(GridIterationNestedForLoop);
 
 static void GridIterationRangeBasedLoop(benchmark::State& state) {
   // Code before the loop is not measured
-  const Index bottom_left_idx{-1000, -1000};
-  const Index top_right_idx{1000, 1000};
+  const Index2D bottom_left_idx{-1000, -1000};
+  const Index2D top_right_idx{1000, 1000};
   for (auto _ : state) {
     // Code inside this loop is measured repeatedly
     const Grid range(bottom_left_idx, top_right_idx);

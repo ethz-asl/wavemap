@@ -5,7 +5,7 @@
 
 namespace wavemap {
 inline FloatingPoint FixedResolutionIntegrator::computeUpdateForCell(
-    const RangeImage& range_image, const Point& C_cell_center) {
+    const RangeImage& range_image, const Point2D& C_cell_center) {
   const FloatingPoint d_C_cell = C_cell_center.norm();
   if (d_C_cell < kEpsilon || BeamModel::kRangeMax < d_C_cell) {
     return 0.f;

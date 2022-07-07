@@ -91,16 +91,16 @@ QuadtreeIndex::ChildArray DifferencingQuadtree<CellT>::getFirstChildIndices()
 }
 
 template <typename CellT>
-Index DifferencingQuadtree<CellT>::getMinIndex() const {
+Index2D DifferencingQuadtree<CellT>::getMinIndex() const {
   if (empty()) {
     return {};
   }
 
-  Index min_index = getMaxPossibleIndex();
+  Index2D min_index = getMaxPossibleIndex();
   forEachLeaf(
       [&min_index](const QuadtreeIndex& node_index, FloatingPoint value) {
         if (OccupancyState::isObserved(value)) {
-          const Index index = convert::nodeIndexToMinCornerIndex(node_index);
+          const Index2D index = convert::nodeIndexToMinCornerIndex(node_index);
           min_index = min_index.cwiseMin(index);
         }
       });
@@ -108,16 +108,16 @@ Index DifferencingQuadtree<CellT>::getMinIndex() const {
 }
 
 template <typename CellT>
-Index DifferencingQuadtree<CellT>::getMaxIndex() const {
+Index2D DifferencingQuadtree<CellT>::getMaxIndex() const {
   if (empty()) {
     return {};
   }
 
-  Index max_index = getMinPossibleIndex();
+  Index2D max_index = getMinPossibleIndex();
   forEachLeaf(
       [&max_index](const QuadtreeIndex& node_index, FloatingPoint value) {
         if (OccupancyState::isObserved(value)) {
-          const Index index = convert::nodeIndexToMaxCornerIndex(node_index);
+          const Index2D index = convert::nodeIndexToMaxCornerIndex(node_index);
           max_index = max_index.cwiseMax(index);
         }
       });
@@ -125,20 +125,20 @@ Index DifferencingQuadtree<CellT>::getMaxIndex() const {
 }
 
 template <typename CellT>
-Index DifferencingQuadtree<CellT>::getMinPossibleIndex() const {
+Index2D DifferencingQuadtree<CellT>::getMinPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
-Index DifferencingQuadtree<CellT>::getMaxPossibleIndex() const {
+Index2D DifferencingQuadtree<CellT>::getMaxPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
 FloatingPoint DifferencingQuadtree<CellT>::getCellValue(
-    const Index& index) const {
+    const Index2D& index) const {
   const QuadtreeIndex deepest_possible_node_index = toInternal(index);
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       deepest_possible_node_index.computeRelativeChildIndices<kMaxHeight>();
@@ -155,7 +155,7 @@ FloatingPoint DifferencingQuadtree<CellT>::getCellValue(
 }
 
 template <typename CellT>
-void DifferencingQuadtree<CellT>::setCellValue(const Index& index,
+void DifferencingQuadtree<CellT>::setCellValue(const Index2D& index,
                                                FloatingPoint new_value) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   setCellValue(node_index, new_value);
@@ -175,7 +175,7 @@ void DifferencingQuadtree<CellT>::setCellValue(const QuadtreeIndex& node_index,
 }
 
 template <typename CellT>
-void DifferencingQuadtree<CellT>::addToCellValue(const Index& index,
+void DifferencingQuadtree<CellT>::addToCellValue(const Index2D& index,
                                                  FloatingPoint update) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   addToCellValue(node_index, update);

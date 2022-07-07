@@ -76,16 +76,16 @@ QuadtreeIndex::ChildArray SimpleQuadtree<CellT>::getFirstChildIndices() const {
 }
 
 template <typename CellT>
-Index SimpleQuadtree<CellT>::getMinIndex() const {
+Index2D SimpleQuadtree<CellT>::getMinIndex() const {
   if (empty()) {
     return {};
   }
 
-  Index min_index = getMaxPossibleIndex();
+  Index2D min_index = getMaxPossibleIndex();
   forEachLeaf(
       [&min_index](const QuadtreeIndex& node_index, FloatingPoint value) {
         if (OccupancyState::isObserved(value)) {
-          const Index index = convert::nodeIndexToMinCornerIndex(node_index);
+          const Index2D index = convert::nodeIndexToMinCornerIndex(node_index);
           min_index = min_index.cwiseMin(index);
         }
       });
@@ -93,16 +93,16 @@ Index SimpleQuadtree<CellT>::getMinIndex() const {
 }
 
 template <typename CellT>
-Index SimpleQuadtree<CellT>::getMaxIndex() const {
+Index2D SimpleQuadtree<CellT>::getMaxIndex() const {
   if (empty()) {
     return {};
   }
 
-  Index max_index = getMinPossibleIndex();
+  Index2D max_index = getMinPossibleIndex();
   forEachLeaf(
       [&max_index](const QuadtreeIndex& node_index, FloatingPoint value) {
         if (OccupancyState::isObserved(value)) {
-          const Index index = convert::nodeIndexToMaxCornerIndex(node_index);
+          const Index2D index = convert::nodeIndexToMaxCornerIndex(node_index);
           max_index = max_index.cwiseMax(index);
         }
       });
@@ -110,19 +110,19 @@ Index SimpleQuadtree<CellT>::getMaxIndex() const {
 }
 
 template <typename CellT>
-Index SimpleQuadtree<CellT>::getMinPossibleIndex() const {
+Index2D SimpleQuadtree<CellT>::getMinPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
-Index SimpleQuadtree<CellT>::getMaxPossibleIndex() const {
+Index2D SimpleQuadtree<CellT>::getMaxPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
-FloatingPoint SimpleQuadtree<CellT>::getCellValue(const Index& index) const {
+FloatingPoint SimpleQuadtree<CellT>::getCellValue(const Index2D& index) const {
   const NodeType* deepest_node_at_index = getDeepestNodeAtIndex(index);
   if (deepest_node_at_index) {
     return deepest_node_at_index->data();
@@ -131,7 +131,7 @@ FloatingPoint SimpleQuadtree<CellT>::getCellValue(const Index& index) const {
 }
 
 template <typename CellT>
-void SimpleQuadtree<CellT>::setCellValue(const Index& index,
+void SimpleQuadtree<CellT>::setCellValue(const Index2D& index,
                                          FloatingPoint new_value) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   setCellValue(node_index, new_value);
@@ -151,7 +151,7 @@ void SimpleQuadtree<CellT>::setCellValue(const QuadtreeIndex& node_index,
 }
 
 template <typename CellT>
-void SimpleQuadtree<CellT>::addToCellValue(const Index& index,
+void SimpleQuadtree<CellT>::addToCellValue(const Index2D& index,
                                            FloatingPoint update) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   addToCellValue(node_index, update);
@@ -225,7 +225,7 @@ bool SimpleQuadtree<CellT>::load(const std::string& /*file_path_prefix*/,
 
 template <typename CellT>
 const typename SimpleQuadtree<CellT>::NodeType*
-SimpleQuadtree<CellT>::getDeepestNodeAtIndex(const Index& index) const {
+SimpleQuadtree<CellT>::getDeepestNodeAtIndex(const Index2D& index) const {
   const QuadtreeIndex deepest_possible_internal_node_index = toInternal(index);
   const NodeType* node = &quadtree_.getRootNode();
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =

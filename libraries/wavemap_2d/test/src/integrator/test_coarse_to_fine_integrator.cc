@@ -11,8 +11,9 @@
 namespace wavemap {
 class CoarseToFineIntegratorTest : public FixtureBase {
  protected:
-  Transformation getRandomTransformation() const {
-    return {Transformation::Rotation(getRandomAngle()), getRandomTranslation()};
+  Transformation2D getRandomTransformation() const {
+    return {Transformation2D::Rotation(getRandomAngle()),
+            getRandomTranslation<2>()};
   }
 
   PosedPointcloud<> getRandomPointcloud(FloatingPoint min_angle,
@@ -165,7 +166,7 @@ TEST_F(CoarseToFineIntegratorTest, ApproxAtan2) {
   for (int i = 0; i <= kNumAngles; ++i) {
     const FloatingPoint angle = kTwoPi * static_cast<FloatingPoint>(i) /
                                 static_cast<FloatingPoint>(kNumAngles);
-    const Vector bearing{std::cos(angle), std::sin(angle)};
+    const Vector2D bearing{std::cos(angle), std::sin(angle)};
     EXPECT_NEAR(RangeImageIntersector::atan2_approx(bearing.y(), bearing.x()),
                 std::atan2(bearing.y(), bearing.x()),
                 RangeImageIntersector::kWorstCaseAtan2ApproxError);
@@ -174,10 +175,10 @@ TEST_F(CoarseToFineIntegratorTest, ApproxAtan2) {
 
 TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   struct QueryAndExpectedResults {
-    AABB<Point> W_aabb;
-    Transformation T_W_C;
+    AABB<Point2D> W_aabb;
+    Transformation2D T_W_C;
 
-    QueryAndExpectedResults(AABB<Point> W_aabb, const Transformation& T_W_C)
+    QueryAndExpectedResults(AABB<Point2D> W_aabb, const Transformation2D& T_W_C)
         : W_aabb(std::move(W_aabb)), T_W_C(T_W_C) {}
   };
 
@@ -185,13 +186,13 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   std::vector<QueryAndExpectedResults> tests;
   {
     // Manually define initial AABBs
-    std::list<AABB<Point>> aabbs{{Point::Zero(), Point::Ones()},
-                                 {Point::Zero(), Point{0.5f, 1.f}},
-                                 {Point::Zero(), Point{1.f, 0.5f}}};
+    std::list<AABB<Point2D>> aabbs{{Point2D::Zero(), Point2D::Ones()},
+                                   {Point2D::Zero(), Point2D{0.5f, 1.f}},
+                                   {Point2D::Zero(), Point2D{1.f, 0.5f}}};
     // Insert copies of the initial AABBs flipped across the Y-axis
     std::generate_n(std::back_inserter(aabbs), aabbs.size(),
                     [aabbs_it = aabbs.cbegin()]() mutable {
-                      AABB<Point> aabb_flipped{
+                      AABB<Point2D> aabb_flipped{
                           {-aabbs_it->max.x(), aabbs_it->min.y()},
                           {-aabbs_it->min.x(), aabbs_it->max.y()}};
                       ++aabbs_it;
@@ -200,7 +201,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
     // Insert copies of all above AABBs flipped across the X-axis
     std::generate_n(std::back_inserter(aabbs), aabbs.size(),
                     [aabbs_it = aabbs.cbegin()]() mutable {
-                      AABB<Point> aabb_flipped{
+                      AABB<Point2D> aabb_flipped{
                           {aabbs_it->min.x(), -aabbs_it->max.y()},
                           {aabbs_it->max.x(), -aabbs_it->min.y()}};
                       ++aabbs_it;
@@ -214,19 +215,20 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
     for (const auto& aabb : aabbs) {
       for (int i = 0; i < 1000; ++i) {
         const FloatingPoint random_scale = 1.f / getRandomMinCellWidth();
-        for (const Vector& t_random :
-             {getRandomTranslation(), Vector{getRandomSignedDistance(), 0.f},
-              Vector{0.f, getRandomSignedDistance()}}) {
-          const AABB<Point> aabb_scaled{random_scale * aabb.min,
-                                        random_scale * aabb.max};
-          const AABB<Point> aabb_translated{aabb.min + t_random,
-                                            aabb.max + t_random};
-          const AABB<Point> aabb_scaled_translated{aabb_scaled.min + t_random,
-                                                   aabb_scaled.max + t_random};
-          const Transformation T_W_C_random = getRandomTransformation();
-          tests.emplace_back(aabb_scaled, Transformation());
-          tests.emplace_back(aabb_translated, Transformation());
-          tests.emplace_back(aabb_scaled_translated, Transformation());
+        for (const Vector2D& t_random :
+             {getRandomTranslation<2>(),
+              Vector2D{getRandomSignedDistance(), 0.f},
+              Vector2D{0.f, getRandomSignedDistance()}}) {
+          const AABB<Point2D> aabb_scaled{random_scale * aabb.min,
+                                          random_scale * aabb.max};
+          const AABB<Point2D> aabb_translated{aabb.min + t_random,
+                                              aabb.max + t_random};
+          const AABB<Point2D> aabb_scaled_translated{
+              aabb_scaled.min + t_random, aabb_scaled.max + t_random};
+          const Transformation2D T_W_C_random = getRandomTransformation();
+          tests.emplace_back(aabb_scaled, Transformation2D());
+          tests.emplace_back(aabb_translated, Transformation2D());
+          tests.emplace_back(aabb_scaled_translated, Transformation2D());
           tests.emplace_back(aabb, T_W_C_random);
           tests.emplace_back(aabb_scaled, T_W_C_random);
           tests.emplace_back(aabb_translated, T_W_C_random);
@@ -240,9 +242,9 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   int error_count = 0;
   for (const auto& test : tests) {
     RangeImageIntersector::MinMaxAnglePair reference_angle_pair;
-    const AABB<Point>::Corners C_cell_corners =
+    const AABB<Point2D>::Corners C_cell_corners =
         test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
-    std::array<FloatingPoint, AABB<Point>::kNumCorners> angles{};
+    std::array<FloatingPoint, AABB<Point2D>::kNumCorners> angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
       reference_angle_pair.min_angle = -kPi;
       reference_angle_pair.max_angle = kPi;
@@ -342,31 +344,31 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
     constexpr QuadtreeIndex::Element kMaxHeight = 10;
-    const Index min_index = convert::pointToCeilIndex(
-        random_pointcloud.getOrigin() - Vector::Constant(kMaxDistance),
+    const Index2D min_index = convert::pointToCeilIndex(
+        random_pointcloud.getOrigin() - Vector2D::Constant(kMaxDistance),
         min_cell_width_inv);
-    const Index max_index = convert::pointToCeilIndex(
-        random_pointcloud.getOrigin() + Vector::Constant(kMaxDistance),
+    const Index2D max_index = convert::pointToCeilIndex(
+        random_pointcloud.getOrigin() + Vector2D::Constant(kMaxDistance),
         min_cell_width_inv);
-    for (const Index& index :
+    for (const Index2D& index :
          getRandomIndexVector(min_index, max_index, 50, 100)) {
       const QuadtreeIndex::Element height =
           getRandomNdtreeIndexHeight(2, kMaxHeight);
       const QuadtreeIndex query_index =
           convert::indexAndHeightToNodeIndex(index, height);
-      const Index min_reference_index =
+      const Index2D min_reference_index =
           convert::nodeIndexToMinCornerIndex(query_index);
-      const Index max_reference_index =
+      const Index2D max_reference_index =
           convert::nodeIndexToMaxCornerIndex(query_index);
       bool has_free = false;
       bool has_occupied = false;
       bool has_unknown = false;
-      const Transformation T_C_W = random_pointcloud.getPose().inverse();
-      for (const Index& reference_index :
+      const Transformation2D T_C_W = random_pointcloud.getPose().inverse();
+      for (const Index2D& reference_index :
            Grid(min_reference_index, max_reference_index)) {
-        const Point W_cell_center =
+        const Point2D W_cell_center =
             convert::indexToCenterPoint(reference_index, min_cell_width);
-        const Point C_cell_center = T_C_W * W_cell_center;
+        const Point2D C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
         if (BeamModel::kRangeMax < d_C_cell) {
           has_unknown = true;
@@ -407,14 +409,14 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
 
       const FloatingPoint node_width =
           convert::heightToCellWidth(min_cell_width, query_index.height);
-      const Point W_node_center =
+      const Point2D W_node_center =
           convert::indexToCenterPoint(query_index.position, node_width);
 
-      const Point W_node_bottom_left =
-          W_node_center - Vector::Constant(node_width / 2.f);
-      const AABB<Point> W_cell_aabb{
+      const Point2D W_node_bottom_left =
+          W_node_center - Vector2D::Constant(node_width / 2.f);
+      const AABB<Point2D> W_cell_aabb{
           W_node_bottom_left,
-          W_node_bottom_left + Vector::Constant(node_width)};
+          W_node_bottom_left + Vector2D::Constant(node_width)};
       const RangeImageIntersector::IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
               random_pointcloud.getPose(), W_cell_aabb);

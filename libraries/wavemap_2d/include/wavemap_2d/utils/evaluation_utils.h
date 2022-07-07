@@ -80,7 +80,7 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
                                  DenseGrid<CellType>* error_grid = nullptr);
 
 template <typename Map>
-OccupancyState GetCellState(const Map& map, const Index& index,
+OccupancyState GetCellState(const Map& map, const Index2D& index,
                             const CellSelector& cell_selector,
                             OccupancyState treat_unknown_cells_as);
 }  // namespace wavemap::utils

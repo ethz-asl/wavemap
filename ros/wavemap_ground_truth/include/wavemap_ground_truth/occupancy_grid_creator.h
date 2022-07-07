@@ -22,13 +22,13 @@ class OccupancyGridCreator {
   }
 
   // Floodfill the unoccupied space in the mesh, up to the bounds of the AABB.
-  void floodfillUnoccupied(const Index& start_index);
+  void floodfillUnoccupied(const Index2D& start_index);
 
  private:
   DenseGrid<UnboundedScalarCell> occupancy_grid_;
   FloatingPoint slice_height_;
 
-  static const std::vector<Index> kNeighborOffsets;
+  static const std::vector<Index2D> kNeighborOffsets;
 };
 }  // namespace wavemap::ground_truth
 

@@ -11,26 +11,32 @@
 
 namespace wavemap {
 using FloatingPoint = float;
-// TODO(victorr): Move to wavemap_2d and wavemap_3d packages
-constexpr int kMapDimension = 2;
-
 template <typename T>
 using MatrixT = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 using Matrix = MatrixT<FloatingPoint>;
 
 using IndexElement = int;
-using Index = Eigen::Matrix<IndexElement, 2, 1>;
-using Index3D = Eigen::Matrix<IndexElement, 3, 1>;
+template <int dim>
+using Index = Eigen::Matrix<IndexElement, dim, 1>;
+using Index2D = Index<2>;
+using Index3D = Index<3>;
 
-using Transformation = kindr::minimal::Transformation2DTemplate<FloatingPoint>;
-using Point = Transformation::Position;
-using Vector = Transformation::Position;
-using Rotation = Transformation::Rotation;
+template <int dim>
+using Vector = Eigen::Matrix<FloatingPoint, dim, 1>;
+using Vector2D = Vector<2>;
+using Vector3D = Vector<3>;
 
+template <int dim>
+using Point = Vector<dim>;
+using Point2D = Point<2>;
+using Point3D = Point<3>;
+
+using Transformation2D =
+    kindr::minimal::Transformation2DTemplate<FloatingPoint>;
 using Transformation3D =
     kindr::minimal::QuatTransformationTemplate<FloatingPoint>;
-using Point3D = Transformation3D::Position;
-using Vector3D = Transformation3D::Position;
+
+using Rotation2D = Transformation2D::Rotation;
 using Rotation3D = Transformation3D::Rotation;
 
 constexpr auto kEpsilon = constants<FloatingPoint>::kEpsilon;

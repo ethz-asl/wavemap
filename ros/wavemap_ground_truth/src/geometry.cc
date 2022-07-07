@@ -106,12 +106,12 @@ FloatingPoint Triangle::getDistanceToPoint(const Point3D& point) const {
   return (closest_pt - point).norm();
 }
 
-bool Triangle::intersectsXAlignedRay(const Point& ray_origin_yz,
+bool Triangle::intersectsXAlignedRay(const Point2D& ray_origin_yz,
                                      Point3D& barycentric_coordinates) const {
   // Express the vertices A, B and C relative to the point
-  const Point vertex_a_relative = vertex_a.tail<2>() - ray_origin_yz;
-  const Point vertex_b_relative = vertex_b.tail<2>() - ray_origin_yz;
-  const Point vertex_c_relative = vertex_c.tail<2>() - ray_origin_yz;
+  const Point2D vertex_a_relative = vertex_a.tail<2>() - ray_origin_yz;
+  const Point2D vertex_b_relative = vertex_b.tail<2>() - ray_origin_yz;
+  const Point2D vertex_c_relative = vertex_c.tail<2>() - ray_origin_yz;
 
   // Check the orientation of B relative to C
   // NOTE: As a byproduct of the orientation checks, we also compute the signed
@@ -149,7 +149,7 @@ bool Triangle::intersectsXAlignedRay(const Point& ray_origin_yz,
   return true;
 }
 
-bool Triangle::intersectsXAlignedRay(const Point& ray_origin_yz) const {
+bool Triangle::intersectsXAlignedRay(const Point2D& ray_origin_yz) const {
   Point3D barycentric_coordinates;
   return intersectsXAlignedRay(ray_origin_yz, barycentric_coordinates);
 }
@@ -191,8 +191,8 @@ bool Triangle::intersectsPlane(const Plane& plane) const {
   return false;
 }
 
-int Triangle::getRelativeOrientation(const Point& vertex_one,
-                                     const Point& vertex_two,
+int Triangle::getRelativeOrientation(const Point2D& vertex_one,
+                                     const Point2D& vertex_two,
                                      FloatingPoint& twice_signed_area) {
   // Compute the signed area (scaled by factor 2, but we don't care)
   twice_signed_area =
@@ -216,8 +216,8 @@ int Triangle::getRelativeOrientation(const Point& vertex_one,
   }  // only true when both vertices are equal
 }
 
-int Triangle::getRelativeOrientation(const Point& vertex_one,
-                                     const Point& vertex_two) {
+int Triangle::getRelativeOrientation(const Point2D& vertex_one,
+                                     const Point2D& vertex_two) {
   FloatingPoint twice_signed_area;
   return getRelativeOrientation(vertex_one, vertex_two, twice_signed_area);
 }

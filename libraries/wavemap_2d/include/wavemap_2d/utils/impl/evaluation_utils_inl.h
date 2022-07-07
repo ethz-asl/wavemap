@@ -24,8 +24,8 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
   // Determine the box over which we'll iterate
   const bool crop_to_reference =
       (config.crop_to != MapEvaluationConfig::Source::kPredicted);
-  Index min_index;
-  Index max_index;
+  Index2D min_index;
+  Index2D max_index;
   if (crop_to_reference) {
     if (iterate_over_reference) {
       min_index = reference_map.getMinIndex();
@@ -34,22 +34,22 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
       min_index = convert::indexToNewResolution(reference_map.getMinIndex(),
                                                 reference_map_min_cell_width,
                                                 predicted_map_min_cell_width) +
-                  Index::Ones();
+                  Index2D::Ones();
       max_index = convert::indexToNewResolution(reference_map.getMaxIndex(),
                                                 reference_map_min_cell_width,
                                                 predicted_map_min_cell_width) -
-                  Index::Ones();
+                  Index2D::Ones();
     }
   } else {
     if (iterate_over_reference) {
       min_index = convert::indexToNewResolution(predicted_map.getMinIndex(),
                                                 predicted_map_min_cell_width,
                                                 reference_map_min_cell_width) +
-                  Index::Ones();
+                  Index2D::Ones();
       max_index = convert::indexToNewResolution(predicted_map.getMaxIndex(),
                                                 predicted_map_min_cell_width,
                                                 reference_map_min_cell_width) -
-                  Index::Ones();
+                  Index2D::Ones();
     } else {
       min_index = predicted_map.getMinIndex();
       max_index = predicted_map.getMaxIndex();
@@ -57,8 +57,8 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
   }
 
   // Evaluate all cells in the box, at the resolution set by config.iterate_over
-  for (const Index& index : Grid(min_index, max_index)) {
-    const Index reference_index =
+  for (const Index2D& index : Grid(min_index, max_index)) {
+    const Index2D reference_index =
         iterate_over_reference
             ? index
             : convert::indexToNewResolution(index, predicted_map_min_cell_width,
@@ -71,7 +71,7 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
       continue;
     }
 
-    const Index predicted_index =
+    const Index2D predicted_index =
         iterate_over_reference
             ? convert::indexToNewResolution(index, reference_map_min_cell_width,
                                             predicted_map_min_cell_width)
@@ -111,7 +111,7 @@ MapEvaluationSummary EvaluateMap(const DenseGrid<CellType>& reference_map,
 }
 
 template <typename Map>
-OccupancyState GetCellState(const Map& map, const Index& index,
+OccupancyState GetCellState(const Map& map, const Index2D& index,
                             const CellSelector& cell_selector,
                             OccupancyState treat_unknown_cells_as) {
   const auto cell_value = map.getCellValue(index);

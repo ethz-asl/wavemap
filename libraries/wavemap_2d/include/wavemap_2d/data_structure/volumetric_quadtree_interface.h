@@ -17,8 +17,8 @@ class VolumetricQuadtreeInterface : public VolumetricDataStructure {
 
   virtual QuadtreeIndex::ChildArray getFirstChildIndices() const = 0;
 
-  virtual Index getMinPossibleIndex() const = 0;
-  virtual Index getMaxPossibleIndex() const = 0;
+  virtual Index2D getMinPossibleIndex() const = 0;
+  virtual Index2D getMaxPossibleIndex() const = 0;
 
   using VolumetricDataStructure::setCellValue;
   virtual void setCellValue(const QuadtreeIndex& index,

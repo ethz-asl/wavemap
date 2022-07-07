@@ -15,12 +15,12 @@ class FixedLogOddsModel : public MeasurementModel {
   // Use the base class' constructor
   using MeasurementModel::MeasurementModel;
 
-  Index getBottomLeftUpdateIndex() const override;
-  Index getTopRightUpdateIndex() const override;
+  Index2D getBottomLeftUpdateIndex() const override;
+  Index2D getTopRightUpdateIndex() const override;
 
   // NOTE: This method assumes queried indices always lies on the ray's line
   //       segment.
-  FloatingPoint computeUpdateAt(const Index& index) const override {
+  FloatingPoint computeUpdateAt(const Index2D& index) const override {
     if (index == end_point_index_) {
       return kLogOddsOccupied;
     } else {
@@ -29,7 +29,7 @@ class FixedLogOddsModel : public MeasurementModel {
   }
 
  private:
-  Index end_point_index_;
+  Index2D end_point_index_;
 
   void updateCachedVariablesDerived() override {
     end_point_index_ =

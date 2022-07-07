@@ -28,16 +28,16 @@ class WaveletTree : public WaveletTreeInterface {
 
   QuadtreeIndex::ChildArray getFirstChildIndices() const override;
 
-  Index getMinIndex() const override;
-  Index getMaxIndex() const override;
-  Index getMinPossibleIndex() const override;
-  Index getMaxPossibleIndex() const override;
+  Index2D getMinIndex() const override;
+  Index2D getMaxIndex() const override;
+  Index2D getMinPossibleIndex() const override;
+  Index2D getMaxPossibleIndex() const override;
 
-  FloatingPoint getCellValue(const Index& index) const override;
-  void setCellValue(const Index& index, FloatingPoint new_value) override;
+  FloatingPoint getCellValue(const Index2D& index) const override;
+  void setCellValue(const Index2D& index, FloatingPoint new_value) override;
   void setCellValue(const QuadtreeIndex& index,
                     FloatingPoint new_value) override;
-  void addToCellValue(const Index& index, FloatingPoint update) override;
+  void addToCellValue(const Index2D& index, FloatingPoint update) override;
   void addToCellValue(const QuadtreeIndex& index,
                       FloatingPoint update) override;
 
@@ -86,24 +86,24 @@ class WaveletTree : public WaveletTreeInterface {
   }
   const QuadtreeIndex root_node_index_offset_{kMaxHeight - 1,
                                               QuadtreeIndex::Position::Ones()};
-  const Index root_index_offset_ =
+  const Index2D root_index_offset_ =
       convert::nodeIndexToMinCornerIndex(root_node_index_offset_);
 
-  QuadtreeIndex toInternal(const Index& index) const {
+  QuadtreeIndex toInternal(const Index2D& index) const {
     return convert::indexAndHeightToNodeIndex(index + root_index_offset_, 0);
   }
   QuadtreeIndex toInternal(const QuadtreeIndex& node_index) const {
     DCHECK_LE(node_index.height, root_node_index_offset_.height);
-    const Index height_adjusted_offset =
+    const Index2D height_adjusted_offset =
         int_math::div_exp2(root_index_offset_, node_index.height);
     return {node_index.height, node_index.position + height_adjusted_offset};
   }
-  Index toExternalIndex(const Index& index) const {
+  Index2D toExternalIndex(const Index2D& index) const {
     return index - root_index_offset_;
   }
   QuadtreeIndex toExternalNodeIndex(const QuadtreeIndex& node_index) const {
     DCHECK_LE(node_index.height, root_node_index_offset_.height);
-    const Index height_adjusted_offset =
+    const Index2D height_adjusted_offset =
         int_math::div_exp2(root_index_offset_, node_index.height);
     return {node_index.height, node_index.position - height_adjusted_offset};
   }

@@ -12,7 +12,7 @@ class PointcloudIterator {
   using PointcloudData =
       Eigen::Matrix<FloatingPoint, point_dimensions, Eigen::Dynamic>;
   using difference_type = std::ptrdiff_t;
-  using value_type = Point;
+  using value_type = Point<point_dimensions>;
   using pointer = void;
   using reference = std::conditional_t<std::is_const_v<PointcloudType>,
                                        typename PointcloudData::ConstColXpr,

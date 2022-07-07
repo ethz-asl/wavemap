@@ -35,14 +35,14 @@ class DenseGrid : public VolumetricDataStructure {
     return size() * sizeof(CellDataSpecialized);
   }
 
-  Index dimensions() const { return {data_.rows(), data_.cols()}; }
-  Index getMinIndex() const override { return min_external_index_; }
-  Index getMaxIndex() const override { return max_external_index_; }
+  Index2D dimensions() const { return {data_.rows(), data_.cols()}; }
+  Index2D getMinIndex() const override { return min_external_index_; }
+  Index2D getMaxIndex() const override { return max_external_index_; }
 
-  bool hasCell(const Index& index) const;
-  FloatingPoint getCellValue(const Index& index) const override;
-  void setCellValue(const Index& index, FloatingPoint new_value) override;
-  void addToCellValue(const Index& index, FloatingPoint update) override;
+  bool hasCell(const Index2D& index) const;
+  FloatingPoint getCellValue(const Index2D& index) const override;
+  void setCellValue(const Index2D& index, FloatingPoint new_value) override;
+  void addToCellValue(const Index2D& index, FloatingPoint update) override;
 
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const override;
 
@@ -56,26 +56,26 @@ class DenseGrid : public VolumetricDataStructure {
             bool used_floating_precision) override;
 
  private:
-  Index min_external_index_ = Index::Zero();
-  Index max_external_index_ = Index::Zero();
+  Index2D min_external_index_ = Index2D::Zero();
+  Index2D max_external_index_ = Index2D::Zero();
   DataGridSpecialized data_;
 
-  Index getMinInternalIndex() const { return Index::Zero(); }
-  Index getMaxInternalIndex() const {
+  Index2D getMinInternalIndex() const { return Index2D::Zero(); }
+  Index2D getMaxInternalIndex() const {
     return {data_.rows() - 1, data_.cols() - 1};
   }
 
   // TODO(victorr): Add check for overflows
-  Index toInternal(const Index& index) const {
+  Index2D toInternal(const Index2D& index) const {
     return index - min_external_index_;
   }
-  Index toExternal(const Index& index) const {
+  Index2D toExternal(const Index2D& index) const {
     return index + min_external_index_;
   }
 
-  CellDataSpecialized* accessCellData(const Index& index,
+  CellDataSpecialized* accessCellData(const Index2D& index,
                                       bool auto_allocate = false);
-  const CellDataSpecialized* accessCellData(const Index& index) const;
+  const CellDataSpecialized* accessCellData(const Index2D& index) const;
 };
 }  // namespace wavemap
 

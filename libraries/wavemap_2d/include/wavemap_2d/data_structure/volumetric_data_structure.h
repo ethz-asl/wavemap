@@ -27,12 +27,12 @@ class VolumetricDataStructure {
   FloatingPoint getMinCellWidth() const { return min_cell_width_; }
   virtual size_t getMemoryUsage() const = 0;
 
-  virtual Index getMinIndex() const = 0;
-  virtual Index getMaxIndex() const = 0;
+  virtual Index2D getMinIndex() const = 0;
+  virtual Index2D getMaxIndex() const = 0;
 
-  virtual FloatingPoint getCellValue(const Index& index) const = 0;
-  virtual void setCellValue(const Index& index, FloatingPoint new_value) = 0;
-  virtual void addToCellValue(const Index& index, FloatingPoint update) = 0;
+  virtual FloatingPoint getCellValue(const Index2D& index) const = 0;
+  virtual void setCellValue(const Index2D& index, FloatingPoint new_value) = 0;
+  virtual void addToCellValue(const Index2D& index, FloatingPoint update) = 0;
 
   using IndexedLeafVisitorFunction =
       std::function<void(const QuadtreeIndex& index, FloatingPoint value)>;

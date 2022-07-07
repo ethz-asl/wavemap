@@ -37,15 +37,15 @@ TEST_F(RangeImageTest, IndexConversions) {
   for (int idx = 0; idx < 1000; ++idx) {
     // Test bearing <-> angle
     {
-      const Point point_original = getRandomPoint();
+      const Point2D point_original = getRandomPoint<2>();
       const FloatingPoint range = point_original.norm();
       const FloatingPoint angle = RangeImage::bearingToAngle(point_original);
-      const Point point_roundtrip = range * RangeImage::angleToBearing(angle);
+      const Point2D point_roundtrip = range * RangeImage::angleToBearing(angle);
       EXPECT_NEAR(point_roundtrip.x(), point_original.x(), 1e-6 * range);
       EXPECT_NEAR(point_roundtrip.y(), point_original.y(), 1e-6 * range);
 
       const FloatingPoint angle_original = getRandomAngle();
-      const Vector bearing = RangeImage::angleToBearing(angle_original);
+      const Vector2D bearing = RangeImage::angleToBearing(angle_original);
       const FloatingPoint angle_roundtrip = RangeImage::bearingToAngle(bearing);
       EXPECT_FLOAT_EQ(angle_roundtrip, angle_original);
     }
@@ -81,19 +81,19 @@ TEST_F(RangeImageTest, IndexConversions) {
 
     // Test bearing <-> index
     {
-      const Vector min_bearing = RangeImage::angleToBearing(min_angle);
+      const Vector2D min_bearing = RangeImage::angleToBearing(min_angle);
       EXPECT_EQ(range_image.bearingToNearestIndex(min_bearing), 0);
-      const Vector bearing_min_index = range_image.indexToBearing(0);
+      const Vector2D bearing_min_index = range_image.indexToBearing(0);
       EXPECT_NEAR(bearing_min_index.x(), min_bearing.x(), 1e-6);
       EXPECT_NEAR(bearing_min_index.y(), min_bearing.y(), 1e-6);
 
-      const Vector max_bearing = RangeImage::angleToBearing(max_angle);
+      const Vector2D max_bearing = RangeImage::angleToBearing(max_angle);
       EXPECT_EQ(range_image.bearingToNearestIndex(max_bearing), max_index);
-      const Vector bearing_max_index = range_image.indexToBearing(max_index);
+      const Vector2D bearing_max_index = range_image.indexToBearing(max_index);
       EXPECT_NEAR(bearing_max_index.x(), max_bearing.x(), 1e-6);
       EXPECT_NEAR(bearing_max_index.y(), max_bearing.y(), 1e-6);
 
-      const Vector mid_bearing = RangeImage::angleToBearing(mid_angle);
+      const Vector2D mid_bearing = RangeImage::angleToBearing(mid_angle);
       EXPECT_GE(range_image.bearingToNearestIndex(mid_bearing),
                 mid_index_floor);
       EXPECT_LE(range_image.bearingToNearestIndex(mid_bearing), mid_index_ceil);

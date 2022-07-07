@@ -16,24 +16,24 @@ TEST_F(MeasurementModelTest, BeamModel) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
     BeamModel beam_model(min_cell_width);
 
-    const Point W_start_point = getRandomPoint();
-    const Point W_end_point = W_start_point + getRandomTranslation();
+    const Point2D W_start_point = getRandomPoint<2>();
+    const Point2D W_end_point = W_start_point + getRandomTranslation<2>();
     beam_model.setStartPoint(W_start_point);
     beam_model.setEndPoint(W_end_point);
 
-    const Point C_end_point = W_end_point - W_start_point;
+    const Point2D C_end_point = W_end_point - W_start_point;
     const FloatingPoint beam_length = C_end_point.norm();
     const FloatingPoint beam_angle =
         std::atan2(C_end_point.y(), C_end_point.x());
 
-    const Index bottom_left_idx = beam_model.getBottomLeftUpdateIndex();
-    const Index top_right_idx = beam_model.getTopRightUpdateIndex();
+    const Index2D bottom_left_idx = beam_model.getBottomLeftUpdateIndex();
+    const Index2D top_right_idx = beam_model.getTopRightUpdateIndex();
 
     constexpr IndexElement kIndexPadding = 10;
-    const Index padded_bottom_left_idx =
-        bottom_left_idx - Index::Constant(kIndexPadding);
-    const Index padded_top_right_idx =
-        top_right_idx + Index::Constant(kIndexPadding);
+    const Index2D padded_bottom_left_idx =
+        bottom_left_idx - Index2D::Constant(kIndexPadding);
+    const Index2D padded_top_right_idx =
+        top_right_idx + Index2D::Constant(kIndexPadding);
 
     const Grid grid(padded_bottom_left_idx, padded_top_right_idx);
     for (const auto& index : grid) {
@@ -45,9 +45,9 @@ TEST_F(MeasurementModelTest, BeamModel) {
             << "Update queries outside the bounding box should return 0.";
       }
 
-      const Point W_cell_center =
+      const Point2D W_cell_center =
           convert::indexToCenterPoint(index, min_cell_width);
-      const Point C_cell_center = W_cell_center - W_start_point;
+      const Point2D C_cell_center = W_cell_center - W_start_point;
       const FloatingPoint cell_distance = C_cell_center.norm();
       const FloatingPoint cell_angle =
           std::atan2(C_cell_center.y(), C_cell_center.x());
@@ -88,24 +88,24 @@ TEST_F(MeasurementModelTest, BeamModel) {
 TEST_F(MeasurementModelTest, FixedLogOddsModel) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const Point start_point = getRandomPoint();
-    const Point end_point = start_point + getRandomTranslation();
+    const Point2D start_point = getRandomPoint<2>();
+    const Point2D end_point = start_point + getRandomTranslation<2>();
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
 
     FixedLogOddsModel fixed_log_odds_model(min_cell_width);
     fixed_log_odds_model.setStartPoint(start_point);
     fixed_log_odds_model.setEndPoint(end_point);
-    const Index start_point_index =
+    const Index2D start_point_index =
         convert::pointToNearestIndex(start_point, min_cell_width_inv);
-    const Index end_point_index =
+    const Index2D end_point_index =
         convert::pointToNearestIndex(end_point, min_cell_width_inv);
 
-    const Index bottom_left_idx = start_point_index.cwiseMin(end_point_index);
-    const Index top_right_idx = start_point_index.cwiseMin(end_point_index);
-    const Index model_bottom_left_idx =
+    const Index2D bottom_left_idx = start_point_index.cwiseMin(end_point_index);
+    const Index2D top_right_idx = start_point_index.cwiseMin(end_point_index);
+    const Index2D model_bottom_left_idx =
         fixed_log_odds_model.getBottomLeftUpdateIndex();
-    const Index model_top_right_idx =
+    const Index2D model_top_right_idx =
         fixed_log_odds_model.getTopRightUpdateIndex();
     EXPECT_TRUE(
         (model_bottom_left_idx.array() <= bottom_left_idx.array()).all());

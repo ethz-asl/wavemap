@@ -11,8 +11,8 @@
 namespace wavemap {
 template <typename CellT>
 void HashedBlocks<CellT>::prune() {
-  const Index min_local_cell_index = Index::Zero();
-  const Index max_local_cell_index = Index::Constant(kCellsPerSide - 1);
+  const Index2D min_local_cell_index = Index2D::Zero();
+  const Index2D max_local_cell_index = Index2D::Constant(kCellsPerSide - 1);
   const Grid local_grid(min_local_cell_index, max_local_cell_index);
 
   std::unordered_set<BlockIndex, VoxbloxIndexHash> blocks_to_delete;
@@ -33,33 +33,33 @@ void HashedBlocks<CellT>::prune() {
 }
 
 template <typename CellT>
-Index HashedBlocks<CellT>::getMinIndex() const {
+Index2D HashedBlocks<CellT>::getMinIndex() const {
   if (!empty()) {
-    Index min_block_index =
-        Index::Constant(std::numeric_limits<IndexElement>::max());
+    Index2D min_block_index =
+        Index2D::Constant(std::numeric_limits<IndexElement>::max());
     for (const auto& [block_index, block] : blocks_) {
       min_block_index = min_block_index.cwiseMin(block_index);
     }
     return kCellsPerSide * min_block_index;
   }
-  return Index::Zero();
+  return Index2D::Zero();
 }
 
 template <typename CellT>
-Index HashedBlocks<CellT>::getMaxIndex() const {
+Index2D HashedBlocks<CellT>::getMaxIndex() const {
   if (!empty()) {
-    Index max_block_index =
-        Index::Constant(std::numeric_limits<IndexElement>::lowest());
+    Index2D max_block_index =
+        Index2D::Constant(std::numeric_limits<IndexElement>::lowest());
     for (const auto& [block_index, block] : blocks_) {
       max_block_index = max_block_index.cwiseMax(block_index);
     }
-    return kCellsPerSide * (max_block_index + Index::Ones());
+    return kCellsPerSide * (max_block_index + Index2D::Ones());
   }
-  return Index::Zero();
+  return Index2D::Zero();
 }
 
 template <typename CellT>
-FloatingPoint HashedBlocks<CellT>::getCellValue(const Index& index) const {
+FloatingPoint HashedBlocks<CellT>::getCellValue(const Index2D& index) const {
   const CellDataSpecialized* cell_data = accessCellData(index);
   if (cell_data) {
     return static_cast<FloatingPoint>(*cell_data);
@@ -68,7 +68,7 @@ FloatingPoint HashedBlocks<CellT>::getCellValue(const Index& index) const {
 }
 
 template <typename CellT>
-void HashedBlocks<CellT>::setCellValue(const Index& index,
+void HashedBlocks<CellT>::setCellValue(const Index2D& index,
                                        FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
@@ -81,7 +81,7 @@ void HashedBlocks<CellT>::setCellValue(const Index& index,
 }
 
 template <typename CellT>
-void HashedBlocks<CellT>::addToCellValue(const Index& index,
+void HashedBlocks<CellT>::addToCellValue(const Index2D& index,
                                          FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
@@ -95,15 +95,15 @@ void HashedBlocks<CellT>::addToCellValue(const Index& index,
 template <typename CellT>
 void HashedBlocks<CellT>::forEachLeaf(
     VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
-  const Index min_local_cell_index = Index::Zero();
-  const Index max_local_cell_index = Index::Constant(kCellsPerSide - 1);
+  const Index2D min_local_cell_index = Index2D::Zero();
+  const Index2D max_local_cell_index = Index2D::Constant(kCellsPerSide - 1);
 
   for (const auto& [block_index, block_data] : blocks_) {
-    for (const Index& cell_index :
+    for (const Index2D& cell_index :
          Grid(min_local_cell_index, max_local_cell_index)) {
       const FloatingPoint cell_data =
           block_data(cell_index.x(), cell_index.y());
-      const Index index =
+      const Index2D index =
           computeIndexFromBlockIndexAndCellIndex(block_index, cell_index);
       const QuadtreeIndex hierarchical_cell_index =
           convert::indexAndHeightToNodeIndex(index, 0);
@@ -115,7 +115,7 @@ void HashedBlocks<CellT>::forEachLeaf(
 template <typename CellT>
 cv::Mat HashedBlocks<CellT>::getImage(bool use_color) const {
   DenseGrid<CellT> dense_grid(min_cell_width_);
-  for (const Index& index : Grid(getMinIndex(), getMaxIndex())) {
+  for (const Index2D& index : Grid(getMinIndex(), getMaxIndex())) {
     const FloatingPoint cell_value = getCellValue(index);
     dense_grid.setCellValue(index, cell_value);
   }
@@ -138,7 +138,7 @@ bool HashedBlocks<CellT>::load(const std::string& /* file_path_prefix */,
 
 template <typename CellT>
 typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
-    const Index& index, bool auto_allocate) {
+    const Index2D& index, bool auto_allocate) {
   BlockIndex block_index = computeBlockIndexFromIndex(index);
   auto it = blocks_.find(block_index);
   if (it == blocks_.end()) {
@@ -155,7 +155,7 @@ typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
 
 template <typename CellT>
 const typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
-    const Index& index) const {
+    const Index2D& index) const {
   BlockIndex block_index = computeBlockIndexFromIndex(index);
   const auto& it = blocks_.find(block_index);
   if (it != blocks_.end()) {
@@ -168,7 +168,7 @@ const typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
 
 template <typename CellT>
 typename HashedBlocks<CellT>::BlockIndex
-HashedBlocks<CellT>::computeBlockIndexFromIndex(const Index& index) const {
+HashedBlocks<CellT>::computeBlockIndexFromIndex(const Index2D& index) const {
   return {
       std::floor(kCellsPerSideInv * static_cast<FloatingPoint>(index.x())),
       std::floor(kCellsPerSideInv * static_cast<FloatingPoint>(index.y())),
@@ -178,9 +178,9 @@ HashedBlocks<CellT>::computeBlockIndexFromIndex(const Index& index) const {
 template <typename CellT>
 typename HashedBlocks<CellT>::CellIndex
 HashedBlocks<CellT>::computeCellIndexFromBlockIndexAndIndex(
-    const HashedBlocks::BlockIndex& block_index, const Index& index) const {
-  const Index origin = kCellsPerSide * block_index;
-  Index cell_index = index - origin;
+    const HashedBlocks::BlockIndex& block_index, const Index2D& index) const {
+  const Index2D origin = kCellsPerSide * block_index;
+  Index2D cell_index = index - origin;
 
   DCHECK((0 <= cell_index.array() && cell_index.array() < kCellsPerSide).all())
       << "(Local) cell indices should always be within range [0, "
@@ -191,7 +191,7 @@ HashedBlocks<CellT>::computeCellIndexFromBlockIndexAndIndex(
 }
 
 template <typename CellT>
-Index HashedBlocks<CellT>::computeIndexFromBlockIndexAndCellIndex(
+Index2D HashedBlocks<CellT>::computeIndexFromBlockIndexAndCellIndex(
     const HashedBlocks::BlockIndex& block_index,
     const HashedBlocks::CellIndex& cell_index) const {
   return kCellsPerSide * block_index + cell_index;

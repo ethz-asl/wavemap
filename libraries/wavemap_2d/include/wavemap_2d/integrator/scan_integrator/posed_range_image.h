@@ -20,16 +20,16 @@ class PosedRangeImage : public RangeImage {
     setPose(posed_pointcloud.getPose());
   }
 
-  void setPose(const Transformation& T_W_C) {
+  void setPose(const Transformation2D& T_W_C) {
     T_W_C_ = T_W_C;
     T_C_W_ = T_W_C.inverse();
   }
-  const Transformation& getPose() const { return T_W_C_; }
-  const Transformation& getPoseInverse() const { return T_C_W_; }
+  const Transformation2D& getPose() const { return T_W_C_; }
+  const Transformation2D& getPoseInverse() const { return T_C_W_; }
 
  private:
-  Transformation T_W_C_;
-  Transformation T_C_W_;
+  Transformation2D T_W_C_;
+  Transformation2D T_C_W_;
 };
 }  // namespace wavemap
 

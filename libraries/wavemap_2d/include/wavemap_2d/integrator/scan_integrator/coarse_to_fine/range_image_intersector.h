@@ -40,15 +40,15 @@ class RangeImageIntersector {
   //       reasonably well for our query pattern. This might change for 3D
   //       and/or if we batch queries together.
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
-      const Transformation& T_W_C, const AABB<Point>& W_aabb) {
+      const Transformation2D& T_W_C, const AABB<Point2D>& W_aabb) {
     // If the sensor is contained in the AABB, it overlaps with the full range
     if (W_aabb.containsPoint(T_W_C.getPosition())) {
       return {-kPi, kPi};
     }
 
     // Translate the AABB into frame C, but do not yet rotate it
-    const Point W_t_C_min = W_aabb.min - T_W_C.getPosition();
-    const Point W_t_C_max = W_aabb.max - T_W_C.getPosition();
+    const Point2D W_t_C_min = W_aabb.min - T_W_C.getPosition();
+    const Point2D W_t_C_max = W_aabb.max - T_W_C.getPosition();
 
     // Find the min and max angles for the AABB's corners
     MinMaxAnglePair angle_pair;
@@ -126,7 +126,7 @@ class RangeImageIntersector {
   }
 
   IntersectionType determineIntersectionType(
-      const Transformation& T_W_C, const AABB<Point>& W_cell_aabb) const {
+      const Transformation2D& T_W_C, const AABB<Point2D>& W_cell_aabb) const {
     // Get the min and max distances from any point in the cell (which is an
     // axis-aligned cube) to the sensor's center
     // NOTE: The min distance is 0 if the cell contains the sensor's center.

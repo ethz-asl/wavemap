@@ -11,56 +11,56 @@ using RayIteratorTest = FixtureBase;
 TEST_F(RayIteratorTest, IterationOrderAndCompleteness) {
   constexpr int kNumTestRays = 100;
   struct TestRay {
-    Point origin;
-    Vector translation;
+    Point2D origin;
+    Vector2D translation;
   };
 
   // Create zero length, perfectly horizontal/vertical, and random test rays
   std::vector<TestRay> test_rays(kNumTestRays);
-  test_rays[0] = {getRandomPoint(), {0.f, 0.f}};
-  test_rays[1] = {getRandomPoint(), {getRandomSignedDistance(), 0.f}};
-  test_rays[2] = {getRandomPoint(), {0.f, getRandomSignedDistance()}};
+  test_rays[0] = {getRandomPoint<2>(), {0.f, 0.f}};
+  test_rays[1] = {getRandomPoint<2>(), {getRandomSignedDistance(), 0.f}};
+  test_rays[2] = {getRandomPoint<2>(), {0.f, getRandomSignedDistance()}};
   std::generate(test_rays.begin() + 3, test_rays.end(), [this]() {
-    return TestRay{getRandomPoint(), getRandomTranslation()};
+    return TestRay{getRandomPoint<2>(), getRandomTranslation<2>()};
   });
 
   for (const auto& test_ray : test_rays) {
-    const Point start_point = test_ray.origin;
-    const Point end_point = test_ray.origin + test_ray.translation;
-    const Vector t_start_end = end_point - start_point;
+    const Point2D start_point = test_ray.origin;
+    const Point2D end_point = test_ray.origin + test_ray.translation;
+    const Vector2D t_start_end = end_point - start_point;
     const FloatingPoint ray_length = t_start_end.norm();
 
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
-    const Index start_point_index =
+    const Index2D start_point_index =
         convert::pointToNearestIndex(start_point, min_cell_width_inv);
-    const Index end_point_index =
+    const Index2D end_point_index =
         convert::pointToNearestIndex(end_point, min_cell_width_inv);
-    const Index direction =
+    const Index2D direction =
         (end_point_index - start_point_index).cwiseSign().cast<IndexElement>();
 
     Ray ray(start_point, end_point, min_cell_width);
     EXPECT_EQ(*ray.begin(), start_point_index);
     EXPECT_EQ(*ray.end(), end_point_index);
 
-    Index last_index;
+    Index2D last_index;
     size_t step_idx = 0u;
-    for (const Index& index : ray) {
+    for (const Index2D& index : ray) {
       if (step_idx == 0u) {
         EXPECT_EQ(index, start_point_index)
             << "Ray iterator did not start at start index.";
       } else {
         EXPECT_NE(index, last_index)
             << "Ray iterator updated the same index twice.";
-        const Index index_diff = index - last_index;
+        const Index2D index_diff = index - last_index;
         EXPECT_EQ(index_diff.cwiseAbs().sum(), 1)
             << "Ray iterator skipped a cell.";
         EXPECT_TRUE((index_diff.array() == direction.array()).any())
             << "Ray iterator stepped into an unexpected direction.";
 
-        const Point current_point =
+        const Point2D current_point =
             convert::indexToCenterPoint(index, min_cell_width);
-        const Vector t_start_current = current_point - start_point;
+        const Vector2D t_start_current = current_point - start_point;
         const FloatingPoint distance =
             std::abs(t_start_end.x() * t_start_current.y() -
                      t_start_current.x() * t_start_end.y()) /

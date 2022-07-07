@@ -28,12 +28,12 @@ class HashedBlocks : public VolumetricDataStructure {
     return size() * sizeof(CellDataSpecialized);
   }
 
-  Index getMinIndex() const override;
-  Index getMaxIndex() const override;
+  Index2D getMinIndex() const override;
+  Index2D getMaxIndex() const override;
 
-  FloatingPoint getCellValue(const Index& index) const override;
-  void setCellValue(const Index& index, FloatingPoint new_value) override;
-  void addToCellValue(const Index& index, FloatingPoint update) override;
+  FloatingPoint getCellValue(const Index2D& index) const override;
+  void setCellValue(const Index2D& index, FloatingPoint new_value) override;
+  void addToCellValue(const Index2D& index, FloatingPoint update) override;
 
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const override;
 
@@ -53,19 +53,19 @@ class HashedBlocks : public VolumetricDataStructure {
 
   using Block =
       Eigen::Matrix<CellDataSpecialized, kCellsPerSide, kCellsPerSide>;
-  using BlockIndex = Index;
-  using CellIndex = Index;
+  using BlockIndex = Index2D;
+  using CellIndex = Index2D;
 
   std::unordered_map<BlockIndex, Block, VoxbloxIndexHash> blocks_;
 
-  CellDataSpecialized* accessCellData(const Index& index,
+  CellDataSpecialized* accessCellData(const Index2D& index,
                                       bool auto_allocate = false);
-  const CellDataSpecialized* accessCellData(const Index& index) const;
+  const CellDataSpecialized* accessCellData(const Index2D& index) const;
 
-  BlockIndex computeBlockIndexFromIndex(const Index& index) const;
+  BlockIndex computeBlockIndexFromIndex(const Index2D& index) const;
   CellIndex computeCellIndexFromBlockIndexAndIndex(
-      const BlockIndex& block_index, const Index& index) const;
-  Index computeIndexFromBlockIndexAndCellIndex(
+      const BlockIndex& block_index, const Index2D& index) const;
+  Index2D computeIndexFromBlockIndexAndCellIndex(
       const BlockIndex& block_index, const CellIndex& cell_index) const;
 };
 }  // namespace wavemap

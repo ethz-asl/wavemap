@@ -20,10 +20,10 @@ class BeamModel : public MeasurementModel {
   // Use the base class' constructor
   using MeasurementModel::MeasurementModel;
 
-  Index getBottomLeftUpdateIndex() const override;
-  Index getTopRightUpdateIndex() const override;
+  Index2D getBottomLeftUpdateIndex() const override;
+  Index2D getTopRightUpdateIndex() const override;
 
-  FloatingPoint computeUpdateAt(const Index& index) const override;
+  FloatingPoint computeUpdateAt(const Index2D& index) const override;
   static FloatingPoint computeUpdate(FloatingPoint cell_to_sensor_distance,
                                      FloatingPoint cell_to_beam_angle,
                                      FloatingPoint measured_distance);
@@ -36,7 +36,7 @@ class BeamModel : public MeasurementModel {
     if (measured_distance_ < kEpsilon) {
       beam_angle_ = 0.f;
     } else {
-      const Point C_end_point = W_end_point_ - W_start_point_;
+      const Point2D C_end_point = W_end_point_ - W_start_point_;
       beam_angle_ = std::atan2(C_end_point.y(), C_end_point.x());
     }
     // TODO(victorr): Calculate this properly

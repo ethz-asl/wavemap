@@ -7,7 +7,7 @@ namespace wavemap {
 struct VoxbloxIndexHash {
   static constexpr size_t sl = 17191;
 
-  size_t operator()(const Index& index) const {
+  size_t operator()(const Index2D& index) const {
     return index.x() + index.y() * sl;
   }
 };
@@ -19,7 +19,7 @@ struct VDBIndexHash {
   // NOTE: kLog2N should equal log_2 of the estimated hash map size
   static constexpr size_t kLog2N = 16u;
 
-  size_t operator()(const Index& index) const {
+  size_t operator()(const Index2D& index) const {
     return static_cast<size_t>(((1 << kLog2N) - 1) &
                                (index.x() * 73856093 ^ index.y() * 19349663));
   }

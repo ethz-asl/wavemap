@@ -8,9 +8,12 @@
 namespace wavemap {
 using AabbTest = FixtureBase;
 
+// TODO(victorr): Also test for 3D
+constexpr int kDim = 2;
+
 TEST_F(AabbTest, InitializationAndInclusion) {
-  for (const Point& random_point : getRandomPointVector()) {
-    AABB<Point> aabb;
+  for (const Point<kDim>& random_point : getRandomPointVector<kDim>()) {
+    AABB<Point<kDim>> aabb;
     EXPECT_FALSE(aabb.containsPoint(random_point))
         << "The uninitialized AABB should be empty.";
     aabb.includePoint(random_point);
@@ -21,10 +24,10 @@ TEST_F(AabbTest, InitializationAndInclusion) {
 
 TEST_F(AabbTest, ClosestPointsAndDistances) {
   struct QueryAndExpectedResults {
-    AABB<Point> aabb;
-    Point query_point;
+    AABB<Point<kDim>> aabb;
+    Point<kDim> query_point;
 
-    QueryAndExpectedResults(AABB<Point> aabb, Point query_point)
+    QueryAndExpectedResults(AABB<Point<kDim>> aabb, Point<kDim> query_point)
         : aabb(std::move(aabb)), query_point(std::move(query_point)) {}
 
     std::string getDescription() const {
@@ -38,22 +41,23 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
   // Generate test set
   std::vector<QueryAndExpectedResults> tests;
   {
-    std::vector<AABB<Point>> aabbs{{Point::Zero(), Point::Ones()},
-                                   {Point::Zero(), Point{0.5f, 1.f}},
-                                   {Point::Zero(), Point{1.f, 0.5f}}};
+    std::vector<AABB<Point<kDim>>> aabbs{
+        {Point<kDim>::Zero(), Point<kDim>::Ones()},
+        {Point<kDim>::Zero(), Point<kDim>{0.5f, 1.f}},
+        {Point<kDim>::Zero(), Point<kDim>{1.f, 0.5f}}};
     for (const auto& aabb : aabbs) {
-      tests.emplace_back(aabb, Point::Zero());
+      tests.emplace_back(aabb, Point<kDim>::Zero());
     }
     for (int direction = 1; direction < 4; ++direction) {
       for (const FloatingPoint scale : {0.1f, 1.f, 3.f, 30.f}) {
         for (const FloatingPoint sign : {-1.f, 1.f}) {
-          const Vector translation =
-              sign * scale * Vector{direction & 0b01, direction & 0b10};
+          const Vector<kDim> translation =
+              sign * scale * Vector<kDim>{direction & 0b01, direction & 0b10};
           for (const auto& aabb : aabbs) {
-            const AABB<Point> aabb_translated{aabb.min + translation,
-                                              aabb.max + translation};
+            const AABB<Point<kDim>> aabb_translated{aabb.min + translation,
+                                                    aabb.max + translation};
             tests.emplace_back(aabb, translation);
-            tests.emplace_back(aabb_translated, Point::Zero());
+            tests.emplace_back(aabb_translated, Point<kDim>::Zero());
             tests.emplace_back(aabb_translated, translation);
           }
         }
@@ -64,8 +68,8 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
   // Run tests
   for (const QueryAndExpectedResults& test : tests) {
     // Find the closest and furthest point
-    Point closest_point;
-    Point furthest_point;
+    Point<kDim> closest_point;
+    Point<kDim> furthest_point;
     // Check for closest/furthest points on the AABB's edges
     for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
       const FloatingPoint query_coord = test.query_point[dim_idx];
@@ -98,7 +102,7 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
           << test.getDescription();
     }
 
-    const Point returned_closest_point =
+    const Point<kDim> returned_closest_point =
         test.aabb.closestPointTo(test.query_point);
     EXPECT_NEAR(returned_closest_point.x(), closest_point.x(), kEpsilon)
         << test.getDescription();
@@ -111,7 +115,7 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
                 (test.query_point - closest_point).squaredNorm(), kEpsilon)
         << test.getDescription();
 
-    const Point returned_furthest_point =
+    const Point<kDim> returned_furthest_point =
         test.aabb.furthestPointFrom(test.query_point);
     EXPECT_NEAR(returned_furthest_point.x(), furthest_point.x(), kEpsilon)
         << test.getDescription();

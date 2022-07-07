@@ -111,7 +111,7 @@ void Wavemap2DServer::processPointcloudQueue() {
 
     // Convert the scan to a pointcloud
     const size_t num_rays = scan_msg.ranges.size();
-    std::vector<Point> t_C_points_2d;
+    std::vector<Point2D> t_C_points_2d;
     t_C_points_2d.reserve(num_rays);
     for (size_t ray_idx = 0u; ray_idx < num_rays; ++ray_idx) {
       const FloatingPoint ray_range =
@@ -119,16 +119,16 @@ void Wavemap2DServer::processPointcloudQueue() {
       const FloatingPoint ray_angle =
           static_cast<FloatingPoint>(ray_idx) * scan_msg.angle_increment +
           scan_msg.angle_min;
-      const Point ray_endpoint =
-          ray_range * Point(std::cos(ray_angle), std::sin(ray_angle));
+      const Point2D ray_endpoint =
+          ray_range * Point2D(std::cos(ray_angle), std::sin(ray_angle));
       t_C_points_2d.emplace_back(ray_endpoint);
     }
 
     // Integrate the pointcloud
     ROS_INFO_STREAM("Inserting pointcloud with " << t_C_points_2d.size()
                                                  << " points");
-    const Transformation T_W_C_2d(Rotation(T_W_C.getRotation().log().z()),
-                                  T_W_C.getPosition().head<2>());
+    const Transformation2D T_W_C_2d(Rotation2D(T_W_C.getRotation().log().z()),
+                                    T_W_C.getPosition().head<2>());
     const PosedPointcloud posed_pointcloud(T_W_C_2d, Pointcloud(t_C_points_2d));
     integration_timer.start();
     pointcloud_integrator_->integratePointcloud(posed_pointcloud);

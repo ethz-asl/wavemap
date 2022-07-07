@@ -265,7 +265,7 @@ bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
                     floodfill_unoccupied);
   if (floodfill_unoccupied) {
     LOG_IF(INFO, kDebug) << "Floodfill unoccupied space";
-    occupancy_grid_creator.floodfillUnoccupied(wavemap::Index::Zero());
+    occupancy_grid_creator.floodfillUnoccupied(wavemap::Index2D::Zero());
   }
 
   // Visualize the TSDF and intersection count layers

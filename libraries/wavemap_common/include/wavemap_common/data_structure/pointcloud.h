@@ -58,19 +58,21 @@ class Pointcloud {
   PointcloudData data_;
 };
 
-template <int point_dimensions = 2>
+template <int point_dimensions = 2, int pose_dimensions = 2>
 class PosedPointcloud {
  public:
   PosedPointcloud() = default;
-  PosedPointcloud(const Transformation& T_W_C,
+  PosedPointcloud(const Transformation2D& T_W_C,
                   Pointcloud<point_dimensions> points_C)
       : T_W_C_(T_W_C), points_C_(std::move(points_C)) {}
 
   bool empty() const { return !size(); }
   size_t size() const { return points_C_.size(); }
 
-  const Point& getOrigin() const { return T_W_C_.getPosition(); }
-  const Transformation& getPose() const { return T_W_C_; }
+  const Point<pose_dimensions>& getOrigin() const {
+    return T_W_C_.getPosition();
+  }
+  const Transformation2D& getPose() const { return T_W_C_; }
 
   const Pointcloud<point_dimensions>& getPointsLocal() const {
     return points_C_;
@@ -81,7 +83,7 @@ class PosedPointcloud {
   }
 
  private:
-  Transformation T_W_C_;
+  Transformation2D T_W_C_;
   Pointcloud<point_dimensions> points_C_;
 };
 }  // namespace wavemap

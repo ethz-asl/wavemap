@@ -44,7 +44,7 @@ class PointcloudIntegratorTest : public FixtureBase {
       pointcloud[index] = range * RangeImage::angleToBearing(angle);
     }
 
-    return {Transformation(), pointcloud};
+    return {Transformation2D(), pointcloud};
   }
 };
 
@@ -63,9 +63,9 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     // Generate a random point cloud and save its end points in a hashed set
     const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
         min_angle, max_angle, num_beams, min_distance, kMaxDistance);
-    std::unordered_set<Index, VoxbloxIndexHash> ray_end_points;
+    std::unordered_set<Index2D, VoxbloxIndexHash> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
-      const Index index =
+      const Index2D index =
           convert::pointToNearestIndex(end_point, min_cell_width_inv);
       ray_end_points.emplace(index);
     }
@@ -82,7 +82,7 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     //       overlapping rays which erase each other's endpoints. This is most
     //       likely to happen when the map resolution is low w.r.t. the spacing
     //       between the point cloud's beams.
-    for (const Index& index :
+    for (const Index2D& index :
          Grid(occupancy_map->getMinIndex(), occupancy_map->getMaxIndex())) {
       const bool cell_occupied_in_map =
           (0.f < occupancy_map->getCellValue(index));
@@ -127,9 +127,9 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
       scan_occupancy_map->showImage(true, 1000);
     }
 
-    const Index min_index = beam_occupancy_map->getMinIndex().cwiseMin(
+    const Index2D min_index = beam_occupancy_map->getMinIndex().cwiseMin(
         scan_occupancy_map->getMinIndex());
-    const Index max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
+    const Index2D max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
         scan_occupancy_map->getMaxIndex());
 
     constexpr FloatingPoint kTolerableError = 5e-2f;
@@ -138,7 +138,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
       error_grid =
           std::make_shared<DenseGrid<SaturatingOccupancyCell>>(min_cell_width);
     }
-    for (const Index& index : Grid(min_index, max_index)) {
+    for (const Index2D& index : Grid(min_index, max_index)) {
       const FloatingPoint cell_value_in_beam_map =
           beam_occupancy_map->getCellValue(index);
       const FloatingPoint cell_value_in_scan_map =
@@ -191,9 +191,9 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
     }
 
     scan_occupancy_map->prune();
-    const Index min_index = beam_occupancy_map->getMinIndex().cwiseMin(
+    const Index2D min_index = beam_occupancy_map->getMinIndex().cwiseMin(
         scan_occupancy_map->getMinIndex());
-    const Index max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
+    const Index2D max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
         scan_occupancy_map->getMaxIndex());
 
     VolumetricDataStructure::Ptr error_grid;
@@ -201,7 +201,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
       error_grid =
           std::make_shared<DenseGrid<SaturatingOccupancyCell>>(min_cell_width);
     }
-    for (const Index& index : Grid(min_index, max_index)) {
+    for (const Index2D& index : Grid(min_index, max_index)) {
       const FloatingPoint cell_value_in_beam_map =
           beam_occupancy_map->getCellValue(index);
       const FloatingPoint cell_value_in_scan_map =
@@ -253,9 +253,9 @@ TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
     }
 
     scan_occupancy_map->prune();
-    const Index min_index = beam_occupancy_map->getMinIndex().cwiseMin(
+    const Index2D min_index = beam_occupancy_map->getMinIndex().cwiseMin(
         scan_occupancy_map->getMinIndex());
-    const Index max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
+    const Index2D max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
         scan_occupancy_map->getMaxIndex());
 
     VolumetricDataStructure::Ptr error_grid;
@@ -263,7 +263,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
       error_grid =
           std::make_shared<DenseGrid<SaturatingOccupancyCell>>(min_cell_width);
     }
-    for (const Index& index : Grid(min_index, max_index)) {
+    for (const Index2D& index : Grid(min_index, max_index)) {
       const FloatingPoint cell_value_in_beam_map =
           beam_occupancy_map->getCellValue(index);
       const FloatingPoint cell_value_in_scan_map =

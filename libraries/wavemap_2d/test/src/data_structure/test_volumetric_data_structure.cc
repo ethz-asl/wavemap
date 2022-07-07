@@ -40,7 +40,8 @@ TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
   EXPECT_LE(map_base_ptr->size(), 1u);
   const size_t empty_map_memory_usage = map_base_ptr->getMemoryUsage();
 
-  for (const Index& random_index : TestFixture::getRandomIndexVector()) {
+  for (const Index2D& random_index :
+       TestFixture::template getRandomIndexVector<2>()) {
     map_base_ptr->setCellValue(random_index, 1.f);
   }
   EXPECT_FALSE(map_base_ptr->empty());
@@ -58,8 +59,9 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   const size_t empty_map_memory_usage = map_base_ptr->getMemoryUsage();
 
   // Check that pruning removes all zero cells
-  const auto zero_cell_indexes = TestFixture::getRandomIndexVector();
-  for (const Index& index : zero_cell_indexes) {
+  const auto zero_cell_indexes =
+      TestFixture::template getRandomIndexVector<2>();
+  for (const Index2D& index : zero_cell_indexes) {
     map_base_ptr->setCellValue(index, 0.f);
   }
   map_base_ptr->prune();
@@ -68,11 +70,12 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   EXPECT_LE(map_base_ptr->getMemoryUsage(), empty_map_memory_usage);
 
   // Check that pruning removes no non-zero cells
-  const auto non_zero_cell_indexes = TestFixture::getRandomIndexVector();
-  for (const Index& index : zero_cell_indexes) {
+  const auto non_zero_cell_indexes =
+      TestFixture::template getRandomIndexVector<2>();
+  for (const Index2D& index : zero_cell_indexes) {
     map_base_ptr->setCellValue(index, 0.f);
   }
-  for (const Index& index : non_zero_cell_indexes) {
+  for (const Index2D& index : non_zero_cell_indexes) {
     map_base_ptr->setCellValue(index, 1.f);
   }
   const size_t size_before_pruning = map_base_ptr->size();
@@ -81,7 +84,7 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   EXPECT_FALSE(map_base_ptr->empty());
   EXPECT_LE(map_base_ptr->size(), size_before_pruning);
   EXPECT_LE(map_base_ptr->getMemoryUsage(), memory_usage_before_pruning);
-  for (const Index& index : non_zero_cell_indexes) {
+  for (const Index2D& index : non_zero_cell_indexes) {
     EXPECT_EQ(map_base_ptr->getCellValue(index), 1.f);
   }
 }
@@ -92,27 +95,27 @@ TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
     std::unique_ptr<VolumetricDataStructure> map_base_ptr =
         std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
     {
-      const Index map_min_index = map_base_ptr->getMinIndex();
-      const Index map_max_index = map_base_ptr->getMaxIndex();
+      const Index2D map_min_index = map_base_ptr->getMinIndex();
+      const Index2D map_max_index = map_base_ptr->getMaxIndex();
       for (QuadtreeIndex::Element dim = 0; dim < QuadtreeIndex::kDim; ++dim) {
         EXPECT_EQ(map_min_index[dim], 0) << " along dimension " << dim;
         EXPECT_EQ(map_max_index[dim], 0) << " along dimension " << dim;
       }
     }
-    const std::vector<Index> random_indices =
-        TestFixture::getRandomIndexVector();
-    Index reference_min_index =
-        Index::Constant(std::numeric_limits<IndexElement>::max());
-    Index reference_max_index =
-        Index::Constant(std::numeric_limits<IndexElement>::lowest());
-    for (const Index& index : random_indices) {
+    const std::vector<Index2D> random_indices =
+        TestFixture::template getRandomIndexVector<2>();
+    Index2D reference_min_index =
+        Index2D::Constant(std::numeric_limits<IndexElement>::max());
+    Index2D reference_max_index =
+        Index2D::Constant(std::numeric_limits<IndexElement>::lowest());
+    for (const Index2D& index : random_indices) {
       map_base_ptr->addToCellValue(index, 1.f);
       reference_min_index = reference_min_index.cwiseMin(index);
       reference_max_index = reference_max_index.cwiseMax(index);
     }
     {
-      const Index map_min_index = map_base_ptr->getMinIndex();
-      const Index map_max_index = map_base_ptr->getMaxIndex();
+      const Index2D map_min_index = map_base_ptr->getMinIndex();
+      const Index2D map_max_index = map_base_ptr->getMaxIndex();
       for (QuadtreeIndex::Element dim = 0; dim < QuadtreeIndex::kDim; ++dim) {
         EXPECT_LE(map_min_index[dim], reference_min_index[dim])
             << " along dimension " << dim;
@@ -129,14 +132,15 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     // Create a random map
     std::unique_ptr<VolumetricDataStructure> map_base_ptr =
         std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
-    const std::vector<Index> random_indices = TestFixture::getRandomIndexVector(
-        2u, 100u, Index::Constant(-100), Index::Constant(100));
-    Index reference_min_index =
-        Index::Constant(std::numeric_limits<IndexElement>::max());
-    Index reference_max_index =
-        Index::Constant(std::numeric_limits<IndexElement>::lowest());
-    std::unordered_map<Index, FloatingPoint, VoxbloxIndexHash> reference_map;
-    for (const Index& index : random_indices) {
+    const std::vector<Index2D> random_indices =
+        TestFixture::template getRandomIndexVector<2>(
+            2u, 100u, Index2D::Constant(-100), Index2D::Constant(100));
+    Index2D reference_min_index =
+        Index2D::Constant(std::numeric_limits<IndexElement>::max());
+    Index2D reference_max_index =
+        Index2D::Constant(std::numeric_limits<IndexElement>::lowest());
+    std::unordered_map<Index2D, FloatingPoint, VoxbloxIndexHash> reference_map;
+    for (const Index2D& index : random_indices) {
       for (const FloatingPoint update : TestFixture::getRandomUpdateVector()) {
         map_base_ptr->addToCellValue(index, update);
         if (TypeParam::kRequiresPruningForThresholding) {
@@ -150,8 +154,8 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     }
 
     // Check that the map is complete and correct (incl. truncation)
-    for (const Index& index : Grid(reference_min_index - Index::Ones(),
-                                   reference_max_index + Index::Ones())) {
+    for (const Index2D& index : Grid(reference_min_index - Index2D::Ones(),
+                                     reference_max_index + Index2D::Ones())) {
       if (reference_map.count(index)) {
         EXPECT_NEAR(map_base_ptr->getCellValue(index), reference_map[index],
                     TestFixture::kAcceptableReconstructionError *
@@ -166,7 +170,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     const size_t reference_map_size = reference_map.size();
     map_base_ptr->forEachLeaf([&reference_map](const QuadtreeIndex& node_index,
                                                FloatingPoint value) {
-      const Index index = convert::nodeIndexToMinCornerIndex(node_index);
+      const Index2D index = convert::nodeIndexToMinCornerIndex(node_index);
       // Check that the values are correct
       if (reference_map.count(index)) {
         EXPECT_NEAR(value, reference_map[index],
@@ -180,7 +184,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     });
     // If all non-zero values were visited, reference map should now be empty
     // TODO(victorr): Clean up the printing
-    auto IndexToString = [](const Index& index) -> std::string {
+    auto IndexToString = [](const Index2D& index) -> std::string {
       std::stringstream ss;
       ss << EigenFormat::oneLine(index);
       return ss.str();

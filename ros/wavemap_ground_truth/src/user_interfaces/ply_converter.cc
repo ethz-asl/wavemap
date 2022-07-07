@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     triangle_i++;
     // Only print progress for each promile of completion, to reduce IO wait
     if (triangle_i % (num_triangles / 1000) == 0) {
-      wavemap::Index occupancy_grid_dimensions =
+      wavemap::Index2D occupancy_grid_dimensions =
           occupancy_grid_creator.getOccupancyGrid().dimensions();
       printf("\rProgress: %3.1f%% - map dimensions [%i, %i]",
              static_cast<wavemap::FloatingPoint>(triangle_i) /
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
   // TODO(victorr): Read from optional param
   constexpr bool floodfill_unoccupied = false;
   if (floodfill_unoccupied) {
-    occupancy_grid_creator.floodfillUnoccupied(Index::Zero());
+    occupancy_grid_creator.floodfillUnoccupied(Index2D::Zero());
   }
 
   /* Check if the map is empty before continuing */

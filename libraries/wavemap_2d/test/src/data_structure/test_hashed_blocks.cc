@@ -23,7 +23,7 @@ TYPED_TEST(DenseGridTest, Initialization) {
   EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);
-  EXPECT_EQ(map.getMinIndex(), Index::Zero());
-  EXPECT_EQ(map.getMaxIndex(), Index::Zero());
+  EXPECT_EQ(map.getMinIndex(), Index2D::Zero());
+  EXPECT_EQ(map.getMaxIndex(), Index2D::Zero());
 }
 }  // namespace wavemap

@@ -38,9 +38,9 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
   for (const QuadtreeIndex& node_index : random_indices) {
     // Compare to coordinate convention
     {
-      const Index min_corner_index =
+      const Index2D min_corner_index =
           convert::nodeIndexToMinCornerIndex(node_index);
-      const Index min_corner_index_from_convention =
+      const Index2D min_corner_index_from_convention =
           node_index.position * int_math::exp2(node_index.height);
       EXPECT_EQ(min_corner_index, min_corner_index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
@@ -49,12 +49,12 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
           << EigenFormat::oneLine(min_corner_index_from_convention);
     }
     {
-      const Index max_corner_index =
+      const Index2D max_corner_index =
           convert::nodeIndexToMaxCornerIndex(node_index);
-      const Index max_corner_index_from_convention =
-          (node_index.position + Index::Ones()) *
+      const Index2D max_corner_index_from_convention =
+          (node_index.position + Index2D::Ones()) *
               int_math::exp2(node_index.height) -
-          Index::Ones();
+          Index2D::Ones();
       EXPECT_EQ(max_corner_index, max_corner_index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
           << " to regular index " << EigenFormat::oneLine(max_corner_index)
@@ -64,7 +64,7 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
 
     // Roundtrip through regular indices (integer coordinates)
     {
-      const Index min_corner_index =
+      const Index2D min_corner_index =
           convert::nodeIndexToMinCornerIndex(node_index);
       const QuadtreeIndex roundtrip_node_index =
           convert::indexAndHeightToNodeIndex(min_corner_index,
@@ -76,7 +76,7 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
           << roundtrip_node_index.toString() << " instead.";
     }
     {
-      const Index max_corner_index =
+      const Index2D max_corner_index =
           convert::nodeIndexToMaxCornerIndex(node_index);
       const QuadtreeIndex roundtrip_node_index =
           convert::indexAndHeightToNodeIndex(max_corner_index,
@@ -91,7 +91,7 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
     // Roundtrip through real valued coordinates
     {
       const FloatingPoint random_min_cell_width = getRandomMinCellWidth();
-      const Point node_center =
+      const Point2D node_center =
           convert::nodeIndexToCenterPoint(node_index, random_min_cell_width);
       const QuadtreeIndex roundtrip_node_index = convert::pointToNodeIndex(
           node_center, random_min_cell_width, node_index.height);

@@ -69,16 +69,16 @@ QuadtreeIndex::ChildArray WaveletTree<CellT>::getFirstChildIndices() const {
 }
 
 template <typename CellT>
-Index WaveletTree<CellT>::getMinIndex() const {
+Index2D WaveletTree<CellT>::getMinIndex() const {
   if (empty()) {
     return {};
   }
 
-  Index min_index = getMaxPossibleIndex();
+  Index2D min_index = getMaxPossibleIndex();
   forEachLeaf(
       [&min_index](const QuadtreeIndex& node_index, FloatingPoint value) {
         if (OccupancyState::isObserved(value)) {
-          const Index index = convert::nodeIndexToMinCornerIndex(node_index);
+          const Index2D index = convert::nodeIndexToMinCornerIndex(node_index);
           min_index = min_index.cwiseMin(index);
         }
       });
@@ -86,16 +86,16 @@ Index WaveletTree<CellT>::getMinIndex() const {
 }
 
 template <typename CellT>
-Index WaveletTree<CellT>::getMaxIndex() const {
+Index2D WaveletTree<CellT>::getMaxIndex() const {
   if (empty()) {
     return {};
   }
 
-  Index max_index = getMinPossibleIndex();
+  Index2D max_index = getMinPossibleIndex();
   forEachLeaf(
       [&max_index](const QuadtreeIndex& node_index, FloatingPoint value) {
         if (OccupancyState::isObserved(value)) {
-          const Index index = convert::nodeIndexToMaxCornerIndex(node_index);
+          const Index2D index = convert::nodeIndexToMaxCornerIndex(node_index);
           max_index = max_index.cwiseMax(index);
         }
       });
@@ -103,19 +103,19 @@ Index WaveletTree<CellT>::getMaxIndex() const {
 }
 
 template <typename CellT>
-Index WaveletTree<CellT>::getMinPossibleIndex() const {
+Index2D WaveletTree<CellT>::getMinPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
-Index WaveletTree<CellT>::getMaxPossibleIndex() const {
+Index2D WaveletTree<CellT>::getMaxPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT>
-FloatingPoint WaveletTree<CellT>::getCellValue(const Index& index) const {
+FloatingPoint WaveletTree<CellT>::getCellValue(const Index2D& index) const {
   const QuadtreeIndex deepest_possible_node_index = toInternal(index);
   const std::vector<QuadtreeIndex::RelativeChild> child_indices =
       deepest_possible_node_index.computeRelativeChildIndices<kMaxHeight>();
@@ -133,7 +133,7 @@ FloatingPoint WaveletTree<CellT>::getCellValue(const Index& index) const {
 }
 
 template <typename CellT>
-void WaveletTree<CellT>::setCellValue(const Index& index,
+void WaveletTree<CellT>::setCellValue(const Index2D& index,
                                       FloatingPoint new_value) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   setCellValue(node_index, new_value);
@@ -174,7 +174,7 @@ void WaveletTree<CellT>::setCellValue(const QuadtreeIndex& node_index,
 }
 
 template <typename CellT>
-void WaveletTree<CellT>::addToCellValue(const Index& index,
+void WaveletTree<CellT>::addToCellValue(const Index2D& index,
                                         FloatingPoint update) {
   const QuadtreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
   addToCellValue(node_index, update);

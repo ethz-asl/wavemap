@@ -16,13 +16,13 @@ class FixedResolutionIntegrator : public PointcloudIntegrator {
 
   void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
 
-  static std::pair<RangeImage, AABB<Point>> computeRangeImageAndAABB(
+  static std::pair<RangeImage, AABB<Point2D>> computeRangeImageAndAABB(
       const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
       FloatingPoint max_angle, Eigen::Index num_beams);
 
  private:
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
-                                            const Point& C_cell_center);
+                                            const Point2D& C_cell_center);
 };
 }  // namespace wavemap
 

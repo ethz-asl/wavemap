@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
         }
 
         // Parse the position
-        Transformation pose;
+        Transformation2D pose;
         if (!(iss >> pose.getPosition().x() >> pose.getPosition().y() >>
               pose.getRotation().angle())) {
           LOG(WARNING) << "Could not parse pose... skipping.";

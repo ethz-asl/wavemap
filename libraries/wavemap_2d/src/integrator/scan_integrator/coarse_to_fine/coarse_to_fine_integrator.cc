@@ -48,7 +48,7 @@ void CoarseToFineIntegrator::integratePointcloud(
     const auto current_node = std::move(stack.top());
     stack.pop();
 
-    const AABB<Point> W_cell_aabb =
+    const AABB<Point2D> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const RangeImageIntersector::IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(pointcloud.getPose(),
@@ -59,9 +59,9 @@ void CoarseToFineIntegrator::integratePointcloud(
     }
 
     const FloatingPoint node_width = W_cell_aabb.width<0>();
-    const Point W_node_center =
-        W_cell_aabb.min + Vector::Constant(node_width / 2.f);
-    const Point C_node_center =
+    const Point2D W_node_center =
+        W_cell_aabb.min + Vector2D::Constant(node_width / 2.f);
+    const Point2D C_node_center =
         posed_range_image_->getPoseInverse() * W_node_center;
     FloatingPoint d_C_cell = C_node_center.norm();
     const FloatingPoint bounding_sphere_radius =
