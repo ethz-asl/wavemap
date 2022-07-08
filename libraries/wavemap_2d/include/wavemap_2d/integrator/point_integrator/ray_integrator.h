@@ -12,7 +12,8 @@ class RayIntegrator : public PointcloudIntegrator {
   explicit RayIntegrator(VolumetricDataStructure::Ptr occupancy_map)
       : PointcloudIntegrator(std::move(occupancy_map)) {}
 
-  void integratePointcloud(const PosedPointcloud<>& pointcloud) override {
+  void integratePointcloud(
+      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override {
     if (!isPointcloudValid(pointcloud)) {
       return;
     }

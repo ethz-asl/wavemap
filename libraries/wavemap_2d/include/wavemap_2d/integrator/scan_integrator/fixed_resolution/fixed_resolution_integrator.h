@@ -14,11 +14,12 @@ class FixedResolutionIntegrator : public PointcloudIntegrator {
   explicit FixedResolutionIntegrator(VolumetricDataStructure::Ptr occupancy_map)
       : PointcloudIntegrator(std::move(occupancy_map)) {}
 
-  void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
+  void integratePointcloud(
+      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
 
   static std::pair<RangeImage, AABB<Point2D>> computeRangeImageAndAABB(
-      const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
-      FloatingPoint max_angle, Eigen::Index num_beams);
+      const PosedPointcloud<Point2D, Transformation2D>& pointcloud,
+      FloatingPoint min_angle, FloatingPoint max_angle, Eigen::Index num_beams);
 
  private:
   static FloatingPoint computeUpdateForCell(const RangeImage& range_image,

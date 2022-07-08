@@ -9,51 +9,53 @@
 #include "wavemap_common/utils/int_math.h"
 
 namespace wavemap {
-template <typename T>
+template <typename PointT>
 struct AABB {
-  static constexpr int kDim = T::RowsAtCompileTime;
+  static constexpr int kDim = dim<PointT>;
   static constexpr int kNumCorners = int_math::exp2(kDim);
-  using ValueType = typename T::Scalar;
-  using Corners = Eigen::Matrix<ValueType, kDim, kNumCorners>;
+  using PointType = PointT;
+  using ScalarType = typename PointType::Scalar;
+  using Corners = Eigen::Matrix<ScalarType, kDim, kNumCorners>;
 
-  T min = T::Constant(std::numeric_limits<ValueType>::max());
-  T max = T::Constant(std::numeric_limits<ValueType>::lowest());
+  PointType min = PointType::Constant(std::numeric_limits<ScalarType>::max());
+  PointType max =
+      PointType::Constant(std::numeric_limits<ScalarType>::lowest());
 
-  void includePoint(const T& point) {
+  void includePoint(const PointType& point) {
     min = min.cwiseMin(point);
     max = max.cwiseMax(point);
   }
-  bool containsPoint(const T& point) const {
+  bool containsPoint(const PointType& point) const {
     return (min.array() <= point.array() && point.array() <= max.array()).all();
   }
 
-  T closestPointTo(const T& point) const {
-    T closest_point = point.cwiseMax(min);
+  PointType closestPointTo(const PointType& point) const {
+    PointType closest_point = point.cwiseMax(min);
     closest_point = closest_point.cwiseMin(max);
     return closest_point;
   }
-  T furthestPointFrom(const T& point) const {
-    const T aabb_center = (min + max) / static_cast<ValueType>(2);
-    const T furthest_point =
+  PointType furthestPointFrom(const PointType& point) const {
+    const PointType aabb_center = (min + max) / static_cast<ScalarType>(2);
+    const PointType furthest_point =
         (aabb_center.array() < point.array()).select(min, max);
     return furthest_point;
   }
 
-  FloatingPoint minSquaredDistanceTo(const T& point) const {
+  FloatingPoint minSquaredDistanceTo(const PointType& point) const {
     return (point - closestPointTo(point)).squaredNorm();
   }
-  FloatingPoint maxSquaredDistanceTo(const T& point) const {
+  FloatingPoint maxSquaredDistanceTo(const PointType& point) const {
     return (point - furthestPointFrom(point)).squaredNorm();
   }
-  FloatingPoint minDistanceTo(const T& point) const {
+  FloatingPoint minDistanceTo(const PointType& point) const {
     return (point - closestPointTo(point)).norm();
   }
-  FloatingPoint maxDistanceTo(const T& point) const {
+  FloatingPoint maxDistanceTo(const PointType& point) const {
     return (point - furthestPointFrom(point)).norm();
   }
 
   template <int dim>
-  ValueType width() const {
+  ScalarType width() const {
     return max[dim] - min[dim];
   }
 

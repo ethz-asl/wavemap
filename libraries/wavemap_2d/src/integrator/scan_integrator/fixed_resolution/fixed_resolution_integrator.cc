@@ -4,7 +4,7 @@
 
 namespace wavemap {
 void FixedResolutionIntegrator::integratePointcloud(
-    const PosedPointcloud<>& pointcloud) {
+    const PosedPointcloud<Point2D, Transformation2D>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
   }
@@ -45,8 +45,8 @@ void FixedResolutionIntegrator::integratePointcloud(
 
 std::pair<RangeImage, AABB<Point2D>>
 FixedResolutionIntegrator::computeRangeImageAndAABB(
-    const PosedPointcloud<>& pointcloud, FloatingPoint min_angle,
-    FloatingPoint max_angle, Eigen::Index num_beams) {
+    const PosedPointcloud<Point2D, Transformation2D>& pointcloud,
+    FloatingPoint min_angle, FloatingPoint max_angle, Eigen::Index num_beams) {
   RangeImage range_image(min_angle, max_angle, num_beams);
   AABB<Point2D> aabb;
 

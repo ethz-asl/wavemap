@@ -3,24 +3,24 @@
 #include "wavemap_common/common.h"
 #include "wavemap_common/data_structure/pointcloud.h"
 #include "wavemap_common/test/fixture_base.h"
+#include "wavemap_common/utils/eigen_format.h"
 
 namespace wavemap {
-// TODO(victorr): Also test for 3D
-constexpr int kDim = 2;
-
+template <typename PointT>
 class PointcloudTest : public FixtureBase {
  protected:
-  static void compare(const std::vector<Point<kDim>>& point_vector,
-                      const Pointcloud<>& pointcloud) {
+  static void compare(const std::vector<PointT>& point_vector,
+                      const Pointcloud<PointT>& pointcloud) {
     ASSERT_EQ(point_vector.empty(), pointcloud.empty());
     ASSERT_EQ(point_vector.size(), pointcloud.size());
     size_t point_idx = 0u;
-    for (const Point<kDim>& point : point_vector) {
+    for (const PointT& point : point_vector) {
       EXPECT_EQ(point, pointcloud[point_idx++]);
     }
   }
-  static void compare(const Pointcloud<>::PointcloudData& point_matrix,
-                      const Pointcloud<>& pointcloud) {
+  static void compare(
+      const typename Pointcloud<PointT>::PointcloudData& point_matrix,
+      const Pointcloud<PointT>& pointcloud) {
     ASSERT_EQ(point_matrix.size() == 0, pointcloud.empty());
     ASSERT_EQ(point_matrix.cols(), pointcloud.size());
     for (Eigen::Index point_idx = 0; point_idx < point_matrix.cols();
@@ -28,8 +28,8 @@ class PointcloudTest : public FixtureBase {
       EXPECT_EQ(point_matrix.col(point_idx), pointcloud[point_idx]);
     }
   }
-  static void compare(const Pointcloud<>& pointcloud_reference,
-                      const Pointcloud<>& pointcloud_to_test) {
+  static void compare(const Pointcloud<PointT>& pointcloud_reference,
+                      const Pointcloud<PointT>& pointcloud_to_test) {
     ASSERT_EQ(pointcloud_reference.empty(), pointcloud_to_test.empty());
     ASSERT_EQ(pointcloud_reference.size(), pointcloud_to_test.size());
     for (size_t point_idx = 0u; point_idx < pointcloud_reference.size();
@@ -38,19 +38,21 @@ class PointcloudTest : public FixtureBase {
     }
   }
 
-  Pointcloud<>::PointcloudData getRandomPointMatrix() const {
+  typename Pointcloud<PointT>::PointcloudData getRandomPointMatrix() const {
     constexpr FloatingPoint kMaxCoordinate = 1e3;
     const Eigen::Index random_length = getRandomPointcloudSize();
-    Pointcloud<>::PointcloudData random_point_matrix =
-        Pointcloud<>::PointcloudData::Random(Pointcloud<>::kPointDimensions,
-                                             random_length);
+    typename Pointcloud<PointT>::PointcloudData random_point_matrix =
+        Pointcloud<PointT>::PointcloudData::Random(dim<PointT>, random_length);
     random_point_matrix *= kMaxCoordinate;
     return random_point_matrix;
   }
 };
 
-TEST_F(PointcloudTest, DefaultInitialize) {
-  Pointcloud<> default_pointcloud;
+using PointTypes = ::testing::Types<Point2D, Point3D>;
+TYPED_TEST_SUITE(PointcloudTest, PointTypes, );
+
+TYPED_TEST(PointcloudTest, DefaultInitialize) {
+  Pointcloud<TypeParam> default_pointcloud;
   EXPECT_TRUE(default_pointcloud.empty());
   EXPECT_EQ(default_pointcloud.size(), 0u);
 
@@ -59,14 +61,14 @@ TEST_F(PointcloudTest, DefaultInitialize) {
                 [](const auto&) { ADD_FAILURE(); });
 }
 
-TEST_F(PointcloudTest, GetAndSetSize) {
-  Pointcloud<> pointcloud;
+TYPED_TEST(PointcloudTest, GetAndSetSize) {
+  Pointcloud<TypeParam> pointcloud;
   ASSERT_TRUE(pointcloud.empty());
   ASSERT_EQ(pointcloud.size(), 0u);
 
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    unsigned int random_new_size = getRandomPointcloudSize();
+    unsigned int random_new_size = TestFixture::getRandomPointcloudSize();
     pointcloud.resize(random_new_size);
     EXPECT_FALSE(pointcloud.empty());
     EXPECT_EQ(pointcloud.size(), random_new_size);
@@ -77,96 +79,105 @@ TEST_F(PointcloudTest, GetAndSetSize) {
   }
 }
 
-TEST_F(PointcloudTest, InitializeFromStl) {
-  std::vector<Point<kDim>> empty_point_vector;
-  Pointcloud<> empty_pointcloud(empty_point_vector);
+TYPED_TEST(PointcloudTest, InitializeFromStl) {
+  std::vector<TypeParam> empty_point_vector;
+  Pointcloud<TypeParam> empty_pointcloud(empty_point_vector);
   EXPECT_TRUE(empty_pointcloud.empty());
 
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const auto random_point_vector = getRandomPointVector<kDim>();
-    Pointcloud<> random_pointcloud(random_point_vector);
-    compare(random_point_vector, random_pointcloud);
+    const auto random_point_vector =
+        TestFixture::template getRandomPointVector<dim<TypeParam>>();
+    Pointcloud<TypeParam> random_pointcloud(random_point_vector);
+    TestFixture::compare(random_point_vector, random_pointcloud);
   }
 }
 
-TEST_F(PointcloudTest, InitializeFromEigen) {
-  Pointcloud<>::PointcloudData empty_point_matrix;
-  Pointcloud<> empty_pointcloud(empty_point_matrix);
+TYPED_TEST(PointcloudTest, InitializeFromEigen) {
+  typename Pointcloud<TypeParam>::PointcloudData empty_point_matrix;
+  Pointcloud<TypeParam> empty_pointcloud(empty_point_matrix);
   EXPECT_TRUE(empty_pointcloud.empty());
 
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    Pointcloud<>::PointcloudData random_point_matrix = getRandomPointMatrix();
-    Pointcloud<> random_pointcloud(random_point_matrix);
-    compare(random_point_matrix, random_pointcloud);
+    typename Pointcloud<TypeParam>::PointcloudData random_point_matrix =
+        TestFixture::getRandomPointMatrix();
+    Pointcloud<TypeParam> random_pointcloud(random_point_matrix);
+    TestFixture::compare(random_point_matrix, random_pointcloud);
   }
 }
 
-TEST_F(PointcloudTest, CopyInitializationAndAssignment) {
+TYPED_TEST(PointcloudTest, CopyInitializationAndAssignment) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const Pointcloud<> random_pointcloud(getRandomPointMatrix());
+    const Pointcloud<TypeParam> random_pointcloud(
+        TestFixture::getRandomPointMatrix());
 
-    Pointcloud<> copy_initialized_random_pointcloud(random_pointcloud);
-    compare(random_pointcloud, copy_initialized_random_pointcloud);
+    Pointcloud<TypeParam> copy_initialized_random_pointcloud(random_pointcloud);
+    TestFixture::compare(random_pointcloud, copy_initialized_random_pointcloud);
 
-    Pointcloud<> copy_assigned_random_pointcloud;
+    Pointcloud<TypeParam> copy_assigned_random_pointcloud;
     copy_assigned_random_pointcloud = random_pointcloud;
-    compare(random_pointcloud, copy_assigned_random_pointcloud);
+    TestFixture::compare(random_pointcloud, copy_assigned_random_pointcloud);
   }
 }
 
-TEST_F(PointcloudTest, Iterators) {
+TYPED_TEST(PointcloudTest, Iterators) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const auto random_point_vector = getRandomPointVector<kDim>();
+    const auto random_point_vector =
+        TestFixture::template getRandomPointVector<dim<TypeParam>>();
 
-    Pointcloud<> random_pointcloud(random_point_vector);
+    Pointcloud<TypeParam> random_pointcloud(random_point_vector);
     size_t point_idx = 0u;
     for (const auto& random_point : random_pointcloud) {
       EXPECT_EQ(random_point, random_point_vector[point_idx++]);
     }
     EXPECT_EQ(point_idx, random_pointcloud.size());
 
-    const Pointcloud<> const_random_pointcloud(random_point_vector);
+    const Pointcloud<TypeParam> const_random_pointcloud(random_point_vector);
     point_idx = 0u;
     for (const auto& random_point : const_random_pointcloud) {
       EXPECT_EQ(random_point, random_point_vector[point_idx++]);
     }
     EXPECT_EQ(point_idx, const_random_pointcloud.size());
-
-    // TODO(victorr): Add test that checks if modifying when iterating by
-    //                reference changes the source data as expected
   }
 }
 
-class PosedPointcloudTest : public PointcloudTest {
+template <typename PointPoseT>
+class PosedPointcloudTest
+    : public PointcloudTest<typename PointPoseT::first_type> {
  protected:
-  static void compare(const PosedPointcloud<>& pointcloud_reference,
-                      const PosedPointcloud<>& pointcloud_to_test) {
+  using PointType = typename PointPoseT::first_type;
+  using PoseType = typename PointPoseT::second_type;
+
+  static void compare(
+      const PosedPointcloud<PointType, PoseType>& pointcloud_reference,
+      const PosedPointcloud<PointType, PoseType>& pointcloud_to_test) {
     EXPECT_EQ(pointcloud_reference.getOrigin(), pointcloud_to_test.getOrigin());
     EXPECT_EQ(pointcloud_reference.getPose(), pointcloud_to_test.getPose());
 
-    PointcloudTest::compare(pointcloud_reference.getPointsLocal(),
-                            pointcloud_to_test.getPointsLocal());
-    PointcloudTest::compare(pointcloud_reference.getPointsGlobal(),
-                            pointcloud_to_test.getPointsGlobal());
-  }
-
-  Transformation2D getRandomTransformation() const {
-    const Rotation2D random_rotation(getRandomAngle());
-    const auto random_translation = Vector<kDim>::Random();
-    return {random_rotation, random_translation};
+    PointcloudTest<PointType>::compare(pointcloud_reference.getPointsLocal(),
+                                       pointcloud_to_test.getPointsLocal());
+    PointcloudTest<PointType>::compare(pointcloud_reference.getPointsGlobal(),
+                                       pointcloud_to_test.getPointsGlobal());
   }
 };
 
-TEST_F(PosedPointcloudTest, InitializationAndCopying) {
+using PointPoseTypes = ::testing::Types<std::pair<Point2D, Transformation2D>,
+                                        std::pair<Point3D, Transformation3D>>;
+TYPED_TEST_SUITE(PosedPointcloudTest, PointPoseTypes, );
+
+TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
+  using PointType = typename TypeParam::first_type;
+  using PoseType = typename TypeParam::second_type;
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Initialize
-    const Transformation2D random_transformation = getRandomTransformation();
-    const Pointcloud<> random_pointcloud(getRandomPointVector<kDim>());
+    const PoseType random_transformation =
+        TestFixture::template getRandomTransformation<dim<PoseType>>();
+    const Pointcloud<PointType> random_pointcloud(
+        TestFixture::template getRandomPointVector<dim<PointType>>());
     PosedPointcloud random_posed_pointcloud(random_transformation,
                                             random_pointcloud);
 
@@ -174,39 +185,42 @@ TEST_F(PosedPointcloudTest, InitializationAndCopying) {
     EXPECT_EQ(random_posed_pointcloud.getOrigin(),
               random_transformation.getPosition());
     EXPECT_EQ(random_posed_pointcloud.getPose(), random_transformation);
-    PointcloudTest::compare(random_posed_pointcloud.getPointsLocal(),
-                            random_pointcloud);
+    PointcloudTest<PointType>::compare(random_posed_pointcloud.getPointsLocal(),
+                                       random_pointcloud);
 
     // Test copying
     PosedPointcloud copy_initialized_posed_pointcloud(random_posed_pointcloud);
-    compare(random_posed_pointcloud, copy_initialized_posed_pointcloud);
+    TestFixture::compare(random_posed_pointcloud,
+                         copy_initialized_posed_pointcloud);
 
-    PosedPointcloud copy_assigned_posed_pointcloud;
+    PosedPointcloud<PointType, PoseType> copy_assigned_posed_pointcloud;
     copy_assigned_posed_pointcloud = random_posed_pointcloud;
-    compare(random_posed_pointcloud, copy_assigned_posed_pointcloud);
+    TestFixture::compare(random_posed_pointcloud,
+                         copy_assigned_posed_pointcloud);
   }
 }
 
-TEST_F(PosedPointcloudTest, Transformation2D) {
+TYPED_TEST(PosedPointcloudTest, Transformations) {
+  using PointType = typename TypeParam::first_type;
+  using PoseType = typename TypeParam::second_type;
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const std::vector<Point<kDim>> random_points_C =
-        getRandomPointVector<kDim>();
-    const Transformation2D random_T_W_C = getRandomTransformation();
-    PosedPointcloud random_posed_pointcloud(random_T_W_C,
-                                            Pointcloud<>(random_points_C));
+    const std::vector<PointType> random_points_C =
+        TestFixture::template getRandomPointVector<dim<PointType>>();
+    const PoseType random_T_W_C =
+        TestFixture::template getRandomTransformation<dim<PoseType>>();
+    const PosedPointcloud random_posed_pointcloud(
+        random_T_W_C, Pointcloud<PointType>(random_points_C));
 
-    Pointcloud<> pointcloud_W = random_posed_pointcloud.getPointsGlobal();
+    const Pointcloud pointcloud_W = random_posed_pointcloud.getPointsGlobal();
     ASSERT_EQ(pointcloud_W.size(), random_points_C.size());
     size_t point_idx = 0u;
-    for (const Point<kDim>& point_C : random_points_C) {
-      const Point<kDim> point_W = random_T_W_C * point_C;
-      const Point<kDim>& posed_pointcloud_point_W = pointcloud_W[point_idx];
-
-      for (int axis = 0; axis < Point<kDim>::Base::RowsAtCompileTime; ++axis) {
-        EXPECT_FLOAT_EQ(point_W[axis], posed_pointcloud_point_W[axis])
-            << " mismatch for point " << point_idx << " along axis " << axis;
-      }
+    for (const auto& point_C : random_points_C) {
+      const PointType point_W = random_T_W_C * point_C;
+      const PointType& posed_pointcloud_point_W = pointcloud_W[point_idx];
+      EXPECT_LE((posed_pointcloud_point_W - point_W).norm(), kEpsilon)
+          << " for points " << EigenFormat::oneLine(posed_pointcloud_point_W)
+          << " and " << EigenFormat::oneLine(point_W);
       ++point_idx;
     }
   }

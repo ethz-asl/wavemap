@@ -12,7 +12,7 @@ RangeImage::RangeImage(FloatingPoint min_angle, FloatingPoint max_angle,
   CHECK_LT(min_angle_, max_angle_);
 }
 
-void RangeImage::importPointcloud(const Pointcloud<>& pointcloud) {
+void RangeImage::importPointcloud(const Pointcloud<Point2D>& pointcloud) {
   for (const auto& C_point : pointcloud) {
     // Filter out noisy points and compute point's range
     if (C_point.hasNaN()) {

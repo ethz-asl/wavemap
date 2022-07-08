@@ -16,14 +16,13 @@ class CoarseToFineIntegratorTest : public FixtureBase {
             getRandomTranslation<2>()};
   }
 
-  PosedPointcloud<> getRandomPointcloud(FloatingPoint min_angle,
-                                        FloatingPoint max_angle, int num_beams,
-                                        FloatingPoint min_distance,
-                                        FloatingPoint max_distance) const {
+  PosedPointcloud<Point2D, Transformation2D> getRandomPointcloud(
+      FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
+      FloatingPoint min_distance, FloatingPoint max_distance) const {
     CHECK_LT(min_angle, max_angle);
     CHECK_LT(min_distance, max_distance);
 
-    Pointcloud<> pointcloud;
+    Pointcloud<Point2D> pointcloud;
     pointcloud.resize(num_beams);
 
     const FloatingPoint angle_increment =
@@ -49,8 +48,9 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     const int num_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
+    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
+        getRandomPointcloud(kMinAngle, kMaxAngle, num_beams, kMinDistance,
+                            kMaxDistance);
 
     // Create the hierarchical range image
     const auto range_image = std::make_shared<PosedRangeImage>(
@@ -334,8 +334,9 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
     const int num_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 10.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
+    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
+        getRandomPointcloud(kMinAngle, kMaxAngle, num_beams, kMinDistance,
+                            kMaxDistance);
 
     // Create the hierarchical range image
     const auto range_image = std::make_shared<PosedRangeImage>(

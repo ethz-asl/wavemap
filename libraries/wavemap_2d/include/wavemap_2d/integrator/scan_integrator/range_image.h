@@ -15,12 +15,12 @@ class RangeImage {
              Eigen::Index num_beams);
 
   RangeImage(FloatingPoint min_angle, FloatingPoint max_angle,
-             Eigen::Index num_beams, const Pointcloud<>& pointcloud)
+             Eigen::Index num_beams, const Pointcloud<Point2D>& pointcloud)
       : RangeImage(min_angle, max_angle, num_beams) {
     importPointcloud(pointcloud);
   }
 
-  void importPointcloud(const Pointcloud<>& pointcloud);
+  void importPointcloud(const Pointcloud<Point2D>& pointcloud);
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }

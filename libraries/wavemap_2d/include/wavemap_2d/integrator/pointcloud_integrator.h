@@ -22,12 +22,14 @@ class PointcloudIntegrator {
       : occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}
   virtual ~PointcloudIntegrator() = default;
 
-  virtual void integratePointcloud(const PosedPointcloud<>& pointcloud) = 0;
+  virtual void integratePointcloud(
+      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) = 0;
 
  protected:
   VolumetricDataStructure::Ptr occupancy_map_;
 
-  static bool isPointcloudValid(const PosedPointcloud<>& pointcloud);
+  static bool isPointcloudValid(
+      const PosedPointcloud<Point2D, Transformation2D>& pointcloud);
 };
 }  // namespace wavemap
 

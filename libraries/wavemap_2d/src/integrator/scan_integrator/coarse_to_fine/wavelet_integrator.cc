@@ -11,7 +11,7 @@ WaveletIntegrator::WaveletIntegrator(VolumetricDataStructure::Ptr occupancy_map)
 }
 
 void WaveletIntegrator::integratePointcloud(
-    const PosedPointcloud<>& pointcloud) {
+    const PosedPointcloud<Point2D, Transformation2D>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
   }

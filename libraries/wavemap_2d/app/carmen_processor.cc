@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
       int num_beams;
       if (iss >> num_beams) {
         // Parse the pointcloud
-        Pointcloud pointcloud;
+        Pointcloud<Point2D> pointcloud;
         pointcloud.resize(num_beams);
         {
           bool success = true;

@@ -35,9 +35,28 @@ using Transformation2D =
     kindr::minimal::Transformation2DTemplate<FloatingPoint>;
 using Transformation3D =
     kindr::minimal::QuatTransformationTemplate<FloatingPoint>;
+template <int dim>
+using Transformation = typename std::conditional_t<
+    dim == 2, Transformation2D,
+    std::conditional_t<dim == 3, Transformation3D, std::false_type>>;
 
 using Rotation2D = Transformation2D::Rotation;
 using Rotation3D = Transformation3D::Rotation;
+template <int dim>
+using Rotation = typename std::conditional_t<
+    dim == 2, Rotation2D,
+    std::conditional_t<dim == 3, Rotation3D, std::false_type>>;
+
+template <typename T>
+inline constexpr int dim = T::RowsAtCompileTime;
+template <>
+inline constexpr int dim<Transformation2D> = 2;
+template <>
+inline constexpr int dim<Transformation3D> = 3;
+template <>
+inline constexpr int dim<Rotation2D> = 2;
+template <>
+inline constexpr int dim<Rotation3D> = 3;
 
 constexpr auto kEpsilon = constants<FloatingPoint>::kEpsilon;
 constexpr auto kPi = constants<FloatingPoint>::kPi;

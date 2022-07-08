@@ -68,6 +68,13 @@ class FixtureBase : public ::testing::Test {
     return random_number_generator_->getRandomRealNumber(min_angle, max_angle);
   }
 
+  template <int dim>
+  Transformation<dim> getRandomTransformation() const {
+    Transformation<dim> random_transformation;
+    random_transformation.setRandom();
+    return random_transformation;
+  }
+
   IndexElement getRandomIndexElement(
       const IndexElement min_coordinate = -1e3,
       const IndexElement max_coordinate = 1e3) const {

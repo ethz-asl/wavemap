@@ -17,7 +17,8 @@ class WaveletIntegrator : public PointcloudIntegrator {
 
   explicit WaveletIntegrator(VolumetricDataStructure::Ptr occupancy_map);
 
-  void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
+  void integratePointcloud(
+      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
 
  private:
   WaveletTreeInterface* wavelet_tree_;

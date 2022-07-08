@@ -129,7 +129,8 @@ void Wavemap2DServer::processPointcloudQueue() {
                                                  << " points");
     const Transformation2D T_W_C_2d(Rotation2D(T_W_C.getRotation().log().z()),
                                     T_W_C.getPosition().head<2>());
-    const PosedPointcloud posed_pointcloud(T_W_C_2d, Pointcloud(t_C_points_2d));
+    const PosedPointcloud posed_pointcloud(T_W_C_2d,
+                                           Pointcloud<Point2D>(t_C_points_2d));
     integration_timer.start();
     pointcloud_integrator_->integratePointcloud(posed_pointcloud);
     const double pointcloud_integration_time = integration_timer.stop();

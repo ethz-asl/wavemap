@@ -6,14 +6,16 @@
 #include "wavemap_common/utils/eigen_format.h"
 
 namespace wavemap {
+template <typename PointT>
 using AabbTest = FixtureBase;
 
-// TODO(victorr): Also test for 3D
-constexpr int kDim = 2;
+using PointTypes = ::testing::Types<Point2D, Point3D>;
+TYPED_TEST_SUITE(AabbTest, PointTypes, );
 
-TEST_F(AabbTest, InitializationAndInclusion) {
-  for (const Point<kDim>& random_point : getRandomPointVector<kDim>()) {
-    AABB<Point<kDim>> aabb;
+TYPED_TEST(AabbTest, InitializationAndInclusion) {
+  for (const auto& random_point :
+       TestFixture::template getRandomPointVector<dim<TypeParam>>()) {
+    AABB<TypeParam> aabb;
     EXPECT_FALSE(aabb.containsPoint(random_point))
         << "The uninitialized AABB should be empty.";
     aabb.includePoint(random_point);
@@ -22,12 +24,12 @@ TEST_F(AabbTest, InitializationAndInclusion) {
   }
 }
 
-TEST_F(AabbTest, ClosestPointsAndDistances) {
+TYPED_TEST(AabbTest, ClosestPointsAndDistances) {
   struct QueryAndExpectedResults {
-    AABB<Point<kDim>> aabb;
-    Point<kDim> query_point;
+    AABB<TypeParam> aabb;
+    TypeParam query_point;
 
-    QueryAndExpectedResults(AABB<Point<kDim>> aabb, Point<kDim> query_point)
+    QueryAndExpectedResults(AABB<TypeParam> aabb, TypeParam query_point)
         : aabb(std::move(aabb)), query_point(std::move(query_point)) {}
 
     std::string getDescription() const {
@@ -41,23 +43,30 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
   // Generate test set
   std::vector<QueryAndExpectedResults> tests;
   {
-    std::vector<AABB<Point<kDim>>> aabbs{
-        {Point<kDim>::Zero(), Point<kDim>::Ones()},
-        {Point<kDim>::Zero(), Point<kDim>{0.5f, 1.f}},
-        {Point<kDim>::Zero(), Point<kDim>{1.f, 0.5f}}};
-    for (const auto& aabb : aabbs) {
-      tests.emplace_back(aabb, Point<kDim>::Zero());
+    std::vector<AABB<TypeParam>> aabbs{{TypeParam::Zero(), TypeParam::Ones()}};
+    for (int dim_idx = 0; dim_idx < dim<TypeParam>; ++dim_idx) {
+      const TypeParam min_corner = TypeParam::Zero();
+      TypeParam max_corner = TypeParam::Ones();
+      max_corner[dim_idx] = 0.5f;
+      aabbs.template emplace_back(AABB<TypeParam>{min_corner, max_corner});
     }
-    for (int direction = 1; direction < 4; ++direction) {
+    for (const auto& aabb : aabbs) {
+      tests.emplace_back(aabb, TypeParam::Zero());
+    }
+    for (int direction = 1; direction < AABB<TypeParam>::kNumCorners;
+         ++direction) {
       for (const FloatingPoint scale : {0.1f, 1.f, 3.f, 30.f}) {
         for (const FloatingPoint sign : {-1.f, 1.f}) {
-          const Vector<kDim> translation =
-              sign * scale * Vector<kDim>{direction & 0b01, direction & 0b10};
+          Vector<dim<TypeParam>> translation;
+          for (int dim_idx = 0; dim_idx < dim<TypeParam>; ++dim_idx) {
+            translation[dim_idx] = (direction >> dim_idx) & 0b1;
+          }
+          translation *= sign * scale;
           for (const auto& aabb : aabbs) {
-            const AABB<Point<kDim>> aabb_translated{aabb.min + translation,
-                                                    aabb.max + translation};
+            const AABB<TypeParam> aabb_translated{aabb.min + translation,
+                                                  aabb.max + translation};
             tests.emplace_back(aabb, translation);
-            tests.emplace_back(aabb_translated, Point<kDim>::Zero());
+            tests.emplace_back(aabb_translated, TypeParam::Zero());
             tests.emplace_back(aabb_translated, translation);
           }
         }
@@ -68,10 +77,10 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
   // Run tests
   for (const QueryAndExpectedResults& test : tests) {
     // Find the closest and furthest point
-    Point<kDim> closest_point;
-    Point<kDim> furthest_point;
+    TypeParam closest_point;
+    TypeParam furthest_point;
     // Check for closest/furthest points on the AABB's edges
-    for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
+    for (int dim_idx = 0; dim_idx < dim<TypeParam>; ++dim_idx) {
       const FloatingPoint query_coord = test.query_point[dim_idx];
       const FloatingPoint aabb_min_coord = test.aabb.min[dim_idx];
       const FloatingPoint aabb_max_coord = test.aabb.max[dim_idx];
@@ -102,7 +111,7 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
           << test.getDescription();
     }
 
-    const Point<kDim> returned_closest_point =
+    const TypeParam returned_closest_point =
         test.aabb.closestPointTo(test.query_point);
     EXPECT_NEAR(returned_closest_point.x(), closest_point.x(), kEpsilon)
         << test.getDescription();
@@ -115,7 +124,7 @@ TEST_F(AabbTest, ClosestPointsAndDistances) {
                 (test.query_point - closest_point).squaredNorm(), kEpsilon)
         << test.getDescription();
 
-    const Point<kDim> returned_furthest_point =
+    const TypeParam returned_furthest_point =
         test.aabb.furthestPointFrom(test.query_point);
     EXPECT_NEAR(returned_furthest_point.x(), furthest_point.x(), kEpsilon)
         << test.getDescription();
