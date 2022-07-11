@@ -215,10 +215,12 @@ TYPED_TEST(PosedPointcloudTest, Transformations) {
     const Pointcloud pointcloud_W = random_posed_pointcloud.getPointsGlobal();
     ASSERT_EQ(pointcloud_W.size(), random_points_C.size());
     size_t point_idx = 0u;
+    constexpr FloatingPoint kMaxAcceptableOffset = 1e-3f;
     for (const auto& point_C : random_points_C) {
       const PointType point_W = random_T_W_C * point_C;
       const PointType& posed_pointcloud_point_W = pointcloud_W[point_idx];
-      EXPECT_LE((posed_pointcloud_point_W - point_W).norm(), kEpsilon)
+      EXPECT_LE((posed_pointcloud_point_W - point_W).norm(),
+                kMaxAcceptableOffset)
           << " for points " << EigenFormat::oneLine(posed_pointcloud_point_W)
           << " and " << EigenFormat::oneLine(point_W);
       ++point_idx;
