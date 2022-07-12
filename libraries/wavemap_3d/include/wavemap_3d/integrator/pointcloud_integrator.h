@@ -1,14 +1,12 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
+#ifndef WAVEMAP_3D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
+#define WAVEMAP_3D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
 
 #include <memory>
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/pointcloud.h>
 
-#include "wavemap_2d/data_structure/volumetric_data_structure.h"
-#include "wavemap_2d/integrator/measurement_model/beam_model.h"
-#include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
+#include "wavemap_3d/data_structure/volumetric_data_structure.h"
 
 namespace wavemap {
 class PointcloudIntegrator {
@@ -21,14 +19,14 @@ class PointcloudIntegrator {
   virtual ~PointcloudIntegrator() = default;
 
   virtual void integratePointcloud(
-      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) = 0;
+      const PosedPointcloud<Point3D, Transformation3D>& pointcloud) = 0;
 
  protected:
   VolumetricDataStructure::Ptr occupancy_map_;
 
   static bool isPointcloudValid(
-      const PosedPointcloud<Point2D, Transformation2D>& pointcloud);
+      const PosedPointcloud<Point3D, Transformation3D>& pointcloud);
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
+#endif  // WAVEMAP_3D_INTEGRATOR_POINTCLOUD_INTEGRATOR_H_
