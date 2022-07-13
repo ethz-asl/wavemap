@@ -306,6 +306,11 @@ jobs:
           cache-group: noetic-gcc-release
           cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
+      - name: Build regular code
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color
+
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
@@ -363,15 +368,12 @@ jobs:
           catkin clean -y
           catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Rebuild catkin package dependencies (in debug mode)
+      - name: Rebuild dependencies and build regular code (in debug mode)
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           source /opt/ros/noetic/setup.bash
-          dependencies=$(catkin list --deps --directory src/${{ env.REPOSITORY_NAME }} -u | grep -oP '(?<= - ).*?(?=$)' | grep -v ${{ env.REPOSITORY_NAME }} | sort -u)
-          catkin_packages=$(catkin list -u | sort -u)
-          dependencies_to_catkin_build=$(comm -12 <(echo "$dependencies") <(echo "$catkin_packages"))
-          catkin build --no-status --force-color $(echo "$dependencies_to_catkin_build")
+          catkin build wavemap_all --no-status --force-color
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -454,6 +456,11 @@ jobs:
           cache-group: noetic-gcc-release
           cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
+      - name: Build regular code
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color
+
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
@@ -506,6 +513,11 @@ jobs:
         run: |
           apt-get update
           apt-get install -q -y --no-install-recommends valgrind
+
+      - name: Build regular code
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}
