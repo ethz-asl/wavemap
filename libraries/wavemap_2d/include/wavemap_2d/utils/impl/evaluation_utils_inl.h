@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "wavemap_2d/indexing/index_conversions.h"
+#include <wavemap_common/indexing/index_conversions.h>
 
 namespace wavemap::utils {
 template <typename CellType, typename PredictedMap>

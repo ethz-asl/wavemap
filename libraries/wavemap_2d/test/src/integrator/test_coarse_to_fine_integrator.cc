@@ -345,10 +345,10 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
     constexpr QuadtreeIndex::Element kMaxHeight = 10;
-    const Index2D min_index = convert::pointToCeilIndex(
+    const Index2D min_index = convert::pointToCeilIndex<2>(
         random_pointcloud.getOrigin() - Vector2D::Constant(kMaxDistance),
         min_cell_width_inv);
-    const Index2D max_index = convert::pointToCeilIndex(
+    const Index2D max_index = convert::pointToCeilIndex<2>(
         random_pointcloud.getOrigin() + Vector2D::Constant(kMaxDistance),
         min_cell_width_inv);
     for (const Index2D& index :

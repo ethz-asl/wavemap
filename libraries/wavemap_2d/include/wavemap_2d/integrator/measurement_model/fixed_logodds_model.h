@@ -2,8 +2,8 @@
 #define WAVEMAP_2D_INTEGRATOR_MEASUREMENT_MODEL_FIXED_LOGODDS_MODEL_H_
 
 #include <wavemap_common/common.h>
+#include <wavemap_common/indexing/index_conversions.h>
 
-#include "wavemap_2d/indexing/index_conversions.h"
 #include "wavemap_2d/integrator/measurement_model/measurement_model.h"
 
 namespace wavemap {

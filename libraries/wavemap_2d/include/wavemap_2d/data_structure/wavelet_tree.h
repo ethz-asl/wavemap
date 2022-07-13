@@ -90,7 +90,7 @@ class WaveletTree : public WaveletTreeInterface {
       convert::nodeIndexToMinCornerIndex(root_node_index_offset_);
 
   QuadtreeIndex toInternal(const Index2D& index) const {
-    return convert::indexAndHeightToNodeIndex(index + root_index_offset_, 0);
+    return convert::indexAndHeightToNodeIndex<2>(index + root_index_offset_, 0);
   }
   QuadtreeIndex toInternal(const QuadtreeIndex& node_index) const {
     DCHECK_LE(node_index.height, root_node_index_offset_.height);

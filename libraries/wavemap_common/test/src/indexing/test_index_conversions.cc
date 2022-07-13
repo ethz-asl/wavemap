@@ -3,44 +3,57 @@
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/eigen_format.h>
 
-#include "wavemap_2d/indexing/index_conversions.h"
+#include "wavemap_common/indexing/index_conversions.h"
 
 namespace wavemap {
 // TODO(victorr): Add tests for remaining index conversions:
 //                - Index
 //                - Point
+template <typename DimT>
 class IndexConversionsTest : public FixtureBase {
  protected:
-  static constexpr QuadtreeIndex::Element kMaxHeight = 14;
-  const QuadtreeIndex::Position kMinQuadtreePositionIndex =
-      QuadtreeIndex::Position::Zero();
-  const QuadtreeIndex::Position kMaxQuadtreePositionIndex =
-      QuadtreeIndex::Position::Constant(int_math::exp2(kMaxHeight));
+  static constexpr NdtreeIndexElement kMaxHeight = 14;
+  const typename NdtreeIndex<DimT::kDim>::Position kMinNdtreePositionIndex =
+      NdtreeIndex<DimT::kDim>::Position::Zero();
+  const typename NdtreeIndex<DimT::kDim>::Position kMaxNdtreePositionIndex =
+      NdtreeIndex<DimT::kDim>::Position::Constant(int_math::exp2(kMaxHeight));
 };
 
-TEST_F(IndexConversionsTest, NodeIndexConversions) {
+template <int dim>
+struct DimType {
+  static constexpr int kDim = dim;
+};
+using Dimensions = ::testing::Types<DimType<2>, DimType<3>>;
+TYPED_TEST_SUITE(IndexConversionsTest, Dimensions, );
+
+TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
+  using NdtreeIndexType = NdtreeIndex<TypeParam::kDim>;
+  using IndexType = Index<TypeParam::kDim>;
+  using PointType = Point<TypeParam::kDim>;
+
   // Generate a combination of random and handpicked node indices for testing
-  std::vector<QuadtreeIndex> random_indices =
-      getRandomNdtreeIndexVector<QuadtreeIndex>(
-          kMinQuadtreePositionIndex, kMaxQuadtreePositionIndex, 1, kMaxHeight);
-  random_indices.emplace_back(QuadtreeIndex{0, {0, 0}});
-  for (QuadtreeIndex::Element index_height = 0; index_height < kMaxHeight;
-       ++index_height) {
-    for (QuadtreeIndex::Element index_x = -1; index_x <= 1; ++index_x) {
-      for (QuadtreeIndex::Element index_y = -1; index_y <= 1; ++index_y) {
+  std::vector<NdtreeIndexType> random_indices =
+      TestFixture::template getRandomNdtreeIndexVector<NdtreeIndexType>(
+          TestFixture::kMinNdtreePositionIndex,
+          TestFixture::kMaxNdtreePositionIndex, 1, TestFixture::kMaxHeight);
+  random_indices.emplace_back(NdtreeIndexType{0, {0, 0}});
+  for (NdtreeIndexElement index_height = 0;
+       index_height < TestFixture::kMaxHeight; ++index_height) {
+    for (NdtreeIndexElement index_x = -1; index_x <= 1; ++index_x) {
+      for (NdtreeIndexElement index_y = -1; index_y <= 1; ++index_y) {
         random_indices.emplace_back(
-            QuadtreeIndex{index_height, {index_x, index_y}});
+            NdtreeIndexType{index_height, {index_x, index_y}});
       }
     }
   }
 
   // Test conversions from node indices to other coordinate and index types
-  for (const QuadtreeIndex& node_index : random_indices) {
+  for (const NdtreeIndexType& node_index : random_indices) {
     // Compare to coordinate convention
     {
-      const Index2D min_corner_index =
+      const IndexType min_corner_index =
           convert::nodeIndexToMinCornerIndex(node_index);
-      const Index2D min_corner_index_from_convention =
+      const IndexType min_corner_index_from_convention =
           node_index.position * int_math::exp2(node_index.height);
       EXPECT_EQ(min_corner_index, min_corner_index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
@@ -49,12 +62,12 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
           << EigenFormat::oneLine(min_corner_index_from_convention);
     }
     {
-      const Index2D max_corner_index =
+      const IndexType max_corner_index =
           convert::nodeIndexToMaxCornerIndex(node_index);
-      const Index2D max_corner_index_from_convention =
-          (node_index.position + Index2D::Ones()) *
+      const IndexType max_corner_index_from_convention =
+          (node_index.position + IndexType::Ones()) *
               int_math::exp2(node_index.height) -
-          Index2D::Ones();
+          IndexType::Ones();
       EXPECT_EQ(max_corner_index, max_corner_index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
           << " to regular index " << EigenFormat::oneLine(max_corner_index)
@@ -64,9 +77,9 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
 
     // Roundtrip through regular indices (integer coordinates)
     {
-      const Index2D min_corner_index =
+      const IndexType min_corner_index =
           convert::nodeIndexToMinCornerIndex(node_index);
-      const QuadtreeIndex roundtrip_node_index =
+      const NdtreeIndexType roundtrip_node_index =
           convert::indexAndHeightToNodeIndex(min_corner_index,
                                              node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
@@ -76,9 +89,9 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
           << roundtrip_node_index.toString() << " instead.";
     }
     {
-      const Index2D max_corner_index =
+      const IndexType max_corner_index =
           convert::nodeIndexToMaxCornerIndex(node_index);
-      const QuadtreeIndex roundtrip_node_index =
+      const NdtreeIndexType roundtrip_node_index =
           convert::indexAndHeightToNodeIndex(max_corner_index,
                                              node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
@@ -90,10 +103,11 @@ TEST_F(IndexConversionsTest, NodeIndexConversions) {
 
     // Roundtrip through real valued coordinates
     {
-      const FloatingPoint random_min_cell_width = getRandomMinCellWidth();
-      const Point2D node_center =
+      const FloatingPoint random_min_cell_width =
+          TestFixture::getRandomMinCellWidth();
+      const PointType node_center =
           convert::nodeIndexToCenterPoint(node_index, random_min_cell_width);
-      const QuadtreeIndex roundtrip_node_index = convert::pointToNodeIndex(
+      const NdtreeIndexType roundtrip_node_index = convert::pointToNodeIndex(
           node_center, random_min_cell_width, node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()

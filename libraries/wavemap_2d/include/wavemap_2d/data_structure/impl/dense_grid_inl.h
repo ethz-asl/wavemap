@@ -6,9 +6,9 @@
 #include <utility>
 
 #include <opencv2/core/eigen.hpp>
+#include <wavemap_common/indexing/index_conversions.h>
 
 #include "wavemap_2d/data_structure/volumetric_data_structure.h"
-#include "wavemap_2d/indexing/index_conversions.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/utils/image_utils.h"
 

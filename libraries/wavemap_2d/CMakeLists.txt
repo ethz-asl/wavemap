@@ -50,7 +50,6 @@ if (CATKIN_ENABLE_TESTING)
     test/src/data_structure/test_volumetric_data_structure.cc
     test/src/integrator/test_range_image.cc
     test/src/data_structure/test_simple_quadtree.cc
-    test/src/indexing/test_index_conversions.cc
     test/src/iterator/test_grid_iterator.cc
     test/src/iterator/test_ray_iterator.cc
     test/src/integrator/test_pointcloud_integrators.cc

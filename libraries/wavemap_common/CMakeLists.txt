@@ -44,6 +44,7 @@ if (CATKIN_ENABLE_TESTING)
     test/src/data_structure/test_ndtree.cc
     test/src/data_structure/test_pointcloud.cc
     test/src/data_structure/test_sparse_vector.cc
+    test/src/indexing/test_index_conversions.cc
     test/src/indexing/test_ndtree_index.cc
     test/src/iterator/test_subtree_iterator.cc
     test/src/utils/test_int_math.cc)

@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/eigen_format.h>
 
@@ -10,7 +11,6 @@
 #include "wavemap_2d/data_structure/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_data_structure.h"
 #include "wavemap_2d/data_structure/wavelet_tree.h"
-#include "wavemap_2d/indexing/index_conversions.h"
 #include "wavemap_2d/indexing/index_hashes.h"
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
 #include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
@@ -66,7 +66,7 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     std::unordered_set<Index2D, VoxbloxIndexHash> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index2D index =
-          convert::pointToNearestIndex(end_point, min_cell_width_inv);
+          convert::pointToNearestIndex<2>(end_point, min_cell_width_inv);
       ray_end_points.emplace(index);
     }
 

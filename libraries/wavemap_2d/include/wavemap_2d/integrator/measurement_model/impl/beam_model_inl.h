@@ -1,9 +1,8 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_MEASUREMENT_MODEL_IMPL_BEAM_MODEL_INL_H_
 #define WAVEMAP_2D_INTEGRATOR_MEASUREMENT_MODEL_IMPL_BEAM_MODEL_INL_H_
 
+#include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/utils/eigen_format.h>
-
-#include "wavemap_2d/indexing/index_conversions.h"
 
 namespace wavemap {
 inline FloatingPoint BeamModel::computeUpdateAt(const Index2D& index) const {

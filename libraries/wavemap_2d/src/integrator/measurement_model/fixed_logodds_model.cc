@@ -1,6 +1,6 @@
 #include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
 
-#include "wavemap_2d/indexing/index_conversions.h"
+#include <wavemap_common/indexing/index_conversions.h>
 
 namespace wavemap {
 Index2D FixedLogOddsModel::getBottomLeftUpdateIndex() const {

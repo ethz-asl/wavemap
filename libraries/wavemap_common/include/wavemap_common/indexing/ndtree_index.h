@@ -8,14 +8,17 @@
 #include "wavemap_common/utils/int_math.h"
 
 namespace wavemap {
+using NdtreeIndexElement = int;
+using NdtreeIndexRelativeChild = uint8_t;
+
 // TODO(victorr): Consider renaming NdtreeIndex to something like
 //                HierarchicalNdIndex, since it can represent hierarchical
 //                quadtrant/octant subvolumes regardless of the exact data
 //                structure that's being indexed.
 template <int dim>
 struct NdtreeIndex {
-  using Element = int;
-  using RelativeChild = uint8_t;
+  using Element = NdtreeIndexElement;
+  using RelativeChild = NdtreeIndexRelativeChild;
   using Position = Eigen::Matrix<Element, dim, 1>;
 
   static constexpr Element kDim = dim;

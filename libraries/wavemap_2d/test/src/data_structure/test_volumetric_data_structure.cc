@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/container_print_utils.h>
 
@@ -10,7 +11,6 @@
 #include "wavemap_2d/data_structure/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_data_structure.h"
 #include "wavemap_2d/data_structure/wavelet_tree.h"
-#include "wavemap_2d/indexing/index_conversions.h"
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
