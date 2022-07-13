@@ -14,7 +14,7 @@
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
-#include <wavemap_2d_ros/utils/nameof.h>
+#include <wavemap_common_ros/utils/nameof.h>
 
 namespace wavemap {
 Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_ROS_UTILS_TIMER_H_
-#define WAVEMAP_2D_ROS_UTILS_TIMER_H_
+#ifndef WAVEMAP_COMMON_ROS_UTILS_TIMER_H_
+#define WAVEMAP_COMMON_ROS_UTILS_TIMER_H_
 
 namespace wavemap {
 class CpuTimer {
@@ -49,4 +49,4 @@ class CpuTimer {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_ROS_UTILS_TIMER_H_
+#endif  // WAVEMAP_COMMON_ROS_UTILS_TIMER_H_

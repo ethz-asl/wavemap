@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef WAVEMAP_2D_ROS_UTILS_NAMEOF_H_
-#define WAVEMAP_2D_ROS_UTILS_NAMEOF_H_
+#ifndef WAVEMAP_COMMON_ROS_UTILS_NAMEOF_H_
+#define WAVEMAP_COMMON_ROS_UTILS_NAMEOF_H_
 
 #define NAMEOF(x) wavemap::_nameof<0>(#x, sizeof(x))  // NOLINT
 
@@ -49,4 +49,4 @@ std::string _nameof(const std::string& x, std::size_t) {
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_ROS_UTILS_NAMEOF_H_
+#endif  // WAVEMAP_COMMON_ROS_UTILS_NAMEOF_H_

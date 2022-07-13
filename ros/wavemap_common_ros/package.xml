@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>wavemap_3d_ros</name>
+  <name>wavemap_common_ros</name>
   <version>0.0.0</version>
-  <description>ROS interface for wavemap_3d.</description>
+  <description>Common components for wavemap's 2D and 3D ROS interfaces.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
   <license>BSD</license>
@@ -13,11 +13,10 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
 
-  <depend>wavemap_3d</depend>
-  <depend>wavemap_common_ros</depend>
+  <depend>wavemap_2d</depend>
 
-  <depend>wavemap_msgs</depend>
-  <depend>std_srvs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>visualization_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>rosbag</depend>
+
+  <depend>minkindr_conversions</depend>
 </package>

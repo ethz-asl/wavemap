@@ -8,11 +8,11 @@ catkin_simple(ALL_DEPS_REQUIRED)
 add_wavemap_compile_definitions_and_options()
 
 # Libraries
-cs_add_library(${PROJECT_NAME} src/tf_transformer.cc src/wavemap_2d_server.cc)
+cs_add_library(${PROJECT_NAME} src/wavemap_2d_server.cc)
 
 # Binaries
-add_executable(wavemap_2d_server_node app/wavemap_2d_server_node.cc)
-target_link_libraries(wavemap_2d_server_node ${PROJECT_NAME})
+add_executable(server_node app/server_node.cc)
+target_link_libraries(server_node ${PROJECT_NAME})
 
 cs_add_executable(rosbag_processor app/rosbag_processor.cc)
 target_link_libraries(rosbag_processor ${PROJECT_NAME})

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_ROS_TF_TRANSFORMER_H_
-#define WAVEMAP_2D_ROS_TF_TRANSFORMER_H_
+#ifndef WAVEMAP_COMMON_ROS_TF_TRANSFORMER_H_
+#define WAVEMAP_COMMON_ROS_TF_TRANSFORMER_H_
 
 #include <map>
 #include <string>
@@ -52,4 +52,4 @@ class TfTransformer {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_ROS_TF_TRANSFORMER_H_
+#endif  // WAVEMAP_COMMON_ROS_TF_TRANSFORMER_H_

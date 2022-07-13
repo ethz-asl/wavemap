@@ -3,7 +3,7 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "wavemap");
+  ros::init(argc, argv, "wavemap_2d_server");
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
