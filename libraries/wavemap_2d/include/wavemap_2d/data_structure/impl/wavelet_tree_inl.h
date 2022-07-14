@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "wavemap_2d/data_structure/cell_types/occupancy_state.h"
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_state.h>
 
 namespace wavemap {
 template <typename CellT>
@@ -213,7 +213,7 @@ void WaveletTree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
 
 template <typename CellT>
 void WaveletTree<CellT>::forEachLeaf(
-    VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
+    VolumetricDataStructure2D::IndexedLeafVisitorFunction visitor_fn) const {
   if (empty()) {
     return;
   }

@@ -94,7 +94,7 @@ void HashedBlocks<CellT>::addToCellValue(const Index2D& index,
 
 template <typename CellT>
 void HashedBlocks<CellT>::forEachLeaf(
-    VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
+    VolumetricDataStructure2D::IndexedLeafVisitorFunction visitor_fn) const {
   const Index2D min_local_cell_index = Index2D::Zero();
   const Index2D max_local_cell_index = Index2D::Constant(kCellsPerSide - 1);
 

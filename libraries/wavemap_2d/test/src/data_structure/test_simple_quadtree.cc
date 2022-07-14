@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
 #include <wavemap_common/test/fixture_base.h>
 
-#include "wavemap_2d/data_structure/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/simple_quadtree.h"
 
 namespace wavemap {

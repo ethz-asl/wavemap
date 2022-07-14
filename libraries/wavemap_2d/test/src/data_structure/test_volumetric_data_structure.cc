@@ -1,15 +1,15 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
 #include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/container_print_utils.h>
 
-#include "wavemap_2d/data_structure/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/dense_grid.h"
 #include "wavemap_2d/data_structure/differencing_quadtree.h"
 #include "wavemap_2d/data_structure/hashed_blocks.h"
 #include "wavemap_2d/data_structure/simple_quadtree.h"
-#include "wavemap_2d/data_structure/volumetric_data_structure.h"
+#include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/data_structure/wavelet_tree.h"
 
 namespace wavemap {
@@ -30,7 +30,7 @@ using VolumetricDataStructureTypes = ::testing::Types<
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
-  std::unique_ptr<VolumetricDataStructure> map_base_ptr =
+  std::unique_ptr<VolumetricDataStructure2D> map_base_ptr =
       std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
 
   // NOTE: Empty data structures are allowed to have size 0 or 1, such that the
@@ -54,7 +54,7 @@ TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
 }
 
 TYPED_TEST(VolumetricDataStructureTest, Pruning) {
-  std::unique_ptr<VolumetricDataStructure> map_base_ptr =
+  std::unique_ptr<VolumetricDataStructure2D> map_base_ptr =
       std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
   const size_t empty_map_memory_usage = map_base_ptr->getMemoryUsage();
 
@@ -92,7 +92,7 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
 TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    std::unique_ptr<VolumetricDataStructure> map_base_ptr =
+    std::unique_ptr<VolumetricDataStructure2D> map_base_ptr =
         std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
     {
       const Index2D map_min_index = map_base_ptr->getMinIndex();
@@ -130,7 +130,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Create a random map
-    std::unique_ptr<VolumetricDataStructure> map_base_ptr =
+    std::unique_ptr<VolumetricDataStructure2D> map_base_ptr =
         std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
     const std::vector<Index2D> random_indices =
         TestFixture::template getRandomIndexVector<2>(

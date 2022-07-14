@@ -1,7 +1,7 @@
-#ifndef WAVEMAP_2D_UTILS_ANGLE_UTILS_H_
-#define WAVEMAP_2D_UTILS_ANGLE_UTILS_H_
+#ifndef WAVEMAP_COMMON_UTILS_ANGLE_UTILS_H_
+#define WAVEMAP_COMMON_UTILS_ANGLE_UTILS_H_
 
-#include <wavemap_common/common.h>
+#include "wavemap_common/common.h"
 
 namespace wavemap::angle_math {
 inline FloatingPoint normalize(FloatingPoint angle) {
@@ -18,4 +18,4 @@ inline FloatingPoint normalize_near(FloatingPoint angle) {
 }
 }  // namespace wavemap::angle_math
 
-#endif  // WAVEMAP_2D_UTILS_ANGLE_UTILS_H_
+#endif  // WAVEMAP_COMMON_UTILS_ANGLE_UTILS_H_

@@ -94,7 +94,7 @@ class Wavemap2DServer {
 
   Config config_;
 
-  VolumetricDataStructure::Ptr occupancy_map_;
+  VolumetricDataStructure2D::Ptr occupancy_map_;
   PointcloudIntegrator::Ptr pointcloud_integrator_;
   TfTransformer transformer_;
 

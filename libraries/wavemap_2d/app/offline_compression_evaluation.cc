@@ -3,8 +3,8 @@
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
 
-#include "wavemap_2d/data_structure/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/dense_grid.h"
 #include "wavemap_2d/data_structure/simple_quadtree.h"
 #include "wavemap_2d/transform/dense/lifted_cdf_5_3.h"

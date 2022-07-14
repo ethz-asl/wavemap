@@ -9,7 +9,7 @@
 namespace wavemap {
 class RayIntegrator : public PointcloudIntegrator {
  public:
-  explicit RayIntegrator(VolumetricDataStructure::Ptr occupancy_map)
+  explicit RayIntegrator(VolumetricDataStructure2D::Ptr occupancy_map)
       : PointcloudIntegrator(std::move(occupancy_map)) {}
 
   void integratePointcloud(

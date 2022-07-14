@@ -5,7 +5,7 @@
 
 #include <wavemap_common/common.h>
 
-#include "wavemap_2d/data_structure/volumetric_data_structure.h"
+#include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 
 namespace wavemap {
 class MeasurementModel {

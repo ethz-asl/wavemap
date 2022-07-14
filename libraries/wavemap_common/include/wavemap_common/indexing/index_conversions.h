@@ -1,10 +1,10 @@
 #ifndef WAVEMAP_COMMON_INDEXING_INDEX_CONVERSIONS_H_
 #define WAVEMAP_COMMON_INDEXING_INDEX_CONVERSIONS_H_
 
-#include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/aabb.h>
-#include <wavemap_common/indexing/ndtree_index.h>
-#include <wavemap_common/utils/int_math.h>
+#include "wavemap_common/common.h"
+#include "wavemap_common/data_structure/aabb.h"
+#include "wavemap_common/indexing/ndtree_index.h"
+#include "wavemap_common/utils/int_math.h"
 
 namespace wavemap::convert {
 // TODO(victorr): Check styleguide on whether these classless methods names

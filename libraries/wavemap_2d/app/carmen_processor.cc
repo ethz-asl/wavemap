@@ -3,11 +3,10 @@
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
 
-#include "wavemap_2d/data_structure/cell_types/occupancy_cell.h"
 #include "wavemap_2d/data_structure/dense_grid.h"
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
-#include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",
               "Path to the carmen log file to get the input data from.");
@@ -37,7 +36,7 @@ int main(int argc, char** argv) {
       << "The map_min_cell_width flag must be set to a positive number.";
 
   // Set up the mapper
-  VolumetricDataStructure::Ptr occupancy_map =
+  VolumetricDataStructure2D::Ptr occupancy_map =
       std::make_shared<DataStructureType>(map_min_cell_width);
   PointcloudIntegratorType pointcloud_integrator(occupancy_map);
 
@@ -126,7 +125,7 @@ int main(int argc, char** argv) {
 
   // Print stats
   LOG(INFO) << "Max ray length: " << max_distance;
-  occupancy_map->printSize();
+  LOG(INFO) << "Size: " << occupancy_map->size();
   occupancy_map->showImage(/*use_color*/ true);
   cv::waitKey(1000 /*ms*/);
 

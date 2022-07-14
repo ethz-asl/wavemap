@@ -10,10 +10,10 @@
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/aabb.h>
+#include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/type_utils.h>
 
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
-#include "wavemap_2d/utils/angle_utils.h"
 
 namespace wavemap {
 class RangeImageIntersector {

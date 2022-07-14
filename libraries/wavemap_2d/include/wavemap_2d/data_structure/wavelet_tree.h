@@ -4,22 +4,22 @@
 #include <string>
 
 #include <wavemap_common/data_structure/ndtree/ndtree.h>
+#include <wavemap_common/data_structure/volumetric_cell_types/haar_wavelet.h>
 #include <wavemap_common/indexing/ndtree_index.h>
 
-#include "wavemap_2d/data_structure/cell_types/haar_wavelet.h"
-#include "wavemap_2d/data_structure/wavelet_tree_interface.h"
+#include "wavemap_2d/data_structure/volumetric_wavelet_tree_interface_2d.h"
 
 namespace wavemap {
 template <typename CellT>
-class WaveletTree : public WaveletTreeInterface {
+class WaveletTree : public VolumetricWaveletTreeInterface2D {
  public:
   static_assert(std::is_same_v<typename CellT::Specialized, FloatingPoint>);
 
   using CellType = CellT;
   static constexpr bool kRequiresPruningForThresholding = true;
 
-  using WaveletTreeInterface::WaveletTreeInterface;
-  ~WaveletTree() override = default;
+  // Use the base class' constructor
+  using VolumetricWaveletTreeInterface2D::VolumetricWaveletTreeInterface2D;
 
   bool empty() const override { return quadtree_.empty(); }
   size_t size() const override { return quadtree_.size(); }

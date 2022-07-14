@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <wavemap_common/common.h>
-#include <wavemap_common/test/fixture_base.h>
-#include <wavemap_common/utils/eigen_format.h>
 
+#include "wavemap_common/common.h"
 #include "wavemap_common/indexing/index_conversions.h"
+#include "wavemap_common/test/fixture_base.h"
+#include "wavemap_common/utils/eigen_format.h"
 
 namespace wavemap {
 // TODO(victorr): Add tests for remaining index conversions:

@@ -6,18 +6,18 @@
 
 #include <wavemap_common/common.h>
 
-#include "wavemap_2d/data_structure/volumetric_data_structure.h"
+#include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/indexing/index_hashes.h"
 
 namespace wavemap {
 template <typename CellT>
-class HashedBlocks : public VolumetricDataStructure {
+class HashedBlocks : public VolumetricDataStructure2D {
  public:
   using CellType = CellT;
   static constexpr bool kRequiresPruningForThresholding = false;
 
-  explicit HashedBlocks(const FloatingPoint min_cell_width)
-      : VolumetricDataStructure(min_cell_width) {}
+  // Use the base class' constructor
+  using VolumetricDataStructure2D::VolumetricDataStructure2D;
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override { return kCellsPerBlock * blocks_.size(); }

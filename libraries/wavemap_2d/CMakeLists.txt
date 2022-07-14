@@ -20,7 +20,6 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # Libraries
 add_library(
   ${PROJECT_NAME}
-  src/data_structure/volumetric_data_structure.cc
   src/integrator/pointcloud_integrator.cc
   src/integrator/measurement_model/beam_model.cc
   src/integrator/measurement_model/fixed_logodds_model.cc
@@ -44,12 +43,11 @@ target_link_libraries(offline_compression_evaluation ${PROJECT_NAME})
 if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
     test_${PROJECT_NAME}
-    test/src/data_structure/cell_types/test_cell_types.cc
     test/src/data_structure/test_dense_grid.cc
     test/src/data_structure/test_hashed_blocks.cc
+    test/src/data_structure/test_simple_quadtree.cc
     test/src/data_structure/test_volumetric_data_structure.cc
     test/src/integrator/test_range_image.cc
-    test/src/data_structure/test_simple_quadtree.cc
     test/src/iterator/test_grid_iterator.cc
     test/src/iterator/test_ray_iterator.cc
     test/src/integrator/test_pointcloud_integrators.cc

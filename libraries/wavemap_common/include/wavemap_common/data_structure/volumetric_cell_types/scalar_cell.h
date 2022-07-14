@@ -1,12 +1,11 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_SCALAR_CELL_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_SCALAR_CELL_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_SCALAR_CELL_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_SCALAR_CELL_H_
 
 #include <algorithm>
 #include <limits>
 
-#include <wavemap_common/common.h>
-
-#include "wavemap_2d/data_structure/cell_types/cell_traits.h"
+#include "wavemap_common/common.h"
+#include "wavemap_common/data_structure/volumetric_cell_types/cell_traits.h"
 
 namespace wavemap {
 using BoundType = int;
@@ -93,4 +92,4 @@ struct BoundedScalarCell : ScalarCell {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_SCALAR_CELL_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_SCALAR_CELL_H_

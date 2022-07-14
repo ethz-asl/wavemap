@@ -4,8 +4,9 @@
 #include <memory>
 #include <utility>
 
-#include "wavemap_2d/data_structure/cell_types/occupancy_cell.h"
-#include "wavemap_2d/data_structure/wavelet_tree_interface.h"
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
+
+#include "wavemap_2d/data_structure/volumetric_wavelet_tree_interface_2d.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/range_image_intersector.h"
 #include "wavemap_2d/integrator/scan_integrator/posed_range_image.h"
@@ -15,13 +16,13 @@ class WaveletIntegrator : public PointcloudIntegrator {
  public:
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
-  explicit WaveletIntegrator(VolumetricDataStructure::Ptr occupancy_map);
+  explicit WaveletIntegrator(VolumetricDataStructure2D::Ptr occupancy_map);
 
   void integratePointcloud(
       const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
 
  private:
-  WaveletTreeInterface* wavelet_tree_;
+  VolumetricWaveletTreeInterface2D* wavelet_tree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<PosedRangeImage> posed_range_image_;
@@ -33,9 +34,9 @@ class WaveletIntegrator : public PointcloudIntegrator {
       BeamModel::kScaling * 14.9999999999997f;
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
 
-  WaveletTreeInterface::ScaleCoefficient recursiveSamplerCompressor(
+  VolumetricWaveletTreeInterface2D::ScaleCoefficient recursiveSamplerCompressor(
       const QuadtreeIndex& node_index,
-      WaveletTreeInterface::NodeType& parent_node,
+      VolumetricWaveletTreeInterface2D::NodeType& parent_node,
       QuadtreeIndex ::RelativeChild relative_child_index);
 
   static bool isApproximationErrorAcceptable(

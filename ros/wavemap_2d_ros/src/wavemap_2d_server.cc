@@ -1,8 +1,6 @@
 #include "wavemap_2d_ros/wavemap_2d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <wavemap_2d/data_structure/cell_types/occupancy_cell.h>
-#include <wavemap_2d/data_structure/cell_types/occupancy_state.h>
 #include <wavemap_2d/data_structure/dense_grid.h>
 #include <wavemap_2d/data_structure/differencing_quadtree.h>
 #include <wavemap_2d/data_structure/hashed_blocks.h>
@@ -14,6 +12,8 @@
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
+#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_state.h>
 #include <wavemap_common_ros/utils/nameof.h>
 
 namespace wavemap {
@@ -257,7 +257,7 @@ void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
                     << config_.map_pruning_period_s << "s");
     map_pruning_timer_ = nh.createTimer(
         ros::Duration(config_.map_pruning_period_s),
-        std::bind(&VolumetricDataStructure::prune, occupancy_map_.get()));
+        std::bind(&VolumetricDataStructure2D::prune, occupancy_map_.get()));
   }
 
   if (0.f < config_.map_visualization_period_s) {

@@ -6,17 +6,17 @@
 #include <wavemap_common/data_structure/ndtree/ndtree.h>
 #include <wavemap_common/indexing/ndtree_index.h>
 
-#include "wavemap_2d/data_structure/volumetric_quadtree_interface.h"
+#include "wavemap_2d/data_structure/volumetric_quadtree_interface_2d.h"
 
 namespace wavemap {
 template <typename CellT>
-class DifferencingQuadtree : public VolumetricQuadtreeInterface {
+class DifferencingQuadtree : public VolumetricQuadtreeInterface2D {
  public:
   using CellType = CellT;
   static constexpr bool kRequiresPruningForThresholding = true;
 
-  using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
-  ~DifferencingQuadtree() override = default;
+  // Use the base class' constructor
+  using VolumetricQuadtreeInterface2D::VolumetricQuadtreeInterface2D;
 
   bool empty() const override { return quadtree_.empty(); }
   size_t size() const override { return quadtree_.size(); }

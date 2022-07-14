@@ -5,11 +5,11 @@
 
 #include <wavemap_common/common.h>
 
-#include "wavemap_2d/data_structure/volumetric_data_structure.h"
+#include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 
 namespace wavemap {
 template <typename CellT>
-class DenseGrid : public VolumetricDataStructure {
+class DenseGrid : public VolumetricDataStructure2D {
  public:
   using CellType = CellT;
   using CellDataSpecialized = typename CellT::Specialized;
@@ -24,7 +24,7 @@ class DenseGrid : public VolumetricDataStructure {
   using DataGridBaseInt = DataGrid<CellDataBaseInt>;
 
   // Use the base class' constructor
-  using VolumetricDataStructure::VolumetricDataStructure;
+  using VolumetricDataStructure2D::VolumetricDataStructure2D;
 
   bool empty() const override { return !data_.size(); }
   size_t size() const override { return data_.size(); }
@@ -76,6 +76,15 @@ class DenseGrid : public VolumetricDataStructure {
   CellDataSpecialized* accessCellData(const Index2D& index,
                                       bool auto_allocate = false);
   const CellDataSpecialized* accessCellData(const Index2D& index) const;
+
+  static std::string getHeaderFilePath(const std::string& file_path_prefix) {
+    return file_path_prefix + "_header";
+  }
+  static std::string getDataFilePath(const std::string& file_path_prefix,
+                                     const bool use_floating_precision) {
+    return file_path_prefix + "_data." +
+           (use_floating_precision ? "tiff" : "jp2");
+  }
 };
 }  // namespace wavemap
 

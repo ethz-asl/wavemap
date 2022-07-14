@@ -1,14 +1,19 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_WAVELET_TREE_INTERFACE_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_WAVELET_TREE_INTERFACE_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_
 
-#include <wavemap_common/data_structure/ndtree/ndtree_node.h>
+#include <memory>
 
-#include "wavemap_2d/data_structure/cell_types/haar_wavelet.h"
-#include "wavemap_2d/data_structure/volumetric_quadtree_interface.h"
+#include "wavemap_common/data_structure/ndtree/ndtree_node.h"
+#include "wavemap_common/data_structure/volumetric_cell_types/haar_wavelet.h"
+#include "wavemap_common/data_structure/volumetric_quadtree_interface.h"
 
 namespace wavemap {
-class WaveletTreeInterface : public VolumetricQuadtreeInterface {
+template <int dim>
+class VolumetricWaveletTreeInterface
+    : public virtual VolumetricQuadtreeInterface<dim> {
  public:
+  using Ptr = std::shared_ptr<VolumetricWaveletTreeInterface>;
+
   using HaarWaveletType = HaarWavelet<FloatingPoint>;
   using ScaleCoefficient = typename HaarWaveletType::Coefficients::Scale;
   using DetailCoefficients = typename HaarWaveletType::Coefficients::Details;
@@ -17,7 +22,7 @@ class WaveletTreeInterface : public VolumetricQuadtreeInterface {
   using ParentCoefficients = typename HaarWaveletType::ParentCoefficients;
   using NodeType = NdtreeNode<DetailCoefficients, 2>;
 
-  using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
+  using VolumetricQuadtreeInterface<dim>::VolumetricQuadtreeInterface;
 
   virtual ScaleCoefficient& getRootScale() = 0;
   virtual const ScaleCoefficient& getRootScale() const = 0;
@@ -28,4 +33,4 @@ class WaveletTreeInterface : public VolumetricQuadtreeInterface {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_WAVELET_TREE_INTERFACE_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_

@@ -9,8 +9,7 @@
 namespace wavemap {
 class BeamIntegrator : public PointcloudIntegrator {
  public:
-  explicit BeamIntegrator(VolumetricDataStructure::Ptr occupancy_map)
-      : PointcloudIntegrator(std::move(occupancy_map)) {}
+  using PointcloudIntegrator::PointcloudIntegrator;
 
   void integratePointcloud(
       const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override {

@@ -1,10 +1,10 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_WAVELET_COEFFICIENTS_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_WAVELET_COEFFICIENTS_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_WAVELET_COEFFICIENTS_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_WAVELET_COEFFICIENTS_H_
 
 #include <string>
 
-#include <wavemap_common/common.h>
-#include <wavemap_common/indexing/ndtree_index.h>
+#include "wavemap_common/common.h"
+#include "wavemap_common/indexing/ndtree_index.h"
 
 namespace wavemap {
 template <typename ValueT>
@@ -110,4 +110,4 @@ typename WaveletCoefficients<ValueT>::ChildScales operator*(
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_WAVELET_COEFFICIENTS_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_WAVELET_COEFFICIENTS_H_

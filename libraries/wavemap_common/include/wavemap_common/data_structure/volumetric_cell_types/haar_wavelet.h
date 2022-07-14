@@ -1,12 +1,11 @@
-#ifndef WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_HAAR_WAVELET_H_
-#define WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_HAAR_WAVELET_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_HAAR_WAVELET_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_HAAR_WAVELET_H_
 
 #include <string>
 
-#include <wavemap_common/common.h>
-#include <wavemap_common/indexing/ndtree_index.h>
-
-#include "wavemap_2d/data_structure/cell_types/wavelet_coefficients.h"
+#include "wavemap_common/common.h"
+#include "wavemap_common/data_structure/volumetric_cell_types/wavelet_coefficients.h"
+#include "wavemap_common/indexing/ndtree_index.h"
 
 namespace wavemap {
 template <typename ValueT = FloatingPoint>
@@ -67,6 +66,6 @@ class HaarWavelet {
 };
 }  // namespace wavemap
 
-#include "wavemap_2d/data_structure/cell_types/impl/haar_wavelet_inl.h"
+#include "wavemap_common/data_structure/volumetric_cell_types/impl/haar_wavelet_inl.h"
 
-#endif  // WAVEMAP_2D_DATA_STRUCTURE_CELL_TYPES_HAAR_WAVELET_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_HAAR_WAVELET_H_

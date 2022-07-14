@@ -8,7 +8,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <wavemap_common/indexing/index_conversions.h>
 
-#include "wavemap_2d/data_structure/volumetric_data_structure.h"
+#include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 #include "wavemap_2d/utils/image_utils.h"
 
@@ -101,7 +101,7 @@ void DenseGrid<CellT>::addToCellValue(const Index2D& index,
 
 template <typename CellT>
 void DenseGrid<CellT>::forEachLeaf(
-    VolumetricDataStructure::IndexedLeafVisitorFunction visitor_fn) const {
+    VolumetricDataStructure2D::IndexedLeafVisitorFunction visitor_fn) const {
   for (const Index2D& internal_cell_index :
        Grid(getMinInternalIndex(), getMaxInternalIndex())) {
     const CellDataSpecialized& cell_data =

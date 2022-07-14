@@ -11,7 +11,8 @@
 namespace wavemap {
 class FixedResolutionIntegrator : public PointcloudIntegrator {
  public:
-  explicit FixedResolutionIntegrator(VolumetricDataStructure::Ptr occupancy_map)
+  explicit FixedResolutionIntegrator(
+      VolumetricDataStructure2D::Ptr occupancy_map)
       : PointcloudIntegrator(std::move(occupancy_map)) {}
 
   void integratePointcloud(
