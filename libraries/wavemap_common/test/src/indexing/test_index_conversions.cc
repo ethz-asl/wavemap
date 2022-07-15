@@ -9,22 +9,24 @@ namespace wavemap {
 // TODO(victorr): Add tests for remaining index conversions:
 //                - Index
 //                - Point
-template <typename DimT>
+template <typename TypeParamT>
 class IndexConversionsTest : public FixtureBase {
  protected:
   static constexpr NdtreeIndexElement kMaxHeight = 14;
-  const typename NdtreeIndex<DimT::kDim>::Position kMinNdtreePositionIndex =
-      NdtreeIndex<DimT::kDim>::Position::Zero();
-  const typename NdtreeIndex<DimT::kDim>::Position kMaxNdtreePositionIndex =
-      NdtreeIndex<DimT::kDim>::Position::Constant(int_math::exp2(kMaxHeight));
+  const typename NdtreeIndex<TypeParamT::kDim>::Position
+      kMinNdtreePositionIndex = NdtreeIndex<TypeParamT::kDim>::Position::Zero();
+  const typename NdtreeIndex<TypeParamT::kDim>::Position
+      kMaxNdtreePositionIndex =
+          NdtreeIndex<TypeParamT::kDim>::Position::Constant(
+              int_math::exp2(kMaxHeight));
 };
 
 template <int dim>
-struct DimType {
+struct TypeParamTemplate {
   static constexpr int kDim = dim;
 };
-using Dimensions = ::testing::Types<DimType<2>, DimType<3>>;
-TYPED_TEST_SUITE(IndexConversionsTest, Dimensions, );
+using TypeParams = ::testing::Types<TypeParamTemplate<2>, TypeParamTemplate<3>>;
+TYPED_TEST_SUITE(IndexConversionsTest, TypeParams, );
 
 TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
   using NdtreeIndexType = NdtreeIndex<TypeParam::kDim>;

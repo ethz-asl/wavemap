@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_state.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
 
 namespace wavemap {
 template <typename CellT>

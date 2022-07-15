@@ -5,7 +5,7 @@
 #include <limits>
 
 #include "wavemap_common/common.h"
-#include "wavemap_common/data_structure/volumetric_cell_types/cell_traits.h"
+#include "wavemap_common/data_structure/volumetric/cell_types/cell_traits.h"
 
 namespace wavemap {
 using BoundType = int;

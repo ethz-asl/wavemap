@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "wavemap_common/data_structure/volumetric_cell_types/scalar_cell.h"
+#include "wavemap_common/data_structure/volumetric/cell_types/scalar_cell.h"
 
 namespace wavemap {
 TEST(CellTest, UnboundedScalar) {

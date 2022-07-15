@@ -9,6 +9,7 @@ namespace wavemap {
 template <typename PointT>
 using AabbTest = FixtureBase;
 
+// TODO(victorr): Template AABB class and tests directly on dim instead
 using PointTypes = ::testing::Types<Point2D, Point3D>;
 TYPED_TEST_SUITE(AabbTest, PointTypes, );
 

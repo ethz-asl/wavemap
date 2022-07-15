@@ -4,7 +4,7 @@
 #include <wavemap_2d/data_structure/dense_grid.h>
 #include <wavemap_2d/data_structure/differencing_quadtree.h>
 #include <wavemap_2d/data_structure/hashed_blocks.h>
-#include <wavemap_2d/data_structure/simple_quadtree.h>
+#include <wavemap_2d/data_structure/volumetric_quadtree.h>
 #include <wavemap_2d/data_structure/wavelet_tree.h>
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
 #include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
@@ -12,8 +12,8 @@
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
-#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
-#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_state.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
 #include <wavemap_common_ros/utils/nameof.h>
 
 namespace wavemap {
@@ -27,8 +27,9 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // TODO(victorr): Move this to a factory class
   if (config_.data_structure_type == "simple_quadtree") {
     ROS_INFO("Using simple quadtree datastructure");
-    occupancy_map_ = std::make_shared<SimpleQuadtree<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
+    occupancy_map_ =
+        std::make_shared<VolumetricQuadtree<SaturatingOccupancyCell>>(
+            config_.min_cell_width);
   } else if (config_.data_structure_type == "differencing_quadtree") {
     ROS_INFO("Using differencing quadtree datastructure");
     occupancy_map_ =

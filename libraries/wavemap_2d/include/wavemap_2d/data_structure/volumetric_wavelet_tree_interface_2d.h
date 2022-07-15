@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <wavemap_common/data_structure/volumetric_wavelet_tree_interface.h>
+#include <wavemap_common/data_structure/volumetric/volumetric_wavelet_tree_interface.h>
 
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 

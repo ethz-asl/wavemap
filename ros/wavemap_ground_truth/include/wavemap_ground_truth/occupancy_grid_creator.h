@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <wavemap_2d/data_structure/dense_grid.h>
-#include <wavemap_common/data_structure/volumetric_cell_types/scalar_cell.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/scalar_cell.h>
 
 #include "wavemap_ground_truth/common.h"
 #include "wavemap_ground_truth/geometry.h"

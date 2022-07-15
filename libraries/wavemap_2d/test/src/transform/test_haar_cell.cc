@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/volumetric_cell_types/haar_wavelet.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/haar_wavelet.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/container_print_utils.h>
 

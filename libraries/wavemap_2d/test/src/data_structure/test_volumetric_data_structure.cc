@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/container_print_utils.h>
@@ -8,8 +8,8 @@
 #include "wavemap_2d/data_structure/dense_grid.h"
 #include "wavemap_2d/data_structure/differencing_quadtree.h"
 #include "wavemap_2d/data_structure/hashed_blocks.h"
-#include "wavemap_2d/data_structure/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
+#include "wavemap_2d/data_structure/volumetric_quadtree.h"
 #include "wavemap_2d/data_structure/wavelet_tree.h"
 
 namespace wavemap {
@@ -22,8 +22,8 @@ class VolumetricDataStructureTest : public FixtureBase {
 using VolumetricDataStructureTypes = ::testing::Types<
     DenseGrid<UnboundedOccupancyCell>, DenseGrid<SaturatingOccupancyCell>,
     HashedBlocks<UnboundedOccupancyCell>, HashedBlocks<SaturatingOccupancyCell>,
-    SimpleQuadtree<UnboundedOccupancyCell>,
-    SimpleQuadtree<SaturatingOccupancyCell>,
+    VolumetricQuadtree<UnboundedOccupancyCell>,
+    VolumetricQuadtree<SaturatingOccupancyCell>,
     DifferencingQuadtree<UnboundedOccupancyCell>,
     DifferencingQuadtree<SaturatingOccupancyCell>,
     WaveletTree<UnboundedOccupancyCell>, WaveletTree<SaturatingOccupancyCell>>;

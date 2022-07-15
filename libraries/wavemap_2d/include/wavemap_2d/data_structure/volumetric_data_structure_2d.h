@@ -5,7 +5,7 @@
 #include <string>
 
 #include <opencv2/opencv.hpp>
-#include <wavemap_common/data_structure/volumetric_data_structure_base.h>
+#include <wavemap_common/data_structure/volumetric/volumetric_data_structure_base.h>
 
 #include "wavemap_2d/utils/image_utils.h"
 

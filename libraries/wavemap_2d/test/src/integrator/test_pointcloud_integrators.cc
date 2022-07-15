@@ -2,14 +2,14 @@
 
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/eigen_format.h>
 
 #include "wavemap_2d/data_structure/dense_grid.h"
-#include "wavemap_2d/data_structure/simple_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
+#include "wavemap_2d/data_structure/volumetric_quadtree.h"
 #include "wavemap_2d/data_structure/wavelet_tree.h"
 #include "wavemap_2d/indexing/index_hashes.h"
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
@@ -183,7 +183,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
     }
 
     VolumetricDataStructure2D::Ptr scan_occupancy_map =
-        std::make_shared<SimpleQuadtree<UnboundedOccupancyCell>>(
+        std::make_shared<VolumetricQuadtree<UnboundedOccupancyCell>>(
             min_cell_width);
     PointcloudIntegrator::Ptr scan_integrator =
         std::make_shared<CoarseToFineIntegrator>(scan_occupancy_map);

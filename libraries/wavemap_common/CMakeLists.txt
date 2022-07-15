@@ -43,6 +43,7 @@ if (CATKIN_ENABLE_TESTING)
     test/src/data_structure/test_aabb.cc
     test/src/data_structure/test_ndtree.cc
     test/src/data_structure/test_pointcloud.cc
+      test/src/data_structure/test_volumetric_ndtree.cc
     test/src/data_structure/test_sparse_vector.cc
     test/src/data_structure/test_volumetric_cell_types.cc
     test/src/indexing/test_index_conversions.cc

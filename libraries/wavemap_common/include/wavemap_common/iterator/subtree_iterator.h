@@ -15,18 +15,18 @@ enum class TraversalOrder {
   kBreadthFirst
 };
 
-template <typename ValueT, typename DerivedT>
+template <typename NodeT, typename DerivedT>
 class SubtreeIteratorBase {
  public:
   using difference_type = std::ptrdiff_t;
-  using value_type = ValueT;
-  using pointer = ValueT*;
-  using reference = ValueT&;
+  using value_type = NodeT;
+  using pointer = NodeT*;
+  using reference = NodeT&;
   using iterator_category = std::forward_iterator_tag;
 
-  ValueT& operator*() { return *getFrontValuePtr(); }
-  const ValueT& operator*() const { return *getFrontValuePtr(); }
-  ValueT* operator->() { return getFrontValuePtr(); }
+  NodeT& operator*() { return *getFrontValuePtr(); }
+  const NodeT& operator*() const { return *getFrontValuePtr(); }
+  NodeT* operator->() { return getFrontValuePtr(); }
 
   friend bool operator==(const SubtreeIteratorBase& lhs,
                          const SubtreeIteratorBase& rhs) {
@@ -48,7 +48,7 @@ class SubtreeIteratorBase {
 
  private:
   virtual size_t dequeSize() const = 0;
-  virtual ValueT* getFrontValuePtr() const = 0;
+  virtual NodeT* getFrontValuePtr() const = 0;
 };
 
 template <typename NodeT, TraversalOrder traversal_order>
@@ -88,7 +88,7 @@ class SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>
  private:
   struct StackElement {
     NodeT* node_ptr;
-    QuadtreeIndex::RelativeChild last_expanded_child_idx;
+    NdtreeIndexRelativeChild last_expanded_child_idx;
     bool operator==(const StackElement& rhs) const {
       return node_ptr == rhs.node_ptr &&
              last_expanded_child_idx == rhs.last_expanded_child_idx;

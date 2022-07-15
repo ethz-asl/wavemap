@@ -4,7 +4,7 @@
 #include <string>
 
 #include "wavemap_common/common.h"
-#include "wavemap_common/data_structure/volumetric_cell_types/wavelet_coefficients.h"
+#include "wavemap_common/data_structure/volumetric/cell_types/wavelet_coefficients.h"
 #include "wavemap_common/indexing/ndtree_index.h"
 
 namespace wavemap {
@@ -66,6 +66,6 @@ class HaarWavelet {
 };
 }  // namespace wavemap
 
-#include "wavemap_common/data_structure/volumetric_cell_types/impl/haar_wavelet_inl.h"
+#include "wavemap_common/data_structure/volumetric/cell_types/impl/haar_wavelet_inl.h"
 
 #endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_HAAR_WAVELET_H_

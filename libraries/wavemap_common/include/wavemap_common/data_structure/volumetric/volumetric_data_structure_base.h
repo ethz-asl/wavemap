@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
-#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
 
 #include <algorithm>
 #include <memory>
@@ -38,7 +38,7 @@ class VolumetricDataStructureBase {
                               FloatingPoint update) = 0;
 
   using IndexedLeafVisitorFunction =
-      std::function<void(const QuadtreeIndex& index, FloatingPoint value)>;
+      std::function<void(const NdtreeIndex<dim>& index, FloatingPoint value)>;
   virtual void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const = 0;
 
   virtual bool save(const std::string& file_path_prefix,
@@ -53,4 +53,4 @@ class VolumetricDataStructureBase {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_VOLUMETRIC_DATA_STRUCTURE_BASE_H_

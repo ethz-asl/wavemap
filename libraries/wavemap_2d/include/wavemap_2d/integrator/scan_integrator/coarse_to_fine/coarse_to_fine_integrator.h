@@ -5,7 +5,7 @@
 #include <memory>
 #include <utility>
 
-#include "wavemap_2d/data_structure/volumetric_quadtree_interface_2d.h"
+#include "wavemap_2d/data_structure/volumetric_quadtree_interface.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/range_image_intersector.h"
 #include "wavemap_2d/integrator/scan_integrator/posed_range_image.h"
@@ -21,7 +21,7 @@ class CoarseToFineIntegrator : public PointcloudIntegrator {
       const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
 
  private:
-  VolumetricQuadtreeInterface2D* volumetric_quadtree_;
+  VolumetricQuadtreeInterface* volumetric_quadtree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<PosedRangeImage> posed_range_image_;

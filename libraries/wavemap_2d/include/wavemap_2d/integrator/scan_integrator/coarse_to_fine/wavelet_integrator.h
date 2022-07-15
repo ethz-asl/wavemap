@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 
-#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_2d/data_structure/volumetric_wavelet_tree_interface_2d.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"

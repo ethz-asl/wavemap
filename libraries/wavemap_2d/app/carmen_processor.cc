@@ -3,7 +3,7 @@
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-#include <wavemap_common/data_structure/volumetric_cell_types/occupancy_cell.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_2d/data_structure/dense_grid.h"
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
