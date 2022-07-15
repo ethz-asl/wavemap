@@ -2,8 +2,8 @@
 
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <wavemap_2d/data_structure/dense_grid.h>
-#include <wavemap_2d/data_structure/differencing_quadtree.h>
 #include <wavemap_2d/data_structure/hashed_blocks.h>
+#include <wavemap_2d/data_structure/volumetric_differencing_quadtree.h>
 #include <wavemap_2d/data_structure/volumetric_quadtree.h>
 #include <wavemap_2d/data_structure/wavelet_tree.h>
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
@@ -32,9 +32,9 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
             config_.min_cell_width);
   } else if (config_.data_structure_type == "differencing_quadtree") {
     ROS_INFO("Using differencing quadtree datastructure");
-    occupancy_map_ =
-        std::make_shared<DifferencingQuadtree<SaturatingOccupancyCell>>(
-            config_.min_cell_width);
+    occupancy_map_ = std::make_shared<
+        VolumetricDifferencingQuadtree<SaturatingOccupancyCell>>(
+        config_.min_cell_width);
   } else if (config_.data_structure_type == "wavelet_tree") {
     ROS_INFO("Using wavelet tree datastructure");
     occupancy_map_ = std::make_shared<WaveletTree<SaturatingOccupancyCell>>(

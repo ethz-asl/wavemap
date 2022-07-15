@@ -6,9 +6,9 @@
 #include <wavemap_common/utils/container_print_utils.h>
 
 #include "wavemap_2d/data_structure/dense_grid.h"
-#include "wavemap_2d/data_structure/differencing_quadtree.h"
 #include "wavemap_2d/data_structure/hashed_blocks.h"
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
+#include "wavemap_2d/data_structure/volumetric_differencing_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_quadtree.h"
 #include "wavemap_2d/data_structure/wavelet_tree.h"
 
@@ -24,8 +24,8 @@ using VolumetricDataStructureTypes = ::testing::Types<
     HashedBlocks<UnboundedOccupancyCell>, HashedBlocks<SaturatingOccupancyCell>,
     VolumetricQuadtree<UnboundedOccupancyCell>,
     VolumetricQuadtree<SaturatingOccupancyCell>,
-    DifferencingQuadtree<UnboundedOccupancyCell>,
-    DifferencingQuadtree<SaturatingOccupancyCell>,
+    VolumetricDifferencingQuadtree<UnboundedOccupancyCell>,
+    VolumetricDifferencingQuadtree<SaturatingOccupancyCell>,
     WaveletTree<UnboundedOccupancyCell>, WaveletTree<SaturatingOccupancyCell>>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
