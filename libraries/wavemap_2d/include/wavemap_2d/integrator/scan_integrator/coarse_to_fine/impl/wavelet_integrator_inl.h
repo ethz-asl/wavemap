@@ -47,7 +47,7 @@ inline FloatingPoint WaveletIntegrator::sampleUpdateAtPoint(
 
 FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const QuadtreeIndex& node_index,
-    typename VolumetricWaveletTreeInterface2D::NodeType& parent_node,
+    typename WaveletTreeInterface2D::NodeType& parent_node,
     QuadtreeIndex::RelativeChild relative_child_index) {
   const AABB<Point2D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
@@ -74,13 +74,13 @@ FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     return sampleUpdateAtPoint(*posed_range_image_, d_C_cell, angle_C_cell);
   }
 
-  VolumetricWaveletTreeInterface2D::NodeType* node =
+  WaveletTreeInterface2D::NodeType* node =
       parent_node.getChild(relative_child_index);
   if (!node) {
     node = parent_node.allocateChild(relative_child_index);
   }
 
-  VolumetricWaveletTreeInterface2D::ChildScaleCoefficients
+  WaveletTreeInterface2D::ChildScaleCoefficients
       child_scale_coefficient_updates;
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {
@@ -91,7 +91,7 @@ FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
   }
 
   const auto [scale_update, detail_updates] =
-      VolumetricWaveletTreeInterface2D::HaarWaveletType::forward(
+      WaveletTreeInterface2D::HaarWaveletType::forward(
           child_scale_coefficient_updates);
   node->data() += detail_updates;
 
