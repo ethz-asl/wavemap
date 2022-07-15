@@ -140,7 +140,7 @@ jobs:
       #       package (e.g. installed through rosdep or pulled in through
       #       vcstool), it'd make sense to run pre-commit in a full workspace
       #       container (such as ${{ needs.workspace-container.outputs.image }})
-      #       at the cost of a longer waiting time.
+      #       at the cost of a longer loading time on the CI actions runner.
       image: ros:noetic-ros-base-focal
     steps:
       - name: Install pre-commit's dependencies

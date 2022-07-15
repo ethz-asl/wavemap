@@ -23,7 +23,7 @@ COPY $REPOSITORY_NAME src/$REPOSITORY_NAME/
 
 # Import from-source dependencies with vcstool
 RUN mkdir src/dependencies && \
-    vcs import --recursive --input src/$REPOSITORY_NAME/wavemap_https.yml \
+    vcs import --recursive --input src/$REPOSITORY_NAME/tooling/vcstool/wavemap_https.yml \
       src/dependencies
 
 # Cache the manifests of all packages for use in subsequent stages
