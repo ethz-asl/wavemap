@@ -53,8 +53,7 @@ if (CATKIN_ENABLE_TESTING)
     test/src/integrator/test_coarse_to_fine_integrator.cc
     test/src/integrator/test_measurement_models.cc
     test/src/transform/test_discrete_wavelet_transform.cc
-    test/src/transform/test_naive_haar.cc
-    test/src/transform/test_haar_cell.cc)
+    test/src/transform/test_naive_haar.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
   target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
 endif ()

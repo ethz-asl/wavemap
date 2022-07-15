@@ -3,11 +3,10 @@
 
 #include <string>
 
-#include <wavemap_common/data_structure/ndtree/ndtree.h>
-#include <wavemap_common/indexing/index_conversions.h>
-#include <wavemap_common/indexing/ndtree_index.h>
-
+#include "wavemap_common/data_structure/ndtree/ndtree.h"
 #include "wavemap_common/data_structure/volumetric/volumetric_ndtree_interface.h"
+#include "wavemap_common/indexing/index_conversions.h"
+#include "wavemap_common/indexing/ndtree_index.h"
 
 namespace wavemap {
 template <typename CellT, int dim>
