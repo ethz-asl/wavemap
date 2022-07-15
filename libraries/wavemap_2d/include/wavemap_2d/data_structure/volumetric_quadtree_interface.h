@@ -12,7 +12,9 @@ class VolumetricQuadtreeInterface : public virtual VolumetricNdtreeInterface<2>,
                                     public VolumetricDataStructure2D {
  public:
   using Ptr = std::shared_ptr<VolumetricQuadtreeInterface>;
+
   using VolumetricNdtreeInterface<2>::VolumetricNdtreeInterface;
+  using VolumetricDataStructure2D::VolumetricDataStructure2D;
 };
 }  // namespace wavemap
 

@@ -11,6 +11,7 @@ class VolumetricQuadtree : public VolumetricNdtree<CellT, 2>,
                            public VolumetricQuadtreeInterface {
  public:
   using VolumetricNdtree<CellT, 2>::VolumetricNdtree;
+  using VolumetricQuadtreeInterface::VolumetricQuadtreeInterface;
 
   cv::Mat getImage(bool /* use_color */) const override {
     // TODO(victorr): Implement this
