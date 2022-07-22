@@ -37,6 +37,8 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardParallel(
   typename HaarCoefficients<ValueT, dim>::CoefficientsArray
       parent_coefficients{};
 
+  // TODO(victorr): Check assembly to see if GCC optimizes out the constants and
+  //                manages to vectorize the loops nicely
   constexpr auto kNumCoefficients =
       HaarCoefficients<ValueT, dim>::kNumCoefficients;
   for (NdtreeIndexElement parent_idx = 0; parent_idx < kNumCoefficients;
@@ -44,9 +46,8 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardParallel(
     for (NdtreeIndexElement child_idx = 0; child_idx < kNumCoefficients;
          ++child_idx) {
       parent_coefficients[parent_idx] +=
-          (bit_manip::popcount(parent_idx & ~child_idx) & 1)
-              ? -child_scales[child_idx]
-              : +child_scales[child_idx];
+          bit_manip::parity(parent_idx & ~child_idx) ? -child_scales[child_idx]
+                                                     : +child_scales[child_idx];
     }
     parent_coefficients[parent_idx] /= static_cast<ValueT>(
         int_math::exp2(dim - bit_manip::popcount(parent_idx)));
@@ -65,9 +66,9 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardSingleChild(
       HaarCoefficients<ValueT, dim>::kNumCoefficients;
   for (NdtreeIndexElement parent_idx = 0; parent_idx < kNumCoefficients;
        ++parent_idx) {
-    parent_coefficients[parent_idx] =
-        (bit_manip::popcount(parent_idx & ~child_idx) & 1) ? -child_scale
-                                                           : +child_scale;
+    parent_coefficients[parent_idx] = bit_manip::parity(parent_idx & ~child_idx)
+                                          ? -child_scale
+                                          : +child_scale;
     parent_coefficients[parent_idx] /= static_cast<ValueT>(
         int_math::exp2(dim - bit_manip::popcount(parent_idx)));
   }
@@ -117,9 +118,9 @@ typename HaarCoefficients<ValueT, dim>::CoefficientsArray BackwardParallel(
       const ValueT contribution =
           parent.details[parent_idx - 1] /
           static_cast<ValueT>(int_math::exp2(bit_manip::popcount(parent_idx)));
-      child_scales[child_idx] +=
-          (bit_manip::popcount(~child_idx & parent_idx) & 1) ? -contribution
-                                                             : contribution;
+      child_scales[child_idx] += bit_manip::parity(~child_idx & parent_idx)
+                                     ? -contribution
+                                     : contribution;
     }
   }
 
@@ -138,8 +139,8 @@ typename HaarCoefficients<ValueT, dim>::Scale BackwardSingleChild(
     const ValueT contribution =
         parent.details[parent_idx - 1] /
         static_cast<ValueT>(int_math::exp2(bit_manip::popcount(parent_idx)));
-    scale += (bit_manip::popcount(~child_idx & parent_idx) & 1) ? -contribution
-                                                                : contribution;
+    scale += bit_manip::parity(~child_idx & parent_idx) ? -contribution
+                                                        : contribution;
   }
 
   return scale;

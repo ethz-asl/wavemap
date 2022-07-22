@@ -28,6 +28,11 @@ template <typename T>
 int popcount(T bitstring) {
   return __builtin_popcount(bitstring);
 }
+
+template <typename T>
+int parity(T bitstring) {
+  return __builtin_parity(bitstring);
+}
 }  // namespace wavemap::bit_manip
 
 #endif  // WAVEMAP_COMMON_UTILS_BIT_MANIPULATION_H_
