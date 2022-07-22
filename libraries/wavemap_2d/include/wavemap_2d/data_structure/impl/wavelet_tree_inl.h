@@ -24,9 +24,10 @@ void WaveletTree<CellT>::prune() {
             child_scale_coefficients[child_idx] =
                 recursive_fn(child_node, child_scale_coefficients[child_idx]);
             if (!child_node.hasChildrenArray() &&
-                std::all_of(
-                    child_node.data().begin(), child_node.data().end(),
-                    [](auto coefficient) { return coefficient < 1e-4f; })) {
+                std::all_of(child_node.data().begin(), child_node.data().end(),
+                            [](auto coefficient) {
+                              return std::abs(coefficient) < 1e-4f;
+                            })) {
               node.deleteChild(child_idx);
             } else {
               has_at_least_one_child = true;
