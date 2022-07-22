@@ -14,7 +14,7 @@ void WaveletTree<CellT>::prune() {
   std::function<ScaleCoefficient(NodeType&, ScaleCoefficient)> recursive_fn =
       [&recursive_fn](NodeType& node, ScaleCoefficient scale_coefficient) {
         ChildScaleCoefficients child_scale_coefficients =
-            HaarWaveletType::backward({scale_coefficient, node.data()});
+            Transform::backward({scale_coefficient, node.data()});
 
         bool has_at_least_one_child = false;
         for (QuadtreeIndex::RelativeChild child_idx = 0;
@@ -23,11 +23,10 @@ void WaveletTree<CellT>::prune() {
             NodeType& child_node = *node.getChild(child_idx);
             child_scale_coefficients[child_idx] =
                 recursive_fn(child_node, child_scale_coefficients[child_idx]);
-            constexpr FloatingPoint kNegligibleDetailCoefficient = 1e-4f;
             if (!child_node.hasChildrenArray() &&
-                std::abs(child_node.data().xx) < kNegligibleDetailCoefficient &&
-                std::abs(child_node.data().yy) < kNegligibleDetailCoefficient &&
-                std::abs(child_node.data().xy) < kNegligibleDetailCoefficient) {
+                std::all_of(
+                    child_node.data().begin(), child_node.data().end(),
+                    [](auto coefficient) { return coefficient < 1e-4f; })) {
               node.deleteChild(child_idx);
             } else {
               has_at_least_one_child = true;
@@ -42,7 +41,7 @@ void WaveletTree<CellT>::prune() {
         }
 
         const auto [scale_update, detail_updates] =
-            HaarWaveletType::forward(child_scale_coefficients);
+            Transform::forward(child_scale_coefficients);
         node.data() -= detail_updates;
 
         return scale_update;
@@ -122,8 +121,7 @@ FloatingPoint WaveletTree<CellT>::getCellValue(const Index2D& index) const {
   const NodeType* node = &quadtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
   for (const QuadtreeIndex::RelativeChild child_index : child_indices) {
-    value = HaarWaveletType::backwardSingleChild({value, node->data()},
-                                                 child_index);
+    value = Transform::backwardSingleChild({value, node->data()}, child_index);
     if (!node->hasChild(child_index)) {
       break;
     }
@@ -152,7 +150,7 @@ void WaveletTree<CellT>::setCellValue(const QuadtreeIndex& node_index,
   for (size_t depth = 0; depth < child_indices.size() - 1; ++depth) {
     const QuadtreeIndex::RelativeChild child_index = child_indices[depth];
     NodeType* current_parent = node_ptrs.back();
-    current_value = HaarWaveletType::backwardSingleChild(
+    current_value = Transform::backwardSingleChild(
         {current_value, current_parent->data()}, child_index);
     if (!current_parent->hasChild(child_index)) {
       current_parent->allocateChild(child_index);
@@ -166,8 +164,8 @@ void WaveletTree<CellT>::setCellValue(const QuadtreeIndex& node_index,
     const QuadtreeIndex::RelativeChild relative_child_idx =
         child_indices[depth];
     NodeType* current_node = node_ptrs[depth];
-    coefficients = HaarWaveletType::forwardSingleChild(coefficients.scale,
-                                                       relative_child_idx);
+    coefficients =
+        Transform::forwardSingleChild(coefficients.scale, relative_child_idx);
     current_node->data() += coefficients.details;
   }
   root_scale_coefficient_ += coefficients.scale;
@@ -204,8 +202,8 @@ void WaveletTree<CellT>::addToCellValue(const QuadtreeIndex& node_index,
     NodeType* current_node = node_ptrs[depth];
     const QuadtreeIndex::RelativeChild relative_child_idx =
         child_indices[depth];
-    coefficients = HaarWaveletType::forwardSingleChild(coefficients.scale,
-                                                       relative_child_idx);
+    coefficients =
+        Transform::forwardSingleChild(coefficients.scale, relative_child_idx);
     current_node->data() += coefficients.details;
   }
   root_scale_coefficient_ += coefficients.scale;
@@ -229,7 +227,7 @@ void WaveletTree<CellT>::forEachLeaf(
     stack.pop();
 
     const ChildScaleCoefficients child_scale_coefficients =
-        HaarWaveletType::backward({node_scale_coefficient, {node.data()}});
+        Transform::backward({node_scale_coefficient, {node.data()}});
     for (QuadtreeIndex::RelativeChild child_idx = 0;
          child_idx < QuadtreeIndex::kNumChildren; ++child_idx) {
       const QuadtreeIndex child_node_index =

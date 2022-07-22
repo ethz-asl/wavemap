@@ -91,7 +91,7 @@ FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
   }
 
   const auto [scale_update, detail_updates] =
-      WaveletTreeInterface2D::HaarWaveletType::forward(
+      WaveletTreeInterface2D::Transform::forward(
           child_scale_coefficient_updates);
   node->data() += detail_updates;
 

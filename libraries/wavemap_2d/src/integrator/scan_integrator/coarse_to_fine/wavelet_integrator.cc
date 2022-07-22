@@ -45,7 +45,7 @@ void WaveletIntegrator::integratePointcloud(
                                    relative_child_idx);
   }
   const auto [scale_update, detail_updates] =
-      WaveletTreeInterface2D::HaarWaveletType::forward(
+      WaveletTreeInterface2D::Transform::forward(
           child_scale_coefficient_updates);
   wavelet_tree_->getRootNode().data() += detail_updates;
   wavelet_tree_->getRootScale() += scale_update;

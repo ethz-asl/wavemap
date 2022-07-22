@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "wavemap_common/data_structure/ndtree/ndtree_node.h"
-#include "wavemap_common/data_structure/volumetric/cell_types/haar_wavelet.h"
+#include "wavemap_common/data_structure/volumetric/cell_types/haar_transform.h"
 #include "wavemap_common/data_structure/volumetric/volumetric_ndtree_interface.h"
 
 namespace wavemap {
@@ -13,12 +13,14 @@ class WaveletTreeInterface : public virtual VolumetricNdtreeInterface<dim> {
  public:
   using Ptr = std::shared_ptr<WaveletTreeInterface>;
 
-  using HaarWaveletType = HaarWavelet<FloatingPoint>;
-  using ScaleCoefficient = typename HaarWaveletType::Coefficients::Scale;
-  using DetailCoefficients = typename HaarWaveletType::Coefficients::Details;
+  using Transform = HaarTransform<FloatingPoint, dim>;
+  using ScaleCoefficient = typename HaarCoefficients<FloatingPoint, dim>::Scale;
+  using DetailCoefficients =
+      typename HaarCoefficients<FloatingPoint, dim>::Details;
+  using ParentCoefficients =
+      typename HaarCoefficients<FloatingPoint, dim>::Parent;
   using ChildScaleCoefficients =
-      typename HaarWaveletType::ChildScaleCoefficients;
-  using ParentCoefficients = typename HaarWaveletType::ParentCoefficients;
+      typename HaarCoefficients<FloatingPoint, dim>::CoefficientsArray;
   using NodeType = NdtreeNode<DetailCoefficients, 2>;
 
   using VolumetricNdtreeInterface<dim>::VolumetricNdtreeInterface;

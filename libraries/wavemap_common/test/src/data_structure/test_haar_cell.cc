@@ -1,223 +1,261 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_common/common.h"
-#include "wavemap_common/data_structure/volumetric/cell_types/haar_wavelet.h"
+#include "wavemap_common/data_structure/volumetric/cell_types/haar_transform.h"
 #include "wavemap_common/test/fixture_base.h"
 #include "wavemap_common/utils/container_print_utils.h"
 
 namespace wavemap {
+template <typename TypeParamT>
 class HaarCellTest : public FixtureBase {
  protected:
-  using HaarWaveletType = HaarWavelet<FloatingPoint>;
   static constexpr FloatingPoint kReconstructionErrorTolerance = 1e-3f;
 
   FloatingPoint getRandomWaveletCoefficient() const {
     return random_number_generator_->getRandomRealNumber(-1e2f, 1e2f);
   }
 
-  HaarWaveletType::ChildScaleCoefficients getRandomChildScaleCoefficients()
-      const {
-    HaarWaveletType::ChildScaleCoefficients child_scale_coefficients;
-    for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
-         relative_child_idx < QuadtreeIndex::kNumChildren;
-         ++relative_child_idx) {
-      child_scale_coefficients[relative_child_idx] =
-          getRandomWaveletCoefficient();
-    }
-    return child_scale_coefficients;
-  }
-
-  HaarWaveletType::ParentCoefficients getRandomParentCoefficients() const {
-    HaarWaveletType::ParentCoefficients parent_coefficients;
-    parent_coefficients.scale = getRandomWaveletCoefficient();
-    parent_coefficients.details.xx = getRandomWaveletCoefficient();
-    parent_coefficients.details.yy = getRandomWaveletCoefficient();
-    parent_coefficients.details.xy = getRandomWaveletCoefficient();
-    return parent_coefficients;
+  typename HaarCoefficients<typename TypeParamT::ValueType,
+                            TypeParamT::kDim>::CoefficientsArray
+  getRandomWaveletCoefficientArray() const {
+    typename HaarCoefficients<typename TypeParamT::ValueType,
+                              TypeParamT::kDim>::CoefficientsArray coefficients;
+    std::generate(coefficients.begin(), coefficients.end(),
+                  [this]() { return getRandomWaveletCoefficient(); });
+    return coefficients;
   }
 };
 
-TEST_F(HaarCellTest, Initialization) {
-  using WaveletCoefficientsType = WaveletCoefficients<FloatingPoint>;
-  WaveletCoefficientsType::Details detail_coefficients;
-  EXPECT_EQ(detail_coefficients.xx, 0.f);
-  EXPECT_EQ(detail_coefficients.yy, 0.f);
-  EXPECT_EQ(detail_coefficients.xy, 0.f);
+template <typename ValueT, int dim>
+struct TypeParamTemplate {
+  using ValueType = ValueT;
+  static constexpr int kDim = dim;
+};
+using TypeParams = ::testing::Types<
+    TypeParamTemplate<FloatingPoint, 1>, TypeParamTemplate<FloatingPoint, 2>,
+    TypeParamTemplate<FloatingPoint, 3>, TypeParamTemplate<FloatingPoint, 4>>;
+TYPED_TEST_SUITE(HaarCellTest, TypeParams, );
 
-  HaarWaveletType::ParentCoefficients parent_coefficients;
-  EXPECT_EQ(parent_coefficients.scale, 0.f);
-  EXPECT_EQ(parent_coefficients.details, WaveletCoefficientsType::Details{});
+TYPED_TEST(HaarCellTest, InitializationAndAccessors) {
+  using Coefficients =
+      HaarCoefficients<typename TypeParam::ValueType, TypeParam::kDim>;
 
-  HaarWaveletType::ChildScaleCoefficients child_scale_coefficients{};
-  ASSERT_EQ(child_scale_coefficients.size(), QuadtreeIndex::kNumChildren);
-  for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
-       relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {
-    EXPECT_EQ(child_scale_coefficients[relative_child_idx], 0.f);
-  }
-}
-
-TEST_F(HaarCellTest, LosslessReconstruction) {
-  for (int repetition = 0; repetition < 1000; ++repetition) {
-    const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
-        getRandomChildScaleCoefficients();
-    const HaarWaveletType::ParentCoefficients parent_coefficients =
-        HaarWaveletType::forward(child_scale_coefficients);
-    const HaarWaveletType::ChildScaleCoefficients
-        roundtrip_child_scale_coefficients =
-            HaarWaveletType::backward(parent_coefficients);
-
-    bool check_failed = false;
-    for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
-         relative_child_idx < QuadtreeIndex::kNumChildren;
-         ++relative_child_idx) {
-      EXPECT_NEAR(roundtrip_child_scale_coefficients[relative_child_idx],
-                  child_scale_coefficients[relative_child_idx],
-                  kReconstructionErrorTolerance)
-          << (check_failed = true);
+  // Default (zero) initialization
+  {
+    typename Coefficients::Parent default_parent;
+    EXPECT_EQ(default_parent.scale, 0.f);
+    for (int idx = 0; idx < Coefficients::kNumDetailCoefficients; ++idx) {
+      EXPECT_EQ(default_parent.details[idx], 0.f);
     }
-    if (check_failed) {
-      std::cerr << "The full original array was { "
-                << ToString(child_scale_coefficients)
-                << " } and after the roundtrip { "
-                << ToString(roundtrip_child_scale_coefficients) << " }"
-                << std::endl;
+    EXPECT_EQ(
+        static_cast<typename Coefficients::CoefficientsArray>(default_parent),
+        typename Coefficients::CoefficientsArray{});
+    EXPECT_EQ(default_parent.details, typename Coefficients::Details{});
+  }
+
+  // Initialization from array
+  constexpr int kNumRepetitions = 10;
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    const auto random_parent_coefficients =
+        TestFixture::getRandomWaveletCoefficientArray();
+    typename Coefficients::Parent random_parent(random_parent_coefficients);
+    EXPECT_EQ(
+        static_cast<typename Coefficients::CoefficientsArray>(random_parent),
+        random_parent_coefficients);
+    EXPECT_EQ(random_parent.scale, random_parent_coefficients[0]);
+    for (int idx = 0; idx < Coefficients::kNumDetailCoefficients; ++idx) {
+      EXPECT_EQ(random_parent.details[idx],
+                random_parent_coefficients[idx + 1]);
     }
   }
 }
 
-TEST_F(HaarCellTest, ConservationOfEnergy) {
-  for (int repetition = 0; repetition < 1000; ++repetition) {
-    const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
-        getRandomChildScaleCoefficients();
-    const HaarWaveletType::ParentCoefficients parent_coefficients =
-        HaarWaveletType::forward(child_scale_coefficients);
+TYPED_TEST(HaarCellTest, ParallelAndLiftedForwardTransformEquivalence) {
+  constexpr int kNumRepetitions = 1000;
+  using Coefficients =
+      HaarCoefficients<typename TypeParam::ValueType, TypeParam::kDim>;
 
-    // Check that the parent's scale matches the average of its children
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    const typename Coefficients::CoefficientsArray child_scale_coefficients =
+        TestFixture::getRandomWaveletCoefficientArray();
+    const typename Coefficients::Parent parallel_parent_coefficients =
+        ForwardParallel<typename TypeParam::ValueType, TypeParam::kDim>(
+            child_scale_coefficients);
+    const typename Coefficients::Parent lifted_parent_coefficients =
+        ForwardLifted<typename TypeParam::ValueType, TypeParam::kDim>(
+            child_scale_coefficients);
+
+    bool results_are_equal =
+        parallel_parent_coefficients.scale - lifted_parent_coefficients.scale <
+        TestFixture::kReconstructionErrorTolerance;
+    for (NdtreeIndexRelativeChild detail_idx = 0;
+         detail_idx < Coefficients::kNumDetailCoefficients; ++detail_idx) {
+      if (TestFixture::kReconstructionErrorTolerance <
+          parallel_parent_coefficients.details[detail_idx] -
+              lifted_parent_coefficients.details[detail_idx]) {
+        results_are_equal = false;
+      }
+    }
+    EXPECT_TRUE(results_are_equal)
+        << "The parallel implementation's parent coefficients are\n"
+        << parallel_parent_coefficients.toString()
+        << " and the lifted parent coefficients are\n"
+        << lifted_parent_coefficients.toString();
+  }
+}
+
+TYPED_TEST(HaarCellTest, ParallelAndLiftedBackwardTransformEquivalence) {
+  constexpr int kNumRepetitions = 1000;
+  using Coefficients =
+      HaarCoefficients<typename TypeParam::ValueType, TypeParam::kDim>;
+
+  // Test equivalence of backward transforms
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    const typename Coefficients::Parent parent_coefficients =
+        TestFixture::getRandomWaveletCoefficientArray();
+    const typename Coefficients::CoefficientsArray
+        parallel_child_scale_coefficients =
+            BackwardParallel<typename TypeParam::ValueType, TypeParam::kDim>(
+                parent_coefficients);
+    const typename Coefficients::CoefficientsArray
+        lifted_child_scale_coefficients =
+            BackwardLifted<typename TypeParam::ValueType, TypeParam::kDim>(
+                parent_coefficients);
+
+    bool results_are_equal = true;
+    for (NdtreeIndexRelativeChild child_idx = 0;
+         child_idx < Coefficients::kNumCoefficients; ++child_idx) {
+      if (TestFixture::kReconstructionErrorTolerance <
+          parallel_child_scale_coefficients[child_idx] -
+              lifted_child_scale_coefficients[child_idx]) {
+        results_are_equal = false;
+      }
+    }
+    EXPECT_TRUE(results_are_equal)
+        << "The parallel implementation's child scales are\n["
+        << ToString(parallel_child_scale_coefficients)
+        << "] and the lifted child scales are\n["
+        << ToString(lifted_child_scale_coefficients) << "]";
+  }
+}
+
+TYPED_TEST(HaarCellTest, ParentScaleEqualsAverageChildScale) {
+  constexpr int kNumRepetitions = 1000;
+  using Coefficients =
+      HaarCoefficients<typename TypeParam::ValueType, TypeParam::kDim>;
+  using Transform =
+      HaarTransform<typename TypeParam::ValueType, TypeParam::kDim>;
+
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    const typename Coefficients::CoefficientsArray child_scale_coefficients =
+        TestFixture::getRandomWaveletCoefficientArray();
+    const typename Coefficients::Parent parent_coefficients =
+        Transform::forward(child_scale_coefficients);
+
     const FloatingPoint average_of_children =
         std::accumulate(child_scale_coefficients.begin(),
                         child_scale_coefficients.end(), 0.f) /
-        static_cast<FloatingPoint>(QuadtreeIndex::kNumChildren);
+        static_cast<FloatingPoint>(NdtreeIndex<TypeParam::kDim>::kNumChildren);
     EXPECT_NEAR(parent_coefficients.scale, average_of_children,
-                kReconstructionErrorTolerance);
-
-    // Check that the parent's coefficients preserve the energy of its children
-    const FloatingPoint child_scale_coefficients_energy = std::inner_product(
-        child_scale_coefficients.begin(), child_scale_coefficients.end(),
-        child_scale_coefficients.begin(), 0.f);
-    const HaarWaveletType::Coefficients::Array parent_coefficients_array{
-        parent_coefficients.scale, parent_coefficients.details.xx,
-        parent_coefficients.details.yy, parent_coefficients.details.xy};
-    const auto basis_fn_cell_magnitudes =
-        HaarWaveletType::Coefficients::Array{1.f, 0.5f, 0.5f, 0.25f};
-    const FloatingPoint parent_coefficients_energy = std::transform_reduce(
-        parent_coefficients_array.begin(), parent_coefficients_array.end(),
-        basis_fn_cell_magnitudes.begin(), 0.f, std::plus<>(),
-        [](auto coeff, auto basis_fn_cell_mag) {
-          constexpr auto kNumCells = 4.f;
-          const auto projected_cell_mag = coeff * basis_fn_cell_mag;
-          return kNumCells * projected_cell_mag * projected_cell_mag;
-        });
-    EXPECT_NEAR(parent_coefficients_energy, child_scale_coefficients_energy,
-                1e-2f * child_scale_coefficients_energy);
+                TestFixture::kReconstructionErrorTolerance);
   }
 }
 
-TEST_F(HaarCellTest, LiftedImplementationEquivalence) {
-  for (int repetition = 0; repetition < 1000; ++repetition) {
-    const HaarWaveletType::ChildScaleCoefficients child_scale_coefficients =
-        getRandomChildScaleCoefficients();
-    const HaarWaveletType::ParentCoefficients naive_parent_coefficients =
-        HaarWaveletType::forwardNaive(child_scale_coefficients);
-    const HaarWaveletType::ParentCoefficients lifted_parent_coefficients =
-        HaarWaveletType::forwardLifted(child_scale_coefficients);
+TYPED_TEST(HaarCellTest, LosslessReconstruction) {
+  constexpr int kNumRepetitions = 1000;
+  using Coefficients =
+      HaarCoefficients<typename TypeParam::ValueType, TypeParam::kDim>;
+  using Transform =
+      HaarTransform<typename TypeParam::ValueType, TypeParam::kDim>;
 
-    bool check_failed = false;
-    EXPECT_NEAR(lifted_parent_coefficients.scale,
-                naive_parent_coefficients.scale, kReconstructionErrorTolerance)
-        << (check_failed = true);
-    EXPECT_NEAR(lifted_parent_coefficients.details.xx,
-                naive_parent_coefficients.details.xx,
-                kReconstructionErrorTolerance)
-        << (check_failed = true);
-    EXPECT_NEAR(lifted_parent_coefficients.details.yy,
-                naive_parent_coefficients.details.yy,
-                kReconstructionErrorTolerance)
-        << (check_failed = true);
-    EXPECT_NEAR(lifted_parent_coefficients.details.xy,
-                naive_parent_coefficients.details.xy,
-                kReconstructionErrorTolerance)
-        << (check_failed = true);
-    if (check_failed) {
-      std::cerr << "The naive implementation's parent coefficients are "
-                << naive_parent_coefficients.toString()
-                << " and the lifted coefficients are "
-                << lifted_parent_coefficients.toString() << std::endl;
-    }
-  }
-  for (int repetition = 0; repetition < 1000; ++repetition) {
-    const HaarWaveletType::ParentCoefficients parent_coefficients =
-        getRandomParentCoefficients();
-    const HaarWaveletType::ChildScaleCoefficients
-        naive_child_scale_coefficients =
-            HaarWaveletType::backwardNaive(parent_coefficients);
-    const HaarWaveletType::ChildScaleCoefficients
-        lifted_child_scale_coefficients =
-            HaarWaveletType::backwardLifted(parent_coefficients);
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    const auto child_scale_coefficients =
+        TestFixture::getRandomWaveletCoefficientArray();
+    const typename Coefficients::Parent parent_coefficients =
+        Transform::forward(child_scale_coefficients);
+    const typename Coefficients::CoefficientsArray
+        roundtrip_child_scale_coefficients =
+            Transform::backward(parent_coefficients);
 
-    bool check_failed = false;
-    for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
-         relative_child_idx < QuadtreeIndex::kNumChildren;
+    bool round_trip_equals_original = true;
+    for (NdtreeIndexRelativeChild relative_child_idx = 0;
+         relative_child_idx < NdtreeIndex<TypeParam::kDim>::kNumChildren;
          ++relative_child_idx) {
-      EXPECT_NEAR(lifted_child_scale_coefficients[relative_child_idx],
-                  naive_child_scale_coefficients[relative_child_idx],
-                  kReconstructionErrorTolerance)
-          << (check_failed = true);
+      if (TestFixture::kReconstructionErrorTolerance <
+          roundtrip_child_scale_coefficients[relative_child_idx] -
+              child_scale_coefficients[relative_child_idx]) {
+        round_trip_equals_original = false;
+      }
     }
-    if (check_failed) {
-      std::cerr << "The naive implementation's parent coefficients are { "
-                << ToString(naive_child_scale_coefficients)
-                << " } and the lifted coefficients are { "
-                << ToString(lifted_child_scale_coefficients) << " }"
-                << std::endl;
+    EXPECT_TRUE(round_trip_equals_original)
+        << "The full original array was\n["
+        << ToString(child_scale_coefficients) << "] and after the roundtrip\n["
+        << ToString(roundtrip_child_scale_coefficients) << "]";
+  }
+}
+
+TYPED_TEST(HaarCellTest, SingleChildForwardTransforms) {
+  constexpr int kNumRepetitions = 1000;
+  using Coefficients =
+      HaarCoefficients<typename TypeParam::ValueType, TypeParam::kDim>;
+  using Transform =
+      HaarTransform<typename TypeParam::ValueType, TypeParam::kDim>;
+
+  // Test forward transform
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    for (NdtreeIndexRelativeChild child_idx = 0;
+         child_idx < NdtreeIndex<TypeParam::kDim>::kNumChildren; ++child_idx) {
+      const typename Coefficients::Scale child_scale_coefficient =
+          TestFixture::getRandomWaveletCoefficient();
+
+      const typename Coefficients::CoefficientsArray parent_from_single_child =
+          Transform::forwardSingleChild(child_scale_coefficient, child_idx);
+
+      typename Coefficients::CoefficientsArray child_scale_coefficients{};
+      child_scale_coefficients[child_idx] = child_scale_coefficient;
+      const typename Coefficients::CoefficientsArray parent_from_sparse_array =
+          Transform::forward(child_scale_coefficients);
+
+      bool single_child_transform_equals_regular = true;
+      for (NdtreeIndexRelativeChild parent_coefficient_idx = 0;
+           parent_coefficient_idx < NdtreeIndex<TypeParam::kDim>::kNumChildren;
+           ++parent_coefficient_idx) {
+        if (TestFixture::kReconstructionErrorTolerance <
+            std::abs(parent_from_single_child[parent_coefficient_idx] -
+                     parent_from_sparse_array[parent_coefficient_idx])) {
+          single_child_transform_equals_regular = false;
+        }
+      }
+      EXPECT_TRUE(single_child_transform_equals_regular)
+          << "The single child transform returned parent coefficients\n["
+          << ToString(parent_from_single_child)
+          << "] while the regular transform returns\n["
+          << ToString(parent_from_sparse_array) << "]";
     }
   }
 }
 
-TEST_F(HaarCellTest, SingleChildTransforms) {
-  for (int repetition = 0; repetition < 1000; ++repetition) {
-    for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
-         relative_child_idx < QuadtreeIndex::kNumChildren;
-         ++relative_child_idx) {
-      const HaarWaveletType::Coefficients::Scale child_scale_coefficient =
-          getRandomWaveletCoefficient();
+TYPED_TEST(HaarCellTest, SingleChildBackwardTransforms) {
+  constexpr int kNumRepetitions = 1000;
+  using Coefficients =
+      HaarCoefficients<typename TypeParam::ValueType, TypeParam::kDim>;
+  using Transform =
+      HaarTransform<typename TypeParam::ValueType, TypeParam::kDim>;
 
-      const HaarWaveletType::ParentCoefficients parent_from_single_child =
-          HaarWaveletType::forwardSingleChild(child_scale_coefficient,
-                                              relative_child_idx);
+  // Test backward transform
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    const typename Coefficients::CoefficientsArray parent_coefficients =
+        TestFixture::getRandomWaveletCoefficientArray();
 
-      HaarWaveletType::Coefficients::ChildScales child_scale_coefficients{};
-      child_scale_coefficients[relative_child_idx] = child_scale_coefficient;
-      const HaarWaveletType::ParentCoefficients parent_from_sparse_array =
-          HaarWaveletType::forward(child_scale_coefficients);
+    const typename Coefficients::CoefficientsArray child_scale_array =
+        Transform::backward(parent_coefficients);
 
-      EXPECT_EQ(parent_from_single_child, parent_from_sparse_array);
-    }
-  }
-
-  for (int repetition = 0; repetition < 1000; ++repetition) {
-    const HaarWaveletType::ParentCoefficients parent_coefficients =
-        getRandomParentCoefficients();
-
-    const HaarWaveletType::ChildScaleCoefficients child_scale_array =
-        HaarWaveletType::backward(parent_coefficients);
-
-    for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
-         relative_child_idx < QuadtreeIndex::kNumChildren;
-         ++relative_child_idx) {
-      const HaarWaveletType::Coefficients::Scale single_child_scale =
-          HaarWaveletType::backwardSingleChild(parent_coefficients,
-                                               relative_child_idx);
-      EXPECT_EQ(single_child_scale, child_scale_array[relative_child_idx]);
+    for (NdtreeIndexRelativeChild child_idx = 0;
+         child_idx < NdtreeIndex<TypeParam::kDim>::kNumChildren; ++child_idx) {
+      const typename Coefficients::Scale single_child_scale =
+          Transform::backwardSingleChild(parent_coefficients, child_idx);
+      EXPECT_NEAR(single_child_scale, child_scale_array[child_idx],
+                  TestFixture::kReconstructionErrorTolerance);
     }
   }
 }

@@ -5,7 +5,7 @@
 #include "wavemap_common/utils/int_math.h"
 
 namespace wavemap {
-TEST(ConstexprFunctionsTest, Exp2) {
+TEST(IntMathTest, Exp2) {
   constexpr int kMaxExponent = 31;
   for (int exponent = 0; exponent < kMaxExponent; ++exponent) {
     EXPECT_EQ(int_math::exp2(exponent), std::exp2(exponent))
@@ -13,7 +13,7 @@ TEST(ConstexprFunctionsTest, Exp2) {
   }
 }
 
-TEST(ConstexprFunctionsTest, Log2) {
+TEST(IntMathTest, Log2) {
   // NOTE: We want to test whether the result of our log2_floored|ceiled methods
   //       are truncated in the right direction for all values in the
   //       logarithm's valid range [1, max_int]. By bit shifting a base_value
