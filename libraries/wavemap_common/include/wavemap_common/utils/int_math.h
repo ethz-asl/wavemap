@@ -22,7 +22,7 @@ constexpr int log2_ceil(int value) {
 }
 
 template <typename T>
-T mult_exp2(T value, int exp) {
+constexpr T mult_exp2(T value, int exp) {
   return value * exp2(exp);
 }
 

@@ -85,6 +85,9 @@ static void ForwardSingleChildMemberTransform(benchmark::State& state) {
   }
 }
 
+// TODO(victorr): Also include and benchmark against manual versions up to 3D to
+//                see if GCC is able to optimize the templated vers equally well
+
 BENCHMARK_TEMPLATE(ForwardSingleChildTransform, FloatingPoint, 1);
 BENCHMARK_TEMPLATE(ForwardSingleChildMemberTransform, FloatingPoint, 1);
 BENCHMARK_TEMPLATE(ForwardSingleChildTransform, FloatingPoint, 2);

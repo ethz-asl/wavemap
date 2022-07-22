@@ -25,12 +25,12 @@ constexpr T rotate_right(T bitstring, T shift) {
 }
 
 template <typename T>
-int popcount(T bitstring) {
+constexpr int popcount(T bitstring) {
   return __builtin_popcount(bitstring);
 }
 
 template <typename T>
-int parity(T bitstring) {
+constexpr int parity(T bitstring) {
   return __builtin_parity(bitstring);
 }
 }  // namespace wavemap::bit_manip
