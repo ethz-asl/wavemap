@@ -6,8 +6,22 @@
 
 namespace wavemap {
 template <typename ValueT, int dim>
+typename HaarCoefficients<ValueT, dim>::CoefficientsArray
+GenerateRandomCoefficientsArray() {
+  RandomNumberGenerator random_number_generator;
+  typename HaarCoefficients<ValueT, dim>::CoefficientsArray coefficients_array;
+  std::generate(coefficients_array.begin(), coefficients_array.end(),
+                [&random_number_generator]() {
+                  return random_number_generator.template getRandomRealNumber(
+                      -1e2, 1e2);
+                });
+  return coefficients_array;
+}
+
+template <typename ValueT, int dim>
 static void ForwardParallelTransform(benchmark::State& state) {
-  typename HaarCoefficients<ValueT, dim>::CoefficientsArray child_scales{};
+  const typename HaarCoefficients<ValueT, dim>::CoefficientsArray child_scales =
+      GenerateRandomCoefficientsArray<ValueT, dim>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(ForwardParallel<ValueT, dim>(child_scales));
   }
@@ -15,7 +29,8 @@ static void ForwardParallelTransform(benchmark::State& state) {
 
 template <typename ValueT, int dim>
 static void ForwardLiftedTransform(benchmark::State& state) {
-  typename HaarCoefficients<ValueT, dim>::CoefficientsArray child_scales{};
+  const typename HaarCoefficients<ValueT, dim>::CoefficientsArray child_scales =
+      GenerateRandomCoefficientsArray<ValueT, dim>();
   for (auto _ : state) {
     benchmark::DoNotOptimize(ForwardLifted<ValueT, dim>(child_scales));
   }
@@ -32,7 +47,8 @@ BENCHMARK_TEMPLATE(ForwardLiftedTransform, FloatingPoint, 4);
 
 template <typename ValueT, int dim>
 static void BackwardParallelTransform(benchmark::State& state) {
-  typename HaarCoefficients<ValueT, dim>::Parent parent;
+  const typename HaarCoefficients<ValueT, dim>::Parent parent(
+      GenerateRandomCoefficientsArray<ValueT, dim>());
   for (auto _ : state) {
     benchmark::DoNotOptimize(BackwardParallel<ValueT, dim>(parent));
   }
@@ -40,7 +56,8 @@ static void BackwardParallelTransform(benchmark::State& state) {
 
 template <typename ValueT, int dim>
 static void BackwardLiftedTransform(benchmark::State& state) {
-  typename HaarCoefficients<ValueT, dim>::Parent parent;
+  const typename HaarCoefficients<ValueT, dim>::Parent parent(
+      GenerateRandomCoefficientsArray<ValueT, dim>());
   for (auto _ : state) {
     benchmark::DoNotOptimize(BackwardLifted<ValueT, dim>(parent));
   }
@@ -100,7 +117,8 @@ BENCHMARK_TEMPLATE(ForwardSingleChildMemberTransform, FloatingPoint, 4);
 template <typename ValueT, int dim>
 static void BackwardSingleChildTransform(benchmark::State& state) {
   RandomNumberGenerator random_number_generator;
-  typename HaarCoefficients<ValueT, dim>::Parent parent;
+  typename HaarCoefficients<ValueT, dim>::Parent parent(
+      GenerateRandomCoefficientsArray<ValueT, dim>());
   const NdtreeIndexRelativeChild child_idx =
       random_number_generator.template getRandomInteger(
           0, HaarCoefficients<ValueT, dim>::kNumCoefficients - 1);
@@ -114,7 +132,8 @@ static void BackwardSingleChildTransform(benchmark::State& state) {
 template <typename ValueT, int dim>
 static void BackwardSingleChildMemberTransform(benchmark::State& state) {
   RandomNumberGenerator random_number_generator;
-  typename HaarCoefficients<ValueT, dim>::Parent parent;
+  typename HaarCoefficients<ValueT, dim>::Parent parent(
+      GenerateRandomCoefficientsArray<ValueT, dim>());
   const NdtreeIndexRelativeChild child_idx =
       random_number_generator.template getRandomInteger(
           0, HaarCoefficients<ValueT, dim>::kNumCoefficients - 1);
