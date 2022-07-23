@@ -19,10 +19,8 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardLifted(
       const NdtreeIndexElement detail_idx =
           bit_manip::rotate_left<NdtreeIndexElement, dim>(beam_idx << 1 | 1,
                                                           dim_idx);
-      parent_coefficients[detail_idx] =
-          parent_coefficients[detail_idx] - parent_coefficients[scale_idx];
-      parent_coefficients[scale_idx] =
-          parent_coefficients[scale_idx] +
+      parent_coefficients[detail_idx] -= parent_coefficients[scale_idx];
+      parent_coefficients[scale_idx] +=
           static_cast<ValueT>(0.5) * parent_coefficients[detail_idx];
     }
   }
@@ -92,11 +90,9 @@ typename HaarCoefficients<ValueT, dim>::CoefficientsArray BackwardLifted(
       const NdtreeIndexElement detail_idx =
           bit_manip::rotate_left<NdtreeIndexElement, dim>(beam_idx << 1 | 1,
                                                           dim_idx);
-      child_scales[scale_idx] =
-          child_scales[scale_idx] -
+      child_scales[scale_idx] -=
           static_cast<ValueT>(0.5) * child_scales[detail_idx];
-      child_scales[detail_idx] =
-          child_scales[detail_idx] + child_scales[scale_idx];
+      child_scales[detail_idx] += child_scales[scale_idx];
     }
   }
 
