@@ -6,19 +6,29 @@ template <typename ValueT, int dim>
 typename HaarCoefficients<ValueT, dim>::Parent ForwardLifted(
     const typename HaarCoefficients<ValueT, dim>::CoefficientsArray&
         child_scales) {
-  typename HaarCoefficients<ValueT, dim>::CoefficientsArray
-      parent_coefficients = child_scales;
+  typename HaarCoefficients<ValueT, dim>::CoefficientsArray parent_coefficients;
 
   // Apply the forward transform one beam (row/col) at a time using lifting
   constexpr NdtreeIndexElement kNumBeams = int_math::exp2(dim - 1);
-  for (NdtreeIndexElement dim_idx = 0; dim_idx < dim; ++dim_idx) {
+  // Perform the transform along axis 0 while moving the data into the array
+  for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
+    const NdtreeIndexElement scale_idx =
+        bit_manip::squeeze_in(beam_idx, false, 0);
+    const NdtreeIndexElement detail_idx =
+        bit_manip::squeeze_in(beam_idx, true, 0);
+    parent_coefficients[detail_idx] =
+        child_scales[detail_idx] - child_scales[scale_idx];
+    parent_coefficients[scale_idx] =
+        child_scales[scale_idx] +
+        static_cast<ValueT>(0.5) * parent_coefficients[detail_idx];
+  }
+  // Perform the transform along the remaining axes in-place
+  for (NdtreeIndexElement dim_idx = 1; dim_idx < dim; ++dim_idx) {
     for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
       const NdtreeIndexElement scale_idx =
-          bit_manip::rotate_left<NdtreeIndexElement, dim>(beam_idx << 1,
-                                                          dim_idx);
+          bit_manip::squeeze_in(beam_idx, false, dim_idx);
       const NdtreeIndexElement detail_idx =
-          bit_manip::rotate_left<NdtreeIndexElement, dim>(beam_idx << 1 | 1,
-                                                          dim_idx);
+          bit_manip::squeeze_in(beam_idx, true, dim_idx);
       parent_coefficients[detail_idx] -= parent_coefficients[scale_idx];
       parent_coefficients[scale_idx] +=
           static_cast<ValueT>(0.5) * parent_coefficients[detail_idx];
@@ -77,19 +87,27 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardSingleChild(
 template <typename ValueT, int dim>
 typename HaarCoefficients<ValueT, dim>::CoefficientsArray BackwardLifted(
     const typename HaarCoefficients<ValueT, dim>::Parent& parent) {
-  typename HaarCoefficients<ValueT, dim>::CoefficientsArray child_scales =
-      parent;
+  typename HaarCoefficients<ValueT, dim>::CoefficientsArray child_scales;
 
   // Apply the inverse transform one beam (row/col) at a time using lifting
   constexpr NdtreeIndexElement kNumBeams = int_math::exp2(dim - 1);
-  for (NdtreeIndexElement dim_idx = 0; dim_idx < dim; ++dim_idx) {
+  // Perform the transform along axis 0 while moving the data into the array
+  for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
+    const NdtreeIndexElement scale_idx =
+        bit_manip::squeeze_in(beam_idx, false, 0);
+    const NdtreeIndexElement detail_idx =
+        bit_manip::squeeze_in(beam_idx, true, 0);
+    child_scales[scale_idx] =
+        parent[scale_idx] - static_cast<ValueT>(0.5) * parent[detail_idx];
+    child_scales[detail_idx] = parent[detail_idx] + child_scales[scale_idx];
+  }
+  // Perform the transform along the remaining axes in-place
+  for (NdtreeIndexElement dim_idx = 1; dim_idx < dim; ++dim_idx) {
     for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
       const NdtreeIndexElement scale_idx =
-          bit_manip::rotate_left<NdtreeIndexElement, dim>(beam_idx << 1,
-                                                          dim_idx);
+          bit_manip::squeeze_in(beam_idx, false, dim_idx);
       const NdtreeIndexElement detail_idx =
-          bit_manip::rotate_left<NdtreeIndexElement, dim>(beam_idx << 1 | 1,
-                                                          dim_idx);
+          bit_manip::squeeze_in(beam_idx, true, dim_idx);
       child_scales[scale_idx] -=
           static_cast<ValueT>(0.5) * child_scales[detail_idx];
       child_scales[detail_idx] += child_scales[scale_idx];

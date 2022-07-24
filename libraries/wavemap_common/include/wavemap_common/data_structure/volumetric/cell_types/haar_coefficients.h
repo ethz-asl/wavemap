@@ -89,6 +89,13 @@ struct HaarCoefficients {
       return coefficients_array;
     }
 
+    ValueType& operator[](size_t index) {
+      return (index == 0) ? scale : details[index - 1];
+    }
+    const ValueType& operator[](size_t index) const {
+      return (index == 0) ? scale : details[index - 1];
+    }
+
     friend bool operator==(const Parent& lhs, const Parent& rhs) {
       return lhs.scale == rhs.scale && lhs.details == rhs.details;
     }
