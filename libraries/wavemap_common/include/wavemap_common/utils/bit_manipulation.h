@@ -9,10 +9,9 @@ constexpr T rotate_left(T bitstring, T shift) {
   static_assert(width <= 8 * sizeof(T));
   constexpr auto mask = ~std::make_unsigned_t<T>{} >> (8 * sizeof(T) - width);
 
-  bitstring &= mask;
-  bitstring = (bitstring << shift) |
-              (std::make_unsigned_t<T>(bitstring) >> (width - shift));
-  return bitstring & mask;
+  auto result = std::make_unsigned_t<T>(bitstring) & mask;
+  result = (result << shift) | (result >> (width - shift));
+  return result & mask;
 }
 
 template <typename T, T width = 8 * sizeof(T)>
@@ -20,10 +19,9 @@ constexpr T rotate_right(T bitstring, T shift) {
   static_assert(width <= 8 * sizeof(T));
   constexpr auto mask = ~std::make_unsigned_t<T>{} >> (8 * sizeof(T) - width);
 
-  bitstring &= mask;
-  bitstring = (std::make_unsigned_t<T>(bitstring) >> shift) |
-              (bitstring << (width - shift));
-  return bitstring & mask;
+  auto result = std::make_unsigned_t<T>(bitstring) & mask;
+  result = (result >> shift) | (result << (width - shift));
+  return result & mask;
 }
 
 template <typename T>
