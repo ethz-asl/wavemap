@@ -25,6 +25,14 @@ constexpr T rotate_right(T bitstring, T shift) {
 }
 
 template <typename T>
+constexpr T squeeze_in(T bitstring, bool bit, T position) {
+  const auto mask = (1 << position) - 1;
+  const auto lower = bitstring & mask;
+  const std::make_unsigned_t<T> upper = bitstring & ~mask;
+  return (upper << 1) | (static_cast<T>(bit) << position) | lower;
+}
+
+template <typename T>
 constexpr int popcount(T bitstring) {
   return __builtin_popcount(bitstring);
 }

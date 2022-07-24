@@ -112,6 +112,20 @@ TEST(BitManipulationTest, RotateRight) {
             static_cast<unsigned>(std::numeric_limits<int>::lowest()) >> 3);
 }
 
+TEST(BitManipulationTest, SqueezeIn) {
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, false, 0), 0b10010);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, false, 1), 0b10001);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, false, 2), 0b10001);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, false, 3), 0b10001);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, false, 4), 0b01001);
+
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, true, 0), 0b10011);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, true, 1), 0b10011);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, true, 2), 0b10101);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, true, 3), 0b11001);
+  EXPECT_EQ(bit_manip::squeeze_in(0b1001, true, 4), 0b11001);
+}
+
 TEST(BitManipulationTest, Popcount) {
   EXPECT_EQ(bit_manip::popcount(0b0), 0);
   EXPECT_EQ(bit_manip::popcount(0b1), 1);
