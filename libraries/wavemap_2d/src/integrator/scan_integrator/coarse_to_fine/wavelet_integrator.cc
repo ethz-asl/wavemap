@@ -35,7 +35,7 @@ void WaveletIntegrator::integratePointcloud(
 
   // Recursively update all relevant cells
   const auto first_child_indices = wavelet_tree_->getFirstChildIndices();
-  WaveletTreeInterface2D::ChildScaleCoefficients
+  WaveletTreeInterface2D::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {

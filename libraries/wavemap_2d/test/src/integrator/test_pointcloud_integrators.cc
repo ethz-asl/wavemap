@@ -10,7 +10,7 @@
 #include "wavemap_2d/data_structure/dense_grid.h"
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/data_structure/volumetric_quadtree.h"
-#include "wavemap_2d/data_structure/wavelet_tree.h"
+#include "wavemap_2d/data_structure/wavelet_tree_2d.h"
 #include "wavemap_2d/indexing/index_hashes.h"
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
 #include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
@@ -247,7 +247,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
     }
 
     VolumetricDataStructure2D::Ptr scan_occupancy_map =
-        std::make_shared<WaveletTree<UnboundedOccupancyCell>>(min_cell_width);
+        std::make_shared<WaveletTree2D<UnboundedOccupancyCell>>(min_cell_width);
     PointcloudIntegrator::Ptr scan_integrator =
         std::make_shared<WaveletIntegrator>(scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);

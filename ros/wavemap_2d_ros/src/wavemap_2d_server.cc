@@ -5,7 +5,7 @@
 #include <wavemap_2d/data_structure/hashed_blocks.h>
 #include <wavemap_2d/data_structure/volumetric_differencing_quadtree.h>
 #include <wavemap_2d/data_structure/volumetric_quadtree.h>
-#include <wavemap_2d/data_structure/wavelet_tree.h>
+#include <wavemap_2d/data_structure/wavelet_tree_2d.h>
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
 #include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h>
@@ -37,7 +37,7 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
         config_.min_cell_width);
   } else if (config_.data_structure_type == "wavelet_tree") {
     ROS_INFO("Using wavelet tree datastructure");
-    occupancy_map_ = std::make_shared<WaveletTree<SaturatingOccupancyCell>>(
+    occupancy_map_ = std::make_shared<WaveletTree2D<SaturatingOccupancyCell>>(
         config_.min_cell_width);
   } else if (config_.data_structure_type == "hashed_blocks") {
     ROS_INFO("Using hashed blocks datastructure");

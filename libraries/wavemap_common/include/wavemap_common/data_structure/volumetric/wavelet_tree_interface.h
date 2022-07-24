@@ -13,20 +13,14 @@ class WaveletTreeInterface : public virtual VolumetricNdtreeInterface<dim> {
  public:
   using Ptr = std::shared_ptr<WaveletTreeInterface>;
 
+  using Coefficients = HaarCoefficients<FloatingPoint, dim>;
   using Transform = HaarTransform<FloatingPoint, dim>;
-  using ScaleCoefficient = typename HaarCoefficients<FloatingPoint, dim>::Scale;
-  using DetailCoefficients =
-      typename HaarCoefficients<FloatingPoint, dim>::Details;
-  using ParentCoefficients =
-      typename HaarCoefficients<FloatingPoint, dim>::Parent;
-  using ChildScaleCoefficients =
-      typename HaarCoefficients<FloatingPoint, dim>::CoefficientsArray;
-  using NodeType = NdtreeNode<DetailCoefficients, 2>;
+  using NodeType = NdtreeNode<typename Coefficients::Details, 2>;
 
   using VolumetricNdtreeInterface<dim>::VolumetricNdtreeInterface;
 
-  virtual ScaleCoefficient& getRootScale() = 0;
-  virtual const ScaleCoefficient& getRootScale() const = 0;
+  virtual typename Coefficients::Scale& getRootScale() = 0;
+  virtual const typename Coefficients::Scale& getRootScale() const = 0;
   virtual NodeType& getRootNode() = 0;
   virtual const NodeType& getRootNode() const = 0;
   virtual NodeType* getNode(const NdtreeIndex<dim>& node_index) = 0;

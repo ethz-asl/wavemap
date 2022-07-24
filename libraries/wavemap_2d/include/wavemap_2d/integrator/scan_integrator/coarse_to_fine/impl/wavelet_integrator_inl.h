@@ -80,7 +80,7 @@ FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     node = parent_node.allocateChild(relative_child_index);
   }
 
-  WaveletTreeInterface2D::ChildScaleCoefficients
+  WaveletTreeInterface2D::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {

@@ -34,7 +34,7 @@ class WaveletIntegrator : public PointcloudIntegrator {
       BeamModel::kScaling * 14.9999999999997f;
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
 
-  WaveletTreeInterface2D::ScaleCoefficient recursiveSamplerCompressor(
+  WaveletTreeInterface2D::Coefficients::Scale recursiveSamplerCompressor(
       const QuadtreeIndex& node_index,
       WaveletTreeInterface2D::NodeType& parent_node,
       QuadtreeIndex ::RelativeChild relative_child_index);

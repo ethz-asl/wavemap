@@ -8,7 +8,7 @@
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 
 namespace wavemap {
-class WaveletTreeInterface2D : public WaveletTreeInterface<2>,
+class WaveletTreeInterface2D : public virtual WaveletTreeInterface<2>,
                                public VolumetricDataStructure2D {
  public:
   using Ptr = std::shared_ptr<WaveletTreeInterface2D>;
