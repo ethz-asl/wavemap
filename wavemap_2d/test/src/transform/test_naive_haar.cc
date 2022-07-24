@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_2d/test/fixture_wavelet_transforms.h"
-#include "wavemap_2d/transform/naive_haar.h"
+#include "wavemap_2d/transform/dense/naive_haar.h"
 
 namespace wavemap_2d {
 using NaiveHaarTest = FixtureWaveletTransform;
@@ -13,10 +13,6 @@ TEST_F(NaiveHaarTest, KnownPatterns) {
     const auto rows = static_cast<Eigen::Index>(std::exp2(size_idx));
     const auto cols = static_cast<Eigen::Index>(std::exp2(size_idx));
     for (int pass_idx = 1; pass_idx <= size_idx; ++pass_idx) {
-      DLOG(INFO) << "Evaluating pass " << pass_idx << " / " << size_idx
-                 << " for matrix of size [" << rows << ", " << cols << "]"
-                 << std::endl;
-
       // Constant matrices
       for (FloatingPoint constant_value : {0.f, 1.f}) {
         // Setup the matrix
@@ -50,8 +46,7 @@ TEST_F(NaiveHaarTest, KnownPatterns) {
       }
 
       // Ramp patterns
-      const bool is_last_pass = (pass_idx == size_idx);
-      if (is_last_pass) {
+      if (const bool is_last_pass = (pass_idx == size_idx); is_last_pass) {
         for (bool transpose : {false, true}) {
           // Setup the matrix
           Matrix matrix = Matrix::Zero(rows, cols);

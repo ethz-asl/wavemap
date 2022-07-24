@@ -84,9 +84,7 @@ class FixtureWaveletTransform : public FixtureBase {
       expected_default_value_bands = bandKeysAfterNPasses(n_passes);
     }
 
-    for (const auto& band_expectation_kv : band_expectation_map) {
-      const BandKey& band_key = band_expectation_kv.first;
-      const FloatingPoint band_expected_value = band_expectation_kv.second;
+    for (const auto& [band_key, band_expected_value] : band_expectation_map) {
       if (!std::isnan(band_expected_value)) {
         const Matrix::ConstBlockXpr band_block =
             getBlockForBand(band_key, matrix);

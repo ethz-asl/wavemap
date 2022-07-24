@@ -2,7 +2,7 @@
 
 # ========== Functions ==========
 function run_all_combinations() {
-  for map_resolution in "${map_resolutions[@]}"; do
+  for map_min_cell_width in "${map_min_cell_widths[@]}"; do
     # Get the git commit ID (included in the log dir name for future reference)
     git_dir=$(rospack find wavemap_2d)/../.git
     git_commit_id=$(git --git-dir="${git_dir}" rev-parse --short --verify HEAD)
@@ -16,11 +16,11 @@ function run_all_combinations() {
       # Create the log dir and set the log file path
       run_log_dir="${output_log_dir}/${experiment_date}"
       mkdir -p "${run_log_dir}"
-      run_log_file_prefix="${run_log_dir}/${carmen_log_file_name}_commit_${git_commit_id}_res_${map_resolution}_"
+      run_log_file_prefix="${run_log_dir}/${carmen_log_file_name}_commit_${git_commit_id}_res_${map_min_cell_width}_"
 
       # Run the experiments
       carmen_log_file_path="${carmen_log_dir}/${carmen_log_file_name}"
-      "${executable}" -alsologtostderr -map_resolution "${map_resolution}" -carmen-log-file-path "${carmen_log_file_path}" -output_log_dir "${run_log_file_prefix}" &
+      "${executable}" -alsologtostderr -map_min_cell_width "${map_min_cell_width}" -carmen-log-file-path "${carmen_log_file_path}" -output_log_dir "${run_log_file_prefix}" &
     done
   done
 }
@@ -60,7 +60,7 @@ catkin build "${package_name}"
 popd || exit
 
 # Run the batches
-declare -a map_resolutions=(0.05)
+declare -a map_min_cell_widths=(0.05)
 # Options: (0.20 0.1 0.05 0.02 0.01 0.005 0.002 0.001)
 max_num_jobs=8
 run_all_combinations

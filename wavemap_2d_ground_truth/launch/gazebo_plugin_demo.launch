@@ -4,6 +4,7 @@
   <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.01"/>
   <param name="/gazebo/wavemap_2d_ground_truth_plugin/slice_height" value="0.268"/>
   <param name="/gazebo/wavemap_2d_ground_truth_plugin/floodfill_unoccupied" value="true"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/publish_visuals" value="false"/>
 
   <arg name="show_gazebo" default="true"/>
   <arg name="debug_gazebo" default="false"/>

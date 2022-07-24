@@ -9,9 +9,8 @@
 #include <gazebo/physics/physics.hh>
 #include <glog/logging.h>
 #include <ros/ros.h>
+#include <wavemap_2d/common.h>
 #include <wavemap_2d_msgs/FilePath.h>
-
-#include "wavemap_2d/common.h"
 
 namespace gazebo {
 class Wavemap2DGroundTruthPlugin : public WorldPlugin {

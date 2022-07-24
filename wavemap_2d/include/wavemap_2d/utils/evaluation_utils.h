@@ -3,8 +3,10 @@
 
 #include <string>
 
-#include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
-#include "wavemap_2d/datastructure/occupancy_state.h"
+#include "wavemap_2d/common.h"
+#include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_state.h"
+#include "wavemap_2d/data_structure/volumetric/dense_grid.h"
+#include "wavemap_2d/indexing/index.h"
 #include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d::utils {
@@ -29,8 +31,9 @@ struct CellSelector {
         return cell_state.isFree();
       case Categories::kOccupied:
         return cell_state.isOccupied();
+      default:
+        return false;
     }
-    return false;
   }
 };
 
@@ -82,6 +85,6 @@ OccupancyState GetCellState(const Map& map, const Index& index,
                             OccupancyState treat_unknown_cells_as);
 }  // namespace wavemap_2d::utils
 
-#include "wavemap_2d/utils/evaluation_utils_inl.h"
+#include "wavemap_2d/utils/impl/evaluation_utils_inl.h"
 
 #endif  // WAVEMAP_2D_UTILS_EVALUATION_UTILS_H_

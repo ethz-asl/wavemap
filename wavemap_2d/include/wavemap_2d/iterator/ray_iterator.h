@@ -2,6 +2,8 @@
 #define WAVEMAP_2D_ITERATOR_RAY_ITERATOR_H_
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
+#include "wavemap_2d/indexing/index_conversions.h"
 
 namespace wavemap_2d {
 // NOTE: The ray casting code in this class is largely based on voxblox's
@@ -10,16 +12,16 @@ namespace wavemap_2d {
 class Ray {
  public:
   Ray(const Point& start_point, const Point& end_point,
-      FloatingPoint resolution) {
-    const Point start_point_scaled = start_point / resolution;
-    const Point end_point_scaled = end_point / resolution;
+      FloatingPoint min_cell_width) {
+    const Point start_point_scaled = start_point / min_cell_width;
+    const Point end_point_scaled = end_point / min_cell_width;
     if (start_point_scaled.hasNaN() || end_point_scaled.hasNaN()) {
       ray_length_in_steps_ = 0u;
       return;
     }
 
-    start_index_ = start_point_scaled.array().round().cast<IndexElement>();
-    end_index_ = end_point_scaled.array().round().cast<IndexElement>();
+    start_index_ = convert::scaledPointToNearestIndex(start_point_scaled);
+    end_index_ = convert::scaledPointToNearestIndex(end_point_scaled);
     const Index diff_index = end_index_ - start_index_;
     ray_length_in_steps_ = diff_index.cwiseAbs().sum() + 1u;
 
@@ -27,9 +29,8 @@ class Ray {
     ray_step_signs_ = ray_scaled.cwiseSign().cast<IndexElement>();
 
     const Index corrected_step = ray_step_signs_.cwiseMax(0);
-    const Point start_scaled_shifted = start_point_scaled +
-                                       Vector::Constant(0.5f) -
-                                       start_index_.cast<FloatingPoint>();
+    const Point start_scaled_shifted =
+        start_point_scaled - start_index_.cast<FloatingPoint>();
     const Vector distance_to_boundaries =
         corrected_step.cast<FloatingPoint>() - start_scaled_shifted;
 
@@ -48,7 +49,6 @@ class Ray {
    public:
     explicit Iterator(const Ray& ray)
         : ray_(ray),
-          current_step_(0u),
           current_index_(ray_.start_index_),
           t_to_next_boundary_(ray_.t_to_next_boundary_init_) {}
     Iterator(const Ray& ray, bool end) : Iterator(ray) {
@@ -58,7 +58,7 @@ class Ray {
       }
     }
 
-    Index operator*() { return current_index_; }
+    Index operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
       int t_min_idx;
       t_to_next_boundary_.minCoeff(&t_min_idx);
@@ -82,9 +82,9 @@ class Ray {
       return !(lhs == rhs);  // NOLINT
     }
 
-   protected:
+   private:
     const Ray& ray_;
-    unsigned int current_step_;
+    unsigned int current_step_ = 0u;
     Index current_index_;
     Vector t_to_next_boundary_;
   };
@@ -92,7 +92,7 @@ class Ray {
   Iterator begin() const { return Iterator{*this}; }
   Iterator end() const { return Iterator{*this, /*end*/ true}; }
 
- protected:
+ private:
   Index start_index_;
   Index end_index_;
   unsigned int ray_length_in_steps_;

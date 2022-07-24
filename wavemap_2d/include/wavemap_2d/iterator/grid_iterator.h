@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
 
 namespace wavemap_2d {
 class Grid {
@@ -14,6 +15,12 @@ class Grid {
 
   class Iterator {
    public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = Index;
+    using pointer = Index*;
+    using reference = Index&;
+    using iterator_category = std::forward_iterator_tag;
+
     explicit Iterator(const Grid& grid)
         : grid_(grid),
           current_index_(grid_.min_index_.x(), grid_.min_index_.y()) {}
@@ -21,7 +28,8 @@ class Grid {
         : grid_(grid),
           current_index_(end ? grid_.max_index_.x() : grid_.min_index_.x(),
                          grid_.min_index_.y()) {}
-    Index operator*() { return current_index_; }
+
+    const Index& operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
       if (++current_index_.y() == grid_.max_index_.y()) {
         current_index_.y() = grid_.min_index_.y();
@@ -41,7 +49,7 @@ class Grid {
       return !(lhs == rhs);  // NOLINT
     }
 
-   protected:
+   private:
     const Grid& grid_;
     Index current_index_;
   };
@@ -49,7 +57,7 @@ class Grid {
   Iterator begin() const { return Iterator{*this}; }
   Iterator end() const { return Iterator{*this, /*end*/ true}; }
 
- protected:
+ private:
   const Index min_index_;
   const Index max_index_;
 };

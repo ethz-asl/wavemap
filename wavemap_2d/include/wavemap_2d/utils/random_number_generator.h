@@ -32,7 +32,12 @@ class RandomNumberGenerator {
     return uniform_distribution(random_number_generator_);
   }
 
- protected:
+  bool getRandomBool(FloatingPoint p_true) {
+    std::bernoulli_distribution bernoulli_distribution(p_true);
+    return bernoulli_distribution(random_number_generator_);
+  }
+
+ private:
   std::mt19937 random_number_generator_;
 };
 }  // namespace wavemap_2d

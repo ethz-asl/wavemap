@@ -4,22 +4,23 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "wavemap_2d/datastructure/cell.h"
-#include "wavemap_2d/datastructure/dense_grid/dense_grid.h"
-#include "wavemap_2d/integrator/pointcloud_integrator.h"
-#include "wavemap_2d/transform/naive_haar.h"
+#include "wavemap_2d/data_structure/volumetric/cell_types/occupancy_cell.h"
+#include "wavemap_2d/data_structure/volumetric/dense_grid.h"
+#include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
+#include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",
               "Path to the carmen log file to get the input data from.");
 DEFINE_string(output_log_dir, "",
               "Path to the directory where the logs should be stored. Leave "
               "blank to disable logging.");
-DEFINE_double(map_resolution, 0.01, "Grid map resolution in meters.");
+DEFINE_double(map_min_cell_width, 0.01,
+              "Grid map minimum cell width in meters.");
 
 using namespace wavemap_2d;  // NOLINT
 int main(int argc, char** argv) {
-  using DataStructureType = DenseGrid<SaturatingCell<>>;
-  using MeasurementModelType = BeamModel;
+  using DataStructureType = DenseGrid<SaturatingOccupancyCell>;
+  using PointcloudIntegratorType = BeamIntegrator;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
@@ -30,15 +31,15 @@ int main(int argc, char** argv) {
   CHECK(!carmen_log_file_path.empty())
       << "The carmen_log_file_path flag must be set to a non-empty string.";
   const std::string output_log_dir = FLAGS_output_log_dir;
-  const auto map_resolution = static_cast<FloatingPoint>(FLAGS_map_resolution);
-  CHECK_GT(map_resolution, 0.f)
-      << "The map_resolution flag must be set to a positive number.";
+  const auto map_min_cell_width =
+      static_cast<FloatingPoint>(FLAGS_map_min_cell_width);
+  CHECK_GT(map_min_cell_width, 0.f)
+      << "The map_min_cell_width flag must be set to a positive number.";
 
   // Set up the mapper
-  auto occupancy_map = std::make_shared<DataStructureType>(map_resolution);
-  auto measurement_model =
-      std::make_shared<MeasurementModelType>(map_resolution);
-  PointcloudIntegrator pointcloud_integrator(occupancy_map, measurement_model);
+  VolumetricDataStructure::Ptr occupancy_map =
+      std::make_shared<DataStructureType>(map_min_cell_width);
+  PointcloudIntegratorType pointcloud_integrator(occupancy_map);
 
   // Open the log file
   std::ifstream log_file(carmen_log_file_path);
@@ -65,16 +66,15 @@ int main(int argc, char** argv) {
     std::istringstream iss(line);
     std::string msg_type;
     if ((iss >> msg_type) && (msg_type == "FLASER")) {
-      int n_beams;
-      if (iss >> n_beams) {
+      int num_beams;
+      if (iss >> num_beams) {
         // Parse the pointcloud
         Pointcloud pointcloud;
-        pointcloud.resize(n_beams);
+        pointcloud.resize(num_beams);
         {
           bool success = true;
-          constexpr auto PI = static_cast<float>(M_PI);
-          const float angle_increment = PI / static_cast<float>(n_beams);
-          for (int beam_idx = 0; beam_idx < n_beams; ++beam_idx) {
+          const float angle_increment = kPi / static_cast<float>(num_beams);
+          for (int beam_idx = 0; beam_idx < num_beams; ++beam_idx) {
             float distance;
             if (!(iss >> distance)) {
               success = false;
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
             max_distance = std::max(distance, max_distance);
 
             const float angle =
-                static_cast<float>(beam_idx) * angle_increment + (PI / 2.f);
+                static_cast<float>(beam_idx) * angle_increment + kHalfPi;
             float x = distance * std::cos(angle);
             float y = distance * std::sin(angle);
             pointcloud[beam_idx] << x, y;
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
           LOG(WARNING) << "Could not parse pose... skipping.";
           continue;
         }
-        pose.getRotation().angle() -= M_PI;
+        pose.getRotation().angle() -= kPi;
 
         // Integrate the pointcloud
         PosedPointcloud posed_pointcloud(pose, pointcloud);
@@ -122,25 +122,6 @@ int main(int argc, char** argv) {
         output_log_dir + "map" +
         (use_floating_precision ? "_floating" : "_fixed");
     occupancy_map->save(map_path_prefix, use_floating_precision);
-  }
-
-  // Compress
-  constexpr FloatingPoint kThreshold = 1e-3;
-  const size_t num_non_zero_cells_initial =
-      (kThreshold < occupancy_map->getData().cwiseAbs().array()).count();
-  const int max_num_passes = std::floor(std::log2(std::min(
-      occupancy_map->dimensions().x(), occupancy_map->dimensions().y())));
-  const NaiveHaar<FloatingPoint> dwt;
-  for (int pass_idx = 0; pass_idx < max_num_passes; ++pass_idx) {
-    auto map_data = occupancy_map->getData();
-    dwt.forward(map_data, pass_idx);
-    const size_t num_non_zero_cells =
-        (kThreshold < map_data.cwiseAbs().array()).count();
-    std::cout << "Total non-zero cells at pass " << pass_idx << ": "
-              << num_non_zero_cells << "  ("
-              << (static_cast<float>(num_non_zero_cells) /
-                  static_cast<float>(num_non_zero_cells_initial) * 100.f)
-              << "%)" << std::endl;
   }
 
   // Print stats

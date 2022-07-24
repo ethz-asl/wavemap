@@ -1,7 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "wavemap_2d/integrator/beam_model.h"
-#include "wavemap_2d/integrator/fixed_logodds_model.h"
+#include "wavemap_2d/common.h"
+#include "wavemap_2d/indexing/index.h"
+#include "wavemap_2d/integrator/measurement_model/beam_model.h"
+#include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
+#include "wavemap_2d/iterator/ray_iterator.h"
 #include "wavemap_2d/test/fixture_base.h"
 
 namespace wavemap_2d {
@@ -10,8 +14,8 @@ using MeasurementModelTest = FixtureBase;
 TEST_F(MeasurementModelTest, BeamModel) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    const FloatingPoint resolution = getRandomResolution();
-    BeamModel beam_model(resolution);
+    const FloatingPoint min_cell_width = getRandomMinCellWidth();
+    BeamModel beam_model(min_cell_width);
 
     const Point W_start_point = getRandomPoint();
     const Point W_end_point = W_start_point + getRandomTranslation();
@@ -19,8 +23,9 @@ TEST_F(MeasurementModelTest, BeamModel) {
     beam_model.setEndPoint(W_end_point);
 
     const Point C_end_point = W_end_point - W_start_point;
-    const FloatingPoint measured_distance = C_end_point.norm();
-    const Point C_end_point_normalized = C_end_point / measured_distance;
+    const FloatingPoint beam_length = C_end_point.norm();
+    const FloatingPoint beam_angle =
+        std::atan2(C_end_point.y(), C_end_point.x());
 
     const Index bottom_left_idx = beam_model.getBottomLeftUpdateIndex();
     const Index top_right_idx = beam_model.getTopRightUpdateIndex();
@@ -41,18 +46,20 @@ TEST_F(MeasurementModelTest, BeamModel) {
             << "Update queries outside the bounding box should return 0.";
       }
 
-      const Point W_cell_center = index.cast<FloatingPoint>() * resolution;
+      const Point W_cell_center =
+          convert::indexToCenterPoint(index, min_cell_width);
       const Point C_cell_center = W_cell_center - W_start_point;
-      const FloatingPoint distance = C_cell_center.norm();
-      const FloatingPoint dot_prod_normalized =
-          C_cell_center.dot(C_end_point_normalized) / distance;
-      const FloatingPoint angle = std::acos(dot_prod_normalized);
+      const FloatingPoint cell_distance = C_cell_center.norm();
+      const FloatingPoint cell_angle =
+          std::atan2(C_cell_center.y(), C_cell_center.x());
+      const FloatingPoint angle = std::abs(cell_angle - beam_angle);
 
-      const bool within_range =
-          distance <= measured_distance + BeamModel::kRangeDeltaThresh;
+      const FloatingPoint non_zero_range =
+          beam_length + BeamModel::kRangeDeltaThresh;
+      const bool within_range = cell_distance <= non_zero_range;
       const bool within_angle = angle <= BeamModel::kAngleThresh;
       if (within_range && within_angle) {
-        if (distance < measured_distance) {
+        if (cell_distance < beam_length) {
           EXPECT_LE(update, 0.f)
               << "Logodds occupancy updates in front of the sensor should be "
                  "non-positive (free or unknown space)";
@@ -65,9 +72,15 @@ TEST_F(MeasurementModelTest, BeamModel) {
         EXPECT_FLOAT_EQ(update, 0.f)
             << "Encountered non-zero update for cell that is not within the "
                "beam's "
-            << (!within_range ? "range" : "")
+            << (!within_range
+                    ? "range (" + std::to_string(cell_distance) +
+                          " !<= " + std::to_string(non_zero_range) + ") "
+                    : "")
             << (!within_range && !within_angle ? " and " : "")
-            << (!within_angle ? "angle" : "");
+            << (!within_angle
+                    ? "angle (" + std::to_string(angle) + " !<= " +
+                          std::to_string(BeamModel::kAngleThresh) + ") "
+                    : "");
       }
     }
   }
@@ -78,16 +91,16 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
   for (int i = 0; i < kNumRepetitions; ++i) {
     const Point start_point = getRandomPoint();
     const Point end_point = start_point + getRandomTranslation();
-    const FloatingPoint resolution = getRandomResolution();
-    const FloatingPoint resolution_inv = 1.f / resolution;
+    const FloatingPoint min_cell_width = getRandomMinCellWidth();
+    const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
 
-    FixedLogOddsModel fixed_log_odds_model(resolution);
+    FixedLogOddsModel fixed_log_odds_model(min_cell_width);
     fixed_log_odds_model.setStartPoint(start_point);
     fixed_log_odds_model.setEndPoint(end_point);
     const Index start_point_index =
-        (start_point * resolution_inv).array().round().cast<IndexElement>();
+        convert::pointToNearestIndex(start_point, min_cell_width_inv);
     const Index end_point_index =
-        (end_point * resolution_inv).array().round().cast<IndexElement>();
+        convert::pointToNearestIndex(end_point, min_cell_width_inv);
 
     const Index bottom_left_idx = start_point_index.cwiseMin(end_point_index);
     const Index top_right_idx = start_point_index.cwiseMin(end_point_index);
@@ -101,7 +114,7 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
 
     size_t step_idx = 0u;
     bool updated_end_point = false;
-    const Ray ray(start_point, end_point, resolution);
+    const Ray ray(start_point, end_point, min_cell_width);
     for (const auto& index : ray) {
       const FloatingPoint update = fixed_log_odds_model.computeUpdateAt(index);
       if (index == end_point_index) {

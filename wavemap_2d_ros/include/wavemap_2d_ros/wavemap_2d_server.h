@@ -1,7 +1,6 @@
 #ifndef WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_
 #define WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_
 
-#include <memory>
 #include <queue>
 #include <string>
 
@@ -9,9 +8,8 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_srvs/Empty.h>
-#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <wavemap_2d/common.h>
-#include <wavemap_2d/datastructure/cell.h>
 #include <wavemap_2d/integrator/pointcloud_integrator.h>
 #include <wavemap_2d_msgs/FilePath.h>
 #include <wavemap_2d_msgs/MapEvaluationSummary.h>
@@ -25,7 +23,7 @@ namespace wavemap_2d {
 class Wavemap2DServer {
  public:
   struct Config {
-    float map_resolution = 0.f;
+    float min_cell_width = 0.f;
 
     std::string world_frame = "odom";
 
@@ -35,6 +33,8 @@ class Wavemap2DServer {
     std::string pointcloud_topic_name = "scan";
     int pointcloud_topic_queue_length = 10;
 
+    float map_pruning_period_s = 1.f;
+
     float map_visualization_period_s = 10.f;
 
     // NOTE: evaluation will only be performed if map_ground_truth_path is set
@@ -43,6 +43,8 @@ class Wavemap2DServer {
 
     float map_autosave_period_s = -1.f;
     std::string map_autosave_path;
+
+    bool publish_performance_stats = false;
 
     float pointcloud_queue_processing_period_s = 0.1f;
     float pointcloud_queue_max_wait_for_transform_s = 1.f;
@@ -79,24 +81,22 @@ class Wavemap2DServer {
   }
 
   void visualizeMap();
-  bool saveMap(const std::string& file_path) {
+  bool saveMap(const std::string& file_path) const {
     return !occupancy_map_->empty() &&
            occupancy_map_->save(file_path, kSaveWithFloatingPointPrecision);
   }
   bool loadMap(const std::string& file_path) {
-    return !occupancy_map_->empty() &&
-           occupancy_map_->save(file_path, kSaveWithFloatingPointPrecision);
+    return occupancy_map_->load(file_path, kSaveWithFloatingPointPrecision);
   }
   bool evaluateMap(const std::string& file_path);
 
- protected:
+ private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
   Config config_;
 
-  std::shared_ptr<DataStructureBase> occupancy_map_;
-  std::shared_ptr<MeasurementModelBase> measurement_model_;
-  std::shared_ptr<PointcloudIntegrator> pointcloud_integrator_;
+  VolumetricDataStructure::Ptr occupancy_map_;
+  PointcloudIntegrator::Ptr pointcloud_integrator_;
   TfTransformer transformer_;
 
   std::queue<sensor_msgs::LaserScan> pointcloud_queue_;
@@ -104,6 +104,7 @@ class Wavemap2DServer {
   CpuTimer integration_timer;
 
   ros::Timer pointcloud_queue_processing_timer_;
+  ros::Timer map_pruning_timer_;
   ros::Timer map_visualization_timer_;
   ros::Timer map_evaluation_timer_;
   ros::Timer map_autosave_timer_;
@@ -131,14 +132,14 @@ class Wavemap2DServer {
   static constexpr RGBAColor kTransparent{0.f, 0.f, 0.f, 0.f};
   static constexpr RGBAColor kWhite{1.f, 1.f, 1.f, 1.f};
   static constexpr RGBAColor kBlack{1.f, 0.f, 0.f, 0.f};
-  template <typename Map>
-  static visualization_msgs::Marker gridToMarker(
+
+  template <typename Map, typename ScalarToRGBAFunction>
+  static visualization_msgs::MarkerArray gridToMarkerArray(
       const Map& grid, const std::string& world_frame,
-      const std::string& marker_namespace,
-      const std::function<RGBAColor(FloatingPoint)>& color_map);
+      const std::string& marker_namespace, ScalarToRGBAFunction color_map);
 };
 }  // namespace wavemap_2d
 
-#include "wavemap_2d_ros/wavemap_2d_server_inl.h"
+#include "wavemap_2d_ros/impl/wavemap_2d_server_inl.h"
 
 #endif  // WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_

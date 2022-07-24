@@ -41,10 +41,8 @@ template <int a>
 std::string _nameof(const std::string& x, std::size_t) {
   std::regex regex(R"(^&?([_a-zA-Z]\w*(->|\.|::))*([_a-zA-Z]\w*)$)");
   std::smatch match;
-  if (std::regex_match(x, match, regex)) {
-    if (match.size() == 4) {
-      return match[3];
-    }
+  if (std::regex_match(x, match, regex) && match.size() == 4) {
+    return match[3];
   }
   throw std::logic_error(
       "A bad expression x in nameof(x). The expression is \"" + x + "\".");

@@ -3,8 +3,9 @@
 
 #include <vector>
 
-#include <wavemap_2d/datastructure/cell.h>
-#include <wavemap_2d/datastructure/dense_grid/dense_grid.h>
+#include <wavemap_2d/data_structure/volumetric/cell_types/scalar_cell.h>
+#include <wavemap_2d/data_structure/volumetric/dense_grid.h>
+#include <wavemap_2d/indexing/index.h>
 
 #include "wavemap_2d_ground_truth/common.h"
 #include "wavemap_2d_ground_truth/geometry.h"
@@ -17,13 +18,15 @@ class OccupancyGridCreator {
 
   void integrateTriangle(const Triangle& triangle);
 
-  const DenseGrid<UnboundedCell>& getOccupancyGrid() { return occupancy_grid_; }
+  const DenseGrid<UnboundedScalarCell>& getOccupancyGrid() {
+    return occupancy_grid_;
+  }
 
   // Floodfill the unoccupied space in the mesh, up to the bounds of the AABB.
   void floodfillUnoccupied(const Index& start_index);
 
  private:
-  DenseGrid<UnboundedCell> occupancy_grid_;
+  DenseGrid<UnboundedScalarCell> occupancy_grid_;
   FloatingPoint slice_height_;
 
   static const std::vector<Index> kNeighborOffsets;
