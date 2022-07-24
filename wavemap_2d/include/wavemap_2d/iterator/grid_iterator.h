@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_GRID_ITERATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_GRID_ITERATOR_H_
+#ifndef WAVEMAP_2D_ITERATOR_GRID_ITERATOR_H_
+#define WAVEMAP_2D_ITERATOR_GRID_ITERATOR_H_
 
 #include <utility>
 
@@ -35,13 +35,13 @@ class Grid {
       return retval;
     }
     friend bool operator==(const Iterator& lhs, const Iterator& rhs) {
-      return (lhs.current_index_.array() == rhs.current_index_.array()).all();
+      return lhs.current_index_ == rhs.current_index_;
     }
     friend bool operator!=(const Iterator& lhs, const Iterator& rhs) {
       return !(lhs == rhs);  // NOLINT
     }
 
-   private:
+   protected:
     const Grid& grid_;
     Index current_index_;
   };
@@ -49,10 +49,10 @@ class Grid {
   Iterator begin() const { return Iterator{*this}; }
   Iterator end() const { return Iterator{*this, /*end*/ true}; }
 
- private:
+ protected:
   const Index min_index_;
   const Index max_index_;
 };
 }  // namespace wavemap_2d
 
-#endif  // WAVEMAP_2D_INTEGRATOR_GRID_ITERATOR_H_
+#endif  // WAVEMAP_2D_ITERATOR_GRID_ITERATOR_H_

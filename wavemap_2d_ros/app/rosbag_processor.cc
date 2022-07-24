@@ -78,12 +78,12 @@ int main(int argc, char** argv) {
                       &wavemap_server));
   // TFs
   ros::Publisher tf_pub = nh.advertise<tf::tfMessage>("/tf", 10);
-  callbacks.emplace("/tf", [tf_pub](const rosbag::MessageInstance& msg) {
+  callbacks.emplace("/tf", [&tf_pub](const rosbag::MessageInstance& msg) {
     tf_pub.publish(msg);
   });
   ros::Publisher tf_static_pub = nh.advertise<tf::tfMessage>("/tf_static", 10);
   callbacks.emplace("/tf_static",
-                    [tf_static_pub](const rosbag::MessageInstance& msg) {
+                    [&tf_static_pub](const rosbag::MessageInstance& msg) {
                       tf_static_pub.publish(msg);
                     });
   // Clock
@@ -91,14 +91,14 @@ int main(int argc, char** argv) {
   const bool bag_has_clock = bagHasTopic("/clock", &bag_view);
   if (bag_has_clock) {
     callbacks.emplace("/clock",
-                      [clock_pub](const rosbag::MessageInstance& msg) {
+                      [&clock_pub](const rosbag::MessageInstance& msg) {
                         clock_pub.publish(msg);
                       });
   }
 
   // Playback the bag
-  ros::Time last_msg_timestamp(0);
-  ros::Duration timestamp_dt(0.01);
+  ros::Time side_tasks_last_timestamp(0);
+  const ros::Duration kSideTasksDt(0.05);
   for (const rosbag::MessageInstance& msg : bag_view) {
     // Exit if CTRL+C was pressed
     if (!ros::ok()) {
@@ -116,7 +116,10 @@ int main(int argc, char** argv) {
     }
 
     // Catch up on some periodic tasks
-    if (last_msg_timestamp + timestamp_dt < msg.getTime()) {
+    if (msg.getTime() < side_tasks_last_timestamp ||
+        side_tasks_last_timestamp + kSideTasksDt < msg.getTime()) {
+      side_tasks_last_timestamp = msg.getTime();
+
       // Publish clock substitute if needed
       if (!bag_has_clock) {
         rosgraph_msgs::Clock clock_msg;
@@ -135,6 +138,5 @@ int main(int argc, char** argv) {
 
   wavemap_server.visualizeMap();
 
-  ros::spin();
   return 0;
 }

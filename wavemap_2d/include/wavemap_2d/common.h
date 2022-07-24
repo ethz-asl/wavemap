@@ -11,6 +11,10 @@ namespace wavemap_2d {
 using FloatingPoint = float;
 constexpr FloatingPoint kEpsilon = 1e-6;
 
+template <typename T>
+using MatrixT = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+using Matrix = MatrixT<FloatingPoint>;
+
 constexpr int MapDimension = 2;
 using Transformation = kindr::minimal::Transformation2DTemplate<FloatingPoint>;
 using Point = Transformation::Position;
@@ -25,6 +29,13 @@ using Rotation3D = Transformation3D::Rotation;
 
 using IndexElement = int;
 using Index = Eigen::Matrix<IndexElement, 2, 1>;
+struct IndexHash {
+  static constexpr size_t sl = 17191;
+
+  std::size_t operator()(const Index& index) const {
+    return static_cast<unsigned int>(index.x() + index.y() * sl);
+  }
+};
 
 struct PointWithValue {
   Point position;

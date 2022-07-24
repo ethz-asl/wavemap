@@ -15,9 +15,11 @@
   <arg name="y" default="0.0"/>
   <arg name="z" default="0.1"/>
   <!-- Ground truth occupancy grid generation: -->
-  <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.2"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/resolution" value="0.05"/>
   <param name="/gazebo/wavemap_2d_ground_truth_plugin/slice_height"
          value="0.268"/>
+  <param name="/gazebo/wavemap_2d_ground_truth_plugin/floodfill_unoccupied"
+         value="true"/>
   <!-- NOTE: Save the ground truth wavemap_2d map with:
      rosservice call /gazebo/wavemap_2d_ground_truth_plugin/save_occupancy_grid_to_file "file_path: '/home/you/ground_truth_map_name.tsdf'"-->
 

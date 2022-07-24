@@ -7,15 +7,15 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
-void DenseGrid<CellTypeT>::clear() {
+template <typename CellT>
+void DenseGrid<CellT>::clear() {
   data_.resize(0, 0);
   min_index_ = Index::Zero();
   max_index_ = Index::Zero();
 }
 
-template <typename CellTypeT>
-bool DenseGrid<CellTypeT>::hasCell(const Index& index) const {
+template <typename CellT>
+bool DenseGrid<CellT>::hasCell(const Index& index) const {
   if (!empty()) {
     return (min_index_.array() <= index.array() &&
             index.array() <= max_index_.array())
@@ -24,18 +24,19 @@ bool DenseGrid<CellTypeT>::hasCell(const Index& index) const {
   return false;
 }
 
-template <typename CellTypeT>
-FloatingPoint DenseGrid<CellTypeT>::getCellValue(const Index& index) const {
-  if (hasCell(index)) {
-    return static_cast<FloatingPoint>(*accessCellData(index));
+template <typename CellT>
+FloatingPoint DenseGrid<CellT>::getCellValue(const Index& index) const {
+  const CellDataSpecialized* cell_data = accessCellData(index);
+  if (cell_data) {
+    return static_cast<FloatingPoint>(*cell_data);
   } else {
     return 0.f;
   }
 }
 
-template <typename CellTypeT>
-void DenseGrid<CellTypeT>::setCellValue(const Index& index,
-                                        FloatingPoint new_value) {
+template <typename CellT>
+void DenseGrid<CellT>::setCellValue(const Index& index,
+                                    FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
   if (cell_data) {
@@ -46,30 +47,37 @@ void DenseGrid<CellTypeT>::setCellValue(const Index& index,
   }
 }
 
-template <typename CellTypeT>
-void DenseGrid<CellTypeT>::addToCellValue(const Index& index,
-                                          FloatingPoint update) {
+template <typename CellT>
+void DenseGrid<CellT>::addToCellValue(const Index& index,
+                                      FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
   if (cell_data) {
-    *cell_data = CellTypeT::add(*cell_data, update);
+    *cell_data = CellT::add(*cell_data, update);
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << index;
   }
 }
 
-template <typename CellTypeT>
-cv::Mat DenseGrid<CellTypeT>::getImage(bool use_color) const {
+template <typename CellT>
+cv::Mat DenseGrid<CellT>::getImage(bool use_color) const {
+  if (empty()) {
+    return cv::Mat{};
+  }
+
   cv::Mat image;
   constexpr FloatingPoint kLogOddsMin =
-      CellTypeT::hasLowerBound ? CellTypeT::kLowerBound : -2.f;
+      CellT::hasLowerBound ? CellT::kLowerBound : -2.f;
   constexpr FloatingPoint kLogOddsMax =
-      CellTypeT::hasUpperBound ? CellTypeT::kUpperBound : 4.f;
+      CellT::hasUpperBound ? CellT::kUpperBound : 4.f;
   const DataGridBaseFloat grid_map_tmp =
       data_.template cast<CellDataBaseFloat>();
   cv::eigen2cv(grid_map_tmp, image);
   image.convertTo(image, CV_8UC1, 255.f / (kLogOddsMax - kLogOddsMin),
                   -kLogOddsMin);
+  cv::flip(image, image, -1);
+  cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
+
   if (use_color) {
     cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_PARULA);
   }
@@ -77,9 +85,9 @@ cv::Mat DenseGrid<CellTypeT>::getImage(bool use_color) const {
   return image;
 }
 
-template <typename CellTypeT>
-bool DenseGrid<CellTypeT>::save(const std::string& file_path_prefix,
-                                bool use_floating_precision) const {
+template <typename CellT>
+bool DenseGrid<CellT>::save(const std::string& file_path_prefix,
+                            bool use_floating_precision) const {
   const std::string header_file_path = getHeaderFilePath(file_path_prefix);
   const std::string data_file_path =
       getDataFilePath(file_path_prefix, use_floating_precision);
@@ -99,10 +107,10 @@ bool DenseGrid<CellTypeT>::save(const std::string& file_path_prefix,
     const DataGridBaseFloat data_tmp = data_.template cast<CellDataBaseFloat>();
     cv::eigen2cv(data_tmp, image);
   } else {
-    if (CellTypeT::isFullyBounded) {
+    if (CellT::isFullyBounded) {
       const DataGridBaseInt data_rescaled =
-          ((data_.array() - CellTypeT::kLowerBound) *
-           CellTypeT::kSpecializedToBaseIntScalingFactor)
+          ((data_.array() - CellT::kLowerBound) *
+           CellT::kSpecializedToBaseIntScalingFactor)
               .template cast<CellDataBaseInt>();
       cv::eigen2cv(data_rescaled, image);
     } else {
@@ -116,9 +124,9 @@ bool DenseGrid<CellTypeT>::save(const std::string& file_path_prefix,
   return true;
 }
 
-template <typename CellTypeT>
-bool DenseGrid<CellTypeT>::load(const std::string& file_path_prefix,
-                                bool used_floating_precision) {
+template <typename CellT>
+bool DenseGrid<CellT>::load(const std::string& file_path_prefix,
+                            bool used_floating_precision) {
   const std::string header_file_path = getHeaderFilePath(file_path_prefix);
   const std::string data_file_path =
       getDataFilePath(file_path_prefix, used_floating_precision);
@@ -156,10 +164,10 @@ bool DenseGrid<CellTypeT>::load(const std::string& file_path_prefix,
   } else {
     DataGridBaseInt data_tmp;
     cv::cv2eigen(image, data_tmp);
-    if (CellTypeT::isFullyBounded) {
+    if (CellT::isFullyBounded) {
       data_ = (data_tmp.template cast<CellDataSpecialized>().array() /
-               CellTypeT::kSpecializedToBaseIntScalingFactor) +
-              CellTypeT::kLowerBound;
+               CellT::kSpecializedToBaseIntScalingFactor) +
+              CellT::kLowerBound;
     } else {
       data_ = data_tmp.template cast<CellDataSpecialized>();
     }
@@ -168,8 +176,8 @@ bool DenseGrid<CellTypeT>::load(const std::string& file_path_prefix,
   return true;
 }
 
-template <typename CellTypeT>
-typename CellTypeT::Specialized* DenseGrid<CellTypeT>::accessCellData(
+template <typename CellT>
+typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
     const Index& index, bool auto_allocate) {
   if (empty()) {
     if (auto_allocate) {
@@ -210,8 +218,8 @@ typename CellTypeT::Specialized* DenseGrid<CellTypeT>::accessCellData(
   return &data_.coeffRef(data_index.x(), data_index.y());
 }
 
-template <typename CellTypeT>
-const typename CellTypeT::Specialized* DenseGrid<CellTypeT>::accessCellData(
+template <typename CellT>
+const typename CellT::Specialized* DenseGrid<CellT>::accessCellData(
     const Index& index) const {
   if (empty() || !hasCell(index)) {
     // TODO(victorr): Add unit test

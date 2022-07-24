@@ -47,9 +47,9 @@ struct Triangle {
   AABB getAABB() const;
   FloatingPoint getDistanceToPoint(const Point3D& point) const;
 
-  bool intersectsXAlignedRay(const Point2D& ray_origin_yz,
+  bool intersectsXAlignedRay(const Point& ray_origin_yz,
                              Point3D& barycentric_coordinates) const;
-  bool intersectsXAlignedRay(const Point2D& ray_origin_yz) const;
+  bool intersectsXAlignedRay(const Point& ray_origin_yz) const;
 
   bool intersectsPlane(const Plane& plane,
                        LineSegment& intersecting_segment) const;
@@ -58,11 +58,11 @@ struct Triangle {
   std::string toString() const;
 
  protected:
-  static int getRelativeOrientation(const Point2D& vertex_one,
-                                    const Point2D& vertex_two,
+  static int getRelativeOrientation(const Point& vertex_one,
+                                    const Point& vertex_two,
                                     FloatingPoint& twice_signed_area);
-  static int getRelativeOrientation(const Point2D& vertex_one,
-                                    const Point2D& vertex_two);
+  static int getRelativeOrientation(const Point& vertex_one,
+                                    const Point& vertex_two);
 };
 }  // namespace wavemap_2d::ground_truth
 

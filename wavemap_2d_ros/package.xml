@@ -23,6 +23,8 @@
   <depend>minkindr_conversions</depend>
   <depend>rosbag</depend>
 
+  <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
   <depend>wavemap_2d_msgs</depend>
 </package>

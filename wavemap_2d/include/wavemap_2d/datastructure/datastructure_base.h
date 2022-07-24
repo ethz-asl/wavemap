@@ -25,6 +25,10 @@ class DataStructureBase {
   virtual void clear() = 0;
 
   FloatingPoint getResolution() const { return resolution_; }
+  virtual size_t getMemoryUsage() const = 0;
+
+  virtual Index getMinIndex() const = 0;
+  virtual Index getMaxIndex() const = 0;
 
   virtual bool hasCell(const Index& index) const = 0;
   virtual FloatingPoint getCellValue(const Index& index) const = 0;

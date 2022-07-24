@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
   // TODO(victorr): Read from optional param
   constexpr bool floodfill_unoccupied = false;
   if (floodfill_unoccupied) {
-    occupancy_grid_creator.floodfillUnoccupied(4 * FLAGS_resolution);
+    occupancy_grid_creator.floodfillUnoccupied(Index::Zero());
   }
 
   /* Check if the map is empty before continuing */
@@ -166,9 +166,9 @@ int main(int argc, char* argv[]) {
   // Save the occupancy grid to a file
   LOG(INFO) << "Saving occupancy grid to file: "
             << FLAGS_occupancy_grid_output_filepath;
-  constexpr bool kUseFloatingPrecision = true;
   occupancy_grid_creator.getOccupancyGrid().save(
-      FLAGS_occupancy_grid_output_filepath, kUseFloatingPrecision);
+      FLAGS_occupancy_grid_output_filepath,
+      ground_truth::kSaveWithFloatingPrecision);
 
   LOG(INFO) << "Done";
 

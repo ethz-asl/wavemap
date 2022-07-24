@@ -12,10 +12,10 @@
 #include "wavemap_2d/datastructure/quadtree/node_index.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
+template <typename CellT>
 class Quadtree : public DataStructureBase {
  public:
-  using CellType = CellTypeT;
+  using CellType = CellT;
 
   explicit Quadtree(FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -29,13 +29,24 @@ class Quadtree : public DataStructureBase {
   size_t size() const override;
   void clear() override { root_node_.pruneChildren(); }
 
+  size_t getMemoryUsage() const override;
+
   NodeIndexElement getMaxDepth() const { return max_depth_; }
-  Index getMinPossibleIndex() {
-    return (-getNodeHalvedDiagonalAtDepth(0u)).template cast<IndexElement>();
+  Index getMinPossibleIndex() const {
+    return -(luts_.node_halved_diagonals_at_depth_[0] / resolution_)
+                .array()
+                .round()
+                .template cast<IndexElement>();
   }
-  Index getMaxPossibleIndex() {
-    return getNodeHalvedDiagonalAtDepth(0u).template cast<IndexElement>();
+  Index getMaxPossibleIndex() const {
+    return (luts_.node_halved_diagonals_at_depth_[0] / resolution_)
+        .array()
+        .round()
+        .template cast<IndexElement>();
   }
+
+  Index getMinIndex() const override;
+  Index getMaxIndex() const override;
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
@@ -70,7 +81,7 @@ class Quadtree : public DataStructureBase {
   }
 
  protected:
-  using CellDataSpecialized = typename CellTypeT::Specialized;
+  using CellDataSpecialized = typename CellT::Specialized;
 
   NodeIndexElement max_depth_;
   FloatingPoint root_node_width_;

@@ -10,7 +10,7 @@ on:
 #       (/github/home is a docker volume mapped to the container's host).
 env:
   REPOSITORY_NAME: wavemap_2d
-  DOCKER_REGISTRY: nikola.vwire.ch:29139
+  DOCKER_REGISTRY: hub.wavemap2d.vwire.ch
   DOCKER_TARGET: workspace-built-deps
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
@@ -80,9 +80,10 @@ jobs:
         id: should-writeback-ccache
         run: |
           runtime=$(( $(date +%s) - ${{ steps.start-time.outputs.stamp }} ))
+          threshold=300  # seconds
           echo $runtime
           answer=false
-          if [ 180 -le $runtime ]; then
+          if [ $threshold -le $runtime ]; then
             answer=true
           fi
           echo "::set-output name=answer::${answer}"
@@ -142,8 +143,11 @@ jobs:
       - name: Install pre-commit's dependencies
         run: |
           apt-get update
-          apt-get install -q -y git python3-pip clang-format cppcheck libxml2-utils
+          apt-get install -q -y --no-install-recommends git python3-pip clang-format cppcheck libxml2-utils wget
           pip3 install pre-commit cpplint
+          wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
+          chmod +x /bin/hadolint
+        # TODO(victorr): Find a better way to install hadolint (and remove wget dep).
 
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -235,7 +239,7 @@ jobs:
       - name: Install clang-tidy
         run: |
           apt-get update
-          apt-get install -y clang-tidy
+          apt-get install -q -y --no-install-recommends clang-tidy
 
       - name: Build catkin package and dependencies
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -437,7 +441,7 @@ jobs:
       - name: Install Valgrind
         run: |
           apt-get update
-          apt-get install -y valgrind
+          apt-get install -q -y --no-install-recommends valgrind
 
       - name: Build unit tests
         working-directory: ${{ env.CATKIN_WS_PATH }}

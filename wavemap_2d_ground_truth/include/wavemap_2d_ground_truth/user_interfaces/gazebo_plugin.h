@@ -23,6 +23,8 @@ class Wavemap2DGroundTruthPlugin : public WorldPlugin {
   bool serviceCallback(wavemap_2d_msgs::FilePath::Request& request,
                        wavemap_2d_msgs::FilePath::Response& response);
 
+  bool saveOccupancyGrid(const std::string& file_path);
+
  private:
   physics::WorldPtr world_;
   ros::NodeHandle nh_private_;

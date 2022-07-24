@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 
 #include "wavemap_2d/common.h"
-#include "wavemap_2d/integrator/grid_iterator.h"
+#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap_2d {
 static void GridIterationNestedForLoop(benchmark::State& state) {

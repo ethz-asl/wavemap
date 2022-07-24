@@ -44,7 +44,8 @@ cs_add_library(
   src/integrator/beam_model.cc
   src/integrator/fixed_logodds_model.cc
   src/datastructure/datastructure_base.cc
-  src/utils/eigen_format.cc)
+  src/utils/eigen_format.cc
+  src/utils/evaluation_utils.cc)
 
 # Binaries
 cs_add_executable(carmen_processor app/carmen_processor.cc)
@@ -61,6 +62,11 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_dense_grid test/src/datastructure/test_dense_grid.cc)
   target_include_directories(test_dense_grid PRIVATE test/include)
   target_link_libraries(test_dense_grid ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_hashed_blocks
+                   test/src/datastructure/test_hashed_blocks.cc)
+  target_include_directories(test_hashed_blocks PRIVATE test/include)
+  target_link_libraries(test_hashed_blocks ${PROJECT_NAME} testing_main)
 
   catkin_add_gtest(test_pointcloud test/src/datastructure/test_pointcloud.cc)
   target_include_directories(test_pointcloud PRIVATE test/include)
@@ -83,6 +89,17 @@ if (CATKIN_ENABLE_TESTING)
                    test/src/utils/test_constexpr_functions.cc)
   target_include_directories(test_constexpr_functions PRIVATE test/include)
   target_link_libraries(test_constexpr_functions ${PROJECT_NAME} testing_main)
+
+  catkin_add_gtest(test_discrete_wavelet_transform
+                   test/src/transform/test_discrete_wavelet_transform.cc)
+  target_include_directories(test_discrete_wavelet_transform
+                             PRIVATE test/include)
+  target_link_libraries(test_discrete_wavelet_transform ${PROJECT_NAME}
+                        testing_main)
+
+  catkin_add_gtest(test_naive_haar test/src/transform/test_naive_haar.cc)
+  target_include_directories(test_naive_haar PRIVATE test/include)
+  target_link_libraries(test_naive_haar ${PROJECT_NAME} testing_main)
 
   if (ENABLE_COVERAGE_TESTING)
     set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test/*" "*/${PROJECT_NAME}/app/*"

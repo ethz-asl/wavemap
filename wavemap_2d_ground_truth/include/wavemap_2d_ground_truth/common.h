@@ -7,9 +7,7 @@
 #include <wavemap_2d/common.h>
 
 namespace wavemap_2d::ground_truth {
-using Transformation2D = Transformation;
-using Point2D = Point;
-using Vector2D = Point;
+constexpr bool kSaveWithFloatingPrecision = true;
 }  // namespace wavemap_2d::ground_truth
 
 #endif  // WAVEMAP_2D_GROUND_TRUTH_COMMON_H_

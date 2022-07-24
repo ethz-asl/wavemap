@@ -7,10 +7,19 @@
 #include "wavemap_2d/datastructure/datastructure_base.h"
 
 namespace wavemap_2d {
-template <typename CellTypeT>
+template <typename CellT>
 class DenseGrid : public DataStructureBase {
  public:
-  using CellType = CellTypeT;
+  using CellType = CellT;
+  using CellDataSpecialized = typename CellT::Specialized;
+  using CellDataBaseFloat = typename CellT::BaseFloat;
+  using CellDataBaseInt = typename CellT::BaseInt;
+
+  template <typename T>
+  using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+  using DataGridSpecialized = DataGrid<CellDataSpecialized>;
+  using DataGridBaseFloat = DataGrid<CellDataBaseFloat>;
+  using DataGridBaseInt = DataGrid<CellDataBaseInt>;
 
   explicit DenseGrid(const FloatingPoint resolution)
       : DataStructureBase(resolution),
@@ -21,14 +30,19 @@ class DenseGrid : public DataStructureBase {
   size_t size() const override { return data_.size(); }
   void clear() override;
 
+  size_t getMemoryUsage() const override {
+    return size() * sizeof(CellDataSpecialized);
+  }
+
   Index dimensions() const { return {data_.rows(), data_.cols()}; }
-  Index getMinIndex() const { return min_index_; }
-  Index getMaxIndex() const { return max_index_; }
+  Index getMinIndex() const override { return min_index_; }
+  Index getMaxIndex() const override { return max_index_; }
 
   bool hasCell(const Index& index) const override;
   FloatingPoint getCellValue(const Index& index) const override;
   void setCellValue(const Index& index, FloatingPoint new_value) override;
   void addToCellValue(const Index& index, FloatingPoint update) override;
+  const DataGridSpecialized& getData() { return data_; }
 
   cv::Mat getImage(bool use_color) const override;
   bool save(const std::string& file_path_prefix,
@@ -37,24 +51,13 @@ class DenseGrid : public DataStructureBase {
             bool used_floating_precision) override;
 
  protected:
-  using CellDataSpecialized = typename CellTypeT::Specialized;
-  using CellDataBaseFloat = typename CellTypeT::BaseFloat;
-  using CellDataBaseInt = typename CellTypeT::BaseInt;
-
-  template <typename T>
-  using DataGrid = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-  using DataGridSpecialized = DataGrid<CellDataSpecialized>;
-  using DataGridBaseFloat = DataGrid<CellDataBaseFloat>;
-  using DataGridBaseInt = DataGrid<CellDataBaseInt>;
-
   Index min_index_;
   Index max_index_;
+  DataGridSpecialized data_;
 
   CellDataSpecialized* accessCellData(const Index& index,
                                       bool auto_allocate = false);
   const CellDataSpecialized* accessCellData(const Index& index) const;
-
-  DataGridSpecialized data_;
 };
 }  // namespace wavemap_2d
 
