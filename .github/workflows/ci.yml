@@ -9,8 +9,8 @@ on:
 #       dir persists between jobs when using self-hosted GitHub Actions runners
 #       (/github/home is a docker volume mapped to the container's host).
 env:
-  REPOSITORY_NAME: wavemap_2d
-  DOCKER_REGISTRY: hub.wavemap2d.vwire.ch
+  REPOSITORY_NAME: wavemap
+  DOCKER_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_TARGET: workspace-built-deps
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
