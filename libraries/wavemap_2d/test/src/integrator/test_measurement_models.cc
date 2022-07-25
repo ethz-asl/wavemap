@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/iterator/grid_iterator.h>
+#include <wavemap_common/iterator/ray_iterator.h>
 #include <wavemap_common/test/fixture_base.h>
 
 #include "wavemap_2d/integrator/measurement_model/beam_model.h"
 #include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
-#include "wavemap_2d/iterator/grid_iterator.h"
-#include "wavemap_2d/iterator/ray_iterator.h"
 
 namespace wavemap {
 using MeasurementModelTest = FixtureBase;

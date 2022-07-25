@@ -1,6 +1,6 @@
 #include "wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h"
 
-#include "wavemap_2d/iterator/grid_iterator.h"
+#include <wavemap_common/iterator/grid_iterator.h>
 
 namespace wavemap {
 void FixedResolutionIntegrator::integratePointcloud(

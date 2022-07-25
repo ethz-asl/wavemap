@@ -3,8 +3,9 @@
 
 #include <utility>
 
+#include <wavemap_common/iterator/grid_iterator.h>
+
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
-#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap {
 class BeamIntegrator : public PointcloudIntegrator {

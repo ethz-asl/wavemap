@@ -49,6 +49,8 @@ if (CATKIN_ENABLE_TESTING)
       test/src/data_structure/test_volumetric_cell_types.cc
       test/src/indexing/test_index_conversions.cc
       test/src/indexing/test_ndtree_index.cc
+      test/src/iterator/test_grid_iterator.cc
+      test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc
       test/src/utils/test_bit_manipulation.cc
       test/src/utils/test_int_math.cc)

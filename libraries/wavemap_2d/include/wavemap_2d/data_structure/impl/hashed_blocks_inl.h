@@ -5,8 +5,9 @@
 #include <string>
 #include <unordered_set>
 
+#include <wavemap_common/iterator/grid_iterator.h>
+
 #include "wavemap_2d/data_structure/dense_grid.h"
-#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap {
 template <typename CellT>

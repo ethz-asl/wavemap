@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/iterator/grid_iterator.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/container_print_utils.h>
 
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
-#include "wavemap_2d/iterator/grid_iterator.h"
 
 namespace wavemap {
 class CoarseToFineIntegratorTest : public FixtureBase {

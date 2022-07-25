@@ -3,7 +3,7 @@
 #include <unordered_set>
 
 #include <wavemap_2d/indexing/index_hashes.h>
-#include <wavemap_2d/iterator/ray_iterator.h>
+#include <wavemap_common/iterator/ray_iterator.h>
 
 #include "wavemap_ground_truth/geometry.h"
 
@@ -22,9 +22,9 @@ void OccupancyGridCreator::integrateTriangle(const Triangle& triangle) {
   if (triangle.intersectsPlane(xy_plane, intersecting_segment)) {
     CHECK_NEAR(intersecting_segment.start_point.z(), slice_height_, kEpsilon);
     CHECK_NEAR(intersecting_segment.end_point.z(), slice_height_, kEpsilon);
-    Ray intersection_ray(intersecting_segment.start_point.head<2>(),
-                         intersecting_segment.end_point.head<2>(),
-                         occupancy_grid_.getMinCellWidth());
+    Ray<2> intersection_ray(intersecting_segment.start_point.head<2>(),
+                            intersecting_segment.end_point.head<2>(),
+                            occupancy_grid_.getMinCellWidth());
     for (const Index2D& index : intersection_ray) {
       occupancy_grid_.setCellValue(index, 1.f);
     }

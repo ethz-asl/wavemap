@@ -1,66 +1,87 @@
 #include <gtest/gtest.h>
-#include <wavemap_common/common.h>
-#include <wavemap_common/test/fixture_base.h>
-#include <wavemap_common/utils/eigen_format.h>
 
-#include "wavemap_2d/iterator/ray_iterator.h"
+#include "wavemap_common/common.h"
+#include "wavemap_common/iterator/ray_iterator.h"
+#include "wavemap_common/test/fixture_base.h"
+#include "wavemap_common/utils/eigen_format.h"
 
 namespace wavemap {
+template <typename TypeParamT>
 using RayIteratorTest = FixtureBase;
 
-TEST_F(RayIteratorTest, IterationOrderAndCompleteness) {
+template <int dim>
+struct TypeParamTemplate {
+  static constexpr int kDim = dim;
+};
+using TypeParams = ::testing::Types<TypeParamTemplate<2>, TypeParamTemplate<3>>;
+TYPED_TEST_SUITE(RayIteratorTest, TypeParams, );
+
+TYPED_TEST(RayIteratorTest, IterationOrderAndCompleteness) {
+  constexpr int kDim = TypeParam::kDim;
   constexpr int kNumTestRays = 100;
   struct TestRay {
-    Point2D origin;
-    Vector2D translation;
+    Point<kDim> origin;
+    Vector<kDim> translation;
   };
 
   // Create zero length, perfectly horizontal/vertical, and random test rays
-  std::vector<TestRay> test_rays(kNumTestRays);
-  test_rays[0] = {getRandomPoint<2>(), {0.f, 0.f}};
-  test_rays[1] = {getRandomPoint<2>(), {getRandomSignedDistance(), 0.f}};
-  test_rays[2] = {getRandomPoint<2>(), {0.f, getRandomSignedDistance()}};
-  std::generate(test_rays.begin() + 3, test_rays.end(), [this]() {
-    return TestRay{getRandomPoint<2>(), getRandomTranslation<2>()};
+  std::vector<TestRay> test_rays;
+  test_rays.reserve(kNumTestRays);
+  // Generate rays along all axes to test for degenerate cases
+  const auto origin = Point<kDim>::Zero();
+  test_rays.push_back({origin, origin});
+  for (int dim_idx = 0; dim_idx < kDim; ++dim_idx) {
+    const auto vector = TestFixture::getRandomSignedDistance(1e-3, 4e1) *
+                        Point<kDim>::Unit(dim_idx);
+    test_rays.push_back({origin, vector});
+    test_rays.push_back({origin, -vector});
+    test_rays.push_back({vector, origin});
+    test_rays.push_back({-vector, origin});
+  }
+  // Fill the rest of the vector with random rays
+  std::generate_n(test_rays.end(), kNumTestRays - test_rays.size(), [this]() {
+    return TestRay{TestFixture::template getRandomPoint<kDim>(),
+                   TestFixture::template getRandomTranslation<kDim>()};
   });
 
   for (const auto& test_ray : test_rays) {
-    const Point2D start_point = test_ray.origin;
-    const Point2D end_point = test_ray.origin + test_ray.translation;
-    const Vector2D t_start_end = end_point - start_point;
+    const Point<kDim> start_point = test_ray.origin;
+    const Point<kDim> end_point = test_ray.origin + test_ray.translation;
+    const Vector<kDim> t_start_end = end_point - start_point;
     const FloatingPoint ray_length = t_start_end.norm();
 
-    const FloatingPoint min_cell_width = getRandomMinCellWidth();
+    const FloatingPoint min_cell_width = TestFixture::getRandomMinCellWidth();
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
-    const Index2D start_point_index =
+    const Index<kDim> start_point_index =
         convert::pointToNearestIndex(start_point, min_cell_width_inv);
-    const Index2D end_point_index =
+    const Index<kDim> end_point_index =
         convert::pointToNearestIndex(end_point, min_cell_width_inv);
-    const Index2D direction =
-        (end_point_index - start_point_index).cwiseSign().cast<IndexElement>();
+    const Index<kDim> direction = (end_point_index - start_point_index)
+                                      .cwiseSign()
+                                      .template cast<IndexElement>();
 
     Ray ray(start_point, end_point, min_cell_width);
     EXPECT_EQ(*ray.begin(), start_point_index);
     EXPECT_EQ(*ray.end(), end_point_index);
 
-    Index2D last_index;
+    Index<kDim> last_index;
     size_t step_idx = 0u;
-    for (const Index2D& index : ray) {
+    for (const Index<kDim>& index : ray) {
       if (step_idx == 0u) {
         EXPECT_EQ(index, start_point_index)
             << "Ray iterator did not start at start index.";
       } else {
         EXPECT_NE(index, last_index)
             << "Ray iterator updated the same index twice.";
-        const Index2D index_diff = index - last_index;
+        const Index<kDim> index_diff = index - last_index;
         EXPECT_EQ(index_diff.cwiseAbs().sum(), 1)
             << "Ray iterator skipped a cell.";
         EXPECT_TRUE((index_diff.array() == direction.array()).any())
             << "Ray iterator stepped into an unexpected direction.";
 
-        const Point2D current_point =
+        const Point<kDim> current_point =
             convert::indexToCenterPoint(index, min_cell_width);
-        const Vector2D t_start_current = current_point - start_point;
+        const Vector<kDim> t_start_current = current_point - start_point;
         const FloatingPoint distance =
             std::abs(t_start_end.x() * t_start_current.y() -
                      t_start_current.x() * t_start_end.y()) /

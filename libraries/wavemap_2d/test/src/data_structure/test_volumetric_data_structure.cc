@@ -155,8 +155,9 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     }
 
     // Check that the map is complete and correct (incl. truncation)
-    for (const Index2D& index : Grid(reference_min_index - Index2D::Ones(),
-                                     reference_max_index + Index2D::Ones())) {
+    for (const Index2D& index :
+         Grid<2>(reference_min_index - Index2D::Ones(),
+                 reference_max_index + Index2D::Ones())) {
       if (reference_map.count(index)) {
         EXPECT_NEAR(map_base_ptr->getCellValue(index), reference_map[index],
                     TestFixture::kAcceptableReconstructionError *
