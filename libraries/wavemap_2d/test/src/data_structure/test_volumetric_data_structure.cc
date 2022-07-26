@@ -6,7 +6,7 @@
 #include <wavemap_common/utils/container_print_utils.h>
 
 #include "wavemap_2d/data_structure/dense_grid.h"
-#include "wavemap_2d/data_structure/hashed_blocks.h"
+#include "wavemap_2d/data_structure/hashed_blocks_2d.h"
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/data_structure/volumetric_differencing_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_quadtree.h"
@@ -19,15 +19,17 @@ class VolumetricDataStructureTest : public FixtureBase {
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
 };
 
-using VolumetricDataStructureTypes = ::testing::Types<
-    DenseGrid<UnboundedOccupancyCell>, DenseGrid<SaturatingOccupancyCell>,
-    HashedBlocks<UnboundedOccupancyCell>, HashedBlocks<SaturatingOccupancyCell>,
-    VolumetricQuadtree<UnboundedOccupancyCell>,
-    VolumetricQuadtree<SaturatingOccupancyCell>,
-    VolumetricDifferencingQuadtree<UnboundedOccupancyCell>,
-    VolumetricDifferencingQuadtree<SaturatingOccupancyCell>,
-    WaveletTree2D<UnboundedOccupancyCell>,
-    WaveletTree2D<SaturatingOccupancyCell>>;
+using VolumetricDataStructureTypes =
+    ::testing::Types<DenseGrid<UnboundedOccupancyCell>,
+                     DenseGrid<SaturatingOccupancyCell>,
+                     HashedBlocks2D<UnboundedOccupancyCell>,
+                     HashedBlocks2D<SaturatingOccupancyCell>,
+                     VolumetricQuadtree<UnboundedOccupancyCell>,
+                     VolumetricQuadtree<SaturatingOccupancyCell>,
+                     VolumetricDifferencingQuadtree<UnboundedOccupancyCell>,
+                     VolumetricDifferencingQuadtree<SaturatingOccupancyCell>,
+                     WaveletTree2D<UnboundedOccupancyCell>,
+                     WaveletTree2D<SaturatingOccupancyCell>>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
@@ -140,7 +142,8 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
         Index2D::Constant(std::numeric_limits<IndexElement>::max());
     Index2D reference_max_index =
         Index2D::Constant(std::numeric_limits<IndexElement>::lowest());
-    std::unordered_map<Index2D, FloatingPoint, VoxbloxIndexHash> reference_map;
+    std::unordered_map<Index2D, FloatingPoint, VoxbloxIndexHash<2>>
+        reference_map;
     for (const Index2D& index : random_indices) {
       for (const FloatingPoint update : TestFixture::getRandomUpdateVector()) {
         map_base_ptr->addToCellValue(index, update);

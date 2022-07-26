@@ -4,6 +4,7 @@
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/indexing/index_conversions.h>
+#include <wavemap_common/indexing/index_hashes.h>
 #include <wavemap_common/iterator/grid_iterator.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/eigen_format.h>
@@ -12,7 +13,6 @@
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/data_structure/volumetric_quadtree.h"
 #include "wavemap_2d/data_structure/wavelet_tree_2d.h"
-#include "wavemap_2d/indexing/index_hashes.h"
 #include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
 #include "wavemap_2d/integrator/point_integrator/ray_integrator.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
@@ -63,7 +63,7 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
         getRandomPointcloud(min_angle, max_angle, num_beams, min_distance,
                             kMaxDistance);
-    std::unordered_set<Index2D, VoxbloxIndexHash> ray_end_points;
+    std::unordered_set<Index2D, VoxbloxIndexHash<2>> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index2D index =
           convert::pointToNearestIndex<2>(end_point, min_cell_width_inv);

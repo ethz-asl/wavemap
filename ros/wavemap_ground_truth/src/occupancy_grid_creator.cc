@@ -2,7 +2,7 @@
 
 #include <unordered_set>
 
-#include <wavemap_2d/indexing/index_hashes.h>
+#include <wavemap_common/indexing/index_hashes.h>
 #include <wavemap_common/iterator/ray_iterator.h>
 
 #include "wavemap_ground_truth/geometry.h"
@@ -33,7 +33,7 @@ void OccupancyGridCreator::integrateTriangle(const Triangle& triangle) {
 
 void OccupancyGridCreator::floodfillUnoccupied(const Index2D& start_index) {
   std::queue<Index2D> open_queue;
-  std::unordered_set<Index2D, VoxbloxIndexHash> closed_set;
+  std::unordered_set<Index2D, VoxbloxIndexHash<2>> closed_set;
 
   const Index2D min_index = occupancy_grid_.getMinIndex();
   const Index2D max_index = occupancy_grid_.getMaxIndex();

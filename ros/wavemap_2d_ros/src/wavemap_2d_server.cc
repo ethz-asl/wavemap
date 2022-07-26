@@ -2,7 +2,7 @@
 
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <wavemap_2d/data_structure/dense_grid.h>
-#include <wavemap_2d/data_structure/hashed_blocks.h>
+#include <wavemap_2d/data_structure/hashed_blocks_2d.h>
 #include <wavemap_2d/data_structure/volumetric_differencing_quadtree.h>
 #include <wavemap_2d/data_structure/volumetric_quadtree.h>
 #include <wavemap_2d/data_structure/wavelet_tree_2d.h>
@@ -41,7 +41,7 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
         config_.min_cell_width);
   } else if (config_.data_structure_type == "hashed_blocks") {
     ROS_INFO("Using hashed blocks datastructure");
-    occupancy_map_ = std::make_shared<HashedBlocks<SaturatingOccupancyCell>>(
+    occupancy_map_ = std::make_shared<HashedBlocks2D<SaturatingOccupancyCell>>(
         config_.min_cell_width);
   } else {
     ROS_INFO("Using dense grid datastructure");

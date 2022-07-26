@@ -44,7 +44,6 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
     test_${PROJECT_NAME}
     test/src/data_structure/test_dense_grid.cc
-    test/src/data_structure/test_hashed_blocks.cc
     test/src/data_structure/test_volumetric_data_structure.cc
     test/src/integrator/test_range_image.cc
     test/src/integrator/test_pointcloud_integrators.cc

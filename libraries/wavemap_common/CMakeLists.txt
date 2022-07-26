@@ -42,6 +42,7 @@ if (CATKIN_ENABLE_TESTING)
       test_${PROJECT_NAME}
       test/src/data_structure/test_aabb.cc
       test/src/data_structure/test_haar_cell.cc
+      test/src/data_structure/test_hashed_blocks.cc
       test/src/data_structure/test_ndtree.cc
       test/src/data_structure/test_pointcloud.cc
       test/src/data_structure/test_volumetric_ndtree.cc

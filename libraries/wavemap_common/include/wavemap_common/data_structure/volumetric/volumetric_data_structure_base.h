@@ -5,8 +5,6 @@
 #include <memory>
 #include <string>
 
-#include <Eigen/Eigen>
-
 #include "wavemap_common/common.h"
 #include "wavemap_common/indexing/ndtree_index.h"
 

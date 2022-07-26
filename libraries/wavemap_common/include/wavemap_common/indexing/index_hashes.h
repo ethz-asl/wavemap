@@ -1,14 +1,19 @@
-#ifndef WAVEMAP_2D_INDEXING_INDEX_HASHES_H_
-#define WAVEMAP_2D_INDEXING_INDEX_HASHES_H_
+#ifndef WAVEMAP_COMMON_INDEXING_INDEX_HASHES_H_
+#define WAVEMAP_COMMON_INDEXING_INDEX_HASHES_H_
 
-#include <wavemap_common/common.h>
+#include <numeric>
+
+#include "wavemap_common/common.h"
 
 namespace wavemap {
+template <int dim>
 struct VoxbloxIndexHash {
-  static constexpr size_t sl = 17191;
+  static constexpr auto coefficients =
+      int_math::pow_sequence<size_t, 17191u, dim>();
 
-  size_t operator()(const Index2D& index) const {
-    return index.x() + index.y() * sl;
+  size_t operator()(const Index<dim>& index) const {
+    return std::transform_reduce(coefficients.begin(), coefficients.end(),
+                                 index.data(), 0u);
   }
 };
 
@@ -26,4 +31,4 @@ struct VDBIndexHash {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INDEXING_INDEX_HASHES_H_
+#endif  // WAVEMAP_COMMON_INDEXING_INDEX_HASHES_H_
