@@ -92,11 +92,10 @@ template <int cells_per_side, int dim>
 inline Index<dim> linearIndexToIndex(LinearIndex linear_index) {
   DCHECK(linear_index < std::pow(cells_per_side, dim));
   constexpr auto pow_sequence =
-      int_math::pow_sequence<IndexElement, cells_per_side, dim + 1>();
+      int_math::pow_sequence<IndexElement, cells_per_side, dim>();
   Index<dim> index;
   for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    index[dim_idx] =
-        (linear_index % pow_sequence[dim_idx + 1]) / pow_sequence[dim_idx];
+    index[dim_idx] = (linear_index / pow_sequence[dim_idx]) % cells_per_side;
   }
   return index;
 }
