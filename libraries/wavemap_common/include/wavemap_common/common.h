@@ -20,6 +20,7 @@ template <int dim>
 using Index = Eigen::Matrix<IndexElement, dim, 1>;
 using Index2D = Index<2>;
 using Index3D = Index<3>;
+using LinearIndex = size_t;
 
 template <int dim>
 using Vector = Eigen::Matrix<FloatingPoint, dim, 1>;

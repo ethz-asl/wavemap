@@ -28,6 +28,25 @@ struct TypeParamTemplate {
 using TypeParams = ::testing::Types<TypeParamTemplate<2>, TypeParamTemplate<3>>;
 TYPED_TEST_SUITE(IndexConversionsTest, TypeParams, );
 
+TYPED_TEST(IndexConversionsTest, LinearIndexConversions) {
+  constexpr int kDim = TypeParam::kDim;
+  constexpr int kCellsPerSide = 16;
+  const std::vector<Index<kDim>> test_indices =
+      TestFixture::template getRandomIndexVector<kDim>(
+          1000, 2000, Index<kDim>::Zero(),
+          Index<kDim>::Constant(kCellsPerSide - 1));
+  for (const Index<kDim>& index : test_indices) {
+    const LinearIndex linear_index =
+        convert::indexToLinearIndex<kCellsPerSide>(index);
+    const Index<kDim> round_trip_index =
+        convert::linearIndexToIndex<kCellsPerSide, kDim>(linear_index);
+    EXPECT_EQ(round_trip_index, index)
+        << "Expected index " << EigenFormat::oneLine(index) << " but got "
+        << EigenFormat::oneLine(round_trip_index)
+        << ", from intermediate linear_index " << linear_index;
+  }
+}
+
 TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
   constexpr int kDim = TypeParam::kDim;
 

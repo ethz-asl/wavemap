@@ -32,4 +32,44 @@ TEST(IntMathTest, Log2) {
     }
   }
 }
+
+TEST(IntMathTest, PowSequence) {
+  // Test trivial (length 1) sequences
+  constexpr std::array<IndexElement, 1> expected_pow_sequence_length_1 = {1};
+  constexpr auto pow_sequence_base_1_length_1 =
+      int_math::pow_sequence<IndexElement, 1, 1>();
+  EXPECT_EQ(pow_sequence_base_1_length_1, expected_pow_sequence_length_1);
+  constexpr auto pow_sequence_base_4_length_1 =
+      int_math::pow_sequence<IndexElement, 4, 1>();
+  EXPECT_EQ(pow_sequence_base_4_length_1, expected_pow_sequence_length_1);
+
+  // Test power sequences for different bases
+  constexpr std::array<IndexElement, 4> expected_pow_sequence_base_1_length_4 =
+      {1, 1, 1, 1};
+  constexpr auto pow_sequence_base_1_length_4(
+      int_math::pow_sequence<IndexElement, 1, 4>());
+  EXPECT_EQ(pow_sequence_base_1_length_4,
+            expected_pow_sequence_base_1_length_4);
+
+  constexpr std::array<IndexElement, 4> expected_pow_sequence_base_2_length_4 =
+      {1, 2, 4, 8};
+  constexpr auto pow_sequence_base_2_length_4 =
+      int_math::pow_sequence<IndexElement, 2, 4>();
+  EXPECT_EQ(pow_sequence_base_2_length_4,
+            expected_pow_sequence_base_2_length_4);
+
+  constexpr std::array<IndexElement, 4> expected_pow_sequence_base_3_length_4 =
+      {1, 3, 9, 27};
+  constexpr auto pow_sequence_base_3_length_4 =
+      int_math::pow_sequence<IndexElement, 3, 4>();
+  EXPECT_EQ(pow_sequence_base_3_length_4,
+            expected_pow_sequence_base_3_length_4);
+
+  constexpr std::array<IndexElement, 4>
+      expected_pow_sequence_base_min_2_length_4 = {1, -2, 4, -8};
+  constexpr auto pow_sequence_base_min_2_length_4 =
+      int_math::pow_sequence<IndexElement, -2, 4>();
+  EXPECT_EQ(pow_sequence_base_min_2_length_4,
+            expected_pow_sequence_base_min_2_length_4);
+}
 }  // namespace wavemap

@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_COMMON_INDEXING_INDEX_CONVERSIONS_H_
 #define WAVEMAP_COMMON_INDEXING_INDEX_CONVERSIONS_H_
 
+#include <numeric>
+
 #include "wavemap_common/common.h"
 #include "wavemap_common/data_structure/aabb.h"
 #include "wavemap_common/indexing/ndtree_index.h"
@@ -75,6 +77,28 @@ inline Index<dim> indexToNewResolution(const Index<dim>& src_index,
 inline FloatingPoint heightToCellWidth(FloatingPoint min_cell_width,
                                        NdtreeIndexElement height) {
   return min_cell_width * static_cast<FloatingPoint>(int_math::exp2(height));
+}
+
+template <int cells_per_side, int dim>
+inline LinearIndex indexToLinearIndex(const Index<dim>& index) {
+  DCHECK((0 <= index.array() && index.array() < cells_per_side).all());
+  constexpr auto pow_sequence =
+      int_math::pow_sequence<IndexElement, cells_per_side, dim>();
+  return std::transform_reduce(pow_sequence.begin(), pow_sequence.end(),
+                               index.data(), 0);
+}
+
+template <int cells_per_side, int dim>
+inline Index<dim> linearIndexToIndex(LinearIndex linear_index) {
+  DCHECK(linear_index < std::pow(cells_per_side, dim));
+  constexpr auto pow_sequence =
+      int_math::pow_sequence<IndexElement, cells_per_side, dim>();
+  Index<dim> index;
+  for (int dim_idx = dim - 1; 0 <= dim_idx; --dim_idx) {
+    index[dim_idx] = linear_index / pow_sequence[dim_idx];
+    linear_index %= pow_sequence[dim_idx];
+  }
+  return index;
 }
 
 template <int dim>

@@ -37,6 +37,17 @@ Eigen::Matrix<int, dim, 1> div_exp2(Eigen::Matrix<int, dim, 1> vector,
   }
   return vector;
 }
+
+template <typename T, T pow_base, int dim>
+constexpr std::array<T, dim> pow_sequence() {
+  static_assert(0 < dim);
+  std::array<T, dim> pow_sequence{};
+  pow_sequence[0] = 1;
+  for (int dim_idx = 1; dim_idx < dim; ++dim_idx) {
+    pow_sequence[dim_idx] = pow_sequence[dim_idx - 1] * pow_base;
+  }
+  return pow_sequence;
+}
 }  // namespace wavemap::int_math
 
 #endif  // WAVEMAP_COMMON_UTILS_INT_MATH_H_

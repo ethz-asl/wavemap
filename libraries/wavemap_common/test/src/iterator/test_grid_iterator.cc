@@ -55,11 +55,11 @@ TYPED_TEST(GridIteratorTest, EquivalenceToNestedLoops) {
 
   for (int i = 0; i < kNumTestGrids; ++i) {
     const Index<kDim> bottom_left_idx =
-        TestFixture::template getRandomIndex<kDim>(Index<kDim>::Constant(-1e1),
+        TestFixture::template getRandomIndex<kDim>(Index<kDim>::Constant(-4e1),
                                                    Index<kDim>::Zero());
     const Index<kDim> top_right_idx =
         TestFixture::template getRandomIndex<kDim>(Index<kDim>::Zero(),
-                                                   Index<kDim>::Constant(1e1));
+                                                   Index<kDim>::Constant(4e1));
 
     Grid grid(bottom_left_idx, top_right_idx);
     auto grid_it = grid.begin();
