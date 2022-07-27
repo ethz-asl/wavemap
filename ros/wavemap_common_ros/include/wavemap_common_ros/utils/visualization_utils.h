@@ -36,7 +36,7 @@ visualization_msgs::MarkerArray MapToMarkerArray(
 
   // Add a marker for each scale
   default_marker.action = visualization_msgs::Marker::MODIFY;
-  for (QuadtreeIndex::Element height = 0; height <= kMaxHeight; ++height) {
+  for (NdtreeIndexElement height = 0; height <= kMaxHeight; ++height) {
     ++default_marker.id;
     const FloatingPoint cell_width =
         convert::heightToCellWidth(min_cell_width, height);
@@ -48,7 +48,7 @@ visualization_msgs::MarkerArray MapToMarkerArray(
 
   // Add a colored square for each leaf
   map.forEachLeaf([&marker_array, &color_map, min_cell_width](
-                      const QuadtreeIndex& cell_index,
+                      const NdtreeIndex<Map::kDim>& cell_index,
                       FloatingPoint cell_value) {
     // Skip fully transparent cells
     // NOTE: This provides a flexible way to prescribe which cells are shown
@@ -60,7 +60,7 @@ visualization_msgs::MarkerArray MapToMarkerArray(
     }
 
     // Determine the cell's position
-    const Point2D cell_center =
+    const Point<Map::kDim> cell_center =
         convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
 
     // Create the colored square

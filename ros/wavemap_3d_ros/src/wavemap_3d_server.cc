@@ -1,75 +1,24 @@
-#include "wavemap_2d_ros/wavemap_2d_server.h"
+#include "wavemap_3d_ros/wavemap_3d_server.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <std_srvs/Empty.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <wavemap_2d/data_structure/dense_grid.h>
-#include <wavemap_2d/data_structure/hashed_blocks_2d.h>
-#include <wavemap_2d/data_structure/volumetric_differencing_quadtree.h>
-#include <wavemap_2d/data_structure/volumetric_quadtree.h>
-#include <wavemap_2d/data_structure/wavelet_tree_2d.h>
-#include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
-#include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
-#include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h>
-#include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h>
-#include <wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h>
-#include <wavemap_2d/utils/evaluation_utils.h>
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
-#include <wavemap_common_ros/utils/color.h>
+#include <wavemap_common/data_structure/pointcloud.h>
 #include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
+#include <wavemap_msgs/FilePath.h>
+#include <wavemap_msgs/MapEvaluationSummary.h>
+#include <wavemap_msgs/PerformanceStats.h>
 
 namespace wavemap {
-Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                                 Wavemap2DServer::Config config)
+Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
+                                 wavemap::Wavemap3DServer::Config config)
     : config_(std::move(config)) {
   // Assert that the config is valid
   CHECK(config_.isValid(true));
 
   // Setup integrator
-  // TODO(victorr): Move this to a factory class
-  if (config_.data_structure_type == "simple_quadtree") {
-    ROS_INFO("Using simple quadtree datastructure");
-    occupancy_map_ =
-        std::make_shared<VolumetricQuadtree<SaturatingOccupancyCell>>(
-            config_.min_cell_width);
-  } else if (config_.data_structure_type == "differencing_quadtree") {
-    ROS_INFO("Using differencing quadtree datastructure");
-    occupancy_map_ = std::make_shared<
-        VolumetricDifferencingQuadtree<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  } else if (config_.data_structure_type == "wavelet_tree") {
-    ROS_INFO("Using wavelet tree datastructure");
-    occupancy_map_ = std::make_shared<WaveletTree2D<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  } else if (config_.data_structure_type == "hashed_blocks") {
-    ROS_INFO("Using hashed blocks datastructure");
-    occupancy_map_ = std::make_shared<HashedBlocks2D<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  } else {
-    ROS_INFO("Using dense grid datastructure");
-    occupancy_map_ = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  }
-  if (config_.measurement_model_type == "scan_integrator") {
-    ROS_INFO("Using scan integrator");
-    pointcloud_integrator_ =
-        std::make_shared<FixedResolutionIntegrator>(occupancy_map_);
-  } else if (config_.measurement_model_type == "fixed_log_odds") {
-    ROS_INFO("Using ray integrator");
-    pointcloud_integrator_ = std::make_shared<RayIntegrator>(occupancy_map_);
-  } else if (config_.measurement_model_type == "coarse_to_fine") {
-    ROS_INFO("Using coarse to fine integrator");
-    pointcloud_integrator_ =
-        std::make_shared<CoarseToFineIntegrator>(occupancy_map_);
-  } else if (config_.measurement_model_type == "wavelet_integrator") {
-    ROS_INFO("Using wavelet integrator");
-    pointcloud_integrator_ =
-        std::make_shared<WaveletIntegrator>(occupancy_map_);
-  } else {
-    ROS_INFO("Using beam integrator");
-    pointcloud_integrator_ = std::make_shared<BeamIntegrator>(occupancy_map_);
-  }
+  // TODO(victorr): Load the integrators here once they exist for 3D
 
   // Connect to ROS
   subscribeToTimers(nh);
@@ -78,13 +27,13 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   advertiseServices(nh_private);
 }
 
-void Wavemap2DServer::pointcloudCallback(
-    const sensor_msgs::LaserScan& scan_msg) {
+void Wavemap3DServer::pointcloudCallback(
+    const sensor_msgs::PointCloud2& scan_msg) {
   pointcloud_queue_.emplace(scan_msg);
   processPointcloudQueue();
 }
 
-void Wavemap2DServer::visualizeMap() {
+void Wavemap3DServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
     visualization_msgs::MarkerArray occupancy_grid_marker = MapToMarkerArray(
         *occupancy_map_, config_.world_frame, "occupancy_grid",
@@ -102,108 +51,23 @@ void Wavemap2DServer::visualizeMap() {
   }
 }
 
-bool Wavemap2DServer::saveMap(const std::string& file_path) const {
+bool Wavemap3DServer::saveMap(const std::string& file_path) const {
   return !occupancy_map_->empty() &&
          occupancy_map_->save(file_path, kSaveWithFloatingPointPrecision);
 }
 
-bool Wavemap2DServer::loadMap(const std::string& file_path) {
+bool Wavemap3DServer::loadMap(const std::string& file_path) {
   return occupancy_map_->load(file_path, kSaveWithFloatingPointPrecision);
 }
 
-bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
-  if (!occupancy_map_) {
-    ROS_ERROR("The occupancy map has not yet been created.");
-    return false;
-  }
-  occupancy_map_->prune();
-
-  // TODO(victorr): Make it possible to load maps without knowing the resolution
-  //                on beforehand (e.g. through a static method)
-  const FloatingPoint kGroundTruthMapResolution = 1e-2f;
-  using GTDataStructureType = DenseGrid<UnboundedScalarCell>;
-  GTDataStructureType ground_truth_map(kGroundTruthMapResolution);
-  if (!ground_truth_map.load(file_path, true)) {
-    ROS_WARN("Could not load the ground truth map.");
-    return false;
-  }
-  visualization_msgs::MarkerArray occupancy_grid_ground_truth_marker =
-      MapToMarkerArray(ground_truth_map, config_.world_frame,
-                       "occupancy_grid_ground_truth",
-                       [](FloatingPoint gt_occupancy) {
-                         if (!OccupancyState::isObserved(gt_occupancy)) {
-                           return RGBAColor::Transparent();
-                         } else if (gt_occupancy < 0.f) {
-                           return RGBAColor::White();
-                         } else {
-                           return RGBAColor::Black();
-                         }
-                       });
-  occupancy_grid_ground_truth_pub_.publish(occupancy_grid_ground_truth_marker);
-
-  utils::MapEvaluationConfig evaluation_config;
-  evaluation_config.iterate_over =
-      utils::MapEvaluationConfig::Source::kPredicted;
-  evaluation_config.crop_to = utils::MapEvaluationConfig::Source::kReference;
-  evaluation_config.reference.cell_selector = {
-      utils::CellSelector::Categories::kAny};
-  evaluation_config.reference.treat_unknown_cells_as =
-      OccupancyState::Occupied();
-  evaluation_config.predicted.cell_selector = {
-      utils::CellSelector::Categories::kAnyObserved};
-
-  GTDataStructureType error_grid(occupancy_map_->getMinCellWidth());
-  utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
-      ground_truth_map, *occupancy_map_, evaluation_config, &error_grid);
-
-  if (map_evaluation_summary.is_valid) {
-    ROS_INFO_STREAM("Map evaluation overview:\n"
-                    << map_evaluation_summary.toString());
-
-    wavemap_msgs::MapEvaluationSummary map_evaluation_summary_msg;
-    map_evaluation_summary_msg.is_valid = map_evaluation_summary.is_valid;
-    map_evaluation_summary_msg.num_true_positive =
-        map_evaluation_summary.num_true_positive;
-    map_evaluation_summary_msg.num_true_negative =
-        map_evaluation_summary.num_true_negative;
-    map_evaluation_summary_msg.num_false_positive =
-        map_evaluation_summary.num_false_positive;
-    map_evaluation_summary_msg.num_false_negative =
-        map_evaluation_summary.num_false_negative;
-    map_evaluation_summary_msg.num_cells_ignored =
-        map_evaluation_summary.num_cells_ignored;
-    map_evaluation_summary_msg.num_cells_evaluated =
-        map_evaluation_summary.num_cells_evaluated();
-    map_evaluation_summary_msg.num_cells_considered =
-        map_evaluation_summary.num_cells_considered();
-    map_evaluation_summary_msg.precision = map_evaluation_summary.precision();
-    map_evaluation_summary_msg.recall = map_evaluation_summary.recall();
-    map_evaluation_summary_msg.f_1_score = map_evaluation_summary.f_1_score();
-    map_evaluation_summary_pub_.publish(map_evaluation_summary_msg);
-
-    visualization_msgs::MarkerArray occupancy_error_grid_marker =
-        MapToMarkerArray(
-            error_grid, config_.world_frame, "occupancy_grid_evaluation",
-            [](FloatingPoint error_value) {
-              if (error_value < 0.f) {
-                return RGBAColor{1.f, 1.f - error_value / 2.f, 0.f, 0.f};
-              } else if (0.f < error_value) {
-                return RGBAColor{1.f, 0.f, error_value / 2.f, 0.f};
-              } else {
-                return RGBAColor::Transparent();
-              }
-            });
-    occupancy_grid_error_pub_.publish(occupancy_error_grid_marker);
-    return true;
-  }
-
-  ROS_WARN("Map evaluation failed.");
+bool Wavemap3DServer::evaluateMap(const std::string& /*file_path*/) {
+  LOG(WARNING) << "Evaluations are not yet implemented for wavemap 3D";
   return false;
 }
 
-void Wavemap2DServer::processPointcloudQueue() {
+void Wavemap3DServer::processPointcloudQueue() {
   while (!pointcloud_queue_.empty()) {
-    const sensor_msgs::LaserScan& scan_msg = pointcloud_queue_.front();
+    const sensor_msgs::PointCloud2& scan_msg = pointcloud_queue_.front();
 
     // Get the sensor pose in world frame
     Transformation3D T_W_C;
@@ -231,27 +95,35 @@ void Wavemap2DServer::processPointcloudQueue() {
     }
 
     // Convert the scan to a pointcloud
-    const size_t num_rays = scan_msg.ranges.size();
-    std::vector<Point2D> t_C_points_2d;
-    t_C_points_2d.reserve(num_rays);
-    for (size_t ray_idx = 0u; ray_idx < num_rays; ++ray_idx) {
-      const FloatingPoint ray_range =
-          std::min(scan_msg.ranges[ray_idx], scan_msg.range_max);
-      const FloatingPoint ray_angle =
-          static_cast<FloatingPoint>(ray_idx) * scan_msg.angle_increment +
-          scan_msg.angle_min;
-      const Point2D ray_endpoint =
-          ray_range * Point2D(std::cos(ray_angle), std::sin(ray_angle));
-      t_C_points_2d.emplace_back(ray_endpoint);
+    // Get the index of the x field, and assert that the y and z fields follow
+    auto x_field_iter = std::find_if(
+        scan_msg.fields.begin(), scan_msg.fields.end(),
+        [](const sensor_msgs::PointField& field) { return field.name == "x"; });
+    if (x_field_iter == scan_msg.fields.end()) {
+      ROS_WARN("Received pointcloud with missing field x");
+      return;
+    } else if ((++x_field_iter)->name != "y") {
+      ROS_WARN("Received pointcloud with missing or out-of-order field y");
+      return;
+    } else if ((++x_field_iter)->name != "z") {
+      ROS_WARN("Received pointcloud with missing or out-of-order field z");
+      return;
+    }
+
+    // Load the points into our internal Pointcloud type
+    const size_t num_rays = scan_msg.width * scan_msg.height;
+    std::vector<Point3D> t_C_points;
+    t_C_points.reserve(num_rays);
+    for (sensor_msgs::PointCloud2ConstIterator<float> it(scan_msg, "x");
+         it != it.end(); ++it) {
+      t_C_points.emplace_back(it[0], it[1], it[2]);
     }
 
     // Integrate the pointcloud
-    ROS_INFO_STREAM("Inserting pointcloud with " << t_C_points_2d.size()
+    ROS_INFO_STREAM("Inserting pointcloud with " << t_C_points.size()
                                                  << " points");
-    const Transformation2D T_W_C_2d(Rotation2D(T_W_C.getRotation().log().z()),
-                                    T_W_C.getPosition().head<2>());
-    const PosedPointcloud posed_pointcloud(T_W_C_2d,
-                                           Pointcloud<Point2D>(t_C_points_2d));
+    const PosedPointcloud posed_pointcloud(T_W_C,
+                                           Pointcloud<Point3D>(t_C_points));
     integration_timer.start();
     pointcloud_integrator_->integratePointcloud(posed_pointcloud);
     const double pointcloud_integration_time = integration_timer.stop();
@@ -278,7 +150,7 @@ void Wavemap2DServer::processPointcloudQueue() {
   }
 }
 
-void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
+void Wavemap3DServer::subscribeToTimers(const ros::NodeHandle& nh) {
   pointcloud_queue_processing_timer_ = nh.createTimer(
       ros::Duration(config_.pointcloud_queue_processing_period_s),
       [this](const auto& /*event*/) { processPointcloudQueue(); });
@@ -320,13 +192,13 @@ void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
   }
 }
 
-void Wavemap2DServer::subscribeToTopics(ros::NodeHandle& nh) {
+void Wavemap3DServer::subscribeToTopics(ros::NodeHandle& nh) {
   pointcloud_sub_ = nh.subscribe(config_.pointcloud_topic_name,
                                  config_.pointcloud_topic_queue_length,
-                                 &Wavemap2DServer::pointcloudCallback, this);
+                                 &Wavemap3DServer::pointcloudCallback, this);
 }
 
-void Wavemap2DServer::advertiseTopics(ros::NodeHandle& nh_private) {
+void Wavemap3DServer::advertiseTopics(ros::NodeHandle& nh_private) {
   occupancy_grid_pub_ = nh_private.advertise<visualization_msgs::MarkerArray>(
       "occupancy_grid", 10, true);
   occupancy_grid_error_pub_ =
@@ -342,7 +214,7 @@ void Wavemap2DServer::advertiseTopics(ros::NodeHandle& nh_private) {
       "performance_stats", 10, true);
 }
 
-void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
+void Wavemap3DServer::advertiseServices(ros::NodeHandle& nh_private) {
   visualize_map_srv_ = nh_private.advertiseService<std_srvs::Empty::Request,
                                                    std_srvs::Empty::Response>(
       "visualize_map", [this](auto& /*request*/, auto& /*response*/) {
@@ -373,7 +245,7 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
           });
 }
 
-Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
+Wavemap3DServer::Config Wavemap3DServer::Config::fromRosParams(
     ros::NodeHandle nh) {
   Config config;
 
@@ -423,7 +295,7 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
   return config;
 }
 
-bool Wavemap2DServer::Config::isValid(const bool verbose) {
+bool Wavemap3DServer::Config::isValid(bool verbose) {
   bool all_valid = true;
 
   if (min_cell_width <= 0.f) {
@@ -466,5 +338,4 @@ bool Wavemap2DServer::Config::isValid(const bool verbose) {
 
   return all_valid;
 }
-
 }  // namespace wavemap

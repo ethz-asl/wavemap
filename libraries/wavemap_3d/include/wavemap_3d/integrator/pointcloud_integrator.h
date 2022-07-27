@@ -6,7 +6,7 @@
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/pointcloud.h>
 
-#include "wavemap_3d/data_structure/volumetric_data_structure.h"
+#include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
 
 namespace wavemap {
 class PointcloudIntegrator {
@@ -14,7 +14,7 @@ class PointcloudIntegrator {
   using Ptr = std::shared_ptr<PointcloudIntegrator>;
 
   PointcloudIntegrator() = delete;
-  explicit PointcloudIntegrator(VolumetricDataStructure::Ptr occupancy_map)
+  explicit PointcloudIntegrator(VolumetricDataStructure3D::Ptr occupancy_map)
       : occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}
   virtual ~PointcloudIntegrator() = default;
 
@@ -22,7 +22,7 @@ class PointcloudIntegrator {
       const PosedPointcloud<Point3D, Transformation3D>& pointcloud) = 0;
 
  protected:
-  VolumetricDataStructure::Ptr occupancy_map_;
+  VolumetricDataStructure3D::Ptr occupancy_map_;
 
   static bool isPointcloudValid(
       const PosedPointcloud<Point3D, Transformation3D>& pointcloud);
