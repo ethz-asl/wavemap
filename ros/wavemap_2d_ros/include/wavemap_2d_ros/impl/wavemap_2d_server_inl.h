@@ -4,13 +4,14 @@
 #include <string>
 
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
+#include <wavemap_common_ros/utils/color.h>
 
 namespace wavemap {
 template <typename Map, typename ScalarToRGBAFunction>
-visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
-    const Map& grid, const std::string& world_frame,
+visualization_msgs::MarkerArray Wavemap2DServer::mapToMarkerArray(
+    const Map& map, const std::string& world_frame,
     const std::string& marker_namespace, ScalarToRGBAFunction color_map) {
-  const FloatingPoint min_cell_width = grid.getMinCellWidth();
+  const FloatingPoint min_cell_width = map.getMinCellWidth();
   constexpr QuadtreeIndex::Element kMaxHeight = 14;
 
   // Default marker
@@ -43,9 +44,9 @@ visualization_msgs::MarkerArray Wavemap2DServer::gridToMarkerArray(
   }
 
   // Add a colored square for each leaf
-  grid.forEachLeaf([&marker_array, &color_map, min_cell_width](
-                       const QuadtreeIndex& cell_index,
-                       FloatingPoint cell_value) {
+  map.forEachLeaf([&marker_array, &color_map, min_cell_width](
+                      const QuadtreeIndex& cell_index,
+                      FloatingPoint cell_value) {
     // Skip fully transparent cells
     // NOTE: This provides a flexible way to prescribe which cells are shown
     //       and hidden through the color_map. For example, unobserved

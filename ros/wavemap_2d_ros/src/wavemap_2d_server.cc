@@ -14,6 +14,7 @@
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
+#include <wavemap_common_ros/utils/color.h>
 #include <wavemap_common_ros/utils/nameof.h>
 
 namespace wavemap {
@@ -175,17 +176,17 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
     return false;
   }
   visualization_msgs::MarkerArray occupancy_grid_ground_truth_marker =
-      gridToMarkerArray(ground_truth_map, config_.world_frame,
-                        "occupancy_grid_ground_truth",
-                        [](FloatingPoint gt_occupancy) {
-                          if (!OccupancyState::isObserved(gt_occupancy)) {
-                            return kTransparent;
-                          } else if (gt_occupancy < 0.f) {
-                            return kWhite;
-                          } else {
-                            return kBlack;
-                          }
-                        });
+      mapToMarkerArray(ground_truth_map, config_.world_frame,
+                       "occupancy_grid_ground_truth",
+                       [](FloatingPoint gt_occupancy) {
+                         if (!OccupancyState::isObserved(gt_occupancy)) {
+                           return RGBAColor::Transparent();
+                         } else if (gt_occupancy < 0.f) {
+                           return RGBAColor::White();
+                         } else {
+                           return RGBAColor::Black();
+                         }
+                       });
   occupancy_grid_ground_truth_pub_.publish(occupancy_grid_ground_truth_marker);
 
   utils::MapEvaluationConfig evaluation_config;
@@ -229,7 +230,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
     map_evaluation_summary_pub_.publish(map_evaluation_summary_msg);
 
     visualization_msgs::MarkerArray occupancy_error_grid_marker =
-        gridToMarkerArray(
+        mapToMarkerArray(
             error_grid, config_.world_frame, "occupancy_grid_evaluation",
             [](FloatingPoint error_value) {
               if (error_value < 0.f) {
@@ -237,7 +238,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
               } else if (0.f < error_value) {
                 return RGBAColor{1.f, 0.f, error_value / 2.f, 0.f};
               } else {
-                return kTransparent;
+                return RGBAColor::Transparent();
               }
             });
     occupancy_grid_error_pub_.publish(occupancy_error_grid_marker);
@@ -345,7 +346,7 @@ void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
 
 void Wavemap2DServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
-    visualization_msgs::MarkerArray occupancy_grid_marker = gridToMarkerArray(
+    visualization_msgs::MarkerArray occupancy_grid_marker = mapToMarkerArray(
         *occupancy_map_, config_.world_frame, "occupancy_grid",
         [](FloatingPoint cell_log_odds) {
           if (OccupancyState::isObserved(cell_log_odds)) {
@@ -355,10 +356,19 @@ void Wavemap2DServer::visualizeMap() {
             return RGBAColor{1.f, cell_free_prob, cell_free_prob,
                              cell_free_prob};
           }
-          return kTransparent;
+          return RGBAColor::Transparent();
         });
     occupancy_grid_pub_.publish(occupancy_grid_marker);
   }
+}
+
+bool Wavemap2DServer::saveMap(const std::string& file_path) const {
+  return !occupancy_map_->empty() &&
+         occupancy_map_->save(file_path, kSaveWithFloatingPointPrecision);
+}
+
+bool Wavemap2DServer::loadMap(const std::string& file_path) {
+  return occupancy_map_->load(file_path, kSaveWithFloatingPointPrecision);
 }
 
 Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
