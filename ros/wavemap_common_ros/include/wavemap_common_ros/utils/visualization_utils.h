@@ -66,8 +66,9 @@ visualization_msgs::MarkerArray MapToMarkerArray(
     // Create the colored square
     geometry_msgs::Point position_msg;
     std_msgs::ColorRGBA color_msg;
-    position_msg.x = cell_center.x();
-    position_msg.y = cell_center.y();
+    position_msg.x = cell_center[0];
+    position_msg.y = cell_center[1];
+    position_msg.z = Map::kDim == 2 ? 0.0 : cell_center[2];
     color_msg.a = color.a;
     color_msg.r = color.r;
     color_msg.g = color.g;

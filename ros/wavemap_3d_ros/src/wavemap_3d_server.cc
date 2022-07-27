@@ -3,7 +3,10 @@
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <wavemap_3d/data_structure/hashed_blocks_3d.h>
+#include <wavemap_3d/integrator/point_integrator/ray_integrator.h>
 #include <wavemap_common/data_structure/pointcloud.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 #include <wavemap_msgs/FilePath.h>
@@ -18,7 +21,11 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   CHECK(config_.isValid(true));
 
   // Setup integrator
-  // TODO(victorr): Load the integrators here once they exist for 3D
+  ROS_INFO("Using hashed blocks datastructure");
+  occupancy_map_ = std::make_shared<HashedBlocks3D<SaturatingOccupancyCell>>(
+      config_.min_cell_width);
+  ROS_INFO("Using ray integrator");
+  pointcloud_integrator_ = std::make_shared<RayIntegrator>(occupancy_map_);
 
   // Connect to ROS
   subscribeToTimers(nh);
@@ -38,7 +45,8 @@ void Wavemap3DServer::visualizeMap() {
     visualization_msgs::MarkerArray occupancy_grid_marker = MapToMarkerArray(
         *occupancy_map_, config_.world_frame, "occupancy_grid",
         [](FloatingPoint cell_log_odds) {
-          if (OccupancyState::isObserved(cell_log_odds)) {
+          if (OccupancyState::isObserved(cell_log_odds) &&
+              0.f < cell_log_odds) {
             const FloatingPoint cell_odds = std::exp(cell_log_odds);
             const FloatingPoint cell_prob = cell_odds / (1.f + cell_odds);
             const FloatingPoint cell_free_prob = 1.f - cell_prob;
@@ -109,7 +117,6 @@ void Wavemap3DServer::processPointcloudQueue() {
       ROS_WARN("Received pointcloud with missing or out-of-order field z");
       return;
     }
-
     // Load the points into our internal Pointcloud type
     const size_t num_rays = scan_msg.width * scan_msg.height;
     std::vector<Point3D> t_C_points;

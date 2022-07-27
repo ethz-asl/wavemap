@@ -1,0 +1,74 @@
+<launch>
+  <!-- General arguments -->
+  <arg name="use_batch_mode"
+       default="true"
+       doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
+  <arg name="param_file"
+       default="$(find wavemap_3d_ros)/config/wavemap_evaluations.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
+  <arg name="debug_mode"
+       default="false"
+       doc="Run the mapper in a debugger (gdb)."/>
+  <arg name="show_rviz"
+       default="true"
+       doc="Automatically launch Rviz."/>
+  <arg name="record_rosbag" default="false"/>
+
+  <!-- Wavemap params -->
+  <arg name="data_structure_type"
+       default="dense_grid"/>
+  <arg name="measurement_model_type"
+       default="beam_model"/>
+
+  <!-- Dataset params -->
+  <!-- TODO(victorr): Setup LiDAR undistortion -->
+  <arg name="pointcloud_topic"
+       default="/os1_cloud_node/points"/>
+  <arg name="rosbag_path"
+       default="
+../data/newer_college/rooster_2020-03-10-11-36-51_0-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-39-38_1-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-42-25_2-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-45-12_3-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-47-59_4-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-50-46_5-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-53-33_6-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-56-20_7-compressed.bag
+../data/newer_college/rooster_2020-03-10-11-59-07_8-compressed.bag
+../data/newer_college/rooster_2020-03-10-12-01-54_9-compressed.bag
+../data/newer_college/rooster_2020-03-10-12-04-41_10-compressed.bag
+../data/newer_college/rooster_2020-03-10-12-07-28_11-compressed.bag
+../data/newer_college/rooster_2020-03-10-12-10-15_12-compressed.bag
+../data/newer_college/rooster_2020-03-10-12-13-02_13-compressed.bag
+../data/newer_college/rooster_2020-03-10-12-15-49_14-compressed.bag"
+       doc="Replay the rosbag at the specified path."/>
+  <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+  <node pkg="tf" type="static_transform_publisher"
+        name="static_tf_cam_left_os1_lidar"
+        args="-0.084 -0.025 0.05 0 0 0.9238795 0.3826834 cam_left os1_lidar 100"/>
+  <node pkg="wavemap_3d_ros" type="csv_to_tf.py" name="csv_to_tf_pub"
+        output="screen"/>
+
+
+  <!-- Process the rosbag with wavemap -->
+  <group if="$(arg use_batch_mode)">
+    <!-- In batch mode (process the rosbag as fast as possible) -->
+    <include file="$(find wavemap_3d_ros)/launch/rosbag_processor.launch"
+             pass_all_args="true"/>
+  </group>
+  <group unless="$(arg use_batch_mode)">
+    <!-- In normal mode (replay the rosbag) -->
+    <include file="$(find wavemap_3d_ros)/launch/wavemap_server.launch"
+             pass_all_args="true"/>
+  </group>
+
+  <!-- Record rosbag -->
+  <group if="$(arg record_rosbag)">
+    <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+    <arg name="bag_save_path" default="../catkin_ws/bags/evaluations"/>
+    <arg name="bag_prefix"
+         default="simple_building_manual-$(arg data_structure_type)-$(arg measurement_model_type)"/>
+    <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
+          args="/wavemap_3d/map_evaluation_summary /wavemap_3d/performance_stats /wavemap_3d/occupancy_grid /wavemap_3d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
+  </group>
+</launch>

@@ -4,7 +4,7 @@
        default="true"
        doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
   <arg name="param_file"
-       default="$(find wavemap_2d_ros)/config/wavemap_evaluations.yaml"
+       default="$(find wavemap_3d_ros)/config/wavemap_evaluations.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
   <arg name="debug_mode"
        default="false"
@@ -14,40 +14,43 @@
        doc="Automatically launch Rviz."/>
   <arg name="record_rosbag" default="false"/>
 
-  <!-- Dataset params -->
-  <arg name="pointcloud_topic"
-       default="/robot/laser/scan"/>
-  <arg name="rosbag_path"
-       default="../catkin_ws/bags/simple_building_manual_2022-01-25-22-35-25.bag"
-       doc="Replay the rosbag at the specified path."/>
-  <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
-
   <!-- Wavemap params -->
   <arg name="data_structure_type"
        default="dense_grid"/>
   <arg name="measurement_model_type"
        default="beam_model"/>
 
+  <!-- Dataset params -->
+  <!-- TODO(victorr): Setup LiDAR undistortion -->
+  <arg name="pointcloud_topic"
+       default="/penguin/os1_cloud_node/points"/>
+  <arg name="rosbag_path"
+       default="../data/arche_week/arche_day_2/flight1_2ms.bag"
+       doc="Replay the rosbag at the specified path."/>
+  <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+  <node pkg="tf" type="static_transform_publisher" name="static_tf_os1"
+        args="0 0 0 0 0 1 0 os1_sensor os1_lidar 100"/>
 
   <!-- Process the rosbag with wavemap -->
   <group if="$(arg use_batch_mode)">
     <!-- In batch mode (process the rosbag as fast as possible) -->
-    <include file="$(find wavemap_2d_ros)/launch/rosbag_processor.launch"
+    <include file="$(find wavemap_3d_ros)/launch/rosbag_processor.launch"
              pass_all_args="true"/>
   </group>
   <group unless="$(arg use_batch_mode)">
     <!-- In normal mode (replay the rosbag) -->
-    <include file="$(find wavemap_2d_ros)/launch/wavemap_server.launch"
+    <arg name="rosbag_skip_first_n_sec" value="5"/>
+    <include file="$(find wavemap_3d_ros)/launch/wavemap_server.launch"
              pass_all_args="true"/>
   </group>
 
   <!-- Record rosbag -->
   <group if="$(arg record_rosbag)">
-    <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+    <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
     <arg name="bag_save_path" default="../catkin_ws/bags/evaluations"/>
     <arg name="bag_prefix"
          default="simple_building_manual-$(arg data_structure_type)-$(arg measurement_model_type)"/>
     <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
-          args="/wavemap_2d/map_evaluation_summary /wavemap_2d/performance_stats /wavemap_2d/occupancy_grid /wavemap_2d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
+          args="/wavemap_3d/map_evaluation_summary /wavemap_3d/performance_stats /wavemap_3d/occupancy_grid /wavemap_3d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
   </group>
 </launch>

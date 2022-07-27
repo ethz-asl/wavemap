@@ -8,7 +8,9 @@ namespace wavemap {
 bool TfTransformer::isTransformAvailable(
     const std::string& to_frame_id, const std::string& from_frame_id,
     const ros::Time& frame_timestamp) const {
-  return tf_buffer_.canTransform(to_frame_id, from_frame_id, frame_timestamp);
+  return tf_buffer_.canTransform(sanitizeFrameId(to_frame_id),
+                                 sanitizeFrameId(from_frame_id),
+                                 frame_timestamp);
 }
 
 bool TfTransformer::waitForTransform(const std::string& to_frame_id,

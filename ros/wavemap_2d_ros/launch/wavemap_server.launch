@@ -12,10 +12,15 @@
 
   <!-- Dataset params -->
   <arg name="pointcloud_topic"
-       doc="Name of the pointcloud topic to read from."/>
+       default="pointcloud_in"
+       doc="ROS topic for pointcloud input"/>
   <arg name="rosbag_path"
-       doc="Replay the rosbag at the specified path."/>
+       default=""
+       doc="Replay the rosbag at the specified path. Can be left blank."/>
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+  <arg name="rosbag_skip_first_n_sec"
+       default="0"
+       doc="Skip the first n seconds of the rosbag."/>
 
   <!-- Wavemap params -->
   <arg name="data_structure_type"
@@ -23,21 +28,25 @@
   <arg name="measurement_model_type"
        default="beam_model"/>
 
-  <!-- Process the rosbag with wavemap as fast as possible -->
-  <param name="/use_sim_time" value="true"/>
+  <!-- Play the rosbag if a path was specified -->
+  <group unless="$(eval arg('rosbag_path') == '')">
+    <param name="/use_sim_time" value="true"/>
+    <node name="player" pkg="rosbag" type="play" output="screen"
+          args="-r 1.0 -s $(arg rosbag_skip_first_n_sec) -q --clock $(arg rosbag_path)"/>
+  </group>
+
+  <!-- Run the wavemap server -->
   <group>
     <arg if="$(arg debug_mode)" name="launch_prefix"
          value="gdb -ex run --args"/>
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
     <node name="wavemap_2d" pkg="wavemap_2d_ros"
-          type="rosbag_processor"
-          output="screen" args="-alsologtostderr" required="true"
+          type="server_node"
+          output="screen" args="-alsologtostderr"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
-      <param name="pointcloud_topic"
-             value="$(arg pointcloud_topic)"/>
-      <param name="rosbag_path" value="$(arg rosbag_path)"/>
+      <param name="pointcloud_topic_name" value="$(arg pointcloud_topic)"/>
       <param name="data_structure_type" value="$(arg data_structure_type)"/>
       <param name="measurement_model_type"
              value="$(arg measurement_model_type)"/>
