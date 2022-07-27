@@ -17,6 +17,7 @@
 
   <depend>roscpp</depend>
   <depend>rosbag</depend>
-
   <depend>minkindr_conversions</depend>
+
+  <depend>visualization_msgs</depend>
 </package>
