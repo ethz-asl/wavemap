@@ -8,7 +8,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_srvs/Empty.h>
-#include <visualization_msgs/MarkerArray.h>
 #include <wavemap_2d/integrator/pointcloud_integrator.h>
 #include <wavemap_common/common.h>
 #include <wavemap_common_ros/tf_transformer.h>
@@ -99,14 +98,7 @@ class Wavemap2DServer {
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
   ros::ServiceServer evaluate_map_srv_;
-
-  template <typename Map, typename ScalarToRGBAFunction>
-  static visualization_msgs::MarkerArray mapToMarkerArray(
-      const Map& map, const std::string& world_frame,
-      const std::string& marker_namespace, ScalarToRGBAFunction color_map);
 };
 }  // namespace wavemap
-
-#include "wavemap_2d_ros/impl/wavemap_2d_server_inl.h"
 
 #endif  // WAVEMAP_2D_ROS_WAVEMAP_2D_SERVER_H_

@@ -1,18 +1,21 @@
-#ifndef WAVEMAP_2D_ROS_IMPL_WAVEMAP_2D_SERVER_INL_H_
-#define WAVEMAP_2D_ROS_IMPL_WAVEMAP_2D_SERVER_INL_H_
+#ifndef WAVEMAP_COMMON_ROS_UTILS_VISUALIZATION_UTILS_H_
+#define WAVEMAP_COMMON_ROS_UTILS_VISUALIZATION_UTILS_H_
 
 #include <string>
 
+#include <visualization_msgs/MarkerArray.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
+#include <wavemap_common/indexing/index_conversions.h>
+#include <wavemap_common/indexing/ndtree_index.h>
 #include <wavemap_common_ros/utils/color.h>
 
 namespace wavemap {
 template <typename Map, typename ScalarToRGBAFunction>
-visualization_msgs::MarkerArray Wavemap2DServer::mapToMarkerArray(
+visualization_msgs::MarkerArray MapToMarkerArray(
     const Map& map, const std::string& world_frame,
     const std::string& marker_namespace, ScalarToRGBAFunction color_map) {
   const FloatingPoint min_cell_width = map.getMinCellWidth();
-  constexpr QuadtreeIndex::Element kMaxHeight = 14;
+  constexpr NdtreeIndexElement kMaxHeight = 14;
 
   // Default marker
   visualization_msgs::Marker default_marker;
@@ -25,7 +28,6 @@ visualization_msgs::MarkerArray Wavemap2DServer::mapToMarkerArray(
   default_marker.pose.position.x = 0.0;
   default_marker.pose.position.y = 0.0;
   default_marker.pose.position.z = 0.0;
-  default_marker.scale.z = 0.1;
 
   // Delete the previous visuals
   visualization_msgs::MarkerArray marker_array;
@@ -40,6 +42,7 @@ visualization_msgs::MarkerArray Wavemap2DServer::mapToMarkerArray(
         convert::heightToCellWidth(min_cell_width, height);
     default_marker.scale.x = cell_width;
     default_marker.scale.y = cell_width;
+    default_marker.scale.z = Map::kDim == 2 ? 0.1 : cell_width;
     marker_array.markers.emplace_back(default_marker);
   }
 
@@ -89,4 +92,4 @@ visualization_msgs::MarkerArray Wavemap2DServer::mapToMarkerArray(
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_ROS_IMPL_WAVEMAP_2D_SERVER_INL_H_
+#endif  // WAVEMAP_COMMON_ROS_UTILS_VISUALIZATION_UTILS_H_

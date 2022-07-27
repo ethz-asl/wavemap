@@ -12,6 +12,7 @@ namespace wavemap {
 template <int dim>
 class VolumetricDataStructureBase {
  public:
+  static constexpr int kDim = dim;
   using Ptr = std::shared_ptr<VolumetricDataStructureBase>;
 
   explicit VolumetricDataStructureBase(const FloatingPoint min_cell_width)
