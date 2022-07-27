@@ -251,14 +251,14 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
 void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
   pointcloud_queue_processing_timer_ = nh.createTimer(
       ros::Duration(config_.pointcloud_queue_processing_period_s),
-      std::bind(&Wavemap2DServer::processPointcloudQueue, this));
+      [this](const auto& /*event*/) { processPointcloudQueue(); });
 
   if (0.f < config_.map_pruning_period_s) {
     ROS_INFO_STREAM("Registering map pruning timer with period "
                     << config_.map_pruning_period_s << "s");
     map_pruning_timer_ = nh.createTimer(
         ros::Duration(config_.map_pruning_period_s),
-        std::bind(&VolumetricDataStructure2D::prune, occupancy_map_.get()));
+        [this](const auto& /*event*/) { occupancy_map_->prune(); });
   }
 
   if (0.f < config_.map_visualization_period_s) {
@@ -266,7 +266,7 @@ void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
                     << config_.map_visualization_period_s << "s");
     map_visualization_timer_ =
         nh.createTimer(ros::Duration(config_.map_visualization_period_s),
-                       std::bind(&Wavemap2DServer::visualizeMap, this));
+                       [this](const auto& /*event*/) { visualizeMap(); });
   }
 
   if (0.f < config_.map_evaluation_period_s &&
@@ -275,8 +275,9 @@ void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
                     << config_.map_evaluation_period_s << "s");
     map_evaluation_timer_ =
         nh.createTimer(ros::Duration(config_.map_evaluation_period_s),
-                       std::bind(&Wavemap2DServer::evaluateMap, this,
-                                 config_.map_ground_truth_path));
+                       [this](const auto& /*event*/) {
+                         evaluateMap(config_.map_ground_truth_path);
+                       });
   }
 
   if (0.f < config_.map_autosave_period_s &&
@@ -285,7 +286,7 @@ void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
                     << config_.map_autosave_period_s << "s");
     map_autosave_timer_ = nh.createTimer(
         ros::Duration(config_.map_autosave_period_s),
-        std::bind(&Wavemap2DServer::saveMap, this, config_.map_autosave_path));
+        [this](const auto& /*event*/) { saveMap(config_.map_autosave_path); });
   }
 }
 
@@ -312,14 +313,34 @@ void Wavemap2DServer::advertiseTopics(ros::NodeHandle& nh_private) {
 }
 
 void Wavemap2DServer::advertiseServices(ros::NodeHandle& nh_private) {
-  visualize_map_srv_ = nh_private.advertiseService(
-      "visualize_map", &Wavemap2DServer::visualizeMapCallback, this);
-  save_map_srv_ = nh_private.advertiseService(
-      "save_map", &Wavemap2DServer::saveMapCallback, this);
-  load_map_srv_ = nh_private.advertiseService(
-      "load_map", &Wavemap2DServer::loadMapCallback, this);
-  evaluate_map_srv_ = nh_private.advertiseService(
-      "evaluate_map", &Wavemap2DServer::evaluateMapCallback, this);
+  visualize_map_srv_ = nh_private.advertiseService<std_srvs::Empty::Request,
+                                                   std_srvs::Empty::Response>(
+      "visualize_map", [this](auto& /*request*/, auto& /*response*/) {
+        visualizeMap();
+        return true;
+      });
+
+  save_map_srv_ = nh_private.advertiseService<wavemap_msgs::FilePath::Request,
+                                              wavemap_msgs::FilePath::Response>(
+      "save_map", [this](auto& request, auto& response) {
+        response.success = saveMap(request.file_path);
+        return true;
+      });
+
+  load_map_srv_ = nh_private.advertiseService<wavemap_msgs::FilePath::Request,
+                                              wavemap_msgs::FilePath::Response>(
+      "load_map", [this](auto& request, auto& response) {
+        response.success = loadMap(request.file_path);
+        return true;
+      });
+
+  evaluate_map_srv_ =
+      nh_private.advertiseService<wavemap_msgs::FilePath::Request,
+                                  wavemap_msgs::FilePath::Response>(
+          "evaluate_map", [this](auto& request, auto& response) {
+            response.success = evaluateMap(request.file_path);
+            return true;
+          });
 }
 
 void Wavemap2DServer::visualizeMap() {

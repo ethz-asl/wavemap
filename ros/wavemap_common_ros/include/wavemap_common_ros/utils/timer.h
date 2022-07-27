@@ -1,6 +1,10 @@
 #ifndef WAVEMAP_COMMON_ROS_UTILS_TIMER_H_
 #define WAVEMAP_COMMON_ROS_UTILS_TIMER_H_
 
+#include <pthread.h>
+
+#include <glog/logging.h>
+
 namespace wavemap {
 class CpuTimer {
  public:
