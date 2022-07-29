@@ -9,6 +9,9 @@
   <arg name="show_rviz"
        default="true"
        doc="Automatically launch Rviz."/>
+  <arg name="publish_input_pointclouds"
+       default="true"
+       doc="Publish the input pointclouds in addition to processing them."/>
 
   <!-- Dataset params -->
   <arg name="pointcloud_topic"
@@ -36,6 +39,8 @@
       <rosparam file="$(arg param_file)"/>
       <param name="pointcloud_topic"
              value="$(arg pointcloud_topic)"/>
+      <param name="publish_input_pointclouds"
+             value="$(arg publish_input_pointclouds)"/>
       <param name="rosbag_path" value="$(arg rosbag_path)"/>
       <param name="data_structure_type" value="$(arg data_structure_type)"/>
       <param name="measurement_model_type"

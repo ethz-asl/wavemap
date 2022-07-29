@@ -31,6 +31,9 @@ class TfTransformer {
                        const ros::Time& frame_timestamp,
                        Transformation3D& transform);
 
+  // Strip leading slashes if needed to avoid TF errors
+  static std::string sanitizeFrameId(const std::string& string);
+
  private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
@@ -41,7 +44,6 @@ class TfTransformer {
   // Maximum time to wait before giving up
   const ros::WallDuration transform_lookup_max_time_{0.25};
 
-  static std::string sanitizeFrameId(const std::string& string);
   bool waitForTransformImpl(const std::string& to_frame_id,
                             const std::string& from_frame_id,
                             const ros::Time& frame_timestamp) const;

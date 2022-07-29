@@ -8,6 +8,7 @@ Panels:
         - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
+        - /Input1
         - /Occupancy grid1
       Splitter Ratio: 0.46162402629852295
     Tree Height: 2240
@@ -29,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: Pointcloud
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -60,11 +61,17 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        cam_left:
+        camera0:
+          Value: true
+        imu:
           Value: true
         odom:
           Value: true
         os1_lidar:
+          Value: true
+        os1_sensor:
+          Value: true
+        penguin/current_reference:
           Value: true
       Marker Alpha: 1
       Marker Scale: 10
@@ -74,39 +81,76 @@ Visualization Manager:
       Show Names: true
       Tree:
         odom:
-          cam_left:
-            os1_lidar:
+          imu:
+            camera0:
               {}
+            os1_sensor:
+              os1_lidar:
+                {}
+          penguin/current_reference:
+            {}
       Update Interval: 0
       Value: true
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
-        Value: true
-      Axis: Z
-      Channel Name: intensity
-      Class: rviz/LaserScan
-      Color: 255; 255; 255
-      Color Transformer: Intensity
-      Decay Time: 0
+    - Class: rviz/Group
+      Displays:
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 255; 255; 255
+          Color Transformer: Intensity
+          Decay Time: 10
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Min Color: 0; 0; 0
+          Name: Pointcloud
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 1
+          Size (m): 0.009999999776482582
+          Style: Points
+          Topic: /penguin/os1_cloud_node/points
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/LaserScan
+          Color: 255; 255; 255
+          Color Transformer: Intensity
+          Decay Time: 0
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Min Color: 0; 0; 0
+          Name: LaserScan
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 10
+          Size (m): 0.30000001192092896
+          Style: Points
+          Topic: /robot/laser/scan
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
       Enabled: true
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Min Color: 0; 0; 0
-      Name: LaserScan
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 10
-      Size (m): 0.30000001192092896
-      Style: Points
-      Topic: /robot/laser/scan
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: true
+      Name: Input
     - Class: rviz/Group
       Displays:
         - Class: rviz/MarkerArray
@@ -163,7 +207,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 96.4104232788086
+      Distance: 77.29972839355469
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -171,17 +215,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 5.479765892028809
-        Y: -17.285913467407227
-        Z: -1.4533936977386475
-      Focal Shape Fixed Size: false
+        X: 11.79728889465332
+        Y: -4.189604759216309
+        Z: -6.38781213760376
+      Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8047975301742554
+      Pitch: 0.7047972679138184
       Target Frame: <Fixed Frame>
-      Yaw: 2.908573865890503
+      Yaw: 3.9463396072387695
     Saved: ~
 Window Geometry:
   Displays:

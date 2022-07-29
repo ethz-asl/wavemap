@@ -30,7 +30,6 @@ bool TfTransformer::lookupTransform(const std::string& to_frame_id,
 }
 
 std::string TfTransformer::sanitizeFrameId(const std::string& string) {
-  // Strip leading slashes if needed to avoid TF errors
   if (string[0] == '/') {
     return string.substr(1, string.length());
   } else {
