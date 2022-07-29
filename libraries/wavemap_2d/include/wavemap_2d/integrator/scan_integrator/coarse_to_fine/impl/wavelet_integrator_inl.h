@@ -45,7 +45,7 @@ inline FloatingPoint WaveletIntegrator::sampleUpdateAtPoint(
                                   measured_distance);
 }
 
-FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
+inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const QuadtreeIndex& node_index,
     typename WaveletTreeInterface2D::NodeType& parent_node,
     QuadtreeIndex::RelativeChild relative_child_index) {

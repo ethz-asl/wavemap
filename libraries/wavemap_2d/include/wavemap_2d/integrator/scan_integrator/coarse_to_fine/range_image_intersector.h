@@ -23,6 +23,13 @@ class RangeImageIntersector {
     kFreeOrUnknown,
     kPossiblyOccupied
   };
+  static std::string getIntersectionTypeStr(
+      IntersectionType intersection_type) {
+    static constexpr std::array<const char*, 3> kIntersectionTypeStrs(
+        {"fully_unknown", "free_or_unknown", "possibly_occupied"});
+    return kIntersectionTypeStrs[to_underlying(intersection_type)];
+  }
+
   struct MinMaxAnglePair {
     FloatingPoint min_angle = std::numeric_limits<FloatingPoint>::max();
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
@@ -188,13 +195,6 @@ class RangeImageIntersector {
     } else {
       return IntersectionType::kPossiblyOccupied;
     }
-  }
-
-  static std::string getIntersectionTypeStr(
-      IntersectionType intersection_type) {
-    const std::vector<std::string> kIntersectionTypeStrs(
-        {"kFullyUnknown", "kFreeOrUnknown", "kPossiblyOccupied"});
-    return kIntersectionTypeStrs[to_underlying(intersection_type)];
   }
 
  private:

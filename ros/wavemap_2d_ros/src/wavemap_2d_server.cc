@@ -4,16 +4,17 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <wavemap_2d/data_structure/dense_grid.h>
 #include <wavemap_2d/data_structure/hashed_blocks_2d.h>
+#include <wavemap_2d/data_structure/volumetric_data_structure_2d_factory.h>
 #include <wavemap_2d/data_structure/volumetric_differencing_quadtree.h>
 #include <wavemap_2d/data_structure/volumetric_quadtree.h>
 #include <wavemap_2d/data_structure/wavelet_tree_2d.h>
 #include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
 #include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
+#include <wavemap_2d/integrator/pointcloud_integrator_factory.h>
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h>
 #include <wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
 #include <wavemap_common_ros/utils/color.h>
 #include <wavemap_common_ros/utils/nameof.h>
@@ -27,49 +28,15 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   CHECK(config_.isValid(true));
 
   // Setup integrator
-  // TODO(victorr): Move this to a factory class
-  if (config_.data_structure_type == "simple_quadtree") {
-    ROS_INFO("Using simple quadtree datastructure");
-    occupancy_map_ =
-        std::make_shared<VolumetricQuadtree<SaturatingOccupancyCell>>(
-            config_.min_cell_width);
-  } else if (config_.data_structure_type == "differencing_quadtree") {
-    ROS_INFO("Using differencing quadtree datastructure");
-    occupancy_map_ = std::make_shared<
-        VolumetricDifferencingQuadtree<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  } else if (config_.data_structure_type == "wavelet_tree") {
-    ROS_INFO("Using wavelet tree datastructure");
-    occupancy_map_ = std::make_shared<WaveletTree2D<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  } else if (config_.data_structure_type == "hashed_blocks") {
-    ROS_INFO("Using hashed blocks datastructure");
-    occupancy_map_ = std::make_shared<HashedBlocks2D<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  } else {
-    ROS_INFO("Using dense grid datastructure");
-    occupancy_map_ = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
-        config_.min_cell_width);
-  }
-  if (config_.measurement_model_type == "scan_integrator") {
-    ROS_INFO("Using scan integrator");
-    pointcloud_integrator_ =
-        std::make_shared<FixedResolutionIntegrator>(occupancy_map_);
-  } else if (config_.measurement_model_type == "fixed_log_odds") {
-    ROS_INFO("Using ray integrator");
-    pointcloud_integrator_ = std::make_shared<RayIntegrator>(occupancy_map_);
-  } else if (config_.measurement_model_type == "coarse_to_fine") {
-    ROS_INFO("Using coarse to fine integrator");
-    pointcloud_integrator_ =
-        std::make_shared<CoarseToFineIntegrator>(occupancy_map_);
-  } else if (config_.measurement_model_type == "wavelet_integrator") {
-    ROS_INFO("Using wavelet integrator");
-    pointcloud_integrator_ =
-        std::make_shared<WaveletIntegrator>(occupancy_map_);
-  } else {
-    ROS_INFO("Using beam integrator");
-    pointcloud_integrator_ = std::make_shared<BeamIntegrator>(occupancy_map_);
-  }
+  occupancy_map_ = VolumetricDataStructure2DFactory::create(
+      config_.data_structure_type, config_.min_cell_width,
+      VolumetricDataStructure2DType::kHashedBlocks);
+  CHECK(occupancy_map_);
+
+  pointcloud_integrator_ = PointcloudIntegratorFactory::create(
+      config_.measurement_model_type, occupancy_map_,
+      PointcloudIntegratorType::kCoarseToFineScanIntegrator);
+  CHECK(pointcloud_integrator_);
 
   // Connect to ROS
   subscribeToTimers(nh);

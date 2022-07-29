@@ -20,7 +20,9 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # Libraries
 add_library(
   ${PROJECT_NAME}
+    src/data_structure/volumetric_data_structure_2d_factory.cc
   src/integrator/pointcloud_integrator.cc
+  src/integrator/pointcloud_integrator_factory.cc
   src/integrator/measurement_model/beam_model.cc
   src/integrator/measurement_model/fixed_logodds_model.cc
   src/integrator/measurement_model/measurement_model.cc
