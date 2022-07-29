@@ -14,6 +14,17 @@ void RosbagProcessor::addRosbag(const std::string& rosbag_path) {
   LOG(INFO) << "Loaded rosbag " << rosbag_path;
 }
 
+bool RosbagProcessor::addRosbags(std::istringstream& rosbag_paths) {
+  std::string rosbag_path;
+  while (rosbag_paths >> rosbag_path) {
+    addRosbag(rosbag_path);
+    if (!ros::ok()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool RosbagProcessor::bagsContainTopic(const std::string& topic_name) {
   const auto connections = bag_view_.getConnections();
   return std::any_of(connections.begin(), connections.end(),

@@ -28,9 +28,8 @@ int main(int argc, char** argv) {
   // Create the rosbag processor and load the rosbags
   wavemap::RosbagProcessor rosbag_processor;
   std::istringstream rosbag_paths_ss(rosbag_paths_str);
-  std::string rosbag_path;
-  while (rosbag_paths_ss >> rosbag_path) {
-    rosbag_processor.addRosbag(rosbag_path);
+  if (!rosbag_processor.addRosbags(rosbag_paths_ss)) {
+    return -1;
   }
 
   // Setup the pointcloud callback

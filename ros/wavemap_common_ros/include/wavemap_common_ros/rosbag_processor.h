@@ -20,6 +20,7 @@ class RosbagProcessor {
   ~RosbagProcessor();
 
   void addRosbag(const std::string& rosbag_path);
+  bool addRosbags(std::istringstream& rosbag_paths);
   bool bagsContainTopic(const std::string& topic_name);
 
   template <typename MessageT>

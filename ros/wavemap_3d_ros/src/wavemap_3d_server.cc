@@ -127,8 +127,10 @@ void Wavemap3DServer::processPointcloudQueue() {
     }
 
     // Integrate the pointcloud
-    ROS_INFO_STREAM("Inserting pointcloud with " << t_C_points.size()
-                                                 << " points");
+    ROS_INFO_STREAM("Inserting pointcloud with "
+                    << t_C_points.size()
+                    << " points. Remaining pointclouds in queue: "
+                    << pointcloud_queue_.size() - 1 << ".");
     const PosedPointcloud posed_pointcloud(T_W_C,
                                            Pointcloud<Point3D>(t_C_points));
     integration_timer.start();
