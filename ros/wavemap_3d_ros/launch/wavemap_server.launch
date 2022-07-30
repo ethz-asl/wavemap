@@ -24,9 +24,9 @@
 
   <!-- Wavemap params -->
   <arg name="data_structure_type"
-       default="dense_grid"/>
+       default="hashed_blocks"/>
   <arg name="measurement_model_type"
-       default="beam_model"/>
+       default="single_ray_integrator"/>
 
   <!-- Play the rosbag if a path was specified -->
   <group unless="$(eval arg('rosbag_path') == '')">

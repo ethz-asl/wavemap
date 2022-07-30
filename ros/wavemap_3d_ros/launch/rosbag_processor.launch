@@ -21,9 +21,9 @@
 
   <!-- Wavemap params -->
   <arg name="data_structure_type"
-       default="dense_grid"/>
+       default="hashed_blocks"/>
   <arg name="measurement_model_type"
-       default="beam_model"/>
+       default="single_ray_integrator"/>
 
   <!-- Process the rosbag with wavemap as fast as possible -->
   <param name="/use_sim_time" value="true"/>
