@@ -9,14 +9,16 @@ add_wavemap_compile_definitions_and_options()
 
 # Setup catkin package
 catkin_package(INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS
-               wavemap_common)
+    wavemap_common)
 
 # For all targets
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 # Libraries
 add_library(${PROJECT_NAME}
+    src/data_structure/volumetric_data_structure_3d_factory.cc
     src/integrator/measurement_model/fixed_logodds_model.cc
     src/integrator/measurement_model/measurement_model.cc
-    src/integrator/pointcloud_integrator.cc)
+    src/integrator/pointcloud_integrator.cc
+    src/integrator/pointcloud_integrator_factory.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

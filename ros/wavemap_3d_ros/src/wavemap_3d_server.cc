@@ -3,10 +3,9 @@
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <wavemap_3d/data_structure/hashed_blocks_3d.h>
-#include <wavemap_3d/integrator/point_integrator/ray_integrator.h>
+#include <wavemap_3d/data_structure/volumetric_data_structure_3d_factory.h>
+#include <wavemap_3d/integrator/pointcloud_integrator_factory.h>
 #include <wavemap_common/data_structure/pointcloud.h>
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 #include <wavemap_msgs/FilePath.h>
@@ -20,12 +19,16 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // Assert that the config is valid
   CHECK(config_.isValid(true));
 
-  // Setup integrator
-  ROS_INFO("Using hashed blocks datastructure");
-  occupancy_map_ = std::make_shared<HashedBlocks3D<SaturatingOccupancyCell>>(
-      config_.min_cell_width);
-  ROS_INFO("Using ray integrator");
-  pointcloud_integrator_ = std::make_shared<RayIntegrator>(occupancy_map_);
+  // Setup data structure and integrator
+  occupancy_map_ = VolumetricDataStructure3DFactory::create(
+      config_.data_structure_type, config_.min_cell_width,
+      VolumetricDataStructure3DType::kHashedBlocks);
+  CHECK_NOTNULL(occupancy_map_);
+
+  pointcloud_integrator_ = PointcloudIntegratorFactory::create(
+      config_.measurement_model_type, occupancy_map_,
+      PointcloudIntegratorType::kSingleRayIntegrator);
+  CHECK_NOTNULL(pointcloud_integrator_);
 
   // Connect to ROS
   subscribeToTimers(nh);

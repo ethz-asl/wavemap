@@ -3,18 +3,10 @@
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <wavemap_2d/data_structure/dense_grid.h>
-#include <wavemap_2d/data_structure/hashed_blocks_2d.h>
 #include <wavemap_2d/data_structure/volumetric_data_structure_2d_factory.h>
-#include <wavemap_2d/data_structure/volumetric_differencing_quadtree.h>
-#include <wavemap_2d/data_structure/volumetric_quadtree.h>
-#include <wavemap_2d/data_structure/wavelet_tree_2d.h>
-#include <wavemap_2d/integrator/point_integrator/beam_integrator.h>
-#include <wavemap_2d/integrator/point_integrator/ray_integrator.h>
 #include <wavemap_2d/integrator/pointcloud_integrator_factory.h>
-#include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h>
-#include <wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h>
-#include <wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
 #include <wavemap_common_ros/utils/color.h>
 #include <wavemap_common_ros/utils/nameof.h>
@@ -27,16 +19,16 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // Assert that the config is valid
   CHECK(config_.isValid(true));
 
-  // Setup integrator
+  // Setup data structure and integrator
   occupancy_map_ = VolumetricDataStructure2DFactory::create(
       config_.data_structure_type, config_.min_cell_width,
-      VolumetricDataStructure2DType::kHashedBlocks);
-  CHECK(occupancy_map_);
+      VolumetricDataStructure2DType::kWaveletTree);
+  CHECK_NOTNULL(occupancy_map_);
 
   pointcloud_integrator_ = PointcloudIntegratorFactory::create(
       config_.measurement_model_type, occupancy_map_,
-      PointcloudIntegratorType::kCoarseToFineScanIntegrator);
-  CHECK(pointcloud_integrator_);
+      PointcloudIntegratorType::kWaveletScanIntegrator);
+  CHECK_NOTNULL(pointcloud_integrator_);
 
   // Connect to ROS
   subscribeToTimers(nh);
