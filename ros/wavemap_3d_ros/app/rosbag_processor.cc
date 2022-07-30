@@ -21,9 +21,10 @@ int main(int argc, char** argv) {
   nh_private.param("pointcloud_topic", pointcloud_topic, pointcloud_topic);
   std::string rosbag_paths_str;
   nh_private.param("rosbag_path", rosbag_paths_str, rosbag_paths_str);
-  bool publish_input_pointclouds = false;
-  nh_private.param("publish_input_pointclouds", publish_input_pointclouds,
-                   publish_input_pointclouds);
+  std::string input_pointcloud_republishing_topic;
+  nh_private.param("input_pointcloud_republishing_topic",
+                   input_pointcloud_republishing_topic,
+                   input_pointcloud_republishing_topic);
 
   // Create the rosbag processor and load the rosbags
   wavemap::RosbagProcessor rosbag_processor;
@@ -33,9 +34,13 @@ int main(int argc, char** argv) {
   }
 
   // Setup the pointcloud callback
-  if (publish_input_pointclouds) {
-    ros::Publisher pointcloud_pub =
-        nh.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
+  if (input_pointcloud_republishing_topic.empty()) {
+    rosbag_processor.addCallback(pointcloud_topic,
+                                 &wavemap::Wavemap3DServer::pointcloudCallback,
+                                 &wavemap_server);
+  } else {
+    ros::Publisher pointcloud_pub = nh.advertise<sensor_msgs::PointCloud2>(
+        input_pointcloud_republishing_topic, 1);
     rosbag_processor.addCallback<sensor_msgs::PointCloud2>(
         pointcloud_topic,
         [&wavemap_server, pointcloud_pub](auto pointcloud_msg) {
@@ -47,10 +52,6 @@ int main(int argc, char** argv) {
                   pointcloud_msg.header.frame_id);
           pointcloud_pub.publish(pointcloud_msg);
         });
-  } else {
-    rosbag_processor.addCallback(pointcloud_topic,
-                                 &wavemap::Wavemap3DServer::pointcloudCallback,
-                                 &wavemap_server);
   }
 
   // Republish TFs
