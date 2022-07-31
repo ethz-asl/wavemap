@@ -15,7 +15,7 @@ enum class VolumetricDataStructure2DType : int {
   kDifferencingQuadtree,
   kWaveletQuadtree
 };
-constexpr std::array<const char*, 5> kVolumetricDataStructure2DTypeStrs = {
+constexpr std::array kVolumetricDataStructure2DTypeStrs = {
     "dense_grid", "hashed_blocks", "quadtree", "differencing_quadtree",
     "wavelet_quadtree"};
 std::string getVolumetricDataStructure2DTypeStr(

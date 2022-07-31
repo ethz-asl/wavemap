@@ -15,7 +15,7 @@ enum class PointcloudIntegratorType : int {
   kCoarseToFineScanIntegrator,
   kWaveletScanIntegrator
 };
-constexpr std::array<const char*, 5> kPointcloudIntegratorTypeStrs = {
+constexpr std::array kPointcloudIntegratorTypeStrs = {
     "single_ray_integrator", "single_beam_integrator",
     "fixed_resolution_scan_integrator", "coarse_to_fine_scan_integrator",
     "wavelet_scan_integrator"};

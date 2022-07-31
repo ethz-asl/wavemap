@@ -9,8 +9,7 @@
 
 namespace wavemap {
 enum class PointcloudIntegratorType : int { kSingleRayIntegrator };
-constexpr std::array<const char*, 1> kPointcloudIntegratorTypeStrs = {
-    "single_ray_integrator"};
+constexpr std::array kPointcloudIntegratorTypeStrs = {"single_ray_integrator"};
 std::string getPointcloudIntegratorTypeStr(
     PointcloudIntegratorType intersection_type) {
   return kPointcloudIntegratorTypeStrs[to_underlying(intersection_type)];
