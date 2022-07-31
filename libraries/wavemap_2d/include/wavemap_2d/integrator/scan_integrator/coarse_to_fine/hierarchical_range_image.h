@@ -55,8 +55,7 @@ class HierarchicalRangeImage {
   // NOTE: We reuse getBounds() to get .upper/.lower and trust the compiler to
   //       optimize out unused (return) values during inlining.
 
-  Bounds getRangeBounds(RangeImageIndex left_idx,
-                        RangeImageIndex right_idx) const {
+  Bounds getRangeBounds(IndexElement left_idx, IndexElement right_idx) const {
     DCHECK_LE(left_idx, right_idx);
     if (left_idx == right_idx) {
       const FloatingPoint range_image_value =
@@ -64,10 +63,10 @@ class HierarchicalRangeImage {
       return {range_image_value, range_image_value};
     }
 
-    const RangeImageIndex min_level_up =
+    const IndexElement min_level_up =
         int_math::log2_floor(right_idx - left_idx);
-    const RangeImageIndex left_idx_shifted = left_idx >> min_level_up;
-    const RangeImageIndex right_idx_shifted = right_idx >> min_level_up;
+    const IndexElement left_idx_shifted = left_idx >> min_level_up;
+    const IndexElement right_idx_shifted = right_idx >> min_level_up;
 
     // Check if the nodes at min_level_up are direct neighbors
     if (left_idx_shifted + 1 == right_idx_shifted) {
@@ -82,8 +81,8 @@ class HierarchicalRangeImage {
       } else {
         // Check both nodes at min_level_up
         const BinaryTreeIndex::Element height = min_level_up - 1;
-        const RangeImageIndex left_node_idx = left_idx_shifted;
-        const RangeImageIndex right_node_idx = right_idx_shifted;
+        const IndexElement left_node_idx = left_idx_shifted;
+        const IndexElement right_node_idx = right_idx_shifted;
         if (min_level_up == 0) {
           return {std::min(range_image_->operator[](left_node_idx),
                            range_image_->operator[](right_node_idx)),
@@ -101,20 +100,20 @@ class HierarchicalRangeImage {
       // one level up and check both parents there
       DCHECK(left_idx_shifted + 2 == right_idx_shifted);
       const BinaryTreeIndex::Element parent_height = min_level_up;
-      const RangeImageIndex left_parent_idx = left_idx_shifted >> 1;
-      const RangeImageIndex right_parent_idx = right_idx_shifted >> 1;
+      const IndexElement left_parent_idx = left_idx_shifted >> 1;
+      const IndexElement right_parent_idx = right_idx_shifted >> 1;
       return {std::min(lower_bounds_[parent_height][left_parent_idx],
                        lower_bounds_[parent_height][right_parent_idx]),
               std::max(upper_bounds_[parent_height][left_parent_idx],
                        upper_bounds_[parent_height][right_parent_idx])};
     }
   }
-  FloatingPoint getRangeLowerBound(RangeImageIndex left_idx,
-                                   RangeImageIndex right_idx) const {
+  FloatingPoint getRangeLowerBound(IndexElement left_idx,
+                                   IndexElement right_idx) const {
     return getRangeBounds(left_idx, right_idx).lower;
   }
-  FloatingPoint getRangeUpperBound(RangeImageIndex left_idx,
-                                   RangeImageIndex right_idx) const {
+  FloatingPoint getRangeUpperBound(IndexElement left_idx,
+                                   IndexElement right_idx) const {
     return getRangeBounds(left_idx, right_idx).upper;
   }
   // NOTE: We reuse getRangeBoundsApprox() to get .upper/.lower and trust the

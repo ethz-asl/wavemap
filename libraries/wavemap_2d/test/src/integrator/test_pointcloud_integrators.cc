@@ -40,7 +40,7 @@ class PointcloudIntegratorTest : public FixtureBase {
       const FloatingPoint angle =
           min_angle + static_cast<FloatingPoint>(index) * angle_increment;
 
-      pointcloud[index] = range * RangeImage::angleToBearing(angle);
+      pointcloud[index] = range * CircleProjector::angleToBearing(angle);
     }
 
     return {Transformation2D(), pointcloud};

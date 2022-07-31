@@ -5,29 +5,21 @@
 
 #include <wavemap_common/data_structure/aabb.h>
 
-#include "wavemap_2d/integrator/pointcloud_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/scan_integrator.h"
 
 namespace wavemap {
-class FixedResolutionIntegrator : public PointcloudIntegrator {
+class FixedResolutionIntegrator : public ScanIntegrator {
  public:
-  explicit FixedResolutionIntegrator(
-      VolumetricDataStructure2D::Ptr occupancy_map)
-      : PointcloudIntegrator(std::move(occupancy_map)) {}
+  using ScanIntegrator::ScanIntegrator;
 
   void integratePointcloud(
       const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
 
   static std::pair<RangeImage, AABB<Point2D>> computeRangeImageAndAABB(
       const PosedPointcloud<Point2D, Transformation2D>& pointcloud,
-      FloatingPoint min_angle, FloatingPoint max_angle, Eigen::Index num_beams);
-
- private:
-  static FloatingPoint computeUpdateForCell(const RangeImage& range_image,
-                                            const Point2D& C_cell_center);
+      const CircleProjector& circle_projector);
 };
 }  // namespace wavemap
-
-#include "wavemap_2d/integrator/scan_integrator/fixed_resolution/impl/fixed_resolution_integrator_inl.h"
 
 #endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_FIXED_RESOLUTION_FIXED_RESOLUTION_INTEGRATOR_H_

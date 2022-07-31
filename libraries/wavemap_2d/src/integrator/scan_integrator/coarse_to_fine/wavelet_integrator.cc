@@ -3,7 +3,7 @@
 namespace wavemap {
 WaveletIntegrator::WaveletIntegrator(
     VolumetricDataStructure2D::Ptr occupancy_map)
-    : PointcloudIntegrator(std::move(occupancy_map)),
+    : ScanIntegrator(std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized quadtree data structure
   wavelet_tree_ = dynamic_cast<WaveletQuadtreeInterface*>(occupancy_map_.get());
@@ -17,19 +17,12 @@ void WaveletIntegrator::integratePointcloud(
     return;
   }
 
-  // TODO(victorr): Check that the pointcloud's angular resolution is lower
-  //                than the angular uncertainty of the beam model. This is
-  //                necessary since this measurement integrator assumes the
-  //                beams don't overlap, i.e. for each sample point we only
-  //                evaluate the contribution from the nearest beam.
-
   // Compute the range image and the scan's AABB
-  // TODO(victorr): Make the FoV and number of beams configurable
   if (!posed_range_image_) {
     posed_range_image_ =
-        std::make_shared<PosedRangeImage>(-kHalfPi, kHalfPi, pointcloud.size());
+        std::make_shared<PosedRangeImage>(pointcloud, circle_projector_);
   }
-  posed_range_image_->importPointcloud(pointcloud);
+  posed_range_image_->importPointcloud(pointcloud, circle_projector_);
   range_image_intersector_ =
       std::make_shared<RangeImageIntersector>(posed_range_image_);
 

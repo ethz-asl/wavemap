@@ -18,33 +18,6 @@ inline bool WaveletIntegrator::isApproximationErrorAcceptable(
   }
 }
 
-inline FloatingPoint WaveletIntegrator::sampleUpdateAtPoint(
-    const RangeImage& range_image, FloatingPoint d_C_cell,
-    FloatingPoint azimuth_angle_C_cell) {
-  if (d_C_cell < kEpsilon || BeamModel::kRangeMax < d_C_cell) {
-    return 0.f;
-  }
-
-  const auto idx = range_image.angleToNearestIndex(azimuth_angle_C_cell);
-  if (idx < 0 || range_image.getNumBeams() <= idx) {
-    return 0.f;
-  }
-  const FloatingPoint measured_distance = range_image[idx];
-  if (measured_distance + BeamModel::kRangeDeltaThresh < d_C_cell) {
-    return 0.f;
-  }
-
-  const FloatingPoint beam_azimuth_angle = range_image.indexToAngle(idx);
-  const FloatingPoint cell_to_beam_angle =
-      std::abs(azimuth_angle_C_cell - beam_azimuth_angle);
-  if (BeamModel::kAngleThresh < cell_to_beam_angle) {
-    return 0.f;
-  }
-
-  return BeamModel::computeUpdate(d_C_cell, cell_to_beam_angle,
-                                  measured_distance);
-}
-
 inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const QuadtreeIndex& node_index,
     typename WaveletQuadtreeInterface::NodeType& parent_node,
@@ -53,7 +26,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const RangeImageIntersector::IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb);
+          posed_range_image_->getPose(), W_cell_aabb, circle_projector_);
   if (intersection_type ==
       RangeImageIntersector::IntersectionType::kFullyUnknown) {
     return 0.f;
@@ -70,8 +43,9 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
   if (node_index.height == 0 ||
       isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
-    FloatingPoint angle_C_cell = RangeImage::bearingToAngle(C_node_center);
-    return sampleUpdateAtPoint(*posed_range_image_, d_C_cell, angle_C_cell);
+    FloatingPoint angle_C_cell = CircleProjector::bearingToAngle(C_node_center);
+    return sampleUpdateAtPoint(*posed_range_image_, circle_projector_, d_C_cell,
+                               angle_C_cell);
   }
 
   WaveletQuadtreeInterface::NodeType* node =

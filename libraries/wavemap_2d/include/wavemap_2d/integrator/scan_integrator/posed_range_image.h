@@ -9,15 +9,17 @@ class PosedRangeImage : public RangeImage {
   using RangeImage::RangeImage;
 
   PosedRangeImage(
-      FloatingPoint min_angle, FloatingPoint max_angle, Eigen::Index num_beams,
-      const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud)
-      : RangeImage(min_angle, max_angle, num_beams) {
-    importPointcloud(posed_pointcloud);
+      const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud,
+      const CircleProjector& circle_projector)
+      : RangeImage(posed_pointcloud.getPointsLocal(), circle_projector) {
+    setPose(posed_pointcloud.getPose());
   }
 
   void importPointcloud(
-      const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud) {
-    RangeImage::importPointcloud(posed_pointcloud.getPointsLocal());
+      const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud,
+      const CircleProjector& circle_projector) {
+    RangeImage::importPointcloud(posed_pointcloud.getPointsLocal(),
+                                 circle_projector);
     setPose(posed_pointcloud.getPose());
   }
 

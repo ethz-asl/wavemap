@@ -7,12 +7,12 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_2d/data_structure/wavelet_quadtree_interface.h"
-#include "wavemap_2d/integrator/pointcloud_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/range_image_intersector.h"
 #include "wavemap_2d/integrator/scan_integrator/posed_range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/scan_integrator.h"
 
 namespace wavemap {
-class WaveletIntegrator : public PointcloudIntegrator {
+class WaveletIntegrator : public ScanIntegrator {
  public:
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
@@ -43,10 +43,6 @@ class WaveletIntegrator : public PointcloudIntegrator {
       RangeImageIntersector::IntersectionType intersection_type,
       FloatingPoint sphere_center_distance,
       FloatingPoint bounding_sphere_radius);
-
-  static FloatingPoint sampleUpdateAtPoint(const RangeImage& range_image,
-                                           FloatingPoint d_C_cell,
-                                           FloatingPoint azimuth_angle_C_cell);
 };
 }  // namespace wavemap
 

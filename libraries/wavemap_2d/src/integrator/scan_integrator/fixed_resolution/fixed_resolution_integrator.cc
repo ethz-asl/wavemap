@@ -9,17 +9,10 @@ void FixedResolutionIntegrator::integratePointcloud(
     return;
   }
 
-  // TODO(victorr): Check that the pointcloud's angular resolution is lower than
-  //                the angular uncertainty of the beam model. This is necessary
-  //                since this measurement integrator assumes the beams don't
-  //                overlap, i.e. for each sample point we only evaluate the
-  //                contribution from the nearest beam.
-
   // Compute the range image and the scan's AABB
-  // TODO(victorr): Make this configurable
   // TODO(victorr): Avoid reallocating the range image (zero and reuse instead)
-  const auto [range_image, aabb] = computeRangeImageAndAABB(
-      pointcloud, -kHalfPi, kHalfPi, pointcloud.size());
+  const auto [range_image, aabb] =
+      computeRangeImageAndAABB(pointcloud, circle_projector_);
 
   // Compute the min and max map indices that could be affected by the cloud
   const FloatingPoint min_cell_width = occupancy_map_->getMinCellWidth();
@@ -35,8 +28,11 @@ void FixedResolutionIntegrator::integratePointcloud(
     const Point2D W_cell_center =
         convert::indexToCenterPoint(index, min_cell_width);
     const Point2D C_cell_center = T_C_W * W_cell_center;
-    const FloatingPoint update =
-        computeUpdateForCell(range_image, C_cell_center);
+    const FloatingPoint d_C_cell = C_cell_center.norm();
+    const FloatingPoint azimuth_angle_C_cell =
+        CircleProjector::bearingToAngle(C_cell_center);
+    const FloatingPoint update = sampleUpdateAtPoint(
+        range_image, circle_projector_, d_C_cell, azimuth_angle_C_cell);
     if (kEpsilon < std::abs(update)) {
       occupancy_map_->addToCellValue(index, update);
     }
@@ -46,8 +42,8 @@ void FixedResolutionIntegrator::integratePointcloud(
 std::pair<RangeImage, AABB<Point2D>>
 FixedResolutionIntegrator::computeRangeImageAndAABB(
     const PosedPointcloud<Point2D, Transformation2D>& pointcloud,
-    FloatingPoint min_angle, FloatingPoint max_angle, Eigen::Index num_beams) {
-  RangeImage range_image(min_angle, max_angle, num_beams);
+    const CircleProjector& circle_projector) {
+  RangeImage range_image(circle_projector.getNumCells());
   AABB<Point2D> aabb;
 
   for (const auto& C_point : pointcloud.getPointsLocal()) {
@@ -64,8 +60,8 @@ FixedResolutionIntegrator::computeRangeImageAndAABB(
     }
 
     // Add the point to the range image
-    const RangeImageIndex range_image_index =
-        range_image.bearingToNearestIndex(C_point);
+    const IndexElement range_image_index =
+        circle_projector.bearingToNearestIndex(C_point);
     CHECK_GE(range_image_index, 0);
     CHECK_LT(range_image_index, range_image.getNumBeams());
     range_image[range_image_index] = range;

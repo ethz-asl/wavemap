@@ -7,7 +7,7 @@
 namespace wavemap {
 CoarseToFineIntegrator::CoarseToFineIntegrator(
     VolumetricDataStructure2D::Ptr occupancy_map)
-    : PointcloudIntegrator(std::move(occupancy_map)),
+    : ScanIntegrator(std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized quadtree data structure
   volumetric_quadtree_ =
@@ -23,19 +23,12 @@ void CoarseToFineIntegrator::integratePointcloud(
     return;
   }
 
-  // TODO(victorr): Check that the pointcloud's angular resolution is lower than
-  //                the angular uncertainty of the beam model. This is necessary
-  //                since this measurement integrator assumes the beams don't
-  //                overlap, i.e. for each sample point we only evaluate the
-  //                contribution from the nearest beam.
-
   // Compute the range image and the scan's AABB
-  // TODO(victorr): Make the FoV and number of beams configurable
   if (!posed_range_image_) {
     posed_range_image_ =
-        std::make_shared<PosedRangeImage>(-kHalfPi, kHalfPi, pointcloud.size());
+        std::make_shared<PosedRangeImage>(pointcloud, circle_projector_);
   }
-  posed_range_image_->importPointcloud(pointcloud);
+  posed_range_image_->importPointcloud(pointcloud, circle_projector_);
   RangeImageIntersector range_image_intersector(posed_range_image_);
 
   // Recursively update all relevant cells
@@ -51,8 +44,8 @@ void CoarseToFineIntegrator::integratePointcloud(
     const AABB<Point2D> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const RangeImageIntersector::IntersectionType intersection_type =
-        range_image_intersector.determineIntersectionType(pointcloud.getPose(),
-                                                          W_cell_aabb);
+        range_image_intersector.determineIntersectionType(
+            pointcloud.getPose(), W_cell_aabb, circle_projector_);
     if (intersection_type ==
         RangeImageIntersector::IntersectionType::kFullyUnknown) {
       continue;
@@ -69,9 +62,10 @@ void CoarseToFineIntegrator::integratePointcloud(
     if (current_node.height == 0 ||
         isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                        bounding_sphere_radius)) {
-      FloatingPoint angle_C_cell = RangeImage::bearingToAngle(C_node_center);
-      FloatingPoint sample =
-          sampleUpdateAtPoint(*posed_range_image_, d_C_cell, angle_C_cell);
+      FloatingPoint angle_C_cell =
+          CircleProjector::bearingToAngle(C_node_center);
+      FloatingPoint sample = sampleUpdateAtPoint(
+          *posed_range_image_, circle_projector_, d_C_cell, angle_C_cell);
       volumetric_quadtree_->addToCellValue(current_node, sample);
       continue;
     }

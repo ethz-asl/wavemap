@@ -11,11 +11,6 @@
 namespace wavemap {
 class CoarseToFineIntegratorTest : public FixtureBase {
  protected:
-  Transformation2D getRandomTransformation() const {
-    return {Transformation2D::Rotation(getRandomAngle()),
-            getRandomTranslation<2>()};
-  }
-
   PosedPointcloud<Point2D, Transformation2D> getRandomPointcloud(
       FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
       FloatingPoint min_distance, FloatingPoint max_distance) const {
@@ -33,10 +28,10 @@ class CoarseToFineIntegratorTest : public FixtureBase {
       const FloatingPoint angle =
           min_angle + static_cast<FloatingPoint>(index) * angle_increment;
 
-      pointcloud[index] = range * RangeImage::angleToBearing(angle);
+      pointcloud[index] = range * CircleProjector::angleToBearing(angle);
     }
 
-    return {getRandomTransformation(), pointcloud};
+    return {getRandomTransformation<2>(), pointcloud};
   }
 };
 
@@ -53,8 +48,9 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
                             kMaxDistance);
 
     // Create the hierarchical range image
-    const auto range_image = std::make_shared<PosedRangeImage>(
-        kMinAngle, kMaxAngle, num_beams, random_pointcloud);
+    CircleProjector circle_projector(kMinAngle, kMaxAngle, num_beams);
+    const auto range_image =
+        std::make_shared<PosedRangeImage>(random_pointcloud, circle_projector);
     HierarchicalRangeImage hierarchical_range_image(range_image);
 
     // Test all the bounds from top to bottom
@@ -225,7 +221,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
                                               aabb.max + t_random};
           const AABB<Point2D> aabb_scaled_translated{
               aabb_scaled.min + t_random, aabb_scaled.max + t_random};
-          const Transformation2D T_W_C_random = getRandomTransformation();
+          const Transformation2D T_W_C_random = getRandomTransformation<2>();
           tests.emplace_back(aabb_scaled, Transformation2D());
           tests.emplace_back(aabb_translated, Transformation2D());
           tests.emplace_back(aabb_scaled_translated, Transformation2D());
@@ -251,7 +247,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
     } else {
       for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
         angles[corner_idx] =
-            RangeImage::bearingToAngle(C_cell_corners.col(corner_idx));
+            CircleProjector::bearingToAngle(C_cell_corners.col(corner_idx));
       }
       std::sort(angles.begin(), angles.end());
       const FloatingPoint min_angle = angles[0];
@@ -339,8 +335,9 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
                             kMaxDistance);
 
     // Create the hierarchical range image
-    const auto range_image = std::make_shared<PosedRangeImage>(
-        kMinAngle, kMaxAngle, num_beams, random_pointcloud);
+    CircleProjector circle_projector(kMinAngle, kMaxAngle, num_beams);
+    const auto range_image =
+        std::make_shared<PosedRangeImage>(random_pointcloud, circle_projector);
     RangeImageIntersector range_image_intersector(range_image);
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
@@ -376,8 +373,8 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
           continue;
         }
 
-        const RangeImageIndex range_image_index =
-            range_image->bearingToNearestIndex(C_cell_center);
+        const IndexElement range_image_index =
+            circle_projector.bearingToNearestIndex(C_cell_center);
         if (range_image_index < 0 ||
             range_image->getNumBeams() <= range_image_index) {
           has_unknown = true;
@@ -420,7 +417,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
           W_node_bottom_left + Vector2D::Constant(node_width)};
       const RangeImageIntersector::IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
-              random_pointcloud.getPose(), W_cell_aabb);
+              random_pointcloud.getPose(), W_cell_aabb, circle_projector);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected "
           << RangeImageIntersector::getIntersectionTypeStr(
