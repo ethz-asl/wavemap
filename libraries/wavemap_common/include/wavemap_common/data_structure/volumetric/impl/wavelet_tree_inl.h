@@ -10,24 +10,24 @@
 
 namespace wavemap {
 template <typename CellT, int dim>
-void WaveletTree<CellT, dim>::prune() {
-  std::function<typename WaveletTreeInterface<dim>::Coefficients::Scale(
-      typename WaveletTreeInterface<dim>::NodeType&,
-      typename WaveletTreeInterface<dim>::Coefficients::Scale)>
+void WaveletNdtree<CellT, dim>::prune() {
+  std::function<typename WaveletNdtreeInterface<dim>::Coefficients::Scale(
+      typename WaveletNdtreeInterface<dim>::NodeType&,
+      typename WaveletNdtreeInterface<dim>::Coefficients::Scale)>
       recursive_fn = [&recursive_fn](
-                         typename WaveletTreeInterface<dim>::NodeType& node,
-                         typename WaveletTreeInterface<dim>::Coefficients::Scale
-                             scale_coefficient) {
-        typename WaveletTreeInterface<dim>::Coefficients::CoefficientsArray
+                         typename WaveletNdtreeInterface<dim>::NodeType& node,
+                         typename WaveletNdtreeInterface<
+                             dim>::Coefficients::Scale scale_coefficient) {
+        typename WaveletNdtreeInterface<dim>::Coefficients::CoefficientsArray
             child_scale_coefficients =
-                WaveletTreeInterface<dim>::Transform::backward(
+                WaveletNdtreeInterface<dim>::Transform::backward(
                     {scale_coefficient, node.data()});
 
         bool has_at_least_one_child = false;
         for (typename NdtreeIndex<dim>::RelativeChild child_idx = 0;
              child_idx < NdtreeIndex<dim>::kNumChildren; ++child_idx) {
           if (node.hasChild(child_idx)) {
-            typename WaveletTreeInterface<dim>::NodeType& child_node =
+            typename WaveletNdtreeInterface<dim>::NodeType& child_node =
                 *node.getChild(child_idx);
             child_scale_coefficients[child_idx] =
                 recursive_fn(child_node, child_scale_coefficients[child_idx]);
@@ -50,7 +50,7 @@ void WaveletTree<CellT, dim>::prune() {
         }
 
         const auto [scale_update, detail_updates] =
-            WaveletTreeInterface<dim>::Transform::forward(
+            WaveletNdtreeInterface<dim>::Transform::forward(
                 child_scale_coefficients);
         node.data() -= detail_updates;
 
@@ -62,14 +62,14 @@ void WaveletTree<CellT, dim>::prune() {
 }
 
 template <typename CellT, int dim>
-void WaveletTree<CellT, dim>::clear() {
+void WaveletNdtree<CellT, dim>::clear() {
   ndtree_.clear();
   root_scale_coefficient_ = {};
 }
 
 template <typename CellT, int dim>
 typename NdtreeIndex<dim>::ChildArray
-WaveletTree<CellT, dim>::getFirstChildIndices() const {
+WaveletNdtree<CellT, dim>::getFirstChildIndices() const {
   typename NdtreeIndex<dim>::ChildArray first_child_indices =
       getInternalRootNodeIndex().computeChildIndices();
   for (auto& child : first_child_indices) {
@@ -79,7 +79,7 @@ WaveletTree<CellT, dim>::getFirstChildIndices() const {
 }
 
 template <typename CellT, int dim>
-Index<dim> WaveletTree<CellT, dim>::getMinIndex() const {
+Index<dim> WaveletNdtree<CellT, dim>::getMinIndex() const {
   if (empty()) {
     return {};
   }
@@ -96,7 +96,7 @@ Index<dim> WaveletTree<CellT, dim>::getMinIndex() const {
 }
 
 template <typename CellT, int dim>
-Index<dim> WaveletTree<CellT, dim>::getMaxIndex() const {
+Index<dim> WaveletNdtree<CellT, dim>::getMaxIndex() const {
   if (empty()) {
     return {};
   }
@@ -113,30 +113,30 @@ Index<dim> WaveletTree<CellT, dim>::getMaxIndex() const {
 }
 
 template <typename CellT, int dim>
-Index<dim> WaveletTree<CellT, dim>::getMinPossibleIndex() const {
+Index<dim> WaveletNdtree<CellT, dim>::getMinPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMinCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT, int dim>
-Index<dim> WaveletTree<CellT, dim>::getMaxPossibleIndex() const {
+Index<dim> WaveletNdtree<CellT, dim>::getMaxPossibleIndex() const {
   return toExternalIndex(
       convert::nodeIndexToMaxCornerIndex(getInternalRootNodeIndex()));
 }
 
 template <typename CellT, int dim>
-FloatingPoint WaveletTree<CellT, dim>::getCellValue(
+FloatingPoint WaveletNdtree<CellT, dim>::getCellValue(
     const Index<dim>& index) const {
   const NdtreeIndex<dim> deepest_possible_node_index = toInternal(index);
   const std::vector<typename NdtreeIndex<dim>::RelativeChild> child_indices =
       deepest_possible_node_index.template computeRelativeChildIndices<
           VolumetricNdtreeInterface<dim>::kMaxHeight>();
-  const typename WaveletTreeInterface<dim>::NodeType* node =
+  const typename WaveletNdtreeInterface<dim>::NodeType* node =
       &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
   for (const typename NdtreeIndex<dim>::RelativeChild child_index :
        child_indices) {
-    value = WaveletTreeInterface<dim>::Transform::backwardSingleChild(
+    value = WaveletNdtreeInterface<dim>::Transform::backwardSingleChild(
         {value, node->data()}, child_index);
     if (!node->hasChild(child_index)) {
       break;
@@ -147,30 +147,30 @@ FloatingPoint WaveletTree<CellT, dim>::getCellValue(
 }
 
 template <typename CellT, int dim>
-void WaveletTree<CellT, dim>::setCellValue(const Index<dim>& index,
-                                           FloatingPoint new_value) {
+void WaveletNdtree<CellT, dim>::setCellValue(const Index<dim>& index,
+                                             FloatingPoint new_value) {
   const NdtreeIndex<dim> node_index =
       convert::indexAndHeightToNodeIndex(index, 0);
   setCellValue(node_index, new_value);
 }
 
 template <typename CellT, int dim>
-void WaveletTree<CellT, dim>::setCellValue(const NdtreeIndex<dim>& node_index,
-                                           FloatingPoint new_value) {
+void WaveletNdtree<CellT, dim>::setCellValue(const NdtreeIndex<dim>& node_index,
+                                             FloatingPoint new_value) {
   const NdtreeIndex<dim> internal_node_index = toInternal(node_index);
   const std::vector<typename NdtreeIndex<dim>::RelativeChild> child_indices =
       internal_node_index.template computeRelativeChildIndices<
           VolumetricNdtreeInterface<dim>::kMaxHeight>();
-  std::vector<typename WaveletTreeInterface<dim>::NodeType*> node_ptrs;
+  std::vector<typename WaveletNdtreeInterface<dim>::NodeType*> node_ptrs;
   node_ptrs.reserve(child_indices.size());
   node_ptrs.emplace_back(&ndtree_.getRootNode());
   FloatingPoint current_value = root_scale_coefficient_;
   for (size_t depth = 0; depth < child_indices.size() - 1; ++depth) {
     const typename NdtreeIndex<dim>::RelativeChild child_index =
         child_indices[depth];
-    typename WaveletTreeInterface<dim>::NodeType* current_parent =
+    typename WaveletNdtreeInterface<dim>::NodeType* current_parent =
         node_ptrs.back();
-    current_value = WaveletTreeInterface<dim>::Transform::backwardSingleChild(
+    current_value = WaveletNdtreeInterface<dim>::Transform::backwardSingleChild(
         {current_value, current_parent->data()}, child_index);
     if (!current_parent->hasChild(child_index)) {
       current_parent->allocateChild(child_index);
@@ -178,15 +178,15 @@ void WaveletTree<CellT, dim>::setCellValue(const NdtreeIndex<dim>& node_index,
     node_ptrs.emplace_back(current_parent->getChild(child_index));
   }
 
-  typename WaveletTreeInterface<dim>::Coefficients::Parent coefficients{
+  typename WaveletNdtreeInterface<dim>::Coefficients::Parent coefficients{
       new_value - current_value, {}};
   for (int depth = static_cast<int>(child_indices.size()) - 1; 0 <= depth;
        --depth) {
     const typename NdtreeIndex<dim>::RelativeChild relative_child_idx =
         child_indices[depth];
-    typename WaveletTreeInterface<dim>::NodeType* current_node =
+    typename WaveletNdtreeInterface<dim>::NodeType* current_node =
         node_ptrs[depth];
-    coefficients = WaveletTreeInterface<dim>::Transform::forwardSingleChild(
+    coefficients = WaveletNdtreeInterface<dim>::Transform::forwardSingleChild(
         coefficients.scale, relative_child_idx);
     current_node->data() += coefficients.details;
   }
@@ -194,27 +194,27 @@ void WaveletTree<CellT, dim>::setCellValue(const NdtreeIndex<dim>& node_index,
 }
 
 template <typename CellT, int dim>
-void WaveletTree<CellT, dim>::addToCellValue(const Index<dim>& index,
-                                             FloatingPoint update) {
+void WaveletNdtree<CellT, dim>::addToCellValue(const Index<dim>& index,
+                                               FloatingPoint update) {
   const NdtreeIndex<dim> node_index =
       convert::indexAndHeightToNodeIndex(index, 0);
   addToCellValue(node_index, update);
 }
 
 template <typename CellT, int dim>
-void WaveletTree<CellT, dim>::addToCellValue(const NdtreeIndex<dim>& node_index,
-                                             FloatingPoint update) {
+void WaveletNdtree<CellT, dim>::addToCellValue(
+    const NdtreeIndex<dim>& node_index, FloatingPoint update) {
   const NdtreeIndex<dim> internal_node_index = toInternal(node_index);
   const std::vector<typename NdtreeIndex<dim>::RelativeChild> child_indices =
       internal_node_index.template computeRelativeChildIndices<
           VolumetricNdtreeInterface<dim>::kMaxHeight>();
-  std::vector<typename WaveletTreeInterface<dim>::NodeType*> node_ptrs;
+  std::vector<typename WaveletNdtreeInterface<dim>::NodeType*> node_ptrs;
   node_ptrs.reserve(child_indices.size());
   node_ptrs.emplace_back(&ndtree_.getRootNode());
   for (size_t depth = 0; depth < child_indices.size() - 1; ++depth) {
     const typename NdtreeIndex<dim>::RelativeChild child_index =
         child_indices[depth];
-    typename WaveletTreeInterface<dim>::NodeType* current_parent =
+    typename WaveletNdtreeInterface<dim>::NodeType* current_parent =
         node_ptrs.back();
     if (!current_parent->hasChild(child_index)) {
       current_parent->allocateChild(child_index);
@@ -222,15 +222,15 @@ void WaveletTree<CellT, dim>::addToCellValue(const NdtreeIndex<dim>& node_index,
     node_ptrs.emplace_back(current_parent->getChild(child_index));
   }
 
-  typename WaveletTreeInterface<dim>::Coefficients::Parent coefficients{update,
-                                                                        {}};
+  typename WaveletNdtreeInterface<dim>::Coefficients::Parent coefficients{
+      update, {}};
   for (int depth = static_cast<int>(child_indices.size()) - 1; 0 <= depth;
        --depth) {
-    typename WaveletTreeInterface<dim>::NodeType* current_node =
+    typename WaveletNdtreeInterface<dim>::NodeType* current_node =
         node_ptrs[depth];
     const typename NdtreeIndex<dim>::RelativeChild relative_child_idx =
         child_indices[depth];
-    coefficients = WaveletTreeInterface<dim>::Transform::forwardSingleChild(
+    coefficients = WaveletNdtreeInterface<dim>::Transform::forwardSingleChild(
         coefficients.scale, relative_child_idx);
     current_node->data() += coefficients.details;
   }
@@ -238,7 +238,7 @@ void WaveletTree<CellT, dim>::addToCellValue(const NdtreeIndex<dim>& node_index,
 }
 
 template <typename CellT, int dim>
-void WaveletTree<CellT, dim>::forEachLeaf(
+void WaveletNdtree<CellT, dim>::forEachLeaf(
     typename VolumetricDataStructureBase<dim>::IndexedLeafVisitorFunction
         visitor_fn) const {
   if (empty()) {
@@ -251,13 +251,14 @@ void WaveletTree<CellT, dim>::forEachLeaf(
                                       root_scale_coefficient_});
   while (!stack.empty()) {
     const NdtreeIndex<dim> node_index = stack.top().node_index;
-    const typename WaveletTreeInterface<dim>::NodeType& node = stack.top().node;
+    const typename WaveletNdtreeInterface<dim>::NodeType& node =
+        stack.top().node;
     const FloatingPoint node_scale_coefficient = stack.top().scale_coefficient;
     stack.pop();
 
-    const typename WaveletTreeInterface<dim>::Coefficients::CoefficientsArray
+    const typename WaveletNdtreeInterface<dim>::Coefficients::CoefficientsArray
         child_scale_coefficients =
-            WaveletTreeInterface<dim>::Transform::backward(
+            WaveletNdtreeInterface<dim>::Transform::backward(
                 {node_scale_coefficient, {node.data()}});
     for (typename NdtreeIndex<dim>::RelativeChild child_idx = 0;
          child_idx < NdtreeIndex<dim>::kNumChildren; ++child_idx) {
@@ -266,7 +267,7 @@ void WaveletTree<CellT, dim>::forEachLeaf(
       const FloatingPoint child_scale_coefficient =
           child_scale_coefficients[child_idx];
       if (node.hasChild(child_idx)) {
-        const typename WaveletTreeInterface<dim>::NodeType& child_node =
+        const typename WaveletNdtreeInterface<dim>::NodeType& child_node =
             *node.getChild(child_idx);
         stack.template emplace(StackElement{child_node_index, child_node,
                                             child_scale_coefficient});
@@ -280,13 +281,13 @@ void WaveletTree<CellT, dim>::forEachLeaf(
 }
 
 template <typename CellT, int dim>
-typename WaveletTreeInterface<dim>::NodeType* WaveletTree<CellT, dim>::getNode(
-    const NdtreeIndex<dim>& node_index) {
+typename WaveletNdtreeInterface<dim>::NodeType*
+WaveletNdtree<CellT, dim>::getNode(const NdtreeIndex<dim>& node_index) {
   const NdtreeIndex<dim> internal_node_index = toInternal(node_index);
   const std::vector<typename NdtreeIndex<dim>::RelativeChild> child_indices =
       internal_node_index.template computeRelativeChildIndices<
           VolumetricNdtreeInterface<dim>::kMaxHeight>();
-  typename WaveletTreeInterface<dim>::NodeType* node = &ndtree_.getRootNode();
+  typename WaveletNdtreeInterface<dim>::NodeType* node = &ndtree_.getRootNode();
   for (const typename NdtreeIndex<dim>::RelativeChild child_index :
        child_indices) {
     if (!node->hasChild(child_index)) {
@@ -298,13 +299,13 @@ typename WaveletTreeInterface<dim>::NodeType* WaveletTree<CellT, dim>::getNode(
 }
 
 template <typename CellT, int dim>
-const typename WaveletTreeInterface<dim>::NodeType*
-WaveletTree<CellT, dim>::getNode(const NdtreeIndex<dim>& node_index) const {
+const typename WaveletNdtreeInterface<dim>::NodeType*
+WaveletNdtree<CellT, dim>::getNode(const NdtreeIndex<dim>& node_index) const {
   const NdtreeIndex<dim> internal_node_index = toInternal(node_index);
   const std::vector<typename NdtreeIndex<dim>::RelativeChild> child_indices =
       internal_node_index.template computeRelativeChildIndices<
           VolumetricNdtreeInterface<dim>::kMaxHeight>();
-  const typename WaveletTreeInterface<dim>::NodeType* node =
+  const typename WaveletNdtreeInterface<dim>::NodeType* node =
       &ndtree_.getRootNode();
   for (const typename NdtreeIndex<dim>::RelativeChild child_index :
        child_indices) {
@@ -317,15 +318,15 @@ WaveletTree<CellT, dim>::getNode(const NdtreeIndex<dim>& node_index) const {
 }
 
 template <typename CellT, int dim>
-bool WaveletTree<CellT, dim>::save(const std::string& /*file_path_prefix*/,
-                                   bool /*use_floating_precision*/) const {
+bool WaveletNdtree<CellT, dim>::save(const std::string& /*file_path_prefix*/,
+                                     bool /*use_floating_precision*/) const {
   // TODO(victorr): Implement this
   return false;
 }
 
 template <typename CellT, int dim>
-bool WaveletTree<CellT, dim>::load(const std::string& /*file_path_prefix*/,
-                                   bool /*used_floating_precision*/) {
+bool WaveletNdtree<CellT, dim>::load(const std::string& /*file_path_prefix*/,
+                                     bool /*used_floating_precision*/) {
   // TODO(victorr): Implement this
   return false;
 }

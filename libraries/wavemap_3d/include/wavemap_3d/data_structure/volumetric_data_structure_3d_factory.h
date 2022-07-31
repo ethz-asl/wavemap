@@ -8,9 +8,14 @@
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
 
 namespace wavemap {
-enum class VolumetricDataStructure3DType : int { kHashedBlocks };
-constexpr std::array<const char*, 1> kVolumetricDataStructure3DTypeStrs = {
-    "hashed_blocks"};
+enum class VolumetricDataStructure3DType : int {
+  kHashedBlocks,
+  kOctree,
+  kDifferencingOctree,
+  kWaveletOctree
+};
+constexpr std::array<const char*, 4> kVolumetricDataStructure3DTypeStrs = {
+    "hashed_blocks", "octree", "differencing_octree", "wavelet_octree"};
 std::string getVolumetricDataStructure3DTypeStr(
     VolumetricDataStructure3DType intersection_type) {
   return kVolumetricDataStructure3DTypeStrs[to_underlying(intersection_type)];

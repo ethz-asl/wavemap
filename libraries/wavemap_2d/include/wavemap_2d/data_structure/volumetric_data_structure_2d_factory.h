@@ -13,11 +13,11 @@ enum class VolumetricDataStructure2DType : int {
   kHashedBlocks,
   kQuadtree,
   kDifferencingQuadtree,
-  kWaveletTree
+  kWaveletQuadtree
 };
 constexpr std::array<const char*, 5> kVolumetricDataStructure2DTypeStrs = {
     "dense_grid", "hashed_blocks", "quadtree", "differencing_quadtree",
-    "wavelet_tree"};
+    "wavelet_quadtree"};
 std::string getVolumetricDataStructure2DTypeStr(
     VolumetricDataStructure2DType intersection_type) {
   return kVolumetricDataStructure2DTypeStrs[to_underlying(intersection_type)];

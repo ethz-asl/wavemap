@@ -3,6 +3,9 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_3d/data_structure/hashed_blocks_3d.h"
+#include "wavemap_3d/data_structure/volumetric_differencing_octree.h"
+#include "wavemap_3d/data_structure/volumetric_octree.h"
+#include "wavemap_3d/data_structure/wavelet_octree.h"
 
 namespace wavemap {
 VolumetricDataStructure3D::Ptr VolumetricDataStructure3DFactory::create(
@@ -38,6 +41,16 @@ VolumetricDataStructure3D::Ptr VolumetricDataStructure3DFactory::create(
   switch (data_structure_type) {
     case VolumetricDataStructure3DType::kHashedBlocks:
       return std::make_shared<HashedBlocks3D<SaturatingOccupancyCell>>(
+          min_cell_width);
+    case VolumetricDataStructure3DType::kOctree:
+      return std::make_shared<VolumetricOctree<SaturatingOccupancyCell>>(
+          min_cell_width);
+    case VolumetricDataStructure3DType::kDifferencingOctree:
+      return std::make_shared<
+          VolumetricDifferencingOctree<SaturatingOccupancyCell>>(
+          min_cell_width);
+    case VolumetricDataStructure3DType::kWaveletOctree:
+      return std::make_shared<WaveletOctree<SaturatingOccupancyCell>>(
           min_cell_width);
     default:
       LOG(ERROR) << "Attempted to create unknown data structure type: "

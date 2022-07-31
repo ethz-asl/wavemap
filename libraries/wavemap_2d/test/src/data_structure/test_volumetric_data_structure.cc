@@ -10,7 +10,7 @@
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/data_structure/volumetric_differencing_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_quadtree.h"
-#include "wavemap_2d/data_structure/wavelet_tree_2d.h"
+#include "wavemap_2d/data_structure/wavelet_quadtree.h"
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
@@ -28,8 +28,8 @@ using VolumetricDataStructureTypes =
                      VolumetricQuadtree<SaturatingOccupancyCell>,
                      VolumetricDifferencingQuadtree<UnboundedOccupancyCell>,
                      VolumetricDifferencingQuadtree<SaturatingOccupancyCell>,
-                     WaveletTree2D<UnboundedOccupancyCell>,
-                     WaveletTree2D<SaturatingOccupancyCell>>;
+                     WaveletQuadtree<UnboundedOccupancyCell>,
+                     WaveletQuadtree<SaturatingOccupancyCell>>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {

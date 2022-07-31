@@ -7,12 +7,7 @@
 
 namespace wavemap {
 template <typename CellT>
-class HashedBlocks3D : public HashedBlocks<CellT, 3>,
-                       public VolumetricDataStructure3D {
- public:
-  using HashedBlocks<CellT, 3>::HashedBlocks;
-  using VolumetricDataStructure3D::VolumetricDataStructure3D;
-};
+using HashedBlocks3D = HashedBlocks<CellT, 3>;
 }  // namespace wavemap
 
 #endif  // WAVEMAP_3D_DATA_STRUCTURE_HASHED_BLOCKS_3D_H_

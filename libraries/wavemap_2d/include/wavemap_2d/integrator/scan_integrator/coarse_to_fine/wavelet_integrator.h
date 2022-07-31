@@ -6,7 +6,7 @@
 
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
-#include "wavemap_2d/data_structure/wavelet_tree_interface_2d.h"
+#include "wavemap_2d/data_structure/wavelet_quadtree_interface.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/range_image_intersector.h"
 #include "wavemap_2d/integrator/scan_integrator/posed_range_image.h"
@@ -22,7 +22,7 @@ class WaveletIntegrator : public PointcloudIntegrator {
       const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
 
  private:
-  WaveletTreeInterface2D* wavelet_tree_;
+  WaveletQuadtreeInterface* wavelet_tree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<PosedRangeImage> posed_range_image_;
@@ -34,9 +34,9 @@ class WaveletIntegrator : public PointcloudIntegrator {
       BeamModel::kScaling * 14.9999999999997f;
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
 
-  WaveletTreeInterface2D::Coefficients::Scale recursiveSamplerCompressor(
+  WaveletQuadtreeInterface::Coefficients::Scale recursiveSamplerCompressor(
       const QuadtreeIndex& node_index,
-      WaveletTreeInterface2D::NodeType& parent_node,
+      WaveletQuadtreeInterface::NodeType& parent_node,
       QuadtreeIndex ::RelativeChild relative_child_index);
 
   static bool isApproximationErrorAcceptable(

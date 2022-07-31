@@ -6,7 +6,7 @@ WaveletIntegrator::WaveletIntegrator(
     : PointcloudIntegrator(std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized quadtree data structure
-  wavelet_tree_ = dynamic_cast<WaveletTreeInterface2D*>(occupancy_map_.get());
+  wavelet_tree_ = dynamic_cast<WaveletQuadtreeInterface*>(occupancy_map_.get());
   CHECK(wavelet_tree_) << "Wavelet integrator can only be used with "
                           "volumetric data structures based on wavelet trees.";
 }
@@ -35,7 +35,7 @@ void WaveletIntegrator::integratePointcloud(
 
   // Recursively update all relevant cells
   const auto first_child_indices = wavelet_tree_->getFirstChildIndices();
-  WaveletTreeInterface2D::Coefficients::CoefficientsArray
+  WaveletQuadtreeInterface::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
   for (QuadtreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < QuadtreeIndex::kNumChildren; ++relative_child_idx) {
@@ -45,7 +45,7 @@ void WaveletIntegrator::integratePointcloud(
                                    relative_child_idx);
   }
   const auto [scale_update, detail_updates] =
-      WaveletTreeInterface2D::Transform::forward(
+      WaveletQuadtreeInterface::Transform::forward(
           child_scale_coefficient_updates);
   wavelet_tree_->getRootNode().data() += detail_updates;
   wavelet_tree_->getRootScale() += scale_update;

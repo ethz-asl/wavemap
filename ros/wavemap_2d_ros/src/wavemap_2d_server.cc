@@ -22,7 +22,7 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // Setup data structure and integrator
   occupancy_map_ = VolumetricDataStructure2DFactory::create(
       config_.data_structure_type, config_.min_cell_width,
-      VolumetricDataStructure2DType::kWaveletTree);
+      VolumetricDataStructure2DType::kWaveletQuadtree);
   CHECK_NOTNULL(occupancy_map_);
 
   pointcloud_integrator_ = PointcloudIntegratorFactory::create(

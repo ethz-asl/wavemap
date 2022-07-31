@@ -1,17 +1,17 @@
-#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_H_
-#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_NDTREE_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_NDTREE_H_
 
 #include <string>
 
 #include "wavemap_common/data_structure/ndtree/ndtree.h"
 #include "wavemap_common/data_structure/volumetric/cell_types/haar_transform.h"
-#include "wavemap_common/data_structure/volumetric/wavelet_tree_interface.h"
+#include "wavemap_common/data_structure/volumetric/wavelet_ndtree_interface.h"
 #include "wavemap_common/indexing/index_conversions.h"
 #include "wavemap_common/indexing/ndtree_index.h"
 
 namespace wavemap {
 template <typename CellT, int dim>
-class WaveletTree : public virtual WaveletTreeInterface<dim> {
+class WaveletNdtree : public virtual WaveletNdtreeInterface<dim> {
  public:
   static_assert(std::is_same_v<typename CellT::Specialized, FloatingPoint>);
 
@@ -19,7 +19,7 @@ class WaveletTree : public virtual WaveletTreeInterface<dim> {
   static constexpr bool kRequiresPruningForThresholding = true;
 
   // Use the base class' constructor
-  using WaveletTreeInterface<dim>::WaveletTreeInterface;
+  using WaveletNdtreeInterface<dim>::WaveletNdtreeInterface;
 
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
@@ -45,24 +45,24 @@ class WaveletTree : public virtual WaveletTreeInterface<dim> {
       typename VolumetricDataStructureBase<dim>::IndexedLeafVisitorFunction
           visitor_fn) const override;
 
-  typename WaveletTreeInterface<dim>::Coefficients::Scale& getRootScale()
+  typename WaveletNdtreeInterface<dim>::Coefficients::Scale& getRootScale()
       override {
     return root_scale_coefficient_;
   }
-  const typename WaveletTreeInterface<dim>::Coefficients::Scale& getRootScale()
-      const override {
+  const typename WaveletNdtreeInterface<dim>::Coefficients::Scale&
+  getRootScale() const override {
     return root_scale_coefficient_;
   }
-  typename WaveletTreeInterface<dim>::NodeType& getRootNode() override {
+  typename WaveletNdtreeInterface<dim>::NodeType& getRootNode() override {
     return ndtree_.getRootNode();
   }
-  const typename WaveletTreeInterface<dim>::NodeType& getRootNode()
+  const typename WaveletNdtreeInterface<dim>::NodeType& getRootNode()
       const override {
     return ndtree_.getRootNode();
   }
-  typename WaveletTreeInterface<dim>::NodeType* getNode(
+  typename WaveletNdtreeInterface<dim>::NodeType* getNode(
       const NdtreeIndex<dim>& node_index) override;
-  const typename WaveletTreeInterface<dim>::NodeType* getNode(
+  const typename WaveletNdtreeInterface<dim>::NodeType* getNode(
       const NdtreeIndex<dim>& node_index) const override;
 
   template <TraversalOrder traversal_order>
@@ -84,14 +84,14 @@ class WaveletTree : public virtual WaveletTreeInterface<dim> {
  private:
   struct StackElement {
     const NdtreeIndex<dim> node_index;
-    const typename WaveletTreeInterface<dim>::NodeType& node;
-    const typename WaveletTreeInterface<dim>::Coefficients::Scale
+    const typename WaveletNdtreeInterface<dim>::NodeType& node;
+    const typename WaveletNdtreeInterface<dim>::Coefficients::Scale
         scale_coefficient{};
   };
 
-  typename WaveletTreeInterface<dim>::Coefficients::Scale
+  typename WaveletNdtreeInterface<dim>::Coefficients::Scale
       root_scale_coefficient_{};
-  Ndtree<typename WaveletTreeInterface<dim>::Coefficients::Details, 2,
+  Ndtree<typename WaveletNdtreeInterface<dim>::Coefficients::Details, dim,
          VolumetricNdtreeInterface<dim>::kMaxHeight - 1>
       ndtree_;
 
@@ -106,7 +106,8 @@ class WaveletTree : public virtual WaveletTreeInterface<dim> {
       convert::nodeIndexToMinCornerIndex(root_node_index_offset_);
 
   NdtreeIndex<dim> toInternal(const Index<dim>& index) const {
-    return convert::indexAndHeightToNodeIndex<2>(index + root_index_offset_, 0);
+    return convert::indexAndHeightToNodeIndex<dim>(index + root_index_offset_,
+                                                   0);
   }
   NdtreeIndex<dim> toInternal(const NdtreeIndex<dim>& node_index) const {
     DCHECK_LE(node_index.height, root_node_index_offset_.height);
@@ -129,4 +130,4 @@ class WaveletTree : public virtual WaveletTreeInterface<dim> {
 
 #include "wavemap_common/data_structure/volumetric/impl/wavelet_tree_inl.h"
 
-#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_NDTREE_H_

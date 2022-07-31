@@ -6,7 +6,7 @@
 #include "wavemap_2d/data_structure/hashed_blocks_2d.h"
 #include "wavemap_2d/data_structure/volumetric_differencing_quadtree.h"
 #include "wavemap_2d/data_structure/volumetric_quadtree.h"
-#include "wavemap_2d/data_structure/wavelet_tree_2d.h"
+#include "wavemap_2d/data_structure/wavelet_quadtree.h"
 
 namespace wavemap {
 VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
@@ -53,8 +53,8 @@ VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
       return std::make_shared<
           VolumetricDifferencingQuadtree<SaturatingOccupancyCell>>(
           min_cell_width);
-    case VolumetricDataStructure2DType::kWaveletTree:
-      return std::make_shared<WaveletTree2D<SaturatingOccupancyCell>>(
+    case VolumetricDataStructure2DType::kWaveletQuadtree:
+      return std::make_shared<WaveletQuadtree<SaturatingOccupancyCell>>(
           min_cell_width);
     default:
       LOG(ERROR) << "Attempted to create unknown data structure type: "

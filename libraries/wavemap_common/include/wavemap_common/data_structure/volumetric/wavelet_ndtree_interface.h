@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_
-#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_
+#ifndef WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_NDTREE_INTERFACE_H_
+#define WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_NDTREE_INTERFACE_H_
 
 #include <memory>
 
@@ -9,13 +9,13 @@
 
 namespace wavemap {
 template <int dim>
-class WaveletTreeInterface : public virtual VolumetricNdtreeInterface<dim> {
+class WaveletNdtreeInterface : public virtual VolumetricNdtreeInterface<dim> {
  public:
-  using Ptr = std::shared_ptr<WaveletTreeInterface>;
+  using Ptr = std::shared_ptr<WaveletNdtreeInterface>;
 
   using Coefficients = HaarCoefficients<FloatingPoint, dim>;
   using Transform = HaarTransform<FloatingPoint, dim>;
-  using NodeType = NdtreeNode<typename Coefficients::Details, 2>;
+  using NodeType = NdtreeNode<typename Coefficients::Details, dim>;
 
   using VolumetricNdtreeInterface<dim>::VolumetricNdtreeInterface;
 
@@ -28,4 +28,4 @@ class WaveletTreeInterface : public virtual VolumetricNdtreeInterface<dim> {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_TREE_INTERFACE_H_
+#endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_NDTREE_INTERFACE_H_
