@@ -11,7 +11,7 @@ TEST_F(CircleProjectorTest, InitializationAndAccessors) {
   for (int repetition = 0; repetition < 1000; ++repetition) {
     const FloatingPoint min_angle = getRandomAngle(-kPi, kHalfPi);
     const FloatingPoint max_angle = getRandomAngle(min_angle + kEpsilon, kPi);
-    const IndexElement num_cells = getRandomIndexElement(1, 1000);
+    const IndexElement num_cells = getRandomIndexElement(2, 1000);
     CircleProjector circle_projector(min_angle, max_angle, num_cells);
     EXPECT_EQ(circle_projector.getMinAngle(), min_angle);
     EXPECT_EQ(circle_projector.getMaxAngle(), max_angle);

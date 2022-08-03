@@ -13,6 +13,7 @@ class CircleProjector {
                          static_cast<FloatingPoint>(num_cells - 1)),
         angle_increment_inv_(1.f / angle_increment_) {
     CHECK_LT(min_angle_, max_angle_);
+    CHECK_GT(num_cells_, 1);
   }
 
   FloatingPoint getMinAngle() const { return min_angle_; }
