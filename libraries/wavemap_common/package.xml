@@ -15,4 +15,6 @@
   <depend>glog_catkin</depend>
   <depend>eigen_catkin</depend>
   <depend>minkindr</depend>
+
+  <test_depend>gtest</test_depend>
 </package>
