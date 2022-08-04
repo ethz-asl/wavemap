@@ -26,9 +26,9 @@ void CoarseToFineIntegrator::integratePointcloud(
   // Compute the range image and the scan's AABB
   if (!posed_range_image_) {
     posed_range_image_ =
-        std::make_shared<PosedRangeImage>(pointcloud, circle_projector_);
+        std::make_shared<PosedRangeImage>(pointcloud, circular_projector_);
   }
-  posed_range_image_->importPointcloud(pointcloud, circle_projector_);
+  posed_range_image_->importPointcloud(pointcloud, circular_projector_);
   RangeImageIntersector range_image_intersector(posed_range_image_);
 
   // Recursively update all relevant cells
@@ -45,7 +45,7 @@ void CoarseToFineIntegrator::integratePointcloud(
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const RangeImageIntersector::IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(
-            pointcloud.getPose(), W_cell_aabb, circle_projector_);
+            pointcloud.getPose(), W_cell_aabb, circular_projector_);
     if (intersection_type ==
         RangeImageIntersector::IntersectionType::kFullyUnknown) {
       continue;
@@ -63,9 +63,9 @@ void CoarseToFineIntegrator::integratePointcloud(
         isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                        bounding_sphere_radius)) {
       FloatingPoint angle_C_cell =
-          CircleProjector::bearingToAngle(C_node_center);
+          CircularProjector::bearingToAngle(C_node_center);
       FloatingPoint sample = sampleUpdateAtPoint(
-          *posed_range_image_, circle_projector_, d_C_cell, angle_C_cell);
+          *posed_range_image_, circular_projector_, d_C_cell, angle_C_cell);
       volumetric_quadtree_->addToCellValue(current_node, sample);
       continue;
     }

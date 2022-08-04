@@ -13,4 +13,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>wavemap_common</depend>
+
+  <test_depend>gtest</test_depend>
 </package>

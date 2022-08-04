@@ -26,7 +26,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const RangeImageIntersector::IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb, circle_projector_);
+          posed_range_image_->getPose(), W_cell_aabb, circular_projector_);
   if (intersection_type ==
       RangeImageIntersector::IntersectionType::kFullyUnknown) {
     return 0.f;
@@ -43,9 +43,10 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
   if (node_index.height == 0 ||
       isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
-    FloatingPoint angle_C_cell = CircleProjector::bearingToAngle(C_node_center);
-    return sampleUpdateAtPoint(*posed_range_image_, circle_projector_, d_C_cell,
-                               angle_C_cell);
+    FloatingPoint angle_C_cell =
+        CircularProjector::bearingToAngle(C_node_center);
+    return sampleUpdateAtPoint(*posed_range_image_, circular_projector_,
+                               d_C_cell, angle_C_cell);
   }
 
   WaveletQuadtreeInterface::NodeType* node =

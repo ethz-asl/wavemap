@@ -1,11 +1,11 @@
-#ifndef WAVEMAP_COMMON_INTEGRATOR_CIRCLE_PROJECTOR_H_
-#define WAVEMAP_COMMON_INTEGRATOR_CIRCLE_PROJECTOR_H_
+#ifndef WAVEMAP_COMMON_INTEGRATOR_CIRCULAR_PROJECTOR_H_
+#define WAVEMAP_COMMON_INTEGRATOR_CIRCULAR_PROJECTOR_H_
 
 namespace wavemap {
-class CircleProjector {
+class CircularProjector {
  public:
-  CircleProjector(FloatingPoint min_angle, FloatingPoint max_angle,
-                  IndexElement num_cells)
+  CircularProjector(FloatingPoint min_angle, FloatingPoint max_angle,
+                    IndexElement num_cells)
       : min_angle_(min_angle),
         max_angle_(max_angle),
         num_cells_(num_cells),
@@ -63,4 +63,4 @@ class CircleProjector {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_COMMON_INTEGRATOR_CIRCLE_PROJECTOR_H_
+#endif  // WAVEMAP_COMMON_INTEGRATOR_CIRCULAR_PROJECTOR_H_

@@ -36,7 +36,7 @@ class RangeImageIntersector {
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
   };
 
-  explicit RangeImageIntersector(std::shared_ptr<RangeImage> range_image)
+  explicit RangeImageIntersector(std::shared_ptr<RangeImage1D> range_image)
       : hierarchical_range_image_(std::move(range_image)) {}
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
@@ -134,7 +134,7 @@ class RangeImageIntersector {
 
   IntersectionType determineIntersectionType(
       const Transformation2D& T_W_C, const AABB<Point2D>& W_cell_aabb,
-      const CircleProjector& circle_projector) const {
+      const CircularProjector& circular_projector) const {
     // Get the min and max distances from any point in the cell (which is an
     // axis-aligned cube) to the sensor's center
     // NOTE: The min distance is 0 if the cell contains the sensor's center.
@@ -159,8 +159,8 @@ class RangeImageIntersector {
     // If the angle wraps around Pi, we can't use the hierarchical range image
     if (const bool angle_range_wraps_pi = max_angle < min_angle;
         angle_range_wraps_pi) {
-      if (max_angle < circle_projector.getMinAngle() &&
-          circle_projector.getMaxAngle() < min_angle) {
+      if (max_angle < circular_projector.getMinAngle() &&
+          circular_projector.getMaxAngle() < min_angle) {
         // No parts of the cell can be affected by the measurement update
         return IntersectionType::kFullyUnknown;
       } else {
@@ -171,17 +171,17 @@ class RangeImageIntersector {
     }
 
     // Check if the cell is outside the observed range
-    if (circle_projector.getMaxAngle() < min_angle ||
-        max_angle < circle_projector.getMinAngle()) {
+    if (circular_projector.getMaxAngle() < min_angle ||
+        max_angle < circular_projector.getMinAngle()) {
       return IntersectionType::kFullyUnknown;
     }
 
     // Convert the angles to range image indices
     const IndexElement min_image_idx =
-        std::max(0, circle_projector.angleToFloorIndex(min_angle));
+        std::max(0, circular_projector.angleToFloorIndex(min_angle));
     const IndexElement max_image_idx =
-        std::min(circle_projector.getNumCells() - 1,
-                 circle_projector.angleToCeilIndex(max_angle));
+        std::min(circular_projector.getNumCells() - 1,
+                 circular_projector.angleToCeilIndex(max_angle));
 
     // Check if the cell overlaps with the approximate but conservative distance
     // bounds of the hierarchical range image

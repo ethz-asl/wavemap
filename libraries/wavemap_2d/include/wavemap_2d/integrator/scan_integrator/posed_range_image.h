@@ -1,25 +1,25 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_POSED_RANGE_IMAGE_H_
 #define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_POSED_RANGE_IMAGE_H_
 
-#include "wavemap_2d/integrator/scan_integrator/range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
 
 namespace wavemap {
-class PosedRangeImage : public RangeImage {
+class PosedRangeImage : public RangeImage1D {
  public:
-  using RangeImage::RangeImage;
+  using RangeImage1D::RangeImage1D;
 
   PosedRangeImage(
       const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud,
-      const CircleProjector& circle_projector)
-      : RangeImage(posed_pointcloud.getPointsLocal(), circle_projector) {
+      const CircularProjector& circular_projector)
+      : RangeImage1D(posed_pointcloud.getPointsLocal(), circular_projector) {
     setPose(posed_pointcloud.getPose());
   }
 
   void importPointcloud(
       const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud,
-      const CircleProjector& circle_projector) {
-    RangeImage::importPointcloud(posed_pointcloud.getPointsLocal(),
-                                 circle_projector);
+      const CircularProjector& circular_projector) {
+    RangeImage1D::importPointcloud(posed_pointcloud.getPointsLocal(),
+                                   circular_projector);
     setPose(posed_pointcloud.getPose());
   }
 

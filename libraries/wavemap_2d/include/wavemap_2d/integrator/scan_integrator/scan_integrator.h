@@ -3,17 +3,17 @@
 
 #include <utility>
 
-#include <wavemap_common/integrator/circle_projector.h>
+#include <wavemap_common/integrator/circular_projector.h>
 
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
 
 namespace wavemap {
 class ScanIntegrator : public PointcloudIntegrator {
  public:
   explicit ScanIntegrator(VolumetricDataStructure2D::Ptr occupancy_map)
       : PointcloudIntegrator(std::move(occupancy_map)),
-        circle_projector_(-kHalfPi, kHalfPi, 400) {
+        circular_projector_(-kHalfPi, kHalfPi, 400) {
     // TODO(victorr): Make the FoV and number of beams configurable
     // TODO(victorr): Check that the pointcloud's angular resolution is lower
     //                than the angular uncertainty of the beam model. This is
@@ -23,11 +23,12 @@ class ScanIntegrator : public PointcloudIntegrator {
   }
 
  protected:
-  CircleProjector circle_projector_;
+  CircularProjector circular_projector_;
 
   static FloatingPoint sampleUpdateAtPoint(
-      const RangeImage& range_image, const CircleProjector& circle_projector,
-      FloatingPoint d_C_cell, FloatingPoint azimuth_angle_C_cell);
+      const RangeImage1D& range_image,
+      const CircularProjector& circular_projector, FloatingPoint d_C_cell,
+      FloatingPoint azimuth_angle_C_cell);
 };
 }  // namespace wavemap
 

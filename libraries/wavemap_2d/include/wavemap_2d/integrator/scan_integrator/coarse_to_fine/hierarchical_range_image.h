@@ -9,7 +9,7 @@
 
 #include <wavemap_common/utils/int_math.h>
 
-#include "wavemap_2d/integrator/scan_integrator/range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
 
 namespace wavemap {
 struct Bounds {
@@ -19,7 +19,7 @@ struct Bounds {
 
 class HierarchicalRangeImage {
  public:
-  explicit HierarchicalRangeImage(std::shared_ptr<RangeImage> range_image)
+  explicit HierarchicalRangeImage(std::shared_ptr<RangeImage1D> range_image)
       : range_image_(std::move(range_image)),
         lower_bounds_(computeReducedPyramid(
             *range_image_, [](auto a, auto b) { return std::min(a, b); })),
@@ -120,24 +120,24 @@ class HierarchicalRangeImage {
   //       compiler to optimize out unused (return) values during inlining.
 
  private:
-  std::shared_ptr<RangeImage> range_image_;
-  const std::vector<RangeImage::RangeImageData> lower_bounds_;
-  const std::vector<RangeImage::RangeImageData> upper_bounds_;
+  std::shared_ptr<RangeImage1D> range_image_;
+  const std::vector<RangeImage1D::Data> lower_bounds_;
+  const std::vector<RangeImage1D::Data> upper_bounds_;
   const BinaryTreeIndex::Element max_height_;
 
   template <typename BinaryFunctor>
-  static std::vector<RangeImage::RangeImageData> computeReducedPyramid(
-      const RangeImage& range_image, BinaryFunctor reduction_functor) {
+  static std::vector<RangeImage1D::Data> computeReducedPyramid(
+      const RangeImage1D& range_image, BinaryFunctor reduction_functor) {
     const int original_width = range_image.getNumBeams();
     const int max_num_halvings = int_math::log2_ceil(original_width);
-    std::vector<RangeImage::RangeImageData> pyramid(max_num_halvings);
+    std::vector<RangeImage1D::Data> pyramid(max_num_halvings);
 
     const int last_reduction_level = max_num_halvings - 1;
     for (int level_idx = 0; level_idx <= last_reduction_level; ++level_idx) {
       // Zero initialize the current level
-      RangeImage::RangeImageData& current_level = pyramid[level_idx];
+      RangeImage1D::Data& current_level = pyramid[level_idx];
       const int level_width = int_math::exp2(last_reduction_level - level_idx);
-      current_level = RangeImage::RangeImageData::Zero(1, level_width);
+      current_level = RangeImage1D::Data::Zero(1, level_width);
       // Reduce
       if (level_idx == 0) {
         // For the first level, reduce from the original range image
@@ -156,8 +156,7 @@ class HierarchicalRangeImage {
         }
       } else {
         // Continue reducing from the previous reduction level otherwise
-        const RangeImage::RangeImageData& previous_level =
-            pyramid[level_idx - 1];
+        const RangeImage1D::Data& previous_level = pyramid[level_idx - 1];
         for (int idx = 0; idx < level_width; ++idx) {
           const int first_child_idx = 2 * idx;
           const int second_child_idx = first_child_idx + 1;

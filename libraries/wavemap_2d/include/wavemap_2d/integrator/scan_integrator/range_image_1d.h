@@ -1,26 +1,26 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_1D_H_
+#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_1D_H_
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/pointcloud.h>
-#include <wavemap_common/integrator/circle_projector.h>
+#include <wavemap_common/integrator/circular_projector.h>
 
 namespace wavemap {
-class RangeImage {
+class RangeImage1D {
  public:
-  using RangeImageData = Eigen::Matrix<FloatingPoint, 1, Eigen::Dynamic>;
+  using Data = Eigen::Matrix<FloatingPoint, 1, Eigen::Dynamic>;
 
-  explicit RangeImage(IndexElement num_beams)
-      : data_(RangeImageData::Zero(1, num_beams)) {}
+  explicit RangeImage1D(IndexElement num_beams)
+      : data_(Data::Zero(1, num_beams)) {}
 
-  RangeImage(const Pointcloud<Point2D>& pointcloud,
-             const CircleProjector& circle_projector)
-      : RangeImage(circle_projector.getNumCells()) {
-    importPointcloud(pointcloud, circle_projector);
+  RangeImage1D(const Pointcloud<Point2D>& pointcloud,
+               const CircularProjector& circular_projector)
+      : RangeImage1D(circular_projector.getNumCells()) {
+    importPointcloud(pointcloud, circular_projector);
   }
 
   void importPointcloud(const Pointcloud<Point2D>& pointcloud,
-                        const CircleProjector& circle_projector);
+                        const CircularProjector& circular_projector);
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
@@ -30,7 +30,7 @@ class RangeImage {
   IndexElement getNumBeams() const {
     return static_cast<IndexElement>(data_.cols());
   }
-  const RangeImageData& getData() const { return data_; }
+  const Data& getData() const { return data_; }
 
   FloatingPoint& operator[](IndexElement index) {
     DCHECK_GE(index, 0);
@@ -44,8 +44,8 @@ class RangeImage {
   }
 
  private:
-  RangeImageData data_;
+  Data data_;
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_1D_H_

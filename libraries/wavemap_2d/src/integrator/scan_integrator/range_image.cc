@@ -1,8 +1,9 @@
-#include "wavemap_2d/integrator/scan_integrator/range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
 
 namespace wavemap {
-void RangeImage::importPointcloud(const Pointcloud<Point2D>& pointcloud,
-                                  const CircleProjector& circle_projector) {
+void RangeImage1D::importPointcloud(
+    const Pointcloud<Point2D>& pointcloud,
+    const CircularProjector& circular_projector) {
   for (const auto& C_point : pointcloud) {
     // Filter out noisy points and compute point's range
     if (C_point.hasNaN()) {
@@ -18,7 +19,7 @@ void RangeImage::importPointcloud(const Pointcloud<Point2D>& pointcloud,
 
     // Add the point to the range image
     const IndexElement range_image_index =
-        circle_projector.bearingToNearestIndex(C_point);
+        circular_projector.bearingToNearestIndex(C_point);
     operator[](range_image_index) = range;
   }
 }
