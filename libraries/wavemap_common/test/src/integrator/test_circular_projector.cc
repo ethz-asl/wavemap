@@ -41,11 +41,11 @@ TEST_F(CircularProjectorTest, Conversions) {
       EXPECT_FLOAT_EQ(angle_roundtrip, angle_original);
     }
 
-    // Construct a random range image
+    // Instantiate projection model with random params
     const FloatingPoint min_angle = getRandomAngle(-kPi, kHalfPi);
     const FloatingPoint max_angle = getRandomAngle(min_angle + kEpsilon, kPi);
     const IndexElement num_beams = getRandomIndexElement(2, 2048);
-    CircularProjector range_image(min_angle, max_angle, num_beams);
+    CircularProjector circular_projector(min_angle, max_angle, num_beams);
 
     // Precompute commonly used values
     const auto max_index = static_cast<IndexElement>((num_beams - 1));
@@ -56,38 +56,42 @@ TEST_F(CircularProjectorTest, Conversions) {
 
     // Test angle <-> index
     {
-      EXPECT_EQ(range_image.angleToNearestIndex(min_angle), 0);
-      EXPECT_EQ(range_image.angleToFloorIndex(min_angle + kEpsilon), 0);
-      EXPECT_FLOAT_EQ(range_image.indexToAngle(0), min_angle);
+      EXPECT_EQ(circular_projector.angleToNearestIndex(min_angle), 0);
+      EXPECT_EQ(circular_projector.angleToFloorIndex(min_angle + kEpsilon), 0);
+      EXPECT_FLOAT_EQ(circular_projector.indexToAngle(0), min_angle);
 
-      EXPECT_EQ(range_image.angleToNearestIndex(max_angle), max_index);
-      EXPECT_EQ(range_image.angleToCeilIndex(max_angle - kEpsilon), max_index);
-      EXPECT_NEAR(range_image.indexToAngle(max_index), max_angle, 1e-6);
+      EXPECT_EQ(circular_projector.angleToNearestIndex(max_angle), max_index);
+      EXPECT_EQ(circular_projector.angleToCeilIndex(max_angle - kEpsilon),
+                max_index);
+      EXPECT_NEAR(circular_projector.indexToAngle(max_index), max_angle, 1e-6);
 
-      EXPECT_EQ(range_image.angleToFloorIndex(mid_angle + kEpsilon),
+      EXPECT_EQ(circular_projector.angleToFloorIndex(mid_angle + kEpsilon),
                 mid_index_floor);
-      EXPECT_EQ(range_image.angleToCeilIndex(mid_angle - kEpsilon),
+      EXPECT_EQ(circular_projector.angleToCeilIndex(mid_angle - kEpsilon),
                 mid_index_ceil);
     }
 
     // Test bearing <-> index
     {
       const Vector2D min_bearing = CircularProjector::angleToBearing(min_angle);
-      EXPECT_EQ(range_image.bearingToNearestIndex(min_bearing), 0);
-      const Vector2D bearing_min_index = range_image.indexToBearing(0);
+      EXPECT_EQ(circular_projector.bearingToNearestIndex(min_bearing), 0);
+      const Vector2D bearing_min_index = circular_projector.indexToBearing(0);
       EXPECT_NEAR(bearing_min_index.x(), min_bearing.x(), 1e-6);
       EXPECT_NEAR(bearing_min_index.y(), min_bearing.y(), 1e-6);
 
       const Vector2D max_bearing = CircularProjector::angleToBearing(max_angle);
-      EXPECT_EQ(range_image.bearingToNearestIndex(max_bearing), max_index);
-      const Vector2D bearing_max_index = range_image.indexToBearing(max_index);
+      EXPECT_EQ(circular_projector.bearingToNearestIndex(max_bearing),
+                max_index);
+      const Vector2D bearing_max_index =
+          circular_projector.indexToBearing(max_index);
       EXPECT_NEAR(bearing_max_index.x(), max_bearing.x(), 1e-6);
       EXPECT_NEAR(bearing_max_index.y(), max_bearing.y(), 1e-6);
 
       const Vector2D mid_bearing = CircularProjector::angleToBearing(mid_angle);
-      EXPECT_GE(range_image.bearingToNearestIndex(mid_bearing),
+      EXPECT_GE(circular_projector.bearingToNearestIndex(mid_bearing),
                 mid_index_floor);
-      EXPECT_LE(range_image.bearingToNearestIndex(mid_bearing), mid_index_ceil);
+      EXPECT_LE(circular_projector.bearingToNearestIndex(mid_bearing),
+                mid_index_ceil);
     }
   }
 }
