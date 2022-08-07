@@ -13,17 +13,15 @@ class RangeImage2D {
   explicit RangeImage2D(IndexElement num_rows, IndexElement num_columns)
       : data_(Data::Zero(num_rows, num_columns)) {}
 
-  RangeImage2D(const Pointcloud<Point2D>& pointcloud,
+  RangeImage2D(const Pointcloud<Point3D>& pointcloud,
                const SphericalProjector& spherical_projector)
       : RangeImage2D(spherical_projector.getNumRows(),
                      spherical_projector.getNumColumns()) {
     importPointcloud(pointcloud, spherical_projector);
   }
 
-  void importPointcloud(const Pointcloud<Point2D>& pointcloud,
-                        const SphericalProjector& spherical_projector) {
-    // TODO(victorr): Implement this
-  }
+  void importPointcloud(const Pointcloud<Point3D>& pointcloud,
+                        const SphericalProjector& spherical_projector);
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.size(); }
