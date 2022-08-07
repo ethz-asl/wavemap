@@ -27,7 +27,10 @@ class RangeImage2D {
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.size(); }
-  void clear() { data_.resize(0, 0); }
+  void resize(IndexElement num_rows, IndexElement num_columns) {
+    data_.resize(num_rows, num_columns);
+  }
+  void clear() { resize(0, 0); }
 
   IndexElement getNumRows() const {
     return static_cast<IndexElement>(data_.rows());

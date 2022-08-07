@@ -5,9 +5,9 @@
 #include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
 
 namespace wavemap {
-using RangeImageTest = FixtureBase;
+using RangeImage2DTest = FixtureBase;
 
-TEST_F(RangeImageTest, ConstructorAndAccessors) {
+TEST_F(RangeImage2DTest, ConstructorAndAccessors) {
   for (int idx = 0; idx < 10; ++idx) {
     const IndexElement num_beams = getRandomIndexElement(1, 2048);
     RangeImage1D range_image(num_beams);

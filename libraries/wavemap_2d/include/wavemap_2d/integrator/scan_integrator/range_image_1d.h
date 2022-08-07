@@ -24,8 +24,8 @@ class RangeImage1D {
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
-  void resize(const unsigned int n_points) { data_.resize(1, n_points); }
-  void clear() { data_.resize(1, 0); }
+  void resize(IndexElement num_beams) { data_.resize(1, num_beams); }
+  void clear() { resize(0); }
 
   IndexElement getNumBeams() const {
     return static_cast<IndexElement>(data_.cols());

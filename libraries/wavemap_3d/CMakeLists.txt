@@ -27,7 +27,7 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
       test_${PROJECT_NAME}
-      test/src/integrator/test_range_image.cc)
+      test/src/integrator/test_range_image_2d.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
   target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
 endif ()
