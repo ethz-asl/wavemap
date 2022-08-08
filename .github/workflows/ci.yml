@@ -17,6 +17,11 @@ env:
   CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
+# Settings for documentation deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 concurrency:
   group: "pages"
   cancel-in-progress: true
