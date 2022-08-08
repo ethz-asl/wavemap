@@ -129,7 +129,7 @@ jobs:
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
           outputs: type=local,dest=ccache
 
-  pre-commit:
+  lint:
     name: Lint
     runs-on: self-hosted
     container:
@@ -150,7 +150,6 @@ jobs:
           pip3 install pre-commit cpplint
           wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
           chmod +x /bin/hadolint
-        # TODO(victorr): Find a better way to install hadolint (and remove wget dep)
 
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -173,6 +172,27 @@ jobs:
           source /opt/ros/noetic/setup.bash
           PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
+
+  document:
+    name: Update docs
+    needs: [ workspace-container, lint ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends doxygen
+          pip3 install exhale sphinx-rtd-theme
+
+      - name: Build documentation
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: make html
 
   build:
     name: Build
