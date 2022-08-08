@@ -213,10 +213,23 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v1
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+      - name: Archive pages artifact
+        shell: bash
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --directory ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/html/ \
+            -cvf ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar \
+            --exclude=.git \
+            --exclude=.github \
+            .
+
+      - name: Upload pages artifact
+        uses: actions/upload-artifact@main
         with:
-          path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/html/
+          name: github-pages
+          path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
+          retention-days: 1
 
       - name: Deploy to GitHub Pages
         id: deployment
