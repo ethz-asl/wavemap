@@ -232,6 +232,7 @@ jobs:
           retention-days: 1
 
       - name: Deploy to GitHub Pages
+        if: ${{ false }}  # Disable publishing to Pages until project is public
         id: deployment
         uses: actions/deploy-pages@main
 
