@@ -198,13 +198,17 @@ jobs:
       - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
         run: |
           apt-get update
-          apt-get install -q -y --no-install-recommends python3-pip doxygen
+          apt-get install -q -y --no-install-recommends python3-pip doxygen tree
           pip3 install exhale sphinx-rtd-theme
 
       - name: Build documentation
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
         shell: bash
-        run: make html
+        run: |
+          make html
+          echo "::group::Show the HTML tree"
+          cd _build/html && pwd && tree -l
+          echo "::endgroup::"
 
       - name: Setup Pages
         uses: actions/configure-pages@v1
@@ -212,7 +216,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: '${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/html'
+          path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/html/
 
       - name: Deploy to GitHub Pages
         id: deployment
