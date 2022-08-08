@@ -17,6 +17,10 @@ env:
   CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   workspace-container:
     name: Setup workspace container
@@ -179,6 +183,9 @@ jobs:
     runs-on: self-hosted
     container:
       image: ${{ needs.workspace-container.outputs.image }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -186,13 +193,25 @@ jobs:
       - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
         run: |
           apt-get update
-          apt-get install -q -y --no-install-recommends doxygen
+          apt-get install -q -y --no-install-recommends python3-pip doxygen
           pip3 install exhale sphinx-rtd-theme
 
       - name: Build documentation
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
         shell: bash
         run: make html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v1
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: '${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/html'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@main
 
   build:
     name: Build
