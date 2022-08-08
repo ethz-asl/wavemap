@@ -16,15 +16,7 @@ env:
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
-
-# Settings for documentation deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
+  DEPLOY_DOCS_TO_GITHUB_PAGES: false
 
 jobs:
   workspace-container:
@@ -188,6 +180,13 @@ jobs:
     runs-on: self-hosted
     container:
       image: ${{ needs.workspace-container.outputs.image }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -198,20 +197,13 @@ jobs:
       - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
         run: |
           apt-get update
-          apt-get install -q -y --no-install-recommends python3-pip doxygen tree
+          apt-get install -q -y --no-install-recommends python3-pip doxygen
           pip3 install exhale sphinx-rtd-theme
 
       - name: Build documentation
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
         shell: bash
-        run: |
-          make html
-          echo "::group::Show the HTML tree"
-          cd _build/html && pwd && tree -l
-          echo "::endgroup::"
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v1
+        run: make html
 
       - name: Archive pages artifact
         shell: bash
@@ -231,8 +223,12 @@ jobs:
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
 
+      - name: Setup Pages
+        if: env.DEPLOY_DOCS_TO_GITHUB_PAGES == 'true'
+        uses: actions/configure-pages@v1
+
       - name: Deploy to GitHub Pages
-        if: ${{ false }}  # Disable publishing to Pages until project is public
+        if: env.DEPLOY_DOCS_TO_GITHUB_PAGES == 'true'
         id: deployment
         uses: actions/deploy-pages@main
 
