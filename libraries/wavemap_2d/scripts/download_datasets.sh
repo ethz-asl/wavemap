@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o pipefail
+
 # ======== Settings ========
 home_dir="/home/victor"
 dataset_dir="${home_dir}/data/2d_carmen_datasets"
