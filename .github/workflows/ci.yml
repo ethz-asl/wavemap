@@ -16,7 +16,6 @@ env:
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
-  DEPLOY_DOCS_TO_GITHUB_PAGES: false
 
 jobs:
   workspace-container:
@@ -180,16 +179,16 @@ jobs:
     runs-on: self-hosted
     container:
       image: ${{ needs.workspace-container.outputs.image }}
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: "pages"
-      cancel-in-progress: true
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # permissions:
+    #   contents: read
+    #   pages: write
+    #   id-token: write
+    # concurrency:
+    #   group: "pages"
+    #   cancel-in-progress: true
+    # environment:
+    #   name: github-pages
+    #   url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v2
@@ -223,14 +222,12 @@ jobs:
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
 
-      - name: Setup Pages
-        if: env.DEPLOY_DOCS_TO_GITHUB_PAGES == 'true'
-        uses: actions/configure-pages@v1
+  #   - name: Setup Pages
+  #     uses: actions/configure-pages@v1
 
-      - name: Deploy to GitHub Pages
-        if: env.DEPLOY_DOCS_TO_GITHUB_PAGES == 'true'
-        id: deployment
-        uses: actions/deploy-pages@main
+  #   - name: Deploy to GitHub Pages
+  #     id: deployment
+  #     uses: actions/deploy-pages@main
 
   build:
     name: Build
