@@ -1,7 +1,7 @@
-#ifndef WAVEMAP_COMMON_INTEGRATOR_SPHERICAL_PROJECTOR_H_
-#define WAVEMAP_COMMON_INTEGRATOR_SPHERICAL_PROJECTOR_H_
+#ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
+#define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
 
-#include "wavemap_common/integrator/circular_projector.h"
+#include "wavemap_common/integrator/projection_model/circular_projector.h"
 
 namespace wavemap {
 class SphericalProjector {
@@ -79,4 +79,4 @@ class SphericalProjector {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_COMMON_INTEGRATOR_SPHERICAL_PROJECTOR_H_
+#endif  // WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_

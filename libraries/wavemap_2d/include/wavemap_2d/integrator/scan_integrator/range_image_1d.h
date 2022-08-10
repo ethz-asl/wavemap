@@ -3,7 +3,7 @@
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/pointcloud.h>
-#include <wavemap_common/integrator/circular_projector.h>
+#include <wavemap_common/integrator/projection_model/circular_projector.h>
 
 namespace wavemap {
 class RangeImage1D {

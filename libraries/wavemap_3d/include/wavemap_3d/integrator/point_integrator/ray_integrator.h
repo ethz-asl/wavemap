@@ -3,9 +3,9 @@
 
 #include <utility>
 
+#include <wavemap_common/integrator/measurement_model/range_only/constant_1d_log_odds.h>
 #include <wavemap_common/iterator/ray_iterator.h>
 
-#include "wavemap_3d/integrator/measurement_model/fixed_logodds_model.h"
 #include "wavemap_3d/integrator/pointcloud_integrator.h"
 
 namespace wavemap {
@@ -40,7 +40,7 @@ class RayIntegrator : public PointcloudIntegrator {
   }
 
  private:
-  using MeasurementModelType = FixedLogOddsModel;
+  using MeasurementModelType = FixedLogOddsModel<3>;
 };
 }  // namespace wavemap
 

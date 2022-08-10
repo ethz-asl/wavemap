@@ -23,10 +23,7 @@ add_library(
     src/data_structure/volumetric_data_structure_2d_factory.cc
   src/integrator/pointcloud_integrator.cc
   src/integrator/pointcloud_integrator_factory.cc
-  src/integrator/measurement_model/beam_model.cc
-  src/integrator/measurement_model/fixed_logodds_model.cc
-  src/integrator/measurement_model/measurement_model.cc
-  src/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.cc
+    src/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.cc
   src/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.cc
     src/integrator/scan_integrator/range_image_1d.cc
   src/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.cc

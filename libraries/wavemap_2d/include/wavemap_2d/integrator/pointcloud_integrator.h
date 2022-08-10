@@ -7,8 +7,6 @@
 #include <wavemap_common/data_structure/pointcloud.h>
 
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
-#include "wavemap_2d/integrator/measurement_model/beam_model.h"
-#include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
 
 namespace wavemap {
 class PointcloudIntegrator {

@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include <wavemap_common/integrator/circular_projector.h>
+#include <wavemap_common/integrator/projection_model/circular_projector.h>
 
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 #include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"

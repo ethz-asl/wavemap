@@ -5,6 +5,7 @@
 
 #include <wavemap_common/iterator/grid_iterator.h>
 
+#include "wavemap_2d/integrator/measurement_model/beam_model.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
 namespace wavemap {
