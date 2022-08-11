@@ -7,7 +7,7 @@
 
 namespace wavemap {
 template <int dim>
-class FixedLogOddsModel : public MeasurementModelBase<dim> {
+class Constant1DLogOdds : public MeasurementModelBase<dim> {
  public:
   static constexpr FloatingPoint kLogOddsOccupied = 0.85f;
   static constexpr FloatingPoint kLogOddsFree = -0.4f;

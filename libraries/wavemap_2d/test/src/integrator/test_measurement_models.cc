@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/integrator/measurement_model/range_only/constant_1d_log_odds.h>
 #include <wavemap_common/iterator/grid_iterator.h>
 #include <wavemap_common/iterator/ray_iterator.h>
 #include <wavemap_common/test/fixture_base.h>
 
 #include "wavemap_2d/integrator/measurement_model/beam_model.h"
-#include "wavemap_2d/integrator/measurement_model/fixed_logodds_model.h"
 
 namespace wavemap {
 using MeasurementModelTest = FixtureBase;
@@ -85,7 +85,7 @@ TEST_F(MeasurementModelTest, BeamModel) {
   }
 }
 
-TEST_F(MeasurementModelTest, FixedLogOddsModel) {
+TEST_F(MeasurementModelTest, Constant1DLogOddsModel) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const Point2D start_point = getRandomPoint<2>();
@@ -93,9 +93,9 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
 
-    FixedLogOddsModel fixed_log_odds_model(min_cell_width);
-    fixed_log_odds_model.setStartPoint(start_point);
-    fixed_log_odds_model.setEndPoint(end_point);
+    Constant1DLogOdds<2> constant_1d_log_odds(min_cell_width);
+    constant_1d_log_odds.setStartPoint(start_point);
+    constant_1d_log_odds.setEndPoint(end_point);
     const Index2D start_point_index =
         convert::pointToNearestIndex(start_point, min_cell_width_inv);
     const Index2D end_point_index =
@@ -104,9 +104,9 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
     const Index2D bottom_left_idx = start_point_index.cwiseMin(end_point_index);
     const Index2D top_right_idx = start_point_index.cwiseMin(end_point_index);
     const Index2D model_bottom_left_idx =
-        fixed_log_odds_model.getBottomLeftUpdateIndex();
+        constant_1d_log_odds.getBottomLeftUpdateIndex();
     const Index2D model_top_right_idx =
-        fixed_log_odds_model.getTopRightUpdateIndex();
+        constant_1d_log_odds.getTopRightUpdateIndex();
     EXPECT_TRUE(
         (model_bottom_left_idx.array() <= bottom_left_idx.array()).all());
     EXPECT_TRUE((top_right_idx.array() <= model_top_right_idx.array()).all());
@@ -115,14 +115,14 @@ TEST_F(MeasurementModelTest, FixedLogOddsModel) {
     bool updated_end_point = false;
     const Ray ray(start_point, end_point, min_cell_width);
     for (const auto& index : ray) {
-      const FloatingPoint update = fixed_log_odds_model.computeUpdateAt(index);
+      const FloatingPoint update = constant_1d_log_odds.computeUpdateAt(index);
       if (index == end_point_index) {
-        EXPECT_FLOAT_EQ(update, FixedLogOddsModel::kLogOddsOccupied);
+        EXPECT_FLOAT_EQ(update, Constant1DLogOdds<2>::kLogOddsOccupied);
         EXPECT_FALSE(updated_end_point)
             << "The cell containing the end point should only be updated once.";
         updated_end_point = true;
       } else {
-        EXPECT_FLOAT_EQ(update, FixedLogOddsModel::kLogOddsFree);
+        EXPECT_FLOAT_EQ(update, Constant1DLogOdds<2>::kLogOddsFree);
       }
       ++step_idx;
     }

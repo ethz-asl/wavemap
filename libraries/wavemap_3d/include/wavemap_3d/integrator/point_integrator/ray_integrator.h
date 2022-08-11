@@ -40,7 +40,7 @@ class RayIntegrator : public PointcloudIntegrator {
   }
 
  private:
-  using MeasurementModelType = FixedLogOddsModel<3>;
+  using MeasurementModelType = Constant1DLogOdds<3>;
 };
 }  // namespace wavemap
 
