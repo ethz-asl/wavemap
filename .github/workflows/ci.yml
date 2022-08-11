@@ -30,7 +30,7 @@ jobs:
       DOCKER_TARGET_ROS_PKG: wavemap_all
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ${{ env.REPOSITORY_NAME }}
 
@@ -152,7 +152,7 @@ jobs:
           chmod +x /bin/hadolint
 
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # NOTE: This has to be done after installing pre-commit, s.t. the
         #       pre-commit hooks are automatically initialized.
 
@@ -191,7 +191,7 @@ jobs:
     #   url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
         run: |
@@ -237,7 +237,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -292,7 +292,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -350,7 +350,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -400,7 +400,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -500,7 +500,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -553,7 +553,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
