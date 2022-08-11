@@ -8,7 +8,7 @@
 
 #include "wavemap_2d/data_structure/wavelet_quadtree_interface.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/range_image_intersector.h"
-#include "wavemap_2d/integrator/scan_integrator/posed_range_image.h"
+#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
 #include "wavemap_2d/integrator/scan_integrator/scan_integrator.h"
 
 namespace wavemap {
@@ -25,13 +25,13 @@ class WaveletIntegrator : public ScanIntegrator {
   WaveletQuadtreeInterface* wavelet_tree_;
 
   const FloatingPoint min_cell_width_;
-  std::shared_ptr<PosedRangeImage> posed_range_image_;
+  std::shared_ptr<PosedRangeImage1D> posed_range_image_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
   static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
-      BeamModel::kScaling * 572.957795130823f;
+      ContinuousVolumetricLogOdds<2>::kScaling * 572.957795130823f;
   static constexpr FloatingPoint kMaxGradientOnBoundary =
-      BeamModel::kScaling * 14.9999999999997f;
+      ContinuousVolumetricLogOdds<2>::kScaling * 14.9999999999997f;
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
 
   WaveletQuadtreeInterface::Coefficients::Scale recursiveSamplerCompressor(

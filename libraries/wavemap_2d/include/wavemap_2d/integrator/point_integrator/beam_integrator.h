@@ -3,9 +3,9 @@
 
 #include <utility>
 
+#include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
 #include <wavemap_common/iterator/grid_iterator.h>
 
-#include "wavemap_2d/integrator/measurement_model/beam_model.h"
 #include "wavemap_2d/integrator/pointcloud_integrator.h"
 
 namespace wavemap {
@@ -40,7 +40,7 @@ class BeamIntegrator : public PointcloudIntegrator {
   }
 
  private:
-  using MeasurementModelType = BeamModel;
+  using MeasurementModelType = ContinuousVolumetricLogOdds<2>;
 };
 }  // namespace wavemap
 

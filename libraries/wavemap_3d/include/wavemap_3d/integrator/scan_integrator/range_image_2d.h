@@ -54,6 +54,37 @@ class RangeImage2D {
  private:
   Data data_;
 };
+
+class PosedRangeImage2D : public RangeImage2D {
+ public:
+  using RangeImage2D::RangeImage2D;
+
+  PosedRangeImage2D(
+      const PosedPointcloud<Point3D, Transformation3D>& posed_pointcloud,
+      const SphericalProjector& spherical_projector)
+      : RangeImage2D(posed_pointcloud.getPointsLocal(), spherical_projector) {
+    setPose(posed_pointcloud.getPose());
+  }
+
+  void importPointcloud(
+      const PosedPointcloud<Point3D, Transformation3D>& posed_pointcloud,
+      const SphericalProjector& spherical_projector) {
+    RangeImage2D::importPointcloud(posed_pointcloud.getPointsLocal(),
+                                   spherical_projector);
+    setPose(posed_pointcloud.getPose());
+  }
+
+  void setPose(const Transformation3D& T_W_C) {
+    T_W_C_ = T_W_C;
+    T_C_W_ = T_W_C.inverse();
+  }
+  const Transformation3D& getPose() const { return T_W_C_; }
+  const Transformation3D& getPoseInverse() const { return T_C_W_; }
+
+ private:
+  Transformation3D T_W_C_;
+  Transformation3D T_C_W_;
+};
 }  // namespace wavemap
 
 #endif  // WAVEMAP_3D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_2D_H_

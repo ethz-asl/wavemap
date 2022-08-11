@@ -20,7 +20,7 @@ void WaveletIntegrator::integratePointcloud(
   // Compute the range image and the scan's AABB
   if (!posed_range_image_) {
     posed_range_image_ =
-        std::make_shared<PosedRangeImage>(pointcloud, circular_projector_);
+        std::make_shared<PosedRangeImage1D>(pointcloud, circular_projector_);
   }
   posed_range_image_->importPointcloud(pointcloud, circular_projector_);
   range_image_intersector_ =

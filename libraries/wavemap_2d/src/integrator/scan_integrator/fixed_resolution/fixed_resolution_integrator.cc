@@ -68,8 +68,8 @@ FixedResolutionIntegrator::computeRangeImageAndAABB(
 
     // Update the AABB (in world frame)
     Point2D C_point_truncated = C_point;
-    if (BeamModel::kRangeMax < range) {
-      C_point_truncated *= BeamModel::kRangeMax / range;
+    if (ContinuousVolumetricLogOdds<2>::kRangeMax < range) {
+      C_point_truncated *= ContinuousVolumetricLogOdds<2>::kRangeMax / range;
     }
     const Point2D W_point_truncated = pointcloud.getPose() * C_point_truncated;
     aabb.includePoint(W_point_truncated);
@@ -77,9 +77,10 @@ FixedResolutionIntegrator::computeRangeImageAndAABB(
 
   // Pad the aabb to account for the beam uncertainties
   const FloatingPoint max_lateral_component =
-      std::max(std::sin(BeamModel::kAngleThresh) *
-                   (BeamModel::kRangeMax + BeamModel::kRangeDeltaThresh),
-               BeamModel::kRangeDeltaThresh);
+      std::max(std::sin(ContinuousVolumetricLogOdds<2>::kAngleThresh) *
+                   (ContinuousVolumetricLogOdds<2>::kRangeMax +
+                    ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh),
+               ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh);
   aabb.min -= Vector2D::Constant(max_lateral_component);
   aabb.max += Vector2D::Constant(max_lateral_component);
 

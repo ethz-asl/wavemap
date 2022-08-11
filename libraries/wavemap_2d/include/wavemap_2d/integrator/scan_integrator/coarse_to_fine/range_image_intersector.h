@@ -10,10 +10,10 @@
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/aabb.h>
+#include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/type_utils.h>
 
-#include "wavemap_2d/integrator/measurement_model/beam_model.h"
 #include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
 
 namespace wavemap {
@@ -140,7 +140,7 @@ class RangeImageIntersector {
     // NOTE: The min distance is 0 if the cell contains the sensor's center.
     const FloatingPoint d_C_cell_closest =
         W_cell_aabb.minDistanceTo(T_W_C.getPosition());
-    if (BeamModel::kRangeMax < d_C_cell_closest) {
+    if (ContinuousVolumetricLogOdds<2>::kRangeMax < d_C_cell_closest) {
       return IntersectionType::kFullyUnknown;
     }
     const FloatingPoint d_C_cell_furthest =
@@ -153,8 +153,8 @@ class RangeImageIntersector {
 
     // Pad the min and max angles with the BeamModel's angle threshold to
     // account for the beam's non-zero width (angular uncertainty)
-    min_angle -= BeamModel::kAngleThresh;
-    max_angle += BeamModel::kAngleThresh;
+    min_angle -= ContinuousVolumetricLogOdds<2>::kAngleThresh;
+    max_angle += ContinuousVolumetricLogOdds<2>::kAngleThresh;
 
     // If the angle wraps around Pi, we can't use the hierarchical range image
     if (const bool angle_range_wraps_pi = max_angle < min_angle;
@@ -187,11 +187,13 @@ class RangeImageIntersector {
     // bounds of the hierarchical range image
     const Bounds distance_bounds =
         hierarchical_range_image_.getRangeBounds(min_image_idx, max_image_idx);
-    if (distance_bounds.upper + BeamModel::kRangeDeltaThresh <
+    if (distance_bounds.upper +
+            ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh <
         d_C_cell_closest) {
       return IntersectionType::kFullyUnknown;
     } else if (d_C_cell_furthest <
-               distance_bounds.lower - BeamModel::kRangeDeltaThresh) {
+               distance_bounds.lower -
+                   ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh) {
       return IntersectionType::kFreeOrUnknown;
     } else {
       return IntersectionType::kPossiblyOccupied;

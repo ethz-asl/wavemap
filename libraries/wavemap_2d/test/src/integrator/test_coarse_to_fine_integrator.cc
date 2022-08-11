@@ -49,7 +49,7 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
 
     // Create the hierarchical range image
     CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);
-    const auto range_image = std::make_shared<PosedRangeImage>(
+    const auto range_image = std::make_shared<PosedRangeImage1D>(
         random_pointcloud, circular_projector);
     HierarchicalRangeImage hierarchical_range_image(range_image);
 
@@ -336,7 +336,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
 
     // Create the hierarchical range image
     CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);
-    const auto range_image = std::make_shared<PosedRangeImage>(
+    const auto range_image = std::make_shared<PosedRangeImage1D>(
         random_pointcloud, circular_projector);
     RangeImageIntersector range_image_intersector(range_image);
 
@@ -368,7 +368,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
             convert::indexToCenterPoint(reference_index, min_cell_width);
         const Point2D C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
-        if (BeamModel::kRangeMax < d_C_cell) {
+        if (ContinuousVolumetricLogOdds<2>::kRangeMax < d_C_cell) {
           has_unknown = true;
           continue;
         }
@@ -386,7 +386,8 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
         if (d_C_cell < range_image_distance) {
           has_free = true;
         } else if (d_C_cell <=
-                   range_image_distance + BeamModel::kRangeDeltaThresh) {
+                   range_image_distance +
+                       ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh) {
           has_occupied = true;
         } else {
           has_unknown = true;
