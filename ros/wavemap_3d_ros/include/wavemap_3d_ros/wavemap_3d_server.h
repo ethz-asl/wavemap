@@ -8,7 +8,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d.h>
-#include <wavemap_3d/integrator/pointcloud_integrator.h>
+#include <wavemap_3d/integrator/pointcloud_integrator_3d.h>
 #include <wavemap_common/common.h>
 #include <wavemap_common_ros/tf_transformer.h>
 #include <wavemap_common_ros/utils/timer.h>
@@ -65,7 +65,7 @@ class Wavemap3DServer {
   Config config_;
 
   VolumetricDataStructure3D::Ptr occupancy_map_;
-  PointcloudIntegrator::Ptr pointcloud_integrator_;
+  PointcloudIntegrator3D::Ptr pointcloud_integrator_;
   TfTransformer transformer_;
 
   void processPointcloudQueue();

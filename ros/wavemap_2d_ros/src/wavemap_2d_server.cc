@@ -4,7 +4,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <wavemap_2d/data_structure/dense_grid.h>
 #include <wavemap_2d/data_structure/volumetric_data_structure_2d_factory.h>
-#include <wavemap_2d/integrator/pointcloud_integrator_factory.h>
+#include <wavemap_2d/integrator/pointcloud_integrator_2d_factory.h>
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
@@ -25,9 +25,9 @@ Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
       VolumetricDataStructure2DType::kWaveletQuadtree);
   CHECK_NOTNULL(occupancy_map_);
 
-  pointcloud_integrator_ = PointcloudIntegratorFactory::create(
+  pointcloud_integrator_ = PointcloudIntegrator2DFactory::create(
       config_.measurement_model_type, occupancy_map_,
-      PointcloudIntegratorType::kWaveletScanIntegrator);
+      PointcloudIntegrator2DType::kWaveletScanIntegrator);
   CHECK_NOTNULL(pointcloud_integrator_);
 
   // Connect to ROS

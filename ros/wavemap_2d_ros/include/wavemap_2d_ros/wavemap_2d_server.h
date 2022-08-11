@@ -8,7 +8,8 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_srvs/Empty.h>
-#include <wavemap_2d/integrator/pointcloud_integrator.h>
+#include <wavemap_2d/data_structure/volumetric_data_structure_2d.h>
+#include <wavemap_2d/integrator/pointcloud_integrator_2d.h>
 #include <wavemap_common/common.h>
 #include <wavemap_common_ros/tf_transformer.h>
 #include <wavemap_common_ros/utils/timer.h>
@@ -69,7 +70,7 @@ class Wavemap2DServer {
   Config config_;
 
   VolumetricDataStructure2D::Ptr occupancy_map_;
-  PointcloudIntegrator::Ptr pointcloud_integrator_;
+  PointcloudIntegrator2D::Ptr pointcloud_integrator_;
   TfTransformer transformer_;
 
   void processPointcloudQueue();

@@ -21,7 +21,6 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_library(
   ${PROJECT_NAME}
     src/data_structure/volumetric_data_structure_2d_factory.cc
-  src/integrator/pointcloud_integrator.cc
   src/integrator/pointcloud_integrator_factory.cc
     src/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.cc
   src/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.cc

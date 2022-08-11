@@ -1,17 +1,17 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_POINT_INTEGRATOR_BEAM_INTEGRATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_POINT_INTEGRATOR_BEAM_INTEGRATOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAM_INTEGRATOR_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAM_INTEGRATOR_H_
 
 #include <utility>
 
 #include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
 #include <wavemap_common/iterator/grid_iterator.h>
 
-#include "wavemap_2d/integrator/pointcloud_integrator.h"
+#include "wavemap_2d/integrator/pointcloud_integrator_2d.h"
 
 namespace wavemap {
-class BeamIntegrator : public PointcloudIntegrator {
+class BeamIntegrator : public PointcloudIntegrator2D {
  public:
-  using PointcloudIntegrator::PointcloudIntegrator;
+  using PointcloudIntegrator2D::PointcloudIntegrator2D;
 
   void integratePointcloud(
       const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override {
@@ -44,4 +44,4 @@ class BeamIntegrator : public PointcloudIntegrator {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_POINT_INTEGRATOR_BEAM_INTEGRATOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAM_INTEGRATOR_H_

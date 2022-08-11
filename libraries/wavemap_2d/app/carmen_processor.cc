@@ -6,7 +6,7 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_2d/data_structure/dense_grid.h"
-#include "wavemap_2d/integrator/point_integrator/beam_integrator.h"
+#include "wavemap_2d/integrator/projective/beam_integrator.h"
 
 DEFINE_string(carmen_log_file_path, "",
               "Path to the carmen log file to get the input data from.");

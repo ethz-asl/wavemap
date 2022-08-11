@@ -4,7 +4,7 @@
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d_factory.h>
-#include <wavemap_3d/integrator/pointcloud_integrator_factory.h>
+#include <wavemap_3d/integrator/pointcloud_integrator_3d_factory.h>
 #include <wavemap_common/data_structure/pointcloud.h>
 #include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
@@ -25,9 +25,9 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
       VolumetricDataStructure3DType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
 
-  pointcloud_integrator_ = PointcloudIntegratorFactory::create(
+  pointcloud_integrator_ = PointcloudIntegrator3DFactory::create(
       config_.measurement_model_type, occupancy_map_,
-      PointcloudIntegratorType::kSingleRayIntegrator);
+      PointcloudIntegrator3DType::kSingleRayIntegrator);
   CHECK_NOTNULL(pointcloud_integrator_);
 
   // Connect to ROS
