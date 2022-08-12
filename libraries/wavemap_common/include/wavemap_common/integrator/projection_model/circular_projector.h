@@ -32,6 +32,13 @@ class CircularProjector {
   IndexElement angleToNearestIndex(FloatingPoint angle) const {
     return static_cast<IndexElement>(std::round(angleToScaledAngle(angle)));
   }
+  IndexElement angleToNearestIndex(FloatingPoint angle,
+                                   FloatingPoint& angle_remainder) const {
+    const FloatingPoint scaled_angle = angleToScaledAngle(angle);
+    const FloatingPoint scaled_angle_rounded = std::round(scaled_angle);
+    angle_remainder = (scaled_angle - scaled_angle_rounded) * angle_increment_;
+    return static_cast<IndexElement>(scaled_angle_rounded);
+  }
   IndexElement angleToFloorIndex(FloatingPoint angle) const {
     return static_cast<IndexElement>(std::floor(angleToScaledAngle(angle)));
   }

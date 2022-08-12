@@ -37,8 +37,9 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
       return 0.f;
     }
 
-    const Index2D idx =
-        spherical_projector_.sphericalToNearestIndex(spherical_C_cell);
+    Vector2D spherical_remainders;
+    const Index2D idx = spherical_projector_.sphericalToNearestIndex(
+        spherical_C_cell, spherical_remainders);
     if ((idx.array() < 0 || range_image.getDimensions().array() <= idx.array())
             .any()) {
       return 0.f;
@@ -49,12 +50,9 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
       return 0.f;
     }
 
-    const Vector2D spherical_C_beam =
-        spherical_projector_.indexToSpherical(idx);
     // TODO(victorr): Test if this approximation is valid (considering the angle
     //                is always small)
-    const FloatingPoint cell_to_beam_angle =
-        (spherical_C_cell - spherical_C_beam).norm();
+    const FloatingPoint cell_to_beam_angle = spherical_remainders.norm();
     if (ContinuousVolumetricLogOdds<3>::kAngleThresh < cell_to_beam_angle) {
       return 0.f;
     }

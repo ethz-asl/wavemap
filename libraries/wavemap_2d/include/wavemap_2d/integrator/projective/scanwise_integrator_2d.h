@@ -35,8 +35,9 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
       return 0.f;
     }
 
-    const IndexElement idx =
-        circular_projector_.angleToNearestIndex(azimuth_angle_C_cell);
+    FloatingPoint angle_remainder;
+    const IndexElement idx = circular_projector_.angleToNearestIndex(
+        azimuth_angle_C_cell, angle_remainder);
     if (idx < 0 || range_image.getNumBeams() <= idx) {
       return 0.f;
     }
@@ -46,10 +47,7 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
       return 0.f;
     }
 
-    const FloatingPoint beam_azimuth_angle =
-        circular_projector_.indexToAngle(idx);
-    const FloatingPoint cell_to_beam_angle =
-        std::abs(azimuth_angle_C_cell - beam_azimuth_angle);
+    const FloatingPoint cell_to_beam_angle = std::abs(angle_remainder);
     if (ContinuousVolumetricLogOdds<2>::kAngleThresh < cell_to_beam_angle) {
       return 0.f;
     }

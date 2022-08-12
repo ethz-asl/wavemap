@@ -50,6 +50,13 @@ class SphericalProjector {
     return {elevation_projector_.angleToNearestIndex(spherical_coordinates[0]),
             azimuth_projector_.angleToNearestIndex(spherical_coordinates[1])};
   }
+  Index2D sphericalToNearestIndex(Vector2D spherical_coordinates,
+                                  Vector2D& spherical_remainders) const {
+    return {elevation_projector_.angleToNearestIndex(spherical_coordinates[0],
+                                                     spherical_remainders[0]),
+            azimuth_projector_.angleToNearestIndex(spherical_coordinates[1],
+                                                   spherical_remainders[1])};
+  }
   Index2D sphericalToFloorIndex(Vector2D spherical_coordinates) const {
     return {elevation_projector_.angleToFloorIndex(spherical_coordinates[0]),
             azimuth_projector_.angleToFloorIndex(spherical_coordinates[1])};
