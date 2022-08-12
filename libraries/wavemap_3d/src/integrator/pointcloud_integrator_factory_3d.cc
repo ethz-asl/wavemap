@@ -2,6 +2,7 @@
 
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"
 #include "wavemap_3d/integrator/pointcloud_integrator_3d_factory.h"
+#include "wavemap_3d/integrator/projective/fixed_resolution/fixed_resolution_integrator_3d.h"
 
 namespace wavemap {
 typename PointcloudIntegrator3D::Ptr PointcloudIntegrator3DFactory::create(
@@ -37,6 +38,9 @@ typename PointcloudIntegrator3D::Ptr PointcloudIntegrator3DFactory::create(
   switch (integrator_type) {
     case PointcloudIntegrator3DType::kSingleRayIntegrator:
       return std::make_shared<RayIntegrator<3>>(std::move(occupancy_map));
+    case PointcloudIntegrator3DType::kFixedResolutionScanIntegrator:
+      return std::make_shared<FixedResolutionIntegrator3D>(
+          std::move(occupancy_map));
     default:
       LOG(ERROR) << "Attempted to create unknown integrator type: "
                  << to_underlying(integrator_type) << ". Returning nullptr.";

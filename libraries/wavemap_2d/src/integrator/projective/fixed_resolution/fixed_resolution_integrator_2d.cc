@@ -54,6 +54,9 @@ FixedResolutionIntegrator2D::computeRangeImageAndAABB(
       continue;
     }
     const FloatingPoint range = C_point.norm();
+    if (range < kEpsilon) {
+      continue;
+    }
     if (1e3 < range) {
       LOG(INFO) << "Skipping measurement with suspicious length: " << range;
       continue;

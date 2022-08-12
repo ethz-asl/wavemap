@@ -36,6 +36,7 @@ class RangeImage2D {
   IndexElement getNumColumns() const {
     return static_cast<IndexElement>(data_.cols());
   }
+  Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
   const Data& getData() const { return data_; }
 
   FloatingPoint& operator[](Index2D index) {

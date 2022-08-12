@@ -9,9 +9,12 @@
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"
 
 namespace wavemap {
-enum class PointcloudIntegrator3DType : int { kSingleRayIntegrator };
+enum class PointcloudIntegrator3DType : int {
+  kSingleRayIntegrator,
+  kFixedResolutionScanIntegrator
+};
 constexpr std::array kPointcloudIntegrator3DTypeStrs = {
-    "single_ray_integrator"};
+    "single_ray_integrator", "fixed_resolution_scan_integrator"};
 std::string getPointcloudIntegrator3DTypeStr(
     PointcloudIntegrator3DType intersection_type) {
   return kPointcloudIntegrator3DTypeStrs[to_underlying(intersection_type)];
