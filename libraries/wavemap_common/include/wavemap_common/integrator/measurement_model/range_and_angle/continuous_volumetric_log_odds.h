@@ -38,38 +38,6 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
                                      Base::min_cell_width_inv_);
   }
 
-  // TODO(victorr): Move this method to the integrator as it's 2D / 3D specific
-  FloatingPoint computeUpdate(const Index<dim>& index) const {
-    const Point<dim> W_cell_center =
-        convert::indexToCenterPoint(index, Base::min_cell_width_);
-    const Point<dim> W_t_start_point_cell_center =
-        W_cell_center - Base::W_start_point_;
-
-    // Compute the distance to the sensor
-    const FloatingPoint d_C_cell = W_t_start_point_cell_center.norm();
-    // Return early if the point is inside the sensor, beyond the beam's max
-    // range, or far behind the surface
-    if (d_C_cell < kEpsilon || Base::kRangeMax < d_C_cell ||
-        Base::measured_distance_ + kRangeDeltaThresh < d_C_cell) {
-      return 0.f;
-    }
-
-    // Compute the angle w.r.t. the ray
-    const FloatingPoint W_cell_heading_angle = std::atan2(
-        W_t_start_point_cell_center.y(), W_t_start_point_cell_center.x());
-    const FloatingPoint cell_to_beam_angle =
-        std::abs(W_cell_heading_angle - W_beam_heading_angle_);
-
-    // Return early if the point is outside the beam's non-zero angular region
-    if (kAngleThresh < cell_to_beam_angle) {
-      return 0.f;
-    }
-
-    // Compute the full measurement update
-    return computeUpdate(d_C_cell, cell_to_beam_angle,
-                         Base::measured_distance_);
-  }
-
   static FloatingPoint computeUpdate(FloatingPoint cell_to_sensor_distance,
                                      FloatingPoint cell_to_beam_angle,
                                      FloatingPoint measured_distance) {
@@ -93,18 +61,9 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
 
  private:
   using Base = MeasurementModelBase<dim>;
-  FloatingPoint W_beam_heading_angle_ = 0.f;
   FloatingPoint max_lateral_component_ = 0.f;
 
   void updateCachedVariablesDerived() override {
-    if (Base::measured_distance_ < kEpsilon) {
-      W_beam_heading_angle_ = 0.f;
-    } else {
-      const Point2D W_t_start_end_point =
-          Base::W_end_point_ - Base::W_start_point_;
-      W_beam_heading_angle_ =
-          std::atan2(W_t_start_end_point.y(), W_t_start_end_point.x());
-    }
     // TODO(victorr): Calculate this properly
     max_lateral_component_ = std::max(
         std::sin(kAngleThresh) * (Base::measured_distance_ + kRangeDeltaThresh),

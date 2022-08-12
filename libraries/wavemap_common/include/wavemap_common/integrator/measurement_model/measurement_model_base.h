@@ -30,7 +30,7 @@ class MeasurementModelBase {
   }
   const Point<dim>& getStartPoint() const { return W_start_point_; }
   const Point<dim>& getEndPoint() const { return W_end_point_; }
-  FloatingPoint getLength() const { return measured_distance_; }
+  FloatingPoint getMeasuredDistance() const { return measured_distance_; }
 
   bool isMeasurementValid() const;
   bool exceedsMaxRange() const { return kRangeMax < measured_distance_; }
