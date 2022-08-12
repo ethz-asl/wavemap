@@ -21,13 +21,12 @@ class PointcloudIntegrator {
   virtual ~PointcloudIntegrator() = default;
 
   virtual void integratePointcloud(
-      const PosedPointcloud<Point<dim>, Transformation<dim>>& pointcloud) = 0;
+      const PosedPointcloud<Point<dim>>& pointcloud) = 0;
 
  protected:
   typename VolumetricDataStructureBase<dim>::Ptr occupancy_map_;
 
-  static bool isPointcloudValid(
-      const PosedPointcloud<Point<dim>, Transformation<dim>>& pointcloud) {
+  static bool isPointcloudValid(const PosedPointcloud<Point<dim>>& pointcloud) {
     if (const Point<dim>& origin = pointcloud.getOrigin(); origin.hasNaN()) {
       LOG(WARNING) << "Ignoring request to integrate pointcloud whose origin "
                       "contains NaNs:\n"

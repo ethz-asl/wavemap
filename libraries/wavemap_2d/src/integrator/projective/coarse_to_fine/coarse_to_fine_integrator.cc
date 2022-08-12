@@ -18,7 +18,7 @@ CoarseToFineIntegrator::CoarseToFineIntegrator(
 }
 
 void CoarseToFineIntegrator::integratePointcloud(
-    const PosedPointcloud<Point2D, Transformation2D>& pointcloud) {
+    const PosedPointcloud<Point2D>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
   }

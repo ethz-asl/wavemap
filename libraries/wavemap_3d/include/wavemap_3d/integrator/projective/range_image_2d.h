@@ -59,16 +59,14 @@ class PosedRangeImage2D : public RangeImage2D {
  public:
   using RangeImage2D::RangeImage2D;
 
-  PosedRangeImage2D(
-      const PosedPointcloud<Point3D, Transformation3D>& posed_pointcloud,
-      const SphericalProjector& spherical_projector)
+  PosedRangeImage2D(const PosedPointcloud<Point3D>& posed_pointcloud,
+                    const SphericalProjector& spherical_projector)
       : RangeImage2D(posed_pointcloud.getPointsLocal(), spherical_projector) {
     setPose(posed_pointcloud.getPose());
   }
 
-  void importPointcloud(
-      const PosedPointcloud<Point3D, Transformation3D>& posed_pointcloud,
-      const SphericalProjector& spherical_projector) {
+  void importPointcloud(const PosedPointcloud<Point3D>& posed_pointcloud,
+                        const SphericalProjector& spherical_projector) {
     RangeImage2D::importPointcloud(posed_pointcloud.getPointsLocal(),
                                    spherical_projector);
     setPose(posed_pointcloud.getPose());

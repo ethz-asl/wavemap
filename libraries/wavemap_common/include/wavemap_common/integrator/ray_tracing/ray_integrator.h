@@ -17,8 +17,7 @@ class RayIntegrator : public PointcloudIntegrator<dim> {
       : Base(std::move(occupancy_map)) {}
 
   void integratePointcloud(
-      const PosedPointcloud<Point<dim>, Transformation<dim>>& pointcloud)
-      override {
+      const PosedPointcloud<Point<dim>>& pointcloud) override {
     if (!Base::isPointcloudValid(pointcloud)) {
       return;
     }

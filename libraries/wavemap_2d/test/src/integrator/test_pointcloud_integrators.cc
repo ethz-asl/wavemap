@@ -23,7 +23,7 @@
 namespace wavemap {
 class PointcloudIntegratorTest : public FixtureBase {
  protected:
-  PosedPointcloud<Point2D, Transformation2D> getRandomPointcloud(
+  PosedPointcloud<Point2D> getRandomPointcloud(
       FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
       FloatingPoint min_distance, FloatingPoint max_distance) const {
     CHECK_LT(min_angle, max_angle);
@@ -60,9 +60,8 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
     constexpr FloatingPoint kMaxDistance = 400.f;
 
     // Generate a random point cloud and save its end points in a hashed set
-    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
-        getRandomPointcloud(min_angle, max_angle, num_beams, min_distance,
-                            kMaxDistance);
+    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
+        min_angle, max_angle, num_beams, min_distance, kMaxDistance);
     std::unordered_set<Index2D, VoxbloxIndexHash<2>> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index2D index =
@@ -106,9 +105,8 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
     constexpr int kNumBeams = 400;
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
-        getRandomPointcloud(kMinAngle, kMaxAngle, kNumBeams, kMinDistance,
-                            kMaxDistance);
+    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
+        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
 
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
@@ -169,9 +167,8 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
     constexpr int kNumBeams = 400;
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
-        getRandomPointcloud(kMinAngle, kMaxAngle, kNumBeams, kMinDistance,
-                            kMaxDistance);
+    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
+        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
 
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
@@ -233,9 +230,8 @@ TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
     constexpr int kNumBeams = 400;
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
-        getRandomPointcloud(kMinAngle, kMaxAngle, kNumBeams, kMinDistance,
-                            kMaxDistance);
+    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
+        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
 
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);

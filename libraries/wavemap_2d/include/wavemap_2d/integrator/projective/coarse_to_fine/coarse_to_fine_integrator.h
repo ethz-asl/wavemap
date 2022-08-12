@@ -17,8 +17,7 @@ class CoarseToFineIntegrator : public ScanwiseIntegrator2D {
 
   explicit CoarseToFineIntegrator(VolumetricDataStructure2D::Ptr occupancy_map);
 
-  void integratePointcloud(
-      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
+  void integratePointcloud(const PosedPointcloud<Point2D>& pointcloud) override;
 
  private:
   VolumetricQuadtreeInterface* volumetric_quadtree_;

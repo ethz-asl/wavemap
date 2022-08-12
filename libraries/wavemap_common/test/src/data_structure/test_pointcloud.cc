@@ -145,42 +145,37 @@ TYPED_TEST(PointcloudTest, Iterators) {
   }
 }
 
-template <typename PointPoseT>
-class PosedPointcloudTest
-    : public PointcloudTest<typename PointPoseT::first_type> {
+template <typename PointT>
+class PosedPointcloudTest : public PointcloudTest<PointT> {
  protected:
-  using PointType = typename PointPoseT::first_type;
-  using PoseType = typename PointPoseT::second_type;
-
-  static void compare(
-      const PosedPointcloud<PointType, PoseType>& pointcloud_reference,
-      const PosedPointcloud<PointType, PoseType>& pointcloud_to_test) {
+  static void compare(const PosedPointcloud<PointT>& pointcloud_reference,
+                      const PosedPointcloud<PointT>& pointcloud_to_test) {
     EXPECT_EQ(pointcloud_reference.getOrigin(), pointcloud_to_test.getOrigin());
     EXPECT_EQ(pointcloud_reference.getPose(), pointcloud_to_test.getPose());
 
-    PointcloudTest<PointType>::compare(pointcloud_reference.getPointsLocal(),
-                                       pointcloud_to_test.getPointsLocal());
-    PointcloudTest<PointType>::compare(pointcloud_reference.getPointsGlobal(),
-                                       pointcloud_to_test.getPointsGlobal());
+    PointcloudTest<PointT>::compare(pointcloud_reference.getPointsLocal(),
+                                    pointcloud_to_test.getPointsLocal());
+    PointcloudTest<PointT>::compare(pointcloud_reference.getPointsGlobal(),
+                                    pointcloud_to_test.getPointsGlobal());
   }
 };
 
 // TODO(victorr): Template PosedPointcloud class and tests directly on dim
 //                instead
-using PointPoseTypes = ::testing::Types<std::pair<Point2D, Transformation2D>,
-                                        std::pair<Point3D, Transformation3D>>;
-TYPED_TEST_SUITE(PosedPointcloudTest, PointPoseTypes, );
+using PointTypes = ::testing::Types<Point2D, Point3D>;
+TYPED_TEST_SUITE(PosedPointcloudTest, PointTypes, );
 
 TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
-  using PointType = typename TypeParam::first_type;
-  using PoseType = typename TypeParam::second_type;
+  constexpr int kDim = dim<TypeParam>;
+  using PointType = TypeParam;
+  using PoseType = Transformation<kDim>;
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Initialize
     const PoseType random_transformation =
-        TestFixture::template getRandomTransformation<dim<PoseType>>();
+        TestFixture::template getRandomTransformation<kDim>();
     const Pointcloud<PointType> random_pointcloud(
-        TestFixture::template getRandomPointVector<dim<PointType>>());
+        TestFixture::template getRandomPointVector<kDim>());
     PosedPointcloud random_posed_pointcloud(random_transformation,
                                             random_pointcloud);
 
@@ -196,7 +191,7 @@ TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
     TestFixture::compare(random_posed_pointcloud,
                          copy_initialized_posed_pointcloud);
 
-    PosedPointcloud<PointType, PoseType> copy_assigned_posed_pointcloud;
+    PosedPointcloud<PointType> copy_assigned_posed_pointcloud;
     copy_assigned_posed_pointcloud = random_posed_pointcloud;
     TestFixture::compare(random_posed_pointcloud,
                          copy_assigned_posed_pointcloud);
@@ -204,14 +199,15 @@ TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
 }
 
 TYPED_TEST(PosedPointcloudTest, Transformations) {
-  using PointType = typename TypeParam::first_type;
-  using PoseType = typename TypeParam::second_type;
+  constexpr int kDim = dim<TypeParam>;
+  using PointType = TypeParam;
+  using PoseType = Transformation<kDim>;
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const std::vector<PointType> random_points_C =
-        TestFixture::template getRandomPointVector<dim<PointType>>();
+        TestFixture::template getRandomPointVector<kDim>();
     const PoseType random_T_W_C =
-        TestFixture::template getRandomTransformation<dim<PoseType>>();
+        TestFixture::template getRandomTransformation<kDim>();
     const PosedPointcloud random_posed_pointcloud(
         random_T_W_C, Pointcloud<PointType>(random_points_C));
 

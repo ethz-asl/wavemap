@@ -13,11 +13,10 @@ class FixedResolutionIntegrator : public ScanwiseIntegrator2D {
  public:
   using ScanwiseIntegrator2D::ScanwiseIntegrator2D;
 
-  void integratePointcloud(
-      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
+  void integratePointcloud(const PosedPointcloud<Point2D>& pointcloud) override;
 
   static std::pair<RangeImage1D, AABB<Point2D>> computeRangeImageAndAABB(
-      const PosedPointcloud<Point2D, Transformation2D>& pointcloud,
+      const PosedPointcloud<Point2D>& pointcloud,
       const CircularProjector& circular_projector);
 };
 }  // namespace wavemap

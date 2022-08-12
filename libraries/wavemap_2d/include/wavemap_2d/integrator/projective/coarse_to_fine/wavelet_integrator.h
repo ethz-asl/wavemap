@@ -18,8 +18,7 @@ class WaveletIntegrator : public ScanwiseIntegrator2D {
 
   explicit WaveletIntegrator(VolumetricDataStructure2D::Ptr occupancy_map);
 
-  void integratePointcloud(
-      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override;
+  void integratePointcloud(const PosedPointcloud<Point2D>& pointcloud) override;
 
  private:
   WaveletQuadtreeInterface* wavelet_tree_;

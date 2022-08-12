@@ -11,7 +11,7 @@
 namespace wavemap {
 class CoarseToFineIntegratorTest : public FixtureBase {
  protected:
-  PosedPointcloud<Point2D, Transformation2D> getRandomPointcloud(
+  PosedPointcloud<Point2D> getRandomPointcloud(
       FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
       FloatingPoint min_distance, FloatingPoint max_distance) const {
     CHECK_LT(min_angle, max_angle);
@@ -43,9 +43,8 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     const int num_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
-        getRandomPointcloud(kMinAngle, kMaxAngle, num_beams, kMinDistance,
-                            kMaxDistance);
+    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
+        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 
     // Create the hierarchical range image
     CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);
@@ -330,9 +329,8 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
     const int num_beams = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 10.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D, Transformation2D> random_pointcloud =
-        getRandomPointcloud(kMinAngle, kMaxAngle, num_beams, kMinDistance,
-                            kMaxDistance);
+    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
+        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 
     // Create the hierarchical range image
     CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);

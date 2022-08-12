@@ -14,7 +14,7 @@ class BeamwiseIntegrator2D : public PointcloudIntegrator2D {
   using PointcloudIntegrator2D::PointcloudIntegrator2D;
 
   void integratePointcloud(
-      const PosedPointcloud<Point2D, Transformation2D>& pointcloud) override {
+      const PosedPointcloud<Point2D>& pointcloud) override {
     if (!isPointcloudValid(pointcloud)) {
       return;
     }

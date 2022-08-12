@@ -10,10 +10,9 @@ namespace wavemap {
 template <typename PointT>
 class Pointcloud {
  public:
-  static constexpr int kPointDim = dim<PointT>;
+  static constexpr int kDim = dim<PointT>;
   using PointType = PointT;
-  using PointcloudData =
-      Eigen::Matrix<FloatingPoint, kPointDim, Eigen::Dynamic>;
+  using PointcloudData = Eigen::Matrix<FloatingPoint, kDim, Eigen::Dynamic>;
 
   Pointcloud() = default;
   explicit Pointcloud(PointcloudData pointcloud)
@@ -21,7 +20,7 @@ class Pointcloud {
 
   template <typename PointContainer>
   explicit Pointcloud(const PointContainer& point_container) {
-    data_.resize(kPointDim, point_container.size());
+    data_.resize(kDim, point_container.size());
     Eigen::Index column_idx = 0;
     for (const auto& point : point_container) {
       data_.col(column_idx++) = point;
@@ -30,10 +29,8 @@ class Pointcloud {
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
-  void resize(const unsigned int n_points) {
-    data_.resize(kPointDim, n_points);
-  }
-  void clear() { data_.resize(kPointDim, 0); }
+  void resize(const unsigned int n_points) { data_.resize(kDim, n_points); }
+  void clear() { data_.resize(kDim, 0); }
 
   typename PointcloudData::ColXpr operator[](Eigen::Index point_index) {
     return data_.col(point_index);
@@ -46,8 +43,8 @@ class Pointcloud {
   PointcloudData& data() { return data_; }
   const PointcloudData& data() const { return data_; }
 
-  using iterator = PointcloudIterator<Pointcloud, kPointDim>;
-  using const_iterator = PointcloudIterator<const Pointcloud, kPointDim>;
+  using iterator = PointcloudIterator<Pointcloud, kDim>;
+  using const_iterator = PointcloudIterator<const Pointcloud, kDim>;
   iterator begin() { return iterator(*this); }
   iterator end() { return iterator(*this, data_.cols()); }
   const_iterator begin() const { return cbegin(); }
@@ -59,12 +56,12 @@ class Pointcloud {
   PointcloudData data_;
 };
 
-template <typename PointT, typename PoseT>
+template <typename PointT>
 class PosedPointcloud {
  public:
-  static constexpr int kPointDim = dim<PointT>;
+  static constexpr int kDim = dim<PointT>;
   using PointType = PointT;
-  using PoseType = PoseT;
+  using PoseType = Transformation<kDim>;
 
   PosedPointcloud() = default;
   PosedPointcloud(const PoseType& T_W_C, Pointcloud<PointType> points_C)

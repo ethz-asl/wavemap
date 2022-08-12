@@ -51,16 +51,14 @@ class PosedRangeImage1D : public RangeImage1D {
  public:
   using RangeImage1D::RangeImage1D;
 
-  PosedRangeImage1D(
-      const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud,
-      const CircularProjector& circular_projector)
+  PosedRangeImage1D(const PosedPointcloud<Point2D>& posed_pointcloud,
+                    const CircularProjector& circular_projector)
       : RangeImage1D(posed_pointcloud.getPointsLocal(), circular_projector) {
     setPose(posed_pointcloud.getPose());
   }
 
-  void importPointcloud(
-      const PosedPointcloud<Point2D, Transformation2D>& posed_pointcloud,
-      const CircularProjector& circular_projector) {
+  void importPointcloud(const PosedPointcloud<Point2D>& posed_pointcloud,
+                        const CircularProjector& circular_projector) {
     RangeImage1D::importPointcloud(posed_pointcloud.getPointsLocal(),
                                    circular_projector);
     setPose(posed_pointcloud.getPose());
