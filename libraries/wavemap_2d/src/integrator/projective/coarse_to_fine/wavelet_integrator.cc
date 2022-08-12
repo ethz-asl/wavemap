@@ -1,9 +1,9 @@
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 
 namespace wavemap {
 WaveletIntegrator::WaveletIntegrator(
     VolumetricDataStructure2D::Ptr occupancy_map)
-    : ScanIntegrator(std::move(occupancy_map)),
+    : ScanwiseIntegrator2D(std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized quadtree data structure
   wavelet_tree_ = dynamic_cast<WaveletQuadtreeInterface*>(occupancy_map_.get());

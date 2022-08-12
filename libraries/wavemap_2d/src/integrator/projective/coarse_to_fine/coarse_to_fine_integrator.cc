@@ -1,4 +1,4 @@
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
 
 #include <stack>
 
@@ -7,7 +7,7 @@
 namespace wavemap {
 CoarseToFineIntegrator::CoarseToFineIntegrator(
     VolumetricDataStructure2D::Ptr occupancy_map)
-    : ScanIntegrator(std::move(occupancy_map)),
+    : ScanwiseIntegrator2D(std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized quadtree data structure
   volumetric_quadtree_ =
@@ -64,8 +64,8 @@ void CoarseToFineIntegrator::integratePointcloud(
                                        bounding_sphere_radius)) {
       FloatingPoint angle_C_cell =
           CircularProjector::bearingToAngle(C_node_center);
-      FloatingPoint sample = sampleUpdateAtPoint(
-          *posed_range_image_, circular_projector_, d_C_cell, angle_C_cell);
+      FloatingPoint sample =
+          computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
       volumetric_quadtree_->addToCellValue(current_node, sample);
       continue;
     }

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAM_INTEGRATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAM_INTEGRATOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAMWISE_INTEGRATOR_2D_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAMWISE_INTEGRATOR_2D_H_
 
 #include <utility>
 
@@ -9,7 +9,7 @@
 #include "wavemap_2d/integrator/pointcloud_integrator_2d.h"
 
 namespace wavemap {
-class BeamIntegrator : public PointcloudIntegrator2D {
+class BeamwiseIntegrator2D : public PointcloudIntegrator2D {
  public:
   using PointcloudIntegrator2D::PointcloudIntegrator2D;
 
@@ -31,7 +31,7 @@ class BeamIntegrator : public PointcloudIntegrator2D {
       const Grid grid(measurement_model.getBottomLeftUpdateIndex(),
                       measurement_model.getTopRightUpdateIndex());
       for (const auto& index : grid) {
-        const FloatingPoint update = measurement_model.computeUpdateAt(index);
+        const FloatingPoint update = measurement_model.computeUpdate(index);
         if (kEpsilon < std::abs(update)) {
           occupancy_map_->addToCellValue(index, update);
         }
@@ -44,4 +44,4 @@ class BeamIntegrator : public PointcloudIntegrator2D {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAM_INTEGRATOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_BEAMWISE_INTEGRATOR_2D_H_

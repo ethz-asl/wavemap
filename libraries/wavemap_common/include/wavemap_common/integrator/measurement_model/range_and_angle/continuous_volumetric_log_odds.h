@@ -38,7 +38,8 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
                                      Base::min_cell_width_inv_);
   }
 
-  FloatingPoint computeUpdateAt(const Index<dim>& index) const override {
+  // TODO(victorr): Move this method to the integrator as it's 2D / 3D specific
+  FloatingPoint computeUpdate(const Index<dim>& index) const {
     const Point<dim> W_cell_center =
         convert::indexToCenterPoint(index, Base::min_cell_width_);
     const Point<dim> W_t_start_point_cell_center =
@@ -54,24 +55,10 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
     }
 
     // Compute the angle w.r.t. the ray
-    const FloatingPoint dot_prod_normalized =
-        W_t_start_point_cell_center.dot(W_t_start_point_end_point_normalized_) /
-        d_C_cell;
-    // Return early if the point is behind the sensor
-    if (dot_prod_normalized < 0.f) {
-      return 0.f;
-    }
-    FloatingPoint cell_to_beam_angle;
-    if (dot_prod_normalized <= 1.f) {
-      // The normalized dot product is within the arc cosine's valid range
-      cell_to_beam_angle = std::acos(dot_prod_normalized);
-    } else {
-      // Due to floating point precision, the normalized dot product can
-      // slightly exceed 1.0 for points on the beam's centerline (i.e. if the
-      // angle is 0).
-      cell_to_beam_angle = 0.f;
-    }
-    DCHECK(!std::isnan(cell_to_beam_angle));
+    const FloatingPoint W_cell_heading_angle = std::atan2(
+        W_t_start_point_cell_center.y(), W_t_start_point_cell_center.x());
+    const FloatingPoint cell_to_beam_angle =
+        std::abs(W_cell_heading_angle - W_beam_heading_angle_);
 
     // Return early if the point is outside the beam's non-zero angular region
     if (kAngleThresh < cell_to_beam_angle) {
@@ -82,6 +69,7 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
     return computeUpdate(d_C_cell, cell_to_beam_angle,
                          Base::measured_distance_);
   }
+
   static FloatingPoint computeUpdate(FloatingPoint cell_to_sensor_distance,
                                      FloatingPoint cell_to_beam_angle,
                                      FloatingPoint measured_distance) {
@@ -105,16 +93,17 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
 
  private:
   using Base = MeasurementModelBase<dim>;
-  Vector<dim> W_t_start_point_end_point_normalized_;
+  FloatingPoint W_beam_heading_angle_ = 0.f;
   FloatingPoint max_lateral_component_ = 0.f;
 
   void updateCachedVariablesDerived() override {
     if (Base::measured_distance_ < kEpsilon) {
-      W_t_start_point_end_point_normalized_.setZero();
+      W_beam_heading_angle_ = 0.f;
     } else {
-      W_t_start_point_end_point_normalized_ =
-          (Base::W_end_point_ - Base::W_start_point_) /
-          Base::measured_distance_;
+      const Point2D W_t_start_end_point =
+          Base::W_end_point_ - Base::W_start_point_;
+      W_beam_heading_angle_ =
+          std::atan2(W_t_start_end_point.y(), W_t_start_end_point.x());
     }
     // TODO(victorr): Calculate this properly
     max_lateral_component_ = std::max(

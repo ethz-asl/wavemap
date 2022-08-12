@@ -30,7 +30,7 @@ class Constant1DLogOdds : public MeasurementModelBase<dim> {
 
   // NOTE: This method assumes queried indices always lies on the ray's line
   //       segment.
-  FloatingPoint computeUpdateAt(const Index<dim>& index) const override {
+  FloatingPoint computeUpdate(const Index<dim>& index) const {
     if (index == end_point_index_) {
       return kLogOddsOccupied;
     } else {

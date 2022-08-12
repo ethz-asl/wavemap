@@ -1,4 +1,4 @@
-#include "wavemap_3d/integrator/scan_integrator/range_image_2d.h"
+#include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
 void RangeImage2D::importPointcloud(

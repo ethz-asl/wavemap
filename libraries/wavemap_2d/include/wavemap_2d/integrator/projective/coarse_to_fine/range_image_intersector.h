@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
 
 #include <algorithm>
 #include <limits>
@@ -14,7 +14,7 @@
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/type_utils.h>
 
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image.h"
 
 namespace wavemap {
 class RangeImageIntersector {
@@ -221,4 +221,4 @@ class RangeImageIntersector {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_

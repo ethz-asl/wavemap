@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_1D_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_1D_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_RANGE_IMAGE_1D_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_RANGE_IMAGE_1D_H_
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/pointcloud.h>
@@ -79,4 +79,4 @@ class PosedRangeImage1D : public RangeImage1D {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_RANGE_IMAGE_1D_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_RANGE_IMAGE_1D_H_

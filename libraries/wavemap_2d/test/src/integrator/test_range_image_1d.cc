@@ -2,7 +2,7 @@
 #include <wavemap_common/common.h>
 #include <wavemap_common/test/fixture_base.h>
 
-#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
+#include "wavemap_2d/integrator/projective/range_image_1d.h"
 
 namespace wavemap {
 using RangeImage2DTest = FixtureBase;

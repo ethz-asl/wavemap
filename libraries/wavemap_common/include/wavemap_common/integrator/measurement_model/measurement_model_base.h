@@ -40,8 +40,6 @@ class MeasurementModelBase {
   virtual Index<dim> getBottomLeftUpdateIndex() const = 0;
   virtual Index<dim> getTopRightUpdateIndex() const = 0;
 
-  virtual FloatingPoint computeUpdateAt(const Index<dim>& index) const = 0;
-
  protected:
   const FloatingPoint min_cell_width_;
   const FloatingPoint min_cell_width_inv_;

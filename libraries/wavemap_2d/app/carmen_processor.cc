@@ -6,7 +6,7 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_2d/data_structure/dense_grid.h"
-#include "wavemap_2d/integrator/projective/beam_integrator.h"
+#include "wavemap_2d/integrator/projective/beamwise_integrator_2d.h"
 
 DEFINE_string(carmen_log_file_path, "",
               "Path to the carmen log file to get the input data from.");
@@ -19,7 +19,7 @@ DEFINE_double(map_min_cell_width, 0.01,
 using namespace wavemap;  // NOLINT
 int main(int argc, char** argv) {
   using DataStructureType = DenseGrid<SaturatingOccupancyCell>;
-  using PointcloudIntegratorType = BeamIntegrator;
+  using PointcloudIntegratorType = BeamwiseIntegrator2D;
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);

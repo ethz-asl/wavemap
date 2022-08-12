@@ -37,7 +37,7 @@ class RayIntegrator : public PointcloudIntegrator<dim> {
                     measurement_model.getEndPointOrMaxRange(),
                     Base::occupancy_map_->getMinCellWidth());
       for (const auto& index : ray) {
-        const FloatingPoint update = measurement_model.computeUpdateAt(index);
+        const FloatingPoint update = measurement_model.computeUpdate(index);
         Base::occupancy_map_->addToCellValue(index, update);
       }
     }

@@ -36,7 +36,7 @@ TEST_F(MeasurementModelTest, ContinuousVolumetricLogOddsModel) {
 
     const Grid grid(padded_bottom_left_idx, padded_top_right_idx);
     for (const auto& index : grid) {
-      const FloatingPoint update = model.computeUpdateAt(index);
+      const FloatingPoint update = model.computeUpdate(index);
 
       if ((index.array() < bottom_left_idx.array()).any() ||
           (top_right_idx.array() < index.array()).any()) {
@@ -115,7 +115,7 @@ TEST_F(MeasurementModelTest, Constant1DLogOddsModel) {
     bool updated_end_point = false;
     const Ray ray(start_point, end_point, min_cell_width);
     for (const auto& index : ray) {
-      const FloatingPoint update = model.computeUpdateAt(index);
+      const FloatingPoint update = model.computeUpdate(index);
       if (index == end_point_index) {
         EXPECT_FLOAT_EQ(update, Constant1DLogOdds<2>::kLogOddsOccupied);
         EXPECT_FALSE(updated_end_point)

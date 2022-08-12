@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_WAVELET_INTEGRATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_WAVELET_INTEGRATOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_WAVELET_INTEGRATOR_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_WAVELET_INTEGRATOR_H_
 
 #include <memory>
 #include <utility>
@@ -7,12 +7,12 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_2d/data_structure/wavelet_quadtree_interface.h"
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/range_image_intersector.h"
-#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
-#include "wavemap_2d/integrator/scan_integrator/scan_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/range_image_intersector.h"
+#include "wavemap_2d/integrator/projective/range_image_1d.h"
+#include "wavemap_2d/integrator/projective/scanwise_integrator_2d.h"
 
 namespace wavemap {
-class WaveletIntegrator : public ScanIntegrator {
+class WaveletIntegrator : public ScanwiseIntegrator2D {
  public:
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
@@ -46,6 +46,6 @@ class WaveletIntegrator : public ScanIntegrator {
 };
 }  // namespace wavemap
 
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/impl/wavelet_integrator_inl.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/impl/wavelet_integrator_inl.h"
 
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_WAVELET_INTEGRATOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_WAVELET_INTEGRATOR_H_

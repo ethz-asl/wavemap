@@ -15,10 +15,10 @@
 #include "wavemap_2d/data_structure/volumetric_quadtree.h"
 #include "wavemap_2d/data_structure/wavelet_quadtree.h"
 #include "wavemap_2d/integrator/pointcloud_integrator_2d.h"
-#include "wavemap_2d/integrator/projective/beam_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h"
+#include "wavemap_2d/integrator/projective/beamwise_integrator_2d.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator.h"
+#include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 
 namespace wavemap {
 class PointcloudIntegratorTest : public FixtureBase {
@@ -113,7 +113,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
     PointcloudIntegrator2D::Ptr beam_integrator =
-        std::make_shared<BeamIntegrator>(beam_occupancy_map);
+        std::make_shared<BeamwiseIntegrator2D>(beam_occupancy_map);
     beam_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       beam_occupancy_map->showImage(true, 1000);
@@ -176,7 +176,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
     PointcloudIntegrator2D::Ptr beam_integrator =
-        std::make_shared<BeamIntegrator>(beam_occupancy_map);
+        std::make_shared<BeamwiseIntegrator2D>(beam_occupancy_map);
     beam_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       beam_occupancy_map->showImage(true, 1000);
@@ -240,7 +240,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
     PointcloudIntegrator2D::Ptr beam_integrator =
-        std::make_shared<BeamIntegrator>(beam_occupancy_map);
+        std::make_shared<BeamwiseIntegrator2D>(beam_occupancy_map);
     beam_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       beam_occupancy_map->showImage(true, 1000);

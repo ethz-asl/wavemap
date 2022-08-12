@@ -17,7 +17,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # Libraries
 add_library(${PROJECT_NAME}
     src/data_structure/volumetric_data_structure_3d_factory.cc
-    src/integrator/scan_integrator/range_image_2d.cc
+    src/integrator/projective/range_image_2d.cc
     src/integrator/pointcloud_integrator_factory.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 

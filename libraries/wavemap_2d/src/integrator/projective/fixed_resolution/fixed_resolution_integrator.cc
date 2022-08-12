@@ -1,4 +1,4 @@
-#include "wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h"
+#include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 
 #include <wavemap_common/iterator/grid_iterator.h>
 
@@ -31,8 +31,8 @@ void FixedResolutionIntegrator::integratePointcloud(
     const FloatingPoint d_C_cell = C_cell_center.norm();
     const FloatingPoint azimuth_angle_C_cell =
         CircularProjector::bearingToAngle(C_cell_center);
-    const FloatingPoint update = sampleUpdateAtPoint(
-        range_image, circular_projector_, d_C_cell, azimuth_angle_C_cell);
+    const FloatingPoint update =
+        computeUpdate(range_image, d_C_cell, azimuth_angle_C_cell);
     if (kEpsilon < std::abs(update)) {
       occupancy_map_->addToCellValue(index, update);
     }

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
 
 namespace wavemap {
 inline bool WaveletIntegrator::isApproximationErrorAcceptable(
@@ -45,8 +45,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
                                      bounding_sphere_radius)) {
     FloatingPoint angle_C_cell =
         CircularProjector::bearingToAngle(C_node_center);
-    return sampleUpdateAtPoint(*posed_range_image_, circular_projector_,
-                               d_C_cell, angle_C_cell);
+    return computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
   }
 
   WaveletQuadtreeInterface::NodeType* node =
@@ -74,4 +73,4 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_

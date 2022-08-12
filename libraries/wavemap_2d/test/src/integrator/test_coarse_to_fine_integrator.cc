@@ -5,8 +5,8 @@
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/container_print_utils.h>
 
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/hierarchical_range_image.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image.h"
 
 namespace wavemap {
 class CoarseToFineIntegratorTest : public FixtureBase {

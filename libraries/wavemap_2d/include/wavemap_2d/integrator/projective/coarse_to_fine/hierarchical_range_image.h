@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
-#define WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
 
 #include <algorithm>
 #include <memory>
@@ -9,7 +9,7 @@
 
 #include <wavemap_common/utils/int_math.h>
 
-#include "wavemap_2d/integrator/scan_integrator/range_image_1d.h"
+#include "wavemap_2d/integrator/projective/range_image_1d.h"
 
 namespace wavemap {
 struct Bounds {
@@ -170,4 +170,4 @@ class HierarchicalRangeImage {
   }
 };
 }  // namespace wavemap
-#endif  // WAVEMAP_2D_INTEGRATOR_SCAN_INTEGRATOR_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_

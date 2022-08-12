@@ -2,10 +2,10 @@
 
 #include "wavemap_2d/integrator/pointcloud_integrator_2d.h"
 #include "wavemap_2d/integrator/pointcloud_integrator_2d_factory.h"
-#include "wavemap_2d/integrator/projective/beam_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/coarse_to_fine_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/coarse_to_fine/wavelet_integrator.h"
-#include "wavemap_2d/integrator/scan_integrator/fixed_resolution/fixed_resolution_integrator.h"
+#include "wavemap_2d/integrator/projective/beamwise_integrator_2d.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator.h"
+#include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 
 namespace wavemap {
 PointcloudIntegrator2D::Ptr PointcloudIntegrator2DFactory::create(
@@ -42,7 +42,7 @@ PointcloudIntegrator2D::Ptr PointcloudIntegrator2DFactory::create(
     case PointcloudIntegrator2DType::kSingleRayIntegrator:
       return std::make_shared<RayIntegrator<2>>(std::move(occupancy_map));
     case PointcloudIntegrator2DType::kSingleBeamIntegrator:
-      return std::make_shared<BeamIntegrator>(std::move(occupancy_map));
+      return std::make_shared<BeamwiseIntegrator2D>(std::move(occupancy_map));
     case PointcloudIntegrator2DType::kFixedResolutionScanIntegrator:
       return std::make_shared<FixedResolutionIntegrator>(
           std::move(occupancy_map));
