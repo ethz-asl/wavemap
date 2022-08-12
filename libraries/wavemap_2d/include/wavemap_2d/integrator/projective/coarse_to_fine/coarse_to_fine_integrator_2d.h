@@ -1,9 +1,7 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_COARSE_TO_FINE_INTEGRATOR_2D_H_
 #define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_COARSE_TO_FINE_INTEGRATOR_2D_H_
 
-#include <algorithm>
 #include <memory>
-#include <utility>
 
 #include "wavemap_2d/data_structure/volumetric_quadtree_interface.h"
 #include "wavemap_2d/integrator/projective/coarse_to_fine/range_image_1d_intersector.h"
