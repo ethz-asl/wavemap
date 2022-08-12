@@ -49,15 +49,15 @@ using Rotation = typename std::conditional_t<
     std::conditional_t<dim == 3, Rotation3D, std::false_type>>;
 
 template <typename T>
-inline constexpr int dim = T::RowsAtCompileTime;
+inline constexpr int dim_v = T::RowsAtCompileTime;
 template <>
-inline constexpr int dim<Transformation2D> = 2;
+inline constexpr int dim_v<Transformation2D> = 2;
 template <>
-inline constexpr int dim<Transformation3D> = 3;
+inline constexpr int dim_v<Transformation3D> = 3;
 template <>
-inline constexpr int dim<Rotation2D> = 2;
+inline constexpr int dim_v<Rotation2D> = 2;
 template <>
-inline constexpr int dim<Rotation3D> = 3;
+inline constexpr int dim_v<Rotation3D> = 3;
 
 constexpr auto kEpsilon = constants<FloatingPoint>::kEpsilon;
 constexpr auto kPi = constants<FloatingPoint>::kPi;

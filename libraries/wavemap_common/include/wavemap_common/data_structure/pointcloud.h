@@ -10,7 +10,7 @@ namespace wavemap {
 template <typename PointT>
 class Pointcloud {
  public:
-  static constexpr int kDim = dim<PointT>;
+  static constexpr int kDim = dim_v<PointT>;
   using PointType = PointT;
   using PointcloudData = Eigen::Matrix<FloatingPoint, kDim, Eigen::Dynamic>;
 
@@ -59,7 +59,7 @@ class Pointcloud {
 template <typename PointT>
 class PosedPointcloud {
  public:
-  static constexpr int kDim = dim<PointT>;
+  static constexpr int kDim = dim_v<PointT>;
   using PointType = PointT;
   using PoseType = Transformation<kDim>;
 

@@ -15,7 +15,7 @@ TYPED_TEST_SUITE(AabbTest, PointTypes, );
 
 TYPED_TEST(AabbTest, InitializationAndInclusion) {
   for (const auto& random_point :
-       TestFixture::template getRandomPointVector<dim<TypeParam>>()) {
+       TestFixture::template getRandomPointVector<dim_v<TypeParam>>()) {
     AABB<TypeParam> aabb;
     EXPECT_FALSE(aabb.containsPoint(random_point))
         << "The uninitialized AABB should be empty.";
@@ -45,7 +45,7 @@ TYPED_TEST(AabbTest, ClosestPointsAndDistances) {
   std::vector<QueryAndExpectedResults> tests;
   {
     std::vector<AABB<TypeParam>> aabbs{{TypeParam::Zero(), TypeParam::Ones()}};
-    for (int dim_idx = 0; dim_idx < dim<TypeParam>; ++dim_idx) {
+    for (int dim_idx = 0; dim_idx < dim_v<TypeParam>; ++dim_idx) {
       const TypeParam min_corner = TypeParam::Zero();
       TypeParam max_corner = TypeParam::Ones();
       max_corner[dim_idx] = 0.5f;
@@ -58,8 +58,8 @@ TYPED_TEST(AabbTest, ClosestPointsAndDistances) {
          ++direction) {
       for (const FloatingPoint scale : {0.1f, 1.f, 3.f, 30.f}) {
         for (const FloatingPoint sign : {-1.f, 1.f}) {
-          Vector<dim<TypeParam>> translation;
-          for (int dim_idx = 0; dim_idx < dim<TypeParam>; ++dim_idx) {
+          Vector<dim_v<TypeParam>> translation;
+          for (int dim_idx = 0; dim_idx < dim_v<TypeParam>; ++dim_idx) {
             translation[dim_idx] = (direction >> dim_idx) & 0b1;
           }
           translation *= sign * scale;
@@ -81,7 +81,7 @@ TYPED_TEST(AabbTest, ClosestPointsAndDistances) {
     TypeParam closest_point;
     TypeParam furthest_point;
     // Check for closest/furthest points on the AABB's edges
-    for (int dim_idx = 0; dim_idx < dim<TypeParam>; ++dim_idx) {
+    for (int dim_idx = 0; dim_idx < dim_v<TypeParam>; ++dim_idx) {
       const FloatingPoint query_coord = test.query_point[dim_idx];
       const FloatingPoint aabb_min_coord = test.aabb.min[dim_idx];
       const FloatingPoint aabb_max_coord = test.aabb.max[dim_idx];

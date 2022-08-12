@@ -42,7 +42,8 @@ class PointcloudTest : public FixtureBase {
     constexpr FloatingPoint kMaxCoordinate = 1e3;
     const Eigen::Index random_length = getRandomPointcloudSize();
     typename Pointcloud<PointT>::PointcloudData random_point_matrix =
-        Pointcloud<PointT>::PointcloudData::Random(dim<PointT>, random_length);
+        Pointcloud<PointT>::PointcloudData::Random(dim_v<PointT>,
+                                                   random_length);
     random_point_matrix *= kMaxCoordinate;
     return random_point_matrix;
   }
@@ -88,7 +89,7 @@ TYPED_TEST(PointcloudTest, InitializeFromStl) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const auto random_point_vector =
-        TestFixture::template getRandomPointVector<dim<TypeParam>>();
+        TestFixture::template getRandomPointVector<dim_v<TypeParam>>();
     Pointcloud<TypeParam> random_pointcloud(random_point_vector);
     TestFixture::compare(random_point_vector, random_pointcloud);
   }
@@ -127,7 +128,7 @@ TYPED_TEST(PointcloudTest, Iterators) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const auto random_point_vector =
-        TestFixture::template getRandomPointVector<dim<TypeParam>>();
+        TestFixture::template getRandomPointVector<dim_v<TypeParam>>();
 
     Pointcloud<TypeParam> random_pointcloud(random_point_vector);
     size_t point_idx = 0u;
@@ -166,7 +167,7 @@ using PointTypes = ::testing::Types<Point2D, Point3D>;
 TYPED_TEST_SUITE(PosedPointcloudTest, PointTypes, );
 
 TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
-  constexpr int kDim = dim<TypeParam>;
+  constexpr int kDim = dim_v<TypeParam>;
   using PointType = TypeParam;
   using PoseType = Transformation<kDim>;
   constexpr int kNumRepetitions = 100;
@@ -199,7 +200,7 @@ TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
 }
 
 TYPED_TEST(PosedPointcloudTest, Transformations) {
-  constexpr int kDim = dim<TypeParam>;
+  constexpr int kDim = dim_v<TypeParam>;
   using PointType = TypeParam;
   using PoseType = Transformation<kDim>;
   constexpr int kNumRepetitions = 100;

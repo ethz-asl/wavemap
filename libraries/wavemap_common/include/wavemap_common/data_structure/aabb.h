@@ -11,7 +11,7 @@
 namespace wavemap {
 template <typename PointT>
 struct AABB {
-  static constexpr int kDim = dim<PointT>;
+  static constexpr int kDim = dim_v<PointT>;
   static constexpr int kNumCorners = int_math::exp2(kDim);
   using PointType = PointT;
   using ScalarType = typename PointType::Scalar;
