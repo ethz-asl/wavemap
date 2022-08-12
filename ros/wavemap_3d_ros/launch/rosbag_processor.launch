@@ -33,7 +33,7 @@
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
     <node name="wavemap_3d" pkg="wavemap_3d_ros"
-          type="rosbag_processor"
+          type="wavemap_3d_rosbag_processor"
           output="screen" args="-alsologtostderr" required="true"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>

@@ -42,7 +42,7 @@
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
     <node name="wavemap_2d" pkg="wavemap_2d_ros"
-          type="server_node"
+          type="wavemap_2d_server_node"
           output="screen" args="-alsologtostderr"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
