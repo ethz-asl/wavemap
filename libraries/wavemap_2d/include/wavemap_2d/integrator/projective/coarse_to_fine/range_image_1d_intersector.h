@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
-#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_1D_INTERSECTOR_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_1D_INTERSECTOR_H_
 
 #include <algorithm>
 #include <limits>
@@ -14,10 +14,10 @@
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/type_utils.h>
 
-#include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image_1d.h"
 
 namespace wavemap {
-class RangeImageIntersector {
+class RangeImage1DIntersector {
  public:
   enum class IntersectionType : int {
     kFullyUnknown,
@@ -36,7 +36,7 @@ class RangeImageIntersector {
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
   };
 
-  explicit RangeImageIntersector(std::shared_ptr<RangeImage1D> range_image)
+  explicit RangeImage1DIntersector(std::shared_ptr<RangeImage1D> range_image)
       : hierarchical_range_image_(std::move(range_image)) {}
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
@@ -201,7 +201,7 @@ class RangeImageIntersector {
   }
 
  private:
-  HierarchicalRangeImage hierarchical_range_image_;
+  HierarchicalRangeImage1D hierarchical_range_image_;
 
   // NOTE: Aside from generally being faster than std::atan2, a major advantage
   //       of this atan2 approximation is that it's branch-free and easily gets
@@ -221,4 +221,4 @@ class RangeImageIntersector {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_INTERSECTOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_1D_INTERSECTOR_H_

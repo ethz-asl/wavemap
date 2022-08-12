@@ -1,11 +1,11 @@
-#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_2d.h"
 
 #include <stack>
 
 #include <wavemap_common/indexing/ndtree_index.h>
 
 namespace wavemap {
-CoarseToFineIntegrator::CoarseToFineIntegrator(
+CoarseToFineIntegrator2D::CoarseToFineIntegrator2D(
     VolumetricDataStructure2D::Ptr occupancy_map)
     : ScanwiseIntegrator2D(std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
@@ -17,7 +17,7 @@ CoarseToFineIntegrator::CoarseToFineIntegrator(
          "volumetric data structures.";
 }
 
-void CoarseToFineIntegrator::integratePointcloud(
+void CoarseToFineIntegrator2D::integratePointcloud(
     const PosedPointcloud<Point2D>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
@@ -29,7 +29,7 @@ void CoarseToFineIntegrator::integratePointcloud(
         std::make_shared<PosedRangeImage1D>(pointcloud, circular_projector_);
   }
   posed_range_image_->importPointcloud(pointcloud, circular_projector_);
-  RangeImageIntersector range_image_intersector(posed_range_image_);
+  RangeImage1DIntersector range_image_intersector(posed_range_image_);
 
   // Recursively update all relevant cells
   std::stack<QuadtreeIndex> stack;
@@ -43,11 +43,11 @@ void CoarseToFineIntegrator::integratePointcloud(
 
     const AABB<Point2D> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width_);
-    const RangeImageIntersector::IntersectionType intersection_type =
+    const RangeImage1DIntersector::IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(
             pointcloud.getPose(), W_cell_aabb, circular_projector_);
     if (intersection_type ==
-        RangeImageIntersector::IntersectionType::kFullyUnknown) {
+        RangeImage1DIntersector::IntersectionType::kFullyUnknown) {
       continue;
     }
 

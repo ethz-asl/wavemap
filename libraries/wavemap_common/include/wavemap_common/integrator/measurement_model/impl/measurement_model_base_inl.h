@@ -10,8 +10,6 @@ bool MeasurementModelBase<dim>::isMeasurementValid() const {
     return false;
   }
   if (measured_distance_ < kEpsilon) {
-    LOG(INFO) << "Skipping measurement with near-zero length: "
-              << measured_distance_;
     return false;
   }
   if (1e3 < measured_distance_) {

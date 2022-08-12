@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
-#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_1D_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_1D_H_
 
 #include <algorithm>
 #include <memory>
@@ -17,9 +17,9 @@ struct Bounds {
   FloatingPoint upper;
 };
 
-class HierarchicalRangeImage {
+class HierarchicalRangeImage1D {
  public:
-  explicit HierarchicalRangeImage(std::shared_ptr<RangeImage1D> range_image)
+  explicit HierarchicalRangeImage1D(std::shared_ptr<RangeImage1D> range_image)
       : range_image_(std::move(range_image)),
         lower_bounds_(computeReducedPyramid(
             *range_image_, [](auto a, auto b) { return std::min(a, b); })),
@@ -170,4 +170,4 @@ class HierarchicalRangeImage {
   }
 };
 }  // namespace wavemap
-#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_1D_H_

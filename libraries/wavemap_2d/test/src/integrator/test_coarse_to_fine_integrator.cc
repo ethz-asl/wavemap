@@ -5,8 +5,8 @@
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/container_print_utils.h>
 
-#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
-#include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_2d.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image_1d.h"
 
 namespace wavemap {
 class CoarseToFineIntegratorTest : public FixtureBase {
@@ -50,7 +50,7 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
     CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);
     const auto range_image = std::make_shared<PosedRangeImage1D>(
         random_pointcloud, circular_projector);
-    HierarchicalRangeImage hierarchical_range_image(range_image);
+    HierarchicalRangeImage1D hierarchical_range_image(range_image);
 
     // Test all the bounds from top to bottom
     const BinaryTreeIndex::Element max_height =
@@ -162,9 +162,9 @@ TEST_F(CoarseToFineIntegratorTest, ApproxAtan2) {
     const FloatingPoint angle = kTwoPi * static_cast<FloatingPoint>(i) /
                                 static_cast<FloatingPoint>(kNumAngles);
     const Vector2D bearing{std::cos(angle), std::sin(angle)};
-    EXPECT_NEAR(RangeImageIntersector::atan2_approx(bearing.y(), bearing.x()),
+    EXPECT_NEAR(RangeImage1DIntersector::atan2_approx(bearing.y(), bearing.x()),
                 std::atan2(bearing.y(), bearing.x()),
-                RangeImageIntersector::kWorstCaseAtan2ApproxError);
+                RangeImage1DIntersector::kWorstCaseAtan2ApproxError);
   }
 }
 
@@ -236,7 +236,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   // Run tests
   int error_count = 0;
   for (const auto& test : tests) {
-    RangeImageIntersector::MinMaxAnglePair reference_angle_pair;
+    RangeImage1DIntersector::MinMaxAnglePair reference_angle_pair;
     const AABB<Point2D>::Corners C_cell_corners =
         test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
     std::array<FloatingPoint, AABB<Point2D>::kNumCorners> angles{};
@@ -264,9 +264,9 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
         reference_angle_pair.max_angle = max_angle;
       }
     }
-    const RangeImageIntersector::MinMaxAnglePair returned_angle_pair =
-        RangeImageIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
-                                                           test.W_aabb);
+    const RangeImage1DIntersector::MinMaxAnglePair returned_angle_pair =
+        RangeImage1DIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
+                                                             test.W_aabb);
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
     const bool angle_range_wraps_around =
         kPi < reference_angle_pair.max_angle - reference_angle_pair.min_angle;
@@ -336,7 +336,7 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
     CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);
     const auto range_image = std::make_shared<PosedRangeImage1D>(
         random_pointcloud, circular_projector);
-    RangeImageIntersector range_image_intersector(range_image);
+    RangeImage1DIntersector range_image_intersector(range_image);
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
     constexpr QuadtreeIndex::Element kMaxHeight = 10;
@@ -392,16 +392,16 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
         }
       }
       ASSERT_TRUE(has_free || has_occupied || has_unknown);
-      RangeImageIntersector::IntersectionType reference_intersection_type;
+      RangeImage1DIntersector::IntersectionType reference_intersection_type;
       if (has_occupied) {
         reference_intersection_type =
-            RangeImageIntersector::IntersectionType::kPossiblyOccupied;
+            RangeImage1DIntersector::IntersectionType::kPossiblyOccupied;
       } else if (has_free) {
         reference_intersection_type =
-            RangeImageIntersector::IntersectionType::kFreeOrUnknown;
+            RangeImage1DIntersector::IntersectionType::kFreeOrUnknown;
       } else {
         reference_intersection_type =
-            RangeImageIntersector::IntersectionType::kFullyUnknown;
+            RangeImage1DIntersector::IntersectionType::kFullyUnknown;
       }
 
       const FloatingPoint node_width =
@@ -414,15 +414,16 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
       const AABB<Point2D> W_cell_aabb{
           W_node_bottom_left,
           W_node_bottom_left + Vector2D::Constant(node_width)};
-      const RangeImageIntersector::IntersectionType returned_intersection_type =
-          range_image_intersector.determineIntersectionType(
-              random_pointcloud.getPose(), W_cell_aabb, circular_projector);
+      const RangeImage1DIntersector::IntersectionType
+          returned_intersection_type =
+              range_image_intersector.determineIntersectionType(
+                  random_pointcloud.getPose(), W_cell_aabb, circular_projector);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected "
-          << RangeImageIntersector::getIntersectionTypeStr(
+          << RangeImage1DIntersector::getIntersectionTypeStr(
                  reference_intersection_type)
           << " but got "
-          << RangeImageIntersector::getIntersectionTypeStr(
+          << RangeImage1DIntersector::getIntersectionTypeStr(
                  returned_intersection_type);
     }
   }

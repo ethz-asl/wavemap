@@ -16,9 +16,9 @@
 #include "wavemap_2d/data_structure/wavelet_quadtree.h"
 #include "wavemap_2d/integrator/pointcloud_integrator_2d.h"
 #include "wavemap_2d/integrator/projective/beamwise_integrator_2d.h"
-#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
-#include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator.h"
-#include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_2d.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator_2d.h"
+#include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator_2d.h"
 
 namespace wavemap {
 class PointcloudIntegratorTest : public FixtureBase {
@@ -120,7 +120,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
     VolumetricDataStructure2D::Ptr scan_occupancy_map =
         std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
     PointcloudIntegrator2D::Ptr scan_integrator =
-        std::make_shared<FixedResolutionIntegrator>(scan_occupancy_map);
+        std::make_shared<FixedResolutionIntegrator2D>(scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       scan_occupancy_map->showImage(true, 1000);
@@ -183,7 +183,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
         std::make_shared<VolumetricQuadtree<UnboundedOccupancyCell>>(
             min_cell_width);
     PointcloudIntegrator2D::Ptr scan_integrator =
-        std::make_shared<CoarseToFineIntegrator>(scan_occupancy_map);
+        std::make_shared<CoarseToFineIntegrator2D>(scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       scan_occupancy_map->showImage(true, 1000);
@@ -206,11 +206,11 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
       const FloatingPoint cell_value_in_scan_map =
           scan_occupancy_map->getCellValue(index);
       EXPECT_NEAR(cell_value_in_scan_map, cell_value_in_beam_map,
-                  CoarseToFineIntegrator::kMaxAcceptableUpdateError);
+                  CoarseToFineIntegrator2D::kMaxAcceptableUpdateError);
       if (error_grid) {
         error_grid->setCellValue(
             index, (cell_value_in_scan_map - cell_value_in_beam_map) /
-                       CoarseToFineIntegrator::kMaxAcceptableUpdateError);
+                       CoarseToFineIntegrator2D::kMaxAcceptableUpdateError);
       }
     }
     if (error_grid) {
@@ -246,7 +246,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
         std::make_shared<WaveletQuadtree<UnboundedOccupancyCell>>(
             min_cell_width);
     PointcloudIntegrator2D::Ptr scan_integrator =
-        std::make_shared<WaveletIntegrator>(scan_occupancy_map);
+        std::make_shared<WaveletIntegrator2D>(scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       scan_occupancy_map->showImage(true, 1000);
@@ -269,11 +269,11 @@ TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
       const FloatingPoint cell_value_in_scan_map =
           scan_occupancy_map->getCellValue(index);
       EXPECT_NEAR(cell_value_in_scan_map, cell_value_in_beam_map,
-                  CoarseToFineIntegrator::kMaxAcceptableUpdateError);
+                  CoarseToFineIntegrator2D::kMaxAcceptableUpdateError);
       if (error_grid) {
         error_grid->setCellValue(
             index, (cell_value_in_scan_map - cell_value_in_beam_map) /
-                       CoarseToFineIntegrator::kMaxAcceptableUpdateError);
+                       CoarseToFineIntegrator2D::kMaxAcceptableUpdateError);
       }
     }
     if (error_grid) {

@@ -1,9 +1,9 @@
-#include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
+#include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator_2d.h"
 
 #include <wavemap_common/iterator/grid_iterator.h>
 
 namespace wavemap {
-void FixedResolutionIntegrator::integratePointcloud(
+void FixedResolutionIntegrator2D::integratePointcloud(
     const PosedPointcloud<Point2D>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
@@ -40,7 +40,7 @@ void FixedResolutionIntegrator::integratePointcloud(
 }
 
 std::pair<RangeImage1D, AABB<Point2D>>
-FixedResolutionIntegrator::computeRangeImageAndAABB(
+FixedResolutionIntegrator2D::computeRangeImageAndAABB(
     const PosedPointcloud<Point2D>& pointcloud,
     const CircularProjector& circular_projector) {
   RangeImage1D range_image(circular_projector.getNumCells());

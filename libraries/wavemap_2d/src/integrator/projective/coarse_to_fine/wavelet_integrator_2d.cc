@@ -1,7 +1,7 @@
-#include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator_2d.h"
 
 namespace wavemap {
-WaveletIntegrator::WaveletIntegrator(
+WaveletIntegrator2D::WaveletIntegrator2D(
     VolumetricDataStructure2D::Ptr occupancy_map)
     : ScanwiseIntegrator2D(std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
@@ -11,7 +11,7 @@ WaveletIntegrator::WaveletIntegrator(
                           "volumetric data structures based on wavelet trees.";
 }
 
-void WaveletIntegrator::integratePointcloud(
+void WaveletIntegrator2D::integratePointcloud(
     const PosedPointcloud<Point2D>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
@@ -24,7 +24,7 @@ void WaveletIntegrator::integratePointcloud(
   }
   posed_range_image_->importPointcloud(pointcloud, circular_projector_);
   range_image_intersector_ =
-      std::make_shared<RangeImageIntersector>(posed_range_image_);
+      std::make_shared<RangeImage1DIntersector>(posed_range_image_);
 
   // Recursively update all relevant cells
   const auto first_child_indices = wavelet_tree_->getFirstChildIndices();

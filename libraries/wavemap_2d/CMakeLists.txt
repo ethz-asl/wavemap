@@ -21,11 +21,11 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_library(
   ${PROJECT_NAME}
     src/data_structure/volumetric_data_structure_2d_factory.cc
-  src/integrator/pointcloud_integrator_factory.cc
-    src/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.cc
-  src/integrator/projective/coarse_to_fine/wavelet_integrator.cc
+    src/integrator/pointcloud_integrator_factory_2d.cc
+    src/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_2d.cc
+    src/integrator/projective/coarse_to_fine/wavelet_integrator_2d.cc
     src/integrator/projective/range_image_1d.cc
-  src/integrator/projective/fixed_resolution/fixed_resolution_integrator.cc
+    src/integrator/projective/fixed_resolution/fixed_resolution_integrator_2d.cc
   src/utils/evaluation_utils.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 

@@ -1,16 +1,16 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
-#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_2D_INL_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_2D_INL_H_
 
 namespace wavemap {
-inline bool WaveletIntegrator::isApproximationErrorAcceptable(
-    RangeImageIntersector::IntersectionType intersection_type,
+inline bool WaveletIntegrator2D::isApproximationErrorAcceptable(
+    RangeImage1DIntersector::IntersectionType intersection_type,
     FloatingPoint sphere_center_distance,
     FloatingPoint bounding_sphere_radius) {
   switch (intersection_type) {
-    case RangeImageIntersector::IntersectionType::kFreeOrUnknown:
+    case RangeImage1DIntersector::IntersectionType::kFreeOrUnknown:
       return bounding_sphere_radius / sphere_center_distance <
              kMaxAcceptableUpdateError / kMaxGradientOverRangeFullyInside;
-    case RangeImageIntersector::IntersectionType::kPossiblyOccupied:
+    case RangeImage1DIntersector::IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
              kMaxAcceptableUpdateError / kMaxGradientOnBoundary;
     default:
@@ -18,17 +18,17 @@ inline bool WaveletIntegrator::isApproximationErrorAcceptable(
   }
 }
 
-inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
+inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
     const QuadtreeIndex& node_index,
     typename WaveletQuadtreeInterface::NodeType& parent_node,
     QuadtreeIndex::RelativeChild relative_child_index) {
   const AABB<Point2D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
-  const RangeImageIntersector::IntersectionType intersection_type =
+  const RangeImage1DIntersector::IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
           posed_range_image_->getPose(), W_cell_aabb, circular_projector_);
   if (intersection_type ==
-      RangeImageIntersector::IntersectionType::kFullyUnknown) {
+      RangeImage1DIntersector::IntersectionType::kFullyUnknown) {
     return 0.f;
   }
 
@@ -73,4 +73,4 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_2D_INL_H_

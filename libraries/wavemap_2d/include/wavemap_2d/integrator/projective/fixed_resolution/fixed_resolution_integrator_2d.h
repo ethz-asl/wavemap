@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_FIXED_RESOLUTION_FIXED_RESOLUTION_INTEGRATOR_H_
-#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_FIXED_RESOLUTION_FIXED_RESOLUTION_INTEGRATOR_H_
+#ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_FIXED_RESOLUTION_FIXED_RESOLUTION_INTEGRATOR_2D_H_
+#define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_FIXED_RESOLUTION_FIXED_RESOLUTION_INTEGRATOR_2D_H_
 
 #include <utility>
 
@@ -9,7 +9,7 @@
 #include "wavemap_2d/integrator/projective/scanwise_integrator_2d.h"
 
 namespace wavemap {
-class FixedResolutionIntegrator : public ScanwiseIntegrator2D {
+class FixedResolutionIntegrator2D : public ScanwiseIntegrator2D {
  public:
   using ScanwiseIntegrator2D::ScanwiseIntegrator2D;
 
@@ -21,4 +21,4 @@ class FixedResolutionIntegrator : public ScanwiseIntegrator2D {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_FIXED_RESOLUTION_FIXED_RESOLUTION_INTEGRATOR_H_
+#endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_FIXED_RESOLUTION_FIXED_RESOLUTION_INTEGRATOR_2D_H_
