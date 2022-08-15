@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_COMMON_COMMON_H_
 #define WAVEMAP_COMMON_COMMON_H_
 
+#include <limits>
 #include <vector>
 
 #include <Eigen/Eigen>
@@ -11,6 +12,13 @@
 
 namespace wavemap {
 using FloatingPoint = float;
+
+template <typename T>
+struct Bounds {
+  T lower = std::numeric_limits<T>::max();
+  T upper = std::numeric_limits<T>::lowest();
+};
+
 template <typename T>
 using MatrixT = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 using Matrix = MatrixT<FloatingPoint>;

@@ -3,14 +3,13 @@
 
 namespace wavemap {
 inline bool WaveletIntegrator2D::isApproximationErrorAcceptable(
-    RangeImage1DIntersector::IntersectionType intersection_type,
-    FloatingPoint sphere_center_distance,
+    IntersectionType intersection_type, FloatingPoint sphere_center_distance,
     FloatingPoint bounding_sphere_radius) {
   switch (intersection_type) {
-    case RangeImage1DIntersector::IntersectionType::kFreeOrUnknown:
+    case IntersectionType::kFreeOrUnknown:
       return bounding_sphere_radius / sphere_center_distance <
              kMaxAcceptableUpdateError / kMaxGradientOverRangeFullyInside;
-    case RangeImage1DIntersector::IntersectionType::kPossiblyOccupied:
+    case IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
              kMaxAcceptableUpdateError / kMaxGradientOnBoundary;
     default:
@@ -24,11 +23,10 @@ inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
     QuadtreeIndex::RelativeChild relative_child_index) {
   const AABB<Point2D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
-  const RangeImage1DIntersector::IntersectionType intersection_type =
+  const IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
           posed_range_image_->getPose(), W_cell_aabb, circular_projector_);
-  if (intersection_type ==
-      RangeImage1DIntersector::IntersectionType::kFullyUnknown) {
+  if (intersection_type == IntersectionType::kFullyUnknown) {
     return 0.f;
   }
 

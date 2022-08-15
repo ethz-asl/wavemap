@@ -11,11 +11,6 @@
 #include "wavemap_2d/integrator/projective/range_image_1d.h"
 
 namespace wavemap {
-struct Bounds {
-  FloatingPoint lower;
-  FloatingPoint upper;
-};
-
 class HierarchicalRangeImage1D {
  public:
   explicit HierarchicalRangeImage1D(std::shared_ptr<RangeImage1D> range_image)
@@ -33,7 +28,7 @@ class HierarchicalRangeImage1D {
   BinaryTreeIndex::Element getMaxHeight() const { return max_height_; }
   BinaryTreeIndex::Element getNumBoundLevels() const { return max_height_ - 1; }
 
-  Bounds getBounds(const BinaryTreeIndex& index) const {
+  Bounds<FloatingPoint> getBounds(const BinaryTreeIndex& index) const {
     DCHECK_GE(index.height, 0);
     DCHECK_LE(index.height, max_height_);
     if (index.height == 0) {
@@ -54,7 +49,8 @@ class HierarchicalRangeImage1D {
   // NOTE: We reuse getBounds() to get .upper/.lower and trust the compiler to
   //       optimize out unused (return) values during inlining.
 
-  Bounds getRangeBounds(IndexElement left_idx, IndexElement right_idx) const;
+  Bounds<FloatingPoint> getRangeBounds(IndexElement left_idx,
+                                       IndexElement right_idx) const;
   FloatingPoint getRangeLowerBound(IndexElement left_idx,
                                    IndexElement right_idx) const {
     return getRangeBounds(left_idx, right_idx).lower;
@@ -70,7 +66,7 @@ class HierarchicalRangeImage1D {
   std::shared_ptr<RangeImage1D> range_image_;
   const std::vector<RangeImage1D::Data> lower_bounds_;
   const std::vector<RangeImage1D::Data> upper_bounds_;
-  const BinaryTreeIndex::Element max_height_;
+  const NdtreeIndexElement max_height_;
 
   template <typename BinaryFunctor>
   static std::vector<RangeImage1D::Data> computeReducedPyramid(

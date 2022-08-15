@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace wavemap {
-inline Bounds HierarchicalRangeImage1D::getRangeBounds(
+inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
     IndexElement left_idx, IndexElement right_idx) const {
   DCHECK_LE(left_idx, right_idx);
   if (left_idx == right_idx) {

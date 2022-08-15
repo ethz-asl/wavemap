@@ -156,18 +156,6 @@ TEST_F(CoarseToFineIntegratorTest, HierarchicalRangeImage) {
   }
 }
 
-TEST_F(CoarseToFineIntegratorTest, ApproxAtan2) {
-  constexpr int kNumAngles = 360 * 1000;
-  for (int i = 0; i <= kNumAngles; ++i) {
-    const FloatingPoint angle = kTwoPi * static_cast<FloatingPoint>(i) /
-                                static_cast<FloatingPoint>(kNumAngles);
-    const Vector2D bearing{std::cos(angle), std::sin(angle)};
-    EXPECT_NEAR(RangeImage1DIntersector::atan2_approx(bearing.y(), bearing.x()),
-                std::atan2(bearing.y(), bearing.x()),
-                RangeImage1DIntersector::kWorstCaseAtan2ApproxError);
-  }
-}
-
 TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   struct QueryAndExpectedResults {
     AABB<Point2D> W_aabb;
@@ -392,16 +380,13 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
         }
       }
       ASSERT_TRUE(has_free || has_occupied || has_unknown);
-      RangeImage1DIntersector::IntersectionType reference_intersection_type;
+      IntersectionType reference_intersection_type;
       if (has_occupied) {
-        reference_intersection_type =
-            RangeImage1DIntersector::IntersectionType::kPossiblyOccupied;
+        reference_intersection_type = IntersectionType::kPossiblyOccupied;
       } else if (has_free) {
-        reference_intersection_type =
-            RangeImage1DIntersector::IntersectionType::kFreeOrUnknown;
+        reference_intersection_type = IntersectionType::kFreeOrUnknown;
       } else {
-        reference_intersection_type =
-            RangeImage1DIntersector::IntersectionType::kFullyUnknown;
+        reference_intersection_type = IntersectionType::kFullyUnknown;
       }
 
       const FloatingPoint node_width =
@@ -414,17 +399,12 @@ TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
       const AABB<Point2D> W_cell_aabb{
           W_node_bottom_left,
           W_node_bottom_left + Vector2D::Constant(node_width)};
-      const RangeImage1DIntersector::IntersectionType
-          returned_intersection_type =
-              range_image_intersector.determineIntersectionType(
-                  random_pointcloud.getPose(), W_cell_aabb, circular_projector);
+      const IntersectionType returned_intersection_type =
+          range_image_intersector.determineIntersectionType(
+              random_pointcloud.getPose(), W_cell_aabb, circular_projector);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
-          << "Expected "
-          << RangeImage1DIntersector::getIntersectionTypeStr(
-                 reference_intersection_type)
-          << " but got "
-          << RangeImage1DIntersector::getIntersectionTypeStr(
-                 returned_intersection_type);
+          << "Expected " << getIntersectionTypeStr(reference_intersection_type)
+          << " but got " << getIntersectionTypeStr(returned_intersection_type);
     }
   }
 }

@@ -55,6 +55,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/iterator/test_grid_iterator.cc
       test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc
+      test/src/utils/test_approximate_trigonometry.cc
       test/src/utils/test_bit_manipulation.cc
       test/src/utils/test_int_math.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)

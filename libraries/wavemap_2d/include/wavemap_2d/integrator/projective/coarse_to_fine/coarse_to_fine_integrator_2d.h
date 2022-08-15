@@ -31,8 +31,7 @@ class CoarseToFineIntegrator2D : public ScanwiseIntegrator2D {
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
 
   static bool isApproximationErrorAcceptable(
-      RangeImage1DIntersector::IntersectionType intersection_type,
-      FloatingPoint sphere_center_distance,
+      IntersectionType intersection_type, FloatingPoint sphere_center_distance,
       FloatingPoint bounding_sphere_radius);
 };
 }  // namespace wavemap

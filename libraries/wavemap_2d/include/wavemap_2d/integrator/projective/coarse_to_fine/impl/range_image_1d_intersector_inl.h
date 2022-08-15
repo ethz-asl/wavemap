@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+#include <wavemap_common/utils/approximate_trigonometry.h>
+
 namespace wavemap {
 // NOTE: Despite being branch-heavy, this implementation still outperforms all
 //       fully vectorized branch-free versions we tried. Possibly because we
@@ -36,41 +38,53 @@ RangeImage1DIntersector::getAabbMinMaxProjectedAngle(
     //       addressed at the start of the method.
     if (aabb_fully_in_upper_quadrants) {
       // AABB crosses both upper quadrants
-      angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
-      angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
+      angle_pair.min_angle = approximate::atan2()(W_t_C_min.y(), W_t_C_min.x());
+      angle_pair.max_angle = approximate::atan2()(W_t_C_max.y(), W_t_C_min.x());
     } else {
       // AABB crosses both lower quadrants
-      angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
-      angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
+      angle_pair.min_angle = approximate::atan2()(W_t_C_max.y(), W_t_C_max.x());
+      angle_pair.max_angle = approximate::atan2()(W_t_C_min.y(), W_t_C_max.x());
     }
   } else {
     if (aabb_fully_in_left_quadrants) {
       if (aabb_crosses_y_axis) {
         // AABB crosses both left quadrants
-        angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
-        angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
+        angle_pair.min_angle =
+            approximate::atan2()(W_t_C_min.y(), W_t_C_max.x());
+        angle_pair.max_angle =
+            approximate::atan2()(W_t_C_min.y(), W_t_C_min.x());
       } else if (aabb_fully_in_upper_quadrants) {
         // AABB is fully in the upper left quadrant
-        angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
-        angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
+        angle_pair.min_angle =
+            approximate::atan2()(W_t_C_min.y(), W_t_C_max.x());
+        angle_pair.max_angle =
+            approximate::atan2()(W_t_C_max.y(), W_t_C_min.x());
       } else {
         // AABB is fully in the bottom left quadrant
-        angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
-        angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
+        angle_pair.min_angle =
+            approximate::atan2()(W_t_C_max.y(), W_t_C_max.x());
+        angle_pair.max_angle =
+            approximate::atan2()(W_t_C_min.y(), W_t_C_min.x());
       }
     } else {
       if (aabb_crosses_y_axis) {
         // AABB crosses both right quadrants
-        angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
-        angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
+        angle_pair.min_angle =
+            approximate::atan2()(W_t_C_max.y(), W_t_C_min.x());
+        angle_pair.max_angle =
+            approximate::atan2()(W_t_C_max.y(), W_t_C_max.x());
       } else if (aabb_fully_in_upper_quadrants) {
         // AABB is fully in the upper right quadrant
-        angle_pair.min_angle = atan2_approx(W_t_C_min.y(), W_t_C_min.x());
-        angle_pair.max_angle = atan2_approx(W_t_C_max.y(), W_t_C_max.x());
+        angle_pair.min_angle =
+            approximate::atan2()(W_t_C_min.y(), W_t_C_min.x());
+        angle_pair.max_angle =
+            approximate::atan2()(W_t_C_max.y(), W_t_C_max.x());
       } else {
         // AABB is fully in the bottom right quadrant
-        angle_pair.min_angle = atan2_approx(W_t_C_max.y(), W_t_C_min.x());
-        angle_pair.max_angle = atan2_approx(W_t_C_min.y(), W_t_C_max.x());
+        angle_pair.min_angle =
+            approximate::atan2()(W_t_C_max.y(), W_t_C_min.x());
+        angle_pair.max_angle =
+            approximate::atan2()(W_t_C_min.y(), W_t_C_max.x());
       }
     }
   }
@@ -78,11 +92,11 @@ RangeImage1DIntersector::getAabbMinMaxProjectedAngle(
   // Make the angle range conservative by padding it with the worst-case error
   // of our atan approximation (in the direction that makes the range largest)
   if (kPi < angle_pair.max_angle - angle_pair.min_angle) {
-    angle_pair.min_angle += kWorstCaseAtan2ApproxError;
-    angle_pair.max_angle -= kWorstCaseAtan2ApproxError;
+    angle_pair.min_angle += approximate::atan2::kWorstCaseError;
+    angle_pair.max_angle -= approximate::atan2::kWorstCaseError;
   } else {
-    angle_pair.min_angle -= kWorstCaseAtan2ApproxError;
-    angle_pair.max_angle += kWorstCaseAtan2ApproxError;
+    angle_pair.min_angle -= approximate::atan2::kWorstCaseError;
+    angle_pair.max_angle += approximate::atan2::kWorstCaseError;
   }
 
   // Rotate the min/max angles we found into frame C
@@ -96,8 +110,7 @@ RangeImage1DIntersector::getAabbMinMaxProjectedAngle(
   return angle_pair;
 }
 
-inline RangeImage1DIntersector::IntersectionType
-RangeImage1DIntersector::determineIntersectionType(
+inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
     const Transformation2D& T_W_C, const AABB<Point2D>& W_cell_aabb,
     const CircularProjector& circular_projector) const {
   // Get the min and max distances from any point in the cell (which is an

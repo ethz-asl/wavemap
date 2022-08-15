@@ -43,11 +43,10 @@ void CoarseToFineIntegrator2D::integratePointcloud(
 
     const AABB<Point2D> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width_);
-    const RangeImage1DIntersector::IntersectionType intersection_type =
+    const IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(
             pointcloud.getPose(), W_cell_aabb, circular_projector_);
-    if (intersection_type ==
-        RangeImage1DIntersector::IntersectionType::kFullyUnknown) {
+    if (intersection_type == IntersectionType::kFullyUnknown) {
       continue;
     }
 

@@ -11,6 +11,7 @@
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/aabb.h>
 #include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
+#include <wavemap_common/integrator/projective/intersection_type.h>
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/type_utils.h>
 
@@ -19,18 +20,6 @@
 namespace wavemap {
 class RangeImage1DIntersector {
  public:
-  enum class IntersectionType : int {
-    kFullyUnknown,
-    kFreeOrUnknown,
-    kPossiblyOccupied
-  };
-  static std::string getIntersectionTypeStr(
-      IntersectionType intersection_type) {
-    static constexpr std::array<const char*, 3> kIntersectionTypeStrs(
-        {"fully_unknown", "free_or_unknown", "possibly_occupied"});
-    return kIntersectionTypeStrs[to_underlying(intersection_type)];
-  }
-
   struct MinMaxAnglePair {
     FloatingPoint min_angle = std::numeric_limits<FloatingPoint>::max();
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
@@ -50,22 +39,6 @@ class RangeImage1DIntersector {
 
  private:
   HierarchicalRangeImage1D hierarchical_range_image_;
-
-  // NOTE: Aside from generally being faster than std::atan2, a major advantage
-  //       of this atan2 approximation is that it's branch-free and easily gets
-  //       vectorized by GCC (e.g. nearby calls and calls in loops).
-  static constexpr FloatingPoint kWorstCaseAtan2ApproxError = 0.011f;
-  static FloatingPoint atan2_approx(FloatingPoint y, FloatingPoint x) {
-    FloatingPoint abs_y =
-        std::abs(y) + std::numeric_limits<FloatingPoint>::epsilon();
-    FloatingPoint r =
-        (x - std::copysign(abs_y, x)) / (abs_y + std::abs(x));  // NOLINT
-    FloatingPoint angle = kHalfPi - std::copysign(kQuarterPi, x);
-    angle += (0.1963f * r * r - 0.9817f) * r;
-    return std::copysign(angle, y);
-  }
-
-  friend class CoarseToFineIntegratorTest_ApproxAtan2_Test;
 };
 }  // namespace wavemap
 

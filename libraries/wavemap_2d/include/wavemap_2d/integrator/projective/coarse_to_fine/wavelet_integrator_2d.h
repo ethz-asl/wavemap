@@ -39,8 +39,7 @@ class WaveletIntegrator2D : public ScanwiseIntegrator2D {
       QuadtreeIndex ::RelativeChild relative_child_index);
 
   static bool isApproximationErrorAcceptable(
-      RangeImage1DIntersector::IntersectionType intersection_type,
-      FloatingPoint sphere_center_distance,
+      IntersectionType intersection_type, FloatingPoint sphere_center_distance,
       FloatingPoint bounding_sphere_radius);
 };
 }  // namespace wavemap
