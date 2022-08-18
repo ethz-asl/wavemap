@@ -14,16 +14,16 @@ class StampedTransform:
             [csv_row['qx'], csv_row['qy'], csv_row['qz'], csv_row['qw']])
 
 
-# Params
-update_rate = 100
-world_frame = 'odom'
-sensor_frame = 'cam_left'
-csv_path = '../data/newer_college/registered_poses.csv'
-
 # Setup ROS
 rospy.init_node("csv_to_tf_node", anonymous=True)
-rate = rospy.Rate(update_rate)
 tf_broadcaster = tf.TransformBroadcaster()
+update_rate = 100
+rate = rospy.Rate(update_rate)
+
+# Params
+world_frame = rospy.get_param('~odom_frame', 'odom')
+sensor_frame = rospy.get_param('~sensor_frame')
+csv_path = rospy.get_param('~ground_truth_pose_file_path')
 
 # Load the CSV file
 pose_dataframe = pandas.read_csv(csv_path)
