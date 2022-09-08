@@ -33,6 +33,20 @@ TEST(IntMathTest, Log2) {
   }
 }
 
+TEST(IntMathTest, DivExp2) {
+  constexpr int kMaxExp = 10;
+  constexpr int kMaxValue = 2000;
+  constexpr int kMinValue = -kMaxValue;
+  for (int exp = 0; exp < kMaxExp; ++exp) {
+    for (int value = kMinValue; value < kMaxValue; ++value) {
+      const FloatingPoint result = static_cast<FloatingPoint>(value) /
+                                   std::exp2f(static_cast<FloatingPoint>(exp));
+      EXPECT_EQ(int_math::div_exp2_floor(value, exp), std::floor(result));
+      EXPECT_EQ(int_math::div_exp2_ceil(value, exp), std::ceil(result));
+    }
+  }
+}
+
 TEST(IntMathTest, PowSequence) {
   // Test trivial (length 1) sequences
   constexpr std::array<IndexElement, 1> expected_pow_sequence_length_1 = {1};

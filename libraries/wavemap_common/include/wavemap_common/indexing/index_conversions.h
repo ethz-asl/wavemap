@@ -151,7 +151,7 @@ inline NdtreeIndex<dim> indexAndHeightToNodeIndex(const Index<dim>& index,
                                                   NdtreeIndexElement height) {
   DCHECK_GE(height, 0);
   NdtreeIndex<dim> node_index{height, index};
-  node_index.position = int_math::div_exp2(node_index.position, height);
+  node_index.position = int_math::div_exp2_floor(node_index.position, height);
   return node_index;
 }
 

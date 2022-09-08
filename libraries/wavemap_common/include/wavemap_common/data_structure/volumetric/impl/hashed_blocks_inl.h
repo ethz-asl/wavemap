@@ -168,7 +168,7 @@ template <typename CellT, int dim>
 typename HashedBlocks<CellT, dim>::BlockIndex
 HashedBlocks<CellT, dim>::computeBlockIndexFromIndex(
     const Index<dim>& index) const {
-  return int_math::div_exp2(index, kCellsPerSideLog2);
+  return int_math::div_exp2_floor(index, kCellsPerSideLog2);
 }
 
 template <typename CellT, int dim>

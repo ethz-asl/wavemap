@@ -5,6 +5,20 @@
 #include <vector>
 
 namespace wavemap {
+inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getBounds(
+    const BinaryTreeIndex& index) const {
+  DCHECK_GE(index.height, 0);
+  DCHECK_LE(index.height, max_height_);
+  if (index.height == 0) {
+    const FloatingPoint range_image_value =
+        range_image_->operator[](index.position.x());
+    return {range_image_value, range_image_value};
+  } else {
+    return {lower_bounds_[index.height - 1][index.position.x()],
+            upper_bounds_[index.height - 1][index.position.x()]};
+  }
+}
+
 inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
     IndexElement left_idx, IndexElement right_idx) const {
   DCHECK_LE(left_idx, right_idx);
@@ -14,22 +28,24 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
   }
 
   const IndexElement min_level_up = int_math::log2_floor(right_idx - left_idx);
-  const IndexElement left_idx_shifted = left_idx >> min_level_up;
-  const IndexElement right_idx_shifted = right_idx >> min_level_up;
+  const IndexElement left_idx_shifted =
+      int_math::div_exp2_floor(left_idx, min_level_up);
+  const IndexElement right_idx_shifted =
+      int_math::div_exp2_floor(right_idx, min_level_up);
 
   // Check if the nodes at min_level_up are direct neighbors
   if (left_idx_shifted + 1 == right_idx_shifted) {
     // Check if they even share the same parent (node at min_level_up + 1)
-    if ((left_idx_shifted & 0b10) == (right_idx_shifted & 0b10)) {
-      // Since they do, we only need to check the parent which is equivalent
-      // to checking both nodes at min_level_up but cheaper
-      const BinaryTreeIndex::Element parent_height = min_level_up;
-      const BinaryTreeIndex::Element parent_idx = left_idx_shifted >> 1;
+    if ((left_idx_shifted >> 1) == (right_idx_shifted >> 1)) {
+      // Since they do, checking both nodes at min_level_up is equivalent to
+      // checking their common parent, so we do that instead as its cheaper
+      const IndexElement parent_height = min_level_up;
+      const IndexElement parent_idx = left_idx_shifted >> 1;
       return {lower_bounds_[parent_height][parent_idx],
               upper_bounds_[parent_height][parent_idx]};
     } else {
       // Check both nodes at min_level_up
-      const BinaryTreeIndex::Element height = min_level_up - 1;
+      const IndexElement height = min_level_up - 1;
       const IndexElement left_node_idx = left_idx_shifted;
       const IndexElement right_node_idx = right_idx_shifted;
       if (min_level_up == 0) {
@@ -48,7 +64,7 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
     // Since the nodes at min_level_up are not direct neighbors we need to go
     // one level up and check both parents there
     DCHECK(left_idx_shifted + 2 == right_idx_shifted);
-    const BinaryTreeIndex::Element parent_height = min_level_up;
+    const NdtreeIndexElement parent_height = min_level_up;
     const IndexElement left_parent_idx = left_idx_shifted >> 1;
     const IndexElement right_parent_idx = right_idx_shifted >> 1;
     return {std::min(lower_bounds_[parent_height][left_parent_idx],
@@ -59,43 +75,39 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
 }
 
 template <typename BinaryFunctor>
-std::vector<RangeImage1D::Data> HierarchicalRangeImage1D::computeReducedPyramid(
-    const RangeImage1D& range_image, BinaryFunctor reduction_functor) {
-  const int original_width = range_image.getNumBeams();
-  const int max_num_halvings = int_math::log2_ceil(original_width);
-  std::vector<RangeImage1D::Data> pyramid(max_num_halvings);
+std::vector<RangeImage1D> HierarchicalRangeImage1D::computeReducedPyramid(
+    const RangeImage1D& range_image, BinaryFunctor reduction_functor,
+    FloatingPoint init) {
+  const int range_image_width = range_image.getNumBeams();
+  const int max_num_halvings = int_math::log2_ceil(range_image_width);
 
-  const int last_reduction_level = max_num_halvings - 1;
-  for (int level_idx = 0; level_idx <= last_reduction_level; ++level_idx) {
-    // Zero initialize the current level
-    RangeImage1D::Data& current_level = pyramid[level_idx];
-    const int level_width = int_math::exp2(last_reduction_level - level_idx);
-    current_level = RangeImage1D::Data::Zero(1, level_width);
-    // Reduce
-    if (level_idx == 0) {
-      // For the first level, reduce from the original range image
-      const int image_width = range_image.getNumBeams();
-      const int half_image_width = image_width >> 1;  // Always rounded down
-      for (int idx = 0; idx < half_image_width; ++idx) {
-        const int first_child_idx = 2 * idx;
-        const int second_child_idx = first_child_idx + 1;
-        current_level[idx] = reduction_functor(range_image[first_child_idx],
-                                               range_image[second_child_idx]);
-      }
-      const bool image_width_is_even = !(image_width & 0b1);
-      if (!image_width_is_even) {
-        const int first_child_idx = 2 * half_image_width;
-        current_level[half_image_width] = range_image[first_child_idx];
-      }
-    } else {
-      // Continue reducing from the previous reduction level otherwise
-      const RangeImage1D::Data& previous_level = pyramid[level_idx - 1];
-      for (int idx = 0; idx < level_width; ++idx) {
-        const int first_child_idx = 2 * idx;
-        const int second_child_idx = first_child_idx + 1;
-        current_level[idx] = reduction_functor(
-            previous_level[first_child_idx], previous_level[second_child_idx]);
-      }
+  std::vector<RangeImage1D> pyramid;
+  pyramid.reserve(max_num_halvings);
+  for (int level_idx = 0; level_idx < max_num_halvings; ++level_idx) {
+    // Initialize the current level
+    const int level_width =
+        int_math::div_exp2_ceil(range_image_width, level_idx + 1);
+    RangeImage1D& current_level =
+        pyramid.template emplace_back(level_width, init);
+
+    // Reduce from the previous level or from the range image (for level 0)
+    const RangeImage1D& previous_level =
+        level_idx == 0 ? range_image : pyramid[level_idx - 1];
+
+    const bool previous_level_width_is_uneven =
+        previous_level.getNumBeams() & 1;
+    const int last_index = level_width - 1;
+    const int last_regular_index = last_index - previous_level_width_is_uneven;
+    for (int idx = 0; idx <= last_regular_index; ++idx) {
+      const int first_child_idx = 2 * idx;
+      const int second_child_idx = first_child_idx + 1;
+      current_level[idx] = reduction_functor(previous_level[first_child_idx],
+                                             previous_level[second_child_idx]);
+    }
+    if (previous_level_width_is_uneven) {
+      const int first_child_idx = 2 * last_index;
+      current_level[last_index] =
+          reduction_functor(previous_level[first_child_idx], init);
     }
   }
   return pyramid;

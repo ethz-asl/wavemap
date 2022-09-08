@@ -7,7 +7,7 @@
 namespace wavemap {
 template <int dim>
 NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex() const {
-  return {height + 1, int_math::div_exp2(position, 1)};
+  return {height + 1, int_math::div_exp2_floor(position, 1)};
 }
 
 template <int dim>
@@ -15,7 +15,7 @@ NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex(
     Element parent_height) const {
   DCHECK_GE(parent_height, height);
   const Element height_difference = parent_height - height;
-  return {parent_height, int_math::div_exp2(position, height_difference)};
+  return {parent_height, int_math::div_exp2_floor(position, height_difference)};
 }
 
 template <int dim>

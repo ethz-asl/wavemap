@@ -13,7 +13,7 @@ enum class IntersectionType : int {
   kPossiblyOccupied
 };
 
-static std::string getIntersectionTypeStr(IntersectionType intersection_type) {
+inline std::string getIntersectionTypeStr(IntersectionType intersection_type) {
   static constexpr std::array<const char*, 3> kIntersectionTypeStrs(
       {"fully_unknown", "free_or_unknown", "possibly_occupied"});
   return kIntersectionTypeStrs[to_underlying(intersection_type)];

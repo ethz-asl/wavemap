@@ -88,7 +88,7 @@ class VolumetricDifferencingNdtree
   NdtreeIndex<dim> toInternal(const NdtreeIndex<dim>& node_index) const {
     DCHECK_LE(node_index.height, root_node_index_offset_.height);
     const Index<dim> height_adjusted_offset =
-        int_math::div_exp2(root_index_offset_, node_index.height);
+        int_math::div_exp2_floor(root_index_offset_, node_index.height);
     return {node_index.height, node_index.position + height_adjusted_offset};
   }
   Index<dim> toExternalIndex(const Index<dim>& index) const {
@@ -98,7 +98,7 @@ class VolumetricDifferencingNdtree
       const NdtreeIndex<dim>& node_index) const {
     DCHECK_LE(node_index.height, root_node_index_offset_.height);
     const Index<dim> height_adjusted_offset =
-        int_math::div_exp2(root_index_offset_, node_index.height);
+        int_math::div_exp2_floor(root_index_offset_, node_index.height);
     return {node_index.height, node_index.position - height_adjusted_offset};
   }
 };

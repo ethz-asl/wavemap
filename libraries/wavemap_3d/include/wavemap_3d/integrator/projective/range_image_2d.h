@@ -10,8 +10,9 @@ class RangeImage2D {
  public:
   using Data = Eigen::Matrix<FloatingPoint, Eigen::Dynamic, Eigen::Dynamic>;
 
-  explicit RangeImage2D(IndexElement num_rows, IndexElement num_columns)
-      : data_(Data::Zero(num_rows, num_columns)) {}
+  RangeImage2D(IndexElement num_rows, IndexElement num_columns,
+               FloatingPoint initial_value = 0.f)
+      : data_(Data::Constant(num_rows, num_columns, initial_value)) {}
 
   RangeImage2D(const Pointcloud<Point3D>& pointcloud,
                const SphericalProjector& spherical_projector)

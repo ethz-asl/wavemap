@@ -10,8 +10,9 @@ class RangeImage1D {
  public:
   using Data = Eigen::Matrix<FloatingPoint, 1, Eigen::Dynamic>;
 
-  explicit RangeImage1D(IndexElement num_beams)
-      : data_(Data::Zero(1, num_beams)) {}
+  explicit RangeImage1D(IndexElement num_beams,
+                        FloatingPoint initial_value = 0.f)
+      : data_(Data::Constant(1, num_beams, initial_value)) {}
 
   RangeImage1D(const Pointcloud<Point2D>& pointcloud,
                const CircularProjector& circular_projector)
