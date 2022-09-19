@@ -197,8 +197,8 @@ TEST_F(RangeImage1DIntersectorTest, RangeImageIntersectionType) {
     constexpr FloatingPoint kMinAngle = -kHalfPi;
     constexpr FloatingPoint kMaxAngle = kHalfPi;
     const int num_beams = getRandomIndexElement(100, 2048);
-    constexpr FloatingPoint kMinDistance = 10.f;
-    constexpr FloatingPoint kMaxDistance = 30.f;
+    constexpr FloatingPoint kMinDistance = 0.f;
+    constexpr FloatingPoint kMaxDistance = 60.f;
     const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
         kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
 

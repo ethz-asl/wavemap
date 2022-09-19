@@ -63,7 +63,9 @@ void CoarseToFineIntegrator2D::integratePointcloud(
           CircularProjector::bearingToAngle(C_node_center);
       const FloatingPoint sample =
           computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
-      volumetric_quadtree_->addToCellValue(current_node, sample);
+      if (kEpsilon < std::abs(sample)) {
+        volumetric_quadtree_->addToCellValue(current_node, sample);
+      }
       continue;
     }
 

@@ -50,6 +50,17 @@ class PointcloudIntegrator3DTest : public FixtureBase {
 
     return {getRandomTransformation<3>(), pointcloud};
   }
+
+  // TODO(victorr): Use random FoVs and numbers of beams once these are
+  //                configurable
+  static constexpr FloatingPoint kMinElevationAngle = -0.3926991f;
+  static constexpr FloatingPoint kMaxElevationAngle = 0.3926991f;
+  static constexpr FloatingPoint kMinAzimuthAngle = -kPi;
+  static constexpr FloatingPoint kMaxAzimuthAngle = kPi;
+  static constexpr int kNumRows = 64;
+  static constexpr int kNumCols = 1024;
+  static constexpr FloatingPoint kMinDistance = 0.f;
+  static constexpr FloatingPoint kMaxDistance = 30.f;
 };
 
 TEST_F(PointcloudIntegrator3DTest, RayIntegrator) {
@@ -115,47 +126,38 @@ TEST_F(PointcloudIntegrator3DTest,
   constexpr int kNumRepetitions = 3;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
-    // TODO(victorr): Use random FoVs and numbers of beams once these are
-    //                configurable
-    constexpr FloatingPoint kMinElevationAngle = -0.3926991f;
-    constexpr FloatingPoint kMaxElevationAngle = 0.3926991f;
-    constexpr FloatingPoint kMinAzimuthAngle = -kPi;
-    constexpr FloatingPoint kMaxAzimuthAngle = kPi;
-    constexpr int kNumRows = 64;
-    constexpr int kNumCols = 1024;
-    constexpr FloatingPoint kMinDistance = 0.f;
-    constexpr FloatingPoint kMaxDistance = 30.f;
     const PosedPointcloud<Point3D> random_pointcloud = getRandomPointcloud(
         kMinElevationAngle, kMaxElevationAngle, kNumRows, kMinAzimuthAngle,
         kMaxAzimuthAngle, kNumCols, kMinDistance, kMaxDistance);
 
-    VolumetricDataStructure3D::Ptr beam_occupancy_map =
+    VolumetricDataStructure3D::Ptr reference_occupancy_map =
         std::make_shared<HashedBlocks3D<UnboundedOccupancyCell>>(
             min_cell_width);
-    PointcloudIntegrator3D::Ptr fixed_resolution_integrator =
-        std::make_shared<FixedResolutionIntegrator3D>(beam_occupancy_map);
-    fixed_resolution_integrator->integratePointcloud(random_pointcloud);
+    PointcloudIntegrator3D::Ptr reference_integrator =
+        std::make_shared<FixedResolutionIntegrator3D>(reference_occupancy_map);
+    reference_integrator->integratePointcloud(random_pointcloud);
 
-    VolumetricDataStructure3D::Ptr scan_occupancy_map =
+    VolumetricDataStructure3D::Ptr evaluated_occupancy_map =
         std::make_shared<VolumetricOctree<UnboundedOccupancyCell>>(
             min_cell_width);
-    PointcloudIntegrator3D::Ptr scan_integrator =
-        std::make_shared<CoarseToFineIntegrator3D>(scan_occupancy_map);
-    scan_integrator->integratePointcloud(random_pointcloud);
+    PointcloudIntegrator3D::Ptr evaluated_integrator =
+        std::make_shared<CoarseToFineIntegrator3D>(evaluated_occupancy_map);
+    evaluated_integrator->integratePointcloud(random_pointcloud);
 
-    scan_occupancy_map->prune();
-    const Index3D min_index = beam_occupancy_map->getMinIndex().cwiseMin(
-        scan_occupancy_map->getMinIndex());
-    const Index3D max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
-        scan_occupancy_map->getMaxIndex());
+    evaluated_occupancy_map->prune();
+    const Index3D min_index = reference_occupancy_map->getMinIndex().cwiseMin(
+        evaluated_occupancy_map->getMinIndex());
+    const Index3D max_index = reference_occupancy_map->getMaxIndex().cwiseMax(
+        evaluated_occupancy_map->getMaxIndex());
 
     for (const Index3D& index : Grid(min_index, max_index)) {
-      const FloatingPoint cell_value_in_beam_map =
-          beam_occupancy_map->getCellValue(index);
-      const FloatingPoint cell_value_in_scan_map =
-          scan_occupancy_map->getCellValue(index);
-      EXPECT_NEAR(cell_value_in_scan_map, cell_value_in_beam_map,
-                  CoarseToFineIntegrator3D::kMaxAcceptableUpdateError);
+      const FloatingPoint cell_value_in_reference_map =
+          reference_occupancy_map->getCellValue(index);
+      const FloatingPoint cell_value_in_evaluated_map =
+          evaluated_occupancy_map->getCellValue(index);
+      EXPECT_NEAR(cell_value_in_evaluated_map, cell_value_in_reference_map,
+                  CoarseToFineIntegrator3D::kMaxAcceptableUpdateError)
+          << "For cell index " << EigenFormat::oneLine(index);
     }
   }
 }
@@ -165,46 +167,37 @@ TEST_F(PointcloudIntegrator3DTest,
   constexpr int kNumRepetitions = 3;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
-    // TODO(victorr): Use random FoVs and numbers of beams once these are
-    //                configurable
-    constexpr FloatingPoint kMinElevationAngle = -0.3926991f;
-    constexpr FloatingPoint kMaxElevationAngle = 0.3926991f;
-    constexpr FloatingPoint kMinAzimuthAngle = -kPi;
-    constexpr FloatingPoint kMaxAzimuthAngle = kPi;
-    constexpr int kNumRows = 64;
-    constexpr int kNumCols = 1024;
-    constexpr FloatingPoint kMinDistance = 0.f;
-    constexpr FloatingPoint kMaxDistance = 30.f;
     const PosedPointcloud<Point3D> random_pointcloud = getRandomPointcloud(
         kMinElevationAngle, kMaxElevationAngle, kNumRows, kMinAzimuthAngle,
         kMaxAzimuthAngle, kNumCols, kMinDistance, kMaxDistance);
 
-    VolumetricDataStructure3D::Ptr beam_occupancy_map =
+    VolumetricDataStructure3D::Ptr reference_occupancy_map =
         std::make_shared<HashedBlocks3D<UnboundedOccupancyCell>>(
             min_cell_width);
-    PointcloudIntegrator3D::Ptr fixed_resolution_integrator =
-        std::make_shared<FixedResolutionIntegrator3D>(beam_occupancy_map);
-    fixed_resolution_integrator->integratePointcloud(random_pointcloud);
+    PointcloudIntegrator3D::Ptr reference_integrator =
+        std::make_shared<FixedResolutionIntegrator3D>(reference_occupancy_map);
+    reference_integrator->integratePointcloud(random_pointcloud);
 
-    VolumetricDataStructure3D::Ptr scan_occupancy_map =
+    VolumetricDataStructure3D::Ptr evaluated_occupancy_map =
         std::make_shared<WaveletOctree<UnboundedOccupancyCell>>(min_cell_width);
-    PointcloudIntegrator3D::Ptr scan_integrator =
-        std::make_shared<WaveletIntegrator3D>(scan_occupancy_map);
-    scan_integrator->integratePointcloud(random_pointcloud);
+    PointcloudIntegrator3D::Ptr evaluated_integrator =
+        std::make_shared<WaveletIntegrator3D>(evaluated_occupancy_map);
+    evaluated_integrator->integratePointcloud(random_pointcloud);
 
-    scan_occupancy_map->prune();
-    const Index3D min_index = beam_occupancy_map->getMinIndex().cwiseMin(
-        scan_occupancy_map->getMinIndex());
-    const Index3D max_index = beam_occupancy_map->getMaxIndex().cwiseMax(
-        scan_occupancy_map->getMaxIndex());
+    evaluated_occupancy_map->prune();
+    const Index3D min_index = reference_occupancy_map->getMinIndex().cwiseMin(
+        evaluated_occupancy_map->getMinIndex());
+    const Index3D max_index = reference_occupancy_map->getMaxIndex().cwiseMax(
+        evaluated_occupancy_map->getMaxIndex());
 
     for (const Index3D& index : Grid(min_index, max_index)) {
-      const FloatingPoint cell_value_in_beam_map =
-          beam_occupancy_map->getCellValue(index);
-      const FloatingPoint cell_value_in_scan_map =
-          scan_occupancy_map->getCellValue(index);
-      EXPECT_NEAR(cell_value_in_scan_map, cell_value_in_beam_map,
-                  CoarseToFineIntegrator3D::kMaxAcceptableUpdateError);
+      const FloatingPoint cell_value_in_reference_map =
+          reference_occupancy_map->getCellValue(index);
+      const FloatingPoint cell_value_in_evaluated_map =
+          evaluated_occupancy_map->getCellValue(index);
+      EXPECT_NEAR(cell_value_in_evaluated_map, cell_value_in_reference_map,
+                  CoarseToFineIntegrator3D::kMaxAcceptableUpdateError)
+          << "For cell index " << EigenFormat::oneLine(index);
     }
   }
 }

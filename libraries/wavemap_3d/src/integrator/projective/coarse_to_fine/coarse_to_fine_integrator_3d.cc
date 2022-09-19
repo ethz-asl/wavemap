@@ -61,11 +61,13 @@ void CoarseToFineIntegrator3D::integratePointcloud(
     if (current_node.height == 0 ||
         isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                        bounding_sphere_radius)) {
-      const Vector2D angles_C_cell =
+      const Vector2D spherical_C_cell =
           SphericalProjector::bearingToSpherical(C_node_center);
       const FloatingPoint sample =
-          computeUpdate(*posed_range_image_, d_C_cell, angles_C_cell);
-      volumetric_octree_->addToCellValue(current_node, sample);
+          computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
+      if (kEpsilon < std::abs(sample)) {
+        volumetric_octree_->addToCellValue(current_node, sample);
+      }
       continue;
     }
 

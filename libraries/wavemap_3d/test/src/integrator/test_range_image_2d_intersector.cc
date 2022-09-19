@@ -250,11 +250,11 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
     constexpr FloatingPoint kMinElevationAngle = -kQuarterPi;
     constexpr FloatingPoint kMaxElevationAngle = kQuarterPi;
     const int num_rows = getRandomIndexElement(100, 2048);
-    constexpr FloatingPoint kMinAzimuthAngle = -kHalfPi;
-    constexpr FloatingPoint kMaxAzimuthAngle = kHalfPi;
+    constexpr FloatingPoint kMinAzimuthAngle = -kPi;
+    constexpr FloatingPoint kMaxAzimuthAngle = kPi;
     const int num_cols = getRandomIndexElement(100, 2048);
-    constexpr FloatingPoint kMinDistance = 10.f;
-    constexpr FloatingPoint kMaxDistance = 30.f;
+    constexpr FloatingPoint kMinDistance = 0.f;
+    constexpr FloatingPoint kMaxDistance = 60.f;
     const PosedPointcloud<Point3D> random_pointcloud = getRandomPointcloud(
         kMinElevationAngle, kMaxElevationAngle, num_rows, kMinAzimuthAngle,
         kMaxAzimuthAngle, num_cols, kMinDistance, kMaxDistance);

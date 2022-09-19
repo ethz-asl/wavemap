@@ -41,9 +41,11 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
   if (node_index.height == 0 ||
       isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
-    const Vector2D angle_C_cell =
+    const Vector2D spherical_C_cell =
         SphericalProjector::bearingToSpherical(C_node_center);
-    return computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
+    const FloatingPoint sample =
+        computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
+    return sample;
   }
 
   WaveletOctreeInterface::NodeType* node =

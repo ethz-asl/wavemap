@@ -41,9 +41,11 @@ inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
   if (node_index.height == 0 ||
       isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
-    FloatingPoint angle_C_cell =
+    const FloatingPoint angle_C_cell =
         CircularProjector::bearingToAngle(C_node_center);
-    return computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
+    const FloatingPoint sample =
+        computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
+    return sample;
   }
 
   WaveletQuadtreeInterface::NodeType* node =
