@@ -97,7 +97,8 @@ TEST_F(PointcloudIntegrator2DTest, RayIntegrator) {
 TEST_F(PointcloudIntegrator2DTest,
        BeamAndFixedResolutionIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
-  for (int idx = 0; idx < 10; ++idx) {
+  constexpr int kNumRepetitions = 10;
+  for (int idx = 0; idx < kNumRepetitions; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
     // TODO(victorr): Use random FoVs and numbers of beams once these are
     //                configurable
@@ -159,7 +160,8 @@ TEST_F(PointcloudIntegrator2DTest,
 
 TEST_F(PointcloudIntegrator2DTest, BeamAndCoarseToFineIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
-  for (int idx = 0; idx < 10; ++idx) {
+  constexpr int kNumRepetitions = 10;
+  for (int idx = 0; idx < kNumRepetitions; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
     // TODO(victorr): Use random FoVs and numbers of beams once these are
     //                configurable
@@ -222,7 +224,8 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndCoarseToFineIntegratorEquivalence) {
 
 TEST_F(PointcloudIntegrator2DTest, BeamAndWaveletIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
-  for (int idx = 0; idx < 10; ++idx) {
+  constexpr int kNumRepetitions = 10;
+  for (int idx = 0; idx < kNumRepetitions; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
     // TODO(victorr): Use random FoVs and numbers of beams once these are
     //                configurable
