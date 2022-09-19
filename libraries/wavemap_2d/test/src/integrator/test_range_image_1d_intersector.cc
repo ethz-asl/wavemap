@@ -204,8 +204,9 @@ TEST_F(RangeImage1DIntersectorTest, RangeImageIntersectionType) {
 
     // Create the hierarchical range image
     CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);
-    const auto range_image = std::make_shared<PosedRangeImage1D>(
-        random_pointcloud, circular_projector);
+    const auto range_image =
+        std::make_shared<PosedRangeImage1D>(circular_projector);
+    range_image->importPointcloud(random_pointcloud, circular_projector);
     RangeImage1DIntersector range_image_intersector(range_image);
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;

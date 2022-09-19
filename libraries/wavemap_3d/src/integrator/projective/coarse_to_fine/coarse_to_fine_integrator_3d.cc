@@ -10,7 +10,9 @@ namespace wavemap {
 CoarseToFineIntegrator3D::CoarseToFineIntegrator3D(
     VolumetricDataStructure3D::Ptr occupancy_map)
     : ScanwiseIntegrator3D(std::move(occupancy_map)),
-      min_cell_width_(occupancy_map_->getMinCellWidth()) {
+      min_cell_width_(occupancy_map_->getMinCellWidth()),
+      posed_range_image_(
+          std::make_shared<PosedRangeImage2D>(spherical_projector_)) {
   // Get a pointer to the underlying specialized octree data structure
   volumetric_octree_ =
       dynamic_cast<VolumetricOctreeInterface*>(occupancy_map_.get());
@@ -26,12 +28,8 @@ void CoarseToFineIntegrator3D::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  if (!posed_range_image_) {
-    posed_range_image_ =
-        std::make_shared<PosedRangeImage2D>(pointcloud, spherical_projector_);
-  }
   posed_range_image_->importPointcloud(pointcloud, spherical_projector_);
-  RangeImage2DIntersector range_image_intersector(posed_range_image_);
+  const RangeImage2DIntersector range_image_intersector(posed_range_image_);
 
   // Recursively update all relevant cells
   std::stack<OctreeIndex> stack;

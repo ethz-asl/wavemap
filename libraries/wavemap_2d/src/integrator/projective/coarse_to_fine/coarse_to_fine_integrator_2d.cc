@@ -8,7 +8,9 @@ namespace wavemap {
 CoarseToFineIntegrator2D::CoarseToFineIntegrator2D(
     VolumetricDataStructure2D::Ptr occupancy_map)
     : ScanwiseIntegrator2D(std::move(occupancy_map)),
-      min_cell_width_(occupancy_map_->getMinCellWidth()) {
+      min_cell_width_(occupancy_map_->getMinCellWidth()),
+      posed_range_image_(
+          std::make_shared<PosedRangeImage1D>(circular_projector_)) {
   // Get a pointer to the underlying specialized quadtree data structure
   volumetric_quadtree_ =
       dynamic_cast<VolumetricQuadtreeInterface*>(occupancy_map_.get());
@@ -24,12 +26,8 @@ void CoarseToFineIntegrator2D::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  if (!posed_range_image_) {
-    posed_range_image_ =
-        std::make_shared<PosedRangeImage1D>(pointcloud, circular_projector_);
-  }
   posed_range_image_->importPointcloud(pointcloud, circular_projector_);
-  RangeImage1DIntersector range_image_intersector(posed_range_image_);
+  const RangeImage1DIntersector range_image_intersector(posed_range_image_);
 
   // Recursively update all relevant cells
   std::stack<QuadtreeIndex> stack;

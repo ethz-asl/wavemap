@@ -263,8 +263,9 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
     SphericalProjector spherical_projector(
         kMinElevationAngle, kMaxElevationAngle, num_rows, kMinAzimuthAngle,
         kMaxAzimuthAngle, num_cols);
-    const auto range_image = std::make_shared<PosedRangeImage2D>(
-        random_pointcloud, spherical_projector);
+    const auto range_image =
+        std::make_shared<PosedRangeImage2D>(spherical_projector);
+    range_image->importPointcloud(random_pointcloud, spherical_projector);
     RangeImage2DIntersector range_image_intersector(range_image);
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;

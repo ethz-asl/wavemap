@@ -10,16 +10,12 @@ class RangeImage2D {
  public:
   using Data = Eigen::Matrix<FloatingPoint, Eigen::Dynamic, Eigen::Dynamic>;
 
+  explicit RangeImage2D(const SphericalProjector& spherical_projector)
+      : RangeImage2D(spherical_projector.getNumRows(),
+                     spherical_projector.getNumColumns()) {}
   RangeImage2D(IndexElement num_rows, IndexElement num_columns,
                FloatingPoint initial_value = 0.f)
       : data_(Data::Constant(num_rows, num_columns, initial_value)) {}
-
-  RangeImage2D(const Pointcloud<Point3D>& pointcloud,
-               const SphericalProjector& spherical_projector)
-      : RangeImage2D(spherical_projector.getNumRows(),
-                     spherical_projector.getNumColumns()) {
-    importPointcloud(pointcloud, spherical_projector);
-  }
 
   void importPointcloud(const Pointcloud<Point3D>& pointcloud,
                         const SphericalProjector& spherical_projector);
@@ -61,11 +57,8 @@ class PosedRangeImage2D : public RangeImage2D {
  public:
   using RangeImage2D::RangeImage2D;
 
-  PosedRangeImage2D(const PosedPointcloud<Point3D>& posed_pointcloud,
-                    const SphericalProjector& spherical_projector)
-      : RangeImage2D(posed_pointcloud.getPointsLocal(), spherical_projector) {
-    setPose(posed_pointcloud.getPose());
-  }
+  explicit PosedRangeImage2D(const SphericalProjector& spherical_projector)
+      : RangeImage2D(spherical_projector) {}
 
   void importPointcloud(const PosedPointcloud<Point3D>& posed_pointcloud,
                         const SphericalProjector& spherical_projector) {

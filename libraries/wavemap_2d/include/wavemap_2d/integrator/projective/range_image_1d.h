@@ -10,15 +10,11 @@ class RangeImage1D {
  public:
   using Data = Eigen::Matrix<FloatingPoint, 1, Eigen::Dynamic>;
 
+  explicit RangeImage1D(const CircularProjector& circular_projector)
+      : RangeImage1D(circular_projector.getNumCells()) {}
   explicit RangeImage1D(IndexElement num_beams,
                         FloatingPoint initial_value = 0.f)
       : data_(Data::Constant(1, num_beams, initial_value)) {}
-
-  RangeImage1D(const Pointcloud<Point2D>& pointcloud,
-               const CircularProjector& circular_projector)
-      : RangeImage1D(circular_projector.getNumCells()) {
-    importPointcloud(pointcloud, circular_projector);
-  }
 
   void importPointcloud(const Pointcloud<Point2D>& pointcloud,
                         const CircularProjector& circular_projector);
@@ -52,11 +48,8 @@ class PosedRangeImage1D : public RangeImage1D {
  public:
   using RangeImage1D::RangeImage1D;
 
-  PosedRangeImage1D(const PosedPointcloud<Point2D>& posed_pointcloud,
-                    const CircularProjector& circular_projector)
-      : RangeImage1D(posed_pointcloud.getPointsLocal(), circular_projector) {
-    setPose(posed_pointcloud.getPose());
-  }
+  explicit PosedRangeImage1D(const CircularProjector& circular_projector)
+      : RangeImage1D(circular_projector) {}
 
   void importPointcloud(const PosedPointcloud<Point2D>& posed_pointcloud,
                         const CircularProjector& circular_projector) {

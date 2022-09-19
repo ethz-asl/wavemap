@@ -4,7 +4,9 @@ namespace wavemap {
 WaveletIntegrator2D::WaveletIntegrator2D(
     VolumetricDataStructure2D::Ptr occupancy_map)
     : ScanwiseIntegrator2D(std::move(occupancy_map)),
-      min_cell_width_(occupancy_map_->getMinCellWidth()) {
+      min_cell_width_(occupancy_map_->getMinCellWidth()),
+      posed_range_image_(
+          std::make_shared<PosedRangeImage1D>(circular_projector_)) {
   // Get a pointer to the underlying specialized quadtree data structure
   wavelet_tree_ = dynamic_cast<WaveletQuadtreeInterface*>(occupancy_map_.get());
   CHECK(wavelet_tree_) << "Wavelet integrator can only be used with "
@@ -18,10 +20,6 @@ void WaveletIntegrator2D::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  if (!posed_range_image_) {
-    posed_range_image_ =
-        std::make_shared<PosedRangeImage1D>(pointcloud, circular_projector_);
-  }
   posed_range_image_->importPointcloud(pointcloud, circular_projector_);
   range_image_intersector_ =
       std::make_shared<RangeImage1DIntersector>(posed_range_image_);
