@@ -11,7 +11,7 @@
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
-constexpr FloatingPoint kOusterVerticalFoV = 0.3926991f;
+constexpr FloatingPoint kOusterVerticalFoV = 0.2897247f;
 class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
  public:
   explicit ScanwiseIntegrator3D(VolumetricDataStructure3D::Ptr occupancy_map)
@@ -40,8 +40,8 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
     Vector2D spherical_remainders;
     const Index2D idx = spherical_projector_.sphericalToNearestIndex(
         spherical_C_cell, spherical_remainders);
-    if ((idx.array() < 0 || range_image.getDimensions().array() <= idx.array())
-            .any()) {
+    if ((idx.array() < 0).any() ||
+        (range_image.getDimensions().array() <= idx.array()).any()) {
       return 0.f;
     }
     const FloatingPoint measured_distance = range_image[idx];

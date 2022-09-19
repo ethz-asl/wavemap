@@ -15,7 +15,8 @@ class RangeImage2D {
                      spherical_projector.getNumColumns()) {}
   RangeImage2D(IndexElement num_rows, IndexElement num_columns,
                FloatingPoint initial_value = 0.f)
-      : data_(Data::Constant(num_rows, num_columns, initial_value)) {}
+      : initial_value_(initial_value),
+        data_(Data::Constant(num_rows, num_columns, initial_value)) {}
 
   void importPointcloud(const Pointcloud<Point3D>& pointcloud,
                         const SphericalProjector& spherical_projector);
@@ -26,6 +27,9 @@ class RangeImage2D {
     data_.resize(num_rows, num_columns);
   }
   void clear() { resize(0, 0); }
+
+  void setToConstant(FloatingPoint value) { data_.setConstant(value); }
+  void resetToInitialValue() { setToConstant(initial_value_); }
 
   IndexElement getNumRows() const {
     return static_cast<IndexElement>(data_.rows());
@@ -50,6 +54,7 @@ class RangeImage2D {
   }
 
  private:
+  const FloatingPoint initial_value_;
   Data data_;
 };
 

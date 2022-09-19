@@ -6,6 +6,7 @@ namespace wavemap {
 void RangeImage2D::importPointcloud(
     const Pointcloud<Point3D>& pointcloud,
     const SphericalProjector& spherical_projector) {
+  resetToInitialValue();
   for (const auto& C_point : pointcloud) {
     // Filter out noisy points and compute point's range
     if (C_point.hasNaN()) {
@@ -25,16 +26,9 @@ void RangeImage2D::importPointcloud(
     // Add the point to the range image
     const Index2D range_image_index =
         spherical_projector.bearingToNearestIndex(C_point);
-
-    // Prevent out-of-bounds access
     if ((range_image_index.array() < 0).any() ||
         (getDimensions().array() <= range_image_index.array()).any()) {
-      LOG(WARNING) << "\nTried update range image with dimensions "
-                   << EigenFormat::oneLine(getDimensions())
-                   << " at out of bounds index "
-                   << EigenFormat::oneLine(range_image_index)
-                   << " with range value " << range << " from original C_point "
-                   << C_point;
+      // Prevent out-of-bounds access
       continue;
     }
 

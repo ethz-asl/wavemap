@@ -10,8 +10,6 @@ void FixedResolutionIntegrator3D::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  // TODO(victorr): Avoid reallocating the range image (zero and reuse
-  // instead)
   const auto [range_image, aabb] =
       computeRangeImageAndAABB(pointcloud, spherical_projector_);
 
@@ -44,8 +42,7 @@ std::pair<RangeImage2D, AABB<Point3D>>
 FixedResolutionIntegrator3D::computeRangeImageAndAABB(
     const PosedPointcloud<Point3D>& pointcloud,
     const SphericalProjector& spherical_projector) {
-  RangeImage2D range_image(spherical_projector.getNumRows(),
-                           spherical_projector.getNumColumns());
+  RangeImage2D range_image(spherical_projector);
   AABB<Point3D> aabb;
 
   for (const auto& C_point : pointcloud.getPointsLocal()) {
@@ -59,7 +56,7 @@ FixedResolutionIntegrator3D::computeRangeImageAndAABB(
     if (range < kEpsilon) {
       continue;
     }
-    if (1e3 < range) {
+    if (1e3f < range) {
       LOG(INFO) << "Skipping measurement with suspicious length: " << range;
       continue;
     }
@@ -67,22 +64,12 @@ FixedResolutionIntegrator3D::computeRangeImageAndAABB(
     // Add the point to the range image
     const Index2D range_image_index =
         spherical_projector.bearingToNearestIndex(C_point);
-    CHECK_GE(range_image_index.x(), 0)
-        << "C_point: " << EigenFormat::oneLine(C_point)
-        << " yielded range_image_index "
-        << EigenFormat::oneLine(range_image_index);
-    CHECK_GE(range_image_index.y(), 0)
-        << "C_point: " << EigenFormat::oneLine(C_point)
-        << " yielded range_image_index "
-        << EigenFormat::oneLine(range_image_index);
-    CHECK_LT(range_image_index.x(), range_image.getNumRows())
-        << "C_point: " << EigenFormat::oneLine(C_point)
-        << " yielded range_image_index "
-        << EigenFormat::oneLine(range_image_index);
-    CHECK_LT(range_image_index.y(), range_image.getNumColumns())
-        << "C_point: " << EigenFormat::oneLine(C_point)
-        << " yielded range_image_index "
-        << EigenFormat::oneLine(range_image_index);
+    if ((range_image_index.array() < 0).any() ||
+        (range_image.getDimensions().array() <= range_image_index.array())
+            .any()) {
+      // Prevent out-of-bounds access
+      continue;
+    }
     range_image[range_image_index] = range;
 
     // Update the AABB (in world frame)
