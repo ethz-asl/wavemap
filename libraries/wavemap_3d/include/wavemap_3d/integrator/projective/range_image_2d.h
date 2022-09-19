@@ -41,14 +41,14 @@ class RangeImage2D {
   const Data& getData() const { return data_; }
 
   FloatingPoint& operator[](Index2D index) {
-    DCHECK((0 < index.array()).all());
-    DCHECK_LT(index.x(), data_.cols());
+    DCHECK((0 <= index.array()).all());
+    DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());
     return data_(index.x(), index.y());
   }
   const FloatingPoint& operator[](Index2D index) const {
-    DCHECK((0 < index.array()).all());
-    DCHECK_LT(index.x(), data_.cols());
+    DCHECK((0 <= index.array()).all());
+    DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());
     return data_(index.x(), index.y());
   }

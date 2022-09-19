@@ -23,7 +23,7 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getBounds(
 
 inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getRangeBounds(
     const Index2D& bottom_left_idx, const Index2D& top_right_idx) const {
-  DCHECK((bottom_left_idx.array() < top_right_idx.array()).all());
+  DCHECK((bottom_left_idx.array() <= top_right_idx.array()).all());
 
   const IndexElement min_level_up =
       int_math::log2_floor((top_right_idx - bottom_left_idx).maxCoeff());
@@ -64,8 +64,6 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getRangeBounds(
   } else {
     // Since the nodes at min_level_up are not direct neighbors we need to go
     // one level up and check both parents there
-    DCHECK(bottom_left_idx_shifted + Index2D::Constant(2) ==
-           top_right_idx_shifted);
     const IndexElement parent_height = min_level_up;
     const Index2D left_parent_idx =
         int_math::div_exp2_floor(bottom_left_idx_shifted, 1);

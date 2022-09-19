@@ -100,12 +100,12 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   }
 
   // Check if the cell is outside the observed range
-  if ((spherical_projector.getMaxAngles().array() <
-       min_spherical_coordinates.array())
-          .all() ||
-      (max_spherical_coordinates.array() <
+  if ((max_spherical_coordinates.array() <
        spherical_projector.getMinAngles().array())
-          .all()) {
+          .any() ||
+      (spherical_projector.getMaxAngles().array() <
+       min_spherical_coordinates.array())
+          .any()) {
     return IntersectionType::kFullyUnknown;
   }
 
