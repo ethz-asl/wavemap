@@ -41,7 +41,7 @@ class SphericalProjector {
   Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
 
   static Vector2D bearingToSpherical(const Vector3D& bearing) {
-    return {std::atan(bearing.z() / bearing.head<2>().norm()),
+    return {std::atan2(bearing.z(), bearing.head<2>().norm()),
             std::atan2(bearing.y(), bearing.x())};
   }
   static Vector3D sphericalToBearing(Vector2D spherical_coordinates) {
