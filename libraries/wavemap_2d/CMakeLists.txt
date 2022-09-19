@@ -45,7 +45,7 @@ if (CATKIN_ENABLE_TESTING)
     test/src/data_structure/test_volumetric_data_structure.cc
       test/src/integrator/test_range_image_1d.cc
     test/src/integrator/test_pointcloud_integrators.cc
-    test/src/integrator/test_coarse_to_fine_integrator.cc
+      test/src/integrator/test_range_image_1d_intersector.cc
       test/src/integrator/test_hierarchical_range_image_1d.cc
     test/src/integrator/test_measurement_models.cc
     test/src/transform/test_discrete_wavelet_transform.cc

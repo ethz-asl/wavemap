@@ -1,21 +1,16 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_1D_INTERSECTOR_H_
 #define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_1D_INTERSECTOR_H_
 
-#include <algorithm>
 #include <limits>
 #include <memory>
-#include <string>
 #include <utility>
-#include <vector>
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/aabb.h>
-#include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
 #include <wavemap_common/integrator/projective/intersection_type.h>
-#include <wavemap_common/utils/angle_utils.h>
-#include <wavemap_common/utils/type_utils.h>
 
 #include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image_1d.h"
+#include "wavemap_2d/integrator/projective/range_image_1d.h"
 
 namespace wavemap {
 class RangeImage1DIntersector {

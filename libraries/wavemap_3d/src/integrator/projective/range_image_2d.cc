@@ -1,5 +1,7 @@
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
+#include <wavemap_common/utils/eigen_format.h>
+
 namespace wavemap {
 void RangeImage2D::importPointcloud(
     const Pointcloud<Point3D>& pointcloud,
@@ -20,6 +22,19 @@ void RangeImage2D::importPointcloud(
     // Add the point to the range image
     const Index2D range_image_index =
         spherical_projector.bearingToNearestIndex(C_point);
+
+    // Prevent out-of-bounds access
+    if ((range_image_index.array() < 0).any() ||
+        (getDimensions().array() <= range_image_index.array()).any()) {
+      LOG(WARNING) << "\nTried update range image with dimensions "
+                   << EigenFormat::oneLine(getDimensions())
+                   << " at out of bounds index "
+                   << EigenFormat::oneLine(range_image_index)
+                   << " with range value " << range << " from original C_point "
+                   << C_point;
+      continue;
+    }
+
     operator[](range_image_index) = range;
   }
 }

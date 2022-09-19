@@ -7,7 +7,7 @@
 #include <wavemap_common/iterator/grid_iterator.h>
 
 namespace wavemap {
-Bounds<FloatingPoint> HierarchicalRangeImage2D::getBounds(
+inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getBounds(
     const QuadtreeIndex& index) const {
   DCHECK_GE(index.height, 0);
   DCHECK_LE(index.height, max_height_);
@@ -21,7 +21,7 @@ Bounds<FloatingPoint> HierarchicalRangeImage2D::getBounds(
   }
 }
 
-Bounds<FloatingPoint> HierarchicalRangeImage2D::getRangeBounds(
+inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getRangeBounds(
     const Index2D& bottom_left_idx, const Index2D& top_right_idx) const {
   DCHECK((bottom_left_idx.array() < top_right_idx.array()).all());
 

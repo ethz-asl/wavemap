@@ -5,11 +5,11 @@
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/container_print_utils.h>
 
-#include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_2d.h"
 #include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image_1d.h"
+#include "wavemap_2d/integrator/projective/coarse_to_fine/range_image_1d_intersector.h"
 
 namespace wavemap {
-class CoarseToFineIntegratorTest : public FixtureBase {
+class RangeImage1DIntersectorTest : public FixtureBase {
  protected:
   PosedPointcloud<Point2D> getRandomPointcloud(
       FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
@@ -20,22 +20,18 @@ class CoarseToFineIntegratorTest : public FixtureBase {
     Pointcloud<Point2D> pointcloud;
     pointcloud.resize(num_beams);
 
-    const FloatingPoint angle_increment =
-        (max_angle - min_angle) / static_cast<FloatingPoint>(num_beams - 1);
+    const CircularProjector circular_projector(min_angle, max_angle, num_beams);
     for (int index = 0; index < num_beams; ++index) {
       const FloatingPoint range =
           getRandomSignedDistance(min_distance, max_distance);
-      const FloatingPoint angle =
-          min_angle + static_cast<FloatingPoint>(index) * angle_increment;
-
-      pointcloud[index] = range * CircularProjector::angleToBearing(angle);
+      pointcloud[index] = range * circular_projector.indexToBearing(index);
     }
 
     return {getRandomTransformation<2>(), pointcloud};
   }
 };
 
-TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
+TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
   struct QueryAndExpectedResults {
     AABB<Point2D> W_aabb;
     Transformation2D T_W_C;
@@ -49,8 +45,8 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   {
     // Manually define initial AABBs
     std::list<AABB<Point2D>> aabbs{{Point2D::Zero(), Point2D::Ones()},
-                                   {Point2D::Zero(), Point2D{0.5f, 1.f}},
-                                   {Point2D::Zero(), Point2D{1.f, 0.5f}}};
+                                   {Point2D::Zero(), {0.5f, 1.f}},
+                                   {Point2D::Zero(), {1.f, 0.5f}}};
     // Insert copies of the initial AABBs flipped across the Y-axis
     std::generate_n(std::back_inserter(aabbs), aabbs.size(),
                     [aabbs_it = aabbs.cbegin()]() mutable {
@@ -111,7 +107,8 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
       reference_angle_pair.min_angle = -kPi;
       reference_angle_pair.max_angle = kPi;
     } else {
-      for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
+      for (int corner_idx = 0; corner_idx < AABB<Point2D>::kNumCorners;
+           ++corner_idx) {
         angles[corner_idx] =
             CircularProjector::bearingToAngle(C_cell_corners.col(corner_idx));
       }
@@ -120,10 +117,9 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
       const FloatingPoint max_angle = angles[3];
       const bool angle_range_wraps_around = kPi < max_angle - min_angle;
       if (angle_range_wraps_around) {
-        const FloatingPoint smallest_angle_above_zero =
-            *std::upper_bound(angles.begin(), angles.end(), 0.f);
-        const FloatingPoint greatest_angle_below_zero =
-            *std::prev(std::upper_bound(angles.begin(), angles.end(), 0.f));
+        const auto it = std::upper_bound(angles.cbegin(), angles.cend(), 0.f);
+        const FloatingPoint smallest_angle_above_zero = *it;
+        const FloatingPoint greatest_angle_below_zero = *std::prev(it);
         reference_angle_pair.min_angle = smallest_angle_above_zero;
         reference_angle_pair.max_angle = greatest_angle_below_zero;
       } else {
@@ -131,47 +127,54 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
         reference_angle_pair.max_angle = max_angle;
       }
     }
+
     const RangeImage1DIntersector::MinMaxAnglePair returned_angle_pair =
         RangeImage1DIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
                                                              test.W_aabb);
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
     const bool angle_range_wraps_around =
         kPi < reference_angle_pair.max_angle - reference_angle_pair.min_angle;
+
     bool check_failed = false;
+    auto canary_token = [&check_failed]() {
+      check_failed = true;
+      return "";
+    };
     if (angle_range_wraps_around) {
       EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
                 0.f)
-          << (check_failed = true);
+          << canary_token();
       EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
                 kOneAndAHalfDegree);
       EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
                 0.f)
-          << (check_failed = true);
+          << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
                 -kOneAndAHalfDegree)
-          << (check_failed = true);
+          << canary_token();
     } else {
       EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
                 0.f)
-          << (check_failed = true);
+          << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
                 -kOneAndAHalfDegree)
-          << (check_failed = true);
+          << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
                 0.f)
-          << (check_failed = true);
+          << canary_token();
       EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
                 kOneAndAHalfDegree)
-          << (check_failed = true);
+          << canary_token();
     }
+
     if (check_failed) {
       std::cerr << "For\n-W_aabb: " << test.W_aabb.toString()
                 << "\n-T_W_C: " << test.T_W_C << "\nWith C_cell_corners:\n"
@@ -187,7 +190,7 @@ TEST_F(CoarseToFineIntegratorTest, AabbMinMaxProjectedAngle) {
   }
 }
 
-TEST_F(CoarseToFineIntegratorTest, RangeImageIntersectionType) {
+TEST_F(RangeImage1DIntersectorTest, RangeImageIntersectionType) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
     const FloatingPoint min_cell_width = getRandomMinCellWidth();

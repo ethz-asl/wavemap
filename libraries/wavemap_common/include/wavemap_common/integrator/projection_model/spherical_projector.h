@@ -32,6 +32,14 @@ class SphericalProjector {
     return azimuth_projector_.getNumCells();
   }
 
+  Vector2D getMinAngles() const {
+    return {getMinElevationAngle(), getMinAzimuthAngle()};
+  }
+  Vector2D getMaxAngles() const {
+    return {getMaxElevationAngle(), getMaxAzimuthAngle()};
+  }
+  Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
+
   static Vector2D bearingToSpherical(const Vector3D& bearing) {
     return {std::atan(bearing.z() / bearing.head<2>().norm()),
             std::atan2(bearing.y(), bearing.x())};
