@@ -14,7 +14,10 @@ void RangeImage2D::importPointcloud(
       continue;
     }
     const FloatingPoint range = C_point.norm();
-    if (1e3 < range) {
+    if (range < 1e-3f) {
+      continue;
+    }
+    if (1e3f < range) {
       LOG(INFO) << "Skipping measurement with suspicious length: " << range;
       continue;
     }

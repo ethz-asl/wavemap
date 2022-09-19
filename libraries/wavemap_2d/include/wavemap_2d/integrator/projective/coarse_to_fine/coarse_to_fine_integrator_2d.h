@@ -28,7 +28,7 @@ class CoarseToFineIntegrator2D : public ScanwiseIntegrator2D {
       ContinuousVolumetricLogOdds<2>::kScaling * 572.957795130823f;
   static constexpr FloatingPoint kMaxGradientOnBoundary =
       ContinuousVolumetricLogOdds<2>::kScaling * 14.9999999999997f;
-  static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
+  static constexpr FloatingPoint kUnitSquareHalfDiagonal = 1.41421356237f / 2.f;
 
   static bool isApproximationErrorAcceptable(
       IntersectionType intersection_type, FloatingPoint sphere_center_distance,

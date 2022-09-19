@@ -78,6 +78,6 @@ class HierarchicalRangeImage2D {
 };
 }  // namespace wavemap
 
-#include "wavemap_3d/integrator/projective/coarse_to_fine/inl/hierarchical_range_image_2d_inl.h"
+#include "wavemap_3d/integrator/projective/coarse_to_fine/impl/hierarchical_range_image_2d_inl.h"
 
 #endif  // WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_2D_H_

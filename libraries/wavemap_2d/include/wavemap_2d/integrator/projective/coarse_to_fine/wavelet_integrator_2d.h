@@ -2,9 +2,6 @@
 #define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_WAVELET_INTEGRATOR_2D_H_
 
 #include <memory>
-#include <utility>
-
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_2d/data_structure/wavelet_quadtree_interface.h"
 #include "wavemap_2d/integrator/projective/coarse_to_fine/range_image_1d_intersector.h"
@@ -31,7 +28,7 @@ class WaveletIntegrator2D : public ScanwiseIntegrator2D {
       ContinuousVolumetricLogOdds<2>::kScaling * 572.957795130823f;
   static constexpr FloatingPoint kMaxGradientOnBoundary =
       ContinuousVolumetricLogOdds<2>::kScaling * 14.9999999999997f;
-  static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.41421356237f / 2.f;
+  static constexpr FloatingPoint kUnitSquareHalfDiagonal = 1.41421356237f / 2.f;
 
   WaveletQuadtreeInterface::Coefficients::Scale recursiveSamplerCompressor(
       const QuadtreeIndex& node_index,

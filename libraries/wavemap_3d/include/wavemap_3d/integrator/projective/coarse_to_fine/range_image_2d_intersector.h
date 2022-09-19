@@ -39,6 +39,6 @@ class RangeImage2DIntersector {
 };
 }  // namespace wavemap
 
-#include "wavemap_3d/integrator/projective/coarse_to_fine/inl/range_image_2d_intersector_inl.h"
+#include "wavemap_3d/integrator/projective/coarse_to_fine/impl/range_image_2d_intersector_inl.h"
 
 #endif  // WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_RANGE_IMAGE_2D_INTERSECTOR_H_

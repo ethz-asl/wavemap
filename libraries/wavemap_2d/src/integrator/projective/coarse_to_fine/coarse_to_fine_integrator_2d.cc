@@ -55,15 +55,15 @@ void CoarseToFineIntegrator2D::integratePointcloud(
         W_cell_aabb.min + Vector2D::Constant(node_width / 2.f);
     const Point2D C_node_center =
         posed_range_image_->getPoseInverse() * W_node_center;
-    FloatingPoint d_C_cell = C_node_center.norm();
+    const FloatingPoint d_C_cell = C_node_center.norm();
     const FloatingPoint bounding_sphere_radius =
-        kUnitCubeHalfDiagonal * node_width;
+        kUnitSquareHalfDiagonal * node_width;
     if (current_node.height == 0 ||
         isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                        bounding_sphere_radius)) {
-      FloatingPoint angle_C_cell =
+      const FloatingPoint angle_C_cell =
           CircularProjector::bearingToAngle(C_node_center);
-      FloatingPoint sample =
+      const FloatingPoint sample =
           computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
       volumetric_quadtree_->addToCellValue(current_node, sample);
       continue;

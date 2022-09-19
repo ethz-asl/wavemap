@@ -295,7 +295,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
             convert::indexToCenterPoint(reference_index, min_cell_width);
         const Point3D C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
-        if (ContinuousVolumetricLogOdds<2>::kRangeMax < d_C_cell) {
+        if (ContinuousVolumetricLogOdds<3>::kRangeMax < d_C_cell) {
           has_unknown = true;
           continue;
         }
@@ -315,7 +315,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
           has_free = true;
         } else if (d_C_cell <=
                    range_image_distance +
-                       ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh) {
+                       ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh) {
           has_occupied = true;
         } else {
           has_unknown = true;
