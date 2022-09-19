@@ -14,7 +14,8 @@ class RangeImage1D {
       : RangeImage1D(circular_projector.getNumCells()) {}
   explicit RangeImage1D(IndexElement num_beams,
                         FloatingPoint initial_value = 0.f)
-      : data_(Data::Constant(1, num_beams, initial_value)) {}
+      : initial_value_(initial_value),
+        data_(Data::Constant(1, num_beams, initial_value)) {}
 
   void importPointcloud(const Pointcloud<Point2D>& pointcloud,
                         const CircularProjector& circular_projector);
@@ -23,6 +24,9 @@ class RangeImage1D {
   size_t size() const { return data_.cols(); }
   void resize(IndexElement num_beams) { data_.resize(1, num_beams); }
   void clear() { resize(0); }
+
+  void setToConstant(FloatingPoint value) { data_.setConstant(value); }
+  void resetToInitialValue() { setToConstant(initial_value_); }
 
   IndexElement getNumBeams() const {
     return static_cast<IndexElement>(data_.cols());
@@ -41,6 +45,7 @@ class RangeImage1D {
   }
 
  private:
+  const FloatingPoint initial_value_;
   Data data_;
 };
 

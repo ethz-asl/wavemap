@@ -4,6 +4,7 @@ namespace wavemap {
 void RangeImage1D::importPointcloud(
     const Pointcloud<Point2D>& pointcloud,
     const CircularProjector& circular_projector) {
+  resetToInitialValue();
   for (const auto& C_point : pointcloud) {
     // Filter out noisy points and compute point's range
     if (C_point.hasNaN()) {
