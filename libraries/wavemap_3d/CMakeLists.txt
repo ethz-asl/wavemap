@@ -28,7 +28,9 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
       test_${PROJECT_NAME}
+      test/src/data_structure/test_volumetric_data_structure_3d.cc
       test/src/integrator/test_hierarchical_range_image_2d.cc
+      test/src/integrator/test_pointcloud_integrators_3d.cc
       test/src/integrator/test_range_image_2d.cc
       test/src/integrator/test_range_image_2d_intersector.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)

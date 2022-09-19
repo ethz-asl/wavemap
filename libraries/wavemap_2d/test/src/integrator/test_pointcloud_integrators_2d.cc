@@ -21,7 +21,7 @@
 #include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator_2d.h"
 
 namespace wavemap {
-class PointcloudIntegratorTest : public FixtureBase {
+class PointcloudIntegrator2DTest : public FixtureBase {
  protected:
   PosedPointcloud<Point2D> getRandomPointcloud(
       FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
@@ -47,7 +47,7 @@ class PointcloudIntegratorTest : public FixtureBase {
   }
 };
 
-TEST_F(PointcloudIntegratorTest, RayIntegrator) {
+TEST_F(PointcloudIntegrator2DTest, RayIntegrator) {
   for (int idx = 0; idx < 3; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
@@ -94,7 +94,8 @@ TEST_F(PointcloudIntegratorTest, RayIntegrator) {
   }
 }
 
-TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
+TEST_F(PointcloudIntegrator2DTest,
+       BeamAndFixedResolutionIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
@@ -156,7 +157,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndFixedResolutionIntegratorEquivalence) {
   }
 }
 
-TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
+TEST_F(PointcloudIntegrator2DTest, BeamAndCoarseToFineIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
@@ -219,7 +220,7 @@ TEST_F(PointcloudIntegratorTest, BeamAndCoarseToFineIntegratorEquivalence) {
   }
 }
 
-TEST_F(PointcloudIntegratorTest, BeamAndWaveletIntegratorEquivalence) {
+TEST_F(PointcloudIntegrator2DTest, BeamAndWaveletIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   for (int idx = 0; idx < 10; ++idx) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);

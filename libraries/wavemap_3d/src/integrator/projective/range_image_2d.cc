@@ -14,7 +14,7 @@ void RangeImage2D::importPointcloud(
       continue;
     }
     const FloatingPoint range = C_point.norm();
-    if (range < 1e-3f) {
+    if (range < kEpsilon) {
       continue;
     }
     if (1e3f < range) {
