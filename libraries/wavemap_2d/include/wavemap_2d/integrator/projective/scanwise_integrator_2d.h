@@ -25,7 +25,7 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
   }
 
  protected:
-  CircularProjector circular_projector_;
+  const CircularProjector circular_projector_;
 
   FloatingPoint computeUpdate(const RangeImage1D& range_image,
                               FloatingPoint d_C_cell,

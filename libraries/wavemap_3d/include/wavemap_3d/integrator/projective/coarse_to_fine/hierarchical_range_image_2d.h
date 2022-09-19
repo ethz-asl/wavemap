@@ -61,7 +61,7 @@ class HierarchicalRangeImage2D {
   }
 
  private:
-  std::shared_ptr<RangeImage2D> range_image_;
+  const std::shared_ptr<const RangeImage2D> range_image_;
 
   static constexpr FloatingPoint kUnknownRangeImageValueLowerBound =
       std::numeric_limits<FloatingPoint>::max();

@@ -27,7 +27,7 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
   }
 
  protected:
-  SphericalProjector spherical_projector_;
+  const SphericalProjector spherical_projector_;
 
   FloatingPoint computeUpdate(const RangeImage2D& range_image,
                               FloatingPoint d_C_cell,

@@ -35,7 +35,7 @@ class RangeImage2DIntersector {
       const SphericalProjector& spherical_projector) const;
 
  private:
-  HierarchicalRangeImage2D hierarchical_range_image_;
+  const HierarchicalRangeImage2D hierarchical_range_image_;
 };
 }  // namespace wavemap
 
