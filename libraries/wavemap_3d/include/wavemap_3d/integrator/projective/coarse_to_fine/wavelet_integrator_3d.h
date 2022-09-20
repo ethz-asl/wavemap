@@ -33,7 +33,8 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
   WaveletOctreeInterface::Coefficients::Scale recursiveSamplerCompressor(
       const OctreeIndex& node_index,
       WaveletOctreeInterface::NodeType& parent_node,
-      OctreeIndex ::RelativeChild relative_child_index);
+      OctreeIndex ::RelativeChild relative_child_index,
+      RangeImage2DIntersector::Cache cache);
 
   static bool isApproximationErrorAcceptable(
       IntersectionType intersection_type, FloatingPoint sphere_center_distance,

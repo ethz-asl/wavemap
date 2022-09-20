@@ -128,6 +128,6 @@ class WaveletNdtree : public virtual WaveletNdtreeInterface<dim> {
 };
 }  // namespace wavemap
 
-#include "wavemap_common/data_structure/volumetric/impl/wavelet_tree_inl.h"
+#include "wavemap_common/data_structure/volumetric/impl/wavelet_ndtree_inl.h"
 
 #endif  // WAVEMAP_COMMON_DATA_STRUCTURE_VOLUMETRIC_WAVELET_NDTREE_H_

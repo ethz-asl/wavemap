@@ -22,6 +22,12 @@ class RangeImage2DIntersector {
         Vector2D::Constant(std::numeric_limits<FloatingPoint>::lowest());
   };
 
+  struct SphericalMinMaxCornerIndices {
+    Eigen::Matrix<NdtreeIndexRelativeChild, 2, 1> min_corner_indices;
+    Eigen::Matrix<NdtreeIndexRelativeChild, 2, 1> max_corner_indices;
+  };
+  using Cache = std::optional<SphericalMinMaxCornerIndices>;
+
   explicit RangeImage2DIntersector(std::shared_ptr<RangeImage2D> range_image)
       : hierarchical_range_image_(std::move(range_image)) {}
 
@@ -29,10 +35,15 @@ class RangeImage2DIntersector {
   //       around at +-PI and a min_angle >= max_angle will be returned.
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb);
+  static MinMaxAnglePair getAabbMinMaxProjectedAngle(
+      const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb, Cache& cache);
 
   IntersectionType determineIntersectionType(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb,
       const SphericalProjector& spherical_projector) const;
+  IntersectionType determineIntersectionType(
+      const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb,
+      const SphericalProjector& spherical_projector, Cache& cache) const;
 
  private:
   const HierarchicalRangeImage2D hierarchical_range_image_;

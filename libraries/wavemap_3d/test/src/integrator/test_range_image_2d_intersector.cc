@@ -10,48 +10,15 @@
 namespace wavemap {
 class RangeImage2DIntersectorTest : public FixtureBase {
  protected:
-  PosedPointcloud<Point3D> getRandomPointcloud(
-      FloatingPoint min_elevation_angle, FloatingPoint max_elevation_angle,
-      int num_rows, FloatingPoint min_azimuth_angle,
-      FloatingPoint max_azimuth_angle, int num_cols, FloatingPoint min_distance,
-      FloatingPoint max_distance) const {
-    CHECK_LT(min_elevation_angle, max_elevation_angle);
-    CHECK_LT(min_azimuth_angle, max_azimuth_angle);
-    CHECK_LT(min_distance, max_distance);
-
-    Pointcloud<Point3D> pointcloud;
-    pointcloud.resize(num_rows * num_cols);
-
-    const SphericalProjector spherical_projector(
-        min_elevation_angle, max_elevation_angle, num_rows, min_azimuth_angle,
-        max_azimuth_angle, num_cols);
-    for (int pointcloud_index = 0;
-         pointcloud_index < static_cast<int>(pointcloud.size());
-         ++pointcloud_index) {
-      const FloatingPoint range =
-          getRandomSignedDistance(min_distance, max_distance);
-      const Index2D image_index{pointcloud_index % num_rows,
-                                pointcloud_index / num_rows};
-      pointcloud[pointcloud_index] =
-          range * spherical_projector.indexToBearing(image_index);
-    }
-
-    return {getRandomTransformation<3>(), pointcloud};
-  }
-};
-
-TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
-  struct QueryAndExpectedResults {
+  struct AABBAndPose {
     AABB<Point3D> W_aabb;
     Transformation3D T_W_C;
 
-    QueryAndExpectedResults(AABB<Point3D> W_aabb, const Transformation3D& T_W_C)
+    AABBAndPose(AABB<Point3D> W_aabb, const Transformation3D& T_W_C)
         : W_aabb(std::move(W_aabb)), T_W_C(T_W_C) {}
   };
 
-  // Generate test set
-  std::vector<QueryAndExpectedResults> tests;
-  {
+  std::vector<AABBAndPose> getTestAABBsAndPoses() const {
     // Manually define initial AABBs
     std::list<AABB<Point3D>> aabbs{{Point3D::Zero(), Point3D::Ones()},
                                    {Point3D::Zero(), {0.5f, 1.f, 1.f}},
@@ -92,6 +59,7 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
 
     // Create tests by combining the above AABBs (incl. random rescaling and
     // translations) with identity and random sensor poses
+    std::vector<AABBAndPose> aabbs_and_poses;
     for (const auto& aabb : aabbs) {
       for (int i = 0; i < 1000; ++i) {
         const FloatingPoint random_scale = 1.f / getRandomMinCellWidth();
@@ -107,24 +75,60 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
           const AABB<Point3D> aabb_scaled_translated{
               aabb_scaled.min + t_random, aabb_scaled.max + t_random};
           const Transformation3D T_W_C_random = getRandomTransformation<3>();
-          tests.emplace_back(aabb_scaled, Transformation3D());
-          tests.emplace_back(aabb_translated, Transformation3D());
-          tests.emplace_back(aabb_scaled_translated, Transformation3D());
-          tests.emplace_back(aabb, T_W_C_random);
-          tests.emplace_back(aabb_scaled, T_W_C_random);
-          tests.emplace_back(aabb_translated, T_W_C_random);
-          tests.emplace_back(aabb_scaled_translated, T_W_C_random);
+          aabbs_and_poses.emplace_back(aabb_scaled, Transformation3D());
+          aabbs_and_poses.emplace_back(aabb_translated, Transformation3D());
+          aabbs_and_poses.emplace_back(aabb_scaled_translated,
+                                       Transformation3D());
+          aabbs_and_poses.emplace_back(aabb, T_W_C_random);
+          aabbs_and_poses.emplace_back(aabb_scaled, T_W_C_random);
+          aabbs_and_poses.emplace_back(aabb_translated, T_W_C_random);
+          aabbs_and_poses.emplace_back(aabb_scaled_translated, T_W_C_random);
         }
       }
     }
+    return aabbs_and_poses;
   }
+
+  PosedPointcloud<Point3D> getRandomPointcloud(
+      FloatingPoint min_elevation_angle, FloatingPoint max_elevation_angle,
+      int num_rows, FloatingPoint min_azimuth_angle,
+      FloatingPoint max_azimuth_angle, int num_cols, FloatingPoint min_distance,
+      FloatingPoint max_distance) const {
+    CHECK_LT(min_elevation_angle, max_elevation_angle);
+    CHECK_LT(min_azimuth_angle, max_azimuth_angle);
+    CHECK_LT(min_distance, max_distance);
+
+    Pointcloud<Point3D> pointcloud;
+    pointcloud.resize(num_rows * num_cols);
+
+    const SphericalProjector spherical_projector(
+        min_elevation_angle, max_elevation_angle, num_rows, min_azimuth_angle,
+        max_azimuth_angle, num_cols);
+    for (int pointcloud_index = 0;
+         pointcloud_index < static_cast<int>(pointcloud.size());
+         ++pointcloud_index) {
+      const FloatingPoint range =
+          getRandomSignedDistance(min_distance, max_distance);
+      const Index2D image_index{pointcloud_index % num_rows,
+                                pointcloud_index / num_rows};
+      pointcloud[pointcloud_index] =
+          range * spherical_projector.indexToBearing(image_index);
+    }
+
+    return {getRandomTransformation<3>(), pointcloud};
+  }
+};
+
+TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
+  // Generate test set
+  std::vector<AABBAndPose> tests = getTestAABBsAndPoses();
 
   // Run tests
   int error_count = 0;
   for (const auto& test : tests) {
     RangeImage2DIntersector::MinMaxAnglePair reference_angle_pair;
     const AABB<Point3D>::Corners C_t_C_corners =
-        test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
+        test.T_W_C.inverse().transformVectorized(test.W_aabb.corner_matrix());
     using AngleCornerArray =
         std::array<FloatingPoint, AABB<Point3D>::kNumCorners>;
     AngleCornerArray elevation_angles{};

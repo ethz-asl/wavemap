@@ -59,19 +59,30 @@ struct AABB {
     return max[dim] - min[dim];
   }
 
-  Corners corners() const {
-    // TODO(victorr): Vectorize this
+  Corners corner_matrix() const {
     Eigen::Matrix<FloatingPoint, kDim, kNumCorners> corners;
     for (int corner_idx = 0; corner_idx < kNumCorners; ++corner_idx) {
       for (int dim_idx = 0; dim_idx < kDim; ++dim_idx) {
-        if (corner_idx & (0b1 << dim_idx)) {
-          corners(dim_idx, corner_idx) = max[dim_idx];
-        } else {
-          corners(dim_idx, corner_idx) = min[dim_idx];
-        }
+        corners(dim_idx, corner_idx) = corner_coordinate(dim_idx, corner_idx);
       }
     }
     return corners;
+  }
+
+  PointType corner_point(int corner_idx) const {
+    PointType corner;
+    for (int dim_idx = 0; dim_idx < kDim; ++dim_idx) {
+      corner[dim_idx] = corner_coordinate(dim_idx, corner_idx);
+    }
+    return corner;
+  }
+
+  ScalarType corner_coordinate(int dim_idx, int corner_idx) const {
+    if (corner_idx & (0b1 << dim_idx)) {
+      return max[dim_idx];
+    } else {
+      return min[dim_idx];
+    }
   }
 
   std::string toString() const {

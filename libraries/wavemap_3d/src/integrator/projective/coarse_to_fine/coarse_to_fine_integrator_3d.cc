@@ -32,20 +32,20 @@ void CoarseToFineIntegrator3D::integratePointcloud(
   const RangeImage2DIntersector range_image_intersector(posed_range_image_);
 
   // Recursively update all relevant cells
-  std::stack<OctreeIndex> stack;
+  std::stack<std::pair<OctreeIndex, RangeImage2DIntersector::Cache>> stack;
   for (const OctreeIndex& node_index :
        volumetric_octree_->getFirstChildIndices()) {
-    stack.emplace(node_index);
+    stack.emplace(node_index, RangeImage2DIntersector::Cache{});
   }
   while (!stack.empty()) {
-    const auto current_node = std::move(stack.top());
+    auto [current_node, cache] = std::move(stack.top());
     stack.pop();
 
     const AABB<Point3D> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const IntersectionType intersection_type =
         range_image_intersector.determineIntersectionType(
-            pointcloud.getPose(), W_cell_aabb, spherical_projector_);
+            pointcloud.getPose(), W_cell_aabb, spherical_projector_, cache);
     if (intersection_type == IntersectionType::kFullyUnknown) {
       continue;
     }
@@ -73,7 +73,7 @@ void CoarseToFineIntegrator3D::integratePointcloud(
 
     for (OctreeIndex::RelativeChild relative_child_idx = 0;
          relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
-      stack.emplace(current_node.computeChildIndex(relative_child_idx));
+      stack.emplace(current_node.computeChildIndex(relative_child_idx), cache);
     }
   }
 }

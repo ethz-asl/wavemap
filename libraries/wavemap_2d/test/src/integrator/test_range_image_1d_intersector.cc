@@ -101,7 +101,7 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
   for (const auto& test : tests) {
     RangeImage1DIntersector::MinMaxAnglePair reference_angle_pair;
     const AABB<Point2D>::Corners C_cell_corners =
-        test.T_W_C.inverse().transformVectorized(test.W_aabb.corners());
+        test.T_W_C.inverse().transformVectorized(test.W_aabb.corner_matrix());
     std::array<FloatingPoint, AABB<Point2D>::kNumCorners> angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
       reference_angle_pair.min_angle = -kPi;

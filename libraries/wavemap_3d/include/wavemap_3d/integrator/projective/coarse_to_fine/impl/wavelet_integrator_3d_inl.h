@@ -20,12 +20,14 @@ inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(
 inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     const OctreeIndex& node_index,
     typename WaveletOctreeInterface::NodeType& parent_node,
-    OctreeIndex::RelativeChild relative_child_index) {
+    OctreeIndex::RelativeChild relative_child_index,
+    RangeImage2DIntersector::Cache cache) {
   const AABB<Point3D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb, spherical_projector_);
+          posed_range_image_->getPose(), W_cell_aabb, spherical_projector_,
+          cache);
   if (intersection_type == IntersectionType::kFullyUnknown) {
     return 0.f;
   }
@@ -61,7 +63,8 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     const OctreeIndex child_index =
         node_index.computeChildIndex(relative_child_idx);
     child_scale_coefficient_updates[relative_child_idx] =
-        recursiveSamplerCompressor(child_index, *node, relative_child_idx);
+        recursiveSamplerCompressor(child_index, *node, relative_child_idx,
+                                   cache);
   }
 
   const auto [scale_update, detail_updates] =
