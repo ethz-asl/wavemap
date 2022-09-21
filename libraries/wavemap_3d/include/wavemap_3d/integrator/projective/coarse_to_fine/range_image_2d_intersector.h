@@ -16,10 +16,13 @@ namespace wavemap {
 class RangeImage2DIntersector {
  public:
   struct MinMaxAnglePair {
-    Vector2D min_spherical_coordinates =
-        Vector2D::Constant(std::numeric_limits<FloatingPoint>::max());
-    Vector2D max_spherical_coordinates =
-        Vector2D::Constant(std::numeric_limits<FloatingPoint>::lowest());
+    static constexpr FloatingPoint kInitialMin =
+        std::numeric_limits<FloatingPoint>::max();
+    static constexpr FloatingPoint kInitialMax =
+        std::numeric_limits<FloatingPoint>::lowest();
+
+    Vector2D min_spherical_coordinates = Vector2D::Constant(kInitialMin);
+    Vector2D max_spherical_coordinates = Vector2D::Constant(kInitialMax);
   };
 
   struct SphericalMinMaxCornerIndices {

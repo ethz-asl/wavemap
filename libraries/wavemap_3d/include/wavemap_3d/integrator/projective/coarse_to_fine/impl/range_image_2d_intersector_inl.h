@@ -5,6 +5,8 @@
 #include <limits>
 
 #include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
+#include <wavemap_common/utils/angle_utils.h>
+#include <wavemap_common/utils/approximate_trigonometry.h>
 
 namespace wavemap {
 inline RangeImage2DIntersector::MinMaxAnglePair
@@ -31,24 +33,40 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Point3D min_elevation_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().min_corner_indices[0]);
     angle_intervals.min_spherical_coordinates[0] =
-        std::atan2(min_elevation_corner_point.z(),
-                   min_elevation_corner_point.head<2>().norm());
+        approximate::atan2()(min_elevation_corner_point.z(),
+                             min_elevation_corner_point.head<2>().norm());
 
     const Point3D min_azimuth_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().min_corner_indices[1]);
-    angle_intervals.min_spherical_coordinates[1] =
-        std::atan2(min_azimuth_corner_point.y(), min_azimuth_corner_point.x());
+    angle_intervals.min_spherical_coordinates[1] = approximate::atan2()(
+        min_azimuth_corner_point.y(), min_azimuth_corner_point.x());
 
     const Point3D max_elevation_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().max_corner_indices[0]);
     angle_intervals.max_spherical_coordinates[0] =
-        std::atan2(max_elevation_corner_point.z(),
-                   max_elevation_corner_point.head<2>().norm());
+        approximate::atan2()(max_elevation_corner_point.z(),
+                             max_elevation_corner_point.head<2>().norm());
 
     const Point3D max_azimuth_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().max_corner_indices[1]);
-    angle_intervals.max_spherical_coordinates[1] =
-        std::atan2(max_azimuth_corner_point.y(), max_azimuth_corner_point.x());
+    angle_intervals.max_spherical_coordinates[1] = approximate::atan2()(
+        max_azimuth_corner_point.y(), max_azimuth_corner_point.x());
+
+    for (int axis : {0, 1}) {
+      auto& min_angle = angle_intervals.min_spherical_coordinates[axis];
+      auto& max_angle = angle_intervals.max_spherical_coordinates[axis];
+
+      if (kPi < max_angle - min_angle) {
+        min_angle += approximate::atan2::kWorstCaseError;
+        max_angle -= approximate::atan2::kWorstCaseError;
+      } else {
+        min_angle -= approximate::atan2::kWorstCaseError;
+        max_angle += approximate::atan2::kWorstCaseError;
+      }
+
+      min_angle = angle_math::normalize_near(min_angle);
+      max_angle = angle_math::normalize_near(max_angle);
+    }
 
     return angle_intervals;
   }
@@ -76,32 +94,29 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
   if (all_corner_in_same_octant) {
     cache.emplace();
     for (const int axis : {0, 1}) {
-      angle_intervals.min_spherical_coordinates[axis] =
-          spherical_C_corners.row(axis).minCoeff(
-              &cache.value().min_corner_indices[axis]);
-      angle_intervals.max_spherical_coordinates[axis] =
-          spherical_C_corners.row(axis).maxCoeff(
-              &cache.value().max_corner_indices[axis]);
+      auto& min_angle = angle_intervals.min_spherical_coordinates[axis];
+      auto& max_angle = angle_intervals.max_spherical_coordinates[axis];
 
-      const bool angle_interval_wraps_around =
-          kPi < (angle_intervals.max_spherical_coordinates[axis] -
-                 angle_intervals.min_spherical_coordinates[axis]);
+      min_angle = spherical_C_corners.row(axis).minCoeff(
+          &cache.value().min_corner_indices[axis]);
+      max_angle = spherical_C_corners.row(axis).maxCoeff(
+          &cache.value().max_corner_indices[axis]);
+
+      const bool angle_interval_wraps_around = kPi < (max_angle - min_angle);
       if (angle_interval_wraps_around) {
-        angle_intervals.min_spherical_coordinates[axis] =
-            std::numeric_limits<FloatingPoint>::max();
-        angle_intervals.max_spherical_coordinates[axis] =
-            std::numeric_limits<FloatingPoint>::lowest();
+        min_angle = MinMaxAnglePair::kInitialMin;
+        max_angle = MinMaxAnglePair::kInitialMax;
         for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
              ++corner_idx) {
           const FloatingPoint angle = spherical_C_corners(axis, corner_idx);
           if (0.f < angle) {
-            if (angle_intervals.min_spherical_coordinates[axis] < angle) {
-              angle_intervals.min_spherical_coordinates[axis] = angle;
+            if (min_angle < angle) {
+              min_angle = angle;
               cache.value().min_corner_indices[axis] = corner_idx;
             }
           } else {
-            if (angle < angle_intervals.max_spherical_coordinates[axis]) {
-              angle_intervals.max_spherical_coordinates[axis] = angle;
+            if (angle < max_angle) {
+              max_angle = angle;
               cache.value().max_corner_indices[axis] = corner_idx;
             }
           }
@@ -113,28 +128,23 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
   }
 
   for (const int axis : {0, 1}) {
-    angle_intervals.min_spherical_coordinates[axis] =
-        spherical_C_corners.row(axis).minCoeff();
-    angle_intervals.max_spherical_coordinates[axis] =
-        spherical_C_corners.row(axis).maxCoeff();
+    auto& min_angle = angle_intervals.min_spherical_coordinates[axis];
+    auto& max_angle = angle_intervals.max_spherical_coordinates[axis];
 
-    const bool angle_interval_wraps_around =
-        kPi < (angle_intervals.max_spherical_coordinates[axis] -
-               angle_intervals.min_spherical_coordinates[axis]);
+    min_angle = spherical_C_corners.row(axis).minCoeff();
+    max_angle = spherical_C_corners.row(axis).maxCoeff();
+
+    const bool angle_interval_wraps_around = kPi < (max_angle - min_angle);
     if (angle_interval_wraps_around) {
-      angle_intervals.min_spherical_coordinates[axis] =
-          std::numeric_limits<FloatingPoint>::max();
-      angle_intervals.max_spherical_coordinates[axis] =
-          std::numeric_limits<FloatingPoint>::lowest();
+      min_angle = MinMaxAnglePair::kInitialMin;
+      max_angle = MinMaxAnglePair::kInitialMax;
       for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
            ++corner_idx) {
         const FloatingPoint angle = spherical_C_corners(axis, corner_idx);
         if (0.f < angle) {
-          angle_intervals.min_spherical_coordinates[axis] =
-              std::min(angle_intervals.min_spherical_coordinates[axis], angle);
+          min_angle = std::min(min_angle, angle);
         } else {
-          angle_intervals.max_spherical_coordinates[axis] =
-              std::max(angle_intervals.max_spherical_coordinates[axis], angle);
+          max_angle = std::max(max_angle, angle);
         }
       }
     }
