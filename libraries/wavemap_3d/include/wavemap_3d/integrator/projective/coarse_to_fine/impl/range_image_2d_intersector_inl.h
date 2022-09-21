@@ -2,6 +2,7 @@
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_RANGE_IMAGE_2D_INTERSECTOR_INL_H_
 
 #include <algorithm>
+#include <bitset>
 #include <limits>
 
 #include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
@@ -74,24 +75,24 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
   const AABB<Point3D>::Corners C_t_C_corners =
       T_C_W.transformVectorized(W_aabb.corner_matrix());
   Eigen::Matrix<FloatingPoint, 2, 8> spherical_C_corners;
-  Eigen::Matrix<bool, 3, 1> all_positive =
-      Eigen::Matrix<bool, 3, 1>::Constant(true);
-  Eigen::Matrix<bool, 3, 1> all_negative =
-      Eigen::Matrix<bool, 3, 1>::Constant(true);
+  std::bitset<3> all_positive{0b111};
+  std::bitset<3> all_negative{0b111};
   for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
        ++corner_idx) {
-    const auto& C_t_C_corner = C_t_C_corners.col(corner_idx);
-    for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-      all_positive[dim_idx] &= 0.f < C_t_C_corner[dim_idx];
-      all_negative[dim_idx] &= C_t_C_corner[dim_idx] < 0.f;
-    }
+    const Point3D& C_t_C_corner = C_t_C_corners.col(corner_idx);
     spherical_C_corners.col(corner_idx) =
         SphericalProjector::bearingToSpherical(C_t_C_corner);
+    for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+      if (bool is_negative = std::signbit(C_t_C_corner[dim_idx]); is_negative) {
+        all_positive.set(dim_idx, false);
+      } else {
+        all_negative.set(dim_idx, false);
+      }
+    }
   }
-  const bool all_corner_in_same_octant =
-      (all_positive.array() || all_negative.array()).all();
+  const bool all_corners_in_same_octant = (all_positive | all_negative).all();
 
-  if (all_corner_in_same_octant) {
+  if (all_corners_in_same_octant) {
     cache.emplace();
     for (const int axis : {0, 1}) {
       auto& min_angle = angle_intervals.min_spherical_coordinates[axis];
