@@ -13,6 +13,7 @@ template <typename CellT, int dim>
 class VolumetricNdtree : public virtual VolumetricNdtreeInterface<dim> {
  public:
   using CellType = CellT;
+  using NodeType = NdtreeNode<typename CellT::Specialized, dim>;
   static constexpr bool kRequiresPruningForThresholding = true;
 
   // Use the base class' constructor
@@ -42,6 +43,8 @@ class VolumetricNdtree : public virtual VolumetricNdtreeInterface<dim> {
       typename VolumetricDataStructureBase<dim>::IndexedLeafVisitorFunction
           visitor_fn) const override;
 
+  NodeType& getRootNode() { return ndtree_.getRootNode(); }
+  const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
   template <TraversalOrder traversal_order>
   auto getNodeIterator() {
     return ndtree_.template getIterator<traversal_order>();
@@ -59,7 +62,6 @@ class VolumetricNdtree : public virtual VolumetricNdtreeInterface<dim> {
             bool used_floating_precision) override;
 
  private:
-  using NodeType = NdtreeNode<typename CellT::Specialized, dim>;
   struct StackElement {
     const NdtreeIndex<dim> node_index;
     const NodeType& node;
