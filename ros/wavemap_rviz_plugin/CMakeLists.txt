@@ -1,0 +1,58 @@
+# NOTE: This file is based on the Rviz plugin tutorials:
+#       https://github.com/ros-visualization/visualization_tutorials/blob/
+#       noetic-devel/wavemap_rviz_plugin/CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.0.2)
+project(wavemap_rviz_plugin)
+
+# Dependencies
+find_package(catkin REQUIRED COMPONENTS rviz wavemap_msgs)
+
+# Setup catkin package
+catkin_package(CATKIN_DEPENDS wavemap_msgs)
+
+# For all targets
+include_directories(include ${catkin_INCLUDE_DIRS})
+link_directories(${catkin_LIBRARY_DIRS})
+
+# This setting causes Qt's "MOC" generation to happen automatically
+set(CMAKE_AUTOMOC ON)
+
+# This plugin includes Qt widgets, so we must include Qt.
+# We'll use the version that rviz used so they are compatible.
+if (rviz_QT_VERSION VERSION_LESS "5")
+  message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+  find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
+  # Pull in all required include dirs, define QT_LIBRARIES, etc.
+  include(${QT_USE_FILE})
+else ()
+  message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+  find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
+  # Make target_link_libraries(${QT_LIBRARIES}) pull in
+  # all required dependencies
+  set(QT_LIBRARIES Qt5::Widgets)
+endif ()
+
+# Avoid Qt signals and slots defining "emit", "slots", etc.
+# because they can conflict with boost signals.
+add_definitions(-DQT_NO_KEYWORDS)
+
+# Libraries
+add_library(${PROJECT_NAME}
+    src/wavemap_octree_display.cc
+    src/wavemap_octree_visual.cpp)
+target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+# Install
+install(TARGETS
+    ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+install(FILES
+    plugin_description.xml
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY icons/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/icons)
