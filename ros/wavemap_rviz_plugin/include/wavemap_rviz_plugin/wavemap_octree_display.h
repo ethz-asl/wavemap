@@ -1,6 +1,7 @@
 #ifndef ROS_WAVEMAP_RVIZ_PLUGIN_INCLUDE_WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
 #define ROS_WAVEMAP_RVIZ_PLUGIN_INCLUDE_WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
 
+#ifndef Q_MOC_RUN
 #include <memory>
 
 #include <rviz/message_filter_display.h>
@@ -10,6 +11,7 @@
 #include <wavemap_msgs/Octree.h>
 
 #include "wavemap_rviz_plugin/wavemap_octree_visual.h"
+#endif
 
 namespace wavemap_rviz_plugin {
 // The WavemapOctreeDisplay class implements the editable parameters and Display

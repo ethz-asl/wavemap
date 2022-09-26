@@ -16,7 +16,6 @@
 
   <depend>rviz</depend>
   <depend>wavemap_msgs</depend>
-  <depend>wavemap_common</depend>
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>

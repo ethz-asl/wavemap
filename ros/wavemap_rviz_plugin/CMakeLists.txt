@@ -13,7 +13,6 @@ catkin_package(CATKIN_DEPENDS wavemap_msgs)
 
 # For all targets
 include_directories(include ${catkin_INCLUDE_DIRS})
-link_directories(${catkin_LIBRARY_DIRS})
 
 # This setting causes Qt's "MOC" generation to happen automatically
 set(CMAKE_AUTOMOC ON)
@@ -25,12 +24,18 @@ if (rviz_QT_VERSION VERSION_LESS "5")
   find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
   # Pull in all required include dirs, define QT_LIBRARIES, etc.
   include(${QT_USE_FILE})
+  # Generate QT's MOC files for our project's headers
+  file(GLOB HEADERS_TO_MOC include/${PROJECT_NAME}/*.h)
+  qt4_wrap_cpp(QT_MOC ${HEADERS_TO_MOC})
 else ()
   message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
   find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
   # Make target_link_libraries(${QT_LIBRARIES}) pull in
   # all required dependencies
   set(QT_LIBRARIES Qt5::Widgets)
+  # Generate QT's MOC files for our project's headers
+  file(GLOB HEADERS_TO_MOC include/${PROJECT_NAME}/*.h)
+  QT5_WRAP_CPP(QT_MOC ${HEADERS_TO_MOC})
 endif ()
 
 # Avoid Qt signals and slots defining "emit", "slots", etc.
@@ -40,7 +45,8 @@ add_definitions(-DQT_NO_KEYWORDS)
 # Libraries
 add_library(${PROJECT_NAME}
     src/wavemap_octree_display.cc
-    src/wavemap_octree_visual.cpp)
+    src/wavemap_octree_visual.cc
+    ${QT_MOC})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 # Install
