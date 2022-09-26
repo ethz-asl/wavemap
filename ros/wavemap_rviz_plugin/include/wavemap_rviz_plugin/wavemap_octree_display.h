@@ -1,5 +1,5 @@
-#ifndef ROS_WAVEMAP_RVIZ_PLUGIN_INCLUDE_WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
-#define ROS_WAVEMAP_RVIZ_PLUGIN_INCLUDE_WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
+#ifndef WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
+#define WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
 
 #ifndef Q_MOC_RUN
 #include <memory>
@@ -10,6 +10,7 @@
 #include <rviz/properties/int_property.h>
 #include <wavemap_msgs/Octree.h>
 
+#include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/wavemap_octree_visual.h"
 #endif
 
@@ -43,7 +44,8 @@ class WavemapOctreeDisplay
   // Function to handle an incoming ROS message
   void processMessage(const wavemap_msgs::Octree::ConstPtr& msg) override;
 
-  // Storage for the octree visual
+  // Storage for the octree and its visualization
+  std::unique_ptr<Octree> octree_;
   std::unique_ptr<WavemapOctreeVisual> visual_;
 
   // User-editable property variables
@@ -51,4 +53,4 @@ class WavemapOctreeDisplay
 };
 }  // namespace wavemap_rviz_plugin
 
-#endif  // ROS_WAVEMAP_RVIZ_PLUGIN_INCLUDE_WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
+#endif  // WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_

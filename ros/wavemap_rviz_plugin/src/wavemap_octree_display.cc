@@ -36,12 +36,18 @@ void WavemapOctreeDisplay::updateOccupancyThreshold() {
   const float occupancy_threshold_log_odds =
       occupancy_threshold_property_->getFloat();
 
-  visual_->setOccupancyThreshold(occupancy_threshold_log_odds);
+  if (visual_ && octree_) {
+    visual_->setOctree(*octree_, occupancy_threshold_log_odds);
+  }
 }
 
 // This is our callback to handle an incoming message
 void WavemapOctreeDisplay::processMessage(
     const wavemap_msgs::Octree::ConstPtr& msg) {
+  // Deserialize the octree
+  octree_ = std::make_unique<Octree>(msg->min_cell_width);
+  // TODO(victorr): Parse the octree msg
+
   // Here we call the rviz::FrameManager to get the transform from the
   // fixed frame to the frame in the header of this WavemapOctree message. If
   // it fails, we can't do anything else, so we return.
@@ -60,14 +66,12 @@ void WavemapOctreeDisplay::processMessage(
                                                     scene_node_);
   }
 
-  // Set or update the contents of the chosen visual
-  visual_->setMessage(msg);
+  // Update the visual's contents
   visual_->setFramePosition(position);
   visual_->setFrameOrientation(orientation);
-
   float occupancy_threshold_log_odds =
       occupancy_threshold_property_->getFloat();
-  visual_->setOccupancyThreshold(occupancy_threshold_log_odds);
+  visual_->setOctree(*octree_, occupancy_threshold_log_odds);
 }
 
 }  // namespace wavemap_rviz_plugin
