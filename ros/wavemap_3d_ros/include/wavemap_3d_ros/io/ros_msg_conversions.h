@@ -11,6 +11,9 @@ namespace wavemap {
 template <typename CellT>
 wavemap_msgs::Octree octreeToRosMsg(const VolumetricOctree<CellT>& octree) {
   wavemap_msgs::Octree octree_msg;
+  octree_msg.header.stamp = ros::Time::now();
+  octree_msg.header.frame_id = "odom";
+  octree_msg.min_cell_width = octree.getMinCellWidth();
 
   for (const auto& node :
        octree.template getNodeIterator<TraversalOrder::kDepthFirstPreorder>()) {

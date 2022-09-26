@@ -14,7 +14,7 @@
 #include "wavemap_rviz_plugin/wavemap_octree_visual.h"
 #endif
 
-namespace wavemap_rviz_plugin {
+namespace wavemap::rviz_plugin {
 // The WavemapOctreeDisplay class implements the editable parameters and Display
 // subclass machinery. The visuals themselves are represented by a separate
 // class, WavemapOctreeVisual. The idiom for the visuals is that when the
@@ -42,7 +42,8 @@ class WavemapOctreeDisplay
 
  private:
   // Function to handle an incoming ROS message
-  void processMessage(const wavemap_msgs::Octree::ConstPtr& msg) override;
+  void processMessage(
+      const wavemap_msgs::Octree::ConstPtr& octree_msg) override;
 
   // Storage for the octree and its visualization
   std::unique_ptr<Octree> octree_;
@@ -51,6 +52,6 @@ class WavemapOctreeDisplay
   // User-editable property variables
   rviz::FloatProperty* occupancy_threshold_property_;
 };
-}  // namespace wavemap_rviz_plugin
+}  // namespace wavemap::rviz_plugin
 
 #endif  // WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_

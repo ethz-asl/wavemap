@@ -83,6 +83,7 @@ class Wavemap3DServer {
   ros::Subscriber pointcloud_sub_;
 
   void advertiseTopics(ros::NodeHandle& nh_private);
+  ros::Publisher map_pub_;
   ros::Publisher occupancy_grid_pub_;
   ros::Publisher occupancy_grid_error_pub_;
   ros::Publisher occupancy_grid_ground_truth_pub_;

@@ -5,10 +5,11 @@
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 #include <tf/transform_listener.h>
+#include <wavemap_common/indexing/ndtree_index.h>
 
 #include "wavemap_rviz_plugin/wavemap_octree_visual.h"
 
-namespace wavemap_rviz_plugin {
+namespace wavemap::rviz_plugin {
 // The constructor must have no arguments, so we can't give the
 // constructor the parameters it needs to fully initialize.
 WavemapOctreeDisplay::WavemapOctreeDisplay() {
@@ -43,20 +44,37 @@ void WavemapOctreeDisplay::updateOccupancyThreshold() {
 
 // This is our callback to handle an incoming message
 void WavemapOctreeDisplay::processMessage(
-    const wavemap_msgs::Octree::ConstPtr& msg) {
+    const wavemap_msgs::Octree::ConstPtr& octree_msg) {
   // Deserialize the octree
-  octree_ = std::make_unique<Octree>(msg->min_cell_width);
-  // TODO(victorr): Parse the octree msg
+  octree_ = std::make_unique<Octree>(octree_msg->min_cell_width);
+  std::stack<Octree::NodeType*> stack;
+  stack.template emplace(&octree_->getRootNode());
+  for (const auto& node_msg : octree_msg->nodes) {
+    CHECK(!stack.empty());
+    Octree::NodeType* current_node = stack.top();
+    stack.pop();
+
+    current_node->data() = node_msg.node_value;
+    for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
+         0 <= relative_child_idx; --relative_child_idx) {
+      const bool child_exists =
+          node_msg.allocated_children_bitset & (1 << relative_child_idx);
+      if (child_exists) {
+        stack.template emplace(current_node->allocateChild(relative_child_idx));
+      }
+    }
+  }
 
   // Here we call the rviz::FrameManager to get the transform from the
   // fixed frame to the frame in the header of this WavemapOctree message. If
   // it fails, we can't do anything else, so we return.
   Ogre::Quaternion orientation;
   Ogre::Vector3 position;
-  if (!context_->getFrameManager()->getTransform(
-          msg->header.frame_id, msg->header.stamp, position, orientation)) {
+  if (!context_->getFrameManager()->getTransform(octree_msg->header.frame_id,
+                                                 octree_msg->header.stamp,
+                                                 position, orientation)) {
     ROS_DEBUG("Error transforming from frame '%s' to frame '%s'",
-              msg->header.frame_id.c_str(), qPrintable(fixed_frame_));
+              octree_msg->header.frame_id.c_str(), qPrintable(fixed_frame_));
     return;
   }
 
@@ -74,8 +92,9 @@ void WavemapOctreeDisplay::processMessage(
   visual_->setOctree(*octree_, occupancy_threshold_log_odds);
 }
 
-}  // namespace wavemap_rviz_plugin
+}  // namespace wavemap::rviz_plugin
 
 // Tell pluginlib about this class.
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(wavemap_rviz_plugin::WavemapOctreeDisplay, rviz::Display)
+PLUGINLIB_EXPORT_CLASS(wavemap::rviz_plugin::WavemapOctreeDisplay,
+                       rviz::Display)

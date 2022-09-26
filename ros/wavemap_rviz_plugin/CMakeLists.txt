@@ -1,6 +1,6 @@
 # NOTE: This file is based on the Rviz plugin tutorials:
 #       https://github.com/ros-visualization/visualization_tutorials/blob/
-#       noetic-devel/wavemap_rviz_plugin/CMakeLists.txt
+#       noetic-devel/rviz_plugin_tutorials/CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_rviz_plugin)
@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS rviz wavemap_msgs wavemap_3d)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
-# Disable some warnings coming from Qt code (mainly when compiled with C++17)
+# Disable some warnings coming from Qt code in combination with C++17
 add_compile_options(-Wno-pedantic -Wno-register)
 
 # Setup catkin package

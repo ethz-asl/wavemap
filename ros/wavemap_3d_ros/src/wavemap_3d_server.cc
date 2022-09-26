@@ -4,13 +4,18 @@
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d_factory.h>
+#include <wavemap_3d/data_structure/volumetric_octree.h>
 #include <wavemap_3d/integrator/pointcloud_integrator_3d_factory.h>
 #include <wavemap_common/data_structure/pointcloud.h>
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/MapEvaluationSummary.h>
+#include <wavemap_msgs/Octree.h>
 #include <wavemap_msgs/PerformanceStats.h>
+
+#include "wavemap_3d_ros/io/ros_msg_conversions.h"
 
 namespace wavemap {
 Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
@@ -45,6 +50,13 @@ void Wavemap3DServer::pointcloudCallback(
 
 void Wavemap3DServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
+    if (const auto& octree = std::dynamic_pointer_cast<
+            VolumetricOctree<SaturatingOccupancyCell>>(occupancy_map_);
+        octree) {
+      wavemap_msgs::Octree octree_msg = octreeToRosMsg(*octree);
+      map_pub_.publish(octree_msg);
+    }
+
     visualization_msgs::MarkerArray occupancy_grid_marker = MapToMarkerArray(
         *occupancy_map_, config_.world_frame, "occupancy_grid",
         [](FloatingPoint cell_log_odds) {
@@ -211,6 +223,7 @@ void Wavemap3DServer::subscribeToTopics(ros::NodeHandle& nh) {
 }
 
 void Wavemap3DServer::advertiseTopics(ros::NodeHandle& nh_private) {
+  map_pub_ = nh_private.advertise<wavemap_msgs::Octree>("map", 10, true);
   occupancy_grid_pub_ = nh_private.advertise<visualization_msgs::MarkerArray>(
       "occupancy_grid", 10, true);
   occupancy_grid_error_pub_ =

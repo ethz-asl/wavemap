@@ -11,8 +11,7 @@
 
 #include "wavemap_rviz_plugin/common.h"
 
-namespace wavemap_rviz_plugin {
-
+namespace wavemap::rviz_plugin {
 // Each instance of WavemapOctreeVisual represents the visualization of a single
 // wavemap_msgs::Octree message.
 class WavemapOctreeVisual {
@@ -44,6 +43,6 @@ class WavemapOctreeVisual {
   // destroy the `frame_node_`.
   Ogre::SceneManager* scene_manager_;
 };
-}  // namespace wavemap_rviz_plugin
+}  // namespace wavemap::rviz_plugin
 
 #endif  // WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_VISUAL_H_
