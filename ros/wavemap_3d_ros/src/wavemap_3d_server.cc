@@ -5,14 +5,15 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d_factory.h>
 #include <wavemap_3d/data_structure/volumetric_octree.h>
+#include <wavemap_3d/data_structure/wavelet_octree.h>
 #include <wavemap_3d/integrator/pointcloud_integrator_3d_factory.h>
 #include <wavemap_common/data_structure/pointcloud.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 #include <wavemap_msgs/FilePath.h>
+#include <wavemap_msgs/Map.h>
 #include <wavemap_msgs/MapEvaluationSummary.h>
-#include <wavemap_msgs/Octree.h>
 #include <wavemap_msgs/PerformanceStats.h>
 
 #include "wavemap_3d_ros/io/ros_msg_conversions.h"
@@ -53,8 +54,15 @@ void Wavemap3DServer::visualizeMap() {
     if (const auto& octree = std::dynamic_pointer_cast<
             VolumetricOctree<SaturatingOccupancyCell>>(occupancy_map_);
         octree) {
-      wavemap_msgs::Octree octree_msg = octreeToRosMsg(*octree);
-      map_pub_.publish(octree_msg);
+      wavemap_msgs::Map map_msg = mapToRosMsg(*octree);
+      map_pub_.publish(map_msg);
+    }
+    if (const auto& wavelet_octree =
+            std::dynamic_pointer_cast<WaveletOctree<SaturatingOccupancyCell>>(
+                occupancy_map_);
+        wavelet_octree) {
+      wavemap_msgs::Map map_msg = mapToRosMsg(*wavelet_octree);
+      map_pub_.publish(map_msg);
     }
 
     visualization_msgs::MarkerArray occupancy_grid_marker = MapToMarkerArray(
@@ -223,7 +231,7 @@ void Wavemap3DServer::subscribeToTopics(ros::NodeHandle& nh) {
 }
 
 void Wavemap3DServer::advertiseTopics(ros::NodeHandle& nh_private) {
-  map_pub_ = nh_private.advertise<wavemap_msgs::Octree>("map", 10, true);
+  map_pub_ = nh_private.advertise<wavemap_msgs::Map>("map", 10, true);
   occupancy_grid_pub_ = nh_private.advertise<visualization_msgs::MarkerArray>(
       "occupancy_grid", 10, true);
   occupancy_grid_error_pub_ =

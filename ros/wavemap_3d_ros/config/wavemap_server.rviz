@@ -145,8 +145,8 @@ Visualization Manager:
           Class: wavemap_rviz_plugin/WavemapOctree
           Enabled: true
           Max occupancy log odds: 1e+06
-          Min occupancy log odds: 9.999999974752427e-07
-          Name: Octree
+          Min occupancy log odds: 9.999999747378752e-05
+          Name: Map
           Queue Size: 10
           Show multi-res grid: true
           Show multi-res slice: false

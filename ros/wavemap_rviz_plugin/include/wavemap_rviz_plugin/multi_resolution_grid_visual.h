@@ -9,12 +9,11 @@
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreVector3.h>
 #include <rviz/ogre_helpers/point_cloud.h>
-
-#include "wavemap_rviz_plugin/common.h"
+#include <wavemap_3d/data_structure/volumetric_data_structure_3d.h>
 
 namespace wavemap::rviz_plugin {
-// Each instance of MultiResolutionGridVisual represents the visualization of an
-// octree's leaves as cubes whose sizes match their height in the tree.
+// Each instance of MultiResolutionGridVisual represents the visualization of a
+// map's leaves as cubes whose sizes match their height in the tree.
 class MultiResolutionGridVisual {
  public:
   // Constructor. Creates the visual elements and puts them into the
@@ -26,8 +25,9 @@ class MultiResolutionGridVisual {
   virtual ~MultiResolutionGridVisual();
 
   // Configure the visual to show the data in the message
-  void setOctree(const Octree& octree, FloatingPoint min_occupancy_log_odds,
-                 FloatingPoint max_occupancy_log_odds, FloatingPoint alpha);
+  void loadMap(const VolumetricDataStructure3D& map,
+               FloatingPoint min_occupancy_log_odds,
+               FloatingPoint max_occupancy_log_odds, FloatingPoint alpha);
 
   // Set the pose of the coordinate frame the message refers to
   void setFramePosition(const Ogre::Vector3& position);

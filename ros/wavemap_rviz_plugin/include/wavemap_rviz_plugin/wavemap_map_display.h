@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
-#define WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
+#ifndef WAVEMAP_RVIZ_PLUGIN_WAVEMAP_MAP_DISPLAY_H_
+#define WAVEMAP_RVIZ_PLUGIN_WAVEMAP_MAP_DISPLAY_H_
 
 #ifndef Q_MOC_RUN
 #include <memory>
@@ -8,27 +8,26 @@
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
-#include <wavemap_msgs/Octree.h>
+#include <wavemap_3d/data_structure/volumetric_data_structure_3d.h>
+#include <wavemap_msgs/Map.h>
 
-#include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/multi_resolution_grid_visual.h"
 #include "wavemap_rviz_plugin/multi_resolution_slice_visual.h"
 #endif
 
 namespace wavemap::rviz_plugin {
-// The WavemapOctreeDisplay class implements the editable parameters and Display
+// The WavemapMapDisplay class implements the editable parameters and Display
 // subclass machinery. The visuals themselves are represented by a separate
-// class, WavemapOctreeVisual. The idiom for the visuals is that when the
+// class, WavemapMapVisual. The idiom for the visuals is that when the
 // objects exist, they appear in the scene, and when they are deleted, they
 // disappear.
-class WavemapOctreeDisplay
-    : public rviz::MessageFilterDisplay<wavemap_msgs::Octree> {
+class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   Q_OBJECT
- public:
+ public:  // NOLINT
   // Constructor. pluginlib::ClassLoader creates instances by calling
   // the default constructor, so make sure you have one.
-  WavemapOctreeDisplay();
-  ~WavemapOctreeDisplay() override = default;
+  WavemapMapDisplay();
+  ~WavemapMapDisplay() override = default;
 
  protected:
   void onInitialize() override;
@@ -46,13 +45,12 @@ class WavemapOctreeDisplay
 
  private:
   // Function to handle an incoming ROS message
-  void processMessage(
-      const wavemap_msgs::Octree::ConstPtr& octree_msg) override;
+  void processMessage(const wavemap_msgs::Map::ConstPtr& map_msg) override;
 
-  // Storage and message parsers for the octree
-  std::unique_ptr<Octree> octree_;
-  static std::unique_ptr<Octree> octreeFromRosMsg(
-      const wavemap_msgs::Octree& octree_msg);
+  // Storage and message parsers for the map
+  std::unique_ptr<VolumetricDataStructure3D> map_;
+  static std::unique_ptr<VolumetricDataStructure3D> mapFromRosMsg(
+      const wavemap_msgs::Map& map_msg);
 
   // Storage for the visuals
   // NOTE: Visuals are enabled when they are allocated, and automatically
@@ -72,4 +70,4 @@ class WavemapOctreeDisplay
 };
 }  // namespace wavemap::rviz_plugin
 
-#endif  // WAVEMAP_RVIZ_PLUGIN_WAVEMAP_OCTREE_DISPLAY_H_
+#endif  // WAVEMAP_RVIZ_PLUGIN_WAVEMAP_MAP_DISPLAY_H_

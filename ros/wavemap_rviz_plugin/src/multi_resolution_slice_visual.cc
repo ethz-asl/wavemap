@@ -1,5 +1,7 @@
 #include "wavemap_rviz_plugin/multi_resolution_slice_visual.h"
 
+#include <wavemap_common/indexing/index_conversions.h>
+
 namespace wavemap::rviz_plugin {
 MultiResolutionSliceVisual::MultiResolutionSliceVisual(
     Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node) {
@@ -23,14 +25,14 @@ MultiResolutionSliceVisual::~MultiResolutionSliceVisual() {
   scene_manager_->destroySceneNode(frame_node_);
 }
 
-void MultiResolutionSliceVisual::setOctree(const Octree& octree,
-                                           FloatingPoint min_occupancy_log_odds,
-                                           FloatingPoint max_occupancy_log_odds,
-                                           FloatingPoint slice_height,
-                                           FloatingPoint alpha) {
+void MultiResolutionSliceVisual::loadMap(const VolumetricDataStructure3D& map,
+                                         FloatingPoint min_occupancy_log_odds,
+                                         FloatingPoint max_occupancy_log_odds,
+                                         FloatingPoint slice_height,
+                                         FloatingPoint alpha) {
   // Constants
-  const FloatingPoint min_cell_width = octree.getMinCellWidth();
-  const int max_height = Octree::kMaxHeight;
+  const FloatingPoint min_cell_width = map.getMinCellWidth();
+  const int max_height = 14;
 
   // Delete the previous visuals
   grid_levels_.clear();
@@ -47,9 +49,8 @@ void MultiResolutionSliceVisual::setOctree(const Octree& octree,
 
   // Add a colored square for each leaf
   std::vector<std::vector<rviz::PointCloud::Point>> cells_per_level(num_levels);
-  octree.forEachLeaf([=, &cells_per_level](
-                         const NdtreeIndex<Octree::kDim>& cell_index,
-                         FloatingPoint cell_log_odds) {
+  map.forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
+                                        FloatingPoint cell_log_odds) {
     // Skip cells that don't intersect the slice
     if (cell_index.position.z() != intersecting_indices[cell_index.height]) {
       return;
@@ -64,7 +65,7 @@ void MultiResolutionSliceVisual::setOctree(const Octree& octree,
     // Determine the cell's position
     CHECK_GE(cell_index.height, 0);
     CHECK_LE(cell_index.height, max_height);
-    const Point<Octree::kDim> cell_center =
+    const Point3D cell_center =
         convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
 
     // Create the cube at the right scale
