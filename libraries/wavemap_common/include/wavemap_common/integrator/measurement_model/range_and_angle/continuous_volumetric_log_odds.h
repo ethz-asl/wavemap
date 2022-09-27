@@ -11,8 +11,8 @@ namespace wavemap {
 template <int dim>
 class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
  public:
-  static constexpr FloatingPoint kAngleSigma = kPi / 400.f / 2.f / 6.f;
-  static constexpr FloatingPoint kRangeSigma = 0.15f / 6.f;
+  static constexpr FloatingPoint kAngleSigma = kTwoPi / 1024.f / 6.f;
+  static constexpr FloatingPoint kRangeSigma = 0.1f;
   static constexpr FloatingPoint kAngleThresh = 6.f * kAngleSigma;
   static constexpr FloatingPoint kRangeDeltaThresh = 6.f * kRangeSigma;
   static constexpr FloatingPoint kScaling = 0.5f;

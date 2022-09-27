@@ -11,13 +11,11 @@
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
-constexpr FloatingPoint kOusterVerticalFoV = 0.2897247f;
 class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
  public:
   explicit ScanwiseIntegrator3D(VolumetricDataStructure3D::Ptr occupancy_map)
       : PointcloudIntegrator3D(std::move(occupancy_map)),
-        spherical_projector_(-kOusterVerticalFoV, kOusterVerticalFoV, 64, -kPi,
-                             kPi, 1024) {
+        spherical_projector_(-0.272167, 0.309674, 64, -kPi, kPi, 1024) {
     // TODO(victorr): Make the FoV and number of beams configurable
     // TODO(victorr): Check that the pointcloud's angular resolution is lower
     //                than the angular uncertainty of the beam model. This is
