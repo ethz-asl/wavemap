@@ -26,7 +26,8 @@ MultiResolutionSliceVisual::~MultiResolutionSliceVisual() {
 void MultiResolutionSliceVisual::setOctree(const Octree& octree,
                                            FloatingPoint min_occupancy_log_odds,
                                            FloatingPoint max_occupancy_log_odds,
-                                           FloatingPoint slice_height) {
+                                           FloatingPoint slice_height,
+                                           FloatingPoint alpha) {
   // Constants
   const FloatingPoint min_cell_width = octree.getMinCellWidth();
   const int max_height = Octree::kMaxHeight;
@@ -92,6 +93,7 @@ void MultiResolutionSliceVisual::setOctree(const Octree& octree,
     grid_level.setDimensions(cell_width, cell_width, 0.1);
     auto& cells_at_level = cells_per_level[height];
     grid_level.addPoints(&cells_at_level.front(), cells_at_level.size());
+    grid_level.setAlpha(alpha, false);
     frame_node_->attachObject(&grid_level);
   }
 

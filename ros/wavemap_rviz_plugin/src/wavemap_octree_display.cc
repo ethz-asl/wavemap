@@ -15,10 +15,10 @@ namespace wavemap::rviz_plugin {
 WavemapOctreeDisplay::WavemapOctreeDisplay() {
   min_occupancy_threshold_property_ = std::make_unique<rviz::FloatProperty>(
       "Min occupancy log odds", 1e-6, "Ranges from -Inf to Inf.", this,
-      SLOT(updateOccupancyThresholds()));
+      SLOT(updateOccupancyThresholdsOrOpacity()));
   max_occupancy_threshold_property_ = std::make_unique<rviz::FloatProperty>(
       "Max occupancy log odds", 1e6, "Ranges from -Inf to Inf.", this,
-      SLOT(updateOccupancyThresholds()));
+      SLOT(updateOccupancyThresholdsOrOpacity()));
 
   multi_resolution_grid_visibility_property_ =
       std::make_unique<rviz::BoolProperty>(
@@ -35,6 +35,10 @@ WavemapOctreeDisplay::WavemapOctreeDisplay() {
       std::make_unique<rviz::FloatProperty>(
           "Slice height", 0.0, "Z-coordinate of the map slice to display.",
           this, SLOT(updateMultiResolutionSliceHeight()));
+
+  opacity_property_ = std::make_unique<rviz::FloatProperty>(
+      "Alpha", 1.0, "Opacity of the displayed visuals.", this,
+      SLOT(updateOccupancyThresholdsOrOpacity()));
 }
 
 // After the top-level rviz::Display::initialize() does its own setup,
@@ -52,22 +56,25 @@ void WavemapOctreeDisplay::reset() {
 }
 
 // Update the visuals with the current occupancy thresholds
-void WavemapOctreeDisplay::updateOccupancyThresholds() {
+void WavemapOctreeDisplay::updateOccupancyThresholdsOrOpacity() {
+  // Get the properties set in the UI
   const FloatingPoint min_occupancy_threshold =
       min_occupancy_threshold_property_->getFloat();
   const FloatingPoint max_occupancy_threshold =
       max_occupancy_threshold_property_->getFloat();
   const FloatingPoint slice_height =
       multi_resolution_slice_height_property_->getFloat();
+  const FloatingPoint alpha = opacity_property_->getFloat();
+
   // Update the visuals (if they are enabled)
   if (octree_ && multi_resolution_grid_visual_) {
     multi_resolution_grid_visual_->setOctree(*octree_, min_occupancy_threshold,
-                                             max_occupancy_threshold);
+                                             max_occupancy_threshold, alpha);
   }
   if (octree_ && multi_resolution_slice_visual_) {
     multi_resolution_slice_visual_->setOctree(*octree_, min_occupancy_threshold,
                                               max_occupancy_threshold,
-                                              slice_height);
+                                              slice_height, alpha);
   }
 }
 
@@ -109,11 +116,13 @@ void WavemapOctreeDisplay::updateMultiResolutionSliceHeight() {
       max_occupancy_threshold_property_->getFloat();
   const FloatingPoint slice_height =
       multi_resolution_slice_height_property_->getFloat();
+  const FloatingPoint alpha = opacity_property_->getFloat();
+
   // Update the visuals (if they are enabled)
   if (octree_ && multi_resolution_slice_visual_) {
     multi_resolution_slice_visual_->setOctree(*octree_, min_occupancy_threshold,
                                               max_occupancy_threshold,
-                                              slice_height);
+                                              slice_height, alpha);
   }
 }
 
@@ -149,11 +158,12 @@ void WavemapOctreeDisplay::processMessage(
       min_occupancy_threshold_property_->getFloat();
   const FloatingPoint max_occupancy_threshold =
       max_occupancy_threshold_property_->getFloat();
+  const FloatingPoint alpha = opacity_property_->getFloat();
   if (multi_resolution_grid_visual_) {
     multi_resolution_grid_visual_->setFramePosition(position);
     multi_resolution_grid_visual_->setFrameOrientation(orientation);
     multi_resolution_grid_visual_->setOctree(*octree_, min_occupancy_threshold,
-                                             max_occupancy_threshold);
+                                             max_occupancy_threshold, alpha);
   }
   if (multi_resolution_slice_visual_) {
     const FloatingPoint slice_height =
@@ -162,7 +172,7 @@ void WavemapOctreeDisplay::processMessage(
     multi_resolution_slice_visual_->setFrameOrientation(orientation);
     multi_resolution_slice_visual_->setOctree(*octree_, min_occupancy_threshold,
                                               max_occupancy_threshold,
-                                              slice_height);
+                                              slice_height, alpha);
   }
 }
 

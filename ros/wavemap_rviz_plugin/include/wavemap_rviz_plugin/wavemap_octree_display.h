@@ -39,7 +39,7 @@ class WavemapOctreeDisplay
  private Q_SLOTS:  // NOLINT
   // These Qt slots get connected to signals indicating changes in the
   // user-editable properties
-  void updateOccupancyThresholds();
+  void updateOccupancyThresholdsOrOpacity();
   void updateMultiResolutionGridVisibility();
   void updateMultiResolutionSliceVisibility();
   void updateMultiResolutionSliceHeight();
@@ -68,6 +68,7 @@ class WavemapOctreeDisplay
   std::unique_ptr<rviz::BoolProperty>
       multi_resolution_slice_visibility_property_;
   std::unique_ptr<rviz::FloatProperty> multi_resolution_slice_height_property_;
+  std::unique_ptr<rviz::FloatProperty> opacity_property_;
 };
 }  // namespace wavemap::rviz_plugin
 

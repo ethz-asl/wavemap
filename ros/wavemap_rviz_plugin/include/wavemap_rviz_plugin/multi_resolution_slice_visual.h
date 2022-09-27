@@ -28,7 +28,7 @@ class MultiResolutionSliceVisual {
   // Configure the visual to show the data in the message
   void setOctree(const Octree& octree, FloatingPoint min_occupancy_log_odds,
                  FloatingPoint max_occupancy_log_odds,
-                 FloatingPoint slice_height);
+                 FloatingPoint slice_height, FloatingPoint alpha);
 
   // Set the pose of the coordinate frame the message refers to
   void setFramePosition(const Ogre::Vector3& position);

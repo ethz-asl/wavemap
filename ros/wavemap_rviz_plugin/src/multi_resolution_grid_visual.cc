@@ -23,9 +23,10 @@ MultiResolutionGridVisual::~MultiResolutionGridVisual() {
   scene_manager_->destroySceneNode(frame_node_);
 }
 
-void MultiResolutionGridVisual::setOctree(
-    const Octree& octree, FloatingPoint min_occupancy_log_odds,
-    FloatingPoint max_occupancy_log_odds) {
+void MultiResolutionGridVisual::setOctree(const Octree& octree,
+                                          FloatingPoint min_occupancy_log_odds,
+                                          FloatingPoint max_occupancy_log_odds,
+                                          FloatingPoint alpha) {
   // Constants
   const FloatingPoint min_cell_width = octree.getMinCellWidth();
   const int max_height = Octree::kMaxHeight;
@@ -77,6 +78,7 @@ void MultiResolutionGridVisual::setOctree(
     grid_level.setDimensions(cell_width, cell_width, cell_width);
     auto& cells_at_level = cells_per_level[height];
     grid_level.addPoints(&cells_at_level.front(), cells_at_level.size());
+    grid_level.setAlpha(alpha, false);
     frame_node_->attachObject(&grid_level);
   }
 
