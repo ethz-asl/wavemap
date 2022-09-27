@@ -90,7 +90,7 @@ void MultiResolutionSliceVisual::setOctree(const Octree& octree,
     auto& grid_level = grid_levels_.emplace_back();
     grid_level.setName(std::to_string(height));
     grid_level.setRenderMode(rviz::PointCloud::RM_BOXES);
-    grid_level.setDimensions(cell_width, cell_width, 0.1);
+    grid_level.setDimensions(cell_width, cell_width, 0.0);
     auto& cells_at_level = cells_per_level[height];
     grid_level.addPoints(&cells_at_level.front(), cells_at_level.size());
     grid_level.setAlpha(alpha, false);

@@ -154,7 +154,7 @@ Visualization Manager:
           Topic: /wavemap_3d/map
           Unreliable: false
           Value: true
-        - Alpha: 0.4000000059604645
+        - Alpha: 0.8999999761581421
           Class: wavemap_rviz_plugin/WavemapOctree
           Enabled: true
           Max occupancy log odds: 1e+06
