@@ -143,12 +143,28 @@ Visualization Manager:
       Displays:
         - Class: wavemap_rviz_plugin/WavemapOctree
           Enabled: true
-          Name: Estimate
-          Occupancy threshold log odds: 0
+          Max occupancy log odds: 1e+06
+          Min occupancy log odds: 9.999999974752427e-07
+          Name: Octree
           Queue Size: 10
+          Show multi-res grid: true
+          Show multi-res slice: false
+          Slice height: 0
           Topic: /wavemap_3d/map
           Unreliable: false
           Value: true
+        - Class: wavemap_rviz_plugin/WavemapOctree
+          Enabled: false
+          Max occupancy log odds: 1e+06
+          Min occupancy log odds: -1e+06
+          Name: Slice
+          Queue Size: 10
+          Show multi-res grid: false
+          Show multi-res slice: true
+          Slice height: 1
+          Topic: /wavemap_3d/map
+          Unreliable: false
+          Value: false
         - Class: rviz/MarkerArray
           Enabled: false
           Marker Topic: /wavemap_3d/occupancy_grid

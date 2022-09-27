@@ -11,7 +11,8 @@
 #include <wavemap_msgs/Octree.h>
 
 #include "wavemap_rviz_plugin/common.h"
-#include "wavemap_rviz_plugin/wavemap_octree_visual.h"
+#include "wavemap_rviz_plugin/multi_resolution_grid_visual.h"
+#include "wavemap_rviz_plugin/multi_resolution_slice_visual.h"
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -38,19 +39,35 @@ class WavemapOctreeDisplay
  private Q_SLOTS:  // NOLINT
   // These Qt slots get connected to signals indicating changes in the
   // user-editable properties
-  void updateOccupancyThreshold();
+  void updateOccupancyThresholds();
+  void updateMultiResolutionGridVisibility();
+  void updateMultiResolutionSliceVisibility();
+  void updateMultiResolutionSliceHeight();
 
  private:
   // Function to handle an incoming ROS message
   void processMessage(
       const wavemap_msgs::Octree::ConstPtr& octree_msg) override;
 
-  // Storage for the octree and its visualization
+  // Storage and message parsers for the octree
   std::unique_ptr<Octree> octree_;
-  std::unique_ptr<WavemapOctreeVisual> visual_;
+  static std::unique_ptr<Octree> octreeFromRosMsg(
+      const wavemap_msgs::Octree& octree_msg);
+
+  // Storage for the visuals
+  // NOTE: Visuals are enabled when they are allocated, and automatically
+  //       removed from the scene when destructed.
+  std::unique_ptr<MultiResolutionGridVisual> multi_resolution_grid_visual_;
+  std::unique_ptr<MultiResolutionSliceVisual> multi_resolution_slice_visual_;
 
   // User-editable property variables
-  rviz::FloatProperty* occupancy_threshold_property_;
+  std::unique_ptr<rviz::FloatProperty> min_occupancy_threshold_property_;
+  std::unique_ptr<rviz::FloatProperty> max_occupancy_threshold_property_;
+  std::unique_ptr<rviz::BoolProperty>
+      multi_resolution_grid_visibility_property_;
+  std::unique_ptr<rviz::BoolProperty>
+      multi_resolution_slice_visibility_property_;
+  std::unique_ptr<rviz::FloatProperty> multi_resolution_slice_height_property_;
 };
 }  // namespace wavemap::rviz_plugin
 

@@ -30,7 +30,7 @@ if (rviz_QT_VERSION VERSION_LESS "5")
   # Pull in all required include dirs, define QT_LIBRARIES, etc.
   include(${QT_USE_FILE})
   # Generate QT's MOC files for our project's headers
-  file(GLOB HEADERS_TO_MOC include/${PROJECT_NAME}/*.h)
+  set(HEADERS_TO_MOC include/wavemap_rviz_plugin/wavemap_octree_display.h)
   qt4_wrap_cpp(QT_MOC ${HEADERS_TO_MOC})
 else ()
   message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
@@ -39,7 +39,7 @@ else ()
   # all required dependencies
   set(QT_LIBRARIES Qt5::Widgets)
   # Generate QT's MOC files for our project's headers
-  file(GLOB HEADERS_TO_MOC include/${PROJECT_NAME}/*.h)
+  set(HEADERS_TO_MOC include/wavemap_rviz_plugin/wavemap_octree_display.h)
   QT5_WRAP_CPP(QT_MOC ${HEADERS_TO_MOC})
 endif ()
 
@@ -49,8 +49,9 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 # Libraries
 add_library(${PROJECT_NAME}
+    src/multi_resolution_grid_visual.cc
+    src/multi_resolution_slice_visual.cc
     src/wavemap_octree_display.cc
-    src/wavemap_octree_visual.cc
     ${QT_MOC})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
