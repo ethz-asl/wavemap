@@ -32,7 +32,8 @@ void WaveletIntegrator3D::integratePointcloud(
        relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
     const OctreeIndex& child_index = first_child_indices[relative_child_idx];
     child_scale_coefficient_updates[relative_child_idx] =
-        recursiveSamplerCompressor(child_index, wavelet_tree_->getRootNode(),
+        recursiveSamplerCompressor(child_index, wavelet_tree_->getRootScale(),
+                                   wavelet_tree_->getRootNode(),
                                    relative_child_idx,
                                    RangeImage2DIntersector::Cache{});
   }

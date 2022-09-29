@@ -31,7 +31,7 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
 
   WaveletOctreeInterface::Coefficients::Scale recursiveSamplerCompressor(
-      const OctreeIndex& node_index,
+      const OctreeIndex& node_index, FloatingPoint node_value,
       WaveletOctreeInterface::NodeType& parent_node,
       OctreeIndex ::RelativeChild relative_child_index,
       RangeImage2DIntersector::Cache cache);
