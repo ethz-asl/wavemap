@@ -22,6 +22,19 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     typename WaveletOctreeInterface::NodeType& parent_node,
     OctreeIndex::RelativeChild relative_child_index,
     RangeImage2DIntersector::Cache cache) {
+  if (node_index.height == 0) {
+    const Point3D W_node_center =
+        convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
+    const Point3D C_node_center =
+        posed_range_image_->getPoseInverse() * W_node_center;
+    const FloatingPoint d_C_cell = C_node_center.norm();
+    const Vector2D spherical_C_cell =
+        SphericalProjector::bearingToSpherical(C_node_center);
+    const FloatingPoint sample =
+        computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
+    return sample;
+  }
+
   const AABB<Point3D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const IntersectionType intersection_type =
@@ -40,8 +53,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
   const FloatingPoint d_C_cell = C_node_center.norm();
   const FloatingPoint bounding_sphere_radius =
       kUnitCubeHalfDiagonal * node_width;
-  if (node_index.height == 0 ||
-      isApproximationErrorAcceptable(intersection_type, d_C_cell,
+  if (isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
     const Vector2D spherical_C_cell =
         SphericalProjector::bearingToSpherical(C_node_center);
