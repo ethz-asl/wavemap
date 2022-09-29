@@ -5,9 +5,12 @@
 #include <vector>
 
 #include <wavemap_common/iterator/grid_iterator.h>
+#include <wavemap_common/utils/bit_manipulation.h>
 
 namespace wavemap {
-inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getBounds(
+template <bool azimuth_wraps_around_pi>
+inline Bounds<FloatingPoint>
+HierarchicalRangeImage2D<azimuth_wraps_around_pi>::getBounds(
     const QuadtreeIndex& index) const {
   DCHECK_GE(index.height, 0);
   DCHECK_LE(index.height, max_height_);
@@ -21,22 +24,32 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getBounds(
   }
 }
 
-inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getRangeBounds(
+template <bool azimuth_wraps_around_pi>
+inline Bounds<FloatingPoint>
+HierarchicalRangeImage2D<azimuth_wraps_around_pi>::getRangeBounds(
     const Index2D& bottom_left_idx, const Index2D& top_right_idx) const {
-  DCHECK((bottom_left_idx.array() <= top_right_idx.array()).all());
+  Index2D top_right_idx_unwrapped = top_right_idx;
+  if (azimuth_wraps_around_pi &&
+      top_right_idx_unwrapped.y() < bottom_left_idx.y()) {
+    top_right_idx_unwrapped.y() += range_image_->getNumColumns();
+  }
+  DCHECK((bottom_left_idx.array() <= top_right_idx_unwrapped.array()).all());
 
-  const IndexElement min_level_up =
-      int_math::log2_floor((top_right_idx - bottom_left_idx).maxCoeff());
+  const IndexElement min_level_up = int_math::log2_floor(
+      (top_right_idx_unwrapped - bottom_left_idx).maxCoeff());
   const Index2D bottom_left_idx_shifted =
       int_math::div_exp2_floor(bottom_left_idx, min_level_up);
   const Index2D top_right_idx_shifted =
       int_math::div_exp2_floor(top_right_idx, min_level_up);
+  const Index2D top_right_idx_unwrapped_shifted =
+      int_math::div_exp2_floor(top_right_idx_unwrapped, min_level_up);
 
   // Check if the nodes at min_level_up are direct neighbors
-  if (bottom_left_idx_shifted + Index2D::Ones() == top_right_idx_shifted) {
+  if (bottom_left_idx_shifted + Index2D::Ones() ==
+      top_right_idx_unwrapped_shifted) {
     // Check if they even share the same parent (node at min_level_up + 1)
     if (int_math::div_exp2_floor(bottom_left_idx_shifted, 1) ==
-        int_math::div_exp2_floor(top_right_idx_shifted, 1)) {
+        int_math::div_exp2_floor(top_right_idx_unwrapped_shifted, 1)) {
       // Since they do, checking both nodes at min_level_up is equivalent to
       // checking their common parent, so we do that instead as its cheaper
       const IndexElement parent_height = min_level_up;
@@ -76,10 +89,18 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage2D::getRangeBounds(
   }
 }
 
+template <bool azimuth_wraps_around_pi>
 template <typename BinaryFunctor>
-std::vector<RangeImage2D> HierarchicalRangeImage2D::computeReducedPyramid(
+std::vector<RangeImage2D>
+HierarchicalRangeImage2D<azimuth_wraps_around_pi>::computeReducedPyramid(
     const RangeImage2D& range_image, BinaryFunctor reduction_functor,
     FloatingPoint init) {
+  CHECK(!azimuth_wraps_around_pi ||
+        bit_manip::popcount(range_image.getNumColumns()))
+      << "For LiDAR range images that wrap around horizontally (FoV of "
+         "360deg), only column numbers that are exact powers of 2 are "
+         "currently supported.";
+
   const Index2D range_image_dims = range_image.getDimensions();
   const int max_num_halvings = int_math::log2_ceil(range_image_dims.maxCoeff());
 
@@ -126,6 +147,16 @@ std::vector<RangeImage2D> HierarchicalRangeImage2D::computeReducedPyramid(
                 reduction_functor(r01, r11);
             current_level[idx] =
                 reduction_functor(first_col_reduced, second_col_reduced);
+          } else if (azimuth_wraps_around_pi &&
+                     max_child_idx.y() <= previous_level_dims.y()) {
+            const FloatingPoint r01 = valueOrInit(
+                previous_level[{min_child_idx.x(), 0}], init, level_idx);
+            const FloatingPoint r11 = valueOrInit(
+                previous_level[{max_child_idx.x(), 0}], init, level_idx);
+            const FloatingPoint second_col_reduced =
+                reduction_functor(r01, r11);
+            current_level[idx] =
+                reduction_functor(first_col_reduced, second_col_reduced);
           } else {
             current_level[idx] = reduction_functor(first_col_reduced, init);
           }
@@ -133,6 +164,12 @@ std::vector<RangeImage2D> HierarchicalRangeImage2D::computeReducedPyramid(
           const FloatingPoint r01 = valueOrInit(
               previous_level[{min_child_idx.x(), max_child_idx.y()}], init,
               level_idx);
+          const FloatingPoint first_row_reduced = reduction_functor(r00, r01);
+          current_level[idx] = reduction_functor(first_row_reduced, init);
+        } else if (azimuth_wraps_around_pi &&
+                   max_child_idx.y() <= previous_level_dims.y()) {
+          const FloatingPoint r01 = valueOrInit(
+              previous_level[{min_child_idx.x(), 0}], init, level_idx);
           const FloatingPoint first_row_reduced = reduction_functor(r00, r01);
           current_level[idx] = reduction_functor(first_row_reduced, init);
         } else {

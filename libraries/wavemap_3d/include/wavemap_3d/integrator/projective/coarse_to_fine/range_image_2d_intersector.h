@@ -49,7 +49,9 @@ class RangeImage2DIntersector {
       const SphericalProjector& spherical_projector, Cache& cache) const;
 
  private:
-  const HierarchicalRangeImage2D hierarchical_range_image_;
+  static constexpr bool kAzimuthAllowedToWrapAround = true;
+  const HierarchicalRangeImage2D<kAzimuthAllowedToWrapAround>
+      hierarchical_range_image_;
 };
 }  // namespace wavemap
 

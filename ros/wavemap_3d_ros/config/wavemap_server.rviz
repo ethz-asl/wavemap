@@ -5,7 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
         - /Input1
@@ -61,7 +60,7 @@ Visualization Manager:
       Frames:
         All Enabled: false
         cam_left:
-          Value: true
+          Value: false
         odom:
           Value: true
         os1_lidar:
