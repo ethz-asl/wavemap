@@ -108,16 +108,20 @@ std::vector<RangeImage2D> HierarchicalRangeImage2D::computeReducedPyramid(
       // virtually pad the previous level with initial value 'init'.
       if ((min_child_idx.array() < previous_level_dims.array()).all()) {
         const FloatingPoint r00 =
-            previous_level[{min_child_idx.x(), min_child_idx.y()}];
+            valueOrInit(previous_level[{min_child_idx.x(), min_child_idx.y()}],
+                        init, level_idx);
         if (max_child_idx.x() < previous_level_dims.x()) {
-          const FloatingPoint r10 =
-              previous_level[{max_child_idx.x(), min_child_idx.y()}];
+          const FloatingPoint r10 = valueOrInit(
+              previous_level[{max_child_idx.x(), min_child_idx.y()}], init,
+              level_idx);
           const FloatingPoint first_col_reduced = reduction_functor(r00, r10);
           if (max_child_idx.y() < previous_level_dims.y()) {
-            const FloatingPoint r01 =
-                previous_level[{min_child_idx.x(), max_child_idx.y()}];
-            const FloatingPoint r11 =
-                previous_level[{max_child_idx.x(), max_child_idx.y()}];
+            const FloatingPoint r01 = valueOrInit(
+                previous_level[{min_child_idx.x(), max_child_idx.y()}], init,
+                level_idx);
+            const FloatingPoint r11 = valueOrInit(
+                previous_level[{max_child_idx.x(), max_child_idx.y()}], init,
+                level_idx);
             const FloatingPoint second_col_reduced =
                 reduction_functor(r01, r11);
             current_level[idx] =
@@ -126,8 +130,9 @@ std::vector<RangeImage2D> HierarchicalRangeImage2D::computeReducedPyramid(
             current_level[idx] = reduction_functor(first_col_reduced, init);
           }
         } else if (max_child_idx.y() < previous_level_dims.y()) {
-          const FloatingPoint r01 =
-              previous_level[{min_child_idx.x(), max_child_idx.y()}];
+          const FloatingPoint r01 = valueOrInit(
+              previous_level[{min_child_idx.x(), max_child_idx.y()}], init,
+              level_idx);
           const FloatingPoint first_row_reduced = reduction_functor(r00, r01);
           current_level[idx] = reduction_functor(first_row_reduced, init);
         } else {

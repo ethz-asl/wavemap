@@ -75,6 +75,13 @@ class HierarchicalRangeImage2D {
   static std::vector<RangeImage2D> computeReducedPyramid(
       const RangeImage2D& range_image, BinaryFunctor reduction_functor,
       FloatingPoint init);
+  static FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
+                                   int level_idx) {
+    if (level_idx == 0 && value < kEpsilon) {
+      return init;
+    }
+    return value;
+  }
 };
 }  // namespace wavemap
 
