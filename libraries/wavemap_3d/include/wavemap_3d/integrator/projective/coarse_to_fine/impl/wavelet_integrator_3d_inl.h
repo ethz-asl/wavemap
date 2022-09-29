@@ -34,7 +34,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         SphericalProjector::bearingToSpherical(C_node_center);
     const FloatingPoint sample =
         computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
-    return sample;
+    return SaturatingOccupancyCell::threshold(node_value + sample) - node_value;
   }
 
   const AABB<Point3D> W_cell_aabb =
@@ -63,7 +63,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         SphericalProjector::bearingToSpherical(C_node_center);
     const FloatingPoint sample =
         computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
-    return sample;
+    return SaturatingOccupancyCell::threshold(node_value + sample) - node_value;
   }
 
   WaveletOctreeInterface::NodeType* node =
