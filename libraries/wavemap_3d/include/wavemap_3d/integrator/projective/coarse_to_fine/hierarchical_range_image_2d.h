@@ -10,6 +10,7 @@
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
+template <bool azimuth_wraps_around_pi>
 class HierarchicalRangeImage2D {
  public:
   explicit HierarchicalRangeImage2D(std::shared_ptr<RangeImage2D> range_image)
@@ -75,6 +76,7 @@ class HierarchicalRangeImage2D {
   static std::vector<RangeImage2D> computeReducedPyramid(
       const RangeImage2D& range_image, BinaryFunctor reduction_functor,
       FloatingPoint init);
+
   static FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
                                    int level_idx) {
     if (level_idx == 0 && value < kEpsilon) {

@@ -189,15 +189,23 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
       Vector2D::Constant(ContinuousVolumetricLogOdds<3>::kAngleThresh);
 
   // If the angle wraps around Pi, we can't use the hierarchical range image
-  const Eigen::Matrix<bool, 2, 1> angle_range_wraps_pi =
-      max_spherical_coordinates.array() < min_spherical_coordinates.array();
-  if (angle_range_wraps_pi.any()) {
-    if ((!angle_range_wraps_pi.array() ||
-         (max_spherical_coordinates.array() <
-              spherical_projector.getMinAngles().array() &&
-          spherical_projector.getMaxAngles().array() <
-              min_spherical_coordinates.array()))
-            .all()) {
+  const bool elevation_range_wraps_pi =
+      max_spherical_coordinates.x() < min_spherical_coordinates.x();
+  const bool azimuth_range_wraps_pi =
+      max_spherical_coordinates.y() < min_spherical_coordinates.y();
+  if (elevation_range_wraps_pi ||
+      (!kAzimuthAllowedToWrapAround && azimuth_range_wraps_pi)) {
+    const bool elevation_range_fully_outside_fov =
+        max_spherical_coordinates.x() <
+            spherical_projector.getMinAngles().x() &&
+        spherical_projector.getMaxAngles().x() < min_spherical_coordinates.x();
+    const bool azimuth_range_fully_outside_fov =
+        max_spherical_coordinates.y() <
+            spherical_projector.getMinAngles().y() &&
+        spherical_projector.getMaxAngles().y() < min_spherical_coordinates.y();
+    if ((!elevation_range_wraps_pi || elevation_range_fully_outside_fov) &&
+        (kAzimuthAllowedToWrapAround || !azimuth_range_wraps_pi ||
+         azimuth_range_fully_outside_fov)) {
       // No parts of the cell can be affected by the measurement update
       return IntersectionType::kFullyUnknown;
     } else {
