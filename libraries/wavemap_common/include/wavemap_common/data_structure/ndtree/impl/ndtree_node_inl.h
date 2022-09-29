@@ -26,11 +26,9 @@ bool NdtreeNode<NodeDataType, dim>::hasChild(
 template <typename NodeDataType, int dim>
 bool NdtreeNode<NodeDataType, dim>::hasAtLeastOneChild() const {
   if (hasChildrenArray()) {
-    for (int child_idx = 0; child_idx < IndexType::kNumChildren; ++child_idx) {
-      if (hasChild(child_idx)) {
-        return true;
-      }
-    }
+    return std::any_of(
+        children_->begin(), children_->end(),
+        [](const auto& child_ptr) { return static_cast<bool>(child_ptr); });
   }
   return false;
 }

@@ -189,15 +189,14 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
       Vector2D::Constant(ContinuousVolumetricLogOdds<3>::kAngleThresh);
 
   // If the angle wraps around Pi, we can't use the hierarchical range image
-  const bool any_angle_range_wraps_pi =
-      (max_spherical_coordinates.array() < min_spherical_coordinates.array())
-          .any();
-  if (any_angle_range_wraps_pi) {
-    if ((max_spherical_coordinates.array() <
-         spherical_projector.getMinAngles().array())
-            .all() &&
-        (spherical_projector.getMaxAngles().array() <
-         min_spherical_coordinates.array())
+  const Eigen::Matrix<bool, 2, 1> angle_range_wraps_pi =
+      max_spherical_coordinates.array() < min_spherical_coordinates.array();
+  if (angle_range_wraps_pi.any()) {
+    if ((!angle_range_wraps_pi.array() ||
+         (max_spherical_coordinates.array() <
+              spherical_projector.getMinAngles().array() &&
+          spherical_projector.getMaxAngles().array() <
+              min_spherical_coordinates.array()))
             .all()) {
       // No parts of the cell can be affected by the measurement update
       return IntersectionType::kFullyUnknown;
@@ -208,7 +207,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
     }
   }
 
-  // Check if the cell is outside the observed range
+  // Check if the cell is outside the FoV
   if ((max_spherical_coordinates.array() <
        spherical_projector.getMinAngles().array())
           .any() ||
