@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_3D_INL_H_
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_3D_INL_H_
 
+#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
+
 namespace wavemap {
 inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(
     IntersectionType intersection_type, FloatingPoint sphere_center_distance,
@@ -18,7 +20,7 @@ inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(
 }
 
 inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
-    const OctreeIndex& node_index,
+    const OctreeIndex& node_index, FloatingPoint node_value,
     typename WaveletOctreeInterface::NodeType& parent_node,
     OctreeIndex::RelativeChild relative_child_index,
     RangeImage2DIntersector::Cache cache) {
@@ -41,7 +43,9 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
       range_image_intersector_->determineIntersectionType(
           posed_range_image_->getPose(), W_cell_aabb, spherical_projector_,
           cache);
-  if (intersection_type == IntersectionType::kFullyUnknown) {
+  if (intersection_type == IntersectionType::kFullyUnknown ||
+      (intersection_type == IntersectionType::kFreeOrUnknown &&
+       node_value < SaturatingOccupancyCell::kLowerBound + 1e-4f)) {
     return 0.f;
   }
 
@@ -68,15 +72,20 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     node = parent_node.allocateChild(relative_child_index);
   }
 
+  const WaveletOctreeInterface::Coefficients::CoefficientsArray
+      child_scale_coefficients = WaveletOctreeInterface::Transform::backward(
+          {node_value, node->data()});
   WaveletOctreeInterface::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
   for (OctreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
     const OctreeIndex child_index =
         node_index.computeChildIndex(relative_child_idx);
+    const FloatingPoint child_value =
+        child_scale_coefficients[relative_child_idx];
     child_scale_coefficient_updates[relative_child_idx] =
-        recursiveSamplerCompressor(child_index, *node, relative_child_idx,
-                                   cache);
+        recursiveSamplerCompressor(child_index, child_value, *node,
+                                   relative_child_idx, cache);
   }
 
   const auto [scale_update, detail_updates] =
