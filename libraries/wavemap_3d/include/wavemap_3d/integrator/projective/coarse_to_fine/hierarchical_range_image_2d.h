@@ -79,7 +79,22 @@ class HierarchicalRangeImage2D {
 
   static FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
                                    int level_idx) {
-    if (level_idx == 0 && value < kEpsilon) {
+    // NOTE: Point clouds often contains points near the sensor, for example
+    //       from missing returns being encoded as zeros, wires or cages around
+    //       the sensor or more generally points hitting the robot or operator's
+    //       body. Filtering out such spurious low values leads to big runtime
+    //       improvements. This is due to the fact that the range image
+    //       intersector, used by all coarse-to-fine integrators, relies on the
+    //       hierarchical range image to quickly get conservative bounds on the
+    //       range values in sub-intervals of the range image. The hierarchical
+    //       range image gathers these bounds from upper and lower bound image
+    //       pyramids. The lower bounds pyramid is generated with min-pooling,
+    //       so low values quickly spread and end up making large intervals very
+    //       conservative, which in turns results in very large parts of the
+    //       observed volume to be marked as possibly occupied.
+    // TODO(victorr): Make this configurable
+    constexpr FloatingPoint kRangeMin = 0.5f;
+    if (level_idx == 0 && value < kRangeMin) {
       return init;
     }
     return value;
