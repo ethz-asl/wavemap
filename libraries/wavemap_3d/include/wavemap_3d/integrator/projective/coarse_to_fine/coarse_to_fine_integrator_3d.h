@@ -25,9 +25,9 @@ class CoarseToFineIntegrator3D : public ScanwiseIntegrator3D {
   std::shared_ptr<PosedRangeImage2D> posed_range_image_;
 
   static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
-      ContinuousVolumetricLogOdds<3>::kScaling * 572.957795130823f;
+      ContinuousVolumetricLogOdds<3>::kScalingFree * 572.957795130823f;
   static constexpr FloatingPoint kMaxGradientOnBoundary =
-      ContinuousVolumetricLogOdds<3>::kScaling * 14.9999999999997f;
+      ContinuousVolumetricLogOdds<3>::kScalingOccupied * 14.9999999999997f;
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
 
   static bool isApproximationErrorAcceptable(

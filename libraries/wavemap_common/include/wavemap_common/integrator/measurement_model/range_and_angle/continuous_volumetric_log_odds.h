@@ -15,7 +15,8 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
   static constexpr FloatingPoint kRangeSigma = 0.1f;
   static constexpr FloatingPoint kAngleThresh = 6.f * kAngleSigma;
   static constexpr FloatingPoint kRangeDeltaThresh = 6.f * kRangeSigma;
-  static constexpr FloatingPoint kScaling = 0.5f;
+  static constexpr FloatingPoint kScalingFree = 0.2f;
+  static constexpr FloatingPoint kScalingOccupied = 0.4f;
   // NOTE: The angle and upper range thresholds have a width of 6 sigmas because
   //       the ground truth surface thickness is 3 sigma, and the angular/range
   //       uncertainty extends the non-zero regions with another 3 sigma.
@@ -51,8 +52,10 @@ class ContinuousVolumetricLogOdds : public MeasurementModelBase<dim> {
     const FloatingPoint range_contrib =
         ApproximateGaussianDistribution::cumulative(f) -
         0.5f * ApproximateGaussianDistribution::cumulative(f - 3.f) - 0.5f;
+    const FloatingPoint contribs = angle_contrib * range_contrib;
     const FloatingPoint scaled_contribs =
-        kScaling * range_contrib * angle_contrib;
+        ((contribs < 0.f) ? kScalingFree * contribs
+                          : kScalingOccupied * contribs);
     const FloatingPoint p = scaled_contribs + 0.5f;
     const FloatingPoint log_odds = std::log(p / (1.f - p));
     DCHECK(!std::isnan(log_odds) && std::isfinite(log_odds));
