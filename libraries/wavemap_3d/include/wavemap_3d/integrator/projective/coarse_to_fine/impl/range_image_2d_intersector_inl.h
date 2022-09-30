@@ -173,8 +173,6 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   if (ContinuousVolumetricLogOdds<3>::kRangeMax < d_C_cell_closest) {
     return IntersectionType::kFullyUnknown;
   }
-  const FloatingPoint d_C_cell_furthest =
-      W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
 
   // Get the min and max angles for any point in the cell projected into the
   // range image
@@ -237,13 +235,16 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   // bounds of the hierarchical range image
   const Bounds distance_bounds =
       hierarchical_range_image_.getRangeBounds(min_image_idx, max_image_idx);
-  if (distance_bounds.upper +
-          ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh <
-      d_C_cell_closest) {
+  const FloatingPoint d_C_cell_furthest =
+      W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
+  constexpr FloatingPoint kRangeMax = MeasurementModelBase<3>::kRangeMax;
+  constexpr FloatingPoint kRangeUncertaintyThreshold =
+      ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh;
+  if (distance_bounds.upper + kRangeUncertaintyThreshold < d_C_cell_closest) {
     return IntersectionType::kFullyUnknown;
   } else if (d_C_cell_furthest <
-             distance_bounds.lower -
-                 ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh) {
+                 distance_bounds.lower - kRangeUncertaintyThreshold ||
+             kRangeMax + kRangeUncertaintyThreshold < distance_bounds.lower) {
     return IntersectionType::kFreeOrUnknown;
   } else {
     return IntersectionType::kPossiblyOccupied;
