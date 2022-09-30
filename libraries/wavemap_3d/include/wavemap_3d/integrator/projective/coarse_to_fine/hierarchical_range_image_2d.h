@@ -33,6 +33,7 @@ class HierarchicalRangeImage2D {
   static FloatingPoint getUnknownRangeImageValueUpperBound() {
     return kUnknownRangeImageValueUpperBound;
   }
+  static FloatingPoint getRangeMin() { return kRangeMin; }
 
   Bounds<FloatingPoint> getBounds(const QuadtreeIndex& index) const;
   FloatingPoint getLowerBound(const QuadtreeIndex& index) const {
@@ -77,6 +78,9 @@ class HierarchicalRangeImage2D {
       const RangeImage2D& range_image, BinaryFunctor reduction_functor,
       FloatingPoint init);
 
+  // TODO(victorr): Make this configurable
+  // Below kRangeMin, range image values are treated as unknown
+  static constexpr FloatingPoint kRangeMin = 0.5f;
   static FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
                                    int level_idx) {
     // NOTE: Point clouds often contains points near the sensor, for example
@@ -92,8 +96,6 @@ class HierarchicalRangeImage2D {
     //       so low values quickly spread and end up making large intervals very
     //       conservative, which in turns results in very large parts of the
     //       observed volume to be marked as possibly occupied.
-    // TODO(victorr): Make this configurable
-    constexpr FloatingPoint kRangeMin = 0.5f;
     if (level_idx == 0 && value < kRangeMin) {
       return init;
     }
