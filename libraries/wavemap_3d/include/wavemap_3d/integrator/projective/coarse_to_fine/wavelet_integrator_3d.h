@@ -25,9 +25,9 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
   std::shared_ptr<RangeImage2DIntersector> range_image_intersector_;
 
   static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
-      ContinuousVolumetricLogOdds<3>::kScaling * 572.957795130823f;
+      ContinuousVolumetricLogOdds<3>::kScalingFree * 366.692988883727f;
   static constexpr FloatingPoint kMaxGradientOnBoundary =
-      ContinuousVolumetricLogOdds<3>::kScaling * 14.9999999999997f;
+      ContinuousVolumetricLogOdds<3>::kScalingOccupied * 3.75000000000002f;
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
 
   WaveletOctreeInterface::Coefficients::Scale recursiveSamplerCompressor(

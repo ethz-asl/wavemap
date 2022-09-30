@@ -34,7 +34,7 @@ void WaveletNdtree<CellT, dim>::prune() {
             if (!child_node.hasChildrenArray() &&
                 std::all_of(child_node.data().begin(), child_node.data().end(),
                             [](auto coefficient) {
-                              return std::abs(coefficient) < 1e-4f;
+                              return std::abs(coefficient) < 1e-3f;
                             })) {
               node.deleteChild(child_idx);
             } else {

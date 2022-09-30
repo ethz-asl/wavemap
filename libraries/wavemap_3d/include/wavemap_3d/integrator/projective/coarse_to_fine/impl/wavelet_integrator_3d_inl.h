@@ -34,7 +34,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         SphericalProjector::bearingToSpherical(C_node_center);
     const FloatingPoint sample =
         computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
-    return SaturatingOccupancyCell::threshold(node_value + sample) - node_value;
+    return sample;
   }
 
   const AABB<Point3D> W_cell_aabb =
@@ -45,7 +45,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
           cache);
   if (intersection_type == IntersectionType::kFullyUnknown ||
       (intersection_type == IntersectionType::kFreeOrUnknown &&
-       node_value < SaturatingOccupancyCell::kLowerBound + 1e-4f)) {
+       node_value < SaturatingOccupancyCell::kLowerBound + 1e-3f)) {
     return 0.f;
   }
 

@@ -236,6 +236,8 @@ std::unique_ptr<VolumetricDataStructure3D> WavemapMapDisplay::mapFromRosMsg(
     }
     return octree;
   }
+
+  return nullptr;
 }
 }  // namespace wavemap::rviz_plugin
 
