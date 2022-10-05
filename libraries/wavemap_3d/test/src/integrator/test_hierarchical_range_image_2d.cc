@@ -163,32 +163,29 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
     // Test range bounds on all sub-intervals and compare to brute force
     for (const Index2D& start_idx :
          Grid<2>(Index2D::Zero(), range_image_dims - Index2D::Ones())) {
-      for (Index2D end_idx = start_idx; end_idx.x() < range_image_dims.x();
-           ++end_idx.x()) {
-        for (end_idx.y() = range_image_dims.y();
-             end_idx.y() < range_image_dims.y(); ++end_idx.y()) {
-          // Check if the different accessors return the same values
-          const Bounds bounds =
-              hierarchical_range_image.getRangeBounds(start_idx, end_idx);
-          const FloatingPoint lower_bound =
-              hierarchical_range_image.getRangeLowerBound(start_idx, end_idx);
-          const FloatingPoint upper_bound =
-              hierarchical_range_image.getRangeUpperBound(start_idx, end_idx);
-          EXPECT_LE(lower_bound, upper_bound);
-          EXPECT_EQ(bounds.lower, lower_bound);
-          EXPECT_EQ(bounds.upper, upper_bound);
+      for (const Index2D& end_idx :
+           Grid<2>(start_idx, range_image_dims - Index2D::Ones())) {
+        // Check if the different accessors return the same values
+        const Bounds bounds =
+            hierarchical_range_image.getRangeBounds(start_idx, end_idx);
+        const FloatingPoint lower_bound =
+            hierarchical_range_image.getRangeLowerBound(start_idx, end_idx);
+        const FloatingPoint upper_bound =
+            hierarchical_range_image.getRangeUpperBound(start_idx, end_idx);
+        EXPECT_LE(lower_bound, upper_bound);
+        EXPECT_EQ(bounds.lower, lower_bound);
+        EXPECT_EQ(bounds.upper, upper_bound);
 
-          // Compare against brute force
-          const Index2D range_dims = end_idx - start_idx + Index2D::Ones();
-          CHECK((1 <= range_dims.array()).all());
-          const RangeImage2D::Data::ConstBlockXpr range =
-              range_image->getData().block(start_idx.x(), start_idx.y(),
-                                           range_dims.x(), range_dims.y());
-          const FloatingPoint lower_bound_brute_force = range.minCoeff();
-          const FloatingPoint upper_bound_brute_force = range.maxCoeff();
-          EXPECT_LE(lower_bound, lower_bound_brute_force);
-          EXPECT_GE(upper_bound, upper_bound_brute_force);
-        }
+        // Compare against brute force
+        const Index2D range_dims = end_idx - start_idx + Index2D::Ones();
+        CHECK((1 <= range_dims.array()).all());
+        const RangeImage2D::Data::ConstBlockXpr range =
+            range_image->getData().block(start_idx.x(), start_idx.y(),
+                                         range_dims.x(), range_dims.y());
+        const FloatingPoint lower_bound_brute_force = range.minCoeff();
+        const FloatingPoint upper_bound_brute_force = range.maxCoeff();
+        EXPECT_LE(lower_bound, lower_bound_brute_force);
+        EXPECT_GE(upper_bound, upper_bound_brute_force);
       }
     }
   }
