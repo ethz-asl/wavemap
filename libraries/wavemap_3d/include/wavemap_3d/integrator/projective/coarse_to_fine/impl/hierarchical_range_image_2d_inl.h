@@ -43,22 +43,35 @@ HierarchicalRangeImage2D<azimuth_wraps_around_pi>::getRangeBounds(
       int_math::div_exp2_floor(top_right_idx, min_level_up);
   const Index2D top_right_idx_unwrapped_shifted =
       int_math::div_exp2_floor(top_right_idx_unwrapped, min_level_up);
+  const Index2D bottom_left_idx_shifted_parent =
+      int_math::div_exp2_floor(bottom_left_idx_shifted, 1);
+  const IndexElement parent_height = min_level_up;
 
   // Check if the nodes at min_level_up are direct neighbors
   if (bottom_left_idx_shifted + Index2D::Ones() ==
       top_right_idx_unwrapped_shifted) {
     // Check if they even share the same parent (node at min_level_up + 1)
-    if (int_math::div_exp2_floor(bottom_left_idx_shifted, 1) ==
-        int_math::div_exp2_floor(top_right_idx_unwrapped_shifted, 1)) {
+    const Index2D top_right_idx_unwrapped_shifted_parent =
+        int_math::div_exp2_floor(top_right_idx_unwrapped_shifted, 1);
+    if (bottom_left_idx_shifted_parent ==
+        top_right_idx_unwrapped_shifted_parent) {
       // Since they do, checking both nodes at min_level_up is equivalent to
       // checking their common parent, so we do that instead as its cheaper
-      const IndexElement parent_height = min_level_up;
-      const Index2D parent_idx =
-          int_math::div_exp2_floor(bottom_left_idx_shifted, 1);
-      return {lower_bounds_[parent_height][parent_idx],
-              upper_bounds_[parent_height][parent_idx]};
+      return {lower_bounds_[parent_height][bottom_left_idx_shifted_parent],
+              upper_bounds_[parent_height][bottom_left_idx_shifted_parent]};
+    } else if (bottom_left_idx_shifted_parent.x() ==
+                   top_right_idx_unwrapped_shifted_parent.x() ||
+               bottom_left_idx_shifted_parent.y() ==
+                   top_right_idx_unwrapped_shifted_parent.y()) {
+      return {
+          std::min(lower_bounds_[parent_height][bottom_left_idx_shifted_parent],
+                   lower_bounds_[parent_height]
+                                [top_right_idx_unwrapped_shifted_parent]),
+          std::max(upper_bounds_[parent_height][bottom_left_idx_shifted_parent],
+                   upper_bounds_[parent_height]
+                                [top_right_idx_unwrapped_shifted_parent])};
     } else {
-      // Check both nodes at min_level_up
+      // Check all four nodes at min_level_up
       const IndexElement height = min_level_up - 1;
       const Index2D& left_node_idx = bottom_left_idx_shifted;
       const Index2D& right_node_idx = top_right_idx_shifted;
@@ -87,8 +100,7 @@ HierarchicalRangeImage2D<azimuth_wraps_around_pi>::getRangeBounds(
     // Since the nodes at min_level_up are not direct neighbors we need to go
     // one level up and check both parents there
     const IndexElement parent_height = min_level_up;
-    const Index2D left_parent_idx =
-        int_math::div_exp2_floor(bottom_left_idx_shifted, 1);
+    const Index2D& left_parent_idx = bottom_left_idx_shifted_parent;
     const Index2D right_parent_idx =
         int_math::div_exp2_floor(top_right_idx_shifted, 1);
     return {
