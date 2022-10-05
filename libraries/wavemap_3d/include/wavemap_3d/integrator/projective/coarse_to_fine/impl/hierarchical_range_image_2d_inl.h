@@ -63,15 +63,24 @@ HierarchicalRangeImage2D<azimuth_wraps_around_pi>::getRangeBounds(
       const Index2D& left_node_idx = bottom_left_idx_shifted;
       const Index2D& right_node_idx = top_right_idx_shifted;
       if (min_level_up == 0) {
-        return {std::min(range_image_->operator[](left_node_idx),
-                         range_image_->operator[](right_node_idx)),
-                std::max(range_image_->operator[](left_node_idx),
-                         range_image_->operator[](right_node_idx))};
+        const auto image_values = {
+            range_image_->operator[](left_node_idx),
+            range_image_->operator[]({left_node_idx.x(), right_node_idx.y()}),
+            range_image_->operator[]({right_node_idx.x(), left_node_idx.y()}),
+            range_image_->operator[](right_node_idx)};
+        return {std::min(image_values), std::max(image_values)};
       } else {
-        return {std::min(lower_bounds_[height][left_node_idx],
-                         lower_bounds_[height][right_node_idx]),
-                std::max(upper_bounds_[height][left_node_idx],
-                         upper_bounds_[height][right_node_idx])};
+        return {
+            std::min(
+                {lower_bounds_[height][left_node_idx],
+                 lower_bounds_[height][{left_node_idx.x(), right_node_idx.y()}],
+                 lower_bounds_[height][{right_node_idx.x(), left_node_idx.y()}],
+                 lower_bounds_[height][right_node_idx]}),
+            std::max(
+                {upper_bounds_[height][left_node_idx],
+                 upper_bounds_[height][{left_node_idx.x(), right_node_idx.y()}],
+                 upper_bounds_[height][{right_node_idx.x(), left_node_idx.y()}],
+                 upper_bounds_[height][right_node_idx]})};
       }
     }
   } else {
@@ -82,10 +91,19 @@ HierarchicalRangeImage2D<azimuth_wraps_around_pi>::getRangeBounds(
         int_math::div_exp2_floor(bottom_left_idx_shifted, 1);
     const Index2D right_parent_idx =
         int_math::div_exp2_floor(top_right_idx_shifted, 1);
-    return {std::min(lower_bounds_[parent_height][left_parent_idx],
-                     lower_bounds_[parent_height][right_parent_idx]),
-            std::max(upper_bounds_[parent_height][left_parent_idx],
-                     upper_bounds_[parent_height][right_parent_idx])};
+    return {
+        std::min({lower_bounds_[parent_height][left_parent_idx],
+                  lower_bounds_[parent_height]
+                               [{left_parent_idx.x(), right_parent_idx.y()}],
+                  lower_bounds_[parent_height]
+                               [{right_parent_idx.x(), left_parent_idx.y()}],
+                  lower_bounds_[parent_height][right_parent_idx]}),
+        std::max({upper_bounds_[parent_height][left_parent_idx],
+                  upper_bounds_[parent_height]
+                               [{left_parent_idx.x(), right_parent_idx.y()}],
+                  upper_bounds_[parent_height]
+                               [{right_parent_idx.x(), left_parent_idx.y()}],
+                  upper_bounds_[parent_height][right_parent_idx]})};
   }
 }
 

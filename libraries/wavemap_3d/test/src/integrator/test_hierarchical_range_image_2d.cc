@@ -161,32 +161,47 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
         range_image);
 
     // Test range bounds on all sub-intervals and compare to brute force
-    for (const Index2D& start_idx :
-         Grid<2>(Index2D::Zero(), range_image_dims - Index2D::Ones())) {
-      for (const Index2D& end_idx :
-           Grid<2>(start_idx, range_image_dims - Index2D::Ones())) {
-        // Check if the different accessors return the same values
-        const Bounds bounds =
-            hierarchical_range_image.getRangeBounds(start_idx, end_idx);
-        const FloatingPoint lower_bound =
-            hierarchical_range_image.getRangeLowerBound(start_idx, end_idx);
-        const FloatingPoint upper_bound =
-            hierarchical_range_image.getRangeUpperBound(start_idx, end_idx);
-        EXPECT_LE(lower_bound, upper_bound);
-        EXPECT_EQ(bounds.lower, lower_bound);
-        EXPECT_EQ(bounds.upper, upper_bound);
+    for (int subrange_idx = 0; subrange_idx < 1000; ++subrange_idx) {
+      // Get bottom left and upper right corners of random sub-interval
+      const Index2D start_idx = FixtureBase::getRandomIndex<2>(
+          Index2D::Zero(), range_image_dims - Index2D::Ones());
+      const Index2D end_idx = FixtureBase::getRandomIndex<2>(
+          start_idx, range_image_dims - Index2D::Ones());
 
-        // Compare against brute force
-        const Index2D range_dims = end_idx - start_idx + Index2D::Ones();
-        CHECK((1 <= range_dims.array()).all());
-        const RangeImage2D::Data::ConstBlockXpr range =
-            range_image->getData().block(start_idx.x(), start_idx.y(),
-                                         range_dims.x(), range_dims.y());
-        const FloatingPoint lower_bound_brute_force = range.minCoeff();
-        const FloatingPoint upper_bound_brute_force = range.maxCoeff();
-        EXPECT_LE(lower_bound, lower_bound_brute_force);
-        EXPECT_GE(upper_bound, upper_bound_brute_force);
+      // Check if the different accessors return the same values
+      const Bounds bounds =
+          hierarchical_range_image.getRangeBounds(start_idx, end_idx);
+      const FloatingPoint lower_bound =
+          hierarchical_range_image.getRangeLowerBound(start_idx, end_idx);
+      const FloatingPoint upper_bound =
+          hierarchical_range_image.getRangeUpperBound(start_idx, end_idx);
+      EXPECT_LE(lower_bound, upper_bound);
+      EXPECT_EQ(bounds.lower, lower_bound);
+      EXPECT_EQ(bounds.upper, upper_bound);
+
+      // Compare against brute force
+      Bounds<FloatingPoint> bounds_brute_force;
+      for (const Index2D& index : Grid(start_idx, end_idx)) {
+        const FloatingPoint range_value = range_image->operator[](index);
+        if (HierarchicalRangeImage2D<kAzimuthMayWrap>::getRangeMin() <
+            range_value) {
+          bounds_brute_force.lower =
+              std::min(bounds_brute_force.lower, range_value);
+          bounds_brute_force.upper =
+              std::max(bounds_brute_force.upper, range_value);
+        } else {
+          bounds_brute_force.lower = std::min(
+              bounds_brute_force.lower,
+              HierarchicalRangeImage2D<
+                  kAzimuthMayWrap>::getUnknownRangeImageValueLowerBound());
+          bounds_brute_force.upper = std::max(
+              bounds_brute_force.upper,
+              HierarchicalRangeImage2D<
+                  kAzimuthMayWrap>::getUnknownRangeImageValueUpperBound());
+        }
       }
+      EXPECT_LE(lower_bound, bounds_brute_force.lower);
+      EXPECT_GE(upper_bound, bounds_brute_force.upper);
     }
   }
 }
