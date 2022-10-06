@@ -16,10 +16,6 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
   if (kRangeMax < range_min) {
     return IntersectionType::kFullyUnknown;
   }
-  if ((range_min < kRangeMin || range_max < kRangeMin) ||
-      kRangeMax < range_max) {
-    return IntersectionType::kPossiblyOccupied;
-  }
 
   Index2D top_right_image_idx_unwrapped = top_right_image_idx;
   if (azimuth_wraps_pi && top_right_image_idx.y() < bottom_left_image_idx.y()) {
@@ -28,8 +24,10 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
   CHECK((bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
             .all());
 
-  const RangeCellIdx range_min_idx = rangeToRangeCellIdx(range_min);
-  const RangeCellIdx range_max_idx = rangeToRangeCellIdx(range_max);
+  const RangeCellIdx range_min_idx =
+      rangeToRangeCellIdx(std::clamp(range_min, kRangeMin, kRangeMax));
+  const RangeCellIdx range_max_idx =
+      rangeToRangeCellIdx(std::clamp(range_max, kRangeMin, kRangeMax));
   CHECK_LE(range_min_idx, range_max_idx)
       << "For range_min " << range_min << ", range_max " << range_max
       << ", range_min_idx " << static_cast<int>(range_min_idx)
@@ -268,8 +266,8 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
     return IntersectionType::kFreeOrUnknown;
   }
 
-  for (const auto& range_cell_set : range_cell_sets) {
-    for (auto range_cell_idx : range_cell_set.get()) {
+  for (const RangeCellSet& range_cell_set : range_cell_sets) {
+    for (auto range_cell_idx : range_cell_set) {
       if (range_cell_min_idx <= range_cell_idx &&
           range_cell_idx <= range_cell_max_idx) {
         return IntersectionType::kPossiblyOccupied;
