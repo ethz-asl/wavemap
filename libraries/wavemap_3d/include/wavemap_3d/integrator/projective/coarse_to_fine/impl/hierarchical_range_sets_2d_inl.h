@@ -194,7 +194,7 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
           // At the first level, we gather the range indices from the range
           // img
           const FloatingPoint child_range = range_image.operator[](child_idx);
-          if (kRangeMin <= child_range && child_range < kRangeMax) {
+          if (kRangeMin < child_range && child_range < kRangeMax) {
             const RangeCellIdx child_range_idx =
                 rangeToRangeCellIdx(child_range);
             const RangeCellIdx reduced_child_range_idx = child_range_idx >> 1;
@@ -253,15 +253,17 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
     std::initializer_list<std::reference_wrapper<const RangeCellSet>>
         range_cell_sets) const {
   if (std::all_of(range_cell_sets.begin(), range_cell_sets.end(),
-                  [range_cell_min_idx](const auto& range_cell_set) {
-                    return range_cell_set.get().back() < range_cell_min_idx;
+                  [range_cell_min_idx](const RangeCellSet& range_cell_set) {
+                    return range_cell_set.empty() ||
+                           range_cell_set.back() < range_cell_min_idx;
                   })) {
     return IntersectionType::kFullyUnknown;
   }
 
   if (std::all_of(range_cell_sets.begin(), range_cell_sets.end(),
-                  [range_cell_max_idx](const auto& range_cell_set) {
-                    return range_cell_max_idx < range_cell_set.get().front();
+                  [range_cell_max_idx](const RangeCellSet& range_cell_set) {
+                    return range_cell_set.empty() ||
+                           range_cell_max_idx < range_cell_set.front();
                   })) {
     return IntersectionType::kFreeOrUnknown;
   }
