@@ -4,7 +4,8 @@
 #include <wavemap_common/iterator/grid_iterator.h>
 #include <wavemap_common/test/fixture_base.h>
 
-#include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_image_2d.h"
+#include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_bounds_2d.h"
+#include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_sets_2d.h"
 
 namespace wavemap {
 class HierarchicalRangeImage2DTest : public FixtureBase {
@@ -29,7 +30,7 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
     constexpr bool kAzimuthMayWrap = false;
     auto range_image = std::make_shared<RangeImage2D>(getRandomRangeImage());
     const Index2D range_image_dims = range_image->getDimensions();
-    HierarchicalRangeImage2D<kAzimuthMayWrap> hierarchical_range_image(
+    HierarchicalRangeBounds2D<kAzimuthMayWrap> hierarchical_range_image(
         range_image);
 
     // Test all the bounds from top to bottom
@@ -77,14 +78,14 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
               const FloatingPoint range_image_value =
                   range_image->operator[](child_idx.position);
               if (range_image_value <
-                  HierarchicalRangeImage2D<kAzimuthMayWrap>::getRangeMin()) {
+                  HierarchicalRangeBounds2D<kAzimuthMayWrap>::getRangeMin()) {
                 child_bounds.lower =
                     std::min(child_bounds.lower,
-                             HierarchicalRangeImage2D<kAzimuthMayWrap>::
+                             HierarchicalRangeBounds2D<kAzimuthMayWrap>::
                                  getUnknownRangeImageValueLowerBound());
                 child_bounds.upper =
                     std::max(child_bounds.upper,
-                             HierarchicalRangeImage2D<kAzimuthMayWrap>::
+                             HierarchicalRangeBounds2D<kAzimuthMayWrap>::
                                  getUnknownRangeImageValueUpperBound());
               } else {
                 child_bounds.lower =
@@ -95,11 +96,11 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
             } else {
               child_bounds.lower = std::min(
                   child_bounds.lower,
-                  HierarchicalRangeImage2D<
+                  HierarchicalRangeBounds2D<
                       kAzimuthMayWrap>::getUnknownRangeImageValueLowerBound());
               child_bounds.upper = std::max(
                   child_bounds.upper,
-                  HierarchicalRangeImage2D<
+                  HierarchicalRangeBounds2D<
                       kAzimuthMayWrap>::getUnknownRangeImageValueUpperBound());
             }
           }
@@ -132,11 +133,11 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
             } else {
               child_bounds.lower = std::min(
                   child_bounds.lower,
-                  HierarchicalRangeImage2D<
+                  HierarchicalRangeBounds2D<
                       kAzimuthMayWrap>::getUnknownRangeImageValueLowerBound());
               child_bounds.upper = std::max(
                   child_bounds.upper,
-                  HierarchicalRangeImage2D<
+                  HierarchicalRangeBounds2D<
                       kAzimuthMayWrap>::getUnknownRangeImageValueUpperBound());
             }
           }
@@ -157,7 +158,7 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
     constexpr bool kAzimuthMayWrap = false;
     auto range_image = std::make_shared<RangeImage2D>(getRandomRangeImage());
     const Index2D range_image_dims = range_image->getDimensions();
-    HierarchicalRangeImage2D<kAzimuthMayWrap> hierarchical_range_image(
+    HierarchicalRangeBounds2D<kAzimuthMayWrap> hierarchical_range_image(
         range_image);
 
     // Test range bounds on all sub-intervals and compare to brute force
@@ -170,11 +171,11 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
 
       // Check if the different accessors return the same values
       const Bounds bounds =
-          hierarchical_range_image.getRangeBounds(start_idx, end_idx);
+          hierarchical_range_image.getBounds(start_idx, end_idx);
       const FloatingPoint lower_bound =
-          hierarchical_range_image.getRangeLowerBound(start_idx, end_idx);
+          hierarchical_range_image.getLowerBound(start_idx, end_idx);
       const FloatingPoint upper_bound =
-          hierarchical_range_image.getRangeUpperBound(start_idx, end_idx);
+          hierarchical_range_image.getUpperBound(start_idx, end_idx);
       EXPECT_LE(lower_bound, upper_bound);
       EXPECT_EQ(bounds.lower, lower_bound);
       EXPECT_EQ(bounds.upper, upper_bound);
@@ -183,7 +184,7 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
       Bounds<FloatingPoint> bounds_brute_force;
       for (const Index2D& index : Grid(start_idx, end_idx)) {
         const FloatingPoint range_value = range_image->operator[](index);
-        if (HierarchicalRangeImage2D<kAzimuthMayWrap>::getRangeMin() <
+        if (HierarchicalRangeBounds2D<kAzimuthMayWrap>::getRangeMin() <
             range_value) {
           bounds_brute_force.lower =
               std::min(bounds_brute_force.lower, range_value);
@@ -192,11 +193,11 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
         } else {
           bounds_brute_force.lower = std::min(
               bounds_brute_force.lower,
-              HierarchicalRangeImage2D<
+              HierarchicalRangeBounds2D<
                   kAzimuthMayWrap>::getUnknownRangeImageValueLowerBound());
           bounds_brute_force.upper = std::max(
               bounds_brute_force.upper,
-              HierarchicalRangeImage2D<
+              HierarchicalRangeBounds2D<
                   kAzimuthMayWrap>::getUnknownRangeImageValueUpperBound());
         }
       }

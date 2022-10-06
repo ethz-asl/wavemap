@@ -233,22 +233,14 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Check if the cell overlaps with the approximate but conservative distance
   // bounds of the hierarchical range image
-  const Bounds distance_bounds =
-      hierarchical_range_image_.getRangeBounds(min_image_idx, max_image_idx);
   const FloatingPoint d_C_cell_furthest =
       W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
-  constexpr FloatingPoint kRangeMax = MeasurementModelBase<3>::kRangeMax;
-  constexpr FloatingPoint kRangeUncertaintyThreshold =
-      ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh;
-  if (distance_bounds.upper + kRangeUncertaintyThreshold < d_C_cell_closest) {
-    return IntersectionType::kFullyUnknown;
-  } else if (d_C_cell_furthest <
-                 distance_bounds.lower - kRangeUncertaintyThreshold ||
-             kRangeMax + kRangeUncertaintyThreshold < distance_bounds.lower) {
-    return IntersectionType::kFreeOrUnknown;
-  } else {
-    return IntersectionType::kPossiblyOccupied;
-  }
+  const FloatingPoint range_min =
+      d_C_cell_closest - ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh;
+  const FloatingPoint range_max =
+      d_C_cell_furthest + ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh;
+  return hierarchical_range_image_.getIntersectionType(
+      min_image_idx, max_image_idx, range_min, range_max);
 }
 }  // namespace wavemap
 

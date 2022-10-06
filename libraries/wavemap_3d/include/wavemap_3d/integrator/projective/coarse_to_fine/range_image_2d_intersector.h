@@ -9,7 +9,7 @@
 #include <wavemap_common/data_structure/aabb.h>
 #include <wavemap_common/integrator/projective/intersection_type.h>
 
-#include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_image_2d.h"
+#include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_sets_2d.h"
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
@@ -50,7 +50,7 @@ class RangeImage2DIntersector {
 
  private:
   static constexpr bool kAzimuthAllowedToWrapAround = true;
-  const HierarchicalRangeImage2D<kAzimuthAllowedToWrapAround>
+  const HierarchicalRangeSets2D<kAzimuthAllowedToWrapAround>
       hierarchical_range_image_;
 };
 }  // namespace wavemap
