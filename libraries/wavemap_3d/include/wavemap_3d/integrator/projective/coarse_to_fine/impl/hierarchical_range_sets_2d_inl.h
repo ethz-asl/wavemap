@@ -2,6 +2,7 @@
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_HIERARCHICAL_RANGE_SETS_2D_INL_H_
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include <wavemap_common/iterator/grid_iterator.h>
@@ -25,10 +26,8 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
       (bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
           .all());
 
-  const RangeCellIdx range_min_idx =
-      rangeToRangeCellIdx(std::clamp(range_min, kRangeMin, kRangeMax));
-  const RangeCellIdx range_max_idx =
-      rangeToRangeCellIdx(std::clamp(range_max, kRangeMin, kRangeMax));
+  const RangeCellIdx range_min_idx = rangeToRangeCellIdxClamped(range_min);
+  const RangeCellIdx range_max_idx = rangeToRangeCellIdxClamped(range_max);
   DCHECK_LE(range_min_idx, range_max_idx)
       << "For range_min " << range_min << ", range_max " << range_max
       << ", range_min_idx " << static_cast<int>(range_min_idx)
@@ -238,6 +237,18 @@ typename HierarchicalRangeSets2D<azimuth_wraps_pi>::
   constexpr FloatingPoint kRangeMinInv = 1.f / kRangeMin;
   return static_cast<RangeCellIdx>(kRangeResAt1mInv *
                                    std::log(kRangeMinInv * range));
+}
+
+template <bool azimuth_wraps_pi>
+constexpr typename HierarchicalRangeSets2D<azimuth_wraps_pi>::RangeCellIdx
+HierarchicalRangeSets2D<azimuth_wraps_pi>::rangeToRangeCellIdxClamped(
+    FloatingPoint range) {
+  if (range < kRangeMin) {
+    return 0.f;
+  } else if (kRangeMax < range) {
+    return std::numeric_limits<RangeCellIdx>::max();
+  }
+  return rangeToRangeCellIdx(range);
 }
 
 template <bool azimuth_wraps_pi>
