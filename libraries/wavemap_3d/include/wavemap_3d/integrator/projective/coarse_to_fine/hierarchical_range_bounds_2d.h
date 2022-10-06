@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_2D_H_
-#define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_2D_H_
+#ifndef WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_BOUNDS_2D_H_
+#define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_BOUNDS_2D_H_
 
 #include <algorithm>
 #include <limits>
@@ -7,23 +7,26 @@
 #include <utility>
 #include <vector>
 
+#include <wavemap_common/integrator/projective/intersection_type.h>
+
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
-template <bool azimuth_wraps_around_pi>
-class HierarchicalRangeImage2D {
+template <bool azimuth_wraps_pi>
+class HierarchicalRangeBounds2D {
  public:
-  explicit HierarchicalRangeImage2D(std::shared_ptr<RangeImage2D> range_image)
+  explicit HierarchicalRangeBounds2D(std::shared_ptr<RangeImage2D> range_image)
       : range_image_(std::move(range_image)),
-        lower_bounds_(computeReducedPyramid(
+        lower_bound_levels_(computeReducedPyramid(
             *range_image_, [](auto a, auto b) { return std::min(a, b); },
             kUnknownRangeImageValueLowerBound)),
-        upper_bounds_(computeReducedPyramid(
+        upper_bound_levels_(computeReducedPyramid(
             *range_image_, [](auto a, auto b) { return std::max(a, b); },
             kUnknownRangeImageValueUpperBound)),
-        max_height_(static_cast<NdtreeIndexElement>(lower_bounds_.size())) {
-    DCHECK_EQ(lower_bounds_.size(), max_height_);
-    DCHECK_EQ(upper_bounds_.size(), max_height_);
+        max_height_(
+            static_cast<NdtreeIndexElement>(lower_bound_levels_.size())) {
+    DCHECK_EQ(lower_bound_levels_.size(), max_height_);
+    DCHECK_EQ(upper_bound_levels_.size(), max_height_);
   }
 
   NdtreeIndexElement getMaxHeight() const { return max_height_; }
@@ -47,20 +50,25 @@ class HierarchicalRangeImage2D {
     return getBounds(index).upper;
   }
 
-  Bounds<FloatingPoint> getRangeBounds(const Index2D& left_idx,
-                                       const Index2D& right_idx) const;
-  FloatingPoint getRangeLowerBound(const Index2D& left_idx,
-                                   const Index2D& right_idx) const {
+  Bounds<FloatingPoint> getBounds(const Index2D& bottom_left_image_idx,
+                                  const Index2D& top_right_image_idx) const;
+  FloatingPoint getLowerBound(const Index2D& bottom_left_image_idx,
+                              const Index2D& top_right_image_idx) const {
     // NOTE: We reuse getRangeBoundsApprox() and trust the compiler to optimize
     //       out the computation of unused (return) values during inlining.
-    return getRangeBounds(left_idx, right_idx).lower;
+    return getBounds(bottom_left_image_idx, top_right_image_idx).lower;
   }
-  FloatingPoint getRangeUpperBound(const Index2D& left_idx,
-                                   const Index2D& right_idx) const {
+  FloatingPoint getUpperBound(const Index2D& bottom_left_image_idx,
+                              const Index2D& top_right_image_idx) const {
     // NOTE: We reuse getRangeBoundsApprox() and trust the compiler to optimize
     //       out the computation of unused (return) values during inlining.
-    return getRangeBounds(left_idx, right_idx).upper;
+    return getBounds(bottom_left_image_idx, top_right_image_idx).upper;
   }
+
+  IntersectionType getIntersectionType(const Index2D& bottom_left_image_idx,
+                                       const Index2D& top_right_image_idx,
+                                       FloatingPoint range_min,
+                                       FloatingPoint range_max) const;
 
  private:
   const std::shared_ptr<const RangeImage2D> range_image_;
@@ -68,8 +76,8 @@ class HierarchicalRangeImage2D {
   static constexpr FloatingPoint kUnknownRangeImageValueLowerBound =
       std::numeric_limits<FloatingPoint>::max();
   static constexpr FloatingPoint kUnknownRangeImageValueUpperBound = 0.f;
-  const std::vector<RangeImage2D> lower_bounds_;
-  const std::vector<RangeImage2D> upper_bounds_;
+  const std::vector<RangeImage2D> lower_bound_levels_;
+  const std::vector<RangeImage2D> upper_bound_levels_;
 
   const NdtreeIndexElement max_height_;
 
@@ -104,6 +112,6 @@ class HierarchicalRangeImage2D {
 };
 }  // namespace wavemap
 
-#include "wavemap_3d/integrator/projective/coarse_to_fine/impl/hierarchical_range_image_2d_inl.h"
+#include "wavemap_3d/integrator/projective/coarse_to_fine/impl/hierarchical_range_bounds_2d_inl.h"
 
-#endif  // WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_IMAGE_2D_H_
+#endif  // WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_BOUNDS_2D_H_

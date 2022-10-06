@@ -9,6 +9,7 @@ namespace wavemap::int_math {
 constexpr int exp2(int exponent) { return 1 << exponent; }
 
 constexpr int log2_floor(int value) {
+  DCHECK(value != 0);
   return std::numeric_limits<int>::digits - __builtin_clz(value);
 }
 
