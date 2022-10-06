@@ -42,6 +42,7 @@ class HierarchicalRangeSets2D {
   static constexpr FloatingPoint kRangeMin = 0.2f;
   static constexpr FloatingPoint kRangeResolutionAt1m = 0.03f;
   static constexpr RangeCellIdx rangeToRangeCellIdx(FloatingPoint range);
+  static constexpr RangeCellIdx rangeToRangeCellIdxClamped(FloatingPoint range);
   static constexpr FloatingPoint rangeCellIdxToRange(
       RangeCellIdx range_cell_idx);
   static constexpr FloatingPoint kRangeMax = 100.f;
