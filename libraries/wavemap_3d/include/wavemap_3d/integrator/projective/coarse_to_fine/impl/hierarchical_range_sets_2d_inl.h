@@ -34,14 +34,17 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
       << ", range_min_idx " << static_cast<int>(range_min_idx)
       << ", range_max_idx " << static_cast<int>(range_max_idx);
 
-  const IndexElement max_idx_diff = std::max(
-      range_max_idx - range_min_idx,
-      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff());
+  const IndexElement max_idx_diff =
+      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff();
   const IndexElement min_level_up =
       max_idx_diff == 0 ? 0 : int_math::log2_floor(max_idx_diff);
 
   // Compute the node indices at the minimum level we have to go up to fully
   // cover the interval with 4 nodes or less
+  // NOTE: The rance cell indices are only reduced by a factor two per level
+  //       starting at the second level. In other words, at the first level the
+  //       range cell indices directly correspond to rangeToRangeCellIdx()
+  //       applied to the cell's 4 children in the range image.
   const Index2D bottom_left_child_idx =
       int_math::div_exp2_floor(bottom_left_image_idx, min_level_up);
   const Index2D top_right_child_idx =
@@ -49,9 +52,9 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
   const Index2D top_right_child_idx_unwrapped =
       int_math::div_exp2_floor(top_right_image_idx_unwrapped, min_level_up);
   const RangeCellIdx range_min_child_idx =
-      int_math::div_exp2_floor(range_min_idx, min_level_up);
+      int_math::div_exp2_floor(range_min_idx, std::max(min_level_up - 1, 0));
   const RangeCellIdx range_max_child_idx =
-      int_math::div_exp2_floor(range_max_idx, min_level_up);
+      int_math::div_exp2_floor(range_max_idx, std::max(min_level_up - 1, 0));
   const IndexElement child_height_idx = min_level_up - 1;
 
   // Compute the node indices at the maximum level we have to go up to fully
@@ -198,9 +201,7 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
           if (kRangeMin < child_range && child_range < kRangeMax) {
             const RangeCellIdx child_range_idx =
                 rangeToRangeCellIdx(child_range);
-            const RangeCellIdx reduced_child_range_idx = child_range_idx >> 1;
-            reduced_child_range_indices.template emplace_back(
-                reduced_child_range_idx);
+            reduced_child_range_indices.template emplace_back(child_range_idx);
           }
         } else {
           // Otherwise we gather them from the previous level
