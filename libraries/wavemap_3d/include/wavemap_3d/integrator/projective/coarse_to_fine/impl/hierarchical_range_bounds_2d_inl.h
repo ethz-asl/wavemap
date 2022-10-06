@@ -37,8 +37,10 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
       (bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
           .all());
 
-  const IndexElement min_level_up = int_math::log2_floor(
-      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff());
+  const IndexElement max_idx_diff =
+      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff();
+  const IndexElement min_level_up =
+      max_idx_diff == 0 ? 0 : int_math::log2_floor(max_idx_diff);
 
   // Compute the node indices at the minimum level we have to go up to fully
   // cover the interval with 4 nodes or less

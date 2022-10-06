@@ -12,7 +12,7 @@ template <bool azimuth_wraps_pi>
 IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
     const Index2D& bottom_left_image_idx, const Index2D& top_right_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
-  CHECK_LE(range_min, range_max);
+  DCHECK_LE(range_min, range_max);
   if (kRangeMax < range_min) {
     return IntersectionType::kFullyUnknown;
   }
@@ -21,21 +21,24 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
   if (azimuth_wraps_pi && top_right_image_idx.y() < bottom_left_image_idx.y()) {
     top_right_image_idx_unwrapped.y() += range_image_->getNumColumns();
   }
-  CHECK((bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
-            .all());
+  DCHECK(
+      (bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
+          .all());
 
   const RangeCellIdx range_min_idx =
       rangeToRangeCellIdx(std::clamp(range_min, kRangeMin, kRangeMax));
   const RangeCellIdx range_max_idx =
       rangeToRangeCellIdx(std::clamp(range_max, kRangeMin, kRangeMax));
-  CHECK_LE(range_min_idx, range_max_idx)
+  DCHECK_LE(range_min_idx, range_max_idx)
       << "For range_min " << range_min << ", range_max " << range_max
       << ", range_min_idx " << static_cast<int>(range_min_idx)
       << ", range_max_idx " << static_cast<int>(range_max_idx);
 
-  const IndexElement min_level_up = int_math::log2_floor(std::max(
+  const IndexElement max_idx_diff = std::max(
       range_max_idx - range_min_idx,
-      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff()));
+      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff());
+  const IndexElement min_level_up =
+      max_idx_diff == 0 ? 0 : int_math::log2_floor(max_idx_diff);
 
   // Compute the node indices at the minimum level we have to go up to fully
   // cover the interval with 4 nodes or less
@@ -64,7 +67,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
   const RangeCellIdx range_max_parent_idx =
       int_math::div_exp2_floor(range_max_child_idx, 1);
   const IndexElement parent_height_idx = min_level_up;
-  CHECK_LT(parent_height_idx, max_height_);
+  DCHECK_LT(parent_height_idx, max_height_);
 
   // Check if the nodes at min_level_up are direct neighbors
   if (bottom_left_child_idx + Index2D::Ones() ==
