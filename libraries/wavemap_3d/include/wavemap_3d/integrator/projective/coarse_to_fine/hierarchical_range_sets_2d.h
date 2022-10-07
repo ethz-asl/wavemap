@@ -48,6 +48,12 @@ class HierarchicalRangeSets2D {
   static constexpr FloatingPoint rangeCellIdxToRange(
       RangeCellIdx range_cell_idx);
   static constexpr FloatingPoint kMaxRepresentableRange = 100.f;
+  static FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init) {
+    if (value < kMinRepresentableRange) {
+      return init;
+    }
+    return value;
+  }
 
   static std::vector<RangeCellSetImage> computeReducedLevels(
       const RangeImage2D& range_image);

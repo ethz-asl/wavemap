@@ -96,14 +96,33 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
     } else {
       // Check all four nodes at min_level_up
       if (min_level_up == 0) {
-        const auto image_values = {
-            range_image_->operator[](bottom_left_image_idx),
-            range_image_->operator[](
-                {bottom_left_image_idx.x(), top_right_image_idx.y()}),
-            range_image_->operator[](
-                {top_right_image_idx.x(), bottom_left_image_idx.y()}),
-            range_image_->operator[](top_right_image_idx)};
-        return {std::min(image_values), std::max(image_values)};
+        return {
+            std::min(
+                {valueOrInit(range_image_->operator[](bottom_left_image_idx),
+                             kUnknownRangeImageValueLowerBound),
+                 valueOrInit(
+                     range_image_->operator[](
+                         {bottom_left_image_idx.x(), top_right_image_idx.y()}),
+                     kUnknownRangeImageValueLowerBound),
+                 valueOrInit(
+                     range_image_->operator[](
+                         {top_right_image_idx.x(), bottom_left_image_idx.y()}),
+                     kUnknownRangeImageValueLowerBound),
+                 valueOrInit(range_image_->operator[](top_right_image_idx),
+                             kUnknownRangeImageValueLowerBound)}),
+            std::max(
+                {valueOrInit(range_image_->operator[](bottom_left_image_idx),
+                             kUnknownRangeImageValueUpperBound),
+                 valueOrInit(
+                     range_image_->operator[](
+                         {bottom_left_image_idx.x(), top_right_image_idx.y()}),
+                     kUnknownRangeImageValueUpperBound),
+                 valueOrInit(
+                     range_image_->operator[](
+                         {top_right_image_idx.x(), bottom_left_image_idx.y()}),
+                     kUnknownRangeImageValueUpperBound),
+                 valueOrInit(range_image_->operator[](top_right_image_idx),
+                             kUnknownRangeImageValueUpperBound)})};
       } else {
         return {
             std::min(

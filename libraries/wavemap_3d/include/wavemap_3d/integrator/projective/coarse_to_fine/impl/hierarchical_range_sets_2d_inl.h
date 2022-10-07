@@ -102,13 +102,15 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
             range_image_->operator[](
                 {top_right_image_idx.x(), bottom_left_image_idx.y()}),
             range_image_->operator[](top_right_image_idx)};
-        if (std::all_of(
-                image_values.begin(), image_values.end(),
-                [range_min](auto range) { return range < range_min; })) {
+        if (std::all_of(image_values.begin(), image_values.end(),
+                        [range_min](auto range) {
+                          return valueOrInit(range, 0.f) < range_min;
+                        })) {
           return IntersectionType::kFullyUnknown;
-        } else if (std::all_of(
-                       image_values.begin(), image_values.end(),
-                       [range_max](auto range) { return range_max < range; })) {
+        } else if (std::all_of(image_values.begin(), image_values.end(),
+                               [range_max](auto range) {
+                                 return range_max < valueOrInit(range, 1e3f);
+                               })) {
           return IntersectionType::kFreeOrUnknown;
         } else {
           return IntersectionType::kPossiblyOccupied;
@@ -303,6 +305,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
       }
     }
   }
+
   return IntersectionType::kFreeOrUnknown;
 }
 }  // namespace wavemap

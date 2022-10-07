@@ -92,7 +92,7 @@ class HierarchicalRangeBounds2D {
   // Below kRangeMin, range image values are treated as unknown
   static constexpr FloatingPoint kRangeMin = 0.5f;
   static FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
-                                   int level_idx) {
+                                   int level_idx = 0) {
     // NOTE: Point clouds often contains points near the sensor, for example
     //       from missing returns being encoded as zeros, wires or cages around
     //       the sensor or more generally points hitting the robot or operator's
