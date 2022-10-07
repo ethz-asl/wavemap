@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -80,6 +81,7 @@ class HierarchicalRangeBounds2D {
   const std::vector<RangeImage2D> upper_bound_levels_;
 
   const NdtreeIndexElement max_height_;
+  static constexpr std::tuple<IndexElement, IndexElement> scale_ = {2, 1};
 
   template <typename BinaryFunctor>
   static std::vector<RangeImage2D> computeReducedPyramid(

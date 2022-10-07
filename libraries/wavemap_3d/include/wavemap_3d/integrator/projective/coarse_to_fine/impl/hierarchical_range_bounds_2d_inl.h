@@ -37,19 +37,30 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
       (bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
           .all());
 
+  const Index2D bottom_left_image_idx_scaled = {
+      std::get<0>(scale_) * bottom_left_image_idx.x(),
+      std::get<1>(scale_) * bottom_left_image_idx.y()};
+  const Index2D top_right_image_idx_scaled = {
+      std::get<0>(scale_) * top_right_image_idx.x(),
+      std::get<1>(scale_) * top_right_image_idx.y()};
+  const Index2D top_right_image_idx_unwrapped_scaled = {
+      std::get<0>(scale_) * top_right_image_idx_unwrapped.x(),
+      std::get<1>(scale_) * top_right_image_idx_unwrapped.y()};
+
   const IndexElement max_idx_diff =
-      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff();
+      (top_right_image_idx_unwrapped_scaled - bottom_left_image_idx_scaled)
+          .maxCoeff();
   const IndexElement min_level_up =
       max_idx_diff == 0 ? 0 : int_math::log2_floor(max_idx_diff);
 
   // Compute the node indices at the minimum level we have to go up to fully
   // cover the interval with 4 nodes or less
   const Index2D bottom_left_child_idx =
-      int_math::div_exp2_floor(bottom_left_image_idx, min_level_up);
+      int_math::div_exp2_floor(bottom_left_image_idx_scaled, min_level_up);
   const Index2D top_right_child_idx =
-      int_math::div_exp2_floor(top_right_image_idx, min_level_up);
-  const Index2D top_right_child_idx_unwrapped =
-      int_math::div_exp2_floor(top_right_image_idx_unwrapped, min_level_up);
+      int_math::div_exp2_floor(top_right_image_idx_scaled, min_level_up);
+  const Index2D top_right_child_idx_unwrapped = int_math::div_exp2_floor(
+      top_right_image_idx_unwrapped_scaled, min_level_up);
   const IndexElement child_height_idx = min_level_up - 1;
 
   // Compute the node indices at the maximum level we have to go up to fully
@@ -86,12 +97,12 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
       // Check all four nodes at min_level_up
       if (min_level_up == 0) {
         const auto image_values = {
-            range_image_->operator[](bottom_left_child_idx),
+            range_image_->operator[](bottom_left_image_idx),
             range_image_->operator[](
-                {bottom_left_child_idx.x(), top_right_child_idx.y()}),
+                {bottom_left_image_idx.x(), top_right_image_idx.y()}),
             range_image_->operator[](
-                {top_right_child_idx.x(), bottom_left_child_idx.y()}),
-            range_image_->operator[](top_right_child_idx)};
+                {top_right_image_idx.x(), bottom_left_image_idx.y()}),
+            range_image_->operator[](top_right_image_idx)};
         return {std::min(image_values), std::max(image_values)};
       } else {
         return {
@@ -160,14 +171,18 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::computeReducedPyramid(
          "currently supported.";
 
   const Index2D range_image_dims = range_image.getDimensions();
-  const int max_num_halvings = int_math::log2_ceil(range_image_dims.maxCoeff());
+  const Index2D range_image_dims_scaled = {
+      std::get<0>(scale_) * range_image_dims.x(),
+      std::get<1>(scale_) * range_image_dims.y()};
+  const int max_num_halvings =
+      int_math::log2_ceil(range_image_dims_scaled.maxCoeff());
 
   std::vector<RangeImage2D> pyramid;
   pyramid.reserve(max_num_halvings);
   for (int level_idx = 0; level_idx < max_num_halvings; ++level_idx) {
     // Initialize the current level
     const Index2D level_dims =
-        int_math::div_exp2_ceil(range_image_dims, level_idx + 1);
+        int_math::div_exp2_ceil(range_image_dims_scaled, level_idx + 1);
     RangeImage2D& current_level =
         pyramid.template emplace_back(level_dims.x(), level_dims.y(), init);
 
@@ -178,8 +193,14 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::computeReducedPyramid(
 
     for (const Index2D& idx :
          Grid<2>(Index2D::Zero(), level_dims - Index2D::Ones())) {
-      const Index2D min_child_idx = 2 * idx;
-      const Index2D max_child_idx = min_child_idx + Index2D::Ones();
+      Index2D min_child_idx = 2 * idx;
+      Index2D max_child_idx = min_child_idx + Index2D::Ones();
+      if (level_idx == 0) {
+        min_child_idx = {min_child_idx.x() / std::get<0>(scale_),
+                         min_child_idx.y() / std::get<1>(scale_)};
+        max_child_idx = {max_child_idx.x() / std::get<0>(scale_),
+                         max_child_idx.y() / std::get<1>(scale_)};
+      }
 
       // Reduce the values in the 2x2 block of the previous level from
       // min_child_idx to max_child_idx while avoiding out-of-bounds access if

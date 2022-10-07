@@ -14,7 +14,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
     const Index2D& bottom_left_image_idx, const Index2D& top_right_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
   DCHECK_LE(range_min, range_max);
-  if (kRangeMax < range_min) {
+  if (kMaxRepresentableRange < range_min) {
     return IntersectionType::kFullyUnknown;
   }
 
@@ -26,34 +26,34 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
       (bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
           .all());
 
-  const RangeCellIdx range_min_idx = rangeToRangeCellIdxClamped(range_min);
-  const RangeCellIdx range_max_idx = rangeToRangeCellIdxClamped(range_max);
-  DCHECK_LE(range_min_idx, range_max_idx)
-      << "For range_min " << range_min << ", range_max " << range_max
-      << ", range_min_idx " << static_cast<int>(range_min_idx)
-      << ", range_max_idx " << static_cast<int>(range_max_idx);
+  const Index2D bottom_left_image_idx_scaled = {
+      std::get<0>(scale_) * bottom_left_image_idx.x(),
+      std::get<1>(scale_) * bottom_left_image_idx.y()};
+  const Index2D top_right_image_idx_scaled = {
+      std::get<0>(scale_) * top_right_image_idx.x(),
+      std::get<1>(scale_) * top_right_image_idx.y()};
+  const Index2D top_right_image_idx_unwrapped_scaled = {
+      std::get<0>(scale_) * top_right_image_idx_unwrapped.x(),
+      std::get<1>(scale_) * top_right_image_idx_unwrapped.y()};
 
   const IndexElement max_idx_diff =
-      (top_right_image_idx_unwrapped - bottom_left_image_idx).maxCoeff();
+      (top_right_image_idx_unwrapped_scaled - bottom_left_image_idx_scaled)
+          .maxCoeff();
   const IndexElement min_level_up =
       max_idx_diff == 0 ? 0 : int_math::log2_floor(max_idx_diff);
 
   // Compute the node indices at the minimum level we have to go up to fully
   // cover the interval with 4 nodes or less
-  // NOTE: The rance cell indices are only reduced by a factor two per level
-  //       starting at the second level. In other words, at the first level the
-  //       range cell indices directly correspond to rangeToRangeCellIdx()
-  //       applied to the cell's 4 children in the range image.
   const Index2D bottom_left_child_idx =
-      int_math::div_exp2_floor(bottom_left_image_idx, min_level_up);
+      int_math::div_exp2_floor(bottom_left_image_idx_scaled, min_level_up);
   const Index2D top_right_child_idx =
-      int_math::div_exp2_floor(top_right_image_idx, min_level_up);
-  const Index2D top_right_child_idx_unwrapped =
-      int_math::div_exp2_floor(top_right_image_idx_unwrapped, min_level_up);
-  const RangeCellIdx range_min_child_idx =
-      int_math::div_exp2_floor(range_min_idx, std::max(min_level_up - 1, 0));
-  const RangeCellIdx range_max_child_idx =
-      int_math::div_exp2_floor(range_max_idx, std::max(min_level_up - 1, 0));
+      int_math::div_exp2_floor(top_right_image_idx_scaled, min_level_up);
+  const Index2D top_right_child_idx_unwrapped = int_math::div_exp2_floor(
+      top_right_image_idx_unwrapped_scaled, min_level_up);
+  const RangeCellIdx range_min_child_idx = int_math::div_exp2_floor(
+      rangeToRangeCellIdxClamped(range_min), min_level_up);
+  const RangeCellIdx range_max_child_idx = int_math::div_exp2_floor(
+      rangeToRangeCellIdxClamped(range_max), min_level_up);
   const IndexElement child_height_idx = min_level_up - 1;
 
   // Compute the node indices at the maximum level we have to go up to fully
@@ -96,12 +96,12 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
       // Check all four nodes at min_level_up
       if (min_level_up == 0) {
         const auto image_values = {
-            range_image_->operator[](bottom_left_child_idx),
+            range_image_->operator[](bottom_left_image_idx),
             range_image_->operator[](
-                {bottom_left_child_idx.x(), top_right_child_idx.y()}),
+                {bottom_left_image_idx.x(), top_right_image_idx.y()}),
             range_image_->operator[](
-                {top_right_child_idx.x(), bottom_left_child_idx.y()}),
-            range_image_->operator[](top_right_child_idx)};
+                {top_right_image_idx.x(), bottom_left_image_idx.y()}),
+            range_image_->operator[](top_right_image_idx)};
         if (std::all_of(
                 image_values.begin(), image_values.end(),
                 [range_min](auto range) { return range < range_min; })) {
@@ -153,7 +153,11 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
          "currently supported.";
 
   const Index2D range_image_dims = range_image.getDimensions();
-  const int max_num_halvings = int_math::log2_ceil(range_image_dims.maxCoeff());
+  const Index2D range_image_dims_scaled = {
+      std::get<0>(scale_) * range_image_dims.x(),
+      std::get<1>(scale_) * range_image_dims.y()};
+  const int max_num_halvings =
+      int_math::log2_ceil(range_image_dims_scaled.maxCoeff());
 
   // Reduce the range image max_num_halvings times
   std::vector<RangeCellSetImage> levels;
@@ -161,12 +165,13 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
   for (int level_idx = 0; level_idx < max_num_halvings; ++level_idx) {
     // Initialize the current level
     const Index2D level_dims =
-        int_math::div_exp2_ceil(range_image_dims, level_idx + 1);
+        int_math::div_exp2_ceil(range_image_dims_scaled, level_idx + 1);
     RangeCellSetImage& current_level =
         levels.template emplace_back(level_dims.x(), level_dims.y());
     const Index2D previous_level_dims =
-        level_idx == 0 ? range_image_dims
-                       : int_math::div_exp2_ceil(range_image_dims, level_idx);
+        level_idx == 0
+            ? range_image_dims_scaled
+            : int_math::div_exp2_ceil(range_image_dims_scaled, level_idx);
 
     // Iterate over all azimuth and elevation bins
     std::vector<RangeCellIdx> reduced_child_range_indices;
@@ -196,11 +201,17 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
         if (level_idx == 0) {
           // At the first level, we gather the range indices from the range
           // img
-          const FloatingPoint child_range = range_image.operator[](child_idx);
-          if (kRangeMin < child_range && child_range < kRangeMax) {
-            const RangeCellIdx child_range_idx =
-                rangeToRangeCellIdx(child_range);
-            reduced_child_range_indices.template emplace_back(child_range_idx);
+          const Index2D child_idx_rescaled = {
+              child_idx.x() / std::get<0>(scale_),
+              child_idx.y() / std::get<1>(scale_)};
+          const FloatingPoint child_range =
+              range_image.operator[](child_idx_rescaled);
+          if (kMinRepresentableRange < child_range &&
+              child_range < kMaxRepresentableRange) {
+            const RangeCellIdx reduced_child_range_idx =
+                rangeToRangeCellIdxClamped(child_range) >> 1;
+            reduced_child_range_indices.template emplace_back(
+                reduced_child_range_idx);
           }
         } else {
           // Otherwise we gather them from the previous level
@@ -230,11 +241,11 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
 }
 
 template <bool azimuth_wraps_pi>
-typename HierarchicalRangeSets2D<azimuth_wraps_pi>::
-    RangeCellIdx constexpr HierarchicalRangeSets2D<
-        azimuth_wraps_pi>::rangeToRangeCellIdx(FloatingPoint range) {
+constexpr typename HierarchicalRangeSets2D<azimuth_wraps_pi>::RangeCellIdx
+HierarchicalRangeSets2D<azimuth_wraps_pi>::rangeToRangeCellIdx(
+    FloatingPoint range) {
   constexpr FloatingPoint kRangeResAt1mInv = 1.f / kRangeResolutionAt1m;
-  constexpr FloatingPoint kRangeMinInv = 1.f / kRangeMin;
+  constexpr FloatingPoint kRangeMinInv = 1.f / kMinRepresentableRange;
   return static_cast<RangeCellIdx>(kRangeResAt1mInv *
                                    std::log(kRangeMinInv * range));
 }
@@ -243,20 +254,21 @@ template <bool azimuth_wraps_pi>
 constexpr typename HierarchicalRangeSets2D<azimuth_wraps_pi>::RangeCellIdx
 HierarchicalRangeSets2D<azimuth_wraps_pi>::rangeToRangeCellIdxClamped(
     FloatingPoint range) {
-  if (range < kRangeMin) {
+  if (range <= kMinRepresentableRange) {
     return 0.f;
-  } else if (kRangeMax < range) {
+  } else if (kMaxRepresentableRange <= range) {
     return std::numeric_limits<RangeCellIdx>::max();
   }
-  return rangeToRangeCellIdx(range);
+  return static_cast<RangeCellIdx>(rangeToRangeCellIdx(range));
 }
 
 template <bool azimuth_wraps_pi>
 constexpr FloatingPoint
 HierarchicalRangeSets2D<azimuth_wraps_pi>::rangeCellIdxToRange(
     HierarchicalRangeSets2D::RangeCellIdx range_cell_idx) {
-  return kRangeMin * std::exp(kRangeResolutionAt1m *
-                              static_cast<FloatingPoint>(range_cell_idx));
+  return kMinRepresentableRange *
+         std::exp(kRangeResolutionAt1m *
+                  static_cast<FloatingPoint>(range_cell_idx));
 }
 
 template <bool azimuth_wraps_pi>

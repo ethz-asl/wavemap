@@ -2,6 +2,7 @@
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HIERARCHICAL_RANGE_SETS_2D_H_
 
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -21,7 +22,7 @@ class HierarchicalRangeSets2D {
   }
 
   NdtreeIndexElement getMaxHeight() const { return max_height_; }
-  static FloatingPoint getRangeMin() { return kRangeMin; }
+  static FloatingPoint getRangeMin() { return kMinRepresentableRange; }
 
   IntersectionType getIntersectionType(const Index2D& bottom_left_image_idx,
                                        const Index2D& top_right_image_idx,
@@ -38,14 +39,15 @@ class HierarchicalRangeSets2D {
 
   std::vector<RangeCellSetImage> levels_;
   const NdtreeIndexElement max_height_;
+  static constexpr std::tuple<IndexElement, IndexElement> scale_ = {2, 1};
 
-  static constexpr FloatingPoint kRangeMin = 0.2f;
+  static constexpr FloatingPoint kMinRepresentableRange = 0.2f;
   static constexpr FloatingPoint kRangeResolutionAt1m = 0.03f;
   static constexpr RangeCellIdx rangeToRangeCellIdx(FloatingPoint range);
   static constexpr RangeCellIdx rangeToRangeCellIdxClamped(FloatingPoint range);
   static constexpr FloatingPoint rangeCellIdxToRange(
       RangeCellIdx range_cell_idx);
-  static constexpr FloatingPoint kRangeMax = 100.f;
+  static constexpr FloatingPoint kMaxRepresentableRange = 100.f;
 
   static std::vector<RangeCellSetImage> computeReducedLevels(
       const RangeImage2D& range_image);
