@@ -34,7 +34,10 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         SphericalProjector::bearingToSpherical(C_node_center);
     const FloatingPoint sample =
         computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
-    return sample;
+    return std::clamp(sample + node_value,
+                      SaturatingOccupancyCell::kLowerBound - 2e-3f,
+                      SaturatingOccupancyCell::kUpperBound + 2e-3f) -
+           node_value;
   }
 
   const AABB<Point3D> W_cell_aabb =
@@ -48,6 +51,9 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
        node_value < SaturatingOccupancyCell::kLowerBound + 1e-3f)) {
     return 0.f;
   }
+
+  WaveletOctreeInterface::NodeType* node =
+      parent_node.getChild(relative_child_index);
 
   const FloatingPoint node_width = W_cell_aabb.width<0>();
   const Point3D W_node_center =
@@ -63,11 +69,16 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         SphericalProjector::bearingToSpherical(C_node_center);
     const FloatingPoint sample =
         computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
-    return sample;
+    if (!node || !node->hasAtLeastOneChild()) {
+      return std::clamp(sample + node_value,
+                        SaturatingOccupancyCell::kLowerBound - 2e-3f,
+                        SaturatingOccupancyCell::kUpperBound + 2e-3f) -
+             node_value;
+    } else {
+      return sample;
+    }
   }
 
-  WaveletOctreeInterface::NodeType* node =
-      parent_node.getChild(relative_child_index);
   if (!node) {
     node = parent_node.allocateChild(relative_child_index);
   }
