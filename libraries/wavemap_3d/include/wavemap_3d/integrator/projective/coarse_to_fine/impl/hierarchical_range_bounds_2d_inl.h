@@ -29,6 +29,12 @@ inline Bounds<FloatingPoint>
 HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
     const Index2D& bottom_left_image_idx,
     const Index2D& top_right_image_idx) const {
+  if (bottom_left_image_idx == top_right_image_idx) {
+    const auto range = range_image_->operator[](bottom_left_image_idx);
+    return {valueOrInit(range, kUnknownRangeImageValueLowerBound),
+            valueOrInit(range, kUnknownRangeImageValueUpperBound)};
+  }
+
   Index2D top_right_image_idx_unwrapped = top_right_image_idx;
   if (azimuth_wraps_pi && top_right_image_idx.y() < bottom_left_image_idx.y()) {
     top_right_image_idx_unwrapped.y() += range_image_->getNumColumns();

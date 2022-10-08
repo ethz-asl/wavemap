@@ -13,6 +13,17 @@ template <bool azimuth_wraps_pi>
 IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
     const Index2D& bottom_left_image_idx, const Index2D& top_right_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
+  if (bottom_left_image_idx == top_right_image_idx) {
+    const auto range = range_image_->operator[](bottom_left_image_idx);
+    if (valueOrInit(range, 0.f) < range_min) {
+      return IntersectionType::kFullyUnknown;
+    } else if (range_max < valueOrInit(range, 1e3f)) {
+      return IntersectionType::kFreeOrUnknown;
+    } else {
+      return IntersectionType::kPossiblyOccupied;
+    }
+  }
+
   DCHECK_LE(range_min, range_max);
   if (kMaxRepresentableRange < range_min) {
     return IntersectionType::kFullyUnknown;
