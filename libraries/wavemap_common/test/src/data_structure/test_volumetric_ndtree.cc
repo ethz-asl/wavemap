@@ -97,8 +97,8 @@ TYPED_TEST(VolumetricNdtreeTest, Resizing) {
 
   Index<TypeParam::kDim> min_index = first_random_index;
   Index<TypeParam::kDim> max_index = first_random_index;
-  for (auto index_it = ++random_indices.begin();
-       index_it != random_indices.end(); ++index_it) {
+  for (auto index_it = ++random_indices.cbegin();
+       index_it != random_indices.cend(); ++index_it) {
     min_index = min_index.cwiseMin(*index_it);
     max_index = max_index.cwiseMax(*index_it);
     map.addToCellValue(*index_it, 0.f);

@@ -84,7 +84,7 @@ inline LinearIndex indexToLinearIndex(const Index<dim>& index) {
   DCHECK((0 <= index.array() && index.array() < cells_per_side).all());
   constexpr auto pow_sequence =
       int_math::pow_sequence<IndexElement, cells_per_side, dim>();
-  return std::transform_reduce(pow_sequence.begin(), pow_sequence.end(),
+  return std::transform_reduce(pow_sequence.cbegin(), pow_sequence.cend(),
                                index.data(), 0);
 }
 

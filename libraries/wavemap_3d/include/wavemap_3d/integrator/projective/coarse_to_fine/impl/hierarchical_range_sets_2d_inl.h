@@ -232,7 +232,8 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
           const RangeCellSet& child_range_indices =
               previous_level(child_idx.x(), child_idx.y());
           // Copy and reduce the child range indices
-          std::transform(child_range_indices.begin(), child_range_indices.end(),
+          std::transform(child_range_indices.cbegin(),
+                         child_range_indices.cend(),
                          std::back_inserter(reduced_child_range_indices),
                          [](auto range_idx) { return range_idx >> 1; });
         }
@@ -243,8 +244,8 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
       RangeCellSet& current_cell = current_level(idx.x(), idx.y());
       std::sort(reduced_child_range_indices.begin(),
                 reduced_child_range_indices.end());
-      std::unique_copy(reduced_child_range_indices.begin(),
-                       reduced_child_range_indices.end(),
+      std::unique_copy(reduced_child_range_indices.cbegin(),
+                       reduced_child_range_indices.cend(),
                        std::back_inserter(current_cell));
       current_cell.shrink_to_fit();
     }

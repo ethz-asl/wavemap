@@ -27,7 +27,7 @@ bool RosbagProcessor::addRosbags(std::istringstream& rosbag_paths) {
 
 bool RosbagProcessor::bagsContainTopic(const std::string& topic_name) {
   const auto connections = bag_view_.getConnections();
-  return std::any_of(connections.begin(), connections.end(),
+  return std::any_of(connections.cbegin(), connections.cend(),
                      [&](const rosbag::ConnectionInfo* info) {
                        return info && info->topic == topic_name;
                      });

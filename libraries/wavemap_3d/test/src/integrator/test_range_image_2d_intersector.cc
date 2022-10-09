@@ -152,9 +152,9 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
         const bool angle_range_wraps_around = kPi < max_angle - min_angle;
         if (angle_range_wraps_around) {
           const FloatingPoint smallest_angle_above_zero =
-              *std::upper_bound(angles->begin(), angles->end(), 0.f);
-          const FloatingPoint greatest_angle_below_zero =
-              *std::prev(std::upper_bound(angles->begin(), angles->end(), 0.f));
+              *std::upper_bound(angles->cbegin(), angles->cend(), 0.f);
+          const FloatingPoint greatest_angle_below_zero = *std::prev(
+              std::upper_bound(angles->cbegin(), angles->cend(), 0.f));
           reference_angle_pair.min_spherical_coordinates[axis] =
               smallest_angle_above_zero;
           reference_angle_pair.max_spherical_coordinates[axis] =

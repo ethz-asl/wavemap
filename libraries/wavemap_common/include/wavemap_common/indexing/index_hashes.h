@@ -12,7 +12,7 @@ struct VoxbloxIndexHash {
       int_math::pow_sequence<size_t, 17191u, dim>();
 
   size_t operator()(const Index<dim>& index) const {
-    return std::transform_reduce(coefficients.begin(), coefficients.end(),
+    return std::transform_reduce(coefficients.cbegin(), coefficients.cend(),
                                  index.data(), 0u);
   }
 };

@@ -59,7 +59,7 @@ TYPED_TEST(PointcloudTest, DefaultInitialize) {
   EXPECT_EQ(default_pointcloud.size(), 0u);
 
   // Ensure that the iterator range is also empty
-  std::for_each(default_pointcloud.begin(), default_pointcloud.end(),
+  std::for_each(default_pointcloud.cbegin(), default_pointcloud.cend(),
                 [](const auto&) { ADD_FAILURE(); });
 }
 

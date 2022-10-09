@@ -197,8 +197,8 @@ std::unique_ptr<VolumetricDataStructure3D> WavemapMapDisplay::mapFromRosMsg(
       WaveletOctreeType::NodeType* current_node = stack.top();
       stack.pop();
 
-      std::copy(node_msg.detail_coefficients.begin(),
-                node_msg.detail_coefficients.end(),
+      std::copy(node_msg.detail_coefficients.cbegin(),
+                node_msg.detail_coefficients.cend(),
                 current_node->data().begin());
       for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {

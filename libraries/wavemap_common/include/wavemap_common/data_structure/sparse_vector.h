@@ -31,7 +31,7 @@ class SparseVector {
     const uint8_t sparse_idx = ((kOnes << idx).flip() & bitmask_).count();
     if (!has(idx)) {
       bitmask_.set(idx);
-      compacted_vector_.insert(compacted_vector_.begin() + sparse_idx,
+      compacted_vector_.insert(compacted_vector_.cbegin() + sparse_idx,
                                kDefaultValue);
     }
     return compacted_vector_[sparse_idx];

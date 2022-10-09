@@ -128,7 +128,7 @@ void Wavemap3DServer::processPointcloudQueue() {
     // Convert the scan to a pointcloud
     // Get the index of the x field, and assert that the y and z fields follow
     auto x_field_iter = std::find_if(
-        scan_msg.fields.begin(), scan_msg.fields.end(),
+        scan_msg.fields.cbegin(), scan_msg.fields.cend(),
         [](const sensor_msgs::PointField& field) { return field.name == "x"; });
     if (x_field_iter == scan_msg.fields.end()) {
       ROS_WARN("Received pointcloud with missing field x");

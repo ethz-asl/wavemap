@@ -153,8 +153,8 @@ TYPED_TEST(HaarCellTest, ParentScaleEqualsAverageChildScale) {
         Transform::forward(child_scale_coefficients);
 
     const FloatingPoint average_of_children =
-        std::accumulate(child_scale_coefficients.begin(),
-                        child_scale_coefficients.end(), 0.f) /
+        std::accumulate(child_scale_coefficients.cbegin(),
+                        child_scale_coefficients.cend(), 0.f) /
         static_cast<FloatingPoint>(NdtreeIndex<TypeParam::kDim>::kNumChildren);
     EXPECT_NEAR(parent_coefficients.scale, average_of_children,
                 TestFixture::kReconstructionErrorTolerance);
