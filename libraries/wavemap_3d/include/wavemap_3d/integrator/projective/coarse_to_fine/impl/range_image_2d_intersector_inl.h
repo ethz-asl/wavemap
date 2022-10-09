@@ -72,14 +72,12 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     return angle_intervals;
   }
 
-  const AABB<Point3D>::Corners C_t_C_corners =
-      T_C_W.transformVectorized(W_aabb.corner_matrix());
   Eigen::Matrix<FloatingPoint, 2, 8> spherical_C_corners;
   std::bitset<3> all_positive{0b111};
   std::bitset<3> all_negative{0b111};
   for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
        ++corner_idx) {
-    const Point3D& C_t_C_corner = C_t_C_corners.col(corner_idx);
+    const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
     spherical_C_corners.col(corner_idx) =
         SphericalProjector::bearingToSpherical(C_t_C_corner);
     for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
