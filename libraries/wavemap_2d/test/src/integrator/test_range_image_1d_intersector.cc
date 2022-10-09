@@ -131,7 +131,9 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
     const RangeImage1DIntersector::MinMaxAnglePair returned_angle_pair =
         RangeImage1DIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
                                                              test.W_aabb);
+    constexpr FloatingPoint kNumericalNoise = 1.8e-06f;
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
+
     const bool angle_range_wraps_around =
         kPi < reference_angle_pair.max_angle - reference_angle_pair.min_angle;
 
@@ -143,14 +145,14 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
     if (angle_range_wraps_around) {
       EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
-                0.f)
+                -kNumericalNoise)
           << canary_token();
       EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
                 kOneAndAHalfDegree);
       EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
-                0.f)
+                kNumericalNoise)
           << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
@@ -159,7 +161,7 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
     } else {
       EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
-                0.f)
+                kNumericalNoise)
           << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
@@ -167,7 +169,7 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
           << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
-                0.f)
+                -kNumericalNoise)
           << canary_token();
       EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),

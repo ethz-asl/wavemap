@@ -43,15 +43,14 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
       (bottom_left_image_idx.array() <= top_right_image_idx_unwrapped.array())
           .all());
 
-  const Index2D bottom_left_image_idx_scaled = {
-      std::get<0>(scale_) * bottom_left_image_idx.x(),
-      std::get<1>(scale_) * bottom_left_image_idx.y()};
-  const Index2D top_right_image_idx_scaled = {
-      std::get<0>(scale_) * top_right_image_idx.x(),
-      std::get<1>(scale_) * top_right_image_idx.y()};
-  const Index2D top_right_image_idx_unwrapped_scaled = {
-      std::get<0>(scale_) * top_right_image_idx_unwrapped.x(),
-      std::get<1>(scale_) * top_right_image_idx_unwrapped.y()};
+  const Index2D bottom_left_image_idx_scaled =
+      getImageToPyramidScaleFactor().template cwiseProduct(
+          bottom_left_image_idx);
+  const Index2D top_right_image_idx_scaled =
+      getImageToPyramidScaleFactor().template cwiseProduct(top_right_image_idx);
+  const Index2D top_right_image_idx_unwrapped_scaled =
+      getImageToPyramidScaleFactor().template cwiseProduct(
+          top_right_image_idx_unwrapped);
 
   const IndexElement max_idx_diff =
       (top_right_image_idx_unwrapped_scaled - bottom_left_image_idx_scaled)
@@ -196,9 +195,8 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::computeReducedPyramid(
          "currently supported.";
 
   const Index2D range_image_dims = range_image.getDimensions();
-  const Index2D range_image_dims_scaled = {
-      std::get<0>(scale_) * range_image_dims.x(),
-      std::get<1>(scale_) * range_image_dims.y()};
+  const Index2D range_image_dims_scaled =
+      getImageToPyramidScaleFactor().template cwiseProduct(range_image_dims);
   const int max_num_halvings =
       int_math::log2_ceil(range_image_dims_scaled.maxCoeff());
 
@@ -221,10 +219,10 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::computeReducedPyramid(
       Index2D min_child_idx = 2 * idx;
       Index2D max_child_idx = min_child_idx + Index2D::Ones();
       if (level_idx == 0) {
-        min_child_idx = {min_child_idx.x() / std::get<0>(scale_),
-                         min_child_idx.y() / std::get<1>(scale_)};
-        max_child_idx = {max_child_idx.x() / std::get<0>(scale_),
-                         max_child_idx.y() / std::get<1>(scale_)};
+        min_child_idx = min_child_idx.template cwiseQuotient(
+            getImageToPyramidScaleFactor());
+        max_child_idx = max_child_idx.template cwiseQuotient(
+            getImageToPyramidScaleFactor());
       }
 
       // Reduce the values in the 2x2 block of the previous level from

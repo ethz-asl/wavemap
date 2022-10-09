@@ -127,8 +127,6 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
   int error_count = 0;
   for (const auto& test : tests) {
     RangeImage2DIntersector::MinMaxAnglePair reference_angle_pair;
-    const AABB<Point3D>::Corners C_t_C_corners =
-        test.T_W_C.inverse().transformVectorized(test.W_aabb.corner_matrix());
     using AngleCornerArray =
         std::array<FloatingPoint, AABB<Point3D>::kNumCorners>;
     AngleCornerArray elevation_angles{};
@@ -139,8 +137,10 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
     } else {
       for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
            ++corner_idx) {
-        const Vector2D angles = SphericalProjector::bearingToSpherical(
-            C_t_C_corners.col(corner_idx));
+        const Point3D C_t_C_corner =
+            test.T_W_C.inverse() * test.W_aabb.corner_point(corner_idx);
+        const Vector2D angles =
+            SphericalProjector::bearingToSpherical(C_t_C_corner);
         elevation_angles[corner_idx] = angles[0];
         azimuth_angles[corner_idx] = angles[1];
       }
@@ -225,6 +225,8 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
     }
 
     if (check_failed) {
+      const AABB<Point3D>::Corners C_t_C_corners =
+          test.T_W_C.inverse().transformVectorized(test.W_aabb.corner_matrix());
       std::cerr
           << "For\n-W_aabb: " << test.W_aabb.toString() << "\n-T_W_C:\n"
           << test.T_W_C << "\nWith C_cell_corners:\n"

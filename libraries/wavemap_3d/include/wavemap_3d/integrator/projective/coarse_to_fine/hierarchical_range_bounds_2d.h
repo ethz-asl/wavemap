@@ -38,6 +38,9 @@ class HierarchicalRangeBounds2D {
     return kUnknownRangeImageValueUpperBound;
   }
   static FloatingPoint getRangeMin() { return kRangeMin; }
+  static Index2D getImageToPyramidScaleFactor() {
+    return {std::get<0>(scale_), std::get<1>(scale_)};
+  }
 
   Bounds<FloatingPoint> getBounds(const QuadtreeIndex& index) const;
   FloatingPoint getLowerBound(const QuadtreeIndex& index) const {
