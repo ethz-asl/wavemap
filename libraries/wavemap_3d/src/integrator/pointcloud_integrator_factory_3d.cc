@@ -8,34 +8,48 @@
 
 namespace wavemap {
 typename PointcloudIntegrator3D::Ptr PointcloudIntegrator3DFactory::create(
-    const std::string& integrator_type_name,
-    VolumetricDataStructure3D::Ptr occupancy_map,
+    const param::Map& params, VolumetricDataStructure3D::Ptr occupancy_map,
     std::optional<PointcloudIntegrator3DType> default_integrator_type) {
-  for (size_t type_idx = 0; type_idx < kPointcloudIntegrator3DTypeStrs.size();
-       ++type_idx) {
-    if (integrator_type_name == kPointcloudIntegrator3DTypeStrs[type_idx]) {
-      return create(static_cast<PointcloudIntegrator3DType>(type_idx),
-                    std::move(occupancy_map));
+  std::ostringstream error_msg;
+
+  error_msg << "Requested creation of ";
+  if (param::map::hasKey(params, "type")) {
+    if (param::map::keyHoldsValue<std::string>(params, "type")) {
+      const std::string& integrator_type_name =
+          params.at("type").get<std::string>();
+      for (size_t type_idx = 0;
+           type_idx < kPointcloudIntegrator3DTypeStrs.size(); ++type_idx) {
+        if (integrator_type_name == kPointcloudIntegrator3DTypeStrs[type_idx]) {
+          return create(static_cast<PointcloudIntegrator3DType>(type_idx),
+                        params, std::move(occupancy_map));
+        }
+      }
+      error_msg << "unknown integrator type. ";
+    } else {
+      error_msg << "integrator but specified type param is not a string. ";
     }
+  } else {
+    error_msg << "integrator without specifying the desired type. ";
   }
 
   if (default_integrator_type.has_value()) {
-    LOG(WARNING) << "Requested creation of unknown integrator type \""
-                 << integrator_type_name << "\". Default type \""
-                 << getPointcloudIntegrator3DTypeStr(
-                        default_integrator_type.value())
+    const std::string default_type_str =
+        getPointcloudIntegrator3DTypeStr(default_integrator_type.value());
+    LOG(WARNING) << error_msg.str() << "Default type \"" << default_type_str
                  << "\" will be created instead.";
-    return create(default_integrator_type.value(), std::move(occupancy_map));
-  } else {
-    LOG(ERROR) << "Requested creation of unknown integrator type \""
-               << integrator_type_name
-               << "\" and no default was set. Returning nullptr.";
+    param::Map params_corrected = params;
+    params_corrected.erase("type");
+    params_corrected.emplace("type", default_type_str);
+    return create(default_integrator_type.value(), params_corrected,
+                  std::move(occupancy_map));
   }
+
+  LOG(ERROR) << error_msg.str() << "No default was set. Returning nullptr.";
   return nullptr;
 }
 
 typename PointcloudIntegrator3D::Ptr PointcloudIntegrator3DFactory::create(
-    PointcloudIntegrator3DType integrator_type,
+    PointcloudIntegrator3DType integrator_type, const param::Map& /*params*/,
     VolumetricDataStructure3D::Ptr occupancy_map) {
   switch (integrator_type) {
     case PointcloudIntegrator3DType::kSingleRayIntegrator:

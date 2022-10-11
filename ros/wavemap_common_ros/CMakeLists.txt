@@ -8,7 +8,8 @@ catkin_simple(ALL_DEPS_REQUIRED)
 add_wavemap_compile_definitions_and_options()
 
 # Libraries
-cs_add_library(${PROJECT_NAME} src/rosbag_processor.cc src/tf_transformer.cc)
+cs_add_library(${PROJECT_NAME} src/rosbag_processor.cc src/tf_transformer.cc
+    src/utils/config_conversions.cc)
 
 # Export
 cs_install()

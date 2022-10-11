@@ -14,6 +14,7 @@ class VolumetricNdtreeInterface
  public:
   using Ptr = std::shared_ptr<VolumetricNdtreeInterface>;
 
+  // TODO(victorr): Make this configurable
   static constexpr NdtreeIndexElement kMaxHeight = 14;
 
   using VolumetricDataStructureBase<dim>::VolumetricDataStructureBase;

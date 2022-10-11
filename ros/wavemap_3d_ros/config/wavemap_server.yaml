@@ -1,6 +1,39 @@
-min_cell_width: 0.05
-world_frame: "odom"
-pointcloud_topic_queue_length: 10
-pointcloud_queue_max_wait_for_transform_s: 1.0
-map_visualization_period_s: 1.0
-map_autosave_period_s: -1.0
+general:
+  world_frame: "odom"
+  publish_performance_stats: false
+
+map:
+  pruning_period: { seconds: 10.0 }
+  visualization_period: { seconds: 10.0 }
+  autosave_period: { seconds: -1.0 }
+  autosave_path: ""
+  data_structure:
+    type: "wavelet_octree"
+    min_cell_width: &min_cell_width { meters: 0.20 }
+    max_height: 14
+
+integrator:
+  pointcloud_input:
+    topic_name: ""
+    topic_queue_length: 10
+    max_wait_for_tf: { seconds: 1.0 }
+  sensor_model:
+    type: "projective_spherical"
+    num_rows: 64
+    num_columns: 1024
+    min_elevation_angle: { degrees: -15.5940204 }
+    max_elevation_angle: { degrees: 17.743013225 }
+    min_azimuth_angle: { degrees: -180 }
+    max_azimuth_angle: { degrees: 180 }
+  measurement_model:
+    type: "continuous_volumetric_log_odds"
+    angle_sigma: { degrees: 0.0374999994559 }
+    range_sigma: { meters: 0.025 }
+    scaling_free: 0.2
+    scaling_occupied: 0.4
+  integration_scheme:
+    type: "coarse_to_fine_wavelet_integrator"
+    min_range: { meters: 0.5 }
+    max_range: { meters: 20.0 }
+    max_acceptable_update_error: 0.1
+    max_update_resolution: *min_cell_width

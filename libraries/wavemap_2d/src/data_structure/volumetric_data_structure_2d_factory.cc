@@ -10,14 +10,14 @@
 
 namespace wavemap {
 VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
-    const std::string& data_structure_type_name, FloatingPoint min_cell_width,
+    const std::string& data_structure_type_name, const param::Map& params,
     std::optional<VolumetricDataStructure2DType> default_data_structure_type) {
   for (size_t type_idx = 0;
        type_idx < kVolumetricDataStructure2DTypeStrs.size(); ++type_idx) {
     if (data_structure_type_name ==
         kVolumetricDataStructure2DTypeStrs[type_idx]) {
       return create(static_cast<VolumetricDataStructure2DType>(type_idx),
-                    min_cell_width);
+                    params);
     }
   }
 
@@ -27,7 +27,7 @@ VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
                  << getVolumetricDataStructure2DTypeStr(
                         default_data_structure_type.value())
                  << "\" will be created instead.";
-    return create(default_data_structure_type.value(), min_cell_width);
+    return create(default_data_structure_type.value(), params);
   } else {
     LOG(ERROR) << "Requested creation of unknown data structure type \""
                << data_structure_type_name
@@ -38,24 +38,21 @@ VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
 
 VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
     VolumetricDataStructure2DType data_structure_type,
-    FloatingPoint min_cell_width) {
+    const param::Map& params) {
+  const auto config = VolumetricDataStructure2D::Config::fromParams(params);
   switch (data_structure_type) {
     case VolumetricDataStructure2DType::kDenseGrid:
-      return std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
-          min_cell_width);
+      return std::make_shared<DenseGrid<SaturatingOccupancyCell>>(config);
     case VolumetricDataStructure2DType::kHashedBlocks:
-      return std::make_shared<HashedBlocks2D<SaturatingOccupancyCell>>(
-          min_cell_width);
+      return std::make_shared<HashedBlocks2D<SaturatingOccupancyCell>>(config);
     case VolumetricDataStructure2DType::kQuadtree:
       return std::make_shared<VolumetricQuadtree<SaturatingOccupancyCell>>(
-          min_cell_width);
+          config);
     case VolumetricDataStructure2DType::kDifferencingQuadtree:
       return std::make_shared<
-          VolumetricDifferencingQuadtree<SaturatingOccupancyCell>>(
-          min_cell_width);
+          VolumetricDifferencingQuadtree<SaturatingOccupancyCell>>(config);
     case VolumetricDataStructure2DType::kWaveletQuadtree:
-      return std::make_shared<WaveletQuadtree<SaturatingOccupancyCell>>(
-          min_cell_width);
+      return std::make_shared<WaveletQuadtree<SaturatingOccupancyCell>>(config);
     default:
       LOG(ERROR) << "Attempted to create unknown data structure type: "
                  << to_underlying(data_structure_type)

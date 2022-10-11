@@ -37,7 +37,8 @@ int main(int argc, char** argv) {
 
   // Set up the mapper
   VolumetricDataStructure2D::Ptr occupancy_map =
-      std::make_shared<DataStructureType>(map_min_cell_width);
+      std::make_shared<DataStructureType>(
+          DataStructureType::Config{map_min_cell_width});
   PointcloudIntegratorType pointcloud_integrator(occupancy_map);
 
   // Open the log file

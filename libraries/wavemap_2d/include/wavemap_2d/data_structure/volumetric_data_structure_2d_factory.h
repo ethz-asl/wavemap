@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <wavemap_common/utils/config_utils.h>
 #include <wavemap_common/utils/type_utils.h>
 
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
@@ -26,13 +27,13 @@ std::string getVolumetricDataStructure2DTypeStr(
 class VolumetricDataStructure2DFactory {
  public:
   static VolumetricDataStructure2D::Ptr create(
-      const std::string& data_structure_type_name, FloatingPoint min_cell_width,
+      const std::string& data_structure_type_name, const param::Map& params,
       std::optional<VolumetricDataStructure2DType> default_data_structure_type =
           std::nullopt);
 
   static VolumetricDataStructure2D::Ptr create(
       VolumetricDataStructure2DType data_structure_type,
-      FloatingPoint min_cell_width);
+      const param::Map& params);
 };
 }  // namespace wavemap
 

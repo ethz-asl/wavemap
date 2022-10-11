@@ -1,9 +1,0 @@
-min_cell_width: 0.20
-world_frame: "odom"
-pointcloud_topic_queue_length: 10
-pointcloud_queue_max_wait_for_transform_s: 1.0
-map_pruning_period_s: 10.0
-map_visualization_period_s: 10.0
-map_evaluation_period_s: -1.0
-publish_performance_stats: false
-map_ground_truth_path: ""

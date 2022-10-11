@@ -17,31 +17,21 @@ namespace wavemap {
 class Wavemap3DServer {
  public:
   struct Config {
-    float min_cell_width = 0.f;
-
+    // General
     std::string world_frame = "odom";
+    bool publish_performance_stats = false;
+    float pointcloud_queue_processing_retry_period_s = 0.1f;
 
-    std::string data_structure_type = "dense_grid";
-    std::string measurement_model_type = "beam_model";
-
-    std::string pointcloud_topic_name = "scan";
-    int pointcloud_topic_queue_length = 10;
-
+    // Map
     float map_pruning_period_s = 1.f;
-
     float map_visualization_period_s = 10.f;
-
-    // NOTE: evaluation will only be performed if map_ground_truth_path is set
-    float map_evaluation_period_s = 10.f;
-    std::string map_ground_truth_path;
-
     float map_autosave_period_s = -1.f;
     std::string map_autosave_path;
 
-    bool publish_performance_stats = false;
-
-    float pointcloud_queue_processing_period_s = 0.1f;
-    float pointcloud_queue_max_wait_for_transform_s = 1.f;
+    // Integrator
+    std::string pointcloud_topic_name = "scan";
+    int pointcloud_topic_queue_length = 10;
+    float pointcloud_queue_max_wait_for_tf_s = 1.f;
 
     static Config fromRosParams(ros::NodeHandle nh);
     bool isValid(bool verbose = true);
@@ -57,7 +47,6 @@ class Wavemap3DServer {
   void visualizeMap();
   bool saveMap(const std::string& file_path) const;
   bool loadMap(const std::string& file_path);
-  bool evaluateMap(const std::string& file_path);
 
  private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;
@@ -76,7 +65,6 @@ class Wavemap3DServer {
   ros::Timer pointcloud_queue_processing_timer_;
   ros::Timer map_pruning_timer_;
   ros::Timer map_visualization_timer_;
-  ros::Timer map_evaluation_timer_;
   ros::Timer map_autosave_timer_;
 
   void subscribeToTopics(ros::NodeHandle& nh);
@@ -84,17 +72,12 @@ class Wavemap3DServer {
 
   void advertiseTopics(ros::NodeHandle& nh_private);
   ros::Publisher map_pub_;
-  ros::Publisher occupancy_grid_pub_;
-  ros::Publisher occupancy_grid_error_pub_;
-  ros::Publisher occupancy_grid_ground_truth_pub_;
-  ros::Publisher map_evaluation_summary_pub_;
   ros::Publisher performance_stats_pub_;
 
   void advertiseServices(ros::NodeHandle& nh_private);
   ros::ServiceServer visualize_map_srv_;
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
-  ros::ServiceServer evaluate_map_srv_;
 };
 }  // namespace wavemap
 

@@ -9,6 +9,7 @@
 #include <wavemap_3d/integrator/pointcloud_integrator_3d_factory.h>
 #include <wavemap_common/data_structure/pointcloud.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap_common_ros/utils/config_conversions.h>
 #include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 #include <wavemap_msgs/FilePath.h>
@@ -25,14 +26,18 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // Assert that the config is valid
   CHECK(config_.isValid(true));
 
-  // Setup data structure and integrator
+  // Setup data structure
+  const param::Map data_structure_params =
+      param::rosParamsToParamMap(nh_private, "map/data_structure");
   occupancy_map_ = VolumetricDataStructure3DFactory::create(
-      config_.data_structure_type, config_.min_cell_width,
-      VolumetricDataStructure3DType::kHashedBlocks);
+      data_structure_params, VolumetricDataStructure3DType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
 
+  // Setup integrator
+  const param::Map integrator_params =
+      param::rosParamsToParamMap(nh_private, "integrator/integration_scheme");
   pointcloud_integrator_ = PointcloudIntegrator3DFactory::create(
-      config_.measurement_model_type, occupancy_map_,
+      integrator_params, occupancy_map_,
       PointcloudIntegrator3DType::kSingleRayIntegrator);
   CHECK_NOTNULL(pointcloud_integrator_);
 
@@ -64,21 +69,6 @@ void Wavemap3DServer::visualizeMap() {
       wavemap_msgs::Map map_msg = mapToRosMsg(*wavelet_octree);
       map_pub_.publish(map_msg);
     }
-
-    visualization_msgs::MarkerArray occupancy_grid_marker = MapToMarkerArray(
-        *occupancy_map_, config_.world_frame, "occupancy_grid",
-        [](FloatingPoint cell_log_odds) {
-          if (OccupancyState::isObserved(cell_log_odds) &&
-              0.f < cell_log_odds) {
-            const FloatingPoint cell_odds = std::exp(cell_log_odds);
-            const FloatingPoint cell_prob = cell_odds / (1.f + cell_odds);
-            const FloatingPoint cell_free_prob = 1.f - cell_prob;
-            return RGBAColor{1.f, cell_free_prob, cell_free_prob,
-                             cell_free_prob};
-          }
-          return RGBAColor::Transparent();
-        });
-    occupancy_grid_pub_.publish(occupancy_grid_marker);
   }
 }
 
@@ -89,11 +79,6 @@ bool Wavemap3DServer::saveMap(const std::string& file_path) const {
 
 bool Wavemap3DServer::loadMap(const std::string& file_path) {
   return occupancy_map_->load(file_path, kSaveWithFloatingPointPrecision);
-}
-
-bool Wavemap3DServer::evaluateMap(const std::string& /*file_path*/) {
-  LOG(WARNING) << "Evaluations are not yet implemented for wavemap 3D";
-  return false;
 }
 
 void Wavemap3DServer::processPointcloudQueue() {
@@ -109,13 +94,13 @@ void Wavemap3DServer::processPointcloudQueue() {
                                       scan_msg.header.frame_id,
                                       scan_msg.header.stamp, T_W_C)) {
       if ((pointcloud_queue_.back().header.stamp - scan_msg.header.stamp)
-              .toSec() < config_.pointcloud_queue_max_wait_for_transform_s) {
+              .toSec() < config_.pointcloud_queue_max_wait_for_tf_s) {
         // Try to get this pointcloud's pose again at the next iteration
         return;
       } else {
         ROS_WARN_STREAM(
             "Waited "
-            << config_.pointcloud_queue_max_wait_for_transform_s
+            << config_.pointcloud_queue_max_wait_for_tf_s
             << "s but still could not look up pose for pointcloud with frame \""
             << scan_msg.header.frame_id << "\" in world frame \""
             << config_.world_frame << "\" at timestamp "
@@ -184,7 +169,7 @@ void Wavemap3DServer::processPointcloudQueue() {
 
 void Wavemap3DServer::subscribeToTimers(const ros::NodeHandle& nh) {
   pointcloud_queue_processing_timer_ = nh.createTimer(
-      ros::Duration(config_.pointcloud_queue_processing_period_s),
+      ros::Duration(config_.pointcloud_queue_processing_retry_period_s),
       [this](const auto& /*event*/) { processPointcloudQueue(); });
 
   if (0.f < config_.map_pruning_period_s) {
@@ -201,17 +186,6 @@ void Wavemap3DServer::subscribeToTimers(const ros::NodeHandle& nh) {
     map_visualization_timer_ =
         nh.createTimer(ros::Duration(config_.map_visualization_period_s),
                        [this](const auto& /*event*/) { visualizeMap(); });
-  }
-
-  if (0.f < config_.map_evaluation_period_s &&
-      !config_.map_ground_truth_path.empty()) {
-    ROS_INFO_STREAM("Registering map evaluation timer with period "
-                    << config_.map_evaluation_period_s << "s");
-    map_evaluation_timer_ =
-        nh.createTimer(ros::Duration(config_.map_evaluation_period_s),
-                       [this](const auto& /*event*/) {
-                         evaluateMap(config_.map_ground_truth_path);
-                       });
   }
 
   if (0.f < config_.map_autosave_period_s &&
@@ -232,17 +206,6 @@ void Wavemap3DServer::subscribeToTopics(ros::NodeHandle& nh) {
 
 void Wavemap3DServer::advertiseTopics(ros::NodeHandle& nh_private) {
   map_pub_ = nh_private.advertise<wavemap_msgs::Map>("map", 10, true);
-  occupancy_grid_pub_ = nh_private.advertise<visualization_msgs::MarkerArray>(
-      "occupancy_grid", 10, true);
-  occupancy_grid_error_pub_ =
-      nh_private.advertise<visualization_msgs::MarkerArray>(
-          "occupancy_grid_error", 10, true);
-  occupancy_grid_ground_truth_pub_ =
-      nh_private.advertise<visualization_msgs::MarkerArray>(
-          "occupancy_grid_ground_truth", 10, true);
-  map_evaluation_summary_pub_ =
-      nh_private.advertise<wavemap_msgs::MapEvaluationSummary>(
-          "map_evaluation_summary", 10, true);
   performance_stats_pub_ = nh_private.advertise<wavemap_msgs::PerformanceStats>(
       "performance_stats", 10, true);
 }
@@ -268,62 +231,42 @@ void Wavemap3DServer::advertiseServices(ros::NodeHandle& nh_private) {
         response.success = loadMap(request.file_path);
         return true;
       });
-
-  evaluate_map_srv_ =
-      nh_private.advertiseService<wavemap_msgs::FilePath::Request,
-                                  wavemap_msgs::FilePath::Response>(
-          "evaluate_map", [this](auto& request, auto& response) {
-            response.success = evaluateMap(request.file_path);
-            return true;
-          });
 }
 
 Wavemap3DServer::Config Wavemap3DServer::Config::fromRosParams(
     ros::NodeHandle nh) {
   Config config;
 
-  nh.param(NAMEOF(config.min_cell_width), config.min_cell_width,
-           config.min_cell_width);
+  // General
+  nh.param("general/" + NAMEOF(config.world_frame), config.world_frame,
+           config.world_frame);
+  nh.param("general/" + NAMEOF(config.publish_performance_stats),
+           config.publish_performance_stats, config.publish_performance_stats);
+  nh.param(
+      "general/" + NAMEOF(config.pointcloud_queue_processing_retry_period_s),
+      config.pointcloud_queue_processing_retry_period_s,
+      config.pointcloud_queue_processing_retry_period_s);
 
-  nh.param(NAMEOF(config.world_frame), config.world_frame, config.world_frame);
-
-  nh.param(NAMEOF(config.data_structure_type), config.data_structure_type,
-           config.data_structure_type);
-  nh.param(NAMEOF(config.measurement_model_type), config.measurement_model_type,
-           config.measurement_model_type);
-
-  nh.param(NAMEOF(config.pointcloud_topic_name), config.pointcloud_topic_name,
-           config.pointcloud_topic_name);
-  nh.param(NAMEOF(config.pointcloud_topic_queue_length),
-           config.pointcloud_topic_queue_length,
-           config.pointcloud_topic_queue_length);
-
-  nh.param(NAMEOF(config.map_pruning_period_s), config.map_pruning_period_s,
-           config.map_pruning_period_s);
-
-  nh.param(NAMEOF(config.map_visualization_period_s),
+  // Map
+  nh.param("map/" + NAMEOF(config.map_pruning_period_s),
+           config.map_pruning_period_s, config.map_pruning_period_s);
+  nh.param("map/" + NAMEOF(config.map_visualization_period_s),
            config.map_visualization_period_s,
            config.map_visualization_period_s);
-
-  nh.param(NAMEOF(config.map_evaluation_period_s),
-           config.map_evaluation_period_s, config.map_evaluation_period_s);
-  nh.param(NAMEOF(config.map_ground_truth_path), config.map_ground_truth_path,
-           config.map_ground_truth_path);
-
-  nh.param(NAMEOF(config.map_autosave_period_s), config.map_autosave_period_s,
-           config.map_autosave_period_s);
-  nh.param(NAMEOF(config.map_autosave_path), config.map_autosave_path,
+  nh.param("map/" + NAMEOF(config.map_autosave_period_s),
+           config.map_autosave_period_s, config.map_autosave_period_s);
+  nh.param("map/" + NAMEOF(config.map_autosave_path), config.map_autosave_path,
            config.map_autosave_path);
 
-  nh.param(NAMEOF(config.publish_performance_stats),
-           config.publish_performance_stats, config.publish_performance_stats);
-
-  nh.param(NAMEOF(config.pointcloud_queue_processing_period_s),
-           config.pointcloud_queue_processing_period_s,
-           config.pointcloud_queue_processing_period_s);
-  nh.param(NAMEOF(config.pointcloud_queue_max_wait_for_transform_s),
-           config.pointcloud_queue_max_wait_for_transform_s,
-           config.pointcloud_queue_max_wait_for_transform_s);
+  // Integrator
+  nh.param("integrator/" + NAMEOF(config.pointcloud_topic_name),
+           config.pointcloud_topic_name, config.pointcloud_topic_name);
+  nh.param("integrator/" + NAMEOF(config.pointcloud_topic_queue_length),
+           config.pointcloud_topic_queue_length,
+           config.pointcloud_topic_queue_length);
+  nh.param("integrator/" + NAMEOF(config.pointcloud_queue_max_wait_for_tf_s),
+           config.pointcloud_queue_max_wait_for_tf_s,
+           config.pointcloud_queue_max_wait_for_tf_s);
 
   return config;
 }
@@ -331,16 +274,17 @@ Wavemap3DServer::Config Wavemap3DServer::Config::fromRosParams(
 bool Wavemap3DServer::Config::isValid(bool verbose) {
   bool all_valid = true;
 
-  if (min_cell_width <= 0.f) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(min_cell_width) << " must be a positive float";
-  }
-
   if (world_frame.empty()) {
     all_valid = false;
     LOG_IF(WARNING, verbose)
         << "Param " << NAMEOF(world_frame) << " must be a non-empty string";
+  }
+
+  if (pointcloud_queue_processing_retry_period_s <= 0.f) {
+    all_valid = false;
+    LOG_IF(WARNING, verbose)
+        << "Param " << NAMEOF(pointcloud_queue_processing_retry_period_s)
+        << " must be a positive float";
   }
 
   if (pointcloud_topic_name.empty()) {
@@ -355,17 +299,10 @@ bool Wavemap3DServer::Config::isValid(bool verbose) {
         << " must be a positive integer";
   }
 
-  if (pointcloud_queue_processing_period_s <= 0.f) {
+  if (pointcloud_queue_max_wait_for_tf_s < 0.f) {
     all_valid = false;
     LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(pointcloud_queue_processing_period_s)
-        << " must be a positive float";
-  }
-
-  if (pointcloud_queue_max_wait_for_transform_s < 0.f) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(pointcloud_queue_max_wait_for_transform_s)
+        << "Param " << NAMEOF(pointcloud_queue_max_wait_for_tf_s)
         << " must be a non-negative float";
   }
 
