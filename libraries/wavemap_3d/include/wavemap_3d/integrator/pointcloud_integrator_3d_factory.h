@@ -4,25 +4,26 @@
 #include <string>
 
 #include <wavemap_common/utils/config_utils.h>
-#include <wavemap_common/utils/type_utils.h>
+#include <wavemap_common/utils/factory_utils.h>
 
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"
 
 namespace wavemap {
-enum class PointcloudIntegrator3DType : int {
-  kSingleRayIntegrator,
-  kFixedResolutionScanIntegrator,
-  kCoarseToFineScanIntegrator,
-  kWaveletScanIntegrator
+struct PointcloudIntegrator3DType : TypeSelector<PointcloudIntegrator3DType> {
+  using TypeSelector<PointcloudIntegrator3DType>::TypeSelector;
+
+  enum Id : TypeId {
+    kSingleRayIntegrator,
+    kFixedResolutionScanIntegrator,
+    kCoarseToFineScanIntegrator,
+    kWaveletScanIntegrator
+  };
+
+  static constexpr std::array names = {
+      "single_ray_integrator", "fixed_resolution_integrator",
+      "coarse_to_fine_integrator", "coarse_to_fine_wavelet_integrator"};
 };
-constexpr std::array kPointcloudIntegrator3DTypeStrs = {
-    "single_ray_integrator", "fixed_resolution_integrator",
-    "coarse_to_fine_integrator", "coarse_to_fine_wavelet_integrator"};
-std::string getPointcloudIntegrator3DTypeStr(
-    PointcloudIntegrator3DType intersection_type) {
-  return kPointcloudIntegrator3DTypeStrs[to_underlying(intersection_type)];
-}
 
 class PointcloudIntegrator3DFactory {
  public:

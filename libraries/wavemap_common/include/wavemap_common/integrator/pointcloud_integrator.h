@@ -3,10 +3,10 @@
 
 #include <memory>
 
-#include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/pointcloud.h>
-
+#include "wavemap_common/common.h"
+#include "wavemap_common/data_structure/pointcloud.h"
 #include "wavemap_common/data_structure/volumetric/volumetric_data_structure_base.h"
+#include "wavemap_common/integrator/pointcloud_integrator_config.h"
 
 namespace wavemap {
 template <int dim>

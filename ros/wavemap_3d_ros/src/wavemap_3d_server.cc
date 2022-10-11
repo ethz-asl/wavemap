@@ -28,14 +28,14 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Setup data structure
   const param::Map data_structure_params =
-      param::rosParamsToParamMap(nh_private, "map/data_structure");
+      param::convert::toParamMap(nh_private, "map/data_structure");
   occupancy_map_ = VolumetricDataStructure3DFactory::create(
       data_structure_params, VolumetricDataStructure3DType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
 
   // Setup integrator
   const param::Map integrator_params =
-      param::rosParamsToParamMap(nh_private, "integrator/integration_scheme");
+      param::convert::toParamMap(nh_private, "integrator/integration_method");
   pointcloud_integrator_ = PointcloudIntegrator3DFactory::create(
       integrator_params, occupancy_map_,
       PointcloudIntegrator3DType::kSingleRayIntegrator);

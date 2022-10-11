@@ -1,12 +1,11 @@
 #include "wavemap_common_ros/utils/config_conversions.h"
 
-namespace wavemap::param {
-param::Map rosParamsToParamMap(const ros::NodeHandle& nh,
-                               const std::string& ns) {
+namespace wavemap::param::convert {
+param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;
   nh.getParam(ns, xml_rpc_value);
 
-  return xmlRpcToParamMap(xml_rpc_value);
+  return toParamMap(xml_rpc_value);
 }
 
 param::Array rosParamsToParamArray(const ros::NodeHandle& nh,
@@ -14,10 +13,10 @@ param::Array rosParamsToParamArray(const ros::NodeHandle& nh,
   XmlRpc::XmlRpcValue xml_rpc_value;
   nh.getParam(ns, xml_rpc_value);
 
-  return xmlRpcToParamArray(xml_rpc_value);
+  return toParamArray(xml_rpc_value);
 }
 
-param::Map xmlRpcToParamMap(  // NOLINT
+param::Map toParamMap(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
     LOG(WARNING) << "Expected param map.";
@@ -26,12 +25,12 @@ param::Map xmlRpcToParamMap(  // NOLINT
 
   param::Map param_map;
   for (const auto& kv : xml_rpc_value) {
-    param_map.emplace(kv.first, xmlRpcToParamValue(kv.second));
+    param_map.emplace(kv.first, toParamValue(kv.second));
   }
   return param_map;
 }
 
-param::Array xmlRpcToParamArray(  // NOLINT
+param::Array toParamArray(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeArray) {
     LOG(WARNING) << "Expected param array.";
@@ -41,12 +40,12 @@ param::Array xmlRpcToParamArray(  // NOLINT
   param::Array array;
   array.reserve(xml_rpc_value.size());
   for (int idx = 0; idx < xml_rpc_value.size(); ++idx) {  // NOLINT
-    array.template emplace_back(xmlRpcToParamValue(xml_rpc_value[idx]));
+    array.template emplace_back(toParamValue(xml_rpc_value[idx]));
   }
   return array;
 }
 
-param::Value xmlRpcToParamValue(  // NOLINT
+param::Value toParamValue(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   switch (xml_rpc_value.getType()) {
     case XmlRpc::XmlRpcValue::TypeBoolean:
@@ -58,9 +57,9 @@ param::Value xmlRpcToParamValue(  // NOLINT
     case XmlRpc::XmlRpcValue::TypeString:
       return param::Value(static_cast<std::string>(xml_rpc_value));
     case XmlRpc::XmlRpcValue::TypeArray:
-      return param::Value(xmlRpcToParamArray(xml_rpc_value));
+      return param::Value(toParamArray(xml_rpc_value));
     case XmlRpc::XmlRpcValue::TypeStruct:
-      return param::Value(xmlRpcToParamMap(xml_rpc_value));
+      return param::Value(toParamMap(xml_rpc_value));
     case XmlRpc::XmlRpcValue::TypeInvalid:
       ROS_ERROR("Encountered invalid type while parsing ROS params.");
       break;
@@ -82,4 +81,4 @@ param::Value xmlRpcToParamValue(  // NOLINT
   // On error, return an empty array
   return param::Value(param::Array{});
 }
-}  // namespace wavemap::param
+}  // namespace wavemap::param::convert

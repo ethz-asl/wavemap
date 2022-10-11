@@ -33,7 +33,9 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 # Libraries
-add_library(${PROJECT_NAME} src/utils/eigen_format.cc)
+add_library(${PROJECT_NAME}
+    src/data_structure/volumetric/volumetric_data_structure_config.cc
+    src/utils/eigen_format.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 # Tests
