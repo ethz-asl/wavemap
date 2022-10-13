@@ -12,9 +12,7 @@ namespace wavemap {
 template <int dim>
 class RayIntegrator : public PointcloudIntegrator<dim> {
  public:
-  explicit RayIntegrator(
-      typename VolumetricDataStructureBase<dim>::Ptr occupancy_map)
-      : Base(std::move(occupancy_map)) {}
+  using PointcloudIntegrator<dim>::PointcloudIntegrator;
 
   void integratePointcloud(
       const PosedPointcloud<Point<dim>>& pointcloud) override {
@@ -32,9 +30,10 @@ class RayIntegrator : public PointcloudIntegrator<dim> {
         continue;
       }
 
-      const Ray ray(measurement_model.getStartPoint(),
-                    measurement_model.getEndPointOrMaxRange(),
-                    Base::occupancy_map_->getMinCellWidth());
+      const Ray ray(
+          measurement_model.getStartPoint(),
+          measurement_model.getEndPointOrMaxRange(Base::config_.max_range),
+          Base::occupancy_map_->getMinCellWidth());
       for (const auto& index : ray) {
         const FloatingPoint update = measurement_model.computeUpdate(index);
         Base::occupancy_map_->addToCellValue(index, update);

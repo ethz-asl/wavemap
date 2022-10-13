@@ -120,7 +120,7 @@ inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
   // NOTE: The min distance is 0 if the cell contains the sensor's center.
   const FloatingPoint d_C_cell_closest =
       W_cell_aabb.minDistanceTo(T_W_C.getPosition());
-  if (ContinuousVolumetricLogOdds<2>::kRangeMax < d_C_cell_closest) {
+  if (max_range_ < d_C_cell_closest) {
     return IntersectionType::kFullyUnknown;
   }
   const FloatingPoint d_C_cell_furthest =
@@ -132,8 +132,8 @@ inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
 
   // Pad the min and max angles with the BeamModel's angle threshold to
   // account for the beam's non-zero width (angular uncertainty)
-  min_angle -= ContinuousVolumetricLogOdds<2>::kAngleThresh;
-  max_angle += ContinuousVolumetricLogOdds<2>::kAngleThresh;
+  min_angle -= angle_threshold_;
+  max_angle += angle_threshold_;
 
   // If the angle wraps around Pi, we can't use the hierarchical range image
   if (const bool angle_range_wraps_pi = max_angle < min_angle;
@@ -166,13 +166,10 @@ inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
   // bounds of the hierarchical range image
   const Bounds distance_bounds =
       hierarchical_range_image_.getRangeBounds(min_image_idx, max_image_idx);
-  if (distance_bounds.upper +
-          ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh <
-      d_C_cell_closest) {
+  if (distance_bounds.upper + range_delta_threshold_ < d_C_cell_closest) {
     return IntersectionType::kFullyUnknown;
   } else if (d_C_cell_furthest <
-             distance_bounds.lower -
-                 ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh) {
+             distance_bounds.lower - range_delta_threshold_) {
     return IntersectionType::kFreeOrUnknown;
   } else {
     return IntersectionType::kPossiblyOccupied;

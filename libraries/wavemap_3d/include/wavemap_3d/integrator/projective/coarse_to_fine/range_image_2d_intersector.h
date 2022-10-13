@@ -31,8 +31,14 @@ class RangeImage2DIntersector {
   };
   using Cache = std::optional<SphericalMinMaxCornerIndices>;
 
-  explicit RangeImage2DIntersector(std::shared_ptr<RangeImage2D> range_image)
-      : hierarchical_range_image_(std::move(range_image)) {}
+  RangeImage2DIntersector(std::shared_ptr<RangeImage2D> range_image,
+                          FloatingPoint max_range,
+                          FloatingPoint angle_threshold,
+                          FloatingPoint range_delta_threshold)
+      : hierarchical_range_image_(std::move(range_image)),
+        max_range_(max_range),
+        angle_threshold_(angle_threshold),
+        range_delta_threshold_(range_delta_threshold) {}
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
   //       around at +-PI and a min_angle >= max_angle will be returned.
@@ -52,6 +58,10 @@ class RangeImage2DIntersector {
   static constexpr bool kAzimuthAllowedToWrapAround = true;
   const HierarchicalRangeBounds2D<kAzimuthAllowedToWrapAround>
       hierarchical_range_image_;
+
+  const FloatingPoint max_range_;
+  const FloatingPoint angle_threshold_;
+  const FloatingPoint range_delta_threshold_;
 };
 }  // namespace wavemap
 

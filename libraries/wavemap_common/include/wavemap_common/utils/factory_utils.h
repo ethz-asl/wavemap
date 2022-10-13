@@ -4,7 +4,7 @@
 #include <string>
 
 namespace wavemap {
-template <typename DerivedNamedTypeSetT>
+template <typename DerivedTypeSelectorT>
 struct TypeSelector {
   using TypeId = int;
   using TypeName = std::string;
@@ -20,27 +20,45 @@ struct TypeSelector {
     }
   }
 
+  ~TypeSelector() {
+    // Force the derived config classes to specify:
+    // - an enum with Ids
+    // - an array of names
+    // NOTE: These static assert have to be placed in a method that's guaranteed
+    //       to be evaluated by the compiler, making the dtor is a good option.
+    static_assert(std::is_enum_v<typename DerivedTypeSelectorT::Id>,
+                  "Derived TypeSelector type must define an enum called Id.");
+    static_assert(
+        std::is_convertible_v<decltype(DerivedTypeSelectorT::names[0]),
+                              std::string>,
+        "Derived TypeSelector type must define an array called names whose "
+        "members are convertible to std::strings.");
+  }
+
   // Conversions to the underlying type's name or ID
   explicit operator TypeName() const { return typeIdToStr(id_); }
   explicit operator TypeId() const { return id_; }
   TypeName toStr() const { return typeIdToStr(id_); }
   TypeId toTypeId() const { return id_; }
 
+  // Comparison operator for convenience
+  bool operator==(TypeId rhs) { return id_ == rhs; }
+
   // Method to check if the type ID is currently valid
   bool isValid() const { return isValidTypeId(id_); }
 
   // Static methods for convenience
   static TypeName typeIdToStr(TypeId intersection_type) {
-    return DerivedNamedTypeSetT::names[static_cast<TypeId>(intersection_type)];
+    return DerivedTypeSelectorT::names[static_cast<TypeId>(intersection_type)];
   }
   static TypeId strToTypeId(const std::string& name);
   static bool isValidTypeId(TypeId type_id) {
     return 0 <= type_id &&
-           static_cast<size_t>(type_id) < DerivedNamedTypeSetT::names.size();
+           static_cast<size_t>(type_id) < DerivedTypeSelectorT::names.size();
   }
 
   // Convenience method to read the type from a param map
-  static DerivedNamedTypeSetT fromParamMap(const param::Map& params,
+  static DerivedTypeSelectorT fromParamMap(const param::Map& params,
                                            std::string& error_msg);
 
  private:

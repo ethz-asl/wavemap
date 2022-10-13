@@ -14,6 +14,9 @@ class CoarseToFineIntegrator2D : public ScanwiseIntegrator2D {
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
   explicit CoarseToFineIntegrator2D(
+      const PointcloudIntegratorConfig& config,
+      CircularProjector projection_model,
+      ContinuousVolumetricLogOdds<2> measurement_model,
       VolumetricDataStructure2D::Ptr occupancy_map);
 
   void integratePointcloud(const PosedPointcloud<Point2D>& pointcloud) override;
@@ -22,17 +25,18 @@ class CoarseToFineIntegrator2D : public ScanwiseIntegrator2D {
   VolumetricQuadtreeInterface* volumetric_quadtree_;
 
   const FloatingPoint min_cell_width_;
-  std::shared_ptr<PosedRangeImage1D> posed_range_image_;
+  std::shared_ptr<RangeImage1DIntersector> range_image_intersector_;
 
-  static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
-      ContinuousVolumetricLogOdds<2>::kScalingFree * 572.957795130823f;
-  static constexpr FloatingPoint kMaxGradientOnBoundary =
-      ContinuousVolumetricLogOdds<2>::kScalingOccupied * 14.9999999999997f;
+  // TODO(victorr): Auto update these based on the projection model config
+  const FloatingPoint max_gradient_over_range_fully_inside_ =
+      measurement_model_.getConfig().scaling_free * 572.957795130823f;
+  const FloatingPoint max_gradient_on_boundary_ =
+      measurement_model_.getConfig().scaling_occupied * 14.9999999999997f;
   static constexpr FloatingPoint kUnitSquareHalfDiagonal = 1.41421356237f / 2.f;
 
-  static bool isApproximationErrorAcceptable(
+  bool isApproximationErrorAcceptable(
       IntersectionType intersection_type, FloatingPoint sphere_center_distance,
-      FloatingPoint bounding_sphere_radius);
+      FloatingPoint bounding_sphere_radius) const;
 };
 }  // namespace wavemap
 

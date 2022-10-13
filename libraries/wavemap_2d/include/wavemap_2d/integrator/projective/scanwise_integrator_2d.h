@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_2D_INTEGRATOR_PROJECTIVE_SCANWISE_INTEGRATOR_2D_H_
 #define WAVEMAP_2D_INTEGRATOR_PROJECTIVE_SCANWISE_INTEGRATOR_2D_H_
 
+#include <memory>
 #include <utility>
 
 #include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
@@ -13,10 +14,16 @@
 namespace wavemap {
 class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
  public:
-  explicit ScanwiseIntegrator2D(VolumetricDataStructure2D::Ptr occupancy_map)
-      : PointcloudIntegrator2D(std::move(occupancy_map)),
-        circular_projector_(-kHalfPi, kHalfPi, 400) {
-    // TODO(victorr): Make the FoV and number of beams configurable
+  explicit ScanwiseIntegrator2D(
+      const PointcloudIntegratorConfig& config,
+      CircularProjector projection_model,
+      ContinuousVolumetricLogOdds<2> measurement_model,
+      VolumetricDataStructure2D::Ptr occupancy_map)
+      : PointcloudIntegrator2D(config, std::move(occupancy_map)),
+        measurement_model_(std::move(measurement_model)),
+        projection_model_(std::move(projection_model)),
+        posed_range_image_(
+            std::make_shared<PosedRangeImage1D>(projection_model_)) {
     // TODO(victorr): Check that the pointcloud's angular resolution is lower
     //                than the angular uncertainty of the beam model. This is
     //                necessary since this measurement integrator assumes the
@@ -25,35 +32,35 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
   }
 
  protected:
-  const CircularProjector circular_projector_;
+  const ContinuousVolumetricLogOdds<2> measurement_model_;
+  const CircularProjector projection_model_;
+  std::shared_ptr<PosedRangeImage1D> posed_range_image_;
 
-  FloatingPoint computeUpdate(const RangeImage1D& range_image,
-                              FloatingPoint d_C_cell,
+  FloatingPoint computeUpdate(FloatingPoint d_C_cell,
                               FloatingPoint azimuth_angle_C_cell) {
-    if (d_C_cell < kEpsilon ||
-        ContinuousVolumetricLogOdds<2>::kRangeMax < d_C_cell) {
+    if (d_C_cell < kEpsilon || config_.max_range < d_C_cell) {
       return 0.f;
     }
 
     FloatingPoint angle_remainder;
-    const IndexElement idx = circular_projector_.angleToNearestIndex(
+    const IndexElement idx = projection_model_.angleToNearestIndex(
         azimuth_angle_C_cell, angle_remainder);
-    if (idx < 0 || range_image.getNumBeams() <= idx) {
+    if (idx < 0 || posed_range_image_->getNumBeams() <= idx) {
       return 0.f;
     }
-    const FloatingPoint measured_distance = range_image[idx];
-    if (measured_distance + ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh <
+    const FloatingPoint measured_distance = posed_range_image_->operator[](idx);
+    if (measured_distance + measurement_model_.getRangeDeltaThreshold() <
         d_C_cell) {
       return 0.f;
     }
 
     const FloatingPoint cell_to_beam_angle = std::abs(angle_remainder);
-    if (ContinuousVolumetricLogOdds<2>::kAngleThresh < cell_to_beam_angle) {
+    if (measurement_model_.getAngleThreshold() < cell_to_beam_angle) {
       return 0.f;
     }
 
-    return ContinuousVolumetricLogOdds<2>::computeUpdate(
-        d_C_cell, cell_to_beam_angle, measured_distance);
+    return measurement_model_.computeUpdate(d_C_cell, cell_to_beam_angle,
+                                            measured_distance);
   }
 };
 }  // namespace wavemap

@@ -6,14 +6,14 @@
 namespace wavemap {
 inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(
     IntersectionType intersection_type, FloatingPoint sphere_center_distance,
-    FloatingPoint bounding_sphere_radius) {
+    FloatingPoint bounding_sphere_radius) const {
   switch (intersection_type) {
     case IntersectionType::kFreeOrUnknown:
       return bounding_sphere_radius / sphere_center_distance <
-             kMaxAcceptableUpdateError / kMaxGradientOverRangeFullyInside;
+             kMaxAcceptableUpdateError / max_gradient_over_range_fully_inside_;
     case IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
-             kMaxAcceptableUpdateError / kMaxGradientOnBoundary;
+             kMaxAcceptableUpdateError / max_gradient_on_boundary_;
     default:
       return true;
   }
@@ -32,8 +32,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     const FloatingPoint d_C_cell = C_node_center.norm();
     const Vector2D spherical_C_cell =
         SphericalProjector::bearingToSpherical(C_node_center);
-    const FloatingPoint sample =
-        computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
+    const FloatingPoint sample = computeUpdate(d_C_cell, spherical_C_cell);
     return std::clamp(sample + node_value,
                       SaturatingOccupancyCell::kLowerBound - 2e-3f,
                       SaturatingOccupancyCell::kUpperBound + 2e-3f) -
@@ -44,8 +43,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb, spherical_projector_,
-          cache);
+          posed_range_image_->getPose(), W_cell_aabb, projection_model_, cache);
   if (intersection_type == IntersectionType::kFullyUnknown ||
       (intersection_type == IntersectionType::kFreeOrUnknown &&
        node_value < SaturatingOccupancyCell::kLowerBound + 1e-3f)) {
@@ -67,8 +65,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
                                      bounding_sphere_radius)) {
     const Vector2D spherical_C_cell =
         SphericalProjector::bearingToSpherical(C_node_center);
-    const FloatingPoint sample =
-        computeUpdate(*posed_range_image_, d_C_cell, spherical_C_cell);
+    const FloatingPoint sample = computeUpdate(d_C_cell, spherical_C_cell);
     if (!node || !node->hasAtLeastOneChild()) {
       return std::clamp(sample + node_value,
                         SaturatingOccupancyCell::kLowerBound - 2e-3f,

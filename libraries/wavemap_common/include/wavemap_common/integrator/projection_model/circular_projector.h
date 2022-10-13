@@ -2,25 +2,26 @@
 #define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_CIRCULAR_PROJECTOR_H_
 
 #include "wavemap_common/common.h"
+#include "wavemap_common/utils/config_utils.h"
 
 namespace wavemap {
+struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig> {
+  FloatingPoint min_angle;
+  FloatingPoint max_angle;
+  IndexElement num_cells;
+
+  bool isValid(bool verbose) const override;
+  static CircularProjectorConfig from(const param::Map& params);
+};
+
 class CircularProjector {
  public:
-  CircularProjector(FloatingPoint min_angle, FloatingPoint max_angle,
-                    IndexElement num_cells)
-      : min_angle_(min_angle),
-        max_angle_(max_angle),
-        num_cells_(num_cells),
-        angle_increment_((max_angle_ - min_angle_) /
-                         static_cast<FloatingPoint>(num_cells - 1)),
-        angle_increment_inv_(1.f / angle_increment_) {
-    CHECK_LT(min_angle_, max_angle_);
-    CHECK_GT(num_cells_, 1);
-  }
+  explicit CircularProjector(const CircularProjectorConfig& config)
+      : config_(config.checkValid()) {}
 
-  FloatingPoint getMinAngle() const { return min_angle_; }
-  FloatingPoint getMaxAngle() const { return max_angle_; }
-  IndexElement getNumCells() const { return num_cells_; }
+  FloatingPoint getMinAngle() const { return config_.min_angle; }
+  FloatingPoint getMaxAngle() const { return config_.max_angle; }
+  IndexElement getNumCells() const { return config_.num_cells; }
 
   static FloatingPoint bearingToAngle(const Vector2D& bearing) {
     return std::atan2(bearing.y(), bearing.x());
@@ -46,7 +47,8 @@ class CircularProjector {
     return static_cast<IndexElement>(std::ceil(angleToScaledAngle(angle)));
   }
   FloatingPoint indexToAngle(IndexElement index) const {
-    return min_angle_ + static_cast<FloatingPoint>(index) * angle_increment_;
+    return config_.min_angle +
+           static_cast<FloatingPoint>(index) * angle_increment_;
   }
 
   IndexElement bearingToNearestIndex(const Vector2D& bearing) const {
@@ -60,14 +62,15 @@ class CircularProjector {
   }
 
  private:
-  const FloatingPoint min_angle_;
-  const FloatingPoint max_angle_;
-  const IndexElement num_cells_;
+  const CircularProjectorConfig config_;
 
-  const FloatingPoint angle_increment_;
-  const FloatingPoint angle_increment_inv_;
+  const FloatingPoint angle_increment_ =
+      (config_.max_angle - config_.min_angle) /
+      static_cast<FloatingPoint>(config_.num_cells - 1);
+  const FloatingPoint angle_increment_inv_ = 1.f / angle_increment_;
+
   FloatingPoint angleToScaledAngle(FloatingPoint angle) const {
-    return (angle - min_angle_) * angle_increment_inv_;
+    return (angle - config_.min_angle) * angle_increment_inv_;
   }
 };
 }  // namespace wavemap

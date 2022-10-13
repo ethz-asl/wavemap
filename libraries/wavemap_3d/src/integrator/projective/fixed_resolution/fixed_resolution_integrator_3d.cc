@@ -10,8 +10,7 @@ void FixedResolutionIntegrator3D::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  const auto [range_image, aabb] =
-      computeRangeImageAndAABB(pointcloud, spherical_projector_);
+  const auto aabb = computeRangeImageAndAABB(pointcloud, projection_model_);
 
   // Compute the min and max map indices that could be affected by the cloud
   const FloatingPoint min_cell_width = occupancy_map_->getMinCellWidth();
@@ -30,19 +29,17 @@ void FixedResolutionIntegrator3D::integratePointcloud(
     const FloatingPoint d_C_cell = C_cell_center.norm();
     const Vector2D spherical_C_cell =
         SphericalProjector::bearingToSpherical(C_cell_center);
-    const FloatingPoint update =
-        computeUpdate(range_image, d_C_cell, spherical_C_cell);
+    const FloatingPoint update = computeUpdate(d_C_cell, spherical_C_cell);
     if (kEpsilon < std::abs(update)) {
       occupancy_map_->addToCellValue(index, update);
     }
   }
 }
 
-std::pair<RangeImage2D, AABB<Point3D>>
-FixedResolutionIntegrator3D::computeRangeImageAndAABB(
+AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
     const PosedPointcloud<Point3D>& pointcloud,
     const SphericalProjector& spherical_projector) {
-  RangeImage2D range_image(spherical_projector);
+  posed_range_image_->resetToInitialValue();
   AABB<Point3D> aabb;
 
   for (const auto& C_point : pointcloud.getPointsLocal()) {
@@ -65,31 +62,31 @@ FixedResolutionIntegrator3D::computeRangeImageAndAABB(
     const Index2D range_image_index =
         spherical_projector.bearingToNearestIndex(C_point);
     if ((range_image_index.array() < 0).any() ||
-        (range_image.getDimensions().array() <= range_image_index.array())
+        (posed_range_image_->getDimensions().array() <=
+         range_image_index.array())
             .any()) {
       // Prevent out-of-bounds access
       continue;
     }
-    range_image[range_image_index] = range;
+    posed_range_image_->operator[](range_image_index) = range;
 
     // Update the AABB (in world frame)
     Point3D C_point_truncated = C_point;
-    if (ContinuousVolumetricLogOdds<3>::kRangeMax < range) {
-      C_point_truncated *= ContinuousVolumetricLogOdds<3>::kRangeMax / range;
+    if (config_.max_range < range) {
+      C_point_truncated *= config_.max_range / range;
     }
     const Point3D W_point_truncated = pointcloud.getPose() * C_point_truncated;
     aabb.includePoint(W_point_truncated);
   }
 
   // Pad the aabb to account for the beam uncertainties
-  const FloatingPoint max_lateral_component =
-      std::max(std::sin(ContinuousVolumetricLogOdds<3>::kAngleThresh) *
-                   (ContinuousVolumetricLogOdds<3>::kRangeMax +
-                    ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh),
-               ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh);
+  const FloatingPoint max_lateral_component = std::max(
+      std::sin(measurement_model_.getAngleThreshold()) *
+          (config_.max_range + measurement_model_.getRangeDeltaThreshold()),
+      measurement_model_.getRangeDeltaThreshold());
   aabb.min -= Vector3D::Constant(max_lateral_component);
   aabb.max += Vector3D::Constant(max_lateral_component);
 
-  return {range_image, aabb};
+  return aabb;
 }
 }  // namespace wavemap

@@ -168,7 +168,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   // NOTE: The min distance is 0 if the cell contains the sensor's center.
   const FloatingPoint d_C_cell_closest =
       W_cell_aabb.minDistanceTo(T_W_C.getPosition());
-  if (ContinuousVolumetricLogOdds<3>::kRangeMax < d_C_cell_closest) {
+  if (max_range_ < d_C_cell_closest) {
     return IntersectionType::kFullyUnknown;
   }
 
@@ -179,10 +179,8 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Pad the min and max angles with the BeamModel's angle threshold to
   // account for the beam's non-zero width (angular uncertainty)
-  min_spherical_coordinates -=
-      Vector2D::Constant(ContinuousVolumetricLogOdds<3>::kAngleThresh);
-  max_spherical_coordinates +=
-      Vector2D::Constant(ContinuousVolumetricLogOdds<3>::kAngleThresh);
+  min_spherical_coordinates -= Vector2D::Constant(angle_threshold_);
+  max_spherical_coordinates += Vector2D::Constant(angle_threshold_);
 
   // If the angle wraps around Pi, we can't use the hierarchical range image
   const bool elevation_range_wraps_pi =
@@ -233,10 +231,8 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   // bounds of the hierarchical range image
   const FloatingPoint d_C_cell_furthest =
       W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
-  const FloatingPoint range_min =
-      d_C_cell_closest - ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh;
-  const FloatingPoint range_max =
-      d_C_cell_furthest + ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh;
+  const FloatingPoint range_min = d_C_cell_closest - range_delta_threshold_;
+  const FloatingPoint range_max = d_C_cell_furthest + range_delta_threshold_;
   return hierarchical_range_image_.getIntersectionType(
       min_image_idx, max_image_idx, range_min, range_max);
 }

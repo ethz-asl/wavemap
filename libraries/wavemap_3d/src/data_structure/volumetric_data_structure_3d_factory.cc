@@ -31,7 +31,7 @@ VolumetricDataStructure3D::Ptr VolumetricDataStructure3DFactory::create(
 VolumetricDataStructure3D::Ptr VolumetricDataStructure3DFactory::create(
     VolumetricDataStructure3DType data_structure_type,
     const param::Map& params) {
-  const auto config = VolumetricDataStructureConfig::fromParams(params);
+  const auto config = VolumetricDataStructureConfig::from(params);
   switch (data_structure_type.toTypeId()) {
     case VolumetricDataStructure3DType::kHashedBlocks:
       return std::make_shared<HashedBlocks3D<SaturatingOccupancyCell>>(config);

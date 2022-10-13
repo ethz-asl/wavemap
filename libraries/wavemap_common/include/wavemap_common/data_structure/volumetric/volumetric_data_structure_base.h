@@ -6,18 +6,27 @@
 #include <string>
 
 #include "wavemap_common/common.h"
-#include "wavemap_common/data_structure/volumetric/volumetric_data_structure_config.h"
 #include "wavemap_common/indexing/ndtree_index.h"
+#include "wavemap_common/utils/config_utils.h"
 
 namespace wavemap {
+struct VolumetricDataStructureConfig
+    : ConfigBase<VolumetricDataStructureConfig> {
+  FloatingPoint min_cell_width = 0.1f;
+
+  bool isValid(bool verbose) const override;
+  static VolumetricDataStructureConfig from(const param::Map& params);
+};
+
 template <int dim>
 class VolumetricDataStructureBase {
  public:
   static constexpr int kDim = dim;
   using Ptr = std::shared_ptr<VolumetricDataStructureBase>;
 
-  explicit VolumetricDataStructureBase(VolumetricDataStructureConfig config)
-      : config_(config) {}
+  explicit VolumetricDataStructureBase(
+      const VolumetricDataStructureConfig& config)
+      : config_(config.checkValid()) {}
   virtual ~VolumetricDataStructureBase() = default;
 
   virtual bool empty() const = 0;

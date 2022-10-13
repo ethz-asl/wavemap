@@ -10,37 +10,30 @@
 
 namespace wavemap {
 VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
-    const std::string& data_structure_type_name, const param::Map& params,
+    const param::Map& params,
     std::optional<VolumetricDataStructure2DType> default_data_structure_type) {
-  for (size_t type_idx = 0;
-       type_idx < kVolumetricDataStructure2DTypeStrs.size(); ++type_idx) {
-    if (data_structure_type_name ==
-        kVolumetricDataStructure2DTypeStrs[type_idx]) {
-      return create(static_cast<VolumetricDataStructure2DType>(type_idx),
-                    params);
-    }
+  std::string error_msg;
+  auto type = VolumetricDataStructure2DType::fromParamMap(params, error_msg);
+  if (type.isValid()) {
+    return create(type, params);
   }
 
   if (default_data_structure_type.has_value()) {
-    LOG(WARNING) << "Requested creation of unknown data structure type \""
-                 << data_structure_type_name << "\". Default type \""
-                 << getVolumetricDataStructure2DTypeStr(
-                        default_data_structure_type.value())
+    type = default_data_structure_type.value();
+    LOG(WARNING) << error_msg << " Default type \"" << type.toStr()
                  << "\" will be created instead.";
     return create(default_data_structure_type.value(), params);
-  } else {
-    LOG(ERROR) << "Requested creation of unknown data structure type \""
-               << data_structure_type_name
-               << "\" and no default was set. Returning nullptr.";
   }
+
+  LOG(ERROR) << error_msg << "No default was set. Returning nullptr.";
   return nullptr;
 }
 
 VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
     VolumetricDataStructure2DType data_structure_type,
     const param::Map& params) {
-  const auto config = VolumetricDataStructure2D::Config::fromParams(params);
-  switch (data_structure_type) {
+  const auto config = VolumetricDataStructureConfig::from(params);
+  switch (data_structure_type.toTypeId()) {
     case VolumetricDataStructure2DType::kDenseGrid:
       return std::make_shared<DenseGrid<SaturatingOccupancyCell>>(config);
     case VolumetricDataStructure2DType::kHashedBlocks:
@@ -55,8 +48,7 @@ VolumetricDataStructure2D::Ptr VolumetricDataStructure2DFactory::create(
       return std::make_shared<WaveletQuadtree<SaturatingOccupancyCell>>(config);
     default:
       LOG(ERROR) << "Attempted to create unknown data structure type: "
-                 << to_underlying(data_structure_type)
-                 << ". Returning nullptr.";
+                 << data_structure_type.toTypeId() << ". Returning nullptr.";
       return nullptr;
   }
 }

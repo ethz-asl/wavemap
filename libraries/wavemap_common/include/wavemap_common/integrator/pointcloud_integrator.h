@@ -6,24 +6,36 @@
 #include "wavemap_common/common.h"
 #include "wavemap_common/data_structure/pointcloud.h"
 #include "wavemap_common/data_structure/volumetric/volumetric_data_structure_base.h"
-#include "wavemap_common/integrator/pointcloud_integrator_config.h"
+#include "wavemap_common/utils/config_utils.h"
 
 namespace wavemap {
+struct PointcloudIntegratorConfig : ConfigBase<PointcloudIntegratorConfig> {
+  FloatingPoint min_range = 0.5f;
+  FloatingPoint max_range = 20.f;
+
+  bool isValid(bool verbose) const override;
+  static PointcloudIntegratorConfig from(const param::Map& params);
+};
+
 template <int dim>
 class PointcloudIntegrator {
  public:
   using Ptr = std::shared_ptr<PointcloudIntegrator>;
 
   PointcloudIntegrator() = delete;
-  explicit PointcloudIntegrator(
+  PointcloudIntegrator(
+      const PointcloudIntegratorConfig& config,
       typename VolumetricDataStructureBase<dim>::Ptr occupancy_map)
-      : occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}
+      : config_(config.checkValid()),
+        occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}
   virtual ~PointcloudIntegrator() = default;
 
   virtual void integratePointcloud(
       const PosedPointcloud<Point<dim>>& pointcloud) = 0;
 
  protected:
+  const PointcloudIntegratorConfig config_;
+
   typename VolumetricDataStructureBase<dim>::Ptr occupancy_map_;
 
   static bool isPointcloudValid(const PosedPointcloud<Point<dim>>& pointcloud) {

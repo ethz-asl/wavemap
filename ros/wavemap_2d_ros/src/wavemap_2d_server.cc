@@ -8,8 +8,8 @@
 #include <wavemap_2d/utils/evaluation_utils.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
+#include <wavemap_common/utils/nameof.h>
 #include <wavemap_common_ros/utils/color.h>
-#include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 
 namespace wavemap {

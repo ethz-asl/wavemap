@@ -15,7 +15,7 @@ class FixedResolutionIntegrator3D : public ScanwiseIntegrator3D {
 
   void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
 
-  static std::pair<RangeImage2D, AABB<Point3D>> computeRangeImageAndAABB(
+  AABB<Point3D> computeRangeImageAndAABB(
       const PosedPointcloud<Point3D>& pointcloud,
       const SphericalProjector& spherical_projector);
 };

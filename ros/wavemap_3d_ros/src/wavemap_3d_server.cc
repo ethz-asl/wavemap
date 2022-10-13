@@ -9,8 +9,8 @@
 #include <wavemap_3d/integrator/pointcloud_integrator_3d_factory.h>
 #include <wavemap_common/data_structure/pointcloud.h>
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap_common/utils/nameof.h>
 #include <wavemap_common_ros/utils/config_conversions.h>
-#include <wavemap_common_ros/utils/nameof.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>
@@ -35,7 +35,7 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Setup integrator
   const param::Map integrator_params =
-      param::convert::toParamMap(nh_private, "integrator/integration_method");
+      param::convert::toParamMap(nh_private, "integrator");
   pointcloud_integrator_ = PointcloudIntegrator3DFactory::create(
       integrator_params, occupancy_map_,
       PointcloudIntegrator3DType::kSingleRayIntegrator);
