@@ -21,11 +21,8 @@
 
 namespace wavemap {
 Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                                 wavemap::Wavemap3DServer::Config config)
-    : config_(std::move(config)) {
-  // Assert that the config is valid
-  CHECK(config_.isValid(true));
-
+                                 const Wavemap3DServer::Config& config)
+    : config_(config.checkValid()) {
   // Setup data structure
   const param::Map data_structure_params =
       param::convert::toParamMap(nh_private, "map/data_structure");
@@ -271,7 +268,7 @@ Wavemap3DServer::Config Wavemap3DServer::Config::fromRosParams(
   return config;
 }
 
-bool Wavemap3DServer::Config::isValid(bool verbose) {
+bool Wavemap3DServer::Config::isValid(bool verbose) const {
   bool all_valid = true;
 
   if (world_frame.empty()) {

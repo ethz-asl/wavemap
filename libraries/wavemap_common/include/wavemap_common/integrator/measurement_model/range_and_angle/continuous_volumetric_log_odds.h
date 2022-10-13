@@ -29,24 +29,36 @@ class ContinuousVolumetricLogOdds {
       const ContinuousVolumetricLogOddsConfig& config)
       : config_(config.checkValid()) {}
 
-  //  Index<dim> getBottomLeftUpdateIndex() const {
-  //    const Point<dim> bottom_left_point = W_start_point_.cwiseMin(
-  //        getEndPointOrMaxRange() -
-  //        Point<dim>::Constant(max_lateral_component_));
-  //    return convert::pointToFloorIndex(bottom_left_point,
-  //    min_cell_width_inv_);
-  //  }
-  //  Index<dim> getTopRightUpdateIndex() const {
-  //    const Point<dim> top_right_point = W_start_point_.cwiseMax(
-  //        getEndPointOrMaxRange() +
-  //        Point<dim>::Constant(max_lateral_component_));
-  //    return convert::pointToCeilIndex(top_right_point, min_cell_width_inv_);
-  //  }
+  Index<dim> getBottomLeftUpdateIndex(const Point<dim>& W_start_point,
+                                      const Point<dim>& W_end_point,
+                                      FloatingPoint measured_distance,
+                                      FloatingPoint min_cell_width_inv) const {
+    const Point<dim> bottom_left_point = W_start_point.cwiseMin(
+        W_end_point -
+        Point<dim>::Constant(getCombinedThreshold(measured_distance)));
+    return convert::pointToFloorIndex(bottom_left_point, min_cell_width_inv);
+  }
+  Index<dim> getTopRightUpdateIndex(const Point<dim>& W_start_point,
+                                    const Point<dim>& W_end_point,
+                                    FloatingPoint measured_distance,
+                                    FloatingPoint min_cell_width_inv) const {
+    const Point<dim> top_right_point = W_start_point.cwiseMax(
+        W_end_point +
+        Point<dim>::Constant(getCombinedThreshold(measured_distance)));
+    return convert::pointToCeilIndex(top_right_point, min_cell_width_inv);
+  }
 
   const ContinuousVolumetricLogOddsConfig& getConfig() const { return config_; }
   FloatingPoint getAngleThreshold() const { return angle_threshold_; }
   FloatingPoint getRangeDeltaThreshold() const {
     return range_delta_threshold_;
+  }
+  FloatingPoint getCombinedThreshold(FloatingPoint measured_distance) const {
+    const FloatingPoint max_lateral_component =
+        std::max(std::sin(angle_threshold_) *
+                     (measured_distance + range_delta_threshold_),
+                 range_delta_threshold_);
+    return max_lateral_component;
   }
 
   FloatingPoint computeUpdate(FloatingPoint cell_to_sensor_distance,
@@ -81,12 +93,6 @@ class ContinuousVolumetricLogOdds {
   //       the assumed 'ground truth' surface thickness is 3 sigma, and the
   //       angular/range uncertainty extends the non-zero regions with another 3
   //       sigma.
-
-  //  // TODO(victorr): Double check this
-  //  FloatingPoint max_lateral_component_ =
-  //      std::max(std::sin(angle_threshold_) *
-  //                   (measured_distance_ + range_delta_threshold_),
-  //               range_delta_threshold_);
 };
 }  // namespace wavemap
 

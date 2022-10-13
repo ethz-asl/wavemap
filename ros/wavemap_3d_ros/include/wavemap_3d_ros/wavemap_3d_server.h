@@ -34,13 +34,17 @@ class Wavemap3DServer {
     float pointcloud_queue_max_wait_for_tf_s = 1.f;
 
     static Config fromRosParams(ros::NodeHandle nh);
-    bool isValid(bool verbose = true);
+    bool isValid(bool verbose = true) const;
+    const Config& checkValid() const {
+      CHECK(isValid(true));
+      return *this;
+    }
   };
 
   Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
       : Wavemap3DServer(nh, nh_private, Config::fromRosParams(nh_private)) {}
   Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                  Config config);
+                  const Config& config);
 
   void pointcloudCallback(const sensor_msgs::PointCloud2& scan_msg);
 
@@ -51,7 +55,7 @@ class Wavemap3DServer {
  private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
-  Config config_;
+  const Config config_;
 
   VolumetricDataStructure3D::Ptr occupancy_map_;
   PointcloudIntegrator3D::Ptr pointcloud_integrator_;

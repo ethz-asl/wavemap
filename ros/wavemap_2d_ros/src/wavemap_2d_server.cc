@@ -10,23 +10,25 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_state.h>
 #include <wavemap_common/utils/nameof.h>
 #include <wavemap_common_ros/utils/color.h>
+#include <wavemap_common_ros/utils/config_conversions.h>
 #include <wavemap_common_ros/utils/visualization_utils.h>
 
 namespace wavemap {
 Wavemap2DServer::Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                                 Wavemap2DServer::Config config)
-    : config_(std::move(config)) {
-  // Assert that the config is valid
-  CHECK(config_.isValid(true));
-
-  // Setup data structure and integrator
+                                 const Wavemap2DServer::Config& config)
+    : config_(config.checkValid()) {
+  // Setup data structure
+  const param::Map data_structure_params =
+      param::convert::toParamMap(nh_private, "map/data_structure");
   occupancy_map_ = VolumetricDataStructure2DFactory::create(
-      config_.data_structure_type, config_.min_cell_width,
-      VolumetricDataStructure2DType::kWaveletQuadtree);
+      data_structure_params, VolumetricDataStructure2DType::kWaveletQuadtree);
   CHECK_NOTNULL(occupancy_map_);
 
+  // Setup integrator
+  const param::Map integrator_params =
+      param::convert::toParamMap(nh_private, "integrator");
   pointcloud_integrator_ = PointcloudIntegrator2DFactory::create(
-      config_.measurement_model_type, occupancy_map_,
+      integrator_params, occupancy_map_,
       PointcloudIntegrator2DType::kWaveletScanIntegrator);
   CHECK_NOTNULL(pointcloud_integrator_);
 
@@ -79,9 +81,10 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
 
   // TODO(victorr): Make it possible to load maps without knowing the resolution
   //                on beforehand (e.g. through a static method)
-  const FloatingPoint kGroundTruthMapResolution = 1e-2f;
+  VolumetricDataStructureConfig gt_data_structure_config;
+  gt_data_structure_config.min_cell_width = 1e-2f;
   using GTDataStructureType = DenseGrid<UnboundedScalarCell>;
-  GTDataStructureType ground_truth_map(kGroundTruthMapResolution);
+  GTDataStructureType ground_truth_map(gt_data_structure_config);
   if (!ground_truth_map.load(file_path, true)) {
     ROS_WARN("Could not load the ground truth map.");
     return false;
@@ -111,7 +114,7 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   evaluation_config.predicted.cell_selector = {
       utils::CellSelector::Categories::kAnyObserved};
 
-  GTDataStructureType error_grid(occupancy_map_->getMinCellWidth());
+  GTDataStructureType error_grid(gt_data_structure_config);
   utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
       ground_truth_map, *occupancy_map_, evaluation_config, &error_grid);
 
@@ -173,13 +176,13 @@ void Wavemap2DServer::processPointcloudQueue() {
                                       scan_msg.header.frame_id,
                                       scan_msg.header.stamp, T_W_C)) {
       if ((pointcloud_queue_.back().header.stamp - scan_msg.header.stamp)
-              .toSec() < config_.pointcloud_queue_max_wait_for_transform_s) {
+              .toSec() < config_.pointcloud_queue_max_wait_for_tf_s) {
         // Try to get this pointcloud's pose again at the next iteration
         return;
       } else {
         ROS_WARN_STREAM(
             "Waited "
-            << config_.pointcloud_queue_max_wait_for_transform_s
+            << config_.pointcloud_queue_max_wait_for_tf_s
             << "s but still could not look up pose for pointcloud with frame \""
             << scan_msg.header.frame_id << "\" in world frame \""
             << config_.world_frame << "\" at timestamp "
@@ -239,7 +242,7 @@ void Wavemap2DServer::processPointcloudQueue() {
 
 void Wavemap2DServer::subscribeToTimers(const ros::NodeHandle& nh) {
   pointcloud_queue_processing_timer_ = nh.createTimer(
-      ros::Duration(config_.pointcloud_queue_processing_period_s),
+      ros::Duration(config_.pointcloud_queue_processing_retry_period_s),
       [this](const auto& /*event*/) { processPointcloudQueue(); });
 
   if (0.f < config_.map_pruning_period_s) {
@@ -336,65 +339,60 @@ Wavemap2DServer::Config Wavemap2DServer::Config::fromRosParams(
     ros::NodeHandle nh) {
   Config config;
 
-  nh.param(NAMEOF(config.min_cell_width), config.min_cell_width,
-           config.min_cell_width);
+  // General
+  nh.param("general/" + NAMEOF(config.world_frame), config.world_frame,
+           config.world_frame);
+  nh.param("general/" + NAMEOF(config.publish_performance_stats),
+           config.publish_performance_stats, config.publish_performance_stats);
+  nh.param(
+      "general/" + NAMEOF(config.pointcloud_queue_processing_retry_period_s),
+      config.pointcloud_queue_processing_retry_period_s,
+      config.pointcloud_queue_processing_retry_period_s);
 
-  nh.param(NAMEOF(config.world_frame), config.world_frame, config.world_frame);
-
-  nh.param(NAMEOF(config.data_structure_type), config.data_structure_type,
-           config.data_structure_type);
-  nh.param(NAMEOF(config.measurement_model_type), config.measurement_model_type,
-           config.measurement_model_type);
-
-  nh.param(NAMEOF(config.pointcloud_topic_name), config.pointcloud_topic_name,
-           config.pointcloud_topic_name);
-  nh.param(NAMEOF(config.pointcloud_topic_queue_length),
-           config.pointcloud_topic_queue_length,
-           config.pointcloud_topic_queue_length);
-
-  nh.param(NAMEOF(config.map_pruning_period_s), config.map_pruning_period_s,
-           config.map_pruning_period_s);
-
-  nh.param(NAMEOF(config.map_visualization_period_s),
+  // Map
+  nh.param("map/" + NAMEOF(config.map_pruning_period_s),
+           config.map_pruning_period_s, config.map_pruning_period_s);
+  nh.param("map/" + NAMEOF(config.map_visualization_period_s),
            config.map_visualization_period_s,
            config.map_visualization_period_s);
-
-  nh.param(NAMEOF(config.map_evaluation_period_s),
-           config.map_evaluation_period_s, config.map_evaluation_period_s);
-  nh.param(NAMEOF(config.map_ground_truth_path), config.map_ground_truth_path,
-           config.map_ground_truth_path);
-
-  nh.param(NAMEOF(config.map_autosave_period_s), config.map_autosave_period_s,
-           config.map_autosave_period_s);
-  nh.param(NAMEOF(config.map_autosave_path), config.map_autosave_path,
+  nh.param("map/" + NAMEOF(config.map_autosave_period_s),
+           config.map_autosave_period_s, config.map_autosave_period_s);
+  nh.param("map/" + NAMEOF(config.map_autosave_path), config.map_autosave_path,
            config.map_autosave_path);
 
-  nh.param(NAMEOF(config.publish_performance_stats),
-           config.publish_performance_stats, config.publish_performance_stats);
+  // Integrator
+  nh.param("integrator/" + NAMEOF(config.pointcloud_topic_name),
+           config.pointcloud_topic_name, config.pointcloud_topic_name);
+  nh.param("integrator/" + NAMEOF(config.pointcloud_topic_queue_length),
+           config.pointcloud_topic_queue_length,
+           config.pointcloud_topic_queue_length);
+  nh.param("integrator/" + NAMEOF(config.pointcloud_queue_max_wait_for_tf_s),
+           config.pointcloud_queue_max_wait_for_tf_s,
+           config.pointcloud_queue_max_wait_for_tf_s);
 
-  nh.param(NAMEOF(config.pointcloud_queue_processing_period_s),
-           config.pointcloud_queue_processing_period_s,
-           config.pointcloud_queue_processing_period_s);
-  nh.param(NAMEOF(config.pointcloud_queue_max_wait_for_transform_s),
-           config.pointcloud_queue_max_wait_for_transform_s,
-           config.pointcloud_queue_max_wait_for_transform_s);
+  // Evaluations
+  nh.param("evaluations/" + NAMEOF(config.map_evaluation_period_s),
+           config.map_evaluation_period_s, config.map_evaluation_period_s);
+  nh.param("evaluations/" + NAMEOF(config.map_ground_truth_path),
+           config.map_ground_truth_path, config.map_ground_truth_path);
 
   return config;
 }
 
-bool Wavemap2DServer::Config::isValid(const bool verbose) {
+bool Wavemap2DServer::Config::isValid(const bool verbose) const {
   bool all_valid = true;
-
-  if (min_cell_width <= 0.f) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(min_cell_width) << " must be a positive float";
-  }
 
   if (world_frame.empty()) {
     all_valid = false;
     LOG_IF(WARNING, verbose)
         << "Param " << NAMEOF(world_frame) << " must be a non-empty string";
+  }
+
+  if (pointcloud_queue_processing_retry_period_s <= 0.f) {
+    all_valid = false;
+    LOG_IF(WARNING, verbose)
+        << "Param " << NAMEOF(pointcloud_queue_processing_retry_period_s)
+        << " must be a positive float";
   }
 
   if (pointcloud_topic_name.empty()) {
@@ -409,17 +407,10 @@ bool Wavemap2DServer::Config::isValid(const bool verbose) {
         << " must be a positive integer";
   }
 
-  if (pointcloud_queue_processing_period_s <= 0.f) {
+  if (pointcloud_queue_max_wait_for_tf_s < 0.f) {
     all_valid = false;
     LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(pointcloud_queue_processing_period_s)
-        << " must be a positive float";
-  }
-
-  if (pointcloud_queue_max_wait_for_transform_s < 0.f) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(pointcloud_queue_max_wait_for_transform_s)
+        << "Param " << NAMEOF(pointcloud_queue_max_wait_for_tf_s)
         << " must be a non-negative float";
   }
 

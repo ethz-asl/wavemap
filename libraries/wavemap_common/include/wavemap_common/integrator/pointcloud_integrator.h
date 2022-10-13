@@ -48,6 +48,34 @@ class PointcloudIntegrator {
 
     return true;
   }
+  static bool isMeasurementValid(const Point<dim>& W_end_point,
+                                 FloatingPoint measured_distance) {
+    if (W_end_point.hasNaN()) {
+      LOG(WARNING) << "Skipping measurement whose endpoint contains NaNs:\n"
+                   << W_end_point;
+      return false;
+    }
+    if (measured_distance < kEpsilon) {
+      return false;
+    }
+    if (1e3 < measured_distance) {
+      LOG(INFO) << "Skipping measurement with suspicious length: "
+                << measured_distance;
+      return false;
+    }
+    return true;
+  }
+  static Point<dim> getEndPointOrMaxRange(const Point<dim>& W_start_point,
+                                          const Point<dim>& W_end_point,
+                                          FloatingPoint measured_distance,
+                                          FloatingPoint max_range) {
+    if (max_range < measured_distance) {
+      return W_start_point +
+             max_range / measured_distance * (W_end_point - W_start_point);
+    } else {
+      return W_end_point;
+    }
+  }
 };
 }  // namespace wavemap
 

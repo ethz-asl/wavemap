@@ -36,10 +36,21 @@ int main(int argc, char** argv) {
       << "The map_min_cell_width flag must be set to a positive number.";
 
   // Set up the mapper
+  VolumetricDataStructureConfig data_structure_config;
+  data_structure_config.min_cell_width = map_min_cell_width;
   VolumetricDataStructure2D::Ptr occupancy_map =
-      std::make_shared<DataStructureType>(
-          DataStructureType::Config{map_min_cell_width});
-  PointcloudIntegratorType pointcloud_integrator(occupancy_map);
+      std::make_shared<DataStructureType>(data_structure_config);
+  PointcloudIntegratorConfig integrator_config;
+  integrator_config.min_range = 0.1f;
+  integrator_config.max_range = 30.f;
+  ContinuousVolumetricLogOddsConfig measurement_model_config;
+  measurement_model_config.angle_sigma = kPi / 400.f / 2.f / 6.f;
+  measurement_model_config.range_sigma = 0.15f / 6.f;
+  measurement_model_config.scaling_free = 0.5f;
+  measurement_model_config.scaling_occupied = 0.5f;
+  ContinuousVolumetricLogOdds<2> measurement_model(measurement_model_config);
+  PointcloudIntegratorType pointcloud_integrator(
+      integrator_config, std::move(measurement_model), occupancy_map);
 
   // Open the log file
   std::ifstream log_file(carmen_log_file_path);

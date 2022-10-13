@@ -44,24 +44,11 @@ PointcloudIntegrator2D::Ptr PointcloudIntegrator2DFactory::create(
   const auto integrator_config = PointcloudIntegratorConfig::from(
       param::map::keyGetValue<param::Map>(params, "integration_method"));
 
-  // If we're using an integrator type that integrates rays one by one,
-  // we're good to go
+  // If we're using a ray-tracing integrator, we're good to go
   if (integrator_type == PointcloudIntegrator2DType::kSingleRayIntegrator) {
     return std::make_shared<RayIntegrator2D>(integrator_config,
                                              std::move(occupancy_map));
   }
-  if (integrator_type == PointcloudIntegrator2DType::kSingleBeamIntegrator) {
-    return std::make_shared<BeamwiseIntegrator2D>(integrator_config,
-                                                  std::move(occupancy_map));
-  }
-
-  // Load the sensor's projection model config
-  if (!param::map::keyHoldsValue<param::Map>(params, "projection_model")) {
-    return nullptr;
-  }
-  const auto projection_model_config = CircularProjectorConfig::from(
-      param::map::keyGetValue<param::Map>(params, "projection_model"));
-  const CircularProjector projection_model(projection_model_config);
 
   // Load the measurement model's config
   if (!param::map::keyHoldsValue<param::Map>(params, "measurement_model")) {
@@ -72,9 +59,22 @@ PointcloudIntegrator2D::Ptr PointcloudIntegrator2DFactory::create(
   const ContinuousVolumetricLogOdds<2> measurement_model(
       measurement_model_config);
 
+  // If we're using the beam-wise integrator, we're good to go
+  if (integrator_type == PointcloudIntegrator2DType::kSingleBeamIntegrator) {
+    return std::make_shared<BeamwiseIntegrator2D>(
+        integrator_config, measurement_model, std::move(occupancy_map));
+  }
+
+  // Load the sensor's projection model config
+  if (!param::map::keyHoldsValue<param::Map>(params, "projection_model")) {
+    return nullptr;
+  }
+  const auto projection_model_config = CircularProjectorConfig::from(
+      param::map::keyGetValue<param::Map>(params, "projection_model"));
+  const CircularProjector projection_model(projection_model_config);
+
   // Assemble the integrator
   switch (integrator_type.toTypeId()) {
-    case PointcloudIntegrator2DType::kSingleRayIntegrator:
     case PointcloudIntegrator2DType::kFixedResolutionScanIntegrator:
       return std::make_shared<FixedResolutionIntegrator2D>(
           integrator_config, projection_model, measurement_model,

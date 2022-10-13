@@ -39,15 +39,19 @@ int main(int argc, char** argv) {
   // Load the estimated map
   const auto estimated_map_min_cell_width =
       static_cast<FloatingPoint>(FLAGS_estimated_map_min_cell_width);
-  auto estimated_map = std::make_shared<DataStructureType>(
-      DataStructureType::Config{estimated_map_min_cell_width});
+  VolumetricDataStructureConfig estimated_map_config;
+  estimated_map_config.min_cell_width = estimated_map_min_cell_width;
+  auto estimated_map =
+      std::make_shared<DataStructureType>(estimated_map_config);
   CHECK(estimated_map->load(FLAGS_estimated_map_file_path,
                             FLAGS_estimated_map_saved_with_floating_precision));
 
   // Load the ground truth map
   const auto ground_truth_map_min_cell_width =
       static_cast<FloatingPoint>(FLAGS_ground_truth_map_min_cell_width);
-  GTDataStructureType ground_truth_map({ground_truth_map_min_cell_width});
+  VolumetricDataStructureConfig ground_truth_map_config;
+  ground_truth_map_config.min_cell_width = ground_truth_map_min_cell_width;
+  GTDataStructureType ground_truth_map(ground_truth_map_config);
   CHECK(ground_truth_map.load(
       FLAGS_ground_truth_map_file_path,
       FLAGS_ground_truth_map_saved_with_floating_precision));
@@ -98,7 +102,7 @@ int main(int argc, char** argv) {
     for (int pass_idx = 1; pass_idx < std::min(max_num_passes, 9); ++pass_idx) {
       // Compress
       DataStructureType reconstructed_map(*estimated_map);
-      GTDataStructureType error_map({estimated_map->getMinCellWidth()});
+      GTDataStructureType error_map(estimated_map_config);
       dwt->forward(reconstructed_map.getData(), pass_idx);
 
       // Truncate
@@ -146,8 +150,7 @@ int main(int argc, char** argv) {
   }
 
   // Evaluate compression in a quadtree
-  VolumetricQuadtree<UnboundedOccupancyCell> quadtree(
-      {estimated_map_min_cell_width});
+  VolumetricQuadtree<UnboundedOccupancyCell> quadtree(estimated_map_config);
   for (const Index2D& index :
        Grid(estimated_map->getMinIndex(), estimated_map->getMaxIndex())) {
     quadtree.setCellValue(index, estimated_map->getCellValue(index));

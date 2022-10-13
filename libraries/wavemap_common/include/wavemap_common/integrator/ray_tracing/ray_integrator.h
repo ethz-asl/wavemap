@@ -20,20 +20,26 @@ class RayIntegrator : public PointcloudIntegrator<dim> {
       return;
     }
 
-    MeasurementModelType measurement_model(
-        Base::occupancy_map_->getMinCellWidth());
-    measurement_model.setStartPoint(pointcloud.getOrigin());
+    const FloatingPoint min_cell_width =
+        Base::occupancy_map_->getMinCellWidth();
+    const Point<dim> W_start_point = pointcloud.getOrigin();
 
-    for (const auto& end_point : pointcloud.getPointsGlobal()) {
-      measurement_model.setEndPoint(end_point);
-      if (!measurement_model.isMeasurementValid()) {
+    MeasurementModelType measurement_model(min_cell_width);
+    measurement_model.setStartPoint(W_start_point);
+
+    for (const auto& W_end_point : pointcloud.getPointsGlobal()) {
+      measurement_model.setEndPoint(W_end_point);
+
+      const FloatingPoint measured_distance =
+          (W_start_point - W_end_point).norm();
+      if (!Base::isMeasurementValid(W_end_point, measured_distance)) {
         continue;
       }
 
-      const Ray ray(
-          measurement_model.getStartPoint(),
-          measurement_model.getEndPointOrMaxRange(Base::config_.max_range),
-          Base::occupancy_map_->getMinCellWidth());
+      const Point<dim> W_end_point_truncated = Base::getEndPointOrMaxRange(
+          W_start_point, W_end_point, measured_distance,
+          Base::config_.max_range);
+      const Ray ray(W_start_point, W_end_point_truncated, measured_distance);
       for (const auto& index : ray) {
         const FloatingPoint update = measurement_model.computeUpdate(index);
         Base::occupancy_map_->addToCellValue(index, update);
