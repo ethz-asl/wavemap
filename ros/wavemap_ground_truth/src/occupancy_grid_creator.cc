@@ -12,9 +12,10 @@ const std::vector<Index2D> OccupancyGridCreator::kNeighborOffsets = {
     {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1},
 };
 
-OccupancyGridCreator::OccupancyGridCreator(FloatingPoint resolution,
-                                           FloatingPoint slice_height)
-    : occupancy_grid_(resolution), slice_height_(slice_height) {}
+OccupancyGridCreator::OccupancyGridCreator(
+    const VolumetricDataStructureConfig& data_structure_config,
+    FloatingPoint slice_height)
+    : occupancy_grid_(data_structure_config), slice_height_(slice_height) {}
 
 void OccupancyGridCreator::integrateTriangle(const Triangle& triangle) {
   const Plane xy_plane{Point3D::UnitZ(), slice_height_};
