@@ -50,14 +50,17 @@ class ContinuousVolumetricLogOdds {
 
   const ContinuousVolumetricLogOddsConfig& getConfig() const { return config_; }
   FloatingPoint getAngleThreshold() const { return angle_threshold_; }
-  FloatingPoint getRangeDeltaThreshold() const {
-    return range_delta_threshold_;
+  FloatingPoint getRangeThresholdInFrontOfSurface() const {
+    return range_threshold_in_front;
+  }
+  FloatingPoint getRangeThresholdBehindSurface() const {
+    return range_threshold_behind_;
   }
   FloatingPoint getCombinedThreshold(FloatingPoint measured_distance) const {
     const FloatingPoint max_lateral_component =
         std::max(std::sin(angle_threshold_) *
-                     (measured_distance + range_delta_threshold_),
-                 range_delta_threshold_);
+                     (measured_distance + range_threshold_behind_),
+                 range_threshold_behind_);
     return max_lateral_component;
   }
 
@@ -88,7 +91,8 @@ class ContinuousVolumetricLogOdds {
   const ContinuousVolumetricLogOddsConfig config_;
 
   const FloatingPoint angle_threshold_ = 6.f * config_.angle_sigma;
-  const FloatingPoint range_delta_threshold_ = 6.f * config_.range_sigma;
+  const FloatingPoint range_threshold_in_front = 3.f * config_.range_sigma;
+  const FloatingPoint range_threshold_behind_ = 6.f * config_.range_sigma;
   // NOTE: The angle and upper range thresholds have a width of 6 sigmas because
   //       the assumed 'ground truth' surface thickness is 3 sigma, and the
   //       angular/range uncertainty extends the non-zero regions with another 3

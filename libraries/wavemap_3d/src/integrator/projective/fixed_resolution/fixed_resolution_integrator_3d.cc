@@ -80,10 +80,11 @@ AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
   }
 
   // Pad the aabb to account for the beam uncertainties
-  const FloatingPoint max_lateral_component = std::max(
-      std::sin(measurement_model_.getAngleThreshold()) *
-          (config_.max_range + measurement_model_.getRangeDeltaThreshold()),
-      measurement_model_.getRangeDeltaThreshold());
+  const FloatingPoint max_lateral_component =
+      std::max(std::sin(measurement_model_.getAngleThreshold()) *
+                   (config_.max_range +
+                    measurement_model_.getRangeThresholdBehindSurface()),
+               measurement_model_.getRangeThresholdBehindSurface());
   aabb.min -= Vector3D::Constant(max_lateral_component);
   aabb.max += Vector3D::Constant(max_lateral_component);
 

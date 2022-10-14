@@ -231,8 +231,8 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   // bounds of the hierarchical range image
   const FloatingPoint d_C_cell_furthest =
       W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
-  const FloatingPoint range_min = d_C_cell_closest - range_delta_threshold_;
-  const FloatingPoint range_max = d_C_cell_furthest + range_delta_threshold_;
+  const FloatingPoint range_min = d_C_cell_closest - range_threshold_behind_;
+  const FloatingPoint range_max = d_C_cell_furthest + range_threshold_in_front_;
   return hierarchical_range_image_.getIntersectionType(
       min_image_idx, max_image_idx, range_min, range_max);
 }

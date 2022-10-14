@@ -166,10 +166,10 @@ inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
   // bounds of the hierarchical range image
   const Bounds distance_bounds =
       hierarchical_range_image_.getRangeBounds(min_image_idx, max_image_idx);
-  if (distance_bounds.upper + range_delta_threshold_ < d_C_cell_closest) {
+  if (distance_bounds.upper + range_threshold_behind_ < d_C_cell_closest) {
     return IntersectionType::kFullyUnknown;
   } else if (d_C_cell_furthest <
-             distance_bounds.lower - range_delta_threshold_) {
+             distance_bounds.lower - range_threshold_in_front_) {
     return IntersectionType::kFreeOrUnknown;
   } else {
     return IntersectionType::kPossiblyOccupied;

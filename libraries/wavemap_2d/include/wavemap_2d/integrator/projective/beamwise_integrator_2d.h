@@ -67,7 +67,8 @@ class BeamwiseIntegrator2D : public PointcloudIntegrator2D {
         // Return early if the point is inside the sensor, beyond the beam's max
         // range, or far behind the surface
         if (d_C_cell < kEpsilon || config_.max_range < d_C_cell ||
-            measured_distance + measurement_model_.getRangeDeltaThreshold() <
+            measured_distance +
+                    measurement_model_.getRangeThresholdBehindSurface() <
                 d_C_cell) {
           continue;
         }

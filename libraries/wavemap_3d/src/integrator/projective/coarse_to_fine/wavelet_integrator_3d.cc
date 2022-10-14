@@ -27,7 +27,8 @@ void WaveletIntegrator3D::integratePointcloud(
   range_image_intersector_ = std::make_shared<RangeImage2DIntersector>(
       posed_range_image_, config_.max_range,
       measurement_model_.getAngleThreshold(),
-      measurement_model_.getRangeDeltaThreshold());
+      measurement_model_.getRangeThresholdInFrontOfSurface(),
+      measurement_model_.getRangeThresholdBehindSurface());
 
   // Recursively update all relevant cells
   const auto first_child_indices = wavelet_tree_->getFirstChildIndices();

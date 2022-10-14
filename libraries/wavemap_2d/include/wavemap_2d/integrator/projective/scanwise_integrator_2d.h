@@ -49,7 +49,8 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
       return 0.f;
     }
     const FloatingPoint measured_distance = posed_range_image_->operator[](idx);
-    if (measured_distance + measurement_model_.getRangeDeltaThreshold() <
+    if (measured_distance +
+            measurement_model_.getRangeThresholdBehindSurface() <
         d_C_cell) {
       return 0.f;
     }
