@@ -13,7 +13,7 @@ void ScanwiseIntegrator3D::updateRangeImage(
       continue;
     }
     const FloatingPoint range = C_point.norm();
-    if (range < kEpsilon) {
+    if (range < 1e-3f) {
       continue;
     }
     if (1e3f < range) {

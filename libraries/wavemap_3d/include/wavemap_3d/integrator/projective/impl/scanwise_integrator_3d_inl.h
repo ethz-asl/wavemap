@@ -35,10 +35,14 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   const Vector3D& bearing = bearing_image_.getBearing(image_idx);
   const FloatingPoint cell_beam_projection =
       C_cell_center.dot(bearing) / d_C_cell;
-  const FloatingPoint cell_to_beam_angle =
-      std::sqrt(2.f * (1.f - cell_beam_projection));
-  if (measurement_model_.getAngleThreshold() < cell_to_beam_angle) {
-    return 0.f;
+  const FloatingPoint one_minus_cell_beam_projection =
+      1.f - cell_beam_projection;
+  FloatingPoint cell_to_beam_angle = 0.f;
+  if (0.f < one_minus_cell_beam_projection) {
+    cell_to_beam_angle = std::sqrt(2.f * one_minus_cell_beam_projection);
+    if (measurement_model_.getAngleThreshold() < cell_to_beam_angle) {
+      return 0.f;
+    }
   }
 
   return measurement_model_.computeUpdate(d_C_cell, cell_to_beam_angle,

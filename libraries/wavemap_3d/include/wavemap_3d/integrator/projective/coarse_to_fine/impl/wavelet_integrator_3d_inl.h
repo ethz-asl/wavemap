@@ -24,6 +24,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     typename WaveletOctreeInterface::NodeType& parent_node,
     OctreeIndex::RelativeChild relative_child_index,
     RangeImage2DIntersector::Cache cache) {
+  constexpr FloatingPoint kNoiseThreshold = 1e-4f;
   if (node_index.height == 0) {
     const Point3D W_node_center =
         convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
@@ -31,8 +32,8 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         posed_range_image_->getPoseInverse() * W_node_center;
     const FloatingPoint sample = computeUpdate(C_node_center);
     return std::clamp(sample + node_value,
-                      SaturatingOccupancyCell::kLowerBound - 2e-3f,
-                      SaturatingOccupancyCell::kUpperBound + 2e-3f) -
+                      SaturatingOccupancyCell::kLowerBound - kNoiseThreshold,
+                      SaturatingOccupancyCell::kUpperBound + kNoiseThreshold) -
            node_value;
   }
 
@@ -43,7 +44,8 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
           posed_range_image_->getPose(), W_cell_aabb, projection_model_, cache);
   if (intersection_type == IntersectionType::kFullyUnknown ||
       (intersection_type == IntersectionType::kFreeOrUnknown &&
-       node_value < SaturatingOccupancyCell::kLowerBound + 1e-3f)) {
+       node_value <
+           SaturatingOccupancyCell::kLowerBound + kNoiseThreshold / 10.f)) {
     return 0.f;
   }
 
@@ -62,9 +64,10 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
                                      bounding_sphere_radius)) {
     const FloatingPoint sample = computeUpdate(C_node_center);
     if (!node || !node->hasAtLeastOneChild()) {
-      return std::clamp(sample + node_value,
-                        SaturatingOccupancyCell::kLowerBound - 2e-3f,
-                        SaturatingOccupancyCell::kUpperBound + 2e-3f) -
+      return std::clamp(
+                 sample + node_value,
+                 SaturatingOccupancyCell::kLowerBound - kNoiseThreshold,
+                 SaturatingOccupancyCell::kUpperBound + kNoiseThreshold) -
              node_value;
     } else {
       return sample;
