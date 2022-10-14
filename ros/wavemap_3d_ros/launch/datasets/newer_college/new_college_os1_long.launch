@@ -21,7 +21,6 @@
        default="single_ray_integrator"/>
 
   <!-- Dataset params -->
-  <!-- TODO(victorr): Setup LiDAR undistortion -->
   <arg name="pointcloud_topic"
        default="/os1_cloud_node/points"/>
   <arg name="rosbag_path"

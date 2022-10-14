@@ -14,7 +14,7 @@ map:
 
 integrator:
   pointcloud_input:
-    topic_name: ""
+    topic_name: "/os_cloud_node/points"
     topic_queue_length: 10
     max_wait_for_tf: { seconds: 1.0 }
   integration_method:

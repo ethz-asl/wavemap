@@ -245,23 +245,22 @@ Wavemap3DServer::Config Wavemap3DServer::Config::fromRosParams(
       config.pointcloud_queue_processing_retry_period_s);
 
   // Map
-  nh.param("map/" + NAMEOF(config.map_pruning_period_s),
-           config.map_pruning_period_s, config.map_pruning_period_s);
-  nh.param("map/" + NAMEOF(config.map_visualization_period_s),
-           config.map_visualization_period_s,
+  nh.param("map/pruning_period", config.map_pruning_period_s,
+           config.map_pruning_period_s);
+  nh.param("map/visualization_period", config.map_visualization_period_s,
            config.map_visualization_period_s);
-  nh.param("map/" + NAMEOF(config.map_autosave_period_s),
-           config.map_autosave_period_s, config.map_autosave_period_s);
-  nh.param("map/" + NAMEOF(config.map_autosave_path), config.map_autosave_path,
+  nh.param("map/autosave_period", config.map_autosave_period_s,
+           config.map_autosave_period_s);
+  nh.param("map/autosave_path", config.map_autosave_path,
            config.map_autosave_path);
 
   // Integrator
-  nh.param("integrator/" + NAMEOF(config.pointcloud_topic_name),
+  nh.param("integrator/pointcloud_input/topic_name",
            config.pointcloud_topic_name, config.pointcloud_topic_name);
-  nh.param("integrator/" + NAMEOF(config.pointcloud_topic_queue_length),
+  nh.param("integrator/pointcloud_input/topic_queue_length",
            config.pointcloud_topic_queue_length,
            config.pointcloud_topic_queue_length);
-  nh.param("integrator/" + NAMEOF(config.pointcloud_queue_max_wait_for_tf_s),
+  nh.param("integrator/pointcloud_input/max_wait_for_tf",
            config.pointcloud_queue_max_wait_for_tf_s,
            config.pointcloud_queue_max_wait_for_tf_s);
 
