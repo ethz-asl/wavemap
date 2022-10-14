@@ -4,7 +4,7 @@
        default="true"
        doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
   <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/wavemap_server.yaml"
+       default="$(find wavemap_3d_ros)/config/ouster_os0.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
   <arg name="debug_mode"
        default="false"
@@ -21,7 +21,6 @@
        default="single_ray_integrator"/>
 
   <!-- Dataset params -->
-  <!-- TODO(victorr): Setup LiDAR undistortion -->
   <arg name="pointcloud_topic"
        default="/os_cloud_node/points"/>
   <arg name="rosbag_path"
