@@ -66,7 +66,7 @@ class BeamwiseIntegrator2D : public PointcloudIntegrator2D {
         const FloatingPoint d_C_cell = W_t_start_point_cell_center.norm();
         // Return early if the point is inside the sensor, beyond the beam's max
         // range, or far behind the surface
-        if (d_C_cell < kEpsilon || config_.max_range < d_C_cell ||
+        if (d_C_cell < config_.min_range || config_.max_range < d_C_cell ||
             measured_distance +
                     measurement_model_.getRangeThresholdBehindSurface() <
                 d_C_cell) {

@@ -14,7 +14,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
     const Index2D& bottom_left_image_idx, const Index2D& top_right_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
   if (bottom_left_image_idx == top_right_image_idx) {
-    const auto range = range_image_->operator[](bottom_left_image_idx);
+    const auto range = range_image_->getRange(bottom_left_image_idx);
     if (valueOrInit(range, 0.f) < range_min) {
       return IntersectionType::kFullyUnknown;
     } else if (range_max < valueOrInit(range, 1e3f)) {
@@ -107,12 +107,12 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
       // Check all four nodes at min_level_up
       if (min_level_up == 0) {
         const auto image_values = {
-            range_image_->operator[](bottom_left_image_idx),
-            range_image_->operator[](
+            range_image_->getRange(bottom_left_image_idx),
+            range_image_->getRange(
                 {bottom_left_image_idx.x(), top_right_image_idx.y()}),
-            range_image_->operator[](
+            range_image_->getRange(
                 {top_right_image_idx.x(), bottom_left_image_idx.y()}),
-            range_image_->operator[](top_right_image_idx)};
+            range_image_->getRange(top_right_image_idx)};
         if (std::all_of(image_values.begin(), image_values.end(),
                         [range_min](auto range) {
                           return valueOrInit(range, 0.f) < range_min;
@@ -218,7 +218,7 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::computeReducedLevels(
               child_idx.x() / std::get<0>(scale_),
               child_idx.y() / std::get<1>(scale_)};
           const FloatingPoint child_range =
-              range_image.operator[](child_idx_rescaled);
+              range_image.getRange(child_idx_rescaled);
           if (kMinRepresentableRange < child_range &&
               child_range < kMaxRepresentableRange) {
             const RangeCellIdx reduced_child_range_idx =

@@ -38,7 +38,7 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
 
   FloatingPoint computeUpdate(FloatingPoint d_C_cell,
                               FloatingPoint azimuth_angle_C_cell) {
-    if (d_C_cell < kEpsilon || config_.max_range < d_C_cell) {
+    if (d_C_cell < config_.min_range || config_.max_range < d_C_cell) {
       return 0.f;
     }
 

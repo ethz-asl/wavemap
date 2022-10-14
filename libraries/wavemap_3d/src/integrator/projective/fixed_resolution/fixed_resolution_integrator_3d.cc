@@ -26,10 +26,7 @@ void FixedResolutionIntegrator3D::integratePointcloud(
     const Point3D W_cell_center =
         convert::indexToCenterPoint(index, min_cell_width);
     const Point3D C_cell_center = T_C_W * W_cell_center;
-    const FloatingPoint d_C_cell = C_cell_center.norm();
-    const Vector2D spherical_C_cell =
-        SphericalProjector::bearingToSpherical(C_cell_center);
-    const FloatingPoint update = computeUpdate(d_C_cell, spherical_C_cell);
+    const FloatingPoint update = computeUpdate(C_cell_center);
     if (kEpsilon < std::abs(update)) {
       occupancy_map_->addToCellValue(index, update);
     }
@@ -68,7 +65,7 @@ AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
       // Prevent out-of-bounds access
       continue;
     }
-    posed_range_image_->operator[](range_image_index) = range;
+    posed_range_image_->getRange(range_image_index) = range;
 
     // Update the AABB (in world frame)
     Point3D C_point_truncated = C_point;

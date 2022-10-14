@@ -20,7 +20,7 @@ add_library(${PROJECT_NAME}
     src/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_3d.cc
     src/integrator/projective/coarse_to_fine/wavelet_integrator_3d.cc
     src/integrator/projective/fixed_resolution/fixed_resolution_integrator_3d.cc
-    src/integrator/projective/range_image_2d.cc
+    src/integrator/projective/scanwise_integrator_3d.cc
     src/integrator/pointcloud_integrator_factory_3d.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 

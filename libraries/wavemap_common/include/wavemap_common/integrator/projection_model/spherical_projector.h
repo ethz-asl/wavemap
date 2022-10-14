@@ -2,6 +2,7 @@
 #define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
 
 #include "wavemap_common/integrator/projection_model/circular_projector.h"
+#include "wavemap_common/utils/approximate_trigonometry.h"
 #include "wavemap_common/utils/config_utils.h"
 
 namespace wavemap {
@@ -48,6 +49,10 @@ class SphericalProjector {
   static Vector2D bearingToSpherical(const Vector3D& bearing) {
     return {std::atan2(bearing.z(), bearing.head<2>().norm()),
             std::atan2(bearing.y(), bearing.x())};
+  }
+  static Vector2D bearingToSphericalApprox(const Vector3D& bearing) {
+    return {approximate::atan2()(bearing.z(), bearing.head<2>().norm()),
+            approximate::atan2()(bearing.y(), bearing.x())};
   }
   static Vector3D sphericalToBearing(Vector2D spherical_coordinates) {
     const FloatingPoint elevation_angle = spherical_coordinates[0];

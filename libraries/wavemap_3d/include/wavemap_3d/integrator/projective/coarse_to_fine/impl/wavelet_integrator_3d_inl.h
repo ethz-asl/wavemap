@@ -29,10 +29,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
     const Point3D C_node_center =
         posed_range_image_->getPoseInverse() * W_node_center;
-    const FloatingPoint d_C_cell = C_node_center.norm();
-    const Vector2D spherical_C_cell =
-        SphericalProjector::bearingToSpherical(C_node_center);
-    const FloatingPoint sample = computeUpdate(d_C_cell, spherical_C_cell);
+    const FloatingPoint sample = computeUpdate(C_node_center);
     return std::clamp(sample + node_value,
                       SaturatingOccupancyCell::kLowerBound - 2e-3f,
                       SaturatingOccupancyCell::kUpperBound + 2e-3f) -
@@ -63,9 +60,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
       kUnitCubeHalfDiagonal * node_width;
   if (isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
-    const Vector2D spherical_C_cell =
-        SphericalProjector::bearingToSpherical(C_node_center);
-    const FloatingPoint sample = computeUpdate(d_C_cell, spherical_C_cell);
+    const FloatingPoint sample = computeUpdate(C_node_center);
     if (!node || !node->hasAtLeastOneChild()) {
       return std::clamp(sample + node_value,
                         SaturatingOccupancyCell::kLowerBound - 2e-3f,
