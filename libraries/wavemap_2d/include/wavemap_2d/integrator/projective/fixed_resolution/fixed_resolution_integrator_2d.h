@@ -16,8 +16,7 @@ class FixedResolutionIntegrator2D : public ScanwiseIntegrator2D {
   void integratePointcloud(const PosedPointcloud<Point2D>& pointcloud) override;
 
   AABB<Point2D> computeRangeImageAndAABB(
-      const PosedPointcloud<Point2D>& pointcloud,
-      const CircularProjector& circular_projector);
+      const PosedPointcloud<Point2D>& pointcloud);
 };
 }  // namespace wavemap
 

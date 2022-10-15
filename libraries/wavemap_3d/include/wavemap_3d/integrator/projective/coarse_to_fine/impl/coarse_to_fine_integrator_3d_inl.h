@@ -7,8 +7,9 @@ inline bool CoarseToFineIntegrator3D::isApproximationErrorAcceptable(
     FloatingPoint bounding_sphere_radius) const {
   switch (intersection_type) {
     case IntersectionType::kFreeOrUnknown:
-      return bounding_sphere_radius / sphere_center_distance <
-             kMaxAcceptableUpdateError / max_gradient_over_range_fully_inside_;
+      return bounding_sphere_radius < (kMaxAcceptableUpdateError /
+                                       max_gradient_over_range_fully_inside_) *
+                                          sphere_center_distance;
     case IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
              kMaxAcceptableUpdateError / max_gradient_on_boundary_;

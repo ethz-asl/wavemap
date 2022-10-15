@@ -10,6 +10,12 @@
 namespace wavemap {
 template <typename ConfigDerivedT>
 struct ConfigBase {
+  // NOTE: Aggregate initialization will not be available for derived classes
+  //       due to the restriction listed on:
+  //       https://en.cppreference.com/w/cpp/language/aggregate_initialization
+  //       But similar syntax can still be used by manually defining
+  //       constructors in the derived class.
+
   virtual ~ConfigBase() {
     // Force the derived config classes to implement a
     // static method that lets users build them from param maps
@@ -28,6 +34,13 @@ struct ConfigBase {
     CHECK(isValid(true));
     return *static_cast<const ConfigDerivedT*>(this);
   }
+
+ private:
+  // Force structs that use ConfigBase (by deriving from it) to pass the right
+  // template argument (i.e. themselves) by making the base constructor private
+  // and befriending the derived class passed as the template argument
+  ConfigBase() = default;
+  friend ConfigDerivedT;
 };
 
 #define IS_PARAM_EQ(value, threshold, verbose) \

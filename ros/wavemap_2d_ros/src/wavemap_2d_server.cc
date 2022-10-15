@@ -81,10 +81,10 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
 
   // TODO(victorr): Make it possible to load maps without knowing the resolution
   //                on beforehand (e.g. through a static method)
-  VolumetricDataStructureConfig gt_data_structure_config;
-  gt_data_structure_config.min_cell_width = 1e-2f;
+  constexpr FloatingPoint kGroundTruthMapMinCellWidth = 1e-2f;
   using GTDataStructureType = DenseGrid<UnboundedScalarCell>;
-  GTDataStructureType ground_truth_map(gt_data_structure_config);
+  GTDataStructureType ground_truth_map(
+      VolumetricDataStructureConfig{kGroundTruthMapMinCellWidth});
   if (!ground_truth_map.load(file_path, true)) {
     ROS_WARN("Could not load the ground truth map.");
     return false;
@@ -114,7 +114,8 @@ bool Wavemap2DServer::evaluateMap(const std::string& file_path) {
   evaluation_config.predicted.cell_selector = {
       utils::CellSelector::Categories::kAnyObserved};
 
-  GTDataStructureType error_grid(gt_data_structure_config);
+  GTDataStructureType error_grid(
+      VolumetricDataStructureConfig{kGroundTruthMapMinCellWidth});
   utils::MapEvaluationSummary map_evaluation_summary = utils::EvaluateMap(
       ground_truth_map, *occupancy_map_, evaluation_config, &error_grid);
 

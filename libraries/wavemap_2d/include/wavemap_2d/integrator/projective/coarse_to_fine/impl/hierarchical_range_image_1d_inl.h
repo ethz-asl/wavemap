@@ -11,11 +11,11 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getBounds(
   DCHECK_LE(index.height, max_height_);
   if (index.height == 0) {
     const FloatingPoint range_image_value =
-        range_image_->operator[](index.position.x());
+        range_image_->getRange(index.position.x());
     return {range_image_value, range_image_value};
   } else {
-    return {lower_bounds_[index.height - 1][index.position.x()],
-            upper_bounds_[index.height - 1][index.position.x()]};
+    return {lower_bounds_[index.height - 1].getRange(index.position.x()),
+            upper_bounds_[index.height - 1].getRange(index.position.x())};
   }
 }
 
@@ -23,7 +23,7 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
     IndexElement left_idx, IndexElement right_idx) const {
   DCHECK_LE(left_idx, right_idx);
   if (left_idx == right_idx) {
-    const FloatingPoint range_image_value = range_image_->operator[](left_idx);
+    const FloatingPoint range_image_value = range_image_->getRange(left_idx);
     return {range_image_value, range_image_value};
   }
 
@@ -41,23 +41,23 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
       // checking their common parent, so we do that instead as its cheaper
       const IndexElement parent_height = min_level_up;
       const IndexElement parent_idx = left_idx_shifted >> 1;
-      return {lower_bounds_[parent_height][parent_idx],
-              upper_bounds_[parent_height][parent_idx]};
+      return {lower_bounds_[parent_height].getRange(parent_idx),
+              upper_bounds_[parent_height].getRange(parent_idx)};
     } else {
       // Check both nodes at min_level_up
       const IndexElement height = min_level_up - 1;
       const IndexElement left_node_idx = left_idx_shifted;
       const IndexElement right_node_idx = right_idx_shifted;
       if (min_level_up == 0) {
-        return {std::min(range_image_->operator[](left_node_idx),
-                         range_image_->operator[](right_node_idx)),
-                std::max(range_image_->operator[](left_node_idx),
-                         range_image_->operator[](right_node_idx))};
+        return {std::min(range_image_->getRange(left_node_idx),
+                         range_image_->getRange(right_node_idx)),
+                std::max(range_image_->getRange(left_node_idx),
+                         range_image_->getRange(right_node_idx))};
       } else {
-        return {std::min(lower_bounds_[height][left_node_idx],
-                         lower_bounds_[height][right_node_idx]),
-                std::max(upper_bounds_[height][left_node_idx],
-                         upper_bounds_[height][right_node_idx])};
+        return {std::min(lower_bounds_[height].getRange(left_node_idx),
+                         lower_bounds_[height].getRange(right_node_idx)),
+                std::max(upper_bounds_[height].getRange(left_node_idx),
+                         upper_bounds_[height].getRange(right_node_idx))};
       }
     }
   } else {
@@ -67,10 +67,10 @@ inline Bounds<FloatingPoint> HierarchicalRangeImage1D::getRangeBounds(
     const NdtreeIndexElement parent_height = min_level_up;
     const IndexElement left_parent_idx = left_idx_shifted >> 1;
     const IndexElement right_parent_idx = right_idx_shifted >> 1;
-    return {std::min(lower_bounds_[parent_height][left_parent_idx],
-                     lower_bounds_[parent_height][right_parent_idx]),
-            std::max(upper_bounds_[parent_height][left_parent_idx],
-                     upper_bounds_[parent_height][right_parent_idx])};
+    return {std::min(lower_bounds_[parent_height].getRange(left_parent_idx),
+                     lower_bounds_[parent_height].getRange(right_parent_idx)),
+            std::max(upper_bounds_[parent_height].getRange(left_parent_idx),
+                     upper_bounds_[parent_height].getRange(right_parent_idx))};
   }
 }
 
@@ -101,13 +101,14 @@ std::vector<RangeImage1D> HierarchicalRangeImage1D::computeReducedPyramid(
     for (int idx = 0; idx <= last_regular_index; ++idx) {
       const int first_child_idx = 2 * idx;
       const int second_child_idx = first_child_idx + 1;
-      current_level[idx] = reduction_functor(previous_level[first_child_idx],
-                                             previous_level[second_child_idx]);
+      current_level.getRange(idx) =
+          reduction_functor(previous_level.getRange(first_child_idx),
+                            previous_level.getRange(second_child_idx));
     }
     if (previous_level_width_is_uneven) {
       const int first_child_idx = 2 * last_index;
-      current_level[last_index] =
-          reduction_functor(previous_level[first_child_idx], init);
+      current_level.getRange(last_index) =
+          reduction_functor(previous_level.getRange(first_child_idx), init);
     }
   }
   return pyramid;

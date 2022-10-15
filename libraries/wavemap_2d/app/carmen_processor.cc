@@ -36,10 +36,9 @@ int main(int argc, char** argv) {
       << "The map_min_cell_width flag must be set to a positive number.";
 
   // Set up the mapper
-  VolumetricDataStructureConfig data_structure_config;
-  data_structure_config.min_cell_width = map_min_cell_width;
   VolumetricDataStructure2D::Ptr occupancy_map =
-      std::make_shared<DataStructureType>(data_structure_config);
+      std::make_shared<DataStructureType>(
+          VolumetricDataStructureConfig{map_min_cell_width});
   PointcloudIntegratorConfig integrator_config;
   integrator_config.min_range = 0.1f;
   integrator_config.max_range = 30.f;

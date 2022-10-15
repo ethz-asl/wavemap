@@ -5,7 +5,6 @@
 #include <wavemap_common/test/fixture_base.h>
 
 #include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_bounds_2d.h"
-#include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_sets_2d.h"
 
 namespace wavemap {
 class HierarchicalRangeImage2DTest : public FixtureBase {
@@ -18,7 +17,8 @@ class HierarchicalRangeImage2DTest : public FixtureBase {
     RangeImage2D range_image(num_rows, num_cols);
     for (const Index2D& index : Grid<2>(
              Index2D::Zero(), range_image.getDimensions() - Index2D::Ones())) {
-      range_image[index] = getRandomSignedDistance(kMinDistance, kMaxDistance);
+      range_image.getRange(index) =
+          getRandomSignedDistance(kMinDistance, kMaxDistance);
     }
     return range_image;
   }
@@ -70,9 +70,9 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
           // At the leaf level the bounds should match range image itself
           if ((index.position.array() < range_image_dims.array()).all()) {
             EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
-                            range_image->operator[](index.position));
+                            range_image->getRange(index.position));
             EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
-                            range_image->operator[](index.position));
+                            range_image->getRange(index.position));
           }
         } else if (index.height == 1) {
           // At the first pyramid level, the bounds should correspond to min/max
@@ -88,7 +88,7 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                     kAzimuthMayWrap>::getImageToPyramidScaleFactor());
             if ((child_idx.position.array() < range_image_dims.array()).all()) {
               const FloatingPoint range_image_value =
-                  range_image->operator[](child_idx.position);
+                  range_image->getRange(child_idx.position);
               if (range_image_value <
                   HierarchicalRangeBounds2D<kAzimuthMayWrap>::getRangeMin()) {
                 child_bounds.lower =
@@ -196,7 +196,7 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
       // Compare against brute force
       Bounds<FloatingPoint> bounds_brute_force;
       for (const Index2D& index : Grid(start_idx, end_idx)) {
-        const FloatingPoint range_value = range_image->operator[](index);
+        const FloatingPoint range_value = range_image->getRange(index);
         if (HierarchicalRangeBounds2D<kAzimuthMayWrap>::getRangeMin() <
             range_value) {
           bounds_brute_force.lower =

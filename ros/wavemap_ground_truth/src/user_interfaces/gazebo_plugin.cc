@@ -48,10 +48,8 @@ bool Wavemap2DGroundTruthPlugin::saveOccupancyGrid(
   }
 
   // Instantiate the ground truth SDF creator
-  wavemap::VolumetricDataStructureConfig data_structure_config;
-  data_structure_config.min_cell_width = resolution;
   wavemap::ground_truth::OccupancyGridCreator occupancy_grid_creator(
-      data_structure_config, slice_height);
+      resolution, slice_height);
 
   // Instantiate a Gazebo mesh manager
   common::MeshManager* const mesh_manager = common::MeshManager::Instance();

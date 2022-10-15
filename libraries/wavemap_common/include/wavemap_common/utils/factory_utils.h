@@ -63,6 +63,12 @@ struct TypeSelector {
 
  private:
   TypeId id_ = kInvalidTypeId;
+
+  // Force structs that use TypeSelector (by deriving from it) to pass the right
+  // template argument (i.e. themselves) by making the base constructor private
+  // and befriending the derived class passed as the template argument
+  TypeSelector() = default;
+  friend DerivedTypeSelectorT;
 };
 
 }  // namespace wavemap

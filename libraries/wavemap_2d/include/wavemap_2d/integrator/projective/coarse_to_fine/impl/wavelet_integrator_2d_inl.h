@@ -41,9 +41,7 @@ inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
   if (node_index.height == 0 ||
       isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
-    const FloatingPoint angle_C_cell =
-        CircularProjector::bearingToAngle(C_node_center);
-    const FloatingPoint sample = computeUpdate(d_C_cell, angle_C_cell);
+    const FloatingPoint sample = computeUpdate(C_node_center);
     return sample;
   }
 

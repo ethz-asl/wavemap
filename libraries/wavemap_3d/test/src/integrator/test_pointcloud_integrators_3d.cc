@@ -22,72 +22,102 @@
 namespace wavemap {
 class PointcloudIntegrator3DTest : public FixtureBase {
  protected:
+  PointcloudIntegratorConfig getRandomPointcloudIntegratorConfig() {
+    const FloatingPoint min_range = getRandomSignedDistance(0.2f, 3.f);
+    const FloatingPoint max_range = getRandomSignedDistance(min_range, 20.f);
+    return PointcloudIntegratorConfig{min_range, max_range};
+  }
+
+  VolumetricDataStructureConfig getRandomVolumetricDataStructureConfig() {
+    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.05f, 1.f);
+    return VolumetricDataStructureConfig{min_cell_width};
+  }
+
+  SphericalProjector getRandomProjectionModel() {
+    const FloatingPoint min_elevation_angle = getRandomAngle(-kQuarterPi, 0.f);
+    const FloatingPoint max_elevation_angle =
+        getRandomAngle(min_elevation_angle + kPi / 8.f, kQuarterPi);
+    const FloatingPoint min_azimuth_angle = -kPi;
+    const FloatingPoint max_azimuth_angle = kPi;
+    const int num_rows = int_math::exp2(getRandomIndexElement(4, 7));
+    const int num_cols = int_math::exp2(getRandomIndexElement(7, 11));
+    return SphericalProjector(SphericalProjectorConfig{
+        {min_elevation_angle, max_elevation_angle, num_rows},
+        {min_azimuth_angle, max_azimuth_angle, num_cols}});
+  }
+
+  ContinuousVolumetricLogOdds<3> getRandomMeasurementModel(
+      const SphericalProjector& projection_model) {
+    ContinuousVolumetricLogOddsConfig measurement_model_config;
+    const FloatingPoint max_angle_sigma_without_overlap =
+        (projection_model.getMaxAngles() - projection_model.getMinAngles())
+            .cwiseQuotient(
+                projection_model.getDimensions().cast<FloatingPoint>())
+            .minCoeff() /
+        (2.f * 6.f);
+    measurement_model_config.angle_sigma =
+        random_number_generator_->getRandomRealNumber(
+            max_angle_sigma_without_overlap / 10.f,
+            max_angle_sigma_without_overlap);
+    measurement_model_config.range_sigma =
+        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+    return ContinuousVolumetricLogOdds<3>(measurement_model_config);
+  }
+
   PosedPointcloud<Point3D> getRandomPointcloud(
-      FloatingPoint min_elevation_angle, FloatingPoint max_elevation_angle,
-      int num_rows, FloatingPoint min_azimuth_angle,
-      FloatingPoint max_azimuth_angle, int num_cols, FloatingPoint min_distance,
-      FloatingPoint max_distance) const {
-    CHECK_LT(min_elevation_angle, max_elevation_angle);
-    CHECK_LT(min_azimuth_angle, max_azimuth_angle);
+      const SphericalProjector& projection_model,
+      FloatingPoint min_distance = 0.f,
+      FloatingPoint max_distance = 30.f) const {
     CHECK_LT(min_distance, max_distance);
 
     Pointcloud<Point3D> pointcloud;
-    pointcloud.resize(num_rows * num_cols);
+    pointcloud.resize(projection_model.getNumRows() *
+                      projection_model.getNumColumns());
 
-    const SphericalProjector spherical_projector(
-        min_elevation_angle, max_elevation_angle, num_rows, min_azimuth_angle,
-        max_azimuth_angle, num_cols);
     for (int pointcloud_index = 0;
          pointcloud_index < static_cast<int>(pointcloud.size());
          ++pointcloud_index) {
       const FloatingPoint range =
           getRandomSignedDistance(min_distance, max_distance);
-      const Index2D image_index{pointcloud_index % num_rows,
-                                pointcloud_index / num_rows};
+      const Index2D image_index{
+          pointcloud_index % projection_model.getNumRows(),
+          pointcloud_index / projection_model.getNumRows()};
       pointcloud[pointcloud_index] =
-          range * spherical_projector.indexToBearing(image_index);
+          range * projection_model.indexToBearing(image_index);
     }
 
     return {getRandomTransformation<3>(), pointcloud};
   }
-
-  // TODO(victorr): Use random FoVs and numbers of beams once these are
-  //                configurable
-  static constexpr FloatingPoint kMinElevationAngle = -0.3926991f;
-  static constexpr FloatingPoint kMaxElevationAngle = 0.3926991f;
-  static constexpr FloatingPoint kMinAzimuthAngle = -kPi;
-  static constexpr FloatingPoint kMaxAzimuthAngle = kPi;
-  static constexpr int kNumRows = 64;
-  static constexpr int kNumCols = 1024;
-  static constexpr FloatingPoint kMinDistance = 0.f;
-  static constexpr FloatingPoint kMaxDistance = 30.f;
 };
 
 TEST_F(PointcloudIntegrator3DTest, RayIntegrator) {
   for (int idx = 0; idx < 3; ++idx) {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth();
-    const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
+    const auto pointcloud_integrator_config =
+        getRandomPointcloudIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const FloatingPoint min_cell_width_inv =
+        1.f / data_structure_config.min_cell_width;
 
-    constexpr FloatingPoint kMinElevationAngle = -kQuarterPi;
-    constexpr FloatingPoint kMaxElevationAngle = kQuarterPi;
-    constexpr FloatingPoint kMinAzimuthAngle = -kPi;
-    constexpr FloatingPoint kMaxAzimuthAngle = kPi;
-
-    const int num_rows = getRandomIndexElement(10, 200);
-    const int num_cols = getRandomIndexElement(10, 1000);
-
-    const FloatingPoint min_distance =
-        std::max(static_cast<FloatingPoint>(num_rows) * min_cell_width /
-                     (kMaxElevationAngle - kMinElevationAngle),
-                 static_cast<FloatingPoint>(num_cols) * min_cell_width /
-                     (kMaxAzimuthAngle - kMinAzimuthAngle));
+    // Set the min distance s.t. no cells are updated by more than 1 beam
+    // NOTE: Otherwise one beam's free space update could erase another beam's
+    //       endpoint and this situation is not covered in this unit test.
     constexpr FloatingPoint kMaxDistance = 200.f;
-    CHECK_LE(min_distance, kMaxDistance);
+    const FloatingPoint min_distance =
+        data_structure_config.min_cell_width *
+        projection_model.getDimensions()
+            .cast<FloatingPoint>()
+            .cwiseQuotient(projection_model.getMaxAngles() -
+                           projection_model.getMinAngles())
+            .maxCoeff();
+    if (kMaxDistance <= min_distance) {
+      --idx;
+      continue;
+    }
 
     // Generate a random point cloud and save its end points in a hashed set
-    const PosedPointcloud<Point3D> random_pointcloud = getRandomPointcloud(
-        kMinElevationAngle, kMaxElevationAngle, num_rows, kMinAzimuthAngle,
-        kMaxAzimuthAngle, num_cols, min_distance, kMaxDistance);
+    const PosedPointcloud<Point3D> random_pointcloud =
+        getRandomPointcloud(projection_model, min_distance, kMaxDistance);
     std::unordered_set<Index3D, VoxbloxIndexHash<3>> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index3D index =
@@ -98,9 +128,10 @@ TEST_F(PointcloudIntegrator3DTest, RayIntegrator) {
     // Set up the occupancy map, integrator and integrate the point cloud
     VolumetricDataStructure3D::Ptr occupancy_map =
         std::make_shared<HashedBlocks3D<SaturatingOccupancyCell>>(
-            min_cell_width);
+            data_structure_config);
     PointcloudIntegrator3D::Ptr pointcloud_integrator =
-        std::make_shared<RayIntegrator<3>>(occupancy_map);
+        std::make_shared<RayIntegrator<3>>(pointcloud_integrator_config,
+                                           occupancy_map);
     pointcloud_integrator->integratePointcloud(random_pointcloud);
 
     // Check the map
@@ -115,7 +146,7 @@ TEST_F(PointcloudIntegrator3DTest, RayIntegrator) {
       const bool cell_contains_ray_end_point = ray_end_points.count(index);
       EXPECT_EQ(cell_occupied_in_map, cell_contains_ray_end_point)
           << "for index " << EigenFormat::oneLine(index) << ", min cell width "
-          << min_cell_width << " and point cloud size "
+          << data_structure_config.min_cell_width << " and point cloud size "
           << random_pointcloud.getPointsLocal().size();
     }
   }
@@ -125,23 +156,30 @@ TEST_F(PointcloudIntegrator3DTest,
        FixedResolutionAndCoarseToFineIntegratorEquivalence) {
   constexpr int kNumRepetitions = 3;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
-    const PosedPointcloud<Point3D> random_pointcloud = getRandomPointcloud(
-        kMinElevationAngle, kMaxElevationAngle, kNumRows, kMinAzimuthAngle,
-        kMaxAzimuthAngle, kNumCols, kMinDistance, kMaxDistance);
+    const auto pointcloud_integrator_config =
+        getRandomPointcloudIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    const PosedPointcloud<Point3D> random_pointcloud =
+        getRandomPointcloud(projection_model);
 
     VolumetricDataStructure3D::Ptr reference_occupancy_map =
         std::make_shared<HashedBlocks3D<UnboundedOccupancyCell>>(
-            min_cell_width);
+            data_structure_config);
     PointcloudIntegrator3D::Ptr reference_integrator =
-        std::make_shared<FixedResolutionIntegrator3D>(reference_occupancy_map);
+        std::make_shared<FixedResolutionIntegrator3D>(
+            pointcloud_integrator_config, projection_model, measurement_model,
+            reference_occupancy_map);
     reference_integrator->integratePointcloud(random_pointcloud);
 
     VolumetricDataStructure3D::Ptr evaluated_occupancy_map =
         std::make_shared<VolumetricOctree<UnboundedOccupancyCell>>(
-            min_cell_width);
+            data_structure_config);
     PointcloudIntegrator3D::Ptr evaluated_integrator =
-        std::make_shared<CoarseToFineIntegrator3D>(evaluated_occupancy_map);
+        std::make_shared<CoarseToFineIntegrator3D>(
+            pointcloud_integrator_config, projection_model, measurement_model,
+            evaluated_occupancy_map);
     evaluated_integrator->integratePointcloud(random_pointcloud);
 
     evaluated_occupancy_map->prune();
@@ -166,22 +204,30 @@ TEST_F(PointcloudIntegrator3DTest,
        FixedResolutionAndWaveletIntegratorEquivalence) {
   constexpr int kNumRepetitions = 3;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
-    const PosedPointcloud<Point3D> random_pointcloud = getRandomPointcloud(
-        kMinElevationAngle, kMaxElevationAngle, kNumRows, kMinAzimuthAngle,
-        kMaxAzimuthAngle, kNumCols, kMinDistance, kMaxDistance);
+    const auto pointcloud_integrator_config =
+        getRandomPointcloudIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    const PosedPointcloud<Point3D> random_pointcloud =
+        getRandomPointcloud(projection_model);
 
     VolumetricDataStructure3D::Ptr reference_occupancy_map =
         std::make_shared<HashedBlocks3D<UnboundedOccupancyCell>>(
-            min_cell_width);
+            data_structure_config);
     PointcloudIntegrator3D::Ptr reference_integrator =
-        std::make_shared<FixedResolutionIntegrator3D>(reference_occupancy_map);
+        std::make_shared<FixedResolutionIntegrator3D>(
+            pointcloud_integrator_config, projection_model, measurement_model,
+            reference_occupancy_map);
     reference_integrator->integratePointcloud(random_pointcloud);
 
     VolumetricDataStructure3D::Ptr evaluated_occupancy_map =
-        std::make_shared<WaveletOctree<UnboundedOccupancyCell>>(min_cell_width);
+        std::make_shared<WaveletOctree<UnboundedOccupancyCell>>(
+            data_structure_config);
     PointcloudIntegrator3D::Ptr evaluated_integrator =
-        std::make_shared<WaveletIntegrator3D>(evaluated_occupancy_map);
+        std::make_shared<WaveletIntegrator3D>(
+            pointcloud_integrator_config, projection_model, measurement_model,
+            evaluated_occupancy_map);
     evaluated_integrator->integratePointcloud(random_pointcloud);
 
     evaluated_occupancy_map->prune();
@@ -196,7 +242,7 @@ TEST_F(PointcloudIntegrator3DTest,
       const FloatingPoint cell_value_in_evaluated_map =
           evaluated_occupancy_map->getCellValue(index);
       EXPECT_NEAR(cell_value_in_evaluated_map, cell_value_in_reference_map,
-                  CoarseToFineIntegrator3D::kMaxAcceptableUpdateError)
+                  WaveletIntegrator3D::kMaxAcceptableUpdateError)
           << "For cell index " << EigenFormat::oneLine(index);
     }
   }

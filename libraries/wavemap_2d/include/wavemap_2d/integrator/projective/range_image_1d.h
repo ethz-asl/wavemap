@@ -10,15 +10,10 @@ class RangeImage1D {
  public:
   using Data = Eigen::Matrix<FloatingPoint, 1, Eigen::Dynamic>;
 
-  explicit RangeImage1D(const CircularProjector& circular_projector)
-      : RangeImage1D(circular_projector.getNumCells()) {}
   explicit RangeImage1D(IndexElement num_beams,
                         FloatingPoint initial_value = 0.f)
       : initial_value_(initial_value),
         data_(Data::Constant(1, num_beams, initial_value)) {}
-
-  void importPointcloud(const Pointcloud<Point2D>& pointcloud,
-                        const CircularProjector& circular_projector);
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
@@ -33,12 +28,12 @@ class RangeImage1D {
   }
   const Data& getData() const { return data_; }
 
-  FloatingPoint& operator[](IndexElement index) {
+  FloatingPoint& getRange(IndexElement index) {
     DCHECK_GE(index, 0);
     DCHECK_LT(index, data_.cols());
     return data_(0, index);
   }
-  const FloatingPoint& operator[](IndexElement index) const {
+  const FloatingPoint& getRange(IndexElement index) const {
     DCHECK_GE(index, 0);
     DCHECK_LT(index, data_.cols());
     return data_(0, index);
@@ -52,16 +47,6 @@ class RangeImage1D {
 class PosedRangeImage1D : public RangeImage1D {
  public:
   using RangeImage1D::RangeImage1D;
-
-  explicit PosedRangeImage1D(const CircularProjector& circular_projector)
-      : RangeImage1D(circular_projector) {}
-
-  void importPointcloud(const PosedPointcloud<Point2D>& posed_pointcloud,
-                        const CircularProjector& circular_projector) {
-    RangeImage1D::importPointcloud(posed_pointcloud.getPointsLocal(),
-                                   circular_projector);
-    setPose(posed_pointcloud.getPose());
-  }
 
   void setPose(const Transformation2D& T_W_C) {
     T_W_C_ = T_W_C;

@@ -12,11 +12,21 @@
 namespace wavemap {
 struct ContinuousVolumetricLogOddsConfig
     : ConfigBase<ContinuousVolumetricLogOddsConfig> {
-  FloatingPoint angle_sigma;
-  FloatingPoint range_sigma;
+  FloatingPoint angle_sigma = 0.f;
+  FloatingPoint range_sigma = 0.f;
+  FloatingPoint scaling_free = 0.5f;
+  FloatingPoint scaling_occupied = 0.5f;
 
-  FloatingPoint scaling_free;
-  FloatingPoint scaling_occupied;
+  // Constructors
+  ContinuousVolumetricLogOddsConfig() = default;
+  ContinuousVolumetricLogOddsConfig(FloatingPoint angle_sigma,
+                                    FloatingPoint range_sigma,
+                                    FloatingPoint scaling_free,
+                                    FloatingPoint scaling_occupied)
+      : angle_sigma(angle_sigma),
+        range_sigma(range_sigma),
+        scaling_free(scaling_free),
+        scaling_occupied(scaling_occupied) {}
 
   bool isValid(bool verbose) const override;
   static ContinuousVolumetricLogOddsConfig from(const param::Map& params);
@@ -33,18 +43,18 @@ class ContinuousVolumetricLogOdds {
                                       const Point<dim>& W_end_point,
                                       FloatingPoint measured_distance,
                                       FloatingPoint min_cell_width_inv) const {
-    const Point<dim> bottom_left_point = W_start_point.cwiseMin(
-        W_end_point -
-        Point<dim>::Constant(getCombinedThreshold(measured_distance)));
+    const Point<dim> bottom_left_point =
+        W_start_point.cwiseMin(W_end_point) -
+        Point<dim>::Constant(getCombinedThreshold(measured_distance));
     return convert::pointToFloorIndex(bottom_left_point, min_cell_width_inv);
   }
   Index<dim> getTopRightUpdateIndex(const Point<dim>& W_start_point,
                                     const Point<dim>& W_end_point,
                                     FloatingPoint measured_distance,
                                     FloatingPoint min_cell_width_inv) const {
-    const Point<dim> top_right_point = W_start_point.cwiseMax(
-        W_end_point +
-        Point<dim>::Constant(getCombinedThreshold(measured_distance)));
+    const Point<dim> top_right_point =
+        W_start_point.cwiseMax(W_end_point) +
+        Point<dim>::Constant(getCombinedThreshold(measured_distance));
     return convert::pointToCeilIndex(top_right_point, min_cell_width_inv);
   }
 

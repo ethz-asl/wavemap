@@ -10,7 +10,7 @@ void FixedResolutionIntegrator3D::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  const auto aabb = computeRangeImageAndAABB(pointcloud, projection_model_);
+  const auto aabb = computeRangeImageAndAABB(pointcloud);
 
   // Compute the min and max map indices that could be affected by the cloud
   const FloatingPoint min_cell_width = occupancy_map_->getMinCellWidth();
@@ -34,30 +34,20 @@ void FixedResolutionIntegrator3D::integratePointcloud(
 }
 
 AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
-    const PosedPointcloud<Point3D>& pointcloud,
-    const SphericalProjector& spherical_projector) {
-  posed_range_image_->resetToInitialValue();
+    const PosedPointcloud<Point3D>& pointcloud) {
   AABB<Point3D> aabb;
-
+  posed_range_image_->resetToInitialValue();
+  posed_range_image_->setPose(pointcloud.getPose());
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
-    if (C_point.hasNaN()) {
-      LOG(WARNING) << "Skipping measurement whose endpoint contains NaNs:\n"
-                   << C_point;
-      continue;
-    }
     const FloatingPoint range = C_point.norm();
-    if (range < kEpsilon) {
-      continue;
-    }
-    if (1e3f < range) {
-      LOG(INFO) << "Skipping measurement with suspicious length: " << range;
+    if (!isMeasurementValid(C_point, range)) {
       continue;
     }
 
     // Add the point to the range image
     const Index2D range_image_index =
-        spherical_projector.bearingToNearestIndex(C_point);
+        projection_model_.bearingToNearestIndex(C_point);
     if ((range_image_index.array() < 0).any() ||
         (posed_range_image_->getDimensions().array() <=
          range_image_index.array())
@@ -65,23 +55,29 @@ AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
       // Prevent out-of-bounds access
       continue;
     }
+
+    // Add the point to the range image
+    // If multiple points hit the same image pixel, keep the closest point
+    const FloatingPoint old_range_value =
+        posed_range_image_->getRange(range_image_index);
+    if (old_range_value < config_.min_range || range < old_range_value) {
+      posed_range_image_->getRange(range_image_index) = range;
+      bearing_image_.getBearing(range_image_index) = C_point / range;
+    }
     posed_range_image_->getRange(range_image_index) = range;
 
     // Update the AABB (in world frame)
-    Point3D C_point_truncated = C_point;
-    if (config_.max_range < range) {
-      C_point_truncated *= config_.max_range / range;
-    }
+    Point3D C_point_truncated = getEndPointOrMaxRange(Point3D::Zero(), C_point,
+                                                      range, config_.max_range);
     const Point3D W_point_truncated = pointcloud.getPose() * C_point_truncated;
     aabb.includePoint(W_point_truncated);
   }
 
   // Pad the aabb to account for the beam uncertainties
   const FloatingPoint max_lateral_component =
-      std::max(std::sin(measurement_model_.getAngleThreshold()) *
-                   (config_.max_range +
-                    measurement_model_.getRangeThresholdBehindSurface()),
-               measurement_model_.getRangeThresholdBehindSurface());
+      measurement_model_.getCombinedThreshold(
+          config_.max_range +
+          measurement_model_.getRangeThresholdBehindSurface());
   aabb.min -= Vector3D::Constant(max_lateral_component);
   aabb.max += Vector3D::Constant(max_lateral_component);
 

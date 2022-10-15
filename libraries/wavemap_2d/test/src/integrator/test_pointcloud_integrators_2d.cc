@@ -5,7 +5,6 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/indexing/index_hashes.h>
-#include <wavemap_common/integrator/ray_tracing/ray_integrator.h>
 #include <wavemap_common/iterator/grid_iterator.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/eigen_format.h>
@@ -19,28 +18,59 @@
 #include "wavemap_2d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_2d.h"
 #include "wavemap_2d/integrator/projective/coarse_to_fine/wavelet_integrator_2d.h"
 #include "wavemap_2d/integrator/projective/fixed_resolution/fixed_resolution_integrator_2d.h"
+#include "wavemap_2d/integrator/ray_tracing/ray_integrator_2d.h"
 
 namespace wavemap {
 class PointcloudIntegrator2DTest : public FixtureBase {
  protected:
+  PointcloudIntegratorConfig getRandomPointcloudIntegratorConfig() {
+    const FloatingPoint min_range = getRandomSignedDistance(1e-2f, 3.f);
+    const FloatingPoint max_range = getRandomSignedDistance(min_range, 60.f);
+    return PointcloudIntegratorConfig{min_range, max_range};
+  }
+
+  VolumetricDataStructureConfig getRandomVolumetricDataStructureConfig() {
+    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
+    return VolumetricDataStructureConfig{min_cell_width};
+  }
+
+  CircularProjector getRandomProjectionModel() {
+    const FloatingPoint min_angle = getRandomAngle(-kPi, 0.f);
+    const FloatingPoint max_angle = getRandomAngle(min_angle, kPi);
+    const IndexElement num_beams = getRandomIndexElement(200, 2048);
+    return CircularProjector(
+        CircularProjectorConfig{min_angle, max_angle, num_beams});
+  }
+
+  ContinuousVolumetricLogOdds<2> getRandomMeasurementModel(
+      const CircularProjector& projection_model) {
+    ContinuousVolumetricLogOddsConfig measurement_model_config;
+    const FloatingPoint max_angle_sigma_without_overlap =
+        (projection_model.getMaxAngle() - projection_model.getMinAngle()) /
+        static_cast<FloatingPoint>(projection_model.getNumCells()) /
+        (2.f * 6.f);
+    measurement_model_config.angle_sigma =
+        random_number_generator_->getRandomRealNumber(
+            max_angle_sigma_without_overlap / 10.f,
+            max_angle_sigma_without_overlap);
+    measurement_model_config.range_sigma =
+        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+    return ContinuousVolumetricLogOdds<2>(measurement_model_config);
+  }
+
   PosedPointcloud<Point2D> getRandomPointcloud(
-      FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
-      FloatingPoint min_distance, FloatingPoint max_distance) const {
-    CHECK_LT(min_angle, max_angle);
+      const CircularProjector& projection_model,
+      FloatingPoint min_distance = 0.f,
+      FloatingPoint max_distance = 30.f) const {
     CHECK_LT(min_distance, max_distance);
 
-    const FloatingPoint angle_increment =
-        (max_angle - min_angle) / static_cast<FloatingPoint>(num_beams - 1);
-
     Pointcloud<Point2D> pointcloud;
-    pointcloud.resize(num_beams);
-    for (int index = 0; index < num_beams; ++index) {
+    pointcloud.resize(projection_model.getNumCells());
+
+    for (int index = 0; index < projection_model.getNumCells(); ++index) {
       const FloatingPoint range =
           getRandomSignedDistance(min_distance, max_distance);
-      const FloatingPoint angle =
-          min_angle + static_cast<FloatingPoint>(index) * angle_increment;
-
-      pointcloud[index] = range * CircularProjector::angleToBearing(angle);
+      pointcloud[index] = range * projection_model.indexToBearing(index);
     }
 
     return {Transformation2D(), pointcloud};
@@ -49,19 +79,29 @@ class PointcloudIntegrator2DTest : public FixtureBase {
 
 TEST_F(PointcloudIntegrator2DTest, RayIntegrator) {
   for (int idx = 0; idx < 3; ++idx) {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth();
-    const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
+    const auto pointcloud_integrator_config =
+        getRandomPointcloudIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const FloatingPoint min_cell_width_inv =
+        1.f / data_structure_config.min_cell_width;
 
-    const FloatingPoint min_angle = -kPi;
-    const FloatingPoint max_angle = kPi;
-    const int num_beams = getRandomIndexElement(10, 100);
-    const FloatingPoint min_distance = static_cast<FloatingPoint>(num_beams) *
-                                       min_cell_width / (max_angle - min_angle);
+    // Set the min distance s.t. no cells are updated by more than 1 beam
+    // NOTE: Otherwise one beam's free space update could erase another beam's
+    //       endpoint and this situation is not covered in this unit test.
     constexpr FloatingPoint kMaxDistance = 400.f;
+    const FloatingPoint min_distance =
+        data_structure_config.min_cell_width *
+        static_cast<FloatingPoint>(projection_model.getNumCells()) /
+        (projection_model.getMaxAngle() - projection_model.getMinAngle());
+    if (kMaxDistance <= min_distance) {
+      --idx;
+      continue;
+    }
 
-    // Generate a random point cloud and save its end points in a hashed set
-    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
-        min_angle, max_angle, num_beams, min_distance, kMaxDistance);
+    // Generate a random pointcloud and save its endpoints in a hashed set
+    const auto random_pointcloud =
+        getRandomPointcloud(projection_model, min_distance, kMaxDistance);
     std::unordered_set<Index2D, VoxbloxIndexHash<2>> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index2D index =
@@ -71,9 +111,11 @@ TEST_F(PointcloudIntegrator2DTest, RayIntegrator) {
 
     // Setup the occupancy map, integrator and integrate the point cloud
     VolumetricDataStructure2D::Ptr occupancy_map =
-        std::make_shared<DenseGrid<SaturatingOccupancyCell>>(min_cell_width);
+        std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
+            data_structure_config);
     PointcloudIntegrator2D::Ptr pointcloud_integrator =
-        std::make_shared<RayIntegrator<2>>(occupancy_map);
+        std::make_shared<RayIntegrator2D>(pointcloud_integrator_config,
+                                          occupancy_map);
     pointcloud_integrator->integratePointcloud(random_pointcloud);
 
     // Check the map
@@ -88,7 +130,7 @@ TEST_F(PointcloudIntegrator2DTest, RayIntegrator) {
       const bool cell_contains_ray_end_point = ray_end_points.count(index);
       EXPECT_EQ(cell_occupied_in_map, cell_contains_ray_end_point)
           << "for index " << EigenFormat::oneLine(index) << ", min cell width "
-          << min_cell_width << " and point cloud size "
+          << data_structure_config.min_cell_width << " and point cloud size "
           << random_pointcloud.getPointsLocal().size();
     }
   }
@@ -99,30 +141,32 @@ TEST_F(PointcloudIntegrator2DTest,
   constexpr bool kShowVisuals = false;
   constexpr int kNumRepetitions = 10;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
-    // TODO(victorr): Use random FoVs and numbers of beams once these are
-    //                configurable
-    constexpr FloatingPoint kMinAngle = -kHalfPi;
-    constexpr FloatingPoint kMaxAngle = kHalfPi;
-    constexpr int kNumBeams = 400;
-    constexpr FloatingPoint kMinDistance = 0.f;
-    constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
+    const auto pointcloud_integrator_config =
+        getRandomPointcloudIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    const auto random_pointcloud = getRandomPointcloud(projection_model);
 
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
-        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
+        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(
+            data_structure_config);
     PointcloudIntegrator2D::Ptr beam_integrator =
-        std::make_shared<BeamwiseIntegrator2D>(beam_occupancy_map);
+        std::make_shared<BeamwiseIntegrator2D>(pointcloud_integrator_config,
+                                               measurement_model,
+                                               beam_occupancy_map);
     beam_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       beam_occupancy_map->showImage(true, 1000);
     }
 
     VolumetricDataStructure2D::Ptr scan_occupancy_map =
-        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
+        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(
+            data_structure_config);
     PointcloudIntegrator2D::Ptr scan_integrator =
-        std::make_shared<FixedResolutionIntegrator2D>(scan_occupancy_map);
+        std::make_shared<FixedResolutionIntegrator2D>(
+            pointcloud_integrator_config, projection_model, measurement_model,
+            scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       scan_occupancy_map->showImage(true, 1000);
@@ -136,8 +180,8 @@ TEST_F(PointcloudIntegrator2DTest,
     constexpr FloatingPoint kTolerableError = 5e-2f;
     VolumetricDataStructure2D::Ptr error_grid;
     if (kShowVisuals) {
-      error_grid =
-          std::make_shared<DenseGrid<SaturatingOccupancyCell>>(min_cell_width);
+      error_grid = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
+          data_structure_config);
     }
     for (const Index2D& index : Grid(min_index, max_index)) {
       const FloatingPoint cell_value_in_beam_map =
@@ -162,21 +206,20 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndCoarseToFineIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   constexpr int kNumRepetitions = 10;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
-    // TODO(victorr): Use random FoVs and numbers of beams once these are
-    //                configurable
-    constexpr FloatingPoint kMinAngle = -kHalfPi;
-    constexpr FloatingPoint kMaxAngle = kHalfPi;
-    constexpr int kNumBeams = 400;
-    constexpr FloatingPoint kMinDistance = 0.f;
-    constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
+    const auto pointcloud_integrator_config =
+        getRandomPointcloudIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    const auto random_pointcloud = getRandomPointcloud(projection_model);
 
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
-        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
+        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(
+            data_structure_config);
     PointcloudIntegrator2D::Ptr beam_integrator =
-        std::make_shared<BeamwiseIntegrator2D>(beam_occupancy_map);
+        std::make_shared<BeamwiseIntegrator2D>(pointcloud_integrator_config,
+                                               measurement_model,
+                                               beam_occupancy_map);
     beam_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       beam_occupancy_map->showImage(true, 1000);
@@ -184,9 +227,11 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndCoarseToFineIntegratorEquivalence) {
 
     VolumetricDataStructure2D::Ptr scan_occupancy_map =
         std::make_shared<VolumetricQuadtree<UnboundedOccupancyCell>>(
-            min_cell_width);
+            data_structure_config);
     PointcloudIntegrator2D::Ptr scan_integrator =
-        std::make_shared<CoarseToFineIntegrator2D>(scan_occupancy_map);
+        std::make_shared<CoarseToFineIntegrator2D>(
+            pointcloud_integrator_config, projection_model, measurement_model,
+            scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       scan_occupancy_map->showImage(true, 1000);
@@ -200,8 +245,8 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndCoarseToFineIntegratorEquivalence) {
 
     VolumetricDataStructure2D::Ptr error_grid;
     if (kShowVisuals) {
-      error_grid =
-          std::make_shared<DenseGrid<SaturatingOccupancyCell>>(min_cell_width);
+      error_grid = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
+          data_structure_config);
     }
     for (const Index2D& index : Grid(min_index, max_index)) {
       const FloatingPoint cell_value_in_beam_map =
@@ -226,21 +271,20 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndWaveletIntegratorEquivalence) {
   constexpr bool kShowVisuals = false;
   constexpr int kNumRepetitions = 10;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
-    // TODO(victorr): Use random FoVs and numbers of beams once these are
-    //                configurable
-    constexpr FloatingPoint kMinAngle = -kHalfPi;
-    constexpr FloatingPoint kMaxAngle = kHalfPi;
-    constexpr int kNumBeams = 400;
-    constexpr FloatingPoint kMinDistance = 0.f;
-    constexpr FloatingPoint kMaxDistance = 30.f;
-    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, kNumBeams, kMinDistance, kMaxDistance);
+    const auto pointcloud_integrator_config =
+        getRandomPointcloudIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    const auto random_pointcloud = getRandomPointcloud(projection_model);
 
     VolumetricDataStructure2D::Ptr beam_occupancy_map =
-        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(min_cell_width);
+        std::make_shared<DenseGrid<UnboundedOccupancyCell>>(
+            data_structure_config);
     PointcloudIntegrator2D::Ptr beam_integrator =
-        std::make_shared<BeamwiseIntegrator2D>(beam_occupancy_map);
+        std::make_shared<BeamwiseIntegrator2D>(pointcloud_integrator_config,
+                                               measurement_model,
+                                               beam_occupancy_map);
     beam_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       beam_occupancy_map->showImage(true, 1000);
@@ -248,9 +292,11 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndWaveletIntegratorEquivalence) {
 
     VolumetricDataStructure2D::Ptr scan_occupancy_map =
         std::make_shared<WaveletQuadtree<UnboundedOccupancyCell>>(
-            min_cell_width);
+            data_structure_config);
     PointcloudIntegrator2D::Ptr scan_integrator =
-        std::make_shared<WaveletIntegrator2D>(scan_occupancy_map);
+        std::make_shared<WaveletIntegrator2D>(
+            pointcloud_integrator_config, projection_model, measurement_model,
+            scan_occupancy_map);
     scan_integrator->integratePointcloud(random_pointcloud);
     if (kShowVisuals) {
       scan_occupancy_map->showImage(true, 1000);
@@ -264,8 +310,8 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndWaveletIntegratorEquivalence) {
 
     VolumetricDataStructure2D::Ptr error_grid;
     if (kShowVisuals) {
-      error_grid =
-          std::make_shared<DenseGrid<SaturatingOccupancyCell>>(min_cell_width);
+      error_grid = std::make_shared<DenseGrid<SaturatingOccupancyCell>>(
+          data_structure_config);
     }
     for (const Index2D& index : Grid(min_index, max_index)) {
       const FloatingPoint cell_value_in_beam_map =
@@ -273,11 +319,11 @@ TEST_F(PointcloudIntegrator2DTest, BeamAndWaveletIntegratorEquivalence) {
       const FloatingPoint cell_value_in_scan_map =
           scan_occupancy_map->getCellValue(index);
       EXPECT_NEAR(cell_value_in_scan_map, cell_value_in_beam_map,
-                  CoarseToFineIntegrator2D::kMaxAcceptableUpdateError);
+                  WaveletIntegrator2D::kMaxAcceptableUpdateError);
       if (error_grid) {
         error_grid->setCellValue(
             index, (cell_value_in_scan_map - cell_value_in_beam_map) /
-                       CoarseToFineIntegrator2D::kMaxAcceptableUpdateError);
+                       WaveletIntegrator2D::kMaxAcceptableUpdateError);
       }
     }
     if (error_grid) {

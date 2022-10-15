@@ -6,9 +6,15 @@
 
 namespace wavemap {
 struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig> {
-  FloatingPoint min_angle;
-  FloatingPoint max_angle;
-  IndexElement num_cells;
+  FloatingPoint min_angle = 0.f;
+  FloatingPoint max_angle = 0.f;
+  IndexElement num_cells = 0;
+
+  // Constructors
+  CircularProjectorConfig() = default;
+  CircularProjectorConfig(FloatingPoint min_angle, FloatingPoint max_angle,
+                          IndexElement num_cells)
+      : min_angle(min_angle), max_angle(max_angle), num_cells(num_cells) {}
 
   bool isValid(bool verbose) const override;
   static CircularProjectorConfig from(const param::Map& params);

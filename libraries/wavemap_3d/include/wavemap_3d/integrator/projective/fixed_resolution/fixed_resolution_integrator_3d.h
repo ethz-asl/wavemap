@@ -16,8 +16,7 @@ class FixedResolutionIntegrator3D : public ScanwiseIntegrator3D {
   void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
 
   AABB<Point3D> computeRangeImageAndAABB(
-      const PosedPointcloud<Point3D>& pointcloud,
-      const SphericalProjector& spherical_projector);
+      const PosedPointcloud<Point3D>& pointcloud);
 };
 }  // namespace wavemap
 

@@ -32,7 +32,8 @@ if (CATKIN_ENABLE_TESTING)
       test/src/integrator/test_hierarchical_range_image_2d.cc
       test/src/integrator/test_pointcloud_integrators_3d.cc
       test/src/integrator/test_range_image_2d.cc
-      test/src/integrator/test_range_image_2d_intersector.cc)
+      test/src/integrator/test_range_image_2d_intersector.cc
+  )
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
   target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
 endif ()

@@ -99,10 +99,8 @@ int main(int argc, char* argv[]) {
 
   // Initialize the occupancy grid creator
   LOG(INFO) << "Generating the occupancy grid";
-  wavemap::VolumetricDataStructureConfig data_structure_config;
-  data_structure_config.min_cell_width = FLAGS_resolution;
-  ground_truth::OccupancyGridCreator occupancy_grid_creator(
-      data_structure_config, FLAGS_slice_height);
+  ground_truth::OccupancyGridCreator occupancy_grid_creator(FLAGS_resolution,
+                                                            FLAGS_slice_height);
 
   // Iterate over all triangles
   size_t triangle_i = 0;

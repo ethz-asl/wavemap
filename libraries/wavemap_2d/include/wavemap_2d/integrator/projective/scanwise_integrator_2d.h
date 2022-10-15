@@ -22,8 +22,8 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
       : PointcloudIntegrator2D(config, std::move(occupancy_map)),
         measurement_model_(std::move(measurement_model)),
         projection_model_(std::move(projection_model)),
-        posed_range_image_(
-            std::make_shared<PosedRangeImage1D>(projection_model_)) {
+        posed_range_image_(std::make_shared<PosedRangeImage1D>(
+            projection_model_.getNumCells())) {
     // TODO(victorr): Check that the pointcloud's angular resolution is lower
     //                than the angular uncertainty of the beam model. This is
     //                necessary since this measurement integrator assumes the
@@ -36,34 +36,13 @@ class ScanwiseIntegrator2D : public PointcloudIntegrator2D {
   const CircularProjector projection_model_;
   std::shared_ptr<PosedRangeImage1D> posed_range_image_;
 
-  FloatingPoint computeUpdate(FloatingPoint d_C_cell,
-                              FloatingPoint azimuth_angle_C_cell) {
-    if (d_C_cell < config_.min_range || config_.max_range < d_C_cell) {
-      return 0.f;
-    }
+  void updateRangeImage(const PosedPointcloud<Point2D>& pointcloud,
+                        PosedRangeImage1D& posed_range_image) const;
 
-    FloatingPoint angle_remainder;
-    const IndexElement idx = projection_model_.angleToNearestIndex(
-        azimuth_angle_C_cell, angle_remainder);
-    if (idx < 0 || posed_range_image_->getNumBeams() <= idx) {
-      return 0.f;
-    }
-    const FloatingPoint measured_distance = posed_range_image_->operator[](idx);
-    if (measured_distance +
-            measurement_model_.getRangeThresholdBehindSurface() <
-        d_C_cell) {
-      return 0.f;
-    }
-
-    const FloatingPoint cell_to_beam_angle = std::abs(angle_remainder);
-    if (measurement_model_.getAngleThreshold() < cell_to_beam_angle) {
-      return 0.f;
-    }
-
-    return measurement_model_.computeUpdate(d_C_cell, cell_to_beam_angle,
-                                            measured_distance);
-  }
+  FloatingPoint computeUpdate(const Point2D& C_cell_center) const;
 };
 }  // namespace wavemap
+
+#include "wavemap_2d/integrator/projective/impl/scanwise_integrator_2d_inl.h"
 
 #endif  // WAVEMAP_2D_INTEGRATOR_PROJECTIVE_SCANWISE_INTEGRATOR_2D_H_

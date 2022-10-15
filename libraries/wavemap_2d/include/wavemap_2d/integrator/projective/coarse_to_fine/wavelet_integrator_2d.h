@@ -24,9 +24,9 @@ class WaveletIntegrator2D : public ScanwiseIntegrator2D {
   WaveletQuadtreeInterface* wavelet_tree_;
 
   const FloatingPoint min_cell_width_;
-  std::shared_ptr<PosedRangeImage1D> posed_range_image_;
   std::shared_ptr<RangeImage1DIntersector> range_image_intersector_;
 
+  // TODO(victorr): Auto update these based on the projection model config
   const FloatingPoint max_gradient_over_range_fully_inside_ =
       measurement_model_.getConfig().scaling_free * 572.957795130823f;
   const FloatingPoint max_gradient_on_boundary_ =

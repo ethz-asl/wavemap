@@ -12,9 +12,8 @@
 namespace wavemap::ground_truth {
 class OccupancyGridCreator {
  public:
-  explicit OccupancyGridCreator(
-      const VolumetricDataStructureConfig& data_structure_config,
-      FloatingPoint slice_height);
+  explicit OccupancyGridCreator(FloatingPoint resolution,
+                                FloatingPoint slice_height);
 
   void integrateTriangle(const Triangle& triangle);
 

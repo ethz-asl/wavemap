@@ -184,9 +184,8 @@ std::unique_ptr<VolumetricDataStructure3D> WavemapMapDisplay::mapFromRosMsg(
   if (!map_msg.wavelet_octree.empty()) {
     using WaveletOctreeType = WaveletOctree<UnboundedScalarCell>;
     const auto& wavelet_octree_msg = map_msg.wavelet_octree.front();
-    VolumetricDataStructureConfig config;
-    config.min_cell_width = wavelet_octree_msg.min_cell_width;
-    auto wavelet_octree = std::make_unique<WaveletOctreeType>(config);
+    auto wavelet_octree =
+        std::make_unique<WaveletOctreeType>(wavelet_octree_msg.min_cell_width);
 
     wavelet_octree->getRootScale() =
         wavelet_octree_msg.root_node_scale_coefficient;
@@ -215,9 +214,7 @@ std::unique_ptr<VolumetricDataStructure3D> WavemapMapDisplay::mapFromRosMsg(
   } else if (!map_msg.octree.empty()) {
     using OctreeType = VolumetricOctree<UnboundedScalarCell>;
     const auto& octree_msg = map_msg.octree.front();
-    VolumetricDataStructureConfig config;
-    config.min_cell_width = octree_msg.min_cell_width;
-    auto octree = std::make_unique<OctreeType>(config);
+    auto octree = std::make_unique<OctreeType>(octree_msg.min_cell_width);
 
     std::stack<OctreeType::NodeType*> stack;
     stack.template emplace(&octree->getRootNode());

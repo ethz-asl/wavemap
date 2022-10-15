@@ -29,7 +29,7 @@ void CoarseToFineIntegrator2D::integratePointcloud(
   }
 
   // Compute the range image and the scan's AABB
-  posed_range_image_->importPointcloud(pointcloud, projection_model_);
+  updateRangeImage(pointcloud, *posed_range_image_);
   range_image_intersector_ = std::make_shared<RangeImage1DIntersector>(
       posed_range_image_, config_.max_range,
       measurement_model_.getAngleThreshold(),
@@ -66,9 +66,7 @@ void CoarseToFineIntegrator2D::integratePointcloud(
     if (current_node.height == 0 ||
         isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                        bounding_sphere_radius)) {
-      const FloatingPoint angle_C_cell =
-          CircularProjector::bearingToAngle(C_node_center);
-      const FloatingPoint sample = computeUpdate(d_C_cell, angle_C_cell);
+      const FloatingPoint sample = computeUpdate(C_node_center);
       if (kEpsilon < std::abs(sample)) {
         volumetric_quadtree_->addToCellValue(current_node, sample);
       }

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/integrator/pointcloud_integrator.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/container_print_utils.h>
@@ -10,6 +11,60 @@
 namespace wavemap {
 class RangeImage2DIntersectorTest : public FixtureBase {
  protected:
+  PointcloudIntegratorConfig getRandomPointcloudIntegratorConfig() {
+    const FloatingPoint min_range = getRandomSignedDistance(1e-1f, 3.f);
+    const FloatingPoint max_range = getRandomSignedDistance(min_range, 40.f);
+    return PointcloudIntegratorConfig{min_range, max_range};
+  }
+
+  SphericalProjector getRandomProjectionModel() {
+    const FloatingPoint min_elevation_angle = getRandomAngle(-kQuarterPi, 0.f);
+    const FloatingPoint max_elevation_angle =
+        getRandomAngle(min_elevation_angle, kQuarterPi);
+    const FloatingPoint min_azimuth_angle = -kPi;
+    const FloatingPoint max_azimuth_angle = kPi;
+    const int num_rows = int_math::exp2(getRandomIndexElement(4, 7));
+    const int num_cols = int_math::exp2(getRandomIndexElement(7, 11));
+    return SphericalProjector(SphericalProjectorConfig{
+        {min_elevation_angle, max_elevation_angle, num_rows},
+        {min_azimuth_angle, max_azimuth_angle, num_cols}});
+  }
+
+  ContinuousVolumetricLogOdds<3> getRandomMeasurementModel(
+      const SphericalProjector& projection_model) {
+    ContinuousVolumetricLogOddsConfig measurement_model_config;
+    const FloatingPoint max_angle_sigma_without_overlap =
+        (projection_model.getMaxAngles() - projection_model.getMinAngles())
+            .cwiseQuotient(
+                projection_model.getDimensions().cast<FloatingPoint>())
+            .minCoeff() /
+        (2.f * 6.f);
+    measurement_model_config.angle_sigma =
+        random_number_generator_->getRandomRealNumber(
+            max_angle_sigma_without_overlap / 10.f,
+            max_angle_sigma_without_overlap);
+    measurement_model_config.range_sigma =
+        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+    return ContinuousVolumetricLogOdds<3>(measurement_model_config);
+  }
+
+  PosedRangeImage2D getRandomPosedRangeImage(IndexElement num_rows,
+                                             IndexElement num_cols,
+                                             FloatingPoint min_range,
+                                             FloatingPoint max_range) {
+    CHECK_LT(min_range, max_range);
+
+    PosedRangeImage2D posed_range_image(num_rows, num_cols);
+    for (const Index2D& index :
+         Grid<2>(Index2D::Zero(), {num_rows - 1, num_cols - 1})) {
+      const FloatingPoint range = getRandomSignedDistance(min_range, max_range);
+      posed_range_image.getRange(index) = range;
+    }
+    posed_range_image.setPose(getRandomTransformation<3>());
+
+    return posed_range_image;
+  }
+
   struct AABBAndPose {
     AABB<Point3D> W_aabb;
     Transformation3D T_W_C;
@@ -87,35 +142,6 @@ class RangeImage2DIntersectorTest : public FixtureBase {
       }
     }
     return aabbs_and_poses;
-  }
-
-  PosedPointcloud<Point3D> getRandomPointcloud(
-      FloatingPoint min_elevation_angle, FloatingPoint max_elevation_angle,
-      int num_rows, FloatingPoint min_azimuth_angle,
-      FloatingPoint max_azimuth_angle, int num_cols, FloatingPoint min_distance,
-      FloatingPoint max_distance) const {
-    CHECK_LT(min_elevation_angle, max_elevation_angle);
-    CHECK_LT(min_azimuth_angle, max_azimuth_angle);
-    CHECK_LT(min_distance, max_distance);
-
-    Pointcloud<Point3D> pointcloud;
-    pointcloud.resize(num_rows * num_cols);
-
-    const SphericalProjector spherical_projector(
-        min_elevation_angle, max_elevation_angle, num_rows, min_azimuth_angle,
-        max_azimuth_angle, num_cols);
-    for (int pointcloud_index = 0;
-         pointcloud_index < static_cast<int>(pointcloud.size());
-         ++pointcloud_index) {
-      const FloatingPoint range =
-          getRandomSignedDistance(min_distance, max_distance);
-      const Index2D image_index{pointcloud_index % num_rows,
-                                pointcloud_index / num_rows};
-      pointcloud[pointcloud_index] =
-          range * spherical_projector.indexToBearing(image_index);
-    }
-
-    return {getRandomTransformation<3>(), pointcloud};
   }
 };
 
@@ -253,34 +279,31 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
-    constexpr FloatingPoint kMinElevationAngle = -kQuarterPi;
-    constexpr FloatingPoint kMaxElevationAngle = kQuarterPi;
-    const int num_rows = getRandomIndexElement(100, 2048);
-    constexpr FloatingPoint kMinAzimuthAngle = -kPi;
-    constexpr FloatingPoint kMaxAzimuthAngle = kPi;
-    const int num_cols = getRandomIndexElement(100, 2048);
-    constexpr FloatingPoint kMinDistance = 0.f;
-    constexpr FloatingPoint kMaxDistance = 60.f;
-    const PosedPointcloud<Point3D> random_pointcloud = getRandomPointcloud(
-        kMinElevationAngle, kMaxElevationAngle, num_rows, kMinAzimuthAngle,
-        kMaxAzimuthAngle, num_cols, kMinDistance, kMaxDistance);
+    const auto integrator_config = getRandomPointcloudIntegratorConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    constexpr FloatingPoint kMaxRange = 60.f;
+    const auto posed_range_image =
+        std::make_shared<PosedRangeImage2D>(getRandomPosedRangeImage(
+            projection_model.getNumRows(), projection_model.getNumColumns(),
+            0.f, kMaxRange));
 
     // Create the hierarchical range image
-    SphericalProjector spherical_projector(
-        kMinElevationAngle, kMaxElevationAngle, num_rows, kMinAzimuthAngle,
-        kMaxAzimuthAngle, num_cols);
-    const auto range_image =
-        std::make_shared<PosedRangeImage2D>(spherical_projector);
-    range_image->importPointcloud(random_pointcloud, spherical_projector);
-    RangeImage2DIntersector range_image_intersector(range_image);
+    RangeImage2DIntersector range_image_intersector(
+        posed_range_image, integrator_config.max_range,
+        measurement_model.getAngleThreshold(),
+        measurement_model.getRangeThresholdInFrontOfSurface(),
+        measurement_model.getRangeThresholdBehindSurface());
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
     constexpr NdtreeIndexElement kMaxHeight = 6;
     const Index3D min_index = convert::pointToCeilIndex<3>(
-        random_pointcloud.getOrigin() - Vector3D::Constant(kMaxDistance),
+        posed_range_image->getPose().getPosition() -
+            Vector3D::Constant(kMaxRange),
         min_cell_width_inv);
     const Index3D max_index = convert::pointToCeilIndex<3>(
-        random_pointcloud.getOrigin() + Vector3D::Constant(kMaxDistance),
+        posed_range_image->getPose().getPosition() +
+            Vector3D::Constant(kMaxRange),
         min_cell_width_inv);
     for (const Index3D& index :
          getRandomIndexVector(min_index, max_index, 50, 100)) {
@@ -295,34 +318,37 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
       bool has_free = false;
       bool has_occupied = false;
       bool has_unknown = false;
-      const Transformation3D T_C_W = random_pointcloud.getPose().inverse();
+      const Transformation3D T_C_W = posed_range_image->getPoseInverse();
       for (const Index3D& reference_index :
            Grid(min_reference_index, max_reference_index)) {
         const Point3D W_cell_center =
             convert::indexToCenterPoint(reference_index, min_cell_width);
         const Point3D C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
-        if (ContinuousVolumetricLogOdds<3>::kRangeMax < d_C_cell) {
+        if (integrator_config.max_range < d_C_cell) {
           has_unknown = true;
           continue;
         }
 
         const Index2D range_image_index =
-            spherical_projector.bearingToNearestIndex(C_cell_center);
+            projection_model.bearingToNearestIndex(C_cell_center);
         if ((range_image_index.array() < 0).any() ||
-            (range_image->getDimensions().array() <= range_image_index.array())
+            (posed_range_image->getDimensions().array() <=
+             range_image_index.array())
                 .any()) {
           has_unknown = true;
           continue;
         }
 
         const FloatingPoint range_image_distance =
-            range_image->operator[](range_image_index);
-        if (d_C_cell < range_image_distance) {
+            posed_range_image->getRange(range_image_index);
+        if (d_C_cell <
+            range_image_distance -
+                measurement_model.getRangeThresholdInFrontOfSurface()) {
           has_free = true;
         } else if (d_C_cell <=
                    range_image_distance +
-                       ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh) {
+                       measurement_model.getRangeThresholdBehindSurface()) {
           has_occupied = true;
         } else {
           has_unknown = true;
@@ -350,7 +376,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
           W_node_bottom_left + Vector3D::Constant(node_width)};
       const IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
-              random_pointcloud.getPose(), W_cell_aabb, spherical_projector);
+              posed_range_image->getPose(), W_cell_aabb, projection_model);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected " << getIntersectionTypeStr(reference_intersection_type)
           << " but got " << getIntersectionTypeStr(returned_intersection_type);

@@ -9,8 +9,9 @@ inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(
     FloatingPoint bounding_sphere_radius) const {
   switch (intersection_type) {
     case IntersectionType::kFreeOrUnknown:
-      return bounding_sphere_radius / sphere_center_distance <
-             kMaxAcceptableUpdateError / max_gradient_over_range_fully_inside_;
+      return bounding_sphere_radius < (kMaxAcceptableUpdateError /
+                                       max_gradient_over_range_fully_inside_) *
+                                          sphere_center_distance;
     case IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
              kMaxAcceptableUpdateError / max_gradient_on_boundary_;
@@ -25,6 +26,8 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     OctreeIndex::RelativeChild relative_child_index,
     RangeImage2DIntersector::Cache cache) {
   constexpr FloatingPoint kNoiseThreshold = 1e-4f;
+
+  // If we're at the leaf level, directly update the node
   if (node_index.height == 0) {
     const Point3D W_node_center =
         convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
@@ -37,21 +40,30 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
            node_value;
   }
 
+  // Otherwise, test whether the current node is fully occupied;
+  // free or unknown; or fully unknown
   const AABB<Point3D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
           posed_range_image_->getPose(), W_cell_aabb, projection_model_, cache);
-  if (intersection_type == IntersectionType::kFullyUnknown ||
-      (intersection_type == IntersectionType::kFreeOrUnknown &&
-       node_value <
-           SaturatingOccupancyCell::kLowerBound + kNoiseThreshold / 10.f)) {
+
+  // If we're fully in unknown space,
+  // there's no need to evaluate this node or its children
+  if (intersection_type == IntersectionType::kFullyUnknown) {
     return 0.f;
   }
 
-  WaveletOctreeInterface::NodeType* node =
-      parent_node.getChild(relative_child_index);
+  // We can also stop here if the cell will result in a free space update (or
+  // zero) and the map is already saturated free
+  if (intersection_type == IntersectionType::kFreeOrUnknown &&
+      node_value <
+          SaturatingOccupancyCell::kLowerBound + kNoiseThreshold / 10.f) {
+    return 0.f;
+  }
 
+  // Test if the worst-case error for the intersection type at the current
+  // resolution falls within the acceptable approximation error
   const FloatingPoint node_width = W_cell_aabb.width<0>();
   const Point3D W_node_center =
       W_cell_aabb.min + Vector3D::Constant(node_width / 2.f);
@@ -60,6 +72,8 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
   const FloatingPoint d_C_cell = C_node_center.norm();
   const FloatingPoint bounding_sphere_radius =
       kUnitCubeHalfDiagonal * node_width;
+  WaveletOctreeInterface::NodeType* node =
+      parent_node.getChild(relative_child_index);
   if (isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
     const FloatingPoint sample = computeUpdate(C_node_center);
@@ -74,10 +88,11 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     }
   }
 
+  // Since the approximation error would still be too big, refine
   if (!node) {
+    // Allocate the current node if it has not yet been allocated
     node = parent_node.allocateChild(relative_child_index);
   }
-
   const WaveletOctreeInterface::Coefficients::CoefficientsArray
       child_scale_coefficients = WaveletOctreeInterface::Transform::backward(
           {node_value, node->data()});
@@ -94,11 +109,13 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
                                    relative_child_idx, cache);
   }
 
+  // Update the current node's wavelet detail coefficients
   const auto [scale_update, detail_updates] =
       WaveletOctreeInterface::Transform::forward(
           child_scale_coefficient_updates);
   node->data() += detail_updates;
 
+  // Propagate the wavelet scale coefficient upward
   return scale_update;
 }
 }  // namespace wavemap

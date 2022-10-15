@@ -14,6 +14,11 @@ struct VolumetricDataStructureConfig
     : ConfigBase<VolumetricDataStructureConfig> {
   FloatingPoint min_cell_width = 0.1f;
 
+  // Constructors
+  VolumetricDataStructureConfig() = default;
+  VolumetricDataStructureConfig(FloatingPoint min_cell_width)  // NOLINT
+      : min_cell_width(min_cell_width) {}
+
   bool isValid(bool verbose) const override;
   static VolumetricDataStructureConfig from(const param::Map& params);
 };

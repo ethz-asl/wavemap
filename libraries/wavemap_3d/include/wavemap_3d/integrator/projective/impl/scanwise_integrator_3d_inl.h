@@ -3,7 +3,7 @@
 
 namespace wavemap {
 inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
-    const Point3D& C_cell_center) {
+    const Point3D& C_cell_center) const {
   const FloatingPoint d_C_cell = C_cell_center.norm();
   if (d_C_cell < config_.min_range || config_.max_range < d_C_cell) {
     return 0.f;

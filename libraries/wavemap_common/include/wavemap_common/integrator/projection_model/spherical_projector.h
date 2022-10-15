@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
 #define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
 
+#include <utility>
+
 #include "wavemap_common/integrator/projection_model/circular_projector.h"
 #include "wavemap_common/utils/approximate_trigonometry.h"
 #include "wavemap_common/utils/config_utils.h"
@@ -9,6 +11,12 @@ namespace wavemap {
 struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
   CircularProjectorConfig elevation;
   CircularProjectorConfig azimuth;
+
+  // Constructors
+  SphericalProjectorConfig() = default;
+  SphericalProjectorConfig(CircularProjectorConfig elevation,
+                           CircularProjectorConfig azimuth)
+      : elevation(std::move(elevation)), azimuth(std::move(azimuth)) {}
 
   bool isValid(bool verbose) const override;
   static SphericalProjectorConfig from(const param::Map& params);

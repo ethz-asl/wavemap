@@ -39,9 +39,11 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
   std::shared_ptr<PosedRangeImage2D> posed_range_image_;
   BearingImage2D bearing_image_;
 
-  void updateRangeImage(const PosedPointcloud<Point3D>& pointcloud);
+  void updateRangeImage(const PosedPointcloud<Point3D>& pointcloud,
+                        PosedRangeImage2D& posed_range_image,
+                        BearingImage2D& bearing_image) const;
 
-  FloatingPoint computeUpdate(const Point3D& C_cell_center);
+  FloatingPoint computeUpdate(const Point3D& C_cell_center) const;
 };
 }  // namespace wavemap
 
