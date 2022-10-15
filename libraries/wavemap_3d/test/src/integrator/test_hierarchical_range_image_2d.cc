@@ -5,7 +5,6 @@
 #include <wavemap_common/test/fixture_base.h>
 
 #include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_bounds_2d.h"
-#include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_sets_2d.h"
 
 namespace wavemap {
 class HierarchicalRangeImage2DTest : public FixtureBase {
@@ -18,7 +17,8 @@ class HierarchicalRangeImage2DTest : public FixtureBase {
     RangeImage2D range_image(num_rows, num_cols);
     for (const Index2D& index : Grid<2>(
              Index2D::Zero(), range_image.getDimensions() - Index2D::Ones())) {
-      range_image[index] = getRandomSignedDistance(kMinDistance, kMaxDistance);
+      range_image.getRange(index) =
+          getRandomSignedDistance(kMinDistance, kMaxDistance);
     }
     return range_image;
   }
@@ -30,6 +30,9 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
     constexpr bool kAzimuthMayWrap = false;
     auto range_image = std::make_shared<RangeImage2D>(getRandomRangeImage());
     const Index2D range_image_dims = range_image->getDimensions();
+    const Index2D range_image_dims_scaled = range_image_dims.cwiseProduct(
+        HierarchicalRangeBounds2D<
+            kAzimuthMayWrap>::getImageToPyramidScaleFactor());
     HierarchicalRangeBounds2D<kAzimuthMayWrap> hierarchical_range_image(
         range_image);
 
@@ -38,33 +41,39 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
         hierarchical_range_image.getMaxHeight();
     for (NdtreeIndexElement height = 0; height <= max_height; ++height) {
       const Index2D current_level_dims =
-          int_math::div_exp2_ceil(range_image_dims, height);
+          int_math::div_exp2_ceil(range_image_dims_scaled, height);
       for (const Index2D& position :
            Grid<2>(Index2D::Zero(), current_level_dims - Index2D::Ones())) {
         QuadtreeIndex index{height, position};
         // Avoid out-of-bounds range image access when we're at the leaf level
         if (index.height == 0 &&
-            (range_image_dims.array() <= index.position.array()).any()) {
+            (range_image_dims_scaled.array() <= index.position.array()).any()) {
           continue;
         }
 
         // Check if the different accessors return the same values
         EXPECT_EQ(hierarchical_range_image.getBounds(index).lower,
                   hierarchical_range_image.getLowerBound(index))
-            << "For index " << index.toString() << " and range image width "
-            << range_image_dims;
+            << "For index " << index.toString() << ", range image size "
+            << range_image_dims << " and scale factor "
+            << HierarchicalRangeBounds2D<
+                   kAzimuthMayWrap>::getImageToPyramidScaleFactor();
         EXPECT_EQ(hierarchical_range_image.getBounds(index).upper,
                   hierarchical_range_image.getUpperBound(index))
-            << "For index " << index.toString() << " and range image width "
-            << range_image_dims;
+            << "For index " << index.toString() << ", range image width "
+            << range_image_dims << " and scale factor "
+            << HierarchicalRangeBounds2D<
+                   kAzimuthMayWrap>::getImageToPyramidScaleFactor();
 
         // Check if the values returned by the accessors are correct
         if (index.height == 0) {
           // At the leaf level the bounds should match range image itself
-          EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
-                          range_image->operator[](index.position));
-          EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
-                          range_image->operator[](index.position));
+          if ((index.position.array() < range_image_dims.array()).all()) {
+            EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
+                            range_image->getRange(index.position));
+            EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
+                            range_image->getRange(index.position));
+          }
         } else if (index.height == 1) {
           // At the first pyramid level, the bounds should correspond to min/max
           // pooling the range image with a downsampling factor of 2
@@ -72,11 +81,14 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
           for (NdtreeIndexRelativeChild relative_child_idx = 0;
                relative_child_idx < QuadtreeIndex::kNumChildren;
                ++relative_child_idx) {
-            const QuadtreeIndex child_idx =
+            QuadtreeIndex child_idx =
                 index.computeChildIndex(relative_child_idx);
+            child_idx.position = child_idx.position.cwiseQuotient(
+                HierarchicalRangeBounds2D<
+                    kAzimuthMayWrap>::getImageToPyramidScaleFactor());
             if ((child_idx.position.array() < range_image_dims.array()).all()) {
               const FloatingPoint range_image_value =
-                  range_image->operator[](child_idx.position);
+                  range_image->getRange(child_idx.position);
               if (range_image_value <
                   HierarchicalRangeBounds2D<kAzimuthMayWrap>::getRangeMin()) {
                 child_bounds.lower =
@@ -120,7 +132,8 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                 index.computeChildIndex(relative_child_idx);
             const bool child_exists =
                 (child_idx.position.array() <
-                 int_math::div_exp2_ceil(range_image_dims, index.height - 1)
+                 int_math::div_exp2_ceil(range_image_dims_scaled,
+                                         index.height - 1)
                      .array())
                     .all();
             if (child_exists) {
@@ -183,7 +196,7 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
       // Compare against brute force
       Bounds<FloatingPoint> bounds_brute_force;
       for (const Index2D& index : Grid(start_idx, end_idx)) {
-        const FloatingPoint range_value = range_image->operator[](index);
+        const FloatingPoint range_value = range_image->getRange(index);
         if (HierarchicalRangeBounds2D<kAzimuthMayWrap>::getRangeMin() <
             range_value) {
           bounds_brute_force.lower =

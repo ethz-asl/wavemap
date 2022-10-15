@@ -33,7 +33,13 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 # Libraries
-add_library(${PROJECT_NAME} src/utils/eigen_format.cc)
+add_library(${PROJECT_NAME}
+    src/data_structure/volumetric/volumetric_data_structure_base.cc
+    src/integrator/measurement_model/continuous_volumetric_log_odds.cc
+    src/integrator/projection_model/circular_projector.cc
+    src/integrator/projection_model/spherical_projector.cc
+    src/integrator/pointcloud_integrator.cc
+    src/utils/eigen_format.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 # Tests

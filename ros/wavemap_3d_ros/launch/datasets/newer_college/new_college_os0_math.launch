@@ -4,7 +4,7 @@
        default="true"
        doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
   <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/wavemap_evaluations.yaml"
+       default="$(find wavemap_3d_ros)/config/ouster_os0.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
   <arg name="debug_mode"
        default="false"
@@ -21,13 +21,13 @@
        default="single_ray_integrator"/>
 
   <!-- Dataset params -->
-  <!-- TODO(victorr): Setup LiDAR undistortion -->
   <arg name="pointcloud_topic"
        default="/os_cloud_node/points"/>
   <arg name="rosbag_path"
        default="
-../data/newer_college/cloister/2021-12-02-10-15-59_0-cloister.bag
-../data/newer_college/cloister/2021-12-02-10-19-05_1-cloister.bag"
+../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/2021-04-07-13-49-03_0-math-easy.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/2021-04-07-13-52-31_1-math-easy.bag
+"
        doc="Replay the rosbag at the specified path."/>
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
   <node pkg="tf" type="static_transform_publisher"
@@ -36,7 +36,7 @@
   <node pkg="wavemap_3d_ros" type="csv_to_tf.py" name="csv_to_tf_pub"
         output="screen">
     <param name="ground_truth_pose_file_path"
-           value="../data/newer_college/cloister/gt-nc-cloister.csv"/>
+           value="../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/gt_state_easy.csv"/>
     <param name="sensor_frame"
            value="base"/>
   </node>

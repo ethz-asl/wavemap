@@ -20,8 +20,16 @@ class RangeImage1DIntersector {
     FloatingPoint max_angle = std::numeric_limits<FloatingPoint>::lowest();
   };
 
-  explicit RangeImage1DIntersector(std::shared_ptr<RangeImage1D> range_image)
-      : hierarchical_range_image_(std::move(range_image)) {}
+  RangeImage1DIntersector(std::shared_ptr<RangeImage1D> range_image,
+                          FloatingPoint max_range,
+                          FloatingPoint angle_threshold,
+                          FloatingPoint range_threshold_in_front_of_surface,
+                          FloatingPoint range_threshold_behind_surface)
+      : hierarchical_range_image_(std::move(range_image)),
+        max_range_(max_range),
+        angle_threshold_(angle_threshold),
+        range_threshold_in_front_(range_threshold_in_front_of_surface),
+        range_threshold_behind_(range_threshold_behind_surface) {}
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
   //       around at +-PI and a min_angle >= max_angle will be returned.
@@ -34,6 +42,11 @@ class RangeImage1DIntersector {
 
  private:
   HierarchicalRangeImage1D hierarchical_range_image_;
+
+  const FloatingPoint max_range_;
+  const FloatingPoint angle_threshold_;
+  const FloatingPoint range_threshold_in_front_;
+  const FloatingPoint range_threshold_behind_;
 };
 }  // namespace wavemap
 

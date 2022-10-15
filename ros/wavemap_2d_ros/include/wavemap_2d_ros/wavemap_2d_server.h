@@ -22,40 +22,39 @@ namespace wavemap {
 class Wavemap2DServer {
  public:
   struct Config {
-    float min_cell_width = 0.f;
-
+    // General
     std::string world_frame = "odom";
+    bool publish_performance_stats = false;
+    float pointcloud_queue_processing_retry_period_s = 0.1f;
 
-    std::string data_structure_type = "dense_grid";
-    std::string measurement_model_type = "beam_model";
+    // Map
+    float map_pruning_period_s = 1.f;
+    float map_visualization_period_s = 10.f;
+    float map_autosave_period_s = -1.f;
+    std::string map_autosave_path;
 
+    // Integrator
     std::string pointcloud_topic_name = "scan";
     int pointcloud_topic_queue_length = 10;
+    float pointcloud_queue_max_wait_for_tf_s = 1.f;
 
-    float map_pruning_period_s = 1.f;
-
-    float map_visualization_period_s = 10.f;
-
+    // Evaluations
     // NOTE: evaluation will only be performed if map_ground_truth_path is set
     float map_evaluation_period_s = 10.f;
     std::string map_ground_truth_path;
 
-    float map_autosave_period_s = -1.f;
-    std::string map_autosave_path;
-
-    bool publish_performance_stats = false;
-
-    float pointcloud_queue_processing_period_s = 0.1f;
-    float pointcloud_queue_max_wait_for_transform_s = 1.f;
-
     static Config fromRosParams(ros::NodeHandle nh);
-    bool isValid(bool verbose = true);
+    bool isValid(bool verbose = true) const;
+    const Config& checkValid() const {
+      CHECK(isValid(true));
+      return *this;
+    }
   };
 
   Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
       : Wavemap2DServer(nh, nh_private, Config::fromRosParams(nh_private)) {}
   Wavemap2DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                  Config config);
+                  const Config& config);
 
   void pointcloudCallback(const sensor_msgs::LaserScan& scan_msg);
 
@@ -67,7 +66,7 @@ class Wavemap2DServer {
  private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
-  Config config_;
+  const Config config_;
 
   VolumetricDataStructure2D::Ptr occupancy_map_;
   PointcloudIntegrator2D::Ptr pointcloud_integrator_;

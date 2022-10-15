@@ -50,7 +50,7 @@ TYPED_TEST(VolumetricNdtreeTest, Initialization) {
   const FloatingPoint random_min_cell_width =
       TestFixture::getRandomMinCellWidth();
   VolumetricNdtree<typename TypeParam::CellType, TypeParam::kDim> map(
-      random_min_cell_width);
+      VolumetricDataStructureConfig{random_min_cell_width});
   EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 1u);  // Contains exactly 1 node (the root)
@@ -58,7 +58,7 @@ TYPED_TEST(VolumetricNdtreeTest, Initialization) {
 
 TYPED_TEST(VolumetricNdtreeTest, IndexConversions) {
   VolumetricNdtree<typename TypeParam::CellType, TypeParam::kDim> map(
-      TestFixture::getRandomMinCellWidth());
+      VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
   std::vector<Index<TypeParam::kDim>> random_indices =
       TestFixture::getRandomIndexVector(map.getMinPossibleIndex(),
                                         map.getMaxPossibleIndex());
@@ -78,7 +78,7 @@ TYPED_TEST(VolumetricNdtreeTest, IndexConversions) {
 
 TYPED_TEST(VolumetricNdtreeTest, Resizing) {
   VolumetricNdtree<typename TypeParam::CellType, TypeParam::kDim> map(
-      TestFixture::getRandomMinCellWidth());
+      VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), 1u);
 
@@ -97,8 +97,8 @@ TYPED_TEST(VolumetricNdtreeTest, Resizing) {
 
   Index<TypeParam::kDim> min_index = first_random_index;
   Index<TypeParam::kDim> max_index = first_random_index;
-  for (auto index_it = ++random_indices.begin();
-       index_it != random_indices.end(); ++index_it) {
+  for (auto index_it = ++random_indices.cbegin();
+       index_it != random_indices.cend(); ++index_it) {
     min_index = min_index.cwiseMin(*index_it);
     max_index = max_index.cwiseMax(*index_it);
     map.addToCellValue(*index_it, 0.f);
@@ -134,7 +134,7 @@ TYPED_TEST(VolumetricNdtreeTest, Pruning) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
     VolumetricNdtree<typename TypeParam::CellType, TypeParam::kDim> map(
-        TestFixture::getRandomMinCellWidth());
+        VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
     const std::vector<Index<TypeParam::kDim>> random_indices =
         TestFixture::template getRandomIndexVector<TypeParam::kDim>(
             map.getMinPossibleIndex(), map.getMaxPossibleIndex());

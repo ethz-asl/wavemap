@@ -138,7 +138,7 @@ bool DenseGrid<CellT>::save(const std::string& file_path_prefix,
                << "\" for writing.";
     return false;
   }
-  header_file << min_cell_width_ << "\n"
+  header_file << config_.min_cell_width << "\n"
               << min_external_index_ << "\n"
               << max_external_index_;
   header_file.close();
@@ -182,11 +182,11 @@ bool DenseGrid<CellT>::load(const std::string& file_path_prefix,
 
   FloatingPoint min_cell_width;
   header_file >> min_cell_width;
-  if (1e-3f < std::abs(min_cell_width - min_cell_width_)) {
+  if (1e-3f < std::abs(min_cell_width - config_.min_cell_width)) {
     LOG(ERROR) << "Tried to load a map whose minimum cell width ("
                << min_cell_width
                << ") does not match the configured minimum cell width ("
-               << min_cell_width_ << ").";
+               << config_.min_cell_width << ").";
     return false;
   }
   header_file >> min_external_index_.x() >> min_external_index_.y();

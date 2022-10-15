@@ -30,7 +30,7 @@ void HashedBlocks<CellT, dim>::prune() {
       blocks_to_delete.template emplace(block_index);
     }
   }
-  std::for_each(blocks_to_delete.begin(), blocks_to_delete.end(),
+  std::for_each(blocks_to_delete.cbegin(), blocks_to_delete.cend(),
                 [&blocks = blocks_](const auto& block_index) {
                   blocks.erase(block_index);
                 });

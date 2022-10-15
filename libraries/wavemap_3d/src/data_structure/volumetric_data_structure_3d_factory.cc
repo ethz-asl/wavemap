@@ -9,53 +9,43 @@
 
 namespace wavemap {
 VolumetricDataStructure3D::Ptr VolumetricDataStructure3DFactory::create(
-    const std::string& data_structure_type_name, FloatingPoint min_cell_width,
+    const param::Map& params,
     std::optional<VolumetricDataStructure3DType> default_data_structure_type) {
-  for (size_t type_idx = 0;
-       type_idx < kVolumetricDataStructure3DTypeStrs.size(); ++type_idx) {
-    if (data_structure_type_name ==
-        kVolumetricDataStructure3DTypeStrs[type_idx]) {
-      return create(static_cast<VolumetricDataStructure3DType>(type_idx),
-                    min_cell_width);
-    }
+  std::string error_msg;
+  auto type = VolumetricDataStructure3DType::fromParamMap(params, error_msg);
+  if (type.isValid()) {
+    return create(type, params);
   }
 
   if (default_data_structure_type.has_value()) {
-    LOG(WARNING) << "Requested creation of unknown data structure type \""
-                 << data_structure_type_name << "\". Default type \""
-                 << getVolumetricDataStructure3DTypeStr(
-                        default_data_structure_type.value())
+    type = default_data_structure_type.value();
+    LOG(WARNING) << error_msg << " Default type \"" << type.toStr()
                  << "\" will be created instead.";
-    return create(default_data_structure_type.value(), min_cell_width);
-  } else {
-    LOG(ERROR) << "Requested creation of unknown data structure type \""
-               << data_structure_type_name
-               << "\" and no default was set. Returning nullptr.";
+    return create(default_data_structure_type.value(), params);
   }
+
+  LOG(ERROR) << error_msg << "No default was set. Returning nullptr.";
   return nullptr;
 }
 
 VolumetricDataStructure3D::Ptr VolumetricDataStructure3DFactory::create(
     VolumetricDataStructure3DType data_structure_type,
-    FloatingPoint min_cell_width) {
-  switch (data_structure_type) {
+    const param::Map& params) {
+  const auto config = VolumetricDataStructureConfig::from(params);
+  switch (data_structure_type.toTypeId()) {
     case VolumetricDataStructure3DType::kHashedBlocks:
-      return std::make_shared<HashedBlocks3D<SaturatingOccupancyCell>>(
-          min_cell_width);
+      return std::make_shared<HashedBlocks3D<SaturatingOccupancyCell>>(config);
     case VolumetricDataStructure3DType::kOctree:
       return std::make_shared<VolumetricOctree<SaturatingOccupancyCell>>(
-          min_cell_width);
+          config);
     case VolumetricDataStructure3DType::kDifferencingOctree:
       return std::make_shared<
-          VolumetricDifferencingOctree<SaturatingOccupancyCell>>(
-          min_cell_width);
+          VolumetricDifferencingOctree<SaturatingOccupancyCell>>(config);
     case VolumetricDataStructure3DType::kWaveletOctree:
-      return std::make_shared<WaveletOctree<SaturatingOccupancyCell>>(
-          min_cell_width);
+      return std::make_shared<WaveletOctree<SaturatingOccupancyCell>>(config);
     default:
-      LOG(ERROR) << "Attempted to create unknown data structure type: "
-                 << to_underlying(data_structure_type)
-                 << ". Returning nullptr.";
+      LOG(ERROR) << "Attempted to create data structure with unknown type ID: "
+                 << data_structure_type.toTypeId() << ". Returning nullptr.";
       return nullptr;
   }
 }

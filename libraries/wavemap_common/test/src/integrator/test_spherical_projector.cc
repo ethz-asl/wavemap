@@ -23,8 +23,8 @@ TEST_F(SphericalProjectorTest, InitializationAndAccessors) {
     const IndexElement num_columns = getRandomIndexElement(2, 1000);
 
     SphericalProjector spherical_projector(
-        min_elevation_angle, max_elevation_angle, num_rows, min_azimuth_angle,
-        max_azimuth_angle, num_columns);
+        {{min_elevation_angle, max_elevation_angle, num_rows},
+         {min_azimuth_angle, max_azimuth_angle, num_columns}});
     EXPECT_EQ(spherical_projector.getMinElevationAngle(), min_elevation_angle);
     EXPECT_EQ(spherical_projector.getMaxElevationAngle(), max_elevation_angle);
     EXPECT_EQ(spherical_projector.getNumRows(), num_rows);
@@ -78,9 +78,9 @@ TEST_F(SphericalProjectorTest, Conversions) {
         getRandomAngle(min_angles[1] + kOneDegree, kPi)};
     const Index2D size =
         getRandomIndex<2>(Index2D::Constant(2), Index2D::Constant(1000));
-    SphericalProjector spherical_projector(min_angles[0], max_angles[0],
-                                           size[0], min_angles[1],
-                                           max_angles[1], size[1]);
+    SphericalProjector spherical_projector(
+        {{min_angles[0], max_angles[0], size[0]},
+         {min_angles[1], max_angles[1], size[1]}});
 
     // Precompute commonly used values
     const Index2D max_index = size - Index2D::Ones();

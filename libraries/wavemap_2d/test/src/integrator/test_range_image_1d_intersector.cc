@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/integrator/pointcloud_integrator.h>
 #include <wavemap_common/iterator/grid_iterator.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/angle_utils.h>
@@ -11,23 +12,49 @@
 namespace wavemap {
 class RangeImage1DIntersectorTest : public FixtureBase {
  protected:
-  PosedPointcloud<Point2D> getRandomPointcloud(
-      FloatingPoint min_angle, FloatingPoint max_angle, int num_beams,
-      FloatingPoint min_distance, FloatingPoint max_distance) const {
-    CHECK_LT(min_angle, max_angle);
-    CHECK_LT(min_distance, max_distance);
+  PointcloudIntegratorConfig getRandomPointcloudIntegratorConfig() {
+    const FloatingPoint min_range = getRandomSignedDistance(1e-2f, 2.f);
+    const FloatingPoint max_range = getRandomSignedDistance(min_range, 60.f);
+    return PointcloudIntegratorConfig{min_range, max_range};
+  }
 
-    Pointcloud<Point2D> pointcloud;
-    pointcloud.resize(num_beams);
+  CircularProjector getRandomProjectionModel() {
+    const FloatingPoint min_angle = getRandomAngle(-kPi, 0.f);
+    const FloatingPoint max_angle = getRandomAngle(min_angle, kPi);
+    const IndexElement num_beams = getRandomIndexElement(100, 2048);
+    return CircularProjector(
+        CircularProjectorConfig{min_angle, max_angle, num_beams});
+  }
 
-    const CircularProjector circular_projector(min_angle, max_angle, num_beams);
-    for (int index = 0; index < num_beams; ++index) {
-      const FloatingPoint range =
-          getRandomSignedDistance(min_distance, max_distance);
-      pointcloud[index] = range * circular_projector.indexToBearing(index);
+  ContinuousVolumetricLogOdds<2> getRandomMeasurementModel(
+      const CircularProjector& projection_model) {
+    ContinuousVolumetricLogOddsConfig measurement_model_config;
+    const FloatingPoint max_angle_sigma_without_overlap =
+        (projection_model.getMaxAngle() - projection_model.getMinAngle()) /
+        static_cast<FloatingPoint>(projection_model.getNumCells()) /
+        (2.f * 6.f);
+    measurement_model_config.angle_sigma =
+        random_number_generator_->getRandomRealNumber(
+            max_angle_sigma_without_overlap / 10.f,
+            max_angle_sigma_without_overlap);
+    measurement_model_config.range_sigma =
+        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+    return ContinuousVolumetricLogOdds<2>(measurement_model_config);
+  }
+
+  PosedRangeImage1D getRandomPosedRangeImage(IndexElement num_cells,
+                                             FloatingPoint min_range,
+                                             FloatingPoint max_range) const {
+    CHECK_LT(min_range, max_range);
+
+    PosedRangeImage1D posed_range_image(num_cells);
+    for (IndexElement index = 0; index < num_cells; ++index) {
+      const FloatingPoint range = getRandomSignedDistance(min_range, max_range);
+      posed_range_image.getRange(index) = range;
     }
+    posed_range_image.setPose(getRandomTransformation<2>());
 
-    return {getRandomTransformation<2>(), pointcloud};
+    return posed_range_image;
   }
 };
 
@@ -131,7 +158,9 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
     const RangeImage1DIntersector::MinMaxAnglePair returned_angle_pair =
         RangeImage1DIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
                                                              test.W_aabb);
+    constexpr FloatingPoint kNumericalNoise = 1.8e-06f;
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
+
     const bool angle_range_wraps_around =
         kPi < reference_angle_pair.max_angle - reference_angle_pair.min_angle;
 
@@ -143,14 +172,14 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
     if (angle_range_wraps_around) {
       EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
-                0.f)
+                -kNumericalNoise)
           << canary_token();
       EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
                 kOneAndAHalfDegree);
       EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
-                0.f)
+                kNumericalNoise)
           << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
@@ -159,7 +188,7 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
     } else {
       EXPECT_LE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
-                0.f)
+                kNumericalNoise)
           << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.min_angle -
                                       reference_angle_pair.min_angle),
@@ -167,7 +196,7 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
           << canary_token();
       EXPECT_GE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
-                0.f)
+                -kNumericalNoise)
           << canary_token();
       EXPECT_LE(angle_math::normalize(returned_angle_pair.max_angle -
                                       reference_angle_pair.max_angle),
@@ -193,29 +222,31 @@ TEST_F(RangeImage1DIntersectorTest, AabbMinMaxProjectedAngle) {
 TEST_F(RangeImage1DIntersectorTest, RangeImageIntersectionType) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
-    const FloatingPoint min_cell_width = getRandomMinCellWidth();
-    constexpr FloatingPoint kMinAngle = -kHalfPi;
-    constexpr FloatingPoint kMaxAngle = kHalfPi;
-    const int num_beams = getRandomIndexElement(100, 2048);
-    constexpr FloatingPoint kMinDistance = 0.f;
-    constexpr FloatingPoint kMaxDistance = 60.f;
-    const PosedPointcloud<Point2D> random_pointcloud = getRandomPointcloud(
-        kMinAngle, kMaxAngle, num_beams, kMinDistance, kMaxDistance);
+    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.02f, 0.5f);
+    const auto integrator_config = getRandomPointcloudIntegratorConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    constexpr FloatingPoint kMaxRange = 50.f;
+    const auto posed_range_image =
+        std::make_shared<PosedRangeImage1D>(getRandomPosedRangeImage(
+            projection_model.getNumCells(), 0.f, kMaxRange));
 
     // Create the hierarchical range image
-    CircularProjector circular_projector(kMinAngle, kMaxAngle, num_beams);
-    const auto range_image =
-        std::make_shared<PosedRangeImage1D>(circular_projector);
-    range_image->importPointcloud(random_pointcloud, circular_projector);
-    RangeImage1DIntersector range_image_intersector(range_image);
+    RangeImage1DIntersector range_image_intersector(
+        posed_range_image, integrator_config.max_range,
+        measurement_model.getAngleThreshold(),
+        measurement_model.getRangeThresholdInFrontOfSurface(),
+        measurement_model.getRangeThresholdBehindSurface());
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
-    constexpr QuadtreeIndex::Element kMaxHeight = 10;
+    constexpr QuadtreeIndex::Element kMaxHeight = 8;
     const Index2D min_index = convert::pointToCeilIndex<2>(
-        random_pointcloud.getOrigin() - Vector2D::Constant(kMaxDistance),
+        posed_range_image->getPose().getPosition() -
+            Vector2D::Constant(kMaxRange),
         min_cell_width_inv);
     const Index2D max_index = convert::pointToCeilIndex<2>(
-        random_pointcloud.getOrigin() + Vector2D::Constant(kMaxDistance),
+        posed_range_image->getPose().getPosition() +
+            Vector2D::Constant(kMaxRange),
         min_cell_width_inv);
     for (const Index2D& index :
          getRandomIndexVector(min_index, max_index, 50, 100)) {
@@ -230,33 +261,35 @@ TEST_F(RangeImage1DIntersectorTest, RangeImageIntersectionType) {
       bool has_free = false;
       bool has_occupied = false;
       bool has_unknown = false;
-      const Transformation2D T_C_W = random_pointcloud.getPose().inverse();
+      const Transformation2D T_C_W = posed_range_image->getPoseInverse();
       for (const Index2D& reference_index :
            Grid(min_reference_index, max_reference_index)) {
         const Point2D W_cell_center =
             convert::indexToCenterPoint(reference_index, min_cell_width);
         const Point2D C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
-        if (ContinuousVolumetricLogOdds<2>::kRangeMax < d_C_cell) {
+        if (integrator_config.max_range < d_C_cell) {
           has_unknown = true;
           continue;
         }
 
         const IndexElement range_image_index =
-            circular_projector.bearingToNearestIndex(C_cell_center);
+            projection_model.bearingToNearestIndex(C_cell_center);
         if (range_image_index < 0 ||
-            range_image->getNumBeams() <= range_image_index) {
+            posed_range_image->getNumBeams() <= range_image_index) {
           has_unknown = true;
           continue;
         }
 
         const FloatingPoint range_image_distance =
-            range_image->operator[](range_image_index);
-        if (d_C_cell < range_image_distance) {
+            posed_range_image->getRange(range_image_index);
+        if (d_C_cell <
+            range_image_distance -
+                measurement_model.getRangeThresholdInFrontOfSurface()) {
           has_free = true;
         } else if (d_C_cell <=
                    range_image_distance +
-                       ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh) {
+                       measurement_model.getRangeThresholdBehindSurface()) {
           has_occupied = true;
         } else {
           has_unknown = true;
@@ -284,7 +317,7 @@ TEST_F(RangeImage1DIntersectorTest, RangeImageIntersectionType) {
           W_node_bottom_left + Vector2D::Constant(node_width)};
       const IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
-              random_pointcloud.getPose(), W_cell_aabb, circular_projector);
+              posed_range_image->getPose(), W_cell_aabb, projection_model);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected " << getIntersectionTypeStr(reference_intersection_type)
           << " but got " << getIntersectionTypeStr(returned_intersection_type);

@@ -4,14 +4,14 @@
 namespace wavemap {
 inline bool WaveletIntegrator2D::isApproximationErrorAcceptable(
     IntersectionType intersection_type, FloatingPoint sphere_center_distance,
-    FloatingPoint bounding_sphere_radius) {
+    FloatingPoint bounding_sphere_radius) const {
   switch (intersection_type) {
     case IntersectionType::kFreeOrUnknown:
       return bounding_sphere_radius / sphere_center_distance <
-             kMaxAcceptableUpdateError / kMaxGradientOverRangeFullyInside;
+             kMaxAcceptableUpdateError / max_gradient_over_range_fully_inside_;
     case IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
-             kMaxAcceptableUpdateError / kMaxGradientOnBoundary;
+             kMaxAcceptableUpdateError / max_gradient_on_boundary_;
     default:
       return true;
   }
@@ -25,7 +25,7 @@ inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb, circular_projector_);
+          posed_range_image_->getPose(), W_cell_aabb, projection_model_);
   if (intersection_type == IntersectionType::kFullyUnknown) {
     return 0.f;
   }
@@ -41,10 +41,7 @@ inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
   if (node_index.height == 0 ||
       isApproximationErrorAcceptable(intersection_type, d_C_cell,
                                      bounding_sphere_radius)) {
-    const FloatingPoint angle_C_cell =
-        CircularProjector::bearingToAngle(C_node_center);
-    const FloatingPoint sample =
-        computeUpdate(*posed_range_image_, d_C_cell, angle_C_cell);
+    const FloatingPoint sample = computeUpdate(C_node_center);
     return sample;
   }
 

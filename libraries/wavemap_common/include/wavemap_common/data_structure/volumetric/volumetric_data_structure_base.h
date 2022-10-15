@@ -7,16 +7,31 @@
 
 #include "wavemap_common/common.h"
 #include "wavemap_common/indexing/ndtree_index.h"
+#include "wavemap_common/utils/config_utils.h"
 
 namespace wavemap {
+struct VolumetricDataStructureConfig
+    : ConfigBase<VolumetricDataStructureConfig> {
+  FloatingPoint min_cell_width = 0.1f;
+
+  // Constructors
+  VolumetricDataStructureConfig() = default;
+  VolumetricDataStructureConfig(FloatingPoint min_cell_width)  // NOLINT
+      : min_cell_width(min_cell_width) {}
+
+  bool isValid(bool verbose) const override;
+  static VolumetricDataStructureConfig from(const param::Map& params);
+};
+
 template <int dim>
 class VolumetricDataStructureBase {
  public:
   static constexpr int kDim = dim;
   using Ptr = std::shared_ptr<VolumetricDataStructureBase>;
 
-  explicit VolumetricDataStructureBase(const FloatingPoint min_cell_width)
-      : min_cell_width_(min_cell_width) {}
+  explicit VolumetricDataStructureBase(
+      const VolumetricDataStructureConfig& config)
+      : config_(config.checkValid()) {}
   virtual ~VolumetricDataStructureBase() = default;
 
   virtual bool empty() const = 0;
@@ -24,7 +39,10 @@ class VolumetricDataStructureBase {
   virtual void prune() = 0;
   virtual void clear() = 0;
 
-  FloatingPoint getMinCellWidth() const { return min_cell_width_; }
+  virtual const VolumetricDataStructureConfig& getConfig() const {
+    return config_;
+  }
+  FloatingPoint getMinCellWidth() const { return config_.min_cell_width; }
   virtual size_t getMemoryUsage() const = 0;
 
   virtual Index<dim> getMinIndex() const = 0;
@@ -48,7 +66,7 @@ class VolumetricDataStructureBase {
                     bool used_floating_precision) = 0;
 
  protected:
-  const FloatingPoint min_cell_width_;
+  const VolumetricDataStructureConfig config_;
 };
 }  // namespace wavemap
 

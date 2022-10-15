@@ -29,7 +29,8 @@ TYPED_TEST(DenseGridTest, Initialization) {
 
   const FloatingPoint random_min_cell_width =
       TestFixture::getRandomMinCellWidth();
-  HashedBlocks<typename TypeParam::CellType, kDim> map(random_min_cell_width);
+  HashedBlocks<typename TypeParam::CellType, kDim> map(
+      VolumetricDataStructureConfig{random_min_cell_width});
   EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);

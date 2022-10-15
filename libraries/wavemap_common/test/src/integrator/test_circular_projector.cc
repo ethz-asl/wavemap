@@ -12,10 +12,11 @@ TEST_F(CircularProjectorTest, InitializationAndAccessors) {
     const FloatingPoint min_angle = getRandomAngle(-kPi, kHalfPi);
     const FloatingPoint max_angle = getRandomAngle(min_angle + kEpsilon, kPi);
     const IndexElement num_cells = getRandomIndexElement(2, 1000);
-    CircularProjector circle_projector(min_angle, max_angle, num_cells);
-    EXPECT_EQ(circle_projector.getMinAngle(), min_angle);
-    EXPECT_EQ(circle_projector.getMaxAngle(), max_angle);
-    EXPECT_EQ(circle_projector.getNumCells(), num_cells);
+    CircularProjector circular_projector(
+        CircularProjectorConfig{min_angle, max_angle, num_cells});
+    EXPECT_EQ(circular_projector.getMinAngle(), min_angle);
+    EXPECT_EQ(circular_projector.getMaxAngle(), max_angle);
+    EXPECT_EQ(circular_projector.getNumCells(), num_cells);
   }
 }
 
@@ -45,7 +46,8 @@ TEST_F(CircularProjectorTest, Conversions) {
     const FloatingPoint min_angle = getRandomAngle(-kPi, kHalfPi);
     const FloatingPoint max_angle = getRandomAngle(min_angle + kEpsilon, kPi);
     const IndexElement num_beams = getRandomIndexElement(2, 2048);
-    CircularProjector circular_projector(min_angle, max_angle, num_beams);
+    CircularProjector circular_projector(
+        CircularProjectorConfig{min_angle, max_angle, num_beams});
 
     // Precompute commonly used values
     const auto max_index = static_cast<IndexElement>((num_beams - 1));

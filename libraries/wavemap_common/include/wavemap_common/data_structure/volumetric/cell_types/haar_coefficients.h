@@ -23,7 +23,7 @@ struct HaarCoefficients {
    public:
     friend Details operator+(const Details& lhs, const Details& rhs) {
       Details result;
-      std::transform(lhs.begin(), lhs.end(), rhs.begin(), result.begin(),
+      std::transform(lhs.cbegin(), lhs.cend(), rhs.cbegin(), result.begin(),
                      std::plus<>());
       return result;
     }
@@ -33,7 +33,7 @@ struct HaarCoefficients {
     }
     friend Details operator-(const Details& lhs, const Details& rhs) {
       Details result;
-      std::transform(lhs.begin(), lhs.end(), rhs.begin(), result.begin(),
+      std::transform(lhs.cbegin(), lhs.cend(), rhs.cbegin(), result.begin(),
                      std::minus<>());
       return result;
     }
@@ -43,7 +43,7 @@ struct HaarCoefficients {
     }
     friend Details operator*(ValueType lhs, const Details& rhs) {
       Details result;
-      std::transform(rhs.begin(), rhs.end(), result.begin(),
+      std::transform(rhs.cbegin(), rhs.cend(), result.begin(),
                      [lhs](const auto& val) { return lhs * val; });
       return result;
     }
@@ -84,7 +84,7 @@ struct HaarCoefficients {
     operator CoefficientsArray() const {  // NOLINT
       CoefficientsArray coefficients_array;
       coefficients_array[0] = scale;
-      std::copy(details.begin(), details.end(),
+      std::copy(details.cbegin(), details.cend(),
                 std::next(coefficients_array.begin()));
       return coefficients_array;
     }

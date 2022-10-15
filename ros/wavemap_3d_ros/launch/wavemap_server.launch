@@ -22,12 +22,6 @@
        default="0"
        doc="Skip the first n seconds of the rosbag."/>
 
-  <!-- Wavemap params -->
-  <arg name="data_structure_type"
-       default="hashed_blocks"/>
-  <arg name="measurement_model_type"
-       default="single_ray_integrator"/>
-
   <!-- Play the rosbag if a path was specified -->
   <group unless="$(eval arg('rosbag_path') == '')">
     <param name="/use_sim_time" value="true"/>
@@ -47,9 +41,6 @@
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
       <param name="pointcloud_topic_name" value="$(arg pointcloud_topic)"/>
-      <param name="data_structure_type" value="$(arg data_structure_type)"/>
-      <param name="measurement_model_type"
-             value="$(arg measurement_model_type)"/>
     </node>
   </group>
 

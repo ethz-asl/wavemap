@@ -10,16 +10,13 @@ class RangeImage2D {
  public:
   using Data = Eigen::Matrix<FloatingPoint, Eigen::Dynamic, Eigen::Dynamic>;
 
-  explicit RangeImage2D(const SphericalProjector& spherical_projector)
-      : RangeImage2D(spherical_projector.getNumRows(),
-                     spherical_projector.getNumColumns()) {}
+  explicit RangeImage2D(const Index2D& dimensions,
+                        FloatingPoint initial_value = 0.f)
+      : RangeImage2D(dimensions.x(), dimensions.y(), initial_value) {}
   RangeImage2D(IndexElement num_rows, IndexElement num_columns,
                FloatingPoint initial_value = 0.f)
       : initial_value_(initial_value),
         data_(Data::Constant(num_rows, num_columns, initial_value)) {}
-
-  void importPointcloud(const Pointcloud<Point3D>& pointcloud,
-                        const SphericalProjector& spherical_projector);
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.size(); }
@@ -40,13 +37,13 @@ class RangeImage2D {
   Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
   const Data& getData() const { return data_; }
 
-  FloatingPoint& operator[](Index2D index) {
+  FloatingPoint& getRange(Index2D index) {
     DCHECK((0 <= index.array()).all());
     DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());
     return data_(index.x(), index.y());
   }
-  const FloatingPoint& operator[](Index2D index) const {
+  const FloatingPoint& getRange(Index2D index) const {
     DCHECK((0 <= index.array()).all());
     DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());
@@ -61,16 +58,6 @@ class RangeImage2D {
 class PosedRangeImage2D : public RangeImage2D {
  public:
   using RangeImage2D::RangeImage2D;
-
-  explicit PosedRangeImage2D(const SphericalProjector& spherical_projector)
-      : RangeImage2D(spherical_projector) {}
-
-  void importPointcloud(const PosedPointcloud<Point3D>& posed_pointcloud,
-                        const SphericalProjector& spherical_projector) {
-    RangeImage2D::importPointcloud(posed_pointcloud.getPointsLocal(),
-                                   spherical_projector);
-    setPose(posed_pointcloud.getPose());
-  }
 
   void setPose(const Transformation3D& T_W_C) {
     T_W_C_ = T_W_C;

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -37,6 +38,9 @@ class HierarchicalRangeBounds2D {
     return kUnknownRangeImageValueUpperBound;
   }
   static FloatingPoint getRangeMin() { return kRangeMin; }
+  static Index2D getImageToPyramidScaleFactor() {
+    return {std::get<0>(scale_), std::get<1>(scale_)};
+  }
 
   Bounds<FloatingPoint> getBounds(const QuadtreeIndex& index) const;
   FloatingPoint getLowerBound(const QuadtreeIndex& index) const {
@@ -54,14 +58,14 @@ class HierarchicalRangeBounds2D {
                                   const Index2D& top_right_image_idx) const;
   FloatingPoint getLowerBound(const Index2D& bottom_left_image_idx,
                               const Index2D& top_right_image_idx) const {
-    // NOTE: We reuse getRangeBoundsApprox() and trust the compiler to optimize
-    //       out the computation of unused (return) values during inlining.
+    // NOTE: We reuse getBounds() and trust the compiler to optimize out the
+    // computation of unused (return) values during inlining.
     return getBounds(bottom_left_image_idx, top_right_image_idx).lower;
   }
   FloatingPoint getUpperBound(const Index2D& bottom_left_image_idx,
                               const Index2D& top_right_image_idx) const {
-    // NOTE: We reuse getRangeBoundsApprox() and trust the compiler to optimize
-    //       out the computation of unused (return) values during inlining.
+    // NOTE: We reuse getBounds() and trust the compiler to optimize out the
+    // computation of unused (return) values during inlining.
     return getBounds(bottom_left_image_idx, top_right_image_idx).upper;
   }
 
@@ -80,6 +84,7 @@ class HierarchicalRangeBounds2D {
   const std::vector<RangeImage2D> upper_bound_levels_;
 
   const NdtreeIndexElement max_height_;
+  static constexpr std::tuple<IndexElement, IndexElement> scale_ = {2, 1};
 
   template <typename BinaryFunctor>
   static std::vector<RangeImage2D> computeReducedPyramid(
@@ -90,7 +95,7 @@ class HierarchicalRangeBounds2D {
   // Below kRangeMin, range image values are treated as unknown
   static constexpr FloatingPoint kRangeMin = 0.5f;
   static FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
-                                   int level_idx) {
+                                   int level_idx = 0) {
     // NOTE: Point clouds often contains points near the sensor, for example
     //       from missing returns being encoded as zeros, wires or cages around
     //       the sensor or more generally points hitting the robot or operator's

@@ -44,7 +44,7 @@ while not rospy.is_shutdown():
                                      current_pose_stamped.stamp, sensor_frame,
                                      world_frame)
         current_row += 1
-        if len(pose_dataframe.index) < current_row:
+        if len(pose_dataframe.index) <= current_row:
             break
         current_pose_stamped = StampedTransform(
             pose_dataframe.iloc[current_row])

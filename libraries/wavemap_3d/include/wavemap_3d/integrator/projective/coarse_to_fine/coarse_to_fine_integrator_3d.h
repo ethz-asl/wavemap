@@ -6,6 +6,7 @@
 #include <wavemap_common/integrator/projective/intersection_type.h>
 
 #include "wavemap_3d/data_structure/volumetric_octree_interface.h"
+#include "wavemap_3d/integrator/projective/coarse_to_fine/range_image_2d_intersector.h"
 #include "wavemap_3d/integrator/projective/scanwise_integrator_3d.h"
 
 namespace wavemap {
@@ -13,8 +14,10 @@ class CoarseToFineIntegrator3D : public ScanwiseIntegrator3D {
  public:
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
-  explicit CoarseToFineIntegrator3D(
-      VolumetricDataStructure3D::Ptr occupancy_map);
+  CoarseToFineIntegrator3D(const PointcloudIntegratorConfig& config,
+                           SphericalProjector projection_model,
+                           ContinuousVolumetricLogOdds<3> measurement_model,
+                           VolumetricDataStructure3D::Ptr occupancy_map);
 
   void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
 
@@ -22,17 +25,18 @@ class CoarseToFineIntegrator3D : public ScanwiseIntegrator3D {
   VolumetricOctreeInterface* volumetric_octree_;
 
   const FloatingPoint min_cell_width_;
-  std::shared_ptr<PosedRangeImage2D> posed_range_image_;
+  std::shared_ptr<RangeImage2DIntersector> range_image_intersector_;
 
-  static constexpr FloatingPoint kMaxGradientOverRangeFullyInside =
-      ContinuousVolumetricLogOdds<3>::kScalingFree * 572.957795130823f;
-  static constexpr FloatingPoint kMaxGradientOnBoundary =
-      ContinuousVolumetricLogOdds<3>::kScalingOccupied * 14.9999999999997f;
+  // TODO(victorr): Auto update these based on the projection model config
+  const FloatingPoint max_gradient_over_range_fully_inside_ =
+      measurement_model_.getConfig().scaling_free * 366.692988883727f;
+  const FloatingPoint max_gradient_on_boundary_ =
+      measurement_model_.getConfig().scaling_occupied * 3.75000000000002f;
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
 
-  static bool isApproximationErrorAcceptable(
+  bool isApproximationErrorAcceptable(
       IntersectionType intersection_type, FloatingPoint sphere_center_distance,
-      FloatingPoint bounding_sphere_radius);
+      FloatingPoint bounding_sphere_radius) const;
 };
 }  // namespace wavemap
 

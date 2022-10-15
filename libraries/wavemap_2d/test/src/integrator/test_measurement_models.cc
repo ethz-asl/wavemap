@@ -13,20 +13,26 @@ TEST_F(MeasurementModelTest, ContinuousVolumetricLogOddsModel) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
-    ContinuousVolumetricLogOdds<2> model(min_cell_width);
+    const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
+    ContinuousVolumetricLogOddsConfig config;
+    config.angle_sigma =
+        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+    config.range_sigma =
+        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+    const ContinuousVolumetricLogOdds<2> model(config);
 
     const Point2D W_start_point = getRandomPoint<2>();
     const Point2D W_end_point = W_start_point + getRandomTranslation<2>();
-    model.setStartPoint(W_start_point);
-    model.setEndPoint(W_end_point);
 
     const Point2D W_t_end_point_start_point = W_end_point - W_start_point;
     const FloatingPoint beam_length = W_t_end_point_start_point.norm();
     const FloatingPoint beam_angle = std::atan2(W_t_end_point_start_point.y(),
                                                 W_t_end_point_start_point.x());
 
-    const Index2D bottom_left_idx = model.getBottomLeftUpdateIndex();
-    const Index2D top_right_idx = model.getTopRightUpdateIndex();
+    const Index2D bottom_left_idx = model.getBottomLeftUpdateIndex(
+        W_start_point, W_end_point, beam_length, min_cell_width_inv);
+    const Index2D top_right_idx = model.getTopRightUpdateIndex(
+        W_start_point, W_end_point, beam_length, min_cell_width_inv);
 
     constexpr IndexElement kIndexPadding = 10;
     const Index2D padded_bottom_left_idx =
@@ -40,9 +46,6 @@ TEST_F(MeasurementModelTest, ContinuousVolumetricLogOddsModel) {
           convert::indexToCenterPoint(index, min_cell_width);
       const Point2D W_t_cell_center_end_point = W_cell_center - W_start_point;
       const FloatingPoint cell_distance = W_t_cell_center_end_point.norm();
-      if (ContinuousVolumetricLogOdds<2>::kRangeMax < cell_distance) {
-        continue;
-      }
 
       const FloatingPoint cell_angle = std::atan2(
           W_t_cell_center_end_point.y(), W_t_cell_center_end_point.x());
@@ -50,8 +53,7 @@ TEST_F(MeasurementModelTest, ContinuousVolumetricLogOddsModel) {
           std::abs(cell_angle - beam_angle);
 
       const FloatingPoint update =
-          ContinuousVolumetricLogOdds<2>::computeUpdate(
-              cell_distance, cell_to_beam_angle, beam_length);
+          model.computeUpdate(cell_distance, cell_to_beam_angle, beam_length);
 
       if ((index.array() < bottom_left_idx.array()).any() ||
           (top_right_idx.array() < index.array()).any()) {
@@ -67,10 +69,9 @@ TEST_F(MeasurementModelTest, ContinuousVolumetricLogOddsModel) {
       }
 
       const FloatingPoint non_zero_range =
-          beam_length + ContinuousVolumetricLogOdds<2>::kRangeDeltaThresh;
+          beam_length + model.getRangeThresholdBehindSurface();
       const bool within_range = cell_distance <= non_zero_range;
-      const bool within_angle =
-          cell_to_beam_angle <= ContinuousVolumetricLogOdds<2>::kAngleThresh;
+      const bool within_angle = cell_to_beam_angle <= model.getAngleThreshold();
       if (within_range && within_angle) {
         if (cell_distance < beam_length) {
           EXPECT_LE(update, kEpsilon)
@@ -92,9 +93,7 @@ TEST_F(MeasurementModelTest, ContinuousVolumetricLogOddsModel) {
             << (!within_range && !within_angle ? " and " : "")
             << (!within_angle
                     ? "angle (" + std::to_string(cell_to_beam_angle) + " !<= " +
-                          std::to_string(
-                              ContinuousVolumetricLogOdds<2>::kAngleThresh) +
-                          ") "
+                          std::to_string(model.getAngleThreshold()) + ") "
                     : "");
       }
     }

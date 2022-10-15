@@ -48,7 +48,7 @@ wavemap_msgs::Map mapToRosMsg(const WaveletOctree<CellT>& map) {
   for (const auto& node :
        map.template getNodeIterator<TraversalOrder::kDepthFirstPreorder>()) {
     wavemap_msgs::WaveletOctreeNode node_msg;
-    std::copy(node.data().begin(), node.data().end(),
+    std::copy(node.data().cbegin(), node.data().cend(),
               node_msg.detail_coefficients.begin());
 
     for (int relative_child_idx = 0;

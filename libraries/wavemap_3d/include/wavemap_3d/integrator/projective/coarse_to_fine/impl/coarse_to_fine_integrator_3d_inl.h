@@ -4,14 +4,15 @@
 namespace wavemap {
 inline bool CoarseToFineIntegrator3D::isApproximationErrorAcceptable(
     IntersectionType intersection_type, FloatingPoint sphere_center_distance,
-    FloatingPoint bounding_sphere_radius) {
+    FloatingPoint bounding_sphere_radius) const {
   switch (intersection_type) {
     case IntersectionType::kFreeOrUnknown:
-      return bounding_sphere_radius / sphere_center_distance <
-             kMaxAcceptableUpdateError / kMaxGradientOverRangeFullyInside;
+      return bounding_sphere_radius < (kMaxAcceptableUpdateError /
+                                       max_gradient_over_range_fully_inside_) *
+                                          sphere_center_distance;
     case IntersectionType::kPossiblyOccupied:
       return bounding_sphere_radius <
-             kMaxAcceptableUpdateError / kMaxGradientOnBoundary;
+             kMaxAcceptableUpdateError / max_gradient_on_boundary_;
     default:
       return true;
   }

@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_3D_INTEGRATOR_PROJECTIVE_SCANWISE_INTEGRATOR_3D_H_
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_SCANWISE_INTEGRATOR_3D_H_
 
+#include <memory>
 #include <utility>
 
 #include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
@@ -8,15 +9,23 @@
 
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"
+#include "wavemap_3d/integrator/projective/bearing_image_2d.h"
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
 class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
  public:
-  explicit ScanwiseIntegrator3D(VolumetricDataStructure3D::Ptr occupancy_map)
-      : PointcloudIntegrator3D(std::move(occupancy_map)),
-        spherical_projector_(-0.272167, 0.309674, 64, -kPi, kPi, 1024) {
-    // TODO(victorr): Make the FoV and number of beams configurable
+  explicit ScanwiseIntegrator3D(
+      const PointcloudIntegratorConfig& config,
+      SphericalProjector projection_model,
+      ContinuousVolumetricLogOdds<3> measurement_model,
+      VolumetricDataStructure3D::Ptr occupancy_map)
+      : PointcloudIntegrator3D(config, std::move(occupancy_map)),
+        measurement_model_(std::move(measurement_model)),
+        projection_model_(std::move(projection_model)),
+        posed_range_image_(std::make_shared<PosedRangeImage2D>(
+            projection_model_.getDimensions())),
+        bearing_image_(projection_model_.getDimensions()) {
     // TODO(victorr): Check that the pointcloud's angular resolution is lower
     //                than the angular uncertainty of the beam model. This is
     //                necessary since this measurement integrator assumes the
@@ -25,40 +34,19 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
   }
 
  protected:
-  const SphericalProjector spherical_projector_;
+  const ContinuousVolumetricLogOdds<3> measurement_model_;
+  const SphericalProjector projection_model_;
+  std::shared_ptr<PosedRangeImage2D> posed_range_image_;
+  BearingImage2D bearing_image_;
 
-  FloatingPoint computeUpdate(const RangeImage2D& range_image,
-                              FloatingPoint d_C_cell,
-                              const Vector2D& spherical_C_cell) {
-    if (d_C_cell < kEpsilon ||
-        ContinuousVolumetricLogOdds<3>::kRangeMax < d_C_cell) {
-      return 0.f;
-    }
+  void updateRangeImage(const PosedPointcloud<Point3D>& pointcloud,
+                        PosedRangeImage2D& posed_range_image,
+                        BearingImage2D& bearing_image) const;
 
-    Vector2D spherical_remainders;
-    const Index2D idx = spherical_projector_.sphericalToNearestIndex(
-        spherical_C_cell, spherical_remainders);
-    if ((idx.array() < 0).any() ||
-        (range_image.getDimensions().array() <= idx.array()).any()) {
-      return 0.f;
-    }
-    const FloatingPoint measured_distance = range_image[idx];
-    if (measured_distance + ContinuousVolumetricLogOdds<3>::kRangeDeltaThresh <
-        d_C_cell) {
-      return 0.f;
-    }
-
-    // TODO(victorr): Test if this approximation is valid (considering the angle
-    //                is always small)
-    const FloatingPoint cell_to_beam_angle = spherical_remainders.norm();
-    if (ContinuousVolumetricLogOdds<3>::kAngleThresh < cell_to_beam_angle) {
-      return 0.f;
-    }
-
-    return ContinuousVolumetricLogOdds<3>::computeUpdate(
-        d_C_cell, cell_to_beam_angle, measured_distance);
-  }
+  FloatingPoint computeUpdate(const Point3D& C_cell_center) const;
 };
 }  // namespace wavemap
+
+#include "wavemap_3d/integrator/projective/impl/scanwise_integrator_3d_inl.h"
 
 #endif  // WAVEMAP_3D_INTEGRATOR_PROJECTIVE_SCANWISE_INTEGRATOR_3D_H_
