@@ -47,7 +47,7 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
         QuadtreeIndex index{height, position};
         // Avoid out-of-bounds range image access when we're at the leaf level
         if (index.height == 0 &&
-            (range_image_dims_scaled.array() <= index.position.array()).any()) {
+            (range_image_dims.array() <= index.position.array()).any()) {
           continue;
         }
 
