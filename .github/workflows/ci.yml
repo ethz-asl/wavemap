@@ -39,7 +39,7 @@ jobs:
 
       - name: Prepare ccache to accelerate the build
         id: get-date
-        # NOTE: Installing tar is required for actions/cache@v2 to work properly
+        # NOTE: Installing tar is required for actions/cache@v3 to work properly
         #       on docker:20.10.9-dind.
         run: |
           apk add --no-cache tar
@@ -47,7 +47,7 @@ jobs:
           echo "::set-output name=date::$(date -u "+%Y-%m-%d_%H-%M-%S")"
 
       - name: Pull in ccache's cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ccache
           key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-${{ steps.get-date.outputs.date }}
@@ -160,7 +160,7 @@ jobs:
         run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
 
       - name: Setup pre-commit cache sharing
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ env.PRE_COMMIT_DIR }}
           key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
