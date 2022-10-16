@@ -74,23 +74,47 @@ class ContinuousVolumetricLogOdds {
     return max_lateral_component;
   }
 
+  // Compute the full measurement update, i.e. valid anywhere
   FloatingPoint computeUpdate(FloatingPoint cell_to_sensor_distance,
                               FloatingPoint cell_to_beam_angle,
                               FloatingPoint measured_distance) const {
-    // Compute the full measurement update
-    const FloatingPoint g = cell_to_beam_angle / config_.angle_sigma;
     const FloatingPoint f =
         (cell_to_sensor_distance - measured_distance) / config_.range_sigma;
-    const FloatingPoint angle_contrib =
-        ApproximateGaussianDistribution::cumulative(g + 3.f) -
-        ApproximateGaussianDistribution::cumulative(g - 3.f);
     const FloatingPoint range_contrib =
         ApproximateGaussianDistribution::cumulative(f) -
         0.5f * ApproximateGaussianDistribution::cumulative(f - 3.f) - 0.5f;
-    const FloatingPoint contribs = angle_contrib * range_contrib;
+
+    const FloatingPoint g = cell_to_beam_angle / config_.angle_sigma;
+    const FloatingPoint angle_contrib =
+        ApproximateGaussianDistribution::cumulative(g + 3.f) -
+        ApproximateGaussianDistribution::cumulative(g - 3.f);
+
+    const FloatingPoint contribs = range_contrib * angle_contrib;
     const FloatingPoint scaled_contribs =
-        ((contribs < 0.f) ? config_.scaling_free * contribs
-                          : config_.scaling_occupied * contribs);
+        (contribs < 0.f) ? config_.scaling_free * contribs
+                         : config_.scaling_occupied * contribs;
+
+    const FloatingPoint p = scaled_contribs + 0.5f;
+    const FloatingPoint log_odds = std::log(p / (1.f - p));
+    DCHECK(!std::isnan(log_odds) && std::isfinite(log_odds));
+    return log_odds;
+  }
+
+  // Compute the measurement update given that we're fully in free space, i.e.
+  // only in the interval [ 0, measured_distance - range_threshold_in_front [
+  // NOTE: Using this method is optional. It's slightly cheaper and more
+  // accurate, but the difference is minor.
+  FloatingPoint computeFreeSpaceUpdate(FloatingPoint cell_to_beam_angle) const {
+    constexpr FloatingPoint kFreeSpaceRangeContrib = -0.5f;
+
+    const FloatingPoint g = cell_to_beam_angle / config_.angle_sigma;
+    const FloatingPoint angle_contrib =
+        ApproximateGaussianDistribution::cumulative(g + 3.f) -
+        ApproximateGaussianDistribution::cumulative(g - 3.f);
+
+    const FloatingPoint contribs = kFreeSpaceRangeContrib * angle_contrib;
+    const FloatingPoint scaled_contribs = config_.scaling_free * contribs;
+
     const FloatingPoint p = scaled_contribs + 0.5f;
     const FloatingPoint log_odds = std::log(p / (1.f - p));
     DCHECK(!std::isnan(log_odds) && std::isfinite(log_odds));

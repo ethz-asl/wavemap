@@ -45,8 +45,13 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     }
   }
 
-  return measurement_model_.computeUpdate(d_C_cell, cell_to_beam_angle,
-                                          measured_distance);
+  if (d_C_cell < measured_distance -
+                     measurement_model_.getRangeThresholdInFrontOfSurface()) {
+    return measurement_model_.computeFreeSpaceUpdate(cell_to_beam_angle);
+  } else {
+    return measurement_model_.computeUpdate(d_C_cell, cell_to_beam_angle,
+                                            measured_distance);
+  }
 }
 }  // namespace wavemap
 

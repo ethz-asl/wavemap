@@ -96,6 +96,15 @@ TEST_F(MeasurementModelTest, ContinuousVolumetricLogOddsModel) {
                           std::to_string(model.getAngleThreshold()) + ") "
                     : "");
       }
+
+      if (cell_distance <
+          beam_length - model.getRangeThresholdInFrontOfSurface()) {
+        EXPECT_NEAR(model.computeFreeSpaceUpdate(cell_to_beam_angle), update,
+                    kEpsilon)
+            << "In free space (update <= 0), the regular update computation "
+               "computeUpdate(...) and computeFreeSpaceUpdate(...) should "
+               "yield the same results.";
+      }
     }
   }
 }
