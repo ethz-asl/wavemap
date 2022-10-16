@@ -20,6 +20,11 @@
 #include "wavemap_3d_ros/io/ros_msg_conversions.h"
 
 namespace wavemap {
+Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
+    : Wavemap3DServer(
+          nh, nh_private,
+          Config::from(param::convert::toParamMap(nh_private, ""))) {}
+
 Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                                  const Wavemap3DServer::Config& config)
     : config_(config.checkValid()) {
@@ -84,23 +89,23 @@ void Wavemap3DServer::processPointcloudQueue() {
 
     // Get the sensor pose in world frame
     Transformation3D T_W_C;
-    if (!transformer_.isTransformAvailable(config_.world_frame,
+    if (!transformer_.isTransformAvailable(config_.general.world_frame,
                                            scan_msg.header.frame_id,
                                            scan_msg.header.stamp) ||
-        !transformer_.lookupTransform(config_.world_frame,
+        !transformer_.lookupTransform(config_.general.world_frame,
                                       scan_msg.header.frame_id,
                                       scan_msg.header.stamp, T_W_C)) {
       if ((pointcloud_queue_.back().header.stamp - scan_msg.header.stamp)
-              .toSec() < config_.pointcloud_queue_max_wait_for_tf_s) {
+              .toSec() < config_.integrator.pointcloud_queue_max_wait_for_tf) {
         // Try to get this pointcloud's pose again at the next iteration
         return;
       } else {
         ROS_WARN_STREAM(
             "Waited "
-            << config_.pointcloud_queue_max_wait_for_tf_s
+            << config_.integrator.pointcloud_queue_max_wait_for_tf
             << "s but still could not look up pose for pointcloud with frame \""
             << scan_msg.header.frame_id << "\" in world frame \""
-            << config_.world_frame << "\" at timestamp "
+            << config_.general.world_frame << "\" at timestamp "
             << scan_msg.header.stamp << "; skipping pointcloud.");
         pointcloud_queue_.pop();
         continue;
@@ -148,7 +153,7 @@ void Wavemap3DServer::processPointcloudQueue() {
                     << "s. Total integration time: "
                     << total_pointcloud_integration_time << "s.");
 
-    if (config_.publish_performance_stats) {
+    if (config_.general.publish_performance_stats) {
       const size_t map_memory_usage = occupancy_map_->getMemoryUsage();
       ROS_INFO_STREAM("Map memory usage: " << map_memory_usage / 1e6 << "MB.");
 
@@ -166,39 +171,39 @@ void Wavemap3DServer::processPointcloudQueue() {
 
 void Wavemap3DServer::subscribeToTimers(const ros::NodeHandle& nh) {
   pointcloud_queue_processing_timer_ = nh.createTimer(
-      ros::Duration(config_.pointcloud_queue_processing_retry_period_s),
+      ros::Duration(config_.general.pointcloud_queue_processing_retry_period),
       [this](const auto& /*event*/) { processPointcloudQueue(); });
 
-  if (0.f < config_.map_pruning_period_s) {
+  if (0.f < config_.map.pruning_period) {
     ROS_INFO_STREAM("Registering map pruning timer with period "
-                    << config_.map_pruning_period_s << "s");
+                    << config_.map.pruning_period << "s");
     map_pruning_timer_ = nh.createTimer(
-        ros::Duration(config_.map_pruning_period_s),
+        ros::Duration(config_.map.pruning_period),
         [this](const auto& /*event*/) { occupancy_map_->prune(); });
   }
 
-  if (0.f < config_.map_visualization_period_s) {
+  if (0.f < config_.map.visualization_period) {
     ROS_INFO_STREAM("Registering map visualization timer with period "
-                    << config_.map_visualization_period_s << "s");
+                    << config_.map.visualization_period << "s");
     map_visualization_timer_ =
-        nh.createTimer(ros::Duration(config_.map_visualization_period_s),
+        nh.createTimer(ros::Duration(config_.map.visualization_period),
                        [this](const auto& /*event*/) { visualizeMap(); });
   }
 
-  if (0.f < config_.map_autosave_period_s &&
-      !config_.map_autosave_path.empty()) {
+  if (0.f < config_.map.autosave_period && !config_.map.autosave_path.empty()) {
     ROS_INFO_STREAM("Registering autosave timer with period "
-                    << config_.map_autosave_period_s << "s");
+                    << config_.map.autosave_period << "s");
     map_autosave_timer_ = nh.createTimer(
-        ros::Duration(config_.map_autosave_period_s),
-        [this](const auto& /*event*/) { saveMap(config_.map_autosave_path); });
+        ros::Duration(config_.map.autosave_period),
+        [this](const auto& /*event*/) { saveMap(config_.map.autosave_path); });
   }
 }
 
 void Wavemap3DServer::subscribeToTopics(ros::NodeHandle& nh) {
-  pointcloud_sub_ = nh.subscribe(config_.pointcloud_topic_name,
-                                 config_.pointcloud_topic_queue_length,
-                                 &Wavemap3DServer::pointcloudCallback, this);
+  pointcloud_sub_ =
+      nh.subscribe(config_.integrator.pointcloud_topic_name,
+                   config_.integrator.pointcloud_topic_queue_length,
+                   &Wavemap3DServer::pointcloudCallback, this);
 }
 
 void Wavemap3DServer::advertiseTopics(ros::NodeHandle& nh_private) {
@@ -230,39 +235,72 @@ void Wavemap3DServer::advertiseServices(ros::NodeHandle& nh_private) {
       });
 }
 
-Wavemap3DServer::Config Wavemap3DServer::Config::fromRosParams(
-    ros::NodeHandle nh) {
+Wavemap3DServer::Config Wavemap3DServer::Config::from(
+    const param::Map& params) {
   Config config;
 
   // General
-  nh.param("general/" + NAMEOF(config.world_frame), config.world_frame,
-           config.world_frame);
-  nh.param("general/" + NAMEOF(config.publish_performance_stats),
-           config.publish_performance_stats, config.publish_performance_stats);
-  nh.param(
-      "general/" + NAMEOF(config.pointcloud_queue_processing_retry_period_s),
-      config.pointcloud_queue_processing_retry_period_s,
-      config.pointcloud_queue_processing_retry_period_s);
+  if (param::map::keyHoldsValue<param::Map>(params, NAMEOF(config.general))) {
+    const auto params_general =
+        param::map::keyGetValue<param::Map>(params, NAMEOF(config.general));
+
+    config.general.world_frame = param::map::keyGetValue(
+        params_general, NAMEOF(config.general.world_frame),
+        config.general.world_frame);
+
+    config.general.publish_performance_stats = param::map::keyGetValue(
+        params_general, NAMEOF(config.general.publish_performance_stats),
+        config.general.publish_performance_stats);
+
+    config.general.pointcloud_queue_processing_retry_period =
+        param::map::keyGetValue(
+            params_general,
+            NAMEOF(config.general.pointcloud_queue_processing_retry_period),
+            config.general.pointcloud_queue_processing_retry_period);
+  }
 
   // Map
-  nh.param("map/pruning_period", config.map_pruning_period_s,
-           config.map_pruning_period_s);
-  nh.param("map/visualization_period", config.map_visualization_period_s,
-           config.map_visualization_period_s);
-  nh.param("map/autosave_period", config.map_autosave_period_s,
-           config.map_autosave_period_s);
-  nh.param("map/autosave_path", config.map_autosave_path,
-           config.map_autosave_path);
+  if (param::map::keyHoldsValue<param::Map>(params, NAMEOF(config.map))) {
+    const auto params_map =
+        param::map::keyGetValue<param::Map>(params, NAMEOF(config.map));
+
+    config.map.pruning_period =
+        param::convert::toSeconds(params_map, NAMEOF(config.map.pruning_period),
+                                  config.map.pruning_period);
+
+    config.map.visualization_period = param::convert::toSeconds(
+        params_map, NAMEOF(config.map.visualization_period),
+        config.map.visualization_period);
+
+    config.map.autosave_period = param::convert::toSeconds(
+        params_map, NAMEOF(config.map.autosave_period),
+        config.map.autosave_period);
+
+    config.map.autosave_path = param::map::keyGetValue(
+        params_map, NAMEOF(config.map.autosave_path), config.map.autosave_path);
+  }
 
   // Integrator
-  nh.param("integrator/pointcloud_input/topic_name",
-           config.pointcloud_topic_name, config.pointcloud_topic_name);
-  nh.param("integrator/pointcloud_input/topic_queue_length",
-           config.pointcloud_topic_queue_length,
-           config.pointcloud_topic_queue_length);
-  nh.param("integrator/pointcloud_input/max_wait_for_tf",
-           config.pointcloud_queue_max_wait_for_tf_s,
-           config.pointcloud_queue_max_wait_for_tf_s);
+  if (param::map::keyHoldsValue<param::Map>(params,
+                                            NAMEOF(config.integrator))) {
+    const auto params_integrator =
+        param::map::keyGetValue<param::Map>(params, NAMEOF(config.integrator));
+
+    config.integrator.pointcloud_topic_name = param::map::keyGetValue(
+        params_integrator, NAMEOF(config.integrator.pointcloud_topic_name),
+        config.integrator.pointcloud_topic_name);
+
+    config.integrator.pointcloud_topic_queue_length = param::map::keyGetValue(
+        params_integrator,
+        NAMEOF(config.integrator.pointcloud_topic_queue_length),
+        config.integrator.pointcloud_topic_queue_length);
+
+    config.integrator.pointcloud_queue_max_wait_for_tf =
+        param::convert::toSeconds(
+            params_integrator,
+            NAMEOF(config.integrator.pointcloud_queue_max_wait_for_tf),
+            config.integrator.pointcloud_queue_max_wait_for_tf);
+  }
 
   return config;
 }
@@ -270,37 +308,17 @@ Wavemap3DServer::Config Wavemap3DServer::Config::fromRosParams(
 bool Wavemap3DServer::Config::isValid(bool verbose) const {
   bool all_valid = true;
 
-  if (world_frame.empty()) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(world_frame) << " must be a non-empty string";
-  }
+  all_valid &= IS_PARAM_NE(general.world_frame, std::string(""), verbose);
 
-  if (pointcloud_queue_processing_retry_period_s <= 0.f) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(pointcloud_queue_processing_retry_period_s)
-        << " must be a positive float";
-  }
+  all_valid &= IS_PARAM_GT(general.pointcloud_queue_processing_retry_period,
+                           0.f, verbose);
 
-  if (pointcloud_topic_name.empty()) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose) << "Param " << NAMEOF(pointcloud_topic_name)
-                             << " must be a non-empty string";
-  }
-  if (pointcloud_topic_queue_length <= 0) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(pointcloud_topic_queue_length)
-        << " must be a positive integer";
-  }
-
-  if (pointcloud_queue_max_wait_for_tf_s < 0.f) {
-    all_valid = false;
-    LOG_IF(WARNING, verbose)
-        << "Param " << NAMEOF(pointcloud_queue_max_wait_for_tf_s)
-        << " must be a non-negative float";
-  }
+  all_valid &=
+      IS_PARAM_NE(integrator.pointcloud_topic_name, std::string(""), verbose);
+  all_valid &=
+      IS_PARAM_GT(integrator.pointcloud_topic_queue_length, 0, verbose);
+  all_valid &=
+      IS_PARAM_GE(integrator.pointcloud_queue_max_wait_for_tf, 0.f, verbose);
 
   return all_valid;
 }

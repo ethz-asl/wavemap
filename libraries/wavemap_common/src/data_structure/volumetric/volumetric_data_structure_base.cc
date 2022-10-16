@@ -13,7 +13,8 @@ VolumetricDataStructureConfig VolumetricDataStructureConfig::from(
 
   for (const auto& [param_name, param_value] : params) {
     if (param_name == NAMEOF(min_cell_width)) {
-      config.min_cell_width = param::convert::toMeters(param_value);
+      config.min_cell_width =
+          param::convert::toMeters(param_value, config.min_cell_width);
     } else {
       LOG(WARNING) << "Ignoring unknown param with name " << param_name;
     }

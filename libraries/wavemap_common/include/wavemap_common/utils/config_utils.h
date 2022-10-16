@@ -44,7 +44,10 @@ struct ConfigBase {
 };
 
 #define IS_PARAM_EQ(value, threshold, verbose) \
-  is_param<std::equal<>>(value, threshold, verbose, NAMEOF(value), "==")
+  is_param<std::equal_to<>>(value, threshold, verbose, NAMEOF(value), "==")
+
+#define IS_PARAM_NE(value, threshold, verbose) \
+  is_param<std::not_equal_to<>>(value, threshold, verbose, NAMEOF(value), "!=")
 
 #define IS_PARAM_LT(value, threshold, verbose) \
   is_param<std::less<>>(value, threshold, verbose, NAMEOF(value), "<")

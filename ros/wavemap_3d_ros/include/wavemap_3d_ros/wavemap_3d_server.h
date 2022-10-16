@@ -16,33 +16,31 @@
 namespace wavemap {
 class Wavemap3DServer {
  public:
-  struct Config {
-    // General
-    std::string world_frame = "odom";
-    bool publish_performance_stats = false;
-    float pointcloud_queue_processing_retry_period_s = 0.1f;
+  struct Config : ConfigBase<Config> {
+    struct General {
+      std::string world_frame = "odom";
+      bool publish_performance_stats = false;
+      float pointcloud_queue_processing_retry_period = 0.1f;
+    } general;
 
-    // Map
-    float map_pruning_period_s = 1.f;
-    float map_visualization_period_s = 10.f;
-    float map_autosave_period_s = -1.f;
-    std::string map_autosave_path;
+    struct Map {
+      float pruning_period = 1.f;
+      float visualization_period = 10.f;
+      float autosave_period = -1.f;
+      std::string autosave_path;
+    } map;
 
-    // Integrator
-    std::string pointcloud_topic_name = "scan";
-    int pointcloud_topic_queue_length = 10;
-    float pointcloud_queue_max_wait_for_tf_s = 1.f;
+    struct Integrator {
+      std::string pointcloud_topic_name = "scan";
+      int pointcloud_topic_queue_length = 10;
+      float pointcloud_queue_max_wait_for_tf = 1.f;
+    } integrator;
 
-    static Config fromRosParams(ros::NodeHandle nh);
-    bool isValid(bool verbose = true) const;
-    const Config& checkValid() const {
-      CHECK(isValid(true));
-      return *this;
-    }
+    static Config from(const param::Map& params);
+    bool isValid(bool verbose) const override;
   };
 
-  Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
-      : Wavemap3DServer(nh, nh_private, Config::fromRosParams(nh_private)) {}
+  Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private);
   Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                   const Config& config);
 

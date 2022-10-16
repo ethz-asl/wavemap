@@ -69,8 +69,7 @@ T keyGetValue(const Map& map, const Name& key, T default_value) {
 }  // namespace map
 
 namespace convert {
-inline FloatingPoint toMeters(const Value& value) {
-  const Map& map = value.get<Map>();
+inline FloatingPoint toMeters(const Map& map) {
   if (map::hasKey(map, "meters")) {
     if (map::keyHoldsValue<FloatingPoint>(map, "meters")) {
       return map::keyGetValue<FloatingPoint>(map, "meters");
@@ -82,8 +81,7 @@ inline FloatingPoint toMeters(const Value& value) {
                 "matching a supported length unit.";
 }
 
-inline FloatingPoint toRadians(const Value& value) {
-  const Map& map = value.get<Map>();
+inline FloatingPoint toRadians(const Map& map) {
   if (map::hasKey(map, "radians")) {
     if (map::keyHoldsValue<FloatingPoint>(map, "radians")) {
       return map::keyGetValue<FloatingPoint>(map, "radians");
@@ -99,6 +97,71 @@ inline FloatingPoint toRadians(const Value& value) {
   }
   LOG(FATAL) << "Could not convert value to radians as it contains no sub-key "
                 "matching a supported angle unit.";
+}
+
+inline FloatingPoint toSeconds(const Map& map) {
+  if (map::hasKey(map, "seconds")) {
+    if (map::keyHoldsValue<FloatingPoint>(map, "seconds")) {
+      return map::keyGetValue<FloatingPoint>(map, "seconds");
+    } else {
+      LOG(ERROR) << "Value held by key seconds is not of type FloatingPoint.";
+    }
+  }
+  LOG(FATAL) << "Could not convert value to seconds as it contains no sub-key "
+                "matching a supported time unit.";
+}
+
+inline FloatingPoint toMeters(const Value& param, FloatingPoint default_value) {
+  if (param.holds<Map>()) {
+    const auto& sub_map = param.get<Map>();
+    return toMeters(sub_map);
+  }
+  return default_value;
+}
+
+inline FloatingPoint toRadians(const Value& param,
+                               FloatingPoint default_value) {
+  if (param.holds<Map>()) {
+    const auto& sub_map = param.get<Map>();
+    return toRadians(sub_map);
+  }
+  return default_value;
+}
+
+inline FloatingPoint toSeconds(const Value& param,
+                               FloatingPoint default_value) {
+  if (param.holds<Map>()) {
+    const auto& sub_map = param.get<Map>();
+    return toSeconds(sub_map);
+  }
+  return default_value;
+}
+
+inline FloatingPoint toMeters(const Map& map, const Name& key,
+                              FloatingPoint default_value) {
+  if (map::keyHoldsValue<Map>(map, key)) {
+    const auto& sub_map = map::keyGetValue<Map>(map, key);
+    return toMeters(sub_map);
+  }
+  return default_value;
+}
+
+inline FloatingPoint toRadians(const Map& map, const Name& key,
+                               FloatingPoint default_value) {
+  if (map::keyHoldsValue<Map>(map, key)) {
+    const auto& sub_map = map::keyGetValue<Map>(map, key);
+    return toRadians(sub_map);
+  }
+  return default_value;
+}
+
+inline FloatingPoint toSeconds(const Map& map, const Name& key,
+                               FloatingPoint default_value) {
+  if (map::keyHoldsValue<Map>(map, key)) {
+    const auto& sub_map = map::keyGetValue<Map>(map, key);
+    return toSeconds(sub_map);
+  }
+  return default_value;
 }
 }  // namespace convert
 }  // namespace wavemap::param
