@@ -27,15 +27,15 @@ integrator:
     type: "spherical_projector"
     elevation:
       num_cells: 64
-      min_angle: { degrees: -15.5940204 }
-      max_angle: { degrees: 17.743013225 }
+      min_angle: { degrees: -15.594 }
+      max_angle: { degrees: 17.743 }
     azimuth:
       num_cells: 1024
       min_angle: { degrees: -180.0 }
       max_angle: { degrees: 180.0 }
   measurement_model:
     type: "continuous_volumetric_log_odds"
-    angle_sigma: { degrees: 0.03 }
+    angle_sigma: { degrees: 0.04 }
     range_sigma: { meters: 0.04 }
     scaling_free: 0.2
     scaling_occupied: 0.4
