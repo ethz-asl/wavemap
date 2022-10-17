@@ -25,6 +25,9 @@ integrator:
     max_update_resolution: *min_cell_width
   projection_model:
     type: "spherical_projector"
+    #    type: "ouster_projector"
+    #    lidar_origin_to_beam_origin: { millimeters: 27.67 }
+    #    lidar_origin_to_sensor_origin_z_offset: { millimeters: 36.18 }
     elevation:
       num_cells: 64
       min_angle: { degrees: -15.594 }

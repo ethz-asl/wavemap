@@ -44,8 +44,7 @@ class PointcloudIntegrator {
   typename VolumetricDataStructureBase<dim>::Ptr occupancy_map_;
 
   static bool isPointcloudValid(const PosedPointcloud<Point<dim>>& pointcloud);
-  static bool isMeasurementValid(const Point<dim>& W_end_point,
-                                 FloatingPoint measured_distance);
+  static bool isMeasurementValid(const Point<dim>& C_end_point);
 
   static Point<dim> getEndPointOrMaxRange(const Point<dim>& W_start_point,
                                           const Point<dim>& W_end_point,

@@ -31,7 +31,7 @@ void CoarseToFineIntegrator3D::integratePointcloud(
   // Compute the range image and the scan's AABB
   updateRangeImage(pointcloud, *posed_range_image_, bearing_image_);
   range_image_intersector_ = std::make_shared<RangeImage2DIntersector>(
-      posed_range_image_, config_.max_range,
+      posed_range_image_, projection_model_, config_.max_range,
       measurement_model_.getAngleThreshold(),
       measurement_model_.getRangeThresholdInFrontOfSurface(),
       measurement_model_.getRangeThresholdBehindSurface());
@@ -65,7 +65,7 @@ void CoarseToFineIntegrator3D::integratePointcloud(
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const IntersectionType intersection_type =
         range_image_intersector_->determineIntersectionType(
-            pointcloud.getPose(), W_cell_aabb, projection_model_, cache);
+            pointcloud.getPose(), W_cell_aabb, cache);
 
     // If we're fully in unknown space,
     // there's no need to evaluate this node or its children

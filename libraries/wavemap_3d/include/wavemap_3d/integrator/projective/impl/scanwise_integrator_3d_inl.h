@@ -4,25 +4,28 @@
 namespace wavemap {
 inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     const Point3D& C_cell_center) const {
-  const FloatingPoint d_C_cell = C_cell_center.norm();
-  if (d_C_cell < config_.min_range || config_.max_range < d_C_cell) {
+  const Vector3D sensor_coordinates =
+      projection_model_.cartesianToSensor(C_cell_center);
+
+  // Check if we're outside the min/max range
+  // NOTE: For spherical (e.g. LiDAR) projection models, sensor_coordinates[2]
+  //       corresponds to the range, whereas for camera models it corresponds to
+  //       the depth.
+  if (sensor_coordinates[2] < config_.min_range ||
+      config_.max_range < sensor_coordinates[2]) {
     return 0.f;
   }
 
-  const Vector2D spherical_C_cell =
-      SphericalProjector::bearingToSphericalApprox(C_cell_center);
   const Index2D image_idx =
-      projection_model_.sphericalToNearestIndex(spherical_C_cell);
-  if ((image_idx.array() < 0).any() ||
-      (posed_range_image_->getDimensions().array() <= image_idx.array())
-          .any()) {
+      projection_model_.imageToIndex(sensor_coordinates.head<2>());
+  if (!posed_range_image_->isIndexWithinBounds(image_idx)) {
     return 0.f;
   }
 
   const FloatingPoint measured_distance =
       posed_range_image_->getRange(image_idx);
   if (measured_distance + measurement_model_.getRangeThresholdBehindSurface() <
-      d_C_cell) {
+      sensor_coordinates[2]) {
     return 0.f;
   }
 
@@ -34,7 +37,7 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   //       use the small angle approximation instead of std::acos().
   const Vector3D& bearing = bearing_image_.getBearing(image_idx);
   const FloatingPoint cell_beam_projection =
-      C_cell_center.dot(bearing) / d_C_cell;
+      C_cell_center.dot(bearing) / sensor_coordinates[2];
   const FloatingPoint one_minus_cell_beam_projection =
       1.f - cell_beam_projection;
   FloatingPoint cell_to_beam_angle = 0.f;
@@ -45,12 +48,13 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     }
   }
 
-  if (d_C_cell < measured_distance -
-                     measurement_model_.getRangeThresholdInFrontOfSurface()) {
+  if (sensor_coordinates[2] <
+      measured_distance -
+          measurement_model_.getRangeThresholdInFrontOfSurface()) {
     return measurement_model_.computeFreeSpaceUpdate(cell_to_beam_angle);
   } else {
-    return measurement_model_.computeUpdate(d_C_cell, cell_to_beam_angle,
-                                            measured_distance);
+    return measurement_model_.computeUpdate(
+        sensor_coordinates[2], cell_to_beam_angle, measured_distance);
   }
 }
 }  // namespace wavemap

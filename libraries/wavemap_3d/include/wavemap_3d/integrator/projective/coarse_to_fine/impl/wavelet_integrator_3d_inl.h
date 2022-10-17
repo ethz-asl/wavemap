@@ -46,7 +46,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb, projection_model_, cache);
+          posed_range_image_->getPose(), W_cell_aabb, cache);
 
   // If we're fully in unknown space,
   // there's no need to evaluate this node or its children

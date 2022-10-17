@@ -28,6 +28,10 @@ class RangeImage1D {
   }
   const Data& getData() const { return data_; }
 
+  bool isIndexWithinBounds(const IndexElement& index) const {
+    return 0 <= index && index < getNumBeams();
+  }
+
   FloatingPoint& getRange(IndexElement index) {
     DCHECK_GE(index, 0);
     DCHECK_LT(index, data_.cols());

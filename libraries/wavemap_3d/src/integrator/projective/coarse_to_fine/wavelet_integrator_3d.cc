@@ -25,7 +25,7 @@ void WaveletIntegrator3D::integratePointcloud(
   // Compute the range image and the scan's AABB
   updateRangeImage(pointcloud, *posed_range_image_, bearing_image_);
   range_image_intersector_ = std::make_shared<RangeImage2DIntersector>(
-      posed_range_image_, config_.max_range,
+      posed_range_image_, projection_model_, config_.max_range,
       measurement_model_.getAngleThreshold(),
       measurement_model_.getRangeThresholdInFrontOfSurface(),
       measurement_model_.getRangeThresholdBehindSurface());

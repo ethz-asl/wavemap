@@ -37,6 +37,8 @@ add_library(${PROJECT_NAME}
     src/data_structure/volumetric/volumetric_data_structure_base.cc
     src/integrator/measurement_model/continuous_volumetric_log_odds.cc
     src/integrator/projection_model/circular_projector.cc
+    src/integrator/projection_model/ouster_projector.cc
+    src/integrator/projection_model/pinhole_camera_projector.cc
     src/integrator/projection_model/spherical_projector.cc
     src/integrator/pointcloud_integrator.cc
     src/utils/eigen_format.cc)

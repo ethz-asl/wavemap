@@ -17,12 +17,13 @@ bool PointcloudIntegrator<dim>::isPointcloudValid(
 
 template <int dim>
 bool PointcloudIntegrator<dim>::isMeasurementValid(
-    const Point<dim>& W_end_point, FloatingPoint measured_distance) {
-  if (W_end_point.hasNaN()) {
+    const Point<dim>& C_end_point) {
+  if (C_end_point.hasNaN()) {
     LOG(WARNING) << "Skipping measurement whose endpoint contains NaNs:\n"
-                 << W_end_point;
+                 << C_end_point;
     return false;
   }
+  const FloatingPoint measured_distance = C_end_point.norm();
   if (measured_distance < 1e-3f) {
     return false;
   }

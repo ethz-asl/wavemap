@@ -4,10 +4,13 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/opencv.hpp>
 #include <wavemap_common/integrator/projective/intersection_type.h>
 
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
@@ -28,6 +31,46 @@ class HierarchicalRangeBounds2D {
             static_cast<NdtreeIndexElement>(lower_bound_levels_.size())) {
     DCHECK_EQ(lower_bound_levels_.size(), max_height_);
     DCHECK_EQ(upper_bound_levels_.size(), max_height_);
+
+    {
+      constexpr FloatingPoint kLowerBound = 0.f;
+      constexpr FloatingPoint kUpperBound = 50.f;
+      for (size_t level = 0; level < lower_bound_levels_.size(); ++level) {
+        cv::Mat image;
+        if (level == 0) {
+          cv::eigen2cv(range_image_->getData(), image);
+        } else {
+          cv::eigen2cv(lower_bound_levels_[level - 1].getData(), image);
+        }
+        const FloatingPoint scale_factor = 255.f / (kUpperBound - kLowerBound);
+        image.convertTo(image, CV_8UC1, scale_factor,
+                        -kLowerBound * scale_factor);
+        cv::flip(image, image, -1);
+        cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_PARULA);
+        const std::string window_name = "Lower bound " + std::to_string(level);
+        cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+        cv::imshow(window_name, image);
+      }
+      for (size_t level = 0; level < upper_bound_levels_.size(); ++level) {
+        cv::Mat image;
+        if (level == 0) {
+          cv::eigen2cv(range_image_->getData(), image);
+        } else {
+          cv::eigen2cv(upper_bound_levels_[level - 1].getData(), image);
+        }
+        const FloatingPoint scale_factor = 255.f / (kUpperBound - kLowerBound);
+        image.convertTo(image, CV_8UC1, scale_factor,
+                        -kLowerBound * scale_factor);
+        cv::flip(image, image, -1);
+        cv::applyColorMap(image, image, cv::ColormapTypes::COLORMAP_PARULA);
+        const std::string window_name = "Upper bound " + std::to_string(level);
+        cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+        cv::imshow(window_name, image);
+      }
+
+      const int delay_ms = 1;
+      cv::waitKey(delay_ms);
+    }
   }
 
   NdtreeIndexElement getMaxHeight() const { return max_height_; }

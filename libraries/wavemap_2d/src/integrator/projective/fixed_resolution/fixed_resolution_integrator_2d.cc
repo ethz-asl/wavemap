@@ -43,15 +43,14 @@ AABB<Point2D> FixedResolutionIntegrator2D::computeRangeImageAndAABB(
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
     const FloatingPoint range = C_point.norm();
-    if (!isMeasurementValid(C_point, range)) {
+    if (!isMeasurementValid(C_point)) {
       continue;
     }
 
     // Add the point to the range image
     const IndexElement range_image_index =
         projection_model_.bearingToNearestIndex(C_point);
-    if (range_image_index < 0 ||
-        posed_range_image_->getNumBeams() <= range_image_index) {
+    if (!posed_range_image_->isIndexWithinBounds(range_image_index)) {
       // Prevent out-of-bounds access
       continue;
     }

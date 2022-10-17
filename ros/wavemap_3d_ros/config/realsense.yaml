@@ -9,33 +9,28 @@ map:
   autosave_path: ""
   data_structure:
     type: "wavelet_octree"
-    min_cell_width: &min_cell_width { meters: 0.2 }
+    min_cell_width: &min_cell_width { meters: 0.05 }
     max_height: 14
 
 integrator:
   pointcloud_input:
-    topic_name: "/os_cloud_node/points"
+    topic_name: "/os1_cloud_node/points"
     topic_queue_length: 10
     max_wait_for_tf: { seconds: 1.0 }
   integration_method:
     type: "coarse_to_fine_wavelet_integrator"
     min_range: { meters: 1.0 }
-    max_range: { meters: 15.0 }
+    max_range: { meters: 6.0 }
     max_acceptable_update_error: 0.1
     max_update_resolution: *min_cell_width
   projection_model:
-    type: "spherical_projector"
-    #    type: "ouster_projector"
-    #    lidar_origin_to_beam_origin: { millimeters: 27.67 }
-    #    lidar_origin_to_sensor_origin_z_offset: { millimeters: 36.18 }
-    elevation:
-      num_cells: 128
-      min_angle: { degrees: -45.73 }
-      max_angle: { degrees: 46.27 }
-    azimuth:
-      num_cells: 1024
-      min_angle: { degrees: -180.0 }
-      max_angle: { degrees: 180.0 }
+    type: "pinhole_camera_projector"
+    width: 848
+    height: 480
+    fx: 421.4140625
+    fy: 421.4140625
+    cx: 429.63104248046875
+    cy: 240.18775939941406
   measurement_model:
     type: "continuous_volumetric_log_odds"
     angle_sigma: { degrees: 0.04 }

@@ -76,6 +76,27 @@ inline FloatingPoint toMeters(const Map& map) {
     } else {
       LOG(ERROR) << "Value held by key meters is not of type FloatingPoint.";
     }
+  } else if (map::hasKey(map, "decimeters")) {
+    if (map::keyHoldsValue<FloatingPoint>(map, "decimeters")) {
+      return 0.1f * map::keyGetValue<FloatingPoint>(map, "decimeters");
+    } else {
+      LOG(ERROR)
+          << "Value held by key decimeters is not of type FloatingPoint.";
+    }
+  } else if (map::hasKey(map, "centimeters")) {
+    if (map::keyHoldsValue<FloatingPoint>(map, "centimeters")) {
+      return 0.01f * map::keyGetValue<FloatingPoint>(map, "centimeters");
+    } else {
+      LOG(ERROR)
+          << "Value held by key centimeters is not of type FloatingPoint.";
+    }
+  } else if (map::hasKey(map, "millimeters")) {
+    if (map::keyHoldsValue<FloatingPoint>(map, "millimeters")) {
+      return 0.001f * map::keyGetValue<FloatingPoint>(map, "millimeters");
+    } else {
+      LOG(ERROR)
+          << "Value held by key millimeters is not of type FloatingPoint.";
+    }
   }
   LOG(FATAL) << "Could not convert value to meters as it contains no sub-key "
                 "matching a supported length unit.";

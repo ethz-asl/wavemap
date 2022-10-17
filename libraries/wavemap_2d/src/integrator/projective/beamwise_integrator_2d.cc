@@ -18,7 +18,7 @@ void BeamwiseIntegrator2D::integratePointcloud(
   for (const auto& W_end_point : pointcloud.getPointsGlobal()) {
     const FloatingPoint measured_distance =
         (W_end_point - W_start_point).norm();
-    if (!isMeasurementValid(W_end_point, measured_distance)) {
+    if (!isMeasurementValid(W_end_point - W_start_point)) {
       continue;
     }
 

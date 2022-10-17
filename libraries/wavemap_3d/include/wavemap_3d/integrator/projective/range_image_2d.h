@@ -37,6 +37,11 @@ class RangeImage2D {
   Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
   const Data& getData() const { return data_; }
 
+  bool isIndexWithinBounds(const Index2D& index) const {
+    return (0 <= index.array() && index.array() < getDimensions().array())
+        .all();
+  }
+
   FloatingPoint& getRange(Index2D index) {
     DCHECK((0 <= index.array()).all());
     DCHECK_LT(index.x(), data_.rows());

@@ -28,82 +28,52 @@ class SphericalProjector {
       : elevation_projector_(config.elevation),
         azimuth_projector_(config.azimuth) {}
 
-  FloatingPoint getMinElevationAngle() const {
-    return elevation_projector_.getMinAngle();
-  }
-  FloatingPoint getMaxElevationAngle() const {
-    return elevation_projector_.getMaxAngle();
-  }
   IndexElement getNumRows() const { return elevation_projector_.getNumCells(); }
-
-  FloatingPoint getMinAzimuthAngle() const {
-    return azimuth_projector_.getMinAngle();
-  }
-  FloatingPoint getMaxAzimuthAngle() const {
-    return azimuth_projector_.getMaxAngle();
-  }
   IndexElement getNumColumns() const {
     return azimuth_projector_.getNumCells();
   }
-
-  Vector2D getMinAngles() const {
-    return {getMinElevationAngle(), getMinAzimuthAngle()};
-  }
-  Vector2D getMaxAngles() const {
-    return {getMaxElevationAngle(), getMaxAzimuthAngle()};
-  }
   Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
 
-  static Vector2D bearingToSpherical(const Vector3D& bearing) {
-    return {std::atan2(bearing.z(), bearing.head<2>().norm()),
-            std::atan2(bearing.y(), bearing.x())};
+  // Coordinate transforms between Cartesian and sensor space
+  static Vector3D cartesianToSensor(const Point3D& C_point) {
+    const Vector2D image_coordinates = cartesianToImage(C_point);
+    const FloatingPoint range = C_point.norm();
+    return {image_coordinates.x(), image_coordinates.y(), range};
   }
-  static Vector2D bearingToSphericalApprox(const Vector3D& bearing) {
-    return {approximate::atan2()(bearing.z(), bearing.head<2>().norm()),
-            approximate::atan2()(bearing.y(), bearing.x())};
+  static Point3D sensorToCartesian(const Vector3D& coordinates) {
+    const FloatingPoint elevation_angle = coordinates[0];
+    const FloatingPoint azimuth_angle = coordinates[1];
+    const FloatingPoint range = coordinates[2];
+    Vector3D bearing{std::cos(elevation_angle) * std::cos(azimuth_angle),
+                     std::cos(elevation_angle) * std::sin(azimuth_angle),
+                     std::sin(elevation_angle)};
+    return range * bearing;
   }
-  static Vector3D sphericalToBearing(Vector2D spherical_coordinates) {
-    const FloatingPoint elevation_angle = spherical_coordinates[0];
-    const FloatingPoint azimuth_angle = spherical_coordinates[1];
-    Vector3D bearing;
-    bearing.x() = std::cos(elevation_angle) * std::cos(azimuth_angle);
-    bearing.y() = std::cos(elevation_angle) * std::sin(azimuth_angle);
-    bearing.z() = std::sin(elevation_angle);
-    return bearing;
-  }
-
-  Index2D sphericalToNearestIndex(Vector2D spherical_coordinates) const {
-    return {elevation_projector_.angleToNearestIndex(spherical_coordinates[0]),
-            azimuth_projector_.angleToNearestIndex(spherical_coordinates[1])};
-  }
-  Index2D sphericalToNearestIndex(Vector2D spherical_coordinates,
-                                  Vector2D& spherical_remainders) const {
-    return {elevation_projector_.angleToNearestIndex(spherical_coordinates[0],
-                                                     spherical_remainders[0]),
-            azimuth_projector_.angleToNearestIndex(spherical_coordinates[1],
-                                                   spherical_remainders[1])};
-  }
-  Index2D sphericalToFloorIndex(Vector2D spherical_coordinates) const {
-    return {elevation_projector_.angleToFloorIndex(spherical_coordinates[0]),
-            azimuth_projector_.angleToFloorIndex(spherical_coordinates[1])};
-  }
-  Index2D sphericalToCeilIndex(Vector2D spherical_coordinates) const {
-    return {elevation_projector_.angleToCeilIndex(spherical_coordinates[0]),
-            azimuth_projector_.angleToCeilIndex(spherical_coordinates[1])};
-  }
-  Vector2D indexToSpherical(Index2D index) const {
-    return {elevation_projector_.indexToAngle(index[0]),
-            azimuth_projector_.indexToAngle(index[1])};
+  static Point3D sensorToCartesian(const Vector2D& image_coordinates,
+                                   FloatingPoint range) {
+    return sensorToCartesian(
+        {image_coordinates.x(), image_coordinates.y(), range});
   }
 
-  Index2D bearingToNearestIndex(const Vector3D& bearing) const {
-    const Vector2D spherical_coordinates = bearingToSpherical(bearing);
-    auto range_image_index = sphericalToNearestIndex(spherical_coordinates);
-    return range_image_index;
+  // Projection from Cartesian space onto the sensor's image surface
+  static Vector2D cartesianToImage(const Point3D& C_point) {
+    const FloatingPoint elevation_angle =
+        std::atan2(C_point.z(), C_point.head<2>().norm());
+    const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
+    return {elevation_angle, azimuth_angle};
   }
-  Vector3D indexToBearing(const Index2D& index) const {
-    const Vector2D spherical_coordinates = indexToSpherical(index);
-    return sphericalToBearing(spherical_coordinates);
+
+  // Conversions between real (unscaled) coordinates on the sensor's image
+  // surface and indices corresponding to sensor pixels/rays
+  Index2D imageToIndex(const Vector2D& image_coordinates) const {
+    const FloatingPoint elevation_angle = image_coordinates.x();
+    const FloatingPoint azimuth_angle = image_coordinates.y();
+    return {elevation_projector_.angleToNearestIndex(elevation_angle),
+            azimuth_projector_.angleToNearestIndex(azimuth_angle)};
+  }
+  Vector2D indexToImage(const Index2D& index) const {
+    return {elevation_projector_.indexToAngle(index.x()),
+            azimuth_projector_.indexToAngle(index.y())};
   }
 
  private:

@@ -40,31 +40,30 @@ AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
   posed_range_image_->setPose(pointcloud.getPose());
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
-    const FloatingPoint range = C_point.norm();
-    if (!isMeasurementValid(C_point, range)) {
+    if (!isMeasurementValid(C_point)) {
       continue;
     }
 
     // Add the point to the range image
+    const Vector3D sensor_coordinates =
+        projection_model_.cartesianToSensor(C_point);
     const Index2D range_image_index =
-        projection_model_.bearingToNearestIndex(C_point);
-    if ((range_image_index.array() < 0).any() ||
-        (posed_range_image_->getDimensions().array() <=
-         range_image_index.array())
-            .any()) {
+        projection_model_.imageToIndex(sensor_coordinates.head<2>());
+    if (!posed_range_image_->isIndexWithinBounds(range_image_index)) {
       // Prevent out-of-bounds access
       continue;
     }
 
     // Add the point to the range image
     // If multiple points hit the same image pixel, keep the closest point
+    const FloatingPoint range = sensor_coordinates[2];
     const FloatingPoint old_range_value =
         posed_range_image_->getRange(range_image_index);
     if (old_range_value < config_.min_range || range < old_range_value) {
       posed_range_image_->getRange(range_image_index) = range;
-      bearing_image_.getBearing(range_image_index) = C_point / range;
+      // TODO(victorr): Generalize this for all sensor models
+      bearing_image_.getBearing(range_image_index) = C_point.normalized();
     }
-    posed_range_image_->getRange(range_image_index) = range;
 
     // Update the AABB (in world frame)
     Point3D C_point_truncated = getEndPointOrMaxRange(Point3D::Zero(), C_point,

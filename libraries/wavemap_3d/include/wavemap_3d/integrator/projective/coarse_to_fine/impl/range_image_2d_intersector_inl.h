@@ -12,14 +12,15 @@
 namespace wavemap {
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
-    const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb) {
+    const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb) const {
   Cache cache{};
   return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, cache);
 }
 
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
-    const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb, Cache& cache) {
+    const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
+    Cache& cache) const {
   MinMaxAnglePair angle_intervals;
 
   // If the sensor is contained in the AABB, it overlaps with the full range
@@ -79,7 +80,7 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
        ++corner_idx) {
     const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
     spherical_C_corners.col(corner_idx) =
-        SphericalProjector::bearingToSpherical(C_t_C_corner);
+        projection_model_.cartesianToImage(C_t_C_corner);
     for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
       if (bool is_negative = std::signbit(C_t_C_corner[dim_idx]); is_negative) {
         all_positive.set(dim_idx, false);
@@ -153,16 +154,14 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
 }
 
 inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
-    const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb,
-    const SphericalProjector& spherical_projector) const {
+    const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb) const {
   Cache cache{};
-  return determineIntersectionType(T_W_C, W_cell_aabb, spherical_projector,
-                                   cache);
+  return determineIntersectionType(T_W_C, W_cell_aabb, cache);
 }
 
 inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb,
-    const SphericalProjector& spherical_projector, Cache& cache) const {
+    Cache& cache) const {
   // Get the min and max distances from any point in the cell (which is an
   // axis-aligned cube) to the sensor's center
   // NOTE: The min distance is 0 if the cell contains the sensor's center.
@@ -179,24 +178,24 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Pad the min and max angles with the BeamModel's angle threshold to
   // account for the beam's non-zero width (angular uncertainty)
-  min_spherical_coordinates -= Vector2D::Constant(angle_threshold_);
-  max_spherical_coordinates += Vector2D::Constant(angle_threshold_);
+  // TODO(victorr): Consider adding Ceil/Floor methods instead of Nearest
+  const Index2D min_image_index = projection_model_.imageToIndex(
+      min_spherical_coordinates - Vector2D::Constant(angle_threshold_));
+  const Index2D max_image_index = projection_model_.imageToIndex(
+      max_spherical_coordinates + Vector2D::Constant(angle_threshold_));
 
   // If the angle wraps around Pi, we can't use the hierarchical range image
   const bool elevation_range_wraps_pi =
-      max_spherical_coordinates.x() < min_spherical_coordinates.x();
-  const bool azimuth_range_wraps_pi =
-      max_spherical_coordinates.y() < min_spherical_coordinates.y();
+      max_image_index.x() < min_image_index.x();
+  const bool azimuth_range_wraps_pi = max_image_index.y() < min_image_index.y();
   if (elevation_range_wraps_pi ||
       (!kAzimuthAllowedToWrapAround && azimuth_range_wraps_pi)) {
     const bool elevation_range_fully_outside_fov =
-        max_spherical_coordinates.x() <
-            spherical_projector.getMinAngles().x() &&
-        spherical_projector.getMaxAngles().x() < min_spherical_coordinates.x();
+        max_image_index.x() < 0 &&
+        projection_model_.getNumRows() < min_image_index.x();
     const bool azimuth_range_fully_outside_fov =
-        max_spherical_coordinates.y() <
-            spherical_projector.getMinAngles().y() &&
-        spherical_projector.getMaxAngles().y() < min_spherical_coordinates.y();
+        max_image_index.y() < 0 &&
+        projection_model_.getNumColumns() < min_image_index.y();
     if ((!elevation_range_wraps_pi || elevation_range_fully_outside_fov) &&
         (kAzimuthAllowedToWrapAround || !azimuth_range_wraps_pi ||
          azimuth_range_fully_outside_fov)) {
@@ -210,22 +209,17 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   }
 
   // Check if the cell is outside the FoV
-  if ((max_spherical_coordinates.array() <
-       spherical_projector.getMinAngles().array())
-          .any() ||
-      (spherical_projector.getMaxAngles().array() <
-       min_spherical_coordinates.array())
+  if ((max_image_index.array() < 0).any() ||
+      (projection_model_.getDimensions().array() < min_image_index.array())
           .any()) {
     return IntersectionType::kFullyUnknown;
   }
 
   // Convert the angles to range image indices
-  const Index2D min_image_idx =
-      spherical_projector.sphericalToFloorIndex(min_spherical_coordinates)
-          .cwiseMax(Index2D::Zero());
-  const Index2D max_image_idx =
-      spherical_projector.sphericalToCeilIndex(max_spherical_coordinates)
-          .cwiseMin(spherical_projector.getDimensions() - Index2D::Ones());
+  const Index2D min_image_idx_rectified =
+      min_image_index.cwiseMax(Index2D::Zero());
+  const Index2D max_image_idx_rectified = max_image_index.cwiseMin(
+      projection_model_.getDimensions() - Index2D::Ones());
 
   // Check if the cell overlaps with the approximate but conservative distance
   // bounds of the hierarchical range image
@@ -234,7 +228,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   const FloatingPoint range_min = d_C_cell_closest - range_threshold_behind_;
   const FloatingPoint range_max = d_C_cell_furthest + range_threshold_in_front_;
   return hierarchical_range_image_.getIntersectionType(
-      min_image_idx, max_image_idx, range_min, range_max);
+      min_image_idx_rectified, max_image_idx_rectified, range_min, range_max);
 }
 }  // namespace wavemap
 

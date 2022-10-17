@@ -30,12 +30,12 @@ class RayIntegrator : public PointcloudIntegrator<dim> {
     for (const auto& W_end_point : pointcloud.getPointsGlobal()) {
       measurement_model.setEndPoint(W_end_point);
 
-      const FloatingPoint measured_distance =
-          (W_start_point - W_end_point).norm();
-      if (!Base::isMeasurementValid(W_end_point, measured_distance)) {
+      if (!Base::isMeasurementValid(W_end_point - W_start_point)) {
         continue;
       }
 
+      const FloatingPoint measured_distance =
+          (W_start_point - W_end_point).norm();
       const Point<dim> W_end_point_truncated = Base::getEndPointOrMaxRange(
           W_start_point, W_end_point, measured_distance,
           Base::config_.max_range);
