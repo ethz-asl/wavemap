@@ -14,13 +14,29 @@ inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb) const {
   Cache cache{};
-  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, cache);
+  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model_, cache);
 }
 
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-    Cache& cache) const {
+    RangeImage2DIntersector::Cache& cache) const {
+  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model_, cache);
+}
+
+inline RangeImage2DIntersector::MinMaxAnglePair
+RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
+    const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
+    const SphericalProjector& projection_model) {
+  Cache cache{};
+  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model, cache);
+}
+
+inline RangeImage2DIntersector::MinMaxAnglePair
+RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
+    const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
+    const SphericalProjector& projection_model,
+    RangeImage2DIntersector::Cache& cache) {
   MinMaxAnglePair angle_intervals;
 
   // If the sensor is contained in the AABB, it overlaps with the full range
@@ -80,7 +96,7 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
        ++corner_idx) {
     const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
     spherical_C_corners.col(corner_idx) =
-        projection_model_.cartesianToImage(C_t_C_corner);
+        projection_model.cartesianToImage(C_t_C_corner);
     for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
       if (bool is_negative = std::signbit(C_t_C_corner[dim_idx]); is_negative) {
         all_positive.set(dim_idx, false);
@@ -178,10 +194,9 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Pad the min and max angles with the BeamModel's angle threshold to
   // account for the beam's non-zero width (angular uncertainty)
-  // TODO(victorr): Consider adding Ceil/Floor methods instead of Nearest
-  const Index2D min_image_index = projection_model_.imageToIndex(
+  const Index2D min_image_index = projection_model_.imageToFloorIndex(
       min_spherical_coordinates - Vector2D::Constant(angle_threshold_));
-  const Index2D max_image_index = projection_model_.imageToIndex(
+  const Index2D max_image_index = projection_model_.imageToCeilIndex(
       max_spherical_coordinates + Vector2D::Constant(angle_threshold_));
 
   // If the angle wraps around Pi, we can't use the hierarchical range image

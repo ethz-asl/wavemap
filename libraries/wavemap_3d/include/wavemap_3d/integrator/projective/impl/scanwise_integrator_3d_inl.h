@@ -17,7 +17,7 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   }
 
   const Index2D image_idx =
-      projection_model_.imageToIndex(sensor_coordinates.head<2>());
+      projection_model_.imageToNearestIndex(sensor_coordinates.head<2>());
   if (!posed_range_image_->isIndexWithinBounds(image_idx)) {
     return 0.f;
   }

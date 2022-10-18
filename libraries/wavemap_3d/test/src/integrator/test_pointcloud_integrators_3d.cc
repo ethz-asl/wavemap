@@ -50,7 +50,8 @@ class PointcloudIntegrator3DTest : public FixtureBase {
       const SphericalProjector& projection_model) {
     ContinuousVolumetricLogOddsConfig measurement_model_config;
     const FloatingPoint max_angle_sigma_without_overlap =
-        (projection_model.getMaxAngles() - projection_model.getMinAngles())
+        (projection_model.getMaxImageCoordinates() -
+         projection_model.getMinImageCoordinates())
             .cwiseQuotient(
                 projection_model.getDimensions().cast<FloatingPoint>())
             .minCoeff() /
@@ -83,7 +84,8 @@ class PointcloudIntegrator3DTest : public FixtureBase {
           pointcloud_index % projection_model.getNumRows(),
           pointcloud_index / projection_model.getNumRows()};
       pointcloud[pointcloud_index] =
-          range * projection_model.indexToBearing(image_index);
+          range * projection_model.sensorToCartesian(
+                      projection_model.indexToImage(image_index), 1.f);
     }
 
     return {getRandomTransformation<3>(), pointcloud};
@@ -107,8 +109,8 @@ TEST_F(PointcloudIntegrator3DTest, RayIntegrator) {
         data_structure_config.min_cell_width *
         projection_model.getDimensions()
             .cast<FloatingPoint>()
-            .cwiseQuotient(projection_model.getMaxAngles() -
-                           projection_model.getMinAngles())
+            .cwiseQuotient(projection_model.getMaxImageCoordinates() -
+                           projection_model.getMinImageCoordinates())
             .maxCoeff();
     if (kMaxDistance <= min_distance) {
       --idx;

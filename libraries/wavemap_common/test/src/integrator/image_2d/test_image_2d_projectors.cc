@@ -74,7 +74,8 @@ TYPED_TEST(Image2DProjectorTest, Conversions) {
     const Vector3D sensor_coordinates = projector.cartesianToSensor(C_point);
     const Vector2D image_coordinates = sensor_coordinates.head<2>();
     const FloatingPoint range_or_depth = sensor_coordinates[2];
-    const Index2D image_index = projector.imageToIndex(image_coordinates);
+    const Index2D image_index =
+        projector.imageToNearestIndex(image_coordinates);
     if ((image_index.array() < 0 ||
          projector.getDimensions().array() <= image_index.array())
             .any() ||
@@ -102,7 +103,8 @@ TYPED_TEST(Image2DProjectorTest, Conversions) {
         Index2D::Zero(), projector.getDimensions());
     const Vector2D image_coordinates = projector.indexToImage(image_index);
     const Point3D C_point = projector.sensorToCartesian(image_coordinates, 1.f);
-    const Index2D image_index_roundtrip = projector.cartesianToIndex(C_point);
+    const Index2D image_index_roundtrip =
+        projector.cartesianToNearestIndex(C_point);
 
     EXPECT_EQ(image_index_roundtrip, image_index)
         << "Original image index was " << EigenFormat::oneLine(image_index)

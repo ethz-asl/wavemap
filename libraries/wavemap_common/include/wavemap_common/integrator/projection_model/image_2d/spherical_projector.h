@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "wavemap_common/integrator/projection_model/image_1d/circular_projector.h"
+#include "wavemap_common/integrator/projection_model/image_2d/image_2d_projection_model.h"
 #include "wavemap_common/utils/approximate_trigonometry.h"
 #include "wavemap_common/utils/config_utils.h"
 
@@ -22,27 +23,36 @@ struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
   static SphericalProjectorConfig from(const param::Map& params);
 };
 
-class SphericalProjector {
+class SphericalProjector : public Image2DProjectionModel {
  public:
   using Config = SphericalProjectorConfig;
 
   explicit SphericalProjector(const Config& config)
-      : elevation_projector_(config.elevation),
-        azimuth_projector_(config.azimuth) {}
+      : Image2DProjectionModel(
+            Vector2D(config.elevation.max_angle - config.elevation.min_angle,
+                     config.azimuth.max_angle - config.azimuth.min_angle)
+                .cwiseQuotient(Index2D(config.elevation.num_cells - 1,
+                                       config.azimuth.num_cells - 1)
+                                   .cast<FloatingPoint>()),
+            Vector2D(config.elevation.min_angle, config.azimuth.min_angle)),
+        config_(config.checkValid()) {}
 
-  IndexElement getNumRows() const { return elevation_projector_.getNumCells(); }
-  IndexElement getNumColumns() const {
-    return azimuth_projector_.getNumCells();
+  IndexElement getNumRows() const final { return config_.elevation.num_cells; }
+  IndexElement getNumColumns() const final { return config_.azimuth.num_cells; }
+  Vector2D getMinImageCoordinates() const final {
+    return {config_.elevation.min_angle, config_.azimuth.min_angle};
   }
-  Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
+  Vector2D getMaxImageCoordinates() const final {
+    return {config_.elevation.max_angle, config_.azimuth.max_angle};
+  }
 
   // Coordinate transforms between Cartesian and sensor space
-  static Vector3D cartesianToSensor(const Point3D& C_point) {
+  Vector3D cartesianToSensor(const Point3D& C_point) const final {
     const Vector2D image_coordinates = cartesianToImage(C_point);
     const FloatingPoint range = C_point.norm();
     return {image_coordinates.x(), image_coordinates.y(), range};
   }
-  static Point3D sensorToCartesian(const Vector3D& coordinates) {
+  Point3D sensorToCartesian(const Vector3D& coordinates) const final {
     const FloatingPoint elevation_angle = coordinates[0];
     const FloatingPoint azimuth_angle = coordinates[1];
     const FloatingPoint range = coordinates[2];
@@ -51,41 +61,22 @@ class SphericalProjector {
                            std::sin(elevation_angle)};
     return range * bearing;
   }
-  static Point3D sensorToCartesian(const Vector2D& image_coordinates,
-                                   FloatingPoint range) {
+  Point3D sensorToCartesian(const Vector2D& image_coordinates,
+                            FloatingPoint range) const final {
     return sensorToCartesian(
         {image_coordinates.x(), image_coordinates.y(), range});
   }
 
   // Projection from Cartesian space onto the sensor's image surface
-  static Vector2D cartesianToImage(const Point3D& C_point) {
+  Vector2D cartesianToImage(const Point3D& C_point) const final {
     const FloatingPoint elevation_angle =
         std::atan2(C_point.z(), C_point.head<2>().norm());
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
   }
-  // TODO(victorr): Move to base
-  Index2D cartesianToIndex(const Point3D& C_point) const {
-    return imageToIndex(cartesianToImage(C_point));
-  }
-
-  // Conversions between real (unscaled) coordinates on the sensor's image
-  // surface and indices corresponding to sensor pixels/rays
-  // TODO(victorr): Make image to scaled image and move rounding fns to base
-  Index2D imageToIndex(const Vector2D& image_coordinates) const {
-    const FloatingPoint elevation_angle = image_coordinates.x();
-    const FloatingPoint azimuth_angle = image_coordinates.y();
-    return {elevation_projector_.angleToNearestIndex(elevation_angle),
-            azimuth_projector_.angleToNearestIndex(azimuth_angle)};
-  }
-  Vector2D indexToImage(const Index2D& index) const {
-    return {elevation_projector_.indexToAngle(index.x()),
-            azimuth_projector_.indexToAngle(index.y())};
-  }
 
  private:
-  CircularProjector elevation_projector_;
-  CircularProjector azimuth_projector_;
+  const Config config_;
 };
 }  // namespace wavemap
 

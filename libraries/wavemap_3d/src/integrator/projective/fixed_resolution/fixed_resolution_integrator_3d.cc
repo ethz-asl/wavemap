@@ -48,7 +48,7 @@ AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
     const Vector3D sensor_coordinates =
         projection_model_.cartesianToSensor(C_point);
     const Index2D range_image_index =
-        projection_model_.imageToIndex(sensor_coordinates.head<2>());
+        projection_model_.imageToNearestIndex(sensor_coordinates.head<2>());
     if (!posed_range_image_->isIndexWithinBounds(range_image_index)) {
       // Prevent out-of-bounds access
       continue;

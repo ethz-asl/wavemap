@@ -34,7 +34,8 @@ class RangeImage2DIntersectorTest : public FixtureBase {
       const SphericalProjector& projection_model) {
     ContinuousVolumetricLogOddsConfig measurement_model_config;
     const FloatingPoint max_angle_sigma_without_overlap =
-        (projection_model.getMaxAngles() - projection_model.getMinAngles())
+        (projection_model.getMaxImageCoordinates() -
+         projection_model.getMinImageCoordinates())
             .cwiseQuotient(
                 projection_model.getDimensions().cast<FloatingPoint>())
             .minCoeff() /
@@ -148,6 +149,7 @@ class RangeImage2DIntersectorTest : public FixtureBase {
 TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
   // Generate test set
   std::vector<AABBAndPose> tests = getTestAABBsAndPoses();
+  const auto projection_model = getRandomProjectionModel();
 
   // Run tests
   int error_count = 0;
@@ -165,8 +167,7 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
            ++corner_idx) {
         const Point3D C_t_C_corner =
             test.T_W_C.inverse() * test.W_aabb.corner_point(corner_idx);
-        const Vector2D angles =
-            SphericalProjector::bearingToSpherical(C_t_C_corner);
+        const Vector2D angles = projection_model.cartesianToImage(C_t_C_corner);
         elevation_angles[corner_idx] = angles[0];
         azimuth_angles[corner_idx] = angles[1];
       }
@@ -193,8 +194,8 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
     }
 
     const RangeImage2DIntersector::MinMaxAnglePair returned_angle_pair =
-        RangeImage2DIntersector::getAabbMinMaxProjectedAngle(test.T_W_C,
-                                                             test.W_aabb);
+        RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
+            test.T_W_C, test.W_aabb, projection_model);
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
 
     bool check_failed = false;
@@ -290,8 +291,8 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
 
     // Create the hierarchical range image
     RangeImage2DIntersector range_image_intersector(
-        posed_range_image, integrator_config.max_range,
-        measurement_model.getAngleThreshold(),
+        posed_range_image, projection_model, integrator_config.min_range,
+        integrator_config.max_range, measurement_model.getAngleThreshold(),
         measurement_model.getRangeThresholdInFrontOfSurface(),
         measurement_model.getRangeThresholdBehindSurface());
 
@@ -331,7 +332,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
         }
 
         const Index2D range_image_index =
-            projection_model.bearingToNearestIndex(C_cell_center);
+            projection_model.cartesianToNearestIndex(C_cell_center);
         if ((range_image_index.array() < 0).any() ||
             (posed_range_image->getDimensions().array() <=
              range_image_index.array())
@@ -376,7 +377,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
           W_node_bottom_left + Vector3D::Constant(node_width)};
       const IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
-              posed_range_image->getPose(), W_cell_aabb, projection_model);
+              posed_range_image->getPose(), W_cell_aabb);
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected " << getIntersectionTypeStr(reference_intersection_type)
           << " but got " << getIntersectionTypeStr(returned_intersection_type);
