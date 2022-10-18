@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap_common/common.h"
-#include "wavemap_common/integrator/projection_model/circular_projector.h"
+#include "wavemap_common/integrator/projection_model/image_1d/circular_projector.h"
 #include "wavemap_common/test/fixture_base.h"
 
 namespace wavemap {
@@ -43,8 +43,10 @@ TEST_F(CircularProjectorTest, Conversions) {
     }
 
     // Instantiate projection model with random params
+    constexpr FloatingPoint kMinAngleIntervalWidth = kPi / 16.f;
     const FloatingPoint min_angle = getRandomAngle(-kPi, kHalfPi);
-    const FloatingPoint max_angle = getRandomAngle(min_angle + kEpsilon, kPi);
+    const FloatingPoint max_angle =
+        getRandomAngle(min_angle + kMinAngleIntervalWidth, kPi);
     const IndexElement num_beams = getRandomIndexElement(2, 2048);
     CircularProjector circular_projector(
         CircularProjectorConfig{min_angle, max_angle, num_beams});
@@ -58,19 +60,30 @@ TEST_F(CircularProjectorTest, Conversions) {
 
     // Test angle <-> index
     {
-      EXPECT_EQ(circular_projector.angleToNearestIndex(min_angle), 0);
-      EXPECT_EQ(circular_projector.angleToFloorIndex(min_angle + kEpsilon), 0);
-      EXPECT_FLOAT_EQ(circular_projector.indexToAngle(0), min_angle);
+      std::string error_msg = "For min_angle " + std::to_string(min_angle) +
+                              ", max_angle " + std::to_string(max_angle) +
+                              " and num_beams " + std::to_string(num_beams);
+      EXPECT_EQ(circular_projector.angleToNearestIndex(min_angle), 0)
+          << error_msg;
+      EXPECT_EQ(circular_projector.angleToFloorIndex(min_angle + kEpsilon), 0)
+          << error_msg;
+      EXPECT_FLOAT_EQ(circular_projector.indexToAngle(0), min_angle)
+          << error_msg;
 
-      EXPECT_EQ(circular_projector.angleToNearestIndex(max_angle), max_index);
+      EXPECT_EQ(circular_projector.angleToNearestIndex(max_angle), max_index)
+          << error_msg;
       EXPECT_EQ(circular_projector.angleToCeilIndex(max_angle - kEpsilon),
-                max_index);
-      EXPECT_NEAR(circular_projector.indexToAngle(max_index), max_angle, 1e-6);
+                max_index)
+          << error_msg;
+      EXPECT_NEAR(circular_projector.indexToAngle(max_index), max_angle, 1e-6)
+          << error_msg;
 
       EXPECT_EQ(circular_projector.angleToFloorIndex(mid_angle + kEpsilon),
-                mid_index_floor);
+                mid_index_floor)
+          << error_msg;
       EXPECT_EQ(circular_projector.angleToCeilIndex(mid_angle - kEpsilon),
-                mid_index_ceil);
+                mid_index_ceil)
+          << error_msg;
     }
 
     // Test bearing <-> index

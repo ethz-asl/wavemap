@@ -1,4 +1,4 @@
-#include "wavemap_common/integrator/projection_model/ouster_projector.h"
+#include "wavemap_common/integrator/projection_model/image_2d/ouster_projector.h"
 
 namespace wavemap {
 bool OusterProjectorConfig::isValid(bool verbose) const {

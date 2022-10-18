@@ -49,7 +49,6 @@ class PointcloudTest : public FixtureBase {
   }
 };
 
-// TODO(victorr): Template Pointcloud class and tests directly on dim instead
 using PointTypes = ::testing::Types<Point2D, Point3D>;
 TYPED_TEST_SUITE(PointcloudTest, PointTypes, );
 
@@ -161,8 +160,6 @@ class PosedPointcloudTest : public PointcloudTest<PointT> {
   }
 };
 
-// TODO(victorr): Template PosedPointcloud class and tests directly on dim
-//                instead
 using PointTypes = ::testing::Types<Point2D, Point3D>;
 TYPED_TEST_SUITE(PosedPointcloudTest, PointTypes, );
 

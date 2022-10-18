@@ -1,4 +1,4 @@
-#include "wavemap_common/integrator/projection_model/circular_projector.h"
+#include "wavemap_common/integrator/projection_model/image_1d/circular_projector.h"
 
 namespace wavemap {
 bool CircularProjectorConfig::isValid(bool verbose) const {

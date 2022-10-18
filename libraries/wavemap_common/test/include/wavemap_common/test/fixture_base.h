@@ -30,8 +30,10 @@ class FixtureBase : public ::testing::Test {
   }
 
   template <int dim>
-  static Point<dim> getRandomPoint(FloatingPoint max_distance = 5e2) {
-    return max_distance * Point<dim>::Random();
+  Point<dim> getRandomPoint(FloatingPoint min_distance = 0.f,
+                            FloatingPoint max_distance = 5e2) const {
+    return getRandomSignedDistance(min_distance, max_distance) *
+           Point<dim>::Random().normalized();
   }
 
   unsigned int getRandomPointcloudSize(unsigned int min_size = 1u,
@@ -43,7 +45,7 @@ class FixtureBase : public ::testing::Test {
   std::vector<Point<dim>> getRandomPointVector() const {
     std::vector<Point<dim>> random_point_vector(getRandomPointcloudSize());
     std::generate(random_point_vector.begin(), random_point_vector.end(),
-                  []() { return getRandomPoint<dim>(); });
+                  [this]() { return getRandomPoint<dim>(); });
     return random_point_vector;
   }
 

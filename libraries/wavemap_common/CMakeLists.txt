@@ -58,8 +58,9 @@ if (CATKIN_ENABLE_TESTING)
       test/src/data_structure/test_volumetric_cell_types.cc
       test/src/indexing/test_index_conversions.cc
       test/src/indexing/test_ndtree_index.cc
-      test/src/integrator/test_circular_projector.cc
-      test/src/integrator/test_spherical_projector.cc
+      test/src/integrator/image_1d/test_circular_projector.cc
+      test/src/integrator/image_2d/test_image_2d_projectors.cc
+      test/src/integrator/image_2d/test_spherical_projector.cc
       test/src/iterator/test_grid_iterator.cc
       test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc

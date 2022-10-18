@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_PINHOLE_CAMERA_PROJECTOR_H_
-#define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_PINHOLE_CAMERA_PROJECTOR_H_
+#ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_PINHOLE_CAMERA_PROJECTOR_H_
+#define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_PINHOLE_CAMERA_PROJECTOR_H_
 
 #include "wavemap_common/utils/config_utils.h"
 
@@ -25,7 +25,9 @@ struct PinholeCameraProjectorConfig : ConfigBase<PinholeCameraProjectorConfig> {
 
 class PinholeCameraProjector {
  public:
-  explicit PinholeCameraProjector(const PinholeCameraProjectorConfig& config)
+  using Config = PinholeCameraProjectorConfig;
+
+  explicit PinholeCameraProjector(const Config& config)
       : config_(config.checkValid()) {}
 
   IndexElement getNumRows() const { return config_.height; }
@@ -40,13 +42,13 @@ class PinholeCameraProjector {
     return {u / w, v / w, w};
   }
   Point3D sensorToCartesian(const Vector3D& coordinates) const {
+    const FloatingPoint u_scaled = coordinates[0];
+    const FloatingPoint v_scaled = coordinates[1];
     const FloatingPoint w = coordinates[2];
-    const FloatingPoint u = w * coordinates[0];
-    const FloatingPoint v = w * coordinates[1];
-    const FloatingPoint x = config_.fx * u;
-    const FloatingPoint y = config_.fy * v;
-    const FloatingPoint z = config_.cx * u + config_.cy * v + w;
-    return {x, y, z};
+    Point3D C_point = w * fxfy_inv *
+                      Point3D{config_.fy * u_scaled - cxfy,
+                              config_.fx * v_scaled - cyfx, fxfy};
+    return C_point;
   }
   Point3D sensorToCartesian(const Vector2D& image_coordinates,
                             FloatingPoint depth) const {
@@ -56,10 +58,11 @@ class PinholeCameraProjector {
 
   // Projection from Cartesian space onto the sensor's image surface
   Vector2D cartesianToImage(const Point3D& C_point) const {
-    const FloatingPoint u = config_.fx * C_point.x() + config_.cx * C_point.z();
-    const FloatingPoint v = config_.fy * C_point.y() + config_.cy * C_point.z();
-    const FloatingPoint w = C_point.z();
-    return {u / w, v / w};
+    return cartesianToSensor(C_point).head<2>();
+  }
+  // TODO(victorr): Move to base
+  Index2D cartesianToIndex(const Point3D& C_point) const {
+    return imageToIndex(cartesianToImage(C_point));
   }
 
   // Conversions between real (unscaled) coordinates on the sensor's image
@@ -74,7 +77,12 @@ class PinholeCameraProjector {
 
  private:
   const PinholeCameraProjectorConfig config_;
+
+  const FloatingPoint fxfy = config_.fx * config_.fy;
+  const FloatingPoint fxfy_inv = 1.f / fxfy;
+  const FloatingPoint cxfy = config_.cx * config_.fy;
+  const FloatingPoint cyfx = config_.cy * config_.fx;
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_PINHOLE_CAMERA_PROJECTOR_H_
+#endif  // WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_PINHOLE_CAMERA_PROJECTOR_H_

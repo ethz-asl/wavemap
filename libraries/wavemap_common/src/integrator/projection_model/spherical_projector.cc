@@ -1,4 +1,4 @@
-#include "wavemap_common/integrator/projection_model/spherical_projector.h"
+#include "wavemap_common/integrator/projection_model/image_2d/spherical_projector.h"
 
 namespace wavemap {
 bool SphericalProjectorConfig::isValid(bool verbose) const {

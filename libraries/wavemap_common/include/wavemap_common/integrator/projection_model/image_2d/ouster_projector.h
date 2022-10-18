@@ -1,9 +1,9 @@
-#ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_OUSTER_PROJECTOR_H_
-#define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_OUSTER_PROJECTOR_H_
+#ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_OUSTER_PROJECTOR_H_
+#define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_OUSTER_PROJECTOR_H_
 
 #include <utility>
 
-#include "wavemap_common/integrator/projection_model/circular_projector.h"
+#include "wavemap_common/integrator/projection_model/image_1d/circular_projector.h"
 #include "wavemap_common/utils/config_utils.h"
 
 namespace wavemap {
@@ -31,7 +31,9 @@ struct OusterProjectorConfig : ConfigBase<OusterProjectorConfig> {
 
 class OusterProjector {
  public:
-  explicit OusterProjector(const OusterProjectorConfig& config)
+  using Config = OusterProjectorConfig;
+
+  explicit OusterProjector(const Config& config)
       : config_(config.checkValid()),
         elevation_projector_(config_.elevation),
         azimuth_projector_(config_.azimuth) {}
@@ -59,11 +61,10 @@ class OusterProjector {
     const FloatingPoint elevation_angle = coordinates[0];
     const FloatingPoint azimuth_angle = coordinates[1];
     const FloatingPoint range = coordinates[2];
-    Point2D B_point =
-        Vector2D{std::cos(elevation_angle), std::sin(elevation_angle)};
-    B_point *= range;
-    B_point += Vector2D{config_.lidar_origin_to_beam_origin,
-                        config_.lidar_origin_to_sensor_origin_z_offset};
+    const Point2D B_point =
+        range * Vector2D(std::cos(elevation_angle), std::sin(elevation_angle)) +
+        Vector2D(config_.lidar_origin_to_beam_origin,
+                 config_.lidar_origin_to_sensor_origin_z_offset);
     Point3D C_point{B_point.x() * std::cos(azimuth_angle),
                     B_point.x() * std::sin(azimuth_angle), B_point.y()};
     return C_point;
@@ -86,6 +87,10 @@ class OusterProjector {
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
   }
+  // TODO(victorr): Move to base
+  Index2D cartesianToIndex(const Point3D& C_point) const {
+    return imageToIndex(cartesianToImage(C_point));
+  }
 
   // Conversions between real (unscaled) coordinates on the sensor's image
   // surface and indices corresponding to sensor pixels/rays
@@ -107,4 +112,4 @@ class OusterProjector {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_OUSTER_PROJECTOR_H_
+#endif  // WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_OUSTER_PROJECTOR_H_

@@ -5,7 +5,7 @@
 #include <utility>
 
 #include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
-#include <wavemap_common/integrator/projection_model/circular_projector.h>
+#include <wavemap_common/integrator/projection_model/image_1d/circular_projector.h>
 
 #include "wavemap_2d/data_structure/volumetric_data_structure_2d.h"
 #include "wavemap_2d/integrator/pointcloud_integrator_2d.h"

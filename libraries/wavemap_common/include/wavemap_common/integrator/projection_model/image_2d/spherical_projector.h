@@ -1,9 +1,9 @@
-#ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
-#define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
+#ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_
+#define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_
 
 #include <utility>
 
-#include "wavemap_common/integrator/projection_model/circular_projector.h"
+#include "wavemap_common/integrator/projection_model/image_1d/circular_projector.h"
 #include "wavemap_common/utils/approximate_trigonometry.h"
 #include "wavemap_common/utils/config_utils.h"
 
@@ -24,7 +24,9 @@ struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
 
 class SphericalProjector {
  public:
-  explicit SphericalProjector(const SphericalProjectorConfig& config)
+  using Config = SphericalProjectorConfig;
+
+  explicit SphericalProjector(const Config& config)
       : elevation_projector_(config.elevation),
         azimuth_projector_(config.azimuth) {}
 
@@ -44,9 +46,9 @@ class SphericalProjector {
     const FloatingPoint elevation_angle = coordinates[0];
     const FloatingPoint azimuth_angle = coordinates[1];
     const FloatingPoint range = coordinates[2];
-    Vector3D bearing{std::cos(elevation_angle) * std::cos(azimuth_angle),
-                     std::cos(elevation_angle) * std::sin(azimuth_angle),
-                     std::sin(elevation_angle)};
+    const Vector3D bearing{std::cos(elevation_angle) * std::cos(azimuth_angle),
+                           std::cos(elevation_angle) * std::sin(azimuth_angle),
+                           std::sin(elevation_angle)};
     return range * bearing;
   }
   static Point3D sensorToCartesian(const Vector2D& image_coordinates,
@@ -62,9 +64,14 @@ class SphericalProjector {
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
   }
+  // TODO(victorr): Move to base
+  Index2D cartesianToIndex(const Point3D& C_point) const {
+    return imageToIndex(cartesianToImage(C_point));
+  }
 
   // Conversions between real (unscaled) coordinates on the sensor's image
   // surface and indices corresponding to sensor pixels/rays
+  // TODO(victorr): Make image to scaled image and move rounding fns to base
   Index2D imageToIndex(const Vector2D& image_coordinates) const {
     const FloatingPoint elevation_angle = image_coordinates.x();
     const FloatingPoint azimuth_angle = image_coordinates.y();
@@ -82,4 +89,4 @@ class SphericalProjector {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_SPHERICAL_PROJECTOR_H_
+#endif  // WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_

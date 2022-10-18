@@ -1,4 +1,4 @@
-#include "wavemap_common/integrator/projection_model/pinhole_camera_projector.h"
+#include "wavemap_common/integrator/projection_model/image_2d/pinhole_camera_projector.h"
 
 namespace wavemap {
 bool PinholeCameraProjectorConfig::isValid(bool verbose) const {
