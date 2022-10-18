@@ -14,7 +14,7 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
   WaveletIntegrator3D(const PointcloudIntegratorConfig& config,
-                      SphericalProjector projection_model,
+                      OusterProjector projection_model,
                       ContinuousVolumetricLogOdds<3> measurement_model,
                       VolumetricDataStructure3D::Ptr occupancy_map);
 

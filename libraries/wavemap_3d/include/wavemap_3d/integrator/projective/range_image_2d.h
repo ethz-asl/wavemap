@@ -3,7 +3,7 @@
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/pointcloud.h>
-#include <wavemap_common/integrator/projection_model/image_2d/spherical_projector.h>
+#include <wavemap_common/integrator/projection_model/image_2d/ouster_projector.h>
 
 namespace wavemap {
 class RangeImage2D {

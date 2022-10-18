@@ -17,7 +17,7 @@ class RangeImage2DIntersectorTest : public FixtureBase {
     return PointcloudIntegratorConfig{min_range, max_range};
   }
 
-  SphericalProjector getRandomProjectionModel() {
+  OusterProjector getRandomProjectionModel() {
     const FloatingPoint min_elevation_angle = getRandomAngle(-kQuarterPi, 0.f);
     const FloatingPoint max_elevation_angle =
         getRandomAngle(min_elevation_angle, kQuarterPi);
@@ -25,13 +25,13 @@ class RangeImage2DIntersectorTest : public FixtureBase {
     const FloatingPoint max_azimuth_angle = kPi;
     const int num_rows = int_math::exp2(getRandomIndexElement(4, 7));
     const int num_cols = int_math::exp2(getRandomIndexElement(7, 11));
-    return SphericalProjector(SphericalProjectorConfig{
+    return OusterProjector(OusterProjectorConfig{
         {min_elevation_angle, max_elevation_angle, num_rows},
         {min_azimuth_angle, max_azimuth_angle, num_cols}});
   }
 
   ContinuousVolumetricLogOdds<3> getRandomMeasurementModel(
-      const SphericalProjector& projection_model) {
+      const OusterProjector& projection_model) {
     ContinuousVolumetricLogOddsConfig measurement_model_config;
     const FloatingPoint max_angle_sigma_without_overlap =
         (projection_model.getMaxImageCoordinates() -

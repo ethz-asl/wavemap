@@ -27,7 +27,7 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-    const SphericalProjector& projection_model) {
+    const OusterProjector& projection_model) {
   Cache cache{};
   return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model, cache);
 }
@@ -35,7 +35,7 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-    const SphericalProjector& projection_model,
+    const OusterProjector& projection_model,
     RangeImage2DIntersector::Cache& cache) {
   MinMaxAnglePair angle_intervals;
 

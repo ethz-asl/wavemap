@@ -33,21 +33,21 @@ class PointcloudIntegrator3DTest : public FixtureBase {
     return VolumetricDataStructureConfig{min_cell_width};
   }
 
-  SphericalProjector getRandomProjectionModel() {
+  OusterProjector getRandomProjectionModel() {
     const FloatingPoint min_elevation_angle = getRandomAngle(-kQuarterPi, 0.f);
     const FloatingPoint max_elevation_angle =
         getRandomAngle(min_elevation_angle + kPi / 8.f, kQuarterPi);
     const FloatingPoint min_azimuth_angle = -kPi;
     const FloatingPoint max_azimuth_angle = kPi;
     const int num_rows = int_math::exp2(getRandomIndexElement(4, 6));
-    const int num_cols = int_math::exp2(getRandomIndexElement(7, 11));
-    return SphericalProjector(SphericalProjectorConfig{
+    const int num_cols = int_math::exp2(getRandomIndexElement(7, 10));
+    return OusterProjector(OusterProjectorConfig{
         {min_elevation_angle, max_elevation_angle, num_rows},
         {min_azimuth_angle, max_azimuth_angle, num_cols}});
   }
 
   ContinuousVolumetricLogOdds<3> getRandomMeasurementModel(
-      const SphericalProjector& projection_model) {
+      const OusterProjector& projection_model) {
     ContinuousVolumetricLogOddsConfig measurement_model_config;
     const FloatingPoint max_angle_sigma_without_overlap =
         (projection_model.getMaxImageCoordinates() -
@@ -66,8 +66,7 @@ class PointcloudIntegrator3DTest : public FixtureBase {
   }
 
   PosedPointcloud<Point3D> getRandomPointcloud(
-      const SphericalProjector& projection_model,
-      FloatingPoint min_distance = 0.f,
+      const OusterProjector& projection_model, FloatingPoint min_distance = 0.f,
       FloatingPoint max_distance = 30.f) const {
     CHECK_LT(min_distance, max_distance);
 

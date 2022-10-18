@@ -6,8 +6,7 @@
 
 namespace wavemap {
 CoarseToFineIntegrator3D::CoarseToFineIntegrator3D(
-    const PointcloudIntegratorConfig& config,
-    SphericalProjector projection_model,
+    const PointcloudIntegratorConfig& config, OusterProjector projection_model,
     ContinuousVolumetricLogOdds<3> measurement_model,
     VolumetricDataStructure3D::Ptr occupancy_map)
     : ScanwiseIntegrator3D(config, std::move(projection_model),

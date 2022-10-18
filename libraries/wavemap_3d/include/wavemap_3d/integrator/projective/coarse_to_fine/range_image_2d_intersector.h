@@ -32,7 +32,7 @@ class RangeImage2DIntersector {
   using Cache = std::optional<SphericalMinMaxCornerIndices>;
 
   RangeImage2DIntersector(std::shared_ptr<RangeImage2D> range_image,
-                          SphericalProjector projection_model,
+                          OusterProjector projection_model,
                           FloatingPoint min_range, FloatingPoint max_range,
                           FloatingPoint angle_threshold,
                           FloatingPoint range_threshold_in_front_of_surface,
@@ -53,10 +53,10 @@ class RangeImage2DIntersector {
                                               Cache& cache) const;
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-      const SphericalProjector& projection_model);
+      const OusterProjector& projection_model);
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-      const SphericalProjector& projection_model, Cache& cache);
+      const OusterProjector& projection_model, Cache& cache);
 
   IntersectionType determineIntersectionType(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb) const;
@@ -69,7 +69,7 @@ class RangeImage2DIntersector {
   const HierarchicalRangeBounds2D<kAzimuthAllowedToWrapAround>
       hierarchical_range_image_;
 
-  const SphericalProjector projection_model_;
+  const OusterProjector projection_model_;
 
   const FloatingPoint max_range_;
   const FloatingPoint angle_threshold_;

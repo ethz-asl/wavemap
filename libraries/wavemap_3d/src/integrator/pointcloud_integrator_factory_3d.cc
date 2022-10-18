@@ -53,9 +53,9 @@ typename PointcloudIntegrator3D::Ptr PointcloudIntegrator3DFactory::create(
   if (!param::map::keyHoldsValue<param::Map>(params, "projection_model")) {
     return nullptr;
   }
-  const auto projection_model_config = SphericalProjectorConfig::from(
+  const auto projection_model_config = OusterProjectorConfig::from(
       param::map::keyGetValue<param::Map>(params, "projection_model"));
-  const SphericalProjector projection_model(projection_model_config);
+  const OusterProjector projection_model(projection_model_config);
 
   // Load the measurement model's config
   if (!param::map::keyHoldsValue<param::Map>(params, "measurement_model")) {
