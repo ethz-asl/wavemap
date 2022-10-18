@@ -39,7 +39,7 @@ class PointcloudIntegrator3DTest : public FixtureBase {
         getRandomAngle(min_elevation_angle + kPi / 8.f, kQuarterPi);
     const FloatingPoint min_azimuth_angle = -kPi;
     const FloatingPoint max_azimuth_angle = kPi;
-    const int num_rows = int_math::exp2(getRandomIndexElement(4, 7));
+    const int num_rows = int_math::exp2(getRandomIndexElement(4, 6));
     const int num_cols = int_math::exp2(getRandomIndexElement(7, 11));
     return SphericalProjector(SphericalProjectorConfig{
         {min_elevation_angle, max_elevation_angle, num_rows},
@@ -61,7 +61,7 @@ class PointcloudIntegrator3DTest : public FixtureBase {
             max_angle_sigma_without_overlap / 10.f,
             max_angle_sigma_without_overlap);
     measurement_model_config.range_sigma =
-        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+        random_number_generator_->getRandomRealNumber(5e-3f, 1e-1f);
     return ContinuousVolumetricLogOdds<3>(measurement_model_config);
   }
 

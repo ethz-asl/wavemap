@@ -47,6 +47,7 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
 
   const Transformation3D T_C_W = T_W_C.inverse();
 
+  // TODO(victorr): Generalize this to work with other sensor models
   if (cache.has_value()) {
     const Point3D min_elevation_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().min_corner_indices[0]);
@@ -225,7 +226,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Check if the cell is outside the FoV
   if ((max_image_index.array() < 0).any() ||
-      (projection_model_.getDimensions().array() < min_image_index.array())
+      (projection_model_.getDimensions().array() <= min_image_index.array())
           .any()) {
     return IntersectionType::kFullyUnknown;
   }
