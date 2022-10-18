@@ -26,8 +26,8 @@ integrator:
   projection_model:
     type: "spherical_projector"
     #    type: "ouster_projector"
-    #    lidar_origin_to_beam_origin: { millimeters: 27.67 }
-    #    lidar_origin_to_sensor_origin_z_offset: { millimeters: 36.18 }
+    lidar_origin_to_beam_origin: { millimeters: 27.67 }
+    lidar_origin_to_sensor_origin_z_offset: { millimeters: 36.18 }
     elevation:
       num_cells: 128
       min_angle: { degrees: -45.73 }
@@ -38,7 +38,7 @@ integrator:
       max_angle: { degrees: 180.0 }
   measurement_model:
     type: "continuous_volumetric_log_odds"
-    angle_sigma: { degrees: 0.04 }
-    range_sigma: { meters: 0.04 }
+    angle_sigma: { degrees: 0.03 }
+    range_sigma: { meters: 0.05 }
     scaling_free: 0.2
     scaling_occupied: 0.4
