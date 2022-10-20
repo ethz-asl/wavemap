@@ -9,7 +9,7 @@
 
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"
-#include "wavemap_3d/integrator/projective/bearing_image_2d.h"
+#include "wavemap_3d/integrator/projective/beam_offset_image_2d.h"
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
@@ -37,11 +37,11 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
   const ContinuousVolumetricLogOdds<3> measurement_model_;
   const OusterProjector projection_model_;
   std::shared_ptr<PosedRangeImage2D> posed_range_image_;
-  BearingImage2D bearing_image_;
+  BeamOffsetImage2D bearing_image_;
 
   void updateRangeImage(const PosedPointcloud<Point3D>& pointcloud,
                         PosedRangeImage2D& posed_range_image,
-                        BearingImage2D& bearing_image) const;
+                        BeamOffsetImage2D& bearing_image) const;
 
   FloatingPoint computeUpdate(const Point3D& C_cell_center) const;
 };

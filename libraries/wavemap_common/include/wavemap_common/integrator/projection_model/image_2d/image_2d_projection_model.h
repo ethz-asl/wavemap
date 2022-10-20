@@ -48,6 +48,14 @@ class Image2DProjectionModel {
         .ceil()
         .cast<IndexElement>();
   }
+  std::pair<Index2D, Vector2D> imageToNearestIndexAndOffset(
+      const Vector2D& image_coordinates) const {
+    const Vector2D index = imageToIndexReal(image_coordinates);
+    const Vector2D index_rounded = index.array().round();
+    const Vector2D image_coordinate_offset =
+        (index - index_rounded).cwiseProduct(index_to_image_scale_factor_);
+    return {index_rounded.cast<IndexElement>(), image_coordinate_offset};
+  }
   Vector2D indexToImage(const Index2D& index) const {
     return index.cast<FloatingPoint>().cwiseProduct(
                index_to_image_scale_factor_) +
