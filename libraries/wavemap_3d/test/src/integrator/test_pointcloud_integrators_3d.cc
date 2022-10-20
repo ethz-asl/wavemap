@@ -40,7 +40,7 @@ class PointcloudIntegrator3DTest : public FixtureBase {
     const FloatingPoint min_azimuth_angle = -kPi;
     const FloatingPoint max_azimuth_angle = kPi;
     const int num_rows = int_math::exp2(getRandomIndexElement(4, 6));
-    const int num_cols = int_math::exp2(getRandomIndexElement(7, 11));
+    const int num_cols = int_math::exp2(getRandomIndexElement(7, 10));
     return SphericalProjector(SphericalProjectorConfig{
         {min_elevation_angle, max_elevation_angle, num_rows},
         {min_azimuth_angle, max_azimuth_angle, num_cols}});
