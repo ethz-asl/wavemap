@@ -16,8 +16,9 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     return 0.f;
   }
 
-  const Index2D image_idx =
-      projection_model_.imageToNearestIndex(sensor_coordinates.head<2>());
+  const auto [image_idx, cell_offset] =
+      projection_model_.imageToNearestIndexAndOffset(
+          sensor_coordinates.head<2>());
   if (!posed_range_image_->isIndexWithinBounds(image_idx)) {
     return 0.f;
   }
@@ -30,31 +31,31 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   }
 
   // Calculate the angle w.r.t. the beam
-  // NOTE: The cell is only affected by the measurement if the cell to beam
-  //       angle is below the measurement model's angle threshold, which is very
-  //       small. When computing the cell to beam angle using
-  //       cos(angle)=dot(C_cell,C_beam)/(|C_cell|*|C_beam|), we can therefore
-  //       use the small angle approximation instead of std::acos().
-  const Vector3D& bearing = bearing_image_.getBearing(image_idx);
-  const FloatingPoint cell_beam_projection =
-      C_cell_center.dot(bearing) / sensor_coordinates[2];
-  const FloatingPoint one_minus_cell_beam_projection =
-      1.f - cell_beam_projection;
-  FloatingPoint cell_to_beam_angle = 0.f;
-  if (0.f < one_minus_cell_beam_projection) {
-    cell_to_beam_angle = std::sqrt(2.f * one_minus_cell_beam_projection);
-    if (measurement_model_.getAngleThreshold() < cell_to_beam_angle) {
-      return 0.f;
-    }
+  // NOTE: For spherical models, the cell-to-beam offset corresponds to the
+  //       cell-to-beam angle (i.e. angle between the ray from the sensor to the
+  //       cell and the ray from the sensor to the beam end-point). For camera
+  //       models, it corresponds to the offset in pixel space.
+  //       Note that the cell-to-beam angle would normally be computed with
+  //       angle = acos(dot(C_beam, C_cell) / (|C_beam|*|C_cell|)). However, the
+  //       angle is guaranteed to be very small since the beam and cell-ray map
+  //       to the same (narrow) single pixel interval by construction. We can
+  //       therefore compute the cell-to-beam angle by directly taking the norm
+  //       of the elevation and azimuth angle differences. Roughly speaking,
+  //       this is because we operate in such a small neighborhood in spherical
+  //       coordinates that it's well approximated by its tangent plane.
+  const Vector2D& beam_offset = bearing_image_.getBeamOffset(image_idx);
+  const FloatingPoint cell_to_beam_offset = (beam_offset - cell_offset).norm();
+  if (measurement_model_.getAngleThreshold() < cell_to_beam_offset) {
+    return 0.f;
   }
 
   if (sensor_coordinates[2] <
       measured_distance -
           measurement_model_.getRangeThresholdInFrontOfSurface()) {
-    return measurement_model_.computeFreeSpaceUpdate(cell_to_beam_angle);
+    return measurement_model_.computeFreeSpaceUpdate(cell_to_beam_offset);
   } else {
     return measurement_model_.computeUpdate(
-        sensor_coordinates[2], cell_to_beam_angle, measured_distance);
+        sensor_coordinates[2], cell_to_beam_offset, measured_distance);
   }
 }
 }  // namespace wavemap

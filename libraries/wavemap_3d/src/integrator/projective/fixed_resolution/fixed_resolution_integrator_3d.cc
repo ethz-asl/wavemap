@@ -47,8 +47,9 @@ AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
     // Add the point to the range image
     const Vector3D sensor_coordinates =
         projection_model_.cartesianToSensor(C_point);
-    const Index2D range_image_index =
-        projection_model_.imageToNearestIndex(sensor_coordinates.head<2>());
+    const auto [range_image_index, beam_to_pixel_offset] =
+        projection_model_.imageToNearestIndexAndOffset(
+            sensor_coordinates.head<2>());
     if (!posed_range_image_->isIndexWithinBounds(range_image_index)) {
       // Prevent out-of-bounds access
       continue;
@@ -61,8 +62,7 @@ AABB<Point3D> FixedResolutionIntegrator3D::computeRangeImageAndAABB(
         posed_range_image_->getRange(range_image_index);
     if (old_range_value < config_.min_range || range < old_range_value) {
       posed_range_image_->getRange(range_image_index) = range;
-      // TODO(victorr): Generalize this for all sensor models
-      bearing_image_.getBearing(range_image_index) = C_point.normalized();
+      bearing_image_.getBeamOffset(range_image_index) = beam_to_pixel_offset;
     }
 
     // Update the AABB (in world frame)
