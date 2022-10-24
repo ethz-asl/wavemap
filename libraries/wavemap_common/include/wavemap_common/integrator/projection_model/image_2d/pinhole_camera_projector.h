@@ -34,10 +34,10 @@ class PinholeCameraProjector : public Image2DProjectionModel {
 
   IndexElement getNumRows() const final { return config_.height; }
   IndexElement getNumColumns() const final { return config_.width; }
-  Vector2D getMinImageCoordinates() const final {
+  ImageCoordinates getMinImageCoordinates() const final {
     return indexToImage(Index2D::Zero());
   }
-  Vector2D getMaxImageCoordinates() const final {
+  ImageCoordinates getMaxImageCoordinates() const final {
     return {indexToImage({config_.width, config_.height})};
   }
 
@@ -57,15 +57,30 @@ class PinholeCameraProjector : public Image2DProjectionModel {
                               config_.fx * v_scaled - cyfx_, fxfy_};
     return C_point;
   }
-  Point3D sensorToCartesian(const Vector2D& image_coordinates,
+  Point3D sensorToCartesian(const ImageCoordinates& image_coordinates,
                             FloatingPoint depth) const final {
     return sensorToCartesian(
         {image_coordinates.x(), image_coordinates.y(), depth});
   }
+  FloatingPoint imageOffsetToErrorNorm(
+      const ImageCoordinates& /*linearization_point*/,
+      ImageCoordinates offset) const final {
+    return offset.norm();
+  }
 
   // Projection from Cartesian space onto the sensor's image surface
-  Vector2D cartesianToImage(const Point3D& C_point) const final {
+  ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
     return cartesianToSensor(C_point).head<2>();
+  }
+  FloatingPoint cartesianToImageX(const Point3D& C_point) const final {
+    const FloatingPoint u = config_.fx * C_point.x() + config_.cx * C_point.z();
+    const FloatingPoint w = C_point.z();
+    return u / w;
+  }
+  FloatingPoint cartesianToImageY(const Point3D& C_point) const final {
+    const FloatingPoint v = config_.fy * C_point.y() + config_.cy * C_point.z();
+    const FloatingPoint w = C_point.z();
+    return v / w;
   }
 
  private:

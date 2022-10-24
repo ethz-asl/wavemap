@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <wavemap_common/common.h>
 #include <wavemap_common/integrator/pointcloud_integrator.h>
+#include <wavemap_common/integrator/projection_model/image_2d/spherical_projector.h>
 #include <wavemap_common/test/fixture_base.h>
 #include <wavemap_common/utils/angle_utils.h>
 #include <wavemap_common/utils/container_print_utils.h>
@@ -17,7 +18,7 @@ class RangeImage2DIntersectorTest : public FixtureBase {
     return PointcloudIntegratorConfig{min_range, max_range};
   }
 
-  SphericalProjector getRandomProjectionModel() {
+  std::shared_ptr<SphericalProjector> getRandomProjectionModel() {
     const FloatingPoint min_elevation_angle = getRandomAngle(-kQuarterPi, 0.f);
     const FloatingPoint max_elevation_angle =
         getRandomAngle(min_elevation_angle, kQuarterPi);
@@ -25,7 +26,7 @@ class RangeImage2DIntersectorTest : public FixtureBase {
     const FloatingPoint max_azimuth_angle = kPi;
     const int num_rows = int_math::exp2(getRandomIndexElement(4, 7));
     const int num_cols = int_math::exp2(getRandomIndexElement(7, 11));
-    return SphericalProjector(SphericalProjectorConfig{
+    return std::make_shared<SphericalProjector>(SphericalProjectorConfig{
         {min_elevation_angle, max_elevation_angle, num_rows},
         {min_azimuth_angle, max_azimuth_angle, num_cols}});
   }
@@ -167,7 +168,8 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
            ++corner_idx) {
         const Point3D C_t_C_corner =
             test.T_W_C.inverse() * test.W_aabb.corner_point(corner_idx);
-        const Vector2D angles = projection_model.cartesianToImage(C_t_C_corner);
+        const Vector2D angles =
+            projection_model->cartesianToImage(C_t_C_corner);
         elevation_angles[corner_idx] = angles[0];
         azimuth_angles[corner_idx] = angles[1];
       }
@@ -195,7 +197,7 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
 
     const RangeImage2DIntersector::MinMaxAnglePair returned_angle_pair =
         RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
-            test.T_W_C, test.W_aabb, projection_model);
+            test.T_W_C, test.W_aabb, *projection_model);
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
 
     bool check_failed = false;
@@ -282,11 +284,11 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
     const auto integrator_config = getRandomPointcloudIntegratorConfig();
     const auto projection_model = getRandomProjectionModel();
-    const auto measurement_model = getRandomMeasurementModel(projection_model);
+    const auto measurement_model = getRandomMeasurementModel(*projection_model);
     constexpr FloatingPoint kMaxRange = 60.f;
     const auto posed_range_image =
         std::make_shared<PosedRangeImage2D>(getRandomPosedRangeImage(
-            projection_model.getNumRows(), projection_model.getNumColumns(),
+            projection_model->getNumRows(), projection_model->getNumColumns(),
             0.f, kMaxRange));
 
     // Create the hierarchical range image
@@ -332,7 +334,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
         }
 
         const Index2D range_image_index =
-            projection_model.cartesianToNearestIndex(C_cell_center);
+            projection_model->cartesianToNearestIndex(C_cell_center);
         if ((range_image_index.array() < 0).any() ||
             (posed_range_image->getDimensions().array() <=
              range_image_index.array())

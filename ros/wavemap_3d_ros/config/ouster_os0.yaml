@@ -20,12 +20,11 @@ integrator:
   integration_method:
     type: "coarse_to_fine_wavelet_integrator"
     min_range: { meters: 1.0 }
-    max_range: { meters: 15.0 }
+    max_range: { meters: 20.0 }
     max_acceptable_update_error: 0.1
     max_update_resolution: *min_cell_width
   projection_model:
-    type: "spherical_projector"
-    #    type: "ouster_projector"
+    type: "ouster_projector"
     lidar_origin_to_beam_origin: { millimeters: 27.67 }
     lidar_origin_to_sensor_origin_z_offset: { millimeters: 36.18 }
     elevation:
@@ -38,7 +37,7 @@ integrator:
       max_angle: { degrees: 180.0 }
   measurement_model:
     type: "continuous_volumetric_log_odds"
-    angle_sigma: { degrees: 0.03 }
+    angle_sigma: { degrees: 0.05 }
     range_sigma: { meters: 0.05 }
     scaling_free: 0.2
     scaling_occupied: 0.4

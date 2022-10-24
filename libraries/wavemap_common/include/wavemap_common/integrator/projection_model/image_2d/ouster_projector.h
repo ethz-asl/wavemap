@@ -46,10 +46,10 @@ class OusterProjector : public Image2DProjectionModel {
 
   IndexElement getNumRows() const final { return config_.elevation.num_cells; }
   IndexElement getNumColumns() const final { return config_.azimuth.num_cells; }
-  Vector2D getMinImageCoordinates() const final {
+  ImageCoordinates getMinImageCoordinates() const final {
     return {config_.elevation.min_angle, config_.azimuth.min_angle};
   }
-  Vector2D getMaxImageCoordinates() const final {
+  ImageCoordinates getMaxImageCoordinates() const final {
     return {config_.elevation.max_angle, config_.azimuth.max_angle};
   }
 
@@ -78,14 +78,23 @@ class OusterProjector : public Image2DProjectionModel {
                     B_point.x() * std::sin(azimuth_angle), B_point.y()};
     return C_point;
   }
-  Point3D sensorToCartesian(const Vector2D& image_coordinates,
+  Point3D sensorToCartesian(const ImageCoordinates& image_coordinates,
                             FloatingPoint range) const final {
     return sensorToCartesian(
         {image_coordinates.x(), image_coordinates.y(), range});
   }
+  FloatingPoint imageOffsetToErrorNorm(
+      const ImageCoordinates& linearization_point,
+      ImageCoordinates offset) const final {
+    // Scale the azimuth offset by the cosine of the elevation angle to account
+    // for the change in density along the azimuth axis in function of elevation
+    const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
+    offset[1] *= cos_elevation_angle;
+    return offset.norm();
+  }
 
   // Projection from Cartesian space onto the sensor's image surface
-  Vector2D cartesianToImage(const Point3D& C_point) const final {
+  ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
     // Project the beam's endpoint into the 2D plane B whose origin lies at the
     // beam's start point, X-axis is parallel to the projection of the beam onto
     // frame C's XY-plane and Y-axis is parallel to frame C's Z-axis
@@ -95,6 +104,17 @@ class OusterProjector : public Image2DProjectionModel {
     const FloatingPoint elevation_angle = std::atan2(B_point.y(), B_point.x());
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
+  }
+  FloatingPoint cartesianToImageX(const Point3D& C_point) const final {
+    const Vector2D B_point{
+        C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
+        C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
+    const FloatingPoint elevation_angle = std::atan2(B_point.y(), B_point.x());
+    return elevation_angle;
+  }
+  FloatingPoint cartesianToImageY(const Point3D& C_point) const final {
+    const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
+    return azimuth_angle;
   }
 
  private:

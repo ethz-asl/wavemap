@@ -114,5 +114,23 @@ TYPED_TEST(Image2DProjectorTest, Conversions) {
         << EigenFormat::oneLine(image_coordinates) << " and "
         << EigenFormat::oneLine(C_point) << ".";
   }
+
+  // Test index -> image -> index round trips
+  for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
+    // Get a random point in sensor coordinates and ensure it's in the FoV
+    const Index2D image_index = FixtureBase::getRandomIndex<2>(
+        Index2D::Zero(), projector.getDimensions());
+    const Vector2D image_coordinates = projector.indexToImage(image_index);
+    const Index2D image_index_roundtrip =
+        projector.imageToNearestIndex(image_coordinates);
+
+    EXPECT_EQ(image_index_roundtrip, image_index)
+        << "Original image index was " << EigenFormat::oneLine(image_index)
+        << ", but after round trip it became "
+        << EigenFormat::oneLine(image_index_roundtrip)
+        << ". Intermediate image coordinates were "
+        << EigenFormat::oneLine(image_coordinates) << " and "
+        << EigenFormat::oneLine(image_coordinates) << ".";
+  }
 }
 }  // namespace wavemap

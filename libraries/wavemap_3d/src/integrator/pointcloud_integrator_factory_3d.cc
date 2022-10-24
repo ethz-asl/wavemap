@@ -1,3 +1,7 @@
+#include <wavemap_common/integrator/projection_model/image_2d/ouster_projector.h>
+#include <wavemap_common/integrator/projection_model/image_2d/pinhole_camera_projector.h>
+#include <wavemap_common/integrator/projection_model/image_2d/spherical_projector.h>
+
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"
 #include "wavemap_3d/integrator/pointcloud_integrator_3d_factory.h"
 #include "wavemap_3d/integrator/projective/coarse_to_fine/coarse_to_fine_integrator_3d.h"
@@ -53,9 +57,38 @@ typename PointcloudIntegrator3D::Ptr PointcloudIntegrator3DFactory::create(
   if (!param::map::keyHoldsValue<param::Map>(params, "projection_model")) {
     return nullptr;
   }
-  const auto projection_model_config = SphericalProjectorConfig::from(
-      param::map::keyGetValue<param::Map>(params, "projection_model"));
-  const SphericalProjector projection_model(projection_model_config);
+  std::shared_ptr<Image2DProjectionModel> projection_model;
+  {
+    std::string error_msg;
+    const auto& projection_model_params =
+        param::map::keyGetValue<param::Map>(params, "projection_model");
+    auto projection_model_type = Image2DProjectionModelType::fromParamMap(
+        projection_model_params, error_msg);
+    if (!projection_model_type.isValid()) {
+      LOG(ERROR) << error_msg;
+      return nullptr;
+    }
+    switch (projection_model_type.toTypeId()) {
+      case Image2DProjectionModelType::kSphericalProjector: {
+        const auto spherical_projector_config =
+            SphericalProjectorConfig::from(projection_model_params);
+        projection_model =
+            std::make_shared<SphericalProjector>(spherical_projector_config);
+      } break;
+      case Image2DProjectionModelType::kOusterProjector: {
+        const auto ouster_projector_config =
+            OusterProjectorConfig::from(projection_model_params);
+        projection_model =
+            std::make_shared<OusterProjector>(ouster_projector_config);
+      } break;
+      case Image2DProjectionModelType::kPinholeCameraProjector: {
+        const auto pinhole_projector_config =
+            PinholeCameraProjectorConfig::from(projection_model_params);
+        projection_model =
+            std::make_shared<PinholeCameraProjector>(pinhole_projector_config);
+      } break;
+    }
+  }
 
   // Load the measurement model's config
   if (!param::map::keyHoldsValue<param::Map>(params, "measurement_model")) {

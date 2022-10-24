@@ -13,10 +13,11 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
  public:
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
-  WaveletIntegrator3D(const PointcloudIntegratorConfig& config,
-                      SphericalProjector projection_model,
-                      ContinuousVolumetricLogOdds<3> measurement_model,
-                      VolumetricDataStructure3D::Ptr occupancy_map);
+  WaveletIntegrator3D(
+      const PointcloudIntegratorConfig& config,
+      std::shared_ptr<const Image2DProjectionModel> projection_model,
+      ContinuousVolumetricLogOdds<3> measurement_model,
+      VolumetricDataStructure3D::Ptr occupancy_map);
 
   void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
 

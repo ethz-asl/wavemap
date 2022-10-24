@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <wavemap_common/integrator/projection_model/image_2d/image_2d_projection_model.h>
 #include <wavemap_common/utils/config_utils.h>
 #include <wavemap_common/utils/factory_utils.h>
 
@@ -23,6 +24,19 @@ struct PointcloudIntegrator3DType : TypeSelector<PointcloudIntegrator3DType> {
   static constexpr std::array names = {
       "single_ray_integrator", "fixed_resolution_integrator",
       "coarse_to_fine_integrator", "coarse_to_fine_wavelet_integrator"};
+};
+
+struct Image2DProjectionModelType : TypeSelector<Image2DProjectionModelType> {
+  using TypeSelector<Image2DProjectionModelType>::TypeSelector;
+
+  enum Id : TypeId {
+    kSphericalProjector,
+    kOusterProjector,
+    kPinholeCameraProjector
+  };
+
+  static constexpr std::array names = {
+      "spherical_projector", "ouster_projector", "pinhole_camera_projector"};
 };
 
 class PointcloudIntegrator3DFactory {
