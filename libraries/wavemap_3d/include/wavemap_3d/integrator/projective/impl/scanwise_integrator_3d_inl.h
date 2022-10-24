@@ -31,31 +31,23 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   }
 
   // Calculate the angle w.r.t. the beam
-  // NOTE: For spherical models, the cell-to-beam offset corresponds to the
-  //       cell-to-beam angle (i.e. angle between the ray from the sensor to the
-  //       cell and the ray from the sensor to the beam end-point). For camera
-  //       models, it corresponds to the offset in pixel space.
-  //       Note that the cell-to-beam angle would normally be computed with
-  //       angle = acos(dot(C_beam, C_cell) / (|C_beam|*|C_cell|)). However, the
-  //       angle is guaranteed to be very small since the beam and cell-ray map
-  //       to the same (narrow) single pixel interval by construction. We can
-  //       therefore compute the cell-to-beam angle by directly taking the norm
-  //       of the elevation and azimuth angle differences. Roughly speaking,
-  //       this is because we operate in such a small neighborhood in spherical
-  //       coordinates that it's well approximated by its tangent plane.
-  const Vector2D& beam_offset = bearing_image_.getBeamOffset(image_idx);
-  const FloatingPoint cell_to_beam_offset = (beam_offset - cell_offset).norm();
-  if (measurement_model_.getAngleThreshold() < cell_to_beam_offset) {
+  const Vector2D cell_to_beam_offset =
+      bearing_image_.getBeamOffset(image_idx) - cell_offset;
+  const FloatingPoint cell_to_beam_angle =
+      Vector2D(cell_to_beam_offset.x(),
+               cell_to_beam_offset.y() * std::cos(sensor_coordinates[0]))
+          .norm();
+  if (measurement_model_.getAngleThreshold() < cell_to_beam_angle) {
     return 0.f;
   }
 
   if (sensor_coordinates[2] <
       measured_distance -
           measurement_model_.getRangeThresholdInFrontOfSurface()) {
-    return measurement_model_.computeFreeSpaceUpdate(cell_to_beam_offset);
+    return measurement_model_.computeFreeSpaceUpdate(cell_to_beam_angle);
   } else {
     return measurement_model_.computeUpdate(
-        sensor_coordinates[2], cell_to_beam_offset, measured_distance);
+        sensor_coordinates[2], cell_to_beam_angle, measured_distance);
   }
 }
 }  // namespace wavemap

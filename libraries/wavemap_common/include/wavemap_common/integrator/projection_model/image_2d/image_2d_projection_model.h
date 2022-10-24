@@ -9,9 +9,9 @@ namespace wavemap {
 class Image2DProjectionModel {
  public:
   Image2DProjectionModel(Vector2D index_to_image_scale_factor,
-                         Vector2D index_to_image_offset)
+                         Vector2D image_offset)
       : index_to_image_scale_factor_(std::move(index_to_image_scale_factor)),
-        index_to_image_offset_(std::move(index_to_image_offset)) {}
+        image_offset_(std::move(image_offset)) {}
 
   virtual IndexElement getNumRows() const = 0;
   virtual IndexElement getNumColumns() const = 0;
@@ -59,7 +59,7 @@ class Image2DProjectionModel {
   Vector2D indexToImage(const Index2D& index) const {
     return index.cast<FloatingPoint>().cwiseProduct(
                index_to_image_scale_factor_) +
-           index_to_image_offset_;
+           image_offset_;
   }
 
   // Convenience functions combining multiple of the above methods
@@ -71,10 +71,10 @@ class Image2DProjectionModel {
   const Vector2D index_to_image_scale_factor_;
   const Vector2D image_to_index_scale_factor_ =
       Vector2D::Ones().cwiseQuotient(index_to_image_scale_factor_);
-  const Vector2D index_to_image_offset_;
+  const Vector2D image_offset_;
 
   Vector2D imageToIndexReal(const Vector2D& image_coordinates) const {
-    return (image_coordinates - index_to_image_offset_)
+    return (image_coordinates - image_offset_)
         .cwiseProduct(image_to_index_scale_factor_);
   }
 };
