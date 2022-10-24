@@ -30,24 +30,29 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     return 0.f;
   }
 
-  // Calculate the angle w.r.t. the beam
+  // Calculate the error norm between the beam and cell projected into the image
+  // NOTE: For spherical (e.g. LiDAR) projection models, the error norm
+  //       corresponds to the relative angle between the beam and the ray
+  //       through the cell, whereas for camera models it corresponds to the
+  //       reprojection error in pixels.
   const Vector2D cell_to_beam_offset =
       bearing_image_.getBeamOffset(image_idx) - cell_offset;
-  const FloatingPoint cell_to_beam_angle =
-      Vector2D(cell_to_beam_offset.x(),
-               cell_to_beam_offset.y() * std::cos(sensor_coordinates[0]))
-          .norm();
-  if (measurement_model_.getAngleThreshold() < cell_to_beam_angle) {
+  const FloatingPoint cell_to_beam_image_error_norm =
+      projection_model_.imageOffsetToErrorNorm(sensor_coordinates.head<2>(),
+                                               cell_to_beam_offset);
+  if (measurement_model_.getAngleThreshold() < cell_to_beam_image_error_norm) {
     return 0.f;
   }
 
   if (sensor_coordinates[2] <
       measured_distance -
           measurement_model_.getRangeThresholdInFrontOfSurface()) {
-    return measurement_model_.computeFreeSpaceUpdate(cell_to_beam_angle);
+    return measurement_model_.computeFreeSpaceUpdate(
+        cell_to_beam_image_error_norm);
   } else {
-    return measurement_model_.computeUpdate(
-        sensor_coordinates[2], cell_to_beam_angle, measured_distance);
+    return measurement_model_.computeUpdate(sensor_coordinates[2],
+                                            cell_to_beam_image_error_norm,
+                                            measured_distance);
   }
 }
 }  // namespace wavemap
