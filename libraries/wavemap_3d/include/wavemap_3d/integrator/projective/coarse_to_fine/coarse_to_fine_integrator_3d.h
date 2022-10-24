@@ -14,10 +14,11 @@ class CoarseToFineIntegrator3D : public ScanwiseIntegrator3D {
  public:
   static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
 
-  CoarseToFineIntegrator3D(const PointcloudIntegratorConfig& config,
-                           OusterProjector projection_model,
-                           ContinuousVolumetricLogOdds<3> measurement_model,
-                           VolumetricDataStructure3D::Ptr occupancy_map);
+  CoarseToFineIntegrator3D(
+      const PointcloudIntegratorConfig& config,
+      std::shared_ptr<const Image2DProjectionModel> projection_model,
+      ContinuousVolumetricLogOdds<3> measurement_model,
+      VolumetricDataStructure3D::Ptr occupancy_map);
 
   void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
 

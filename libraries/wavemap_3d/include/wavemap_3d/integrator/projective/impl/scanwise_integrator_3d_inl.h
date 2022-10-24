@@ -5,7 +5,7 @@ namespace wavemap {
 inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     const Point3D& C_cell_center) const {
   const Vector3D sensor_coordinates =
-      projection_model_.cartesianToSensor(C_cell_center);
+      projection_model_->cartesianToSensor(C_cell_center);
 
   // Check if we're outside the min/max range
   // NOTE: For spherical (e.g. LiDAR) projection models, sensor_coordinates[2]
@@ -17,7 +17,7 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   }
 
   const auto [image_idx, cell_offset] =
-      projection_model_.imageToNearestIndexAndOffset(
+      projection_model_->imageToNearestIndexAndOffset(
           sensor_coordinates.head<2>());
   if (!posed_range_image_->isIndexWithinBounds(image_idx)) {
     return 0.f;
@@ -38,8 +38,8 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   const Vector2D cell_to_beam_offset =
       bearing_image_.getBeamOffset(image_idx) - cell_offset;
   const FloatingPoint cell_to_beam_image_error_norm =
-      projection_model_.imageOffsetToErrorNorm(sensor_coordinates.head<2>(),
-                                               cell_to_beam_offset);
+      projection_model_->imageOffsetToErrorNorm(sensor_coordinates.head<2>(),
+                                                cell_to_beam_offset);
   if (measurement_model_.getAngleThreshold() < cell_to_beam_image_error_norm) {
     return 0.f;
   }

@@ -17,15 +17,15 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
  public:
   explicit ScanwiseIntegrator3D(
       const PointcloudIntegratorConfig& config,
-      OusterProjector projection_model,
+      std::shared_ptr<const Image2DProjectionModel> projection_model,
       ContinuousVolumetricLogOdds<3> measurement_model,
       VolumetricDataStructure3D::Ptr occupancy_map)
       : PointcloudIntegrator3D(config, std::move(occupancy_map)),
         measurement_model_(std::move(measurement_model)),
         projection_model_(std::move(projection_model)),
         posed_range_image_(std::make_shared<PosedRangeImage2D>(
-            projection_model_.getDimensions())),
-        bearing_image_(projection_model_.getDimensions()) {
+            projection_model_->getDimensions())),
+        bearing_image_(projection_model_->getDimensions()) {
     // TODO(victorr): Check that the pointcloud's angular resolution is lower
     //                than the angular uncertainty of the beam model. This is
     //                necessary since this measurement integrator assumes the
@@ -35,7 +35,7 @@ class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
 
  protected:
   const ContinuousVolumetricLogOdds<3> measurement_model_;
-  const OusterProjector projection_model_;
+  const std::shared_ptr<const Image2DProjectionModel> projection_model_;
   std::shared_ptr<PosedRangeImage2D> posed_range_image_;
   BeamOffsetImage2D bearing_image_;
 

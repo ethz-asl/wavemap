@@ -14,20 +14,20 @@ inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb) const {
   Cache cache{};
-  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model_, cache);
+  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, *projection_model_, cache);
 }
 
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
     RangeImage2DIntersector::Cache& cache) const {
-  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model_, cache);
+  return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, *projection_model_, cache);
 }
 
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-    const OusterProjector& projection_model) {
+    const Image2DProjectionModel& projection_model) {
   Cache cache{};
   return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model, cache);
 }
@@ -35,7 +35,7 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
 inline RangeImage2DIntersector::MinMaxAnglePair
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-    const OusterProjector& projection_model,
+    const Image2DProjectionModel& projection_model,
     RangeImage2DIntersector::Cache& cache) {
   MinMaxAnglePair angle_intervals;
 
@@ -176,9 +176,9 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Pad the min and max angles with the BeamModel's angle threshold to
   // account for the beam's non-zero width (angular uncertainty)
-  const Index2D min_image_index = projection_model_.imageToFloorIndex(
+  const Index2D min_image_index = projection_model_->imageToFloorIndex(
       min_spherical_coordinates - Vector2D::Constant(angle_threshold_));
-  const Index2D max_image_index = projection_model_.imageToCeilIndex(
+  const Index2D max_image_index = projection_model_->imageToCeilIndex(
       max_spherical_coordinates + Vector2D::Constant(angle_threshold_));
 
   // If the angle wraps around Pi, we can't use the hierarchical range image
@@ -189,10 +189,10 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
       (!kAzimuthAllowedToWrapAround && azimuth_range_wraps_pi)) {
     const bool elevation_range_fully_outside_fov =
         max_image_index.x() < 0 &&
-        projection_model_.getNumRows() < min_image_index.x();
+        projection_model_->getNumRows() < min_image_index.x();
     const bool azimuth_range_fully_outside_fov =
         max_image_index.y() < 0 &&
-        projection_model_.getNumColumns() < min_image_index.y();
+        projection_model_->getNumColumns() < min_image_index.y();
     if ((!elevation_range_wraps_pi || elevation_range_fully_outside_fov) &&
         (kAzimuthAllowedToWrapAround || !azimuth_range_wraps_pi ||
          azimuth_range_fully_outside_fov)) {
@@ -207,7 +207,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Check if the cell is outside the FoV
   if ((max_image_index.array() < 0).any() ||
-      (projection_model_.getDimensions().array() <= min_image_index.array())
+      (projection_model_->getDimensions().array() <= min_image_index.array())
           .any()) {
     return IntersectionType::kFullyUnknown;
   }
@@ -216,7 +216,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   const Index2D min_image_idx_rectified =
       min_image_index.cwiseMax(Index2D::Zero());
   const Index2D max_image_idx_rectified = max_image_index.cwiseMin(
-      projection_model_.getDimensions() - Index2D::Ones());
+      projection_model_->getDimensions() - Index2D::Ones());
 
   // Check if the cell overlaps with the approximate but conservative distance
   // bounds of the hierarchical range image

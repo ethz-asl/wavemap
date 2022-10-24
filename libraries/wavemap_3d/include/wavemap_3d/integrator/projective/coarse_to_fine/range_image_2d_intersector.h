@@ -31,12 +31,13 @@ class RangeImage2DIntersector {
   };
   using Cache = std::optional<SphericalMinMaxCornerIndices>;
 
-  RangeImage2DIntersector(std::shared_ptr<RangeImage2D> range_image,
-                          OusterProjector projection_model,
-                          FloatingPoint min_range, FloatingPoint max_range,
-                          FloatingPoint angle_threshold,
-                          FloatingPoint range_threshold_in_front_of_surface,
-                          FloatingPoint range_threshold_behind_surface)
+  RangeImage2DIntersector(
+      std::shared_ptr<RangeImage2D> range_image,
+      std::shared_ptr<const Image2DProjectionModel> projection_model,
+      FloatingPoint min_range, FloatingPoint max_range,
+      FloatingPoint angle_threshold,
+      FloatingPoint range_threshold_in_front_of_surface,
+      FloatingPoint range_threshold_behind_surface)
       : hierarchical_range_image_(std::move(range_image), min_range),
         projection_model_(std::move(projection_model)),
         max_range_(max_range),
@@ -53,10 +54,10 @@ class RangeImage2DIntersector {
                                               Cache& cache) const;
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-      const OusterProjector& projection_model);
+      const Image2DProjectionModel& projection_model);
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-      const OusterProjector& projection_model, Cache& cache);
+      const Image2DProjectionModel& projection_model, Cache& cache);
 
   IntersectionType determineIntersectionType(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb) const;
@@ -69,7 +70,7 @@ class RangeImage2DIntersector {
   const HierarchicalRangeBounds2D<kAzimuthAllowedToWrapAround>
       hierarchical_range_image_;
 
-  const OusterProjector projection_model_;
+  const std::shared_ptr<const Image2DProjectionModel> projection_model_;
 
   const FloatingPoint max_range_;
   const FloatingPoint angle_threshold_;

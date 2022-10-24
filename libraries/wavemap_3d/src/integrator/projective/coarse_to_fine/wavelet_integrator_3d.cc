@@ -2,7 +2,8 @@
 
 namespace wavemap {
 WaveletIntegrator3D::WaveletIntegrator3D(
-    const PointcloudIntegratorConfig& config, OusterProjector projection_model,
+    const PointcloudIntegratorConfig& config,
+    std::shared_ptr<const Image2DProjectionModel> projection_model,
     ContinuousVolumetricLogOdds<3> measurement_model,
     VolumetricDataStructure3D::Ptr occupancy_map)
     : ScanwiseIntegrator3D(config, std::move(projection_model),

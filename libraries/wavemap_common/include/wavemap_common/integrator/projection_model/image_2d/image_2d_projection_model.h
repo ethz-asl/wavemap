@@ -14,6 +14,7 @@ class Image2DProjectionModel {
                          Vector2D image_offset)
       : index_to_image_scale_factor_(std::move(index_to_image_scale_factor)),
         image_offset_(std::move(image_offset)) {}
+  virtual ~Image2DProjectionModel() = default;
 
   virtual IndexElement getNumRows() const = 0;
   virtual IndexElement getNumColumns() const = 0;
