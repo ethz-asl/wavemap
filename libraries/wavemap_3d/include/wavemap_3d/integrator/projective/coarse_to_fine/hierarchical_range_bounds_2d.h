@@ -21,7 +21,7 @@ class HierarchicalRangeBounds2D {
  public:
   explicit HierarchicalRangeBounds2D(std::shared_ptr<RangeImage2D> range_image,
                                      FloatingPoint min_range,
-                                     bool show_images = true)
+                                     bool show_images = false)
       : range_image_(std::move(range_image)), min_range_(min_range) {
     DCHECK_EQ(lower_bound_levels_.size(), max_height_);
     DCHECK_EQ(upper_bound_levels_.size(), max_height_);

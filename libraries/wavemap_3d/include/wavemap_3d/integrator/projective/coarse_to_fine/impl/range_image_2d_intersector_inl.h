@@ -47,45 +47,26 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
 
   const Transformation3D T_C_W = T_W_C.inverse();
 
-  // TODO(victorr): Generalize this to work with other sensor models
   if (cache.has_value()) {
     const Point3D min_elevation_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().min_corner_indices[0]);
     angle_intervals.min_spherical_coordinates[0] =
-        approximate::atan2()(min_elevation_corner_point.z(),
-                             min_elevation_corner_point.head<2>().norm());
+        projection_model.cartesianToImageX(min_elevation_corner_point);
 
     const Point3D min_azimuth_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().min_corner_indices[1]);
-    angle_intervals.min_spherical_coordinates[1] = approximate::atan2()(
-        min_azimuth_corner_point.y(), min_azimuth_corner_point.x());
+    angle_intervals.min_spherical_coordinates[1] =
+        projection_model.cartesianToImageY(min_azimuth_corner_point);
 
     const Point3D max_elevation_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().max_corner_indices[0]);
     angle_intervals.max_spherical_coordinates[0] =
-        approximate::atan2()(max_elevation_corner_point.z(),
-                             max_elevation_corner_point.head<2>().norm());
+        projection_model.cartesianToImageX(max_elevation_corner_point);
 
     const Point3D max_azimuth_corner_point =
         T_C_W * W_aabb.corner_point(cache.value().max_corner_indices[1]);
-    angle_intervals.max_spherical_coordinates[1] = approximate::atan2()(
-        max_azimuth_corner_point.y(), max_azimuth_corner_point.x());
-
-    for (int axis : {0, 1}) {
-      auto& min_angle = angle_intervals.min_spherical_coordinates[axis];
-      auto& max_angle = angle_intervals.max_spherical_coordinates[axis];
-
-      if (kPi < max_angle - min_angle) {
-        min_angle += approximate::atan2::kWorstCaseError;
-        max_angle -= approximate::atan2::kWorstCaseError;
-      } else {
-        min_angle -= approximate::atan2::kWorstCaseError;
-        max_angle += approximate::atan2::kWorstCaseError;
-      }
-
-      min_angle = angle_math::normalize_near(min_angle);
-      max_angle = angle_math::normalize_near(max_angle);
-    }
+    angle_intervals.max_spherical_coordinates[1] =
+        projection_model.cartesianToImageY(max_azimuth_corner_point);
 
     return angle_intervals;
   }

@@ -38,7 +38,7 @@ integrator:
       max_angle: { degrees: 180.0 }
   measurement_model:
     type: "continuous_volumetric_log_odds"
-    angle_sigma: { degrees: 0.03 }
+    angle_sigma: { degrees: 0.05 }
     range_sigma: { meters: 0.05 }
     scaling_free: 0.2
     scaling_occupied: 0.4
