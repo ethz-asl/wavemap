@@ -12,7 +12,7 @@ map:
     min_cell_width: &min_cell_width { meters: 0.05 }
     max_height: 14
 
-integrator:
+integrators:
   - input:
       type: "depth_image"
       topic_name: "/os1_cloud_node/points"

@@ -25,7 +25,7 @@ class InputHandler {
     std::string topic_name = "scan";
     int topic_queue_length = 10;
 
-    float processing_retry_period = 0.1f;
+    float processing_retry_period = 0.05f;
     float max_wait_for_pose = 1.f;
 
     // TODO(victorr): Add option to reproject and publish the input pointclouds

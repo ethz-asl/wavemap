@@ -17,29 +17,25 @@ PointcloudInputHandler::PointcloudInputHandler(
 
 void PointcloudInputHandler::processQueue() {
   while (!pointcloud_queue_.empty()) {
-    const sensor_msgs::PointCloud2& pointcloud_msg = pointcloud_queue_.front();
+    const sensor_msgs::PointCloud2& oldest_msg = pointcloud_queue_.front();
 
     // Get the sensor pose in world frame
     Transformation3D T_W_C;
-    if (!transformer_->isTransformAvailable(world_frame_,
-                                            pointcloud_msg.header.frame_id,
-                                            pointcloud_msg.header.stamp) ||
-        !transformer_->lookupTransform(world_frame_,
-                                       pointcloud_msg.header.frame_id,
-                                       pointcloud_msg.header.stamp, T_W_C)) {
-      if ((pointcloud_queue_.back().header.stamp - pointcloud_msg.header.stamp)
-              .toSec() < config_.max_wait_for_pose) {
+    if (!transformer_->lookupTransform(world_frame_, oldest_msg.header.frame_id,
+                                       oldest_msg.header.stamp, T_W_C)) {
+      const auto newest_msg = pointcloud_queue_.back();
+      if ((newest_msg.header.stamp - oldest_msg.header.stamp).toSec() <
+          config_.max_wait_for_pose) {
         // Try to get this pointcloud's pose again at the next iteration
         return;
       } else {
-        ROS_WARN_STREAM("Waited " << config_.max_wait_for_pose
-                                  << "s but still could not look up pose for "
-                                     "pointcloud with frame \""
-                                  << pointcloud_msg.header.frame_id
-                                  << "\" in world frame \"" << world_frame_
-                                  << "\" at timestamp "
-                                  << pointcloud_msg.header.stamp
-                                  << "; skipping pointcloud.");
+        ROS_WARN_STREAM("Waited "
+                        << config_.max_wait_for_pose
+                        << "s but still could not look up pose for "
+                           "pointcloud with frame \""
+                        << oldest_msg.header.frame_id << "\" in world frame \""
+                        << world_frame_ << "\" at timestamp "
+                        << oldest_msg.header.stamp << "; skipping pointcloud.");
         pointcloud_queue_.pop();
         continue;
       }
@@ -48,9 +44,9 @@ void PointcloudInputHandler::processQueue() {
     // Convert the scan to a pointcloud
     // Get the index of the x field, and assert that the y and z fields follow
     auto x_field_iter = std::find_if(
-        pointcloud_msg.fields.cbegin(), pointcloud_msg.fields.cend(),
+        oldest_msg.fields.cbegin(), oldest_msg.fields.cend(),
         [](const sensor_msgs::PointField& field) { return field.name == "x"; });
-    if (x_field_iter == pointcloud_msg.fields.end()) {
+    if (x_field_iter == oldest_msg.fields.end()) {
       ROS_WARN("Received pointcloud with missing field x");
       return;
     } else if ((++x_field_iter)->name != "y") {
@@ -61,10 +57,10 @@ void PointcloudInputHandler::processQueue() {
       return;
     }
     // Load the points into our internal Pointcloud type
-    const size_t num_rays = pointcloud_msg.width * pointcloud_msg.height;
+    const size_t num_rays = oldest_msg.width * oldest_msg.height;
     std::vector<Point3D> t_C_points;
     t_C_points.reserve(num_rays);
-    for (sensor_msgs::PointCloud2ConstIterator<float> it(pointcloud_msg, "x");
+    for (sensor_msgs::PointCloud2ConstIterator<float> it(oldest_msg, "x");
          it != it.end(); ++it) {
       t_C_points.emplace_back(it[0], it[1], it[2]);
     }

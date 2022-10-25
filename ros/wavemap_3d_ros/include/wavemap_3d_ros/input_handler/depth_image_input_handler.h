@@ -6,6 +6,7 @@
 #include <string>
 
 #include <sensor_msgs/Image.h>
+#include <wavemap_3d/integrator/projective/scanwise_integrator_3d.h>
 
 #include "wavemap_3d_ros/input_handler/input_handler.h"
 
@@ -28,6 +29,8 @@ class DepthImageInputHandler : public InputHandler {
   }
 
  private:
+  ScanwiseIntegrator3D::Ptr scanwise_integrator_;
+
   ros::Subscriber depth_image_sub_;
   std::queue<sensor_msgs::Image> depth_image_queue_;
   void processQueue() override;
