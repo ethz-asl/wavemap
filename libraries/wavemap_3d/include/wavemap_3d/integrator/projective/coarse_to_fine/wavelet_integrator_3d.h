@@ -20,7 +20,7 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
       VolumetricDataStructure3D::Ptr occupancy_map);
 
  private:
-  WaveletOctreeInterface* wavelet_tree_;
+  WaveletOctreeInterface::Ptr wavelet_tree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<RangeImage2DIntersector> range_image_intersector_;

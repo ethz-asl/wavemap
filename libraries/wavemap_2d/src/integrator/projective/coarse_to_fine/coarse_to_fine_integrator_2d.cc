@@ -16,7 +16,7 @@ CoarseToFineIntegrator2D::CoarseToFineIntegrator2D(
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized quadtree data structure
   volumetric_quadtree_ =
-      dynamic_cast<VolumetricQuadtreeInterface*>(occupancy_map_.get());
+      std::dynamic_pointer_cast<VolumetricQuadtreeInterface>(occupancy_map_);
   CHECK(volumetric_quadtree_)
       << "Coarse to fine integrator can only be used with quadtree-based "
          "volumetric data structures.";

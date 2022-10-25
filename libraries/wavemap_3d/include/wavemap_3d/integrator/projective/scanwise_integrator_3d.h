@@ -15,6 +15,8 @@
 namespace wavemap {
 class ScanwiseIntegrator3D : public PointcloudIntegrator3D {
  public:
+  using Ptr = std::shared_ptr<ScanwiseIntegrator3D>;
+
   explicit ScanwiseIntegrator3D(
       const PointcloudIntegratorConfig& config,
       std::shared_ptr<const Image2DProjectionModel> projection_model,

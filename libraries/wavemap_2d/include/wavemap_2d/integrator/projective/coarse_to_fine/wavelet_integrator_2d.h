@@ -21,7 +21,7 @@ class WaveletIntegrator2D : public ScanwiseIntegrator2D {
   void integratePointcloud(const PosedPointcloud<Point2D>& pointcloud) override;
 
  private:
-  WaveletQuadtreeInterface* wavelet_tree_;
+  WaveletQuadtreeInterface::Ptr wavelet_tree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<RangeImage1DIntersector> range_image_intersector_;

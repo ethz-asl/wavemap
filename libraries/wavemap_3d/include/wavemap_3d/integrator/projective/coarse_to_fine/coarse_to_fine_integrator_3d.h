@@ -21,7 +21,7 @@ class CoarseToFineIntegrator3D : public ScanwiseIntegrator3D {
       VolumetricDataStructure3D::Ptr occupancy_map);
 
  private:
-  VolumetricOctreeInterface* volumetric_octree_;
+  VolumetricOctreeInterface::Ptr volumetric_octree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<RangeImage2DIntersector> range_image_intersector_;

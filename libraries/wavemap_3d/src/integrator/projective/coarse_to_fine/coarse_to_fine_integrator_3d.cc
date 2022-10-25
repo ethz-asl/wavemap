@@ -16,7 +16,7 @@ CoarseToFineIntegrator3D::CoarseToFineIntegrator3D(
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized octree data structure
   volumetric_octree_ =
-      dynamic_cast<VolumetricOctreeInterface*>(occupancy_map_.get());
+      std::dynamic_pointer_cast<VolumetricOctreeInterface>(occupancy_map_);
   CHECK(volumetric_octree_)
       << "Coarse to fine integrator can only be used with octree-based "
          "volumetric data structures.";

@@ -11,7 +11,8 @@ WaveletIntegrator2D::WaveletIntegrator2D(
                            std::move(occupancy_map)),
       min_cell_width_(occupancy_map_->getMinCellWidth()) {
   // Get a pointer to the underlying specialized quadtree data structure
-  wavelet_tree_ = dynamic_cast<WaveletQuadtreeInterface*>(occupancy_map_.get());
+  wavelet_tree_ =
+      std::dynamic_pointer_cast<WaveletQuadtreeInterface>(occupancy_map_);
   CHECK(wavelet_tree_) << "Wavelet integrator can only be used with "
                           "volumetric data structures based on wavelet trees.";
 }

@@ -22,7 +22,7 @@ class CoarseToFineIntegrator2D : public ScanwiseIntegrator2D {
   void integratePointcloud(const PosedPointcloud<Point2D>& pointcloud) override;
 
  private:
-  VolumetricQuadtreeInterface* volumetric_quadtree_;
+  VolumetricQuadtreeInterface::Ptr volumetric_quadtree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<RangeImage1DIntersector> range_image_intersector_;
