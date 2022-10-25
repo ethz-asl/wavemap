@@ -8,8 +8,7 @@ param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {
   return toParamMap(xml_rpc_value);
 }
 
-param::Array rosParamsToParamArray(const ros::NodeHandle& nh,
-                                   const std::string& ns) {
+param::Array toParamArray(const ros::NodeHandle& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;
   nh.getParam(ns, xml_rpc_value);
 

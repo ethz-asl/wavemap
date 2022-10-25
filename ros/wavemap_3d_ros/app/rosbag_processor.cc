@@ -2,6 +2,8 @@
 #include <tf/tfMessage.h>
 #include <wavemap_common_ros/rosbag_processor.h>
 
+#include "wavemap_3d_ros/input_handler/depth_image_input_handler.h"
+#include "wavemap_3d_ros/input_handler/pointcloud_input_handler.h"
 #include "wavemap_3d_ros/wavemap_3d_server.h"
 
 int main(int argc, char** argv) {
@@ -17,14 +19,9 @@ int main(int argc, char** argv) {
   wavemap::Wavemap3DServer wavemap_server(nh, nh_private);
 
   // Read the required ROS params
-  std::string pointcloud_topic = "/pointcloud";
-  nh_private.param("pointcloud_topic", pointcloud_topic, pointcloud_topic);
   std::string rosbag_paths_str;
   nh_private.param("rosbag_path", rosbag_paths_str, rosbag_paths_str);
   std::string input_pointcloud_republishing_topic;
-  nh_private.param("input_pointcloud_republishing_topic",
-                   input_pointcloud_republishing_topic,
-                   input_pointcloud_republishing_topic);
 
   // Create the rosbag processor and load the rosbags
   wavemap::RosbagProcessor rosbag_processor;
@@ -33,25 +30,31 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  // Setup the pointcloud callback
-  if (input_pointcloud_republishing_topic.empty()) {
-    rosbag_processor.addCallback(pointcloud_topic,
-                                 &wavemap::Wavemap3DServer::pointcloudCallback,
-                                 &wavemap_server);
-  } else {
-    ros::Publisher pointcloud_pub = nh.advertise<sensor_msgs::PointCloud2>(
-        input_pointcloud_republishing_topic, 1);
-    rosbag_processor.addCallback<sensor_msgs::PointCloud2>(
-        pointcloud_topic,
-        [&wavemap_server, pointcloud_pub](auto pointcloud_msg) {
-          // Process the point cloud
-          wavemap_server.pointcloudCallback(pointcloud_msg);
-          // Fix its frame_id s.t. it works with TFs (incl. in Rviz) and publish
-          pointcloud_msg.header.frame_id =
-              wavemap::TfTransformer::sanitizeFrameId(
-                  pointcloud_msg.header.frame_id);
-          pointcloud_pub.publish(pointcloud_msg);
-        });
+  // Setup input handlers
+  const wavemap::param::Array integrator_params_array =
+      wavemap::param::convert::toParamArray(nh_private, "integrators");
+  for (const auto& integrator_params : integrator_params_array) {
+    if (integrator_params.holds<wavemap::param::Map>()) {
+      const auto param_map = integrator_params.get<wavemap::param::Map>();
+      wavemap::InputHandler* input_handler =
+          wavemap_server.addInput(param_map, nh);
+      if (input_handler) {
+        switch (input_handler->getType().toTypeId()) {
+          case wavemap::InputHandlerType::kPointcloud:
+            rosbag_processor.addCallback(
+                input_handler->getConfig().topic_name,
+                &wavemap::PointcloudInputHandler::pointcloudCallback,
+                dynamic_cast<wavemap::PointcloudInputHandler*>(input_handler));
+            continue;
+          case wavemap::InputHandlerType::kDepthImage:
+            rosbag_processor.addCallback(
+                input_handler->getConfig().topic_name,
+                &wavemap::DepthImageInputHandler::depthImageCallback,
+                dynamic_cast<wavemap::DepthImageInputHandler*>(input_handler));
+            continue;
+        }
+      }
+    }
   }
 
   // Republish TFs

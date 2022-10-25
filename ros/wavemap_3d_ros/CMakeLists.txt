@@ -8,7 +8,11 @@ catkin_simple(ALL_DEPS_REQUIRED)
 add_wavemap_compile_definitions_and_options()
 
 # Libraries
-cs_add_library(${PROJECT_NAME} src/wavemap_3d_server.cc)
+cs_add_library(${PROJECT_NAME}
+    src/input_handler/depth_image_input_handler.cc
+    src/input_handler/input_handler.cc
+    src/input_handler/pointcloud_input_handler.cc
+    src/wavemap_3d_server.cc)
 
 # Binaries
 add_executable(wavemap_3d_server_node app/server_node.cc)

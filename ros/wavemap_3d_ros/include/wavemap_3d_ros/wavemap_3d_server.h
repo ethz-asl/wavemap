@@ -1,17 +1,20 @@
 #ifndef WAVEMAP_3D_ROS_WAVEMAP_3D_SERVER_H_
 #define WAVEMAP_3D_ROS_WAVEMAP_3D_SERVER_H_
 
-#include <queue>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include <glog/logging.h>
 #include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d.h>
 #include <wavemap_3d/integrator/pointcloud_integrator_3d.h>
 #include <wavemap_common/common.h>
+#include <wavemap_common/utils/config_utils.h>
 #include <wavemap_common_ros/tf_transformer.h>
 #include <wavemap_common_ros/utils/timer.h>
+
+#include "wavemap_3d_ros/input_handler/input_handler.h"
 
 namespace wavemap {
 class Wavemap3DServer {
@@ -20,7 +23,6 @@ class Wavemap3DServer {
     struct General {
       std::string world_frame = "odom";
       bool publish_performance_stats = false;
-      float pointcloud_queue_processing_retry_period = 0.1f;
     } general;
 
     struct Map {
@@ -30,12 +32,6 @@ class Wavemap3DServer {
       std::string autosave_path;
     } map;
 
-    struct Integrator {
-      std::string pointcloud_topic_name = "scan";
-      int pointcloud_topic_queue_length = 10;
-      float pointcloud_queue_max_wait_for_tf = 1.f;
-    } integrator;
-
     static Config from(const param::Map& params);
     bool isValid(bool verbose) const override;
   };
@@ -44,11 +40,12 @@ class Wavemap3DServer {
   Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                   const Config& config);
 
-  void pointcloudCallback(const sensor_msgs::PointCloud2& scan_msg);
-
   void visualizeMap();
   bool saveMap(const std::string& file_path) const;
   bool loadMap(const std::string& file_path);
+
+  InputHandler* addInput(const param::Map& integrator_params,
+                         const ros::NodeHandle& nh);
 
  private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;
@@ -56,21 +53,16 @@ class Wavemap3DServer {
   const Config config_;
 
   VolumetricDataStructure3D::Ptr occupancy_map_;
-  PointcloudIntegrator3D::Ptr pointcloud_integrator_;
-  TfTransformer transformer_;
 
-  void processPointcloudQueue();
-  std::queue<sensor_msgs::PointCloud2> pointcloud_queue_;
-  CpuTimer integration_timer;
+  std::shared_ptr<TfTransformer> transformer_;
+  std::vector<std::unique_ptr<InputHandler>> input_handlers_;
 
   void subscribeToTimers(const ros::NodeHandle& nh);
-  ros::Timer pointcloud_queue_processing_timer_;
   ros::Timer map_pruning_timer_;
   ros::Timer map_visualization_timer_;
   ros::Timer map_autosave_timer_;
 
   void subscribeToTopics(ros::NodeHandle& nh);
-  ros::Subscriber pointcloud_sub_;
 
   void advertiseTopics(ros::NodeHandle& nh_private);
   ros::Publisher map_pub_;
