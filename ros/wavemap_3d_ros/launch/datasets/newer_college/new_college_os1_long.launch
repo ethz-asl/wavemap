@@ -14,12 +14,6 @@
        doc="Automatically launch Rviz."/>
   <arg name="record_rosbag" default="false"/>
 
-  <!-- Wavemap params -->
-  <arg name="data_structure_type"
-       default="hashed_blocks"/>
-  <arg name="measurement_model_type"
-       default="single_ray_integrator"/>
-
   <!-- Dataset params -->
   <arg name="pointcloud_topic"
        default="/os1_cloud_node/points"/>
@@ -75,8 +69,7 @@
   <group if="$(arg record_rosbag)">
     <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
     <arg name="bag_save_path" default="../catkin_ws/bags/evaluations"/>
-    <arg name="bag_prefix"
-         default="simple_building_manual-$(arg data_structure_type)-$(arg measurement_model_type)"/>
+    <arg name="bag_prefix" default="new_college_os1_long"/>
     <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
           args="/wavemap_3d/map_evaluation_summary /wavemap_3d/performance_stats /wavemap_3d/occupancy_grid /wavemap_3d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
   </group>
