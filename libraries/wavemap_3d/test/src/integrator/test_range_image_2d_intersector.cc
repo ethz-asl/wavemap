@@ -161,8 +161,10 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
     AngleCornerArray elevation_angles{};
     AngleCornerArray azimuth_angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
-      reference_angle_pair.min_spherical_coordinates = -Vector2D::Constant(kPi);
-      reference_angle_pair.max_spherical_coordinates = Vector2D::Constant(kPi);
+      reference_angle_pair.min_spherical_coordinates =
+          projection_model->getMinImageCoordinates();
+      reference_angle_pair.max_spherical_coordinates =
+          projection_model->getMaxImageCoordinates();
     } else {
       for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
            ++corner_idx) {
