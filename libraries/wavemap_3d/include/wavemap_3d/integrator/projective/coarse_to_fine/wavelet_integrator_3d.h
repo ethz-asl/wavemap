@@ -19,15 +19,13 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
       ContinuousVolumetricLogOdds<3> measurement_model,
       VolumetricDataStructure3D::Ptr occupancy_map);
 
-  void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
-
  private:
   WaveletOctreeInterface* wavelet_tree_;
 
   const FloatingPoint min_cell_width_;
   std::shared_ptr<RangeImage2DIntersector> range_image_intersector_;
 
-  // TODO(victorr): Auto update these based on the projection model config
+  // TODO(victorr): Move this to the measurement model
   const FloatingPoint max_gradient_over_range_fully_inside_ =
       measurement_model_.getConfig().scaling_free * 366.692988883727f;
   const FloatingPoint max_gradient_on_boundary_ =
@@ -43,6 +41,8 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
   bool isApproximationErrorAcceptable(
       IntersectionType intersection_type, FloatingPoint sphere_center_distance,
       FloatingPoint bounding_sphere_radius) const;
+
+  void updateMap() override;
 };
 }  // namespace wavemap
 

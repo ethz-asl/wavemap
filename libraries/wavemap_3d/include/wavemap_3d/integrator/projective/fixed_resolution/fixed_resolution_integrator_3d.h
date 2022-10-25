@@ -13,10 +13,15 @@ class FixedResolutionIntegrator3D : public ScanwiseIntegrator3D {
  public:
   using ScanwiseIntegrator3D::ScanwiseIntegrator3D;
 
-  void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
+ private:
+  AABB<Point3D> aabb_;
 
-  AABB<Point3D> computeRangeImageAndAABB(
-      const PosedPointcloud<Point3D>& pointcloud);
+  void importPointcloud(
+      const PosedPointcloud<wavemap::Point3D>& pointcloud) override;
+  void importRangeImage(
+      const wavemap::PosedRangeImage2D& range_image_input) override;
+
+  void updateMap() override;
 };
 }  // namespace wavemap
 

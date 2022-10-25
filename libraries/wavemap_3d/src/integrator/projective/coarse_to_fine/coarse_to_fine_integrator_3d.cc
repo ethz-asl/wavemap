@@ -22,14 +22,8 @@ CoarseToFineIntegrator3D::CoarseToFineIntegrator3D(
          "volumetric data structures.";
 }
 
-void CoarseToFineIntegrator3D::integratePointcloud(
-    const PosedPointcloud<Point3D>& pointcloud) {
-  if (!isPointcloudValid(pointcloud)) {
-    return;
-  }
-
-  // Compute the range image and the scan's AABB
-  updateRangeImage(pointcloud, *posed_range_image_, bearing_image_);
+void CoarseToFineIntegrator3D::updateMap() {
+  // Update the range image intersector
   range_image_intersector_ = std::make_shared<RangeImage2DIntersector>(
       posed_range_image_, projection_model_, config_.min_range,
       config_.max_range, measurement_model_.getAngleThreshold(),
@@ -65,7 +59,7 @@ void CoarseToFineIntegrator3D::integratePointcloud(
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const IntersectionType intersection_type =
         range_image_intersector_->determineIntersectionType(
-            pointcloud.getPose(), W_cell_aabb, cache);
+            posed_range_image_->getPose(), W_cell_aabb, cache);
 
     // If we're fully in unknown space,
     // there's no need to evaluate this node or its children

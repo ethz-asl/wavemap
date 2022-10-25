@@ -43,10 +43,10 @@ class PinholeCameraProjector : public Image2DProjectionModel {
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {
-    const FloatingPoint u = config_.fx * C_point.x() + config_.cx * C_point.z();
-    const FloatingPoint v = config_.fy * C_point.y() + config_.cy * C_point.z();
     const FloatingPoint w = C_point.z();
-    return {u / w, v / w, w};
+    const FloatingPoint uw = config_.fx * C_point.x() / w + config_.cx;
+    const FloatingPoint vw = config_.fy * C_point.y() / w + config_.cy;
+    return {uw, vw, w};
   }
   Point3D sensorToCartesian(const Vector3D& coordinates) const final {
     const FloatingPoint u_scaled = coordinates[0];
@@ -73,14 +73,14 @@ class PinholeCameraProjector : public Image2DProjectionModel {
     return cartesianToSensor(C_point).head<2>();
   }
   FloatingPoint cartesianToImageX(const Point3D& C_point) const final {
-    const FloatingPoint u = config_.fx * C_point.x() + config_.cx * C_point.z();
     const FloatingPoint w = C_point.z();
-    return u / w;
+    const FloatingPoint uw = config_.fx * C_point.x() / w + config_.cx;
+    return uw;
   }
   FloatingPoint cartesianToImageY(const Point3D& C_point) const final {
-    const FloatingPoint v = config_.fy * C_point.y() + config_.cy * C_point.z();
     const FloatingPoint w = C_point.z();
-    return v / w;
+    const FloatingPoint vw = config_.fy * C_point.y() / w + config_.cy;
+    return vw;
   }
 
  private:

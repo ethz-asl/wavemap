@@ -41,8 +41,8 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
 
   // If the sensor is contained in the AABB, it overlaps with the full range
   if (W_aabb.containsPoint(T_W_C.getPosition())) {
-    angle_intervals = {Vector2D::Constant(-kPi), Vector2D::Constant(kPi)};
-    return angle_intervals;
+    return {projection_model.getMinImageCoordinates(),
+            projection_model.getMaxImageCoordinates()};
   }
 
   const Transformation3D T_C_W = T_W_C.inverse();

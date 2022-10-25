@@ -16,14 +16,8 @@ WaveletIntegrator3D::WaveletIntegrator3D(
                           "volumetric data structures based on wavelet trees.";
 }
 
-void WaveletIntegrator3D::integratePointcloud(
-    const PosedPointcloud<Point3D>& pointcloud) {
-  if (!isPointcloudValid(pointcloud)) {
-    return;
-  }
-
-  // Compute the range image and the scan's AABB
-  updateRangeImage(pointcloud, *posed_range_image_, bearing_image_);
+void WaveletIntegrator3D::updateMap() {
+  // Update the range image intersector
   range_image_intersector_ = std::make_shared<RangeImage2DIntersector>(
       posed_range_image_, projection_model_, config_.min_range,
       config_.max_range, measurement_model_.getAngleThreshold(),

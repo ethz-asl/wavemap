@@ -34,6 +34,7 @@ class RangeImage2D {
     return static_cast<IndexElement>(data_.cols());
   }
   Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
+  Data& getData() { return data_; }
   const Data& getData() const { return data_; }
 
   bool isIndexWithinBounds(const Index2D& index) const {
