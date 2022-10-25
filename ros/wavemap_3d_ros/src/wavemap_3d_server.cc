@@ -13,8 +13,7 @@
 #include <wavemap_msgs/MapEvaluationSummary.h>
 #include <wavemap_msgs/PerformanceStats.h>
 
-#include "wavemap_3d_ros/input_handler/depth_image_input_handler.h"
-#include "wavemap_3d_ros/input_handler/pointcloud_input_handler.h"
+#include "wavemap_3d_ros/input_handler/input_handler_factory.h"
 #include "wavemap_3d_ros/io/ros_msg_conversions.h"
 
 namespace wavemap {
@@ -25,7 +24,8 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
 
 Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                                  const Wavemap3DServer::Config& config)
-    : config_(config.checkValid()) {
+    : config_(config.checkValid()),
+      transformer_(std::make_shared<TfTransformer>()) {
   // Setup data structure
   const param::Map data_structure_params =
       param::convert::toParamMap(nh_private, "map/data_structure");
@@ -79,27 +79,11 @@ bool Wavemap3DServer::loadMap(const std::string& file_path) {
 
 InputHandler* Wavemap3DServer::addInput(const param::Map& integrator_params,
                                         const ros::NodeHandle& nh) {
-  std::string error_msg;
-  const auto input_type =
-      InputHandlerType::fromParamMap(integrator_params, error_msg);
-  if (!input_type.isValid()) {
-    LOG(WARNING) << error_msg;
-    return nullptr;
-  }
-
-  switch (input_type.toTypeId()) {
-    case InputHandlerType::kPointcloud:
-      return input_handlers_
-          .emplace_back(std::make_unique<PointcloudInputHandler>(
-              integrator_params, config_.general.world_frame, occupancy_map_,
-              transformer_, nh))
-          .get();
-    case InputHandlerType::kDepthImage:
-      return input_handlers_
-          .emplace_back(std::make_unique<DepthImageInputHandler>(
-              integrator_params, config_.general.world_frame, occupancy_map_,
-              transformer_, nh))
-          .get();
+  auto input_handler = InputHandlerFactory::create(
+      integrator_params, config_.general.world_frame, occupancy_map_,
+      transformer_, nh);
+  if (input_handler) {
+    return input_handlers_.emplace_back(std::move(input_handler)).get();
   }
   return nullptr;
 }

@@ -11,6 +11,7 @@ add_wavemap_compile_definitions_and_options()
 cs_add_library(${PROJECT_NAME}
     src/input_handler/depth_image_input_handler.cc
     src/input_handler/input_handler.cc
+    src/input_handler/input_handler_factory.cc
     src/input_handler/pointcloud_input_handler.cc
     src/wavemap_3d_server.cc)
 

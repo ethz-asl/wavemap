@@ -35,10 +35,6 @@ class InputHandler {
     bool isValid(bool verbose) const override;
   };
 
-  InputHandler(const param::Map& params, std::string world_frame,
-               VolumetricDataStructure3D::Ptr occupancy_map,
-               std::shared_ptr<TfTransformer> transformer,
-               const ros::NodeHandle& nh);
   InputHandler(const Config& config, const param::Map& params,
                std::string world_frame,
                VolumetricDataStructure3D::Ptr occupancy_map,

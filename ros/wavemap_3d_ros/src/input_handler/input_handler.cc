@@ -1,14 +1,6 @@
 #include "wavemap_3d_ros/input_handler/input_handler.h"
 
 namespace wavemap {
-InputHandler::InputHandler(const param::Map& params, std::string world_frame,
-                           VolumetricDataStructure3D::Ptr occupancy_map,
-                           std::shared_ptr<TfTransformer> transformer,
-                           const ros::NodeHandle& nh)
-    : InputHandler(
-          Config::from(param::map::keyGetValue<param::Map>(params, "input")),
-          params, world_frame, occupancy_map, transformer, nh) {}
-
 InputHandler::InputHandler(const InputHandler::Config& config,
                            const param::Map& params, std::string world_frame,
                            VolumetricDataStructure3D::Ptr occupancy_map,
