@@ -24,7 +24,6 @@ class PointcloudInputHandler : public InputHandler {
 
   void pointcloudCallback(const sensor_msgs::PointCloud2& pointcloud_msg) {
     pointcloud_queue_.emplace(pointcloud_msg);
-    processQueue();
   }
 
  private:

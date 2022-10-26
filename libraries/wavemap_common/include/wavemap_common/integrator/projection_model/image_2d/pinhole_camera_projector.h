@@ -40,8 +40,12 @@ class PinholeCameraProjector : public Image2DProjectionModel {
   ImageCoordinates getMaxImageCoordinates() const final {
     return {indexToImage({config_.width, config_.height})};
   }
-  bool isXAxisWrapping() const final { return false; }
-  bool isYAxisWrapping() const final { return false; }
+  Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final {
+    return {false, false, false};
+  }
+  Eigen::Matrix<bool, 3, 1> sensorAxisCouldBePeriodic() const final {
+    return {false, false, false};
+  }
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {
@@ -73,16 +77,6 @@ class PinholeCameraProjector : public Image2DProjectionModel {
   // Projection from Cartesian space onto the sensor's image surface
   ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
     return cartesianToSensor(C_point).head<2>();
-  }
-  FloatingPoint cartesianToImageX(const Point3D& C_point) const final {
-    const FloatingPoint w = C_point.z();
-    const FloatingPoint uw = config_.fx * C_point.x() / w + config_.cx;
-    return uw;
-  }
-  FloatingPoint cartesianToImageY(const Point3D& C_point) const final {
-    const FloatingPoint w = C_point.z();
-    const FloatingPoint vw = config_.fy * C_point.y() / w + config_.cy;
-    return vw;
   }
 
  private:

@@ -155,15 +155,15 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
   // Run tests
   int error_count = 0;
   for (const auto& test : tests) {
-    RangeImage2DIntersector::MinMaxAnglePair reference_angle_pair;
+    RangeImage2DIntersector::MinMaxSensorCoordinates reference_angle_pair;
     using AngleCornerArray =
         std::array<FloatingPoint, AABB<Point3D>::kNumCorners>;
     AngleCornerArray elevation_angles{};
     AngleCornerArray azimuth_angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
-      reference_angle_pair.min_spherical_coordinates =
+      reference_angle_pair.min_sensor_coordinates =
           projection_model->getMinImageCoordinates();
-      reference_angle_pair.max_spherical_coordinates =
+      reference_angle_pair.max_sensor_coordinates =
           projection_model->getMaxImageCoordinates();
     } else {
       for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
@@ -186,18 +186,18 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
               *std::upper_bound(angles->cbegin(), angles->cend(), 0.f);
           const FloatingPoint greatest_angle_below_zero = *std::prev(
               std::upper_bound(angles->cbegin(), angles->cend(), 0.f));
-          reference_angle_pair.min_spherical_coordinates[axis] =
+          reference_angle_pair.min_sensor_coordinates[axis] =
               smallest_angle_above_zero;
-          reference_angle_pair.max_spherical_coordinates[axis] =
+          reference_angle_pair.max_sensor_coordinates[axis] =
               greatest_angle_below_zero;
         } else {
-          reference_angle_pair.min_spherical_coordinates[axis] = min_angle;
-          reference_angle_pair.max_spherical_coordinates[axis] = max_angle;
+          reference_angle_pair.min_sensor_coordinates[axis] = min_angle;
+          reference_angle_pair.max_sensor_coordinates[axis] = max_angle;
         }
       }
     }
 
-    const RangeImage2DIntersector::MinMaxAnglePair returned_angle_pair =
+    const RangeImage2DIntersector::MinMaxSensorCoordinates returned_angle_pair =
         RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
             test.T_W_C, test.W_aabb, *projection_model);
     constexpr FloatingPoint kOneAndAHalfDegree = 0.0261799f;
@@ -209,47 +209,47 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
     };
     for (const int axis : {0, 1}) {
       const bool angle_range_wraps_around =
-          kPi < reference_angle_pair.max_spherical_coordinates[axis] -
-                    reference_angle_pair.min_spherical_coordinates[axis];
+          kPi < reference_angle_pair.max_sensor_coordinates[axis] -
+                    reference_angle_pair.min_sensor_coordinates[axis];
       if (angle_range_wraps_around) {
         EXPECT_GE(angle_math::normalize(
-                      returned_angle_pair.min_spherical_coordinates[axis] -
-                      reference_angle_pair.min_spherical_coordinates[axis]),
+                      returned_angle_pair.min_sensor_coordinates[axis] -
+                      reference_angle_pair.min_sensor_coordinates[axis]),
                   0.f)
             << canary_token();
         EXPECT_LE(angle_math::normalize(
-                      returned_angle_pair.min_spherical_coordinates[axis] -
-                      reference_angle_pair.min_spherical_coordinates[axis]),
+                      returned_angle_pair.min_sensor_coordinates[axis] -
+                      reference_angle_pair.min_sensor_coordinates[axis]),
                   kOneAndAHalfDegree);
         EXPECT_LE(angle_math::normalize(
-                      returned_angle_pair.max_spherical_coordinates[axis] -
-                      reference_angle_pair.max_spherical_coordinates[axis]),
+                      returned_angle_pair.max_sensor_coordinates[axis] -
+                      reference_angle_pair.max_sensor_coordinates[axis]),
                   0.f)
             << canary_token();
         EXPECT_GE(angle_math::normalize(
-                      returned_angle_pair.max_spherical_coordinates[axis] -
-                      reference_angle_pair.max_spherical_coordinates[axis]),
+                      returned_angle_pair.max_sensor_coordinates[axis] -
+                      reference_angle_pair.max_sensor_coordinates[axis]),
                   -kOneAndAHalfDegree)
             << canary_token();
       } else {
         EXPECT_LE(angle_math::normalize(
-                      returned_angle_pair.min_spherical_coordinates[axis] -
-                      reference_angle_pair.min_spherical_coordinates[axis]),
+                      returned_angle_pair.min_sensor_coordinates[axis] -
+                      reference_angle_pair.min_sensor_coordinates[axis]),
                   0.f)
             << canary_token();
         EXPECT_GE(angle_math::normalize(
-                      returned_angle_pair.min_spherical_coordinates[axis] -
-                      reference_angle_pair.min_spherical_coordinates[axis]),
+                      returned_angle_pair.min_sensor_coordinates[axis] -
+                      reference_angle_pair.min_sensor_coordinates[axis]),
                   -kOneAndAHalfDegree)
             << canary_token();
         EXPECT_GE(angle_math::normalize(
-                      returned_angle_pair.max_spherical_coordinates[axis] -
-                      reference_angle_pair.max_spherical_coordinates[axis]),
+                      returned_angle_pair.max_sensor_coordinates[axis] -
+                      reference_angle_pair.max_sensor_coordinates[axis]),
                   0.f)
             << canary_token();
         EXPECT_LE(angle_math::normalize(
-                      returned_angle_pair.max_spherical_coordinates[axis] -
-                      reference_angle_pair.max_spherical_coordinates[axis]),
+                      returned_angle_pair.max_sensor_coordinates[axis] -
+                      reference_angle_pair.max_sensor_coordinates[axis]),
                   kOneAndAHalfDegree)
             << canary_token();
       }
@@ -265,15 +265,13 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
           << ToString(elevation_angles) << "\nazimuth angles:\n"
           << ToString(azimuth_angles)
           << "\nand reference min/max spherical coordinates: "
-          << EigenFormat::oneLine(
-                 reference_angle_pair.min_spherical_coordinates)
+          << EigenFormat::oneLine(reference_angle_pair.min_sensor_coordinates)
           << ", "
-          << EigenFormat::oneLine(
-                 reference_angle_pair.max_spherical_coordinates)
+          << EigenFormat::oneLine(reference_angle_pair.max_sensor_coordinates)
           << "\nWe got min/max spherical coordinates: "
-          << EigenFormat::oneLine(returned_angle_pair.min_spherical_coordinates)
+          << EigenFormat::oneLine(returned_angle_pair.min_sensor_coordinates)
           << ", "
-          << EigenFormat::oneLine(returned_angle_pair.max_spherical_coordinates)
+          << EigenFormat::oneLine(returned_angle_pair.max_sensor_coordinates)
           << "\nThis is error nr " << ++error_count << "\n"
           << std::endl;
     }

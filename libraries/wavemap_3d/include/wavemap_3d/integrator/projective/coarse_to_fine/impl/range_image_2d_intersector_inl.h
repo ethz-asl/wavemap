@@ -10,21 +10,21 @@
 #include <wavemap_common/utils/approximate_trigonometry.h>
 
 namespace wavemap {
-inline RangeImage2DIntersector::MinMaxAnglePair
+inline RangeImage2DIntersector::MinMaxSensorCoordinates
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb) const {
   Cache cache{};
   return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, *projection_model_, cache);
 }
 
-inline RangeImage2DIntersector::MinMaxAnglePair
+inline RangeImage2DIntersector::MinMaxSensorCoordinates
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
     RangeImage2DIntersector::Cache& cache) const {
   return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, *projection_model_, cache);
 }
 
-inline RangeImage2DIntersector::MinMaxAnglePair
+inline RangeImage2DIntersector::MinMaxSensorCoordinates
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
     const Image2DProjectionModel& projection_model) {
@@ -32,53 +32,49 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
   return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model, cache);
 }
 
-inline RangeImage2DIntersector::MinMaxAnglePair
+inline RangeImage2DIntersector::MinMaxSensorCoordinates
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
     const Image2DProjectionModel& projection_model,
     RangeImage2DIntersector::Cache& cache) {
-  MinMaxAnglePair angle_intervals;
+  MinMaxSensorCoordinates sensor_coordinate_interval;
 
   // If the sensor is contained in the AABB, it overlaps with the full range
   if (W_aabb.containsPoint(T_W_C.getPosition())) {
-    return {projection_model.getMinImageCoordinates(),
-            projection_model.getMaxImageCoordinates()};
+    sensor_coordinate_interval.min_sensor_coordinates.head<2>() =
+        projection_model.getMinImageCoordinates();
+    sensor_coordinate_interval.max_sensor_coordinates.head<2>() =
+        projection_model.getMaxImageCoordinates();
+    sensor_coordinate_interval.min_sensor_coordinates.z() = 0.f;
+    sensor_coordinate_interval.max_sensor_coordinates.z() = 1e3f;
+    return sensor_coordinate_interval;
   }
 
   const Transformation3D T_C_W = T_W_C.inverse();
 
   if (cache.has_value()) {
-    const Point3D min_elevation_corner_point =
-        T_C_W * W_aabb.corner_point(cache.value().min_corner_indices[0]);
-    angle_intervals.min_spherical_coordinates[0] =
-        projection_model.cartesianToImageX(min_elevation_corner_point);
-
-    const Point3D min_azimuth_corner_point =
-        T_C_W * W_aabb.corner_point(cache.value().min_corner_indices[1]);
-    angle_intervals.min_spherical_coordinates[1] =
-        projection_model.cartesianToImageY(min_azimuth_corner_point);
-
-    const Point3D max_elevation_corner_point =
-        T_C_W * W_aabb.corner_point(cache.value().max_corner_indices[0]);
-    angle_intervals.max_spherical_coordinates[0] =
-        projection_model.cartesianToImageX(max_elevation_corner_point);
-
-    const Point3D max_azimuth_corner_point =
-        T_C_W * W_aabb.corner_point(cache.value().max_corner_indices[1]);
-    angle_intervals.max_spherical_coordinates[1] =
-        projection_model.cartesianToImageY(max_azimuth_corner_point);
-
-    return angle_intervals;
+    for (auto [sensor_coordinates, corner_indices] :
+         {std::pair{&sensor_coordinate_interval.min_sensor_coordinates,
+                    cache.value().min_corner_indices},
+          {&sensor_coordinate_interval.max_sensor_coordinates,
+           cache.value().max_corner_indices}}) {
+      for (const int axis : {0, 1, 2}) {
+        const Point3D corner_point =
+            T_C_W * W_aabb.corner_point(corner_indices[axis]);
+        sensor_coordinates->operator[](axis) =
+            projection_model.cartesianToSensor(corner_point)[axis];
+      }
+    }
+    return sensor_coordinate_interval;
   }
 
-  Eigen::Matrix<FloatingPoint, 2, 8> spherical_C_corners;
+  Eigen::Matrix<FloatingPoint, 3, 8> corner_sensor_coordinates;
   std::bitset<3> all_positive{0b111};
   std::bitset<3> all_negative{0b111};
   for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
        ++corner_idx) {
     const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
-    spherical_C_corners.col(corner_idx) =
-        projection_model.cartesianToImage(C_t_C_corner);
+    // Check the octant of this corner point
     for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
       if (bool is_negative = std::signbit(C_t_C_corner[dim_idx]); is_negative) {
         all_positive.set(dim_idx, false);
@@ -86,35 +82,47 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
         all_negative.set(dim_idx, false);
       }
     }
+    // Compute its sensor coordinates
+    corner_sensor_coordinates.col(corner_idx) =
+        projection_model.cartesianToSensor(C_t_C_corner);
+    if (corner_sensor_coordinates.col(corner_idx).z() < 0.f) {
+      corner_sensor_coordinates.col(corner_idx).z() = 0.f;
+      corner_sensor_coordinates.col(corner_idx).head<2>() *= -1e6f;
+    }
   }
   const bool all_corners_in_same_octant = (all_positive | all_negative).all();
 
   if (all_corners_in_same_octant) {
     cache.emplace();
-    for (const int axis : {0, 1}) {
-      auto& min_angle = angle_intervals.min_spherical_coordinates[axis];
-      auto& max_angle = angle_intervals.max_spherical_coordinates[axis];
+    for (const int axis : {0, 1, 2}) {
+      auto& min_coordinate =
+          sensor_coordinate_interval.min_sensor_coordinates[axis];
+      auto& max_coordinate =
+          sensor_coordinate_interval.max_sensor_coordinates[axis];
 
-      min_angle = spherical_C_corners.row(axis).minCoeff(
+      min_coordinate = corner_sensor_coordinates.row(axis).minCoeff(
           &cache.value().min_corner_indices[axis]);
-      max_angle = spherical_C_corners.row(axis).maxCoeff(
+      max_coordinate = corner_sensor_coordinates.row(axis).maxCoeff(
           &cache.value().max_corner_indices[axis]);
 
-      const bool angle_interval_wraps_around = kPi < (max_angle - min_angle);
+      const bool angle_interval_wraps_around =
+          projection_model.sensorAxisCouldBePeriodic()[axis] &&
+          kPi < (max_coordinate - min_coordinate);
       if (angle_interval_wraps_around) {
-        min_angle = MinMaxAnglePair::kInitialMin;
-        max_angle = MinMaxAnglePair::kInitialMax;
+        min_coordinate = MinMaxSensorCoordinates::kInitialMin;
+        max_coordinate = MinMaxSensorCoordinates::kInitialMax;
         for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
              ++corner_idx) {
-          const FloatingPoint angle = spherical_C_corners(axis, corner_idx);
+          const FloatingPoint angle =
+              corner_sensor_coordinates(axis, corner_idx);
           if (0.f < angle) {
-            if (min_angle < angle) {
-              min_angle = angle;
+            if (min_coordinate < angle) {
+              min_coordinate = angle;
               cache.value().min_corner_indices[axis] = corner_idx;
             }
           } else {
-            if (angle < max_angle) {
-              max_angle = angle;
+            if (angle < max_coordinate) {
+              max_coordinate = angle;
               cache.value().max_corner_indices[axis] = corner_idx;
             }
           }
@@ -122,33 +130,37 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
       }
     }
 
-    return angle_intervals;
+    return sensor_coordinate_interval;
   }
 
-  for (const int axis : {0, 1}) {
-    auto& min_angle = angle_intervals.min_spherical_coordinates[axis];
-    auto& max_angle = angle_intervals.max_spherical_coordinates[axis];
+  for (const int axis : {0, 1, 2}) {
+    auto& min_coordinate =
+        sensor_coordinate_interval.min_sensor_coordinates[axis];
+    auto& max_coordinate =
+        sensor_coordinate_interval.max_sensor_coordinates[axis];
 
-    min_angle = spherical_C_corners.row(axis).minCoeff();
-    max_angle = spherical_C_corners.row(axis).maxCoeff();
+    min_coordinate = corner_sensor_coordinates.row(axis).minCoeff();
+    max_coordinate = corner_sensor_coordinates.row(axis).maxCoeff();
 
-    const bool angle_interval_wraps_around = kPi < (max_angle - min_angle);
+    const bool angle_interval_wraps_around =
+        projection_model.sensorAxisCouldBePeriodic()[axis] &&
+        kPi < (max_coordinate - min_coordinate);
     if (angle_interval_wraps_around) {
-      min_angle = MinMaxAnglePair::kInitialMin;
-      max_angle = MinMaxAnglePair::kInitialMax;
+      min_coordinate = MinMaxSensorCoordinates::kInitialMin;
+      max_coordinate = MinMaxSensorCoordinates::kInitialMax;
       for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
            ++corner_idx) {
-        const FloatingPoint angle = spherical_C_corners(axis, corner_idx);
+        const FloatingPoint angle = corner_sensor_coordinates(axis, corner_idx);
         if (0.f < angle) {
-          min_angle = std::min(min_angle, angle);
+          min_coordinate = std::min(min_coordinate, angle);
         } else {
-          max_angle = std::max(max_angle, angle);
+          max_coordinate = std::max(max_coordinate, angle);
         }
       }
     }
   }
 
-  return angle_intervals;
+  return sensor_coordinate_interval;
 }
 
 inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
@@ -160,42 +172,35 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb,
     Cache& cache) const {
-  // Get the min and max distances from any point in the cell (which is an
-  // axis-aligned cube) to the sensor's center
-  // NOTE: The min distance is 0 if the cell contains the sensor's center.
-  const FloatingPoint d_C_cell_closest =
-      W_cell_aabb.minDistanceTo(T_W_C.getPosition());
-  if (max_range_ < d_C_cell_closest) {
-    return IntersectionType::kFullyUnknown;
-  }
-
   // Get the min and max angles for any point in the cell projected into the
   // range image
-  auto [min_spherical_coordinates, max_spherical_coordinates] =
+  auto [min_sensor_coordinates, max_sensor_coordinates] =
       getAabbMinMaxProjectedAngle(T_W_C, W_cell_aabb, cache);
+  if (max_range_ < min_sensor_coordinates.z() ||
+      max_sensor_coordinates.z() <= 0.f) {
+    return IntersectionType::kFullyUnknown;
+  }
 
   // Pad the min and max angles with the BeamModel's angle threshold to
   // account for the beam's non-zero width (angular uncertainty)
   const Index2D min_image_index = projection_model_->imageToFloorIndex(
-      min_spherical_coordinates - Vector2D::Constant(angle_threshold_));
+      min_sensor_coordinates.head<2>() - Vector2D::Constant(angle_threshold_));
   const Index2D max_image_index = projection_model_->imageToCeilIndex(
-      max_spherical_coordinates + Vector2D::Constant(angle_threshold_));
+      max_sensor_coordinates.head<2>() + Vector2D::Constant(angle_threshold_));
 
   // If the angle wraps around Pi, we can't use the hierarchical range image
-  const bool elevation_range_wraps_pi =
-      max_image_index.x() < min_image_index.x();
-  const bool azimuth_range_wraps_pi = max_image_index.y() < min_image_index.y();
-  if (elevation_range_wraps_pi ||
-      (!azimuth_wraps_pi_ && azimuth_range_wraps_pi)) {
-    const bool elevation_range_fully_outside_fov =
+  const bool x_range_wraps_around = max_image_index.x() < min_image_index.x();
+  const bool y_range_wraps_around = max_image_index.y() < min_image_index.y();
+  if (x_range_wraps_around || (!y_axis_wraps_around_ && y_range_wraps_around)) {
+    const bool x_range_fully_outside_fov =
         max_image_index.x() < 0 &&
         projection_model_->getNumRows() < min_image_index.x();
-    const bool azimuth_range_fully_outside_fov =
+    const bool y_range_fully_outside_fov =
         max_image_index.y() < 0 &&
         projection_model_->getNumColumns() < min_image_index.y();
-    if ((!elevation_range_wraps_pi || elevation_range_fully_outside_fov) &&
-        (azimuth_wraps_pi_ || !azimuth_range_wraps_pi ||
-         azimuth_range_fully_outside_fov)) {
+    if ((!x_range_wraps_around || x_range_fully_outside_fov) &&
+        (y_axis_wraps_around_ || !y_range_wraps_around ||
+         y_range_fully_outside_fov)) {
       // No parts of the cell can be affected by the measurement update
       return IntersectionType::kFullyUnknown;
     } else {
@@ -220,12 +225,13 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
 
   // Check if the cell overlaps with the approximate but conservative distance
   // bounds of the hierarchical range image
-  const FloatingPoint d_C_cell_furthest =
-      W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
-  const FloatingPoint range_min = d_C_cell_closest - range_threshold_behind_;
-  const FloatingPoint range_max = d_C_cell_furthest + range_threshold_in_front_;
+  const FloatingPoint min_z_coordinate =
+      min_sensor_coordinates.z() - range_threshold_behind_;
+  const FloatingPoint max_z_coordinate =
+      max_sensor_coordinates.z() + range_threshold_in_front_;
   return hierarchical_range_image_.getIntersectionType(
-      min_image_idx_rectified, max_image_idx_rectified, range_min, range_max);
+      min_image_idx_rectified, max_image_idx_rectified, min_z_coordinate,
+      max_z_coordinate);
 }
 }  // namespace wavemap
 

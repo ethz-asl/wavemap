@@ -52,8 +52,10 @@ class OusterProjector : public Image2DProjectionModel {
   ImageCoordinates getMaxImageCoordinates() const final {
     return {config_.elevation.max_angle, config_.azimuth.max_angle};
   }
-  bool isXAxisWrapping() const final;
-  bool isYAxisWrapping() const final;
+  Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final;
+  Eigen::Matrix<bool, 3, 1> sensorAxisCouldBePeriodic() const final {
+    return {true, true, false};
+  }
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {
@@ -106,17 +108,6 @@ class OusterProjector : public Image2DProjectionModel {
     const FloatingPoint elevation_angle = std::atan2(B_point.y(), B_point.x());
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
-  }
-  FloatingPoint cartesianToImageX(const Point3D& C_point) const final {
-    const Vector2D B_point{
-        C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
-        C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
-    const FloatingPoint elevation_angle = std::atan2(B_point.y(), B_point.x());
-    return elevation_angle;
-  }
-  FloatingPoint cartesianToImageY(const Point3D& C_point) const final {
-    const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
-    return azimuth_angle;
   }
 
  private:

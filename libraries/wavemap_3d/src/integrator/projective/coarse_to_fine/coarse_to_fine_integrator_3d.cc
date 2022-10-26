@@ -74,7 +74,8 @@ void CoarseToFineIntegrator3D::updateMap() {
         W_cell_aabb.min + Vector3D::Constant(node_width / 2.f);
     const Point3D C_node_center =
         posed_range_image_->getPoseInverse() * W_node_center;
-    const FloatingPoint d_C_cell = C_node_center.norm();
+    const FloatingPoint d_C_cell =
+        projection_model_->cartesianToSensor(C_node_center).z();
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
     if (current_node.height == 0 ||

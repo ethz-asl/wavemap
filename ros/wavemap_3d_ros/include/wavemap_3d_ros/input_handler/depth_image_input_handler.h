@@ -25,7 +25,6 @@ class DepthImageInputHandler : public InputHandler {
 
   void depthImageCallback(const sensor_msgs::Image& depth_image_msg) {
     depth_image_queue_.emplace(depth_image_msg);
-    processQueue();
   }
 
  private:

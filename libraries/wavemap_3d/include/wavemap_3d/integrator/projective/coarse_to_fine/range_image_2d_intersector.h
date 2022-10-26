@@ -16,21 +16,21 @@
 namespace wavemap {
 class RangeImage2DIntersector {
  public:
-  struct MinMaxAnglePair {
+  struct MinMaxSensorCoordinates {
     static constexpr FloatingPoint kInitialMin =
         std::numeric_limits<FloatingPoint>::max();
     static constexpr FloatingPoint kInitialMax =
         std::numeric_limits<FloatingPoint>::lowest();
 
-    Vector2D min_spherical_coordinates = Vector2D::Constant(kInitialMin);
-    Vector2D max_spherical_coordinates = Vector2D::Constant(kInitialMax);
+    Vector3D min_sensor_coordinates = Vector3D::Constant(kInitialMin);
+    Vector3D max_sensor_coordinates = Vector3D::Constant(kInitialMax);
   };
 
-  struct SphericalMinMaxCornerIndices {
-    Eigen::Matrix<NdtreeIndexRelativeChild, 2, 1> min_corner_indices;
-    Eigen::Matrix<NdtreeIndexRelativeChild, 2, 1> max_corner_indices;
+  struct MinMaxCornerIndices {
+    Eigen::Matrix<NdtreeIndexRelativeChild, 3, 1> min_corner_indices;
+    Eigen::Matrix<NdtreeIndexRelativeChild, 3, 1> max_corner_indices;
   };
-  using Cache = std::optional<SphericalMinMaxCornerIndices>;
+  using Cache = std::optional<MinMaxCornerIndices>;
 
   RangeImage2DIntersector(
       std::shared_ptr<const RangeImage2D> range_image,
@@ -39,8 +39,8 @@ class RangeImage2DIntersector {
       FloatingPoint angle_threshold,
       FloatingPoint range_threshold_in_front_of_surface,
       FloatingPoint range_threshold_behind_surface)
-      : azimuth_wraps_pi_(projection_model->isYAxisWrapping()),
-        hierarchical_range_image_(std::move(range_image), azimuth_wraps_pi_,
+      : y_axis_wraps_around_(projection_model->sensorAxisIsPeriodic().y()),
+        hierarchical_range_image_(std::move(range_image), y_axis_wraps_around_,
                                   min_range),
         projection_model_(std::move(projection_model)),
         max_range_(max_range),
@@ -50,15 +50,15 @@ class RangeImage2DIntersector {
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
   //       around at +-PI and a min_angle >= max_angle will be returned.
-  MinMaxAnglePair getAabbMinMaxProjectedAngle(
+  MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb) const;
-  MinMaxAnglePair getAabbMinMaxProjectedAngle(const Transformation3D& T_W_C,
-                                              const AABB<Point3D>& W_aabb,
-                                              Cache& cache) const;
-  static MinMaxAnglePair getAabbMinMaxProjectedAngle(
+  MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
+      const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
+      Cache& cache) const;
+  static MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
       const Image2DProjectionModel& projection_model);
-  static MinMaxAnglePair getAabbMinMaxProjectedAngle(
+  static MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
       const Image2DProjectionModel& projection_model, Cache& cache);
 
@@ -69,7 +69,7 @@ class RangeImage2DIntersector {
                                              Cache& cache) const;
 
  private:
-  const bool azimuth_wraps_pi_;
+  const bool y_axis_wraps_around_;
   const HierarchicalRangeBounds2D hierarchical_range_image_;
 
   const std::shared_ptr<const Image2DProjectionModel> projection_model_;
