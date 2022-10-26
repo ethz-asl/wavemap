@@ -21,6 +21,8 @@ class Image2DProjectionModel {
   Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
   virtual ImageCoordinates getMinImageCoordinates() const = 0;
   virtual ImageCoordinates getMaxImageCoordinates() const = 0;
+  virtual bool isXAxisWrapping() const = 0;
+  virtual bool isYAxisWrapping() const = 0;
 
   // Coordinate transforms between Cartesian and sensor space
   virtual Vector3D cartesianToSensor(const Point3D& C_point) const = 0;

@@ -186,7 +186,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
       max_image_index.x() < min_image_index.x();
   const bool azimuth_range_wraps_pi = max_image_index.y() < min_image_index.y();
   if (elevation_range_wraps_pi ||
-      (!kAzimuthAllowedToWrapAround && azimuth_range_wraps_pi)) {
+      (!azimuth_wraps_pi_ && azimuth_range_wraps_pi)) {
     const bool elevation_range_fully_outside_fov =
         max_image_index.x() < 0 &&
         projection_model_->getNumRows() < min_image_index.x();
@@ -194,7 +194,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
         max_image_index.y() < 0 &&
         projection_model_->getNumColumns() < min_image_index.y();
     if ((!elevation_range_wraps_pi || elevation_range_fully_outside_fov) &&
-        (kAzimuthAllowedToWrapAround || !azimuth_range_wraps_pi ||
+        (azimuth_wraps_pi_ || !azimuth_range_wraps_pi ||
          azimuth_range_fully_outside_fov)) {
       // No parts of the cell can be affected by the measurement update
       return IntersectionType::kFullyUnknown;

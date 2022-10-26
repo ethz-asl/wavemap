@@ -45,6 +45,8 @@ class SphericalProjector : public Image2DProjectionModel {
   ImageCoordinates getMaxImageCoordinates() const final {
     return {config_.elevation.max_angle, config_.azimuth.max_angle};
   }
+  bool isXAxisWrapping() const final;
+  bool isYAxisWrapping() const final;
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {

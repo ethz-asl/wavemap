@@ -16,13 +16,14 @@
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
 namespace wavemap {
-template <bool azimuth_wraps_pi>
 class HierarchicalRangeBounds2D {
  public:
   explicit HierarchicalRangeBounds2D(
-      std::shared_ptr<const RangeImage2D> range_image, FloatingPoint min_range,
-      bool show_images = false)
-      : range_image_(std::move(range_image)), min_range_(min_range) {
+      std::shared_ptr<const RangeImage2D> range_image, bool azimuth_wraps_pi,
+      FloatingPoint min_range, bool show_images = false)
+      : range_image_(std::move(range_image)),
+        azimuth_wraps_pi_(azimuth_wraps_pi),
+        min_range_(min_range) {
     DCHECK_EQ(lower_bound_levels_.size(), max_height_);
     DCHECK_EQ(upper_bound_levels_.size(), max_height_);
 
@@ -97,6 +98,7 @@ class HierarchicalRangeBounds2D {
 
  private:
   const std::shared_ptr<const RangeImage2D> range_image_;
+  const bool azimuth_wraps_pi_;
 
   // Below min_range, range image values are treated as unknown and set to init
   const FloatingPoint min_range_;

@@ -40,6 +40,8 @@ class PinholeCameraProjector : public Image2DProjectionModel {
   ImageCoordinates getMaxImageCoordinates() const final {
     return {indexToImage({config_.width, config_.height})};
   }
+  bool isXAxisWrapping() const final { return false; }
+  bool isYAxisWrapping() const final { return false; }
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {

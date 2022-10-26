@@ -8,9 +8,7 @@
 #include <wavemap_common/utils/bit_manipulation.h>
 
 namespace wavemap {
-template <bool azimuth_wraps_pi>
-inline Bounds<FloatingPoint>
-HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
+inline Bounds<FloatingPoint> HierarchicalRangeBounds2D::getBounds(
     const QuadtreeIndex& index) const {
   DCHECK_GE(index.height, 0);
   DCHECK_LE(index.height, max_height_);
@@ -24,9 +22,7 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
   }
 }
 
-template <bool azimuth_wraps_pi>
-inline Bounds<FloatingPoint>
-HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
+inline Bounds<FloatingPoint> HierarchicalRangeBounds2D::getBounds(
     const Index2D& bottom_left_image_idx,
     const Index2D& top_right_image_idx) const {
   if (bottom_left_image_idx == top_right_image_idx) {
@@ -36,7 +32,8 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
   }
 
   Index2D top_right_image_idx_unwrapped = top_right_image_idx;
-  if (azimuth_wraps_pi && top_right_image_idx.y() < bottom_left_image_idx.y()) {
+  if (azimuth_wraps_pi_ &&
+      top_right_image_idx.y() < bottom_left_image_idx.y()) {
     top_right_image_idx_unwrapped.y() += range_image_->getNumColumns();
   }
   DCHECK(
@@ -172,9 +169,7 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getBounds(
   }
 }
 
-template <bool azimuth_wraps_pi>
-IntersectionType
-HierarchicalRangeBounds2D<azimuth_wraps_pi>::getIntersectionType(
+inline IntersectionType HierarchicalRangeBounds2D::getIntersectionType(
     const Index2D& bottom_left_image_idx, const Index2D& top_right_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
   const Bounds distance_bounds =
@@ -188,13 +183,11 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::getIntersectionType(
   }
 }
 
-template <bool azimuth_wraps_pi>
 template <typename BinaryFunctor>
-std::vector<RangeImage2D>
-HierarchicalRangeBounds2D<azimuth_wraps_pi>::computeReducedPyramid(
+std::vector<RangeImage2D> HierarchicalRangeBounds2D::computeReducedPyramid(
     const RangeImage2D& range_image, BinaryFunctor reduction_functor,
     FloatingPoint init) {
-  CHECK(!azimuth_wraps_pi || bit_manip::popcount(range_image.getNumColumns()))
+  CHECK(!azimuth_wraps_pi_ || bit_manip::popcount(range_image.getNumColumns()))
       << "For LiDAR range images that wrap around horizontally (FoV of "
          "360deg), only column numbers that are exact powers of 2 are "
          "currently supported.";
@@ -254,7 +247,7 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::computeReducedPyramid(
                 reduction_functor(r01, r11);
             current_level.getRange(idx) =
                 reduction_functor(first_col_reduced, second_col_reduced);
-          } else if (azimuth_wraps_pi &&
+          } else if (azimuth_wraps_pi_ &&
                      max_child_idx.y() <= previous_level_dims.y()) {
             const FloatingPoint r01 =
                 valueOrInit(previous_level.getRange({min_child_idx.x(), 0}),
@@ -277,7 +270,7 @@ HierarchicalRangeBounds2D<azimuth_wraps_pi>::computeReducedPyramid(
           const FloatingPoint first_row_reduced = reduction_functor(r00, r01);
           current_level.getRange(idx) =
               reduction_functor(first_row_reduced, init);
-        } else if (azimuth_wraps_pi &&
+        } else if (azimuth_wraps_pi_ &&
                    max_child_idx.y() <= previous_level_dims.y()) {
           const FloatingPoint r01 = valueOrInit(
               previous_level.getRange({min_child_idx.x(), 0}), init, level_idx);

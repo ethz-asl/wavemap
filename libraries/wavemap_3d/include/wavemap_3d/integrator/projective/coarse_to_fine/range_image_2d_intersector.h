@@ -39,7 +39,9 @@ class RangeImage2DIntersector {
       FloatingPoint angle_threshold,
       FloatingPoint range_threshold_in_front_of_surface,
       FloatingPoint range_threshold_behind_surface)
-      : hierarchical_range_image_(std::move(range_image), min_range),
+      : azimuth_wraps_pi_(projection_model->isYAxisWrapping()),
+        hierarchical_range_image_(std::move(range_image), azimuth_wraps_pi_,
+                                  min_range),
         projection_model_(std::move(projection_model)),
         max_range_(max_range),
         angle_threshold_(angle_threshold),
@@ -67,9 +69,8 @@ class RangeImage2DIntersector {
                                              Cache& cache) const;
 
  private:
-  static constexpr bool kAzimuthAllowedToWrapAround = true;
-  const HierarchicalRangeBounds2D<kAzimuthAllowedToWrapAround>
-      hierarchical_range_image_;
+  const bool azimuth_wraps_pi_;
+  const HierarchicalRangeBounds2D hierarchical_range_image_;
 
   const std::shared_ptr<const Image2DProjectionModel> projection_model_;
 
