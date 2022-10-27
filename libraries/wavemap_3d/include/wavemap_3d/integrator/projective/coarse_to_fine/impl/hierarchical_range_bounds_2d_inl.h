@@ -76,8 +76,8 @@ inline Bounds<FloatingPoint> HierarchicalRangeBounds2D::getBounds(
   const IndexElement parent_height_idx = min_level_up;
 
   // Check if the nodes at min_level_up are direct neighbors
-  if (bottom_left_child_idx + Index2D::Ones() ==
-      top_right_child_idx_unwrapped) {
+  if (((bottom_left_child_idx - top_right_child_idx_unwrapped).array() <= 1)
+          .all()) {
     // Check if they even share the same parent (node at min_level_up + 1)
     if (bottom_left_parent_idx == top_right_parent_idx_unwrapped) {
       // Since they do, checking the nodes at min_level_up is equivalent to
