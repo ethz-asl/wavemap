@@ -109,6 +109,13 @@ class OusterProjector : public Image2DProjectionModel {
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
   }
+  FloatingPoint cartesianToSensorZ(
+      const wavemap::Point3D& C_point) const final {
+    const Point2D B_point{
+        C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
+        C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
+    return B_point.norm();
+  }
 
  private:
   const OusterProjectorConfig config_;

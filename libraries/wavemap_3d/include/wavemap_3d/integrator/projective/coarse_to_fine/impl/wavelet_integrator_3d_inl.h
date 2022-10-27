@@ -70,7 +70,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
   const Point3D C_node_center =
       posed_range_image_->getPoseInverse() * W_node_center;
   const FloatingPoint d_C_cell =
-      projection_model_->cartesianToSensor(C_node_center).z();
+      projection_model_->cartesianToSensorZ(C_node_center);
   const FloatingPoint bounding_sphere_radius =
       kUnitCubeHalfDiagonal * node_width;
   WaveletOctreeInterface::NodeType* node =

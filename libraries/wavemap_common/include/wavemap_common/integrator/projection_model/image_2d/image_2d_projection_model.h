@@ -32,6 +32,7 @@ class Image2DProjectionModel {
 
   // Projection from Cartesian space onto the sensor's image surface
   virtual ImageCoordinates cartesianToImage(const Point3D& C_point) const = 0;
+  virtual FloatingPoint cartesianToSensorZ(const Point3D& C_point) const = 0;
 
   // Conversions between real (unscaled) coordinates on the sensor's image
   // surface and indices corresponding to sensor pixels/rays

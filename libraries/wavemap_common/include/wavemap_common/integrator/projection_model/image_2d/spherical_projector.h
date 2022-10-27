@@ -87,6 +87,10 @@ class SphericalProjector : public Image2DProjectionModel {
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
   }
+  FloatingPoint cartesianToSensorZ(
+      const wavemap::Point3D& C_point) const final {
+    return C_point.norm();
+  }
 
  private:
   const Config config_;

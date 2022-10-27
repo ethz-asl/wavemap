@@ -78,6 +78,10 @@ class PinholeCameraProjector : public Image2DProjectionModel {
   ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
     return cartesianToSensor(C_point).head<2>();
   }
+  FloatingPoint cartesianToSensorZ(
+      const wavemap::Point3D& C_point) const final {
+    return C_point.z();
+  }
 
  private:
   const PinholeCameraProjectorConfig config_;
