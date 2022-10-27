@@ -32,13 +32,13 @@ class PinholeCameraProjector : public Image2DProjectionModel {
       : Image2DProjectionModel(Vector2D::Ones(), Vector2D::Zero()),
         config_(config.checkValid()) {}
 
-  IndexElement getNumRows() const final { return config_.height; }
-  IndexElement getNumColumns() const final { return config_.width; }
+  IndexElement getNumRows() const final { return config_.width; }
+  IndexElement getNumColumns() const final { return config_.height; }
   ImageCoordinates getMinImageCoordinates() const final {
     return indexToImage(Index2D::Zero());
   }
   ImageCoordinates getMaxImageCoordinates() const final {
-    return {indexToImage({config_.width, config_.height})};
+    return {indexToImage({config_.width - 1, config_.height - 1})};
   }
   Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final {
     return {false, false, false};
