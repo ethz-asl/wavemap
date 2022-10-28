@@ -75,31 +75,43 @@ inline Bounds<FloatingPoint> HierarchicalRangeBounds2D::getBounds(
       int_math::div_exp2_floor(top_right_child_idx_unwrapped, 1);
   const IndexElement parent_height_idx = min_level_up;
 
-  // Check if the nodes at min_level_up are direct neighbors
+  // Check if the children (at min_level_up) are direct neighbors
   if (((bottom_left_child_idx - top_right_child_idx_unwrapped).array() <= 1)
           .all()) {
-    // Check if they even share the same parent (node at min_level_up + 1)
-    if (bottom_left_parent_idx == top_right_parent_idx_unwrapped) {
-      // Since they do, checking the nodes at min_level_up is equivalent to
-      // checking their common parent, so we do that instead as its cheaper
+    DCHECK(bottom_left_child_idx != top_right_child_idx_unwrapped);
+    if (bottom_left_child_idx.x() == top_right_child_idx_unwrapped.x() ||
+        bottom_left_child_idx.y() == top_right_child_idx_unwrapped.y()) {
+      // If children are on the same row or column, only need to check 2 cells
+      if (min_level_up == 0) {
+        return {
+            std::min(valueOrInit(range_image_->getRange(bottom_left_image_idx),
+                                 kUnknownRangeImageValueLowerBound),
+                     valueOrInit(range_image_->getRange(top_right_image_idx),
+                                 kUnknownRangeImageValueLowerBound)),
+            std::max(valueOrInit(range_image_->getRange(bottom_left_image_idx),
+                                 kUnknownRangeImageValueUpperBound),
+                     valueOrInit(range_image_->getRange(top_right_image_idx),
+                                 kUnknownRangeImageValueUpperBound))};
+      } else {
+        return {std::min(lower_bound_levels_[child_height_idx].getRange(
+                             bottom_left_child_idx),
+                         lower_bound_levels_[child_height_idx].getRange(
+                             top_right_child_idx)),
+                std::max(upper_bound_levels_[child_height_idx].getRange(
+                             bottom_left_child_idx),
+                         upper_bound_levels_[child_height_idx].getRange(
+                             top_right_child_idx))};
+      }
+    } else if (bottom_left_parent_idx == top_right_parent_idx_unwrapped) {
+      // If the children share the same parent (node at min_level_up + 1),
+      // checking the four children is equivalent to checking their common
+      // parent, so we do that instead as its cheaper
       return {lower_bound_levels_[parent_height_idx].getRange(
                   bottom_left_parent_idx),
               upper_bound_levels_[parent_height_idx].getRange(
                   bottom_left_parent_idx)};
-    } else if (bottom_left_parent_idx.x() ==
-                   top_right_parent_idx_unwrapped.x() ||
-               bottom_left_parent_idx.y() ==
-                   top_right_parent_idx_unwrapped.y()) {
-      return {std::min(lower_bound_levels_[parent_height_idx].getRange(
-                           bottom_left_parent_idx),
-                       lower_bound_levels_[parent_height_idx].getRange(
-                           top_right_parent_idx)),
-              std::max(upper_bound_levels_[parent_height_idx].getRange(
-                           bottom_left_parent_idx),
-                       upper_bound_levels_[parent_height_idx].getRange(
-                           top_right_parent_idx))};
     } else {
-      // Check all four nodes at min_level_up
+      // Check all four children at min_level_up
       if (min_level_up == 0) {
         return {
             std::min(

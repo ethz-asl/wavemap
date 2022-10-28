@@ -115,6 +115,7 @@ class HierarchicalRangeBounds2D {
 
   const NdtreeIndexElement max_height_ =
       static_cast<NdtreeIndexElement>(lower_bound_levels_.size());
+  // TODO(victorr): Make this configurable (or adjust it automatically)
   static constexpr std::tuple<IndexElement, IndexElement> scale_ = {2, 1};
 
   template <typename BinaryFunctor>
