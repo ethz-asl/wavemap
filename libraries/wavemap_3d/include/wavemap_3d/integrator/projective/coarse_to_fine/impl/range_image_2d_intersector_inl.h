@@ -32,6 +32,8 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
   return getAabbMinMaxProjectedAngle(T_W_C, W_aabb, projection_model, cache);
 }
 
+// TODO(victorr): Move and specialize getAabbMinMaxProjectedAngle method for
+// each projector type
 inline RangeImage2DIntersector::MinMaxSensorCoordinates
 RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
@@ -42,11 +44,13 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
   // If the sensor is contained in the AABB, it overlaps with the full range
   if (W_aabb.containsPoint(T_W_C.getPosition())) {
     sensor_coordinate_interval.min_sensor_coordinates.head<2>() =
-        projection_model.getMinImageCoordinates();
+        Vector2D::Constant(std::numeric_limits<FloatingPoint>::lowest());
     sensor_coordinate_interval.max_sensor_coordinates.head<2>() =
-        projection_model.getMaxImageCoordinates();
-    sensor_coordinate_interval.min_sensor_coordinates.z() = 0.f;
-    sensor_coordinate_interval.max_sensor_coordinates.z() = 1e3f;
+        Vector2D::Constant(std::numeric_limits<FloatingPoint>::max());
+    sensor_coordinate_interval.min_sensor_coordinates.z() =
+        std::numeric_limits<FloatingPoint>::lowest();
+    sensor_coordinate_interval.max_sensor_coordinates.z() =
+        std::numeric_limits<FloatingPoint>::max();
     return sensor_coordinate_interval;
   }
 
@@ -65,6 +69,11 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
             projection_model.cartesianToSensor(corner_point)[axis];
       }
     }
+
+    // TODO(victorr): Remove this nasty fix when refactoring
+    sensor_coordinate_interval.min_sensor_coordinates.z() =
+        std::min(sensor_coordinate_interval.min_sensor_coordinates.z(),
+                 W_aabb.minDistanceTo(T_W_C.getPosition()));
     return sensor_coordinate_interval;
   }
 
@@ -130,6 +139,10 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
       }
     }
 
+    // TODO(victorr): Remove this nasty fix when refactoring
+    sensor_coordinate_interval.min_sensor_coordinates.z() =
+        std::min(sensor_coordinate_interval.min_sensor_coordinates.z(),
+                 W_aabb.minDistanceTo(T_W_C.getPosition()));
     return sensor_coordinate_interval;
   }
 
@@ -160,6 +173,10 @@ RangeImage2DIntersector::getAabbMinMaxProjectedAngle(
     }
   }
 
+  // TODO(victorr): Remove this nasty fix when refactoring
+  sensor_coordinate_interval.min_sensor_coordinates.z() =
+      std::min(sensor_coordinate_interval.min_sensor_coordinates.z(),
+               W_aabb.minDistanceTo(T_W_C.getPosition()));
   return sensor_coordinate_interval;
 }
 
@@ -176,6 +193,9 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   // range image
   auto [min_sensor_coordinates, max_sensor_coordinates] =
       getAabbMinMaxProjectedAngle(T_W_C, W_cell_aabb, cache);
+  if (min_sensor_coordinates.z() < 0.f && 0.f < max_sensor_coordinates.z()) {
+    return IntersectionType::kPossiblyOccupied;
+  }
   if (max_range_ < min_sensor_coordinates.z() ||
       max_sensor_coordinates.z() <= 0.f) {
     return IntersectionType::kFullyUnknown;

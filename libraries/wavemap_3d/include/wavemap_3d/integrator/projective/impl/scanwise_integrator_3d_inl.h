@@ -8,11 +8,11 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
       projection_model_->cartesianToSensor(C_cell_center);
 
   // Check if we're outside the min/max range
-  // NOTE: For spherical (e.g. LiDAR) projection models, sensor_coordinates[2]
+  // NOTE: For spherical (e.g. LiDAR) projection models, sensor_coordinates.z()
   //       corresponds to the range, whereas for camera models it corresponds to
   //       the depth.
-  if (sensor_coordinates[2] < config_.min_range ||
-      config_.max_range < sensor_coordinates[2]) {
+  if (sensor_coordinates.z() < config_.min_range ||
+      config_.max_range < sensor_coordinates.z()) {
     return 0.f;
   }
 
@@ -26,7 +26,7 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
   const FloatingPoint measured_distance =
       posed_range_image_->getRange(image_idx);
   if (measured_distance + measurement_model_.getRangeThresholdBehindSurface() <
-      sensor_coordinates[2]) {
+      sensor_coordinates.z()) {
     return 0.f;
   }
 
@@ -44,13 +44,13 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     return 0.f;
   }
 
-  if (sensor_coordinates[2] <
+  if (sensor_coordinates.z() <
       measured_distance -
           measurement_model_.getRangeThresholdInFrontOfSurface()) {
     return measurement_model_.computeFreeSpaceUpdate(
         cell_to_beam_image_error_norm);
   } else {
-    return measurement_model_.computeUpdate(sensor_coordinates[2],
+    return measurement_model_.computeUpdate(sensor_coordinates.z(),
                                             cell_to_beam_image_error_norm,
                                             measured_distance);
   }
