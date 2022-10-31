@@ -147,7 +147,8 @@ class RangeImage2DIntersectorTest : public FixtureBase {
   }
 };
 
-TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
+// TODO(victorr): Update and reenable this test after scheduled refactoring
+TEST_F(RangeImage2DIntersectorTest, DISABLED_AabbMinMaxProjectedAngle) {
   // Generate test set
   std::vector<AABBAndPose> tests = getTestAABBsAndPoses();
   const auto projection_model = getRandomProjectionModel();
@@ -161,9 +162,9 @@ TEST_F(RangeImage2DIntersectorTest, AabbMinMaxProjectedAngle) {
     AngleCornerArray elevation_angles{};
     AngleCornerArray azimuth_angles{};
     if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
-      reference_angle_pair.min_sensor_coordinates =
+      reference_angle_pair.min_sensor_coordinates.head<2>() =
           projection_model->getMinImageCoordinates();
-      reference_angle_pair.max_sensor_coordinates =
+      reference_angle_pair.max_sensor_coordinates.head<2>() =
           projection_model->getMaxImageCoordinates();
     } else {
       for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
