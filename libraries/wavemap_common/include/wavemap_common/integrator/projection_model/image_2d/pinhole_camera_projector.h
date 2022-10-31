@@ -51,10 +51,10 @@ class PinholeCameraProjector : public Image2DProjectionModel {
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {
-    const FloatingPoint w = C_point.z();
-    const FloatingPoint uw = config_.fx * C_point.x() / w + config_.cx;
-    const FloatingPoint vw = config_.fy * C_point.y() / w + config_.cy;
-    return {uw, vw, w};
+    const FloatingPoint w_clamped = std::max(C_point.z(), kEpsilon);
+    const FloatingPoint uw = config_.fx * C_point.x() / w_clamped + config_.cx;
+    const FloatingPoint vw = config_.fy * C_point.y() / w_clamped + config_.cy;
+    return {uw, vw, C_point.z()};
   }
   Point3D sensorToCartesian(const Vector3D& coordinates) const final {
     const FloatingPoint u_scaled = coordinates[0];
@@ -95,7 +95,7 @@ class PinholeCameraProjector : public Image2DProjectionModel {
          ++corner_idx) {
       const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
       const Vector3D corner_sensor_coordinates =
-          cartesianToSensorClamped(C_t_C_corner);
+          cartesianToSensor(C_t_C_corner);
       sensor_coordinate_aabb.includePoint(corner_sensor_coordinates);
     }
 
@@ -109,13 +109,6 @@ class PinholeCameraProjector : public Image2DProjectionModel {
   const FloatingPoint fxfy_inv_ = 1.f / fxfy_;
   const FloatingPoint cxfy_ = config_.cx * config_.fy;
   const FloatingPoint cyfx_ = config_.cy * config_.fx;
-
-  Vector3D cartesianToSensorClamped(const Point3D& C_point) const {
-    const FloatingPoint w_clamped = std::max(C_point.z(), kEpsilon);
-    const FloatingPoint uw = config_.fx * C_point.x() / w_clamped + config_.cx;
-    const FloatingPoint vw = config_.fy * C_point.y() / w_clamped + config_.cy;
-    return {uw, vw, C_point.z()};
-  }
 };
 }  // namespace wavemap
 
