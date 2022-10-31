@@ -23,8 +23,7 @@ inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(
 inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
     const OctreeIndex& node_index, FloatingPoint node_value,
     typename WaveletOctreeInterface::NodeType& parent_node,
-    OctreeIndex::RelativeChild relative_child_index,
-    RangeImage2DIntersector::Cache cache) {
+    OctreeIndex::RelativeChild relative_child_index) {
   constexpr FloatingPoint kNoiseThreshold = 1e-4f;
 
   // If we're at the leaf level, directly update the node
@@ -46,7 +45,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
       convert::nodeIndexToAABB(node_index, min_cell_width_);
   const IntersectionType intersection_type =
       range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb, cache);
+          posed_range_image_->getPose(), W_cell_aabb);
 
   // If we're fully in unknown space,
   // there's no need to evaluate this node or its children
@@ -107,7 +106,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
         child_scale_coefficients[relative_child_idx];
     child_scale_coefficient_updates[relative_child_idx] =
         recursiveSamplerCompressor(child_index, child_value, *node,
-                                   relative_child_idx, cache);
+                                   relative_child_idx);
   }
 
   // Update the current node's wavelet detail coefficients

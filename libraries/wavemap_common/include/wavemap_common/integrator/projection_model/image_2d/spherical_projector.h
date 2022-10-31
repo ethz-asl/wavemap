@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_
 #define WAVEMAP_COMMON_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_
 
+#include <algorithm>
 #include <utility>
 
 #include "wavemap_common/integrator/projection_model/image_1d/circular_projector.h"
@@ -92,8 +93,64 @@ class SphericalProjector : public Image2DProjectionModel {
     return C_point.norm();
   }
 
+  // NOTE: When the AABB is right behind the sensor, the angle range will wrap
+  //       around at +-PI and a min_angle >= max_angle will be returned.
+  AABB<Vector3D> cartesianToSensorAABB(
+      const AABB<wavemap::Point3D>& W_aabb,
+      const wavemap::Transformation3D& T_W_C) const final {
+    AABB<Vector3D> sensor_coordinate_aabb;
+
+    sensor_coordinate_aabb.min.z() = W_aabb.minDistanceTo(T_W_C.getPosition());
+    sensor_coordinate_aabb.max.z() = W_aabb.maxDistanceTo(T_W_C.getPosition());
+
+    const Transformation3D T_C_W = T_W_C.inverse();
+    Eigen::Matrix<FloatingPoint, 2, 8> corner_sensor_coordinates;
+    for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
+         ++corner_idx) {
+      const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
+      corner_sensor_coordinates.col(corner_idx) =
+          cartesianToImageApprox(C_t_C_corner);
+    }
+
+    for (const int axis : {0, 1}) {
+      auto& min_coordinate = sensor_coordinate_aabb.min[axis];
+      auto& max_coordinate = sensor_coordinate_aabb.max[axis];
+
+      min_coordinate = corner_sensor_coordinates.row(axis).minCoeff();
+      max_coordinate = corner_sensor_coordinates.row(axis).maxCoeff();
+
+      const bool angle_interval_wraps_around =
+          sensorAxisCouldBePeriodic()[axis] &&
+          kPi < (max_coordinate - min_coordinate);
+      if (angle_interval_wraps_around) {
+        min_coordinate = AABB<Vector3D>::kInitialMin;
+        max_coordinate = AABB<Vector3D>::kInitialMax;
+        for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
+             ++corner_idx) {
+          const FloatingPoint angle =
+              corner_sensor_coordinates(axis, corner_idx);
+          if (0.f < angle) {
+            min_coordinate = std::min(min_coordinate, angle);
+          } else {
+            max_coordinate = std::max(max_coordinate, angle);
+          }
+        }
+      }
+    }
+
+    return sensor_coordinate_aabb;
+  }
+
  private:
   const Config config_;
+
+  ImageCoordinates cartesianToImageApprox(const Point3D& C_point) const {
+    const FloatingPoint elevation_angle =
+        approximate::atan2()(C_point.z(), C_point.head<2>().norm());
+    const FloatingPoint azimuth_angle =
+        approximate::atan2()(C_point.y(), C_point.x());
+    return {elevation_angle, azimuth_angle};
+  }
 };
 }  // namespace wavemap
 

@@ -17,9 +17,11 @@ struct AABB {
   using ScalarType = typename PointType::Scalar;
   using Corners = Eigen::Matrix<ScalarType, kDim, kNumCorners>;
 
-  PointType min = PointType::Constant(std::numeric_limits<ScalarType>::max());
-  PointType max =
-      PointType::Constant(std::numeric_limits<ScalarType>::lowest());
+  static constexpr auto kInitialMin = std::numeric_limits<ScalarType>::max();
+  static constexpr auto kInitialMax = std::numeric_limits<ScalarType>::lowest();
+
+  PointType min = PointType::Constant(kInitialMin);
+  PointType max = PointType::Constant(kInitialMax);
 
   void includePoint(const PointType& point) {
     min = min.cwiseMin(point);

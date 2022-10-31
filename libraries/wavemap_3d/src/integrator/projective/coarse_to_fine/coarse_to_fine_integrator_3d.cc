@@ -31,13 +31,13 @@ void CoarseToFineIntegrator3D::updateMap() {
       measurement_model_.getRangeThresholdBehindSurface());
 
   // Recursively update all relevant cells
-  std::stack<std::pair<OctreeIndex, RangeImage2DIntersector::Cache>> stack;
+  std::stack<OctreeIndex> stack;
   for (const OctreeIndex& node_index :
        volumetric_octree_->getFirstChildIndices()) {
-    stack.emplace(node_index, RangeImage2DIntersector::Cache{});
+    stack.emplace(node_index);
   }
   while (!stack.empty()) {
-    auto [current_node, cache] = std::move(stack.top());
+    auto current_node = std::move(stack.top());
     stack.pop();
 
     // If we're at the leaf level, directly update the node
@@ -59,7 +59,7 @@ void CoarseToFineIntegrator3D::updateMap() {
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const IntersectionType intersection_type =
         range_image_intersector_->determineIntersectionType(
-            posed_range_image_->getPose(), W_cell_aabb, cache);
+            posed_range_image_->getPose(), W_cell_aabb);
 
     // If we're fully in unknown space,
     // there's no need to evaluate this node or its children
@@ -91,7 +91,7 @@ void CoarseToFineIntegrator3D::updateMap() {
     // Since the approximation error would still be too big, refine
     for (OctreeIndex::RelativeChild relative_child_idx = 0;
          relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
-      stack.emplace(current_node.computeChildIndex(relative_child_idx), cache);
+      stack.emplace(current_node.computeChildIndex(relative_child_idx));
     }
   }
 }

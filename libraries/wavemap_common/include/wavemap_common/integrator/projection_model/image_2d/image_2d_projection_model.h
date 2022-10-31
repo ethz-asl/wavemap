@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "wavemap_common/common.h"
+#include "wavemap_common/data_structure/aabb.h"
 
 namespace wavemap {
 class Image2DProjectionModel {
@@ -81,6 +82,9 @@ class Image2DProjectionModel {
   Index2D cartesianToNearestIndex(const Point3D& C_point) const {
     return imageToNearestIndex(cartesianToImage(C_point));
   }
+
+  virtual AABB<Vector3D> cartesianToSensorAABB(
+      const AABB<Point3D>& W_aabb, const Transformation3D& T_CW) const = 0;
 
  protected:
   const Vector2D index_to_image_scale_factor_;

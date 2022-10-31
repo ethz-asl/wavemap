@@ -16,22 +16,6 @@
 namespace wavemap {
 class RangeImage2DIntersector {
  public:
-  struct MinMaxSensorCoordinates {
-    static constexpr FloatingPoint kInitialMin =
-        std::numeric_limits<FloatingPoint>::max();
-    static constexpr FloatingPoint kInitialMax =
-        std::numeric_limits<FloatingPoint>::lowest();
-
-    Vector3D min_sensor_coordinates = Vector3D::Constant(kInitialMin);
-    Vector3D max_sensor_coordinates = Vector3D::Constant(kInitialMax);
-  };
-
-  struct MinMaxCornerIndices {
-    Eigen::Matrix<NdtreeIndexRelativeChild, 3, 1> min_corner_indices;
-    Eigen::Matrix<NdtreeIndexRelativeChild, 3, 1> max_corner_indices;
-  };
-  using Cache = std::optional<MinMaxCornerIndices>;
-
   RangeImage2DIntersector(
       std::shared_ptr<const RangeImage2D> range_image,
       std::shared_ptr<const Image2DProjectionModel> projection_model,
@@ -43,30 +27,14 @@ class RangeImage2DIntersector {
         hierarchical_range_image_(std::move(range_image), y_axis_wraps_around_,
                                   min_range),
         projection_model_(std::move(projection_model)),
+        min_range_(min_range),
         max_range_(max_range),
         angle_threshold_(angle_threshold),
         range_threshold_in_front_(range_threshold_in_front_of_surface),
         range_threshold_behind_(range_threshold_behind_surface) {}
 
-  // NOTE: When the AABB is right behind the sensor, the angle range will wrap
-  //       around at +-PI and a min_angle >= max_angle will be returned.
-  MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
-      const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb) const;
-  MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
-      const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-      Cache& cache) const;
-  static MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
-      const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-      const Image2DProjectionModel& projection_model);
-  static MinMaxSensorCoordinates getAabbMinMaxProjectedAngle(
-      const Transformation3D& T_W_C, const AABB<Point3D>& W_aabb,
-      const Image2DProjectionModel& projection_model, Cache& cache);
-
   IntersectionType determineIntersectionType(
       const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb) const;
-  IntersectionType determineIntersectionType(const Transformation3D& T_W_C,
-                                             const AABB<Point3D>& W_cell_aabb,
-                                             Cache& cache) const;
 
  private:
   const bool y_axis_wraps_around_;
@@ -74,6 +42,7 @@ class RangeImage2DIntersector {
 
   const std::shared_ptr<const Image2DProjectionModel> projection_model_;
 
+  const FloatingPoint min_range_;
   const FloatingPoint max_range_;
   const FloatingPoint angle_threshold_;
   const FloatingPoint range_threshold_in_front_;
