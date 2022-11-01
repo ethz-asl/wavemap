@@ -15,30 +15,19 @@
   <arg name="record_rosbag" default="false"/>
 
   <!-- Dataset params -->
-  <arg name="pointcloud_topic"
-       default="/os_cloud_node/points"/>
   <arg name="only_first_rosbag"
        default="false"
        doc="If true, replay only the first the rosbag in the dataset. If false, replay everything."/>
-  <node pkg="tf" type="static_transform_publisher"
-        name="static_tf_cam_left_os1_lidar"
-        args="1e-3 0 90.683e-3 0 0 0 1 base os_sensor 100"/>
-  <node pkg="wavemap_3d_ros" type="csv_to_tf.py" name="csv_to_tf_pub"
-        output="screen">
-    <param name="ground_truth_pose_file_path"
-           value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/gt-nc-cloister.csv"/>
-    <param name="sensor_frame"
-           value="base"/>
-  </node>
 
 
   <!-- Select the rosbag paths -->
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
   <arg if="$(arg only_first_rosbag)" name="rosbag_path"
-       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/2021-12-02-10-15-59_0-cloister.bag"/>
+       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/nc-cloister-undistorted_0.bag"/>
   <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/2021-12-02-10-15-59_0-cloister.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/2021-12-02-10-19-05_1-cloister.bag"/>
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/nc-cloister-undistorted_0.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/nc-cloister-undistorted_1.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/nc-cloister-undistorted_2.bag"/>
 
   <!-- Process the rosbag with wavemap -->
   <group if="$(arg use_batch_mode)">

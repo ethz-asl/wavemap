@@ -15,7 +15,7 @@ map:
 integrators:
   - input:
       type: "pointcloud"
-      topic_name: "/os_cloud_node/points"
+      topic_name: "/os_cloud_node/points_corrected"
       topic_queue_length: 10
       max_wait_for_pose: { seconds: 1.0 }
     integration_method:
