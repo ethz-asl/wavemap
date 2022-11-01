@@ -15,35 +15,29 @@
   <arg name="record_rosbag" default="false"/>
 
   <!-- Dataset params -->
-  <arg name="pointcloud_topic"
-       default="/os_cloud_node/points"/>
   <arg name="only_first_rosbag"
        default="false"
        doc="If true, replay only the first the rosbag in the dataset. If false, replay everything."/>
-  <node pkg="tf" type="static_transform_publisher"
-        name="static_tf_cam_left_os1_lidar"
-        args="1e-3 0 90.683e-3 0 0 0 1 base os_sensor 100"/>
-  <node pkg="wavemap_3d_ros" type="csv_to_tf.py" name="csv_to_tf_pub"
-        output="screen">
-    <param name="ground_truth_pose_file_path"
-           value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/gt-nc-park.csv"/>
-    <param name="sensor_frame"
-           value="base"/>
-  </node>
 
   <!-- Select the rosbag paths -->
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
   <arg if="$(arg only_first_rosbag)" name="rosbag_path"
-       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-09-49_0-park.bag"/>
+       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_0.bag"/>
   <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-09-49_0-park.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-13-13_1-park.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-16-38_2-park.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-20-07_3-park.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-23-25_4-park.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-26-36_5-park.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-30-06_6-park.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-33-19_7-park.bag"/>
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_0.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_1.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_2.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_3.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_4.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_5.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_6.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_7.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_8.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_9.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_10.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_11.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_12.bag
+../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_13.bag"/>
 
   <!-- Process the rosbag with wavemap -->
   <group if="$(arg use_batch_mode)">

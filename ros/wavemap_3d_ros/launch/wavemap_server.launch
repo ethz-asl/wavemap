@@ -11,9 +11,6 @@
        doc="Automatically launch Rviz."/>
 
   <!-- Dataset params -->
-  <arg name="pointcloud_topic"
-       default="pointcloud_in"
-       doc="ROS topic for pointcloud input"/>
   <arg name="rosbag_path"
        default=""
        doc="Replay the rosbag at the specified path. Can be left blank."/>
@@ -40,7 +37,6 @@
           output="screen" args="-alsologtostderr"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
-      <param name="pointcloud_topic_name" value="$(arg pointcloud_topic)"/>
     </node>
   </group>
 
