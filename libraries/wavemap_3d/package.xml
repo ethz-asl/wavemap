@@ -12,7 +12,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>opencv3_catkin</depend>
+  <depend>cv_bridge</depend>
   <depend>wavemap_common</depend>
 
   <test_depend>gtest</test_depend>
