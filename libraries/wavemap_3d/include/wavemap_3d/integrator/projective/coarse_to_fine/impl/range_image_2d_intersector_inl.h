@@ -11,15 +11,16 @@
 
 namespace wavemap {
 inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
-    const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb) const {
-  if (W_cell_aabb.containsPoint(T_W_C.getPosition())) {
+    const AABB<Point3D>& W_cell_aabb,
+    const Transformation3D::RotationMatrix& R_C_W, const Point3D& t_W_C) const {
+  if (W_cell_aabb.containsPoint(t_W_C)) {
     return IntersectionType::kPossiblyOccupied;
   }
 
   // Get the min and max angles for any point in the cell projected into the
   // range image
   auto [min_sensor_coordinates, max_sensor_coordinates] =
-      projection_model_->cartesianToSensorAABB(W_cell_aabb, T_W_C);
+      projection_model_->cartesianToSensorAABB(W_cell_aabb, R_C_W, t_W_C);
   if (max_range_ < min_sensor_coordinates.z() ||
       max_sensor_coordinates.z() < min_range_) {
     return IntersectionType::kFullyUnknown;

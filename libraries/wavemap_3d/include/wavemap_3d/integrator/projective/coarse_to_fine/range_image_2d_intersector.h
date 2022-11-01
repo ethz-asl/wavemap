@@ -34,7 +34,9 @@ class RangeImage2DIntersector {
         range_threshold_behind_(range_threshold_behind_surface) {}
 
   IntersectionType determineIntersectionType(
-      const Transformation3D& T_W_C, const AABB<Point3D>& W_cell_aabb) const;
+      const AABB<Point3D>& W_cell_aabb,
+      const Transformation3D::RotationMatrix& R_C_W,
+      const Point3D& t_W_C) const;
 
  private:
   const bool y_axis_wraps_around_;

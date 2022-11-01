@@ -291,7 +291,7 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
 
       const auto returned_angle_pair =
           projector.cartesianToSensorAABB(test.W_aabb, test.T_W_C);
-      constexpr FloatingPoint kAcceptableNoise = 2.f * kEpsilon;
+      constexpr FloatingPoint kAcceptableNoise = 1e-5f;
       constexpr FloatingPoint kAcceptablePadding = 0.0261799f;
 
       bool check_failed = false;

@@ -87,18 +87,42 @@ class PinholeCameraProjector : public Image2DProjectionModel {
 
   AABB<Vector3D> cartesianToSensorAABB(
       const AABB<wavemap::Point3D>& W_aabb,
-      const wavemap::Transformation3D& T_W_C) const final {
-    AABB<Vector3D> sensor_coordinate_aabb;
+      const Transformation3D::RotationMatrix& R_C_W,
+      const Point3D& t_W_C) const final {
+    const Point3D C_aabb_min = R_C_W * (W_aabb.min - t_W_C);
+    const Transformation3D::RotationMatrix C_aabb_edges =
+        R_C_W * (W_aabb.max - W_aabb.min).asDiagonal();
 
-    const Transformation3D T_C_W = T_W_C.inverse();
+    std::array<Point3D, AABB<Point3D>::kNumCorners> C_aabb_corners;
     for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
          ++corner_idx) {
-      const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
-      const Vector3D corner_sensor_coordinates =
-          cartesianToSensor(C_t_C_corner);
-      sensor_coordinate_aabb.includePoint(corner_sensor_coordinates);
+      C_aabb_corners[corner_idx] = C_aabb_min;
+      for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+        if ((corner_idx >> dim_idx) & 1) {
+          C_aabb_corners[corner_idx] += C_aabb_edges.col(dim_idx);
+        }
+      }
     }
 
+    std::array<Vector3D, AABB<Point3D>::kNumCorners> corner_sensor_coordinates;
+    for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
+         ++corner_idx) {
+      corner_sensor_coordinates[corner_idx] =
+          cartesianToSensor(C_aabb_corners[corner_idx]);
+    }
+
+    AABB<Vector3D> sensor_coordinate_aabb;
+    for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+      for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
+           ++corner_idx) {
+        sensor_coordinate_aabb.min[dim_idx] =
+            std::min(sensor_coordinate_aabb.min[dim_idx],
+                     corner_sensor_coordinates[corner_idx][dim_idx]);
+        sensor_coordinate_aabb.max[dim_idx] =
+            std::max(sensor_coordinate_aabb.max[dim_idx],
+                     corner_sensor_coordinates[corner_idx][dim_idx]);
+      }
+    }
     return sensor_coordinate_aabb;
   }
 

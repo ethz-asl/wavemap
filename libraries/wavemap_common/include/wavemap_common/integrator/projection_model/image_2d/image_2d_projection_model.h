@@ -84,7 +84,9 @@ class Image2DProjectionModel {
   }
 
   virtual AABB<Vector3D> cartesianToSensorAABB(
-      const AABB<Point3D>& W_aabb, const Transformation3D& T_CW) const = 0;
+      const AABB<Point3D>& W_aabb,
+      const Transformation3D::RotationMatrix& R_C_W,
+      const Point3D& t_W_C) const = 0;
 
  protected:
   const Vector2D index_to_image_scale_factor_;
