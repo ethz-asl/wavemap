@@ -11,8 +11,8 @@
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d.h>
 #include <wavemap_msgs/Map.h>
 
-#include "wavemap_rviz_plugin/multi_resolution_grid_visual.h"
-#include "wavemap_rviz_plugin/multi_resolution_slice_visual.h"
+#include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
+#include "wavemap_rviz_plugin/visuals/multi_resolution_slice_visual.h"
 #endif
 
 namespace wavemap::rviz_plugin {

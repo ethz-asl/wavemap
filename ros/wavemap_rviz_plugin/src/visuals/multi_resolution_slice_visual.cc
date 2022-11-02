@@ -1,4 +1,4 @@
-#include "wavemap_rviz_plugin/multi_resolution_slice_visual.h"
+#include "wavemap_rviz_plugin/visuals/multi_resolution_slice_visual.h"
 
 #include <wavemap_common/indexing/index_conversions.h>
 
@@ -17,10 +17,6 @@ MultiResolutionSliceVisual::MultiResolutionSliceVisual(
 }
 
 MultiResolutionSliceVisual::~MultiResolutionSliceVisual() {
-  // Remove the grids from the scene
-  // NOTE: Since this deregisters the elements from the scene, it must be done
-  //       before the scene itself is destroyed.
-  grid_levels_.clear();
   // Destroy the frame node
   scene_manager_->destroySceneNode(frame_node_);
 }
@@ -33,9 +29,6 @@ void MultiResolutionSliceVisual::loadMap(const VolumetricDataStructure3D& map,
   // Constants
   const FloatingPoint min_cell_width = map.getMinCellWidth();
   const int max_height = 14;
-
-  // Delete the previous visuals
-  grid_levels_.clear();
 
   // Cache the intersecting node z-indices in function of node height
   const NdtreeIndexElement num_levels = max_height + 1;
@@ -85,20 +78,26 @@ void MultiResolutionSliceVisual::loadMap(const VolumetricDataStructure3D& map,
   });
 
   // Add a grid layer for each scale level
-  for (NdtreeIndexElement height = 0; height <= max_height; ++height) {
-    const FloatingPoint cell_width =
-        convert::heightToCellWidth(min_cell_width, height);
-    auto& grid_level = grid_levels_.emplace_back();
-    grid_level.setName(std::to_string(height));
-    grid_level.setRenderMode(rviz::PointCloud::RM_BOXES);
-    grid_level.setDimensions(cell_width, cell_width, 0.0);
+  for (int height = 0; height <= max_height; ++height) {
+    // Allocate the pointcloud representing this grid level if needed
+    if (static_cast<int>(grid_levels_.size()) <= height) {
+      const Ogre::String name = "multi_res_slice_" + std::to_string(height);
+      const FloatingPoint cell_width =
+          convert::heightToCellWidth(min_cell_width, height);
+      auto& grid_level =
+          grid_levels_.emplace_back(std::make_unique<rviz::PointCloud>());
+      grid_level->setName(name);
+      grid_level->setRenderMode(rviz::PointCloud::RM_BOXES);
+      grid_level->setDimensions(cell_width, cell_width, 0.0);
+      grid_level->setAlpha(alpha, false);
+      frame_node_->attachObject(grid_level.get());
+    }
+    // Update the points
+    auto& grid_level = grid_levels_[height];
+    grid_level->clear();
     auto& cells_at_level = cells_per_level[height];
-    grid_level.addPoints(&cells_at_level.front(), cells_at_level.size());
-    grid_level.setAlpha(alpha, false);
-    frame_node_->attachObject(&grid_level);
+    grid_level->addPoints(&cells_at_level.front(), cells_at_level.size());
   }
-
-  frame_node_->setVisible(true);
 }
 
 // Position and orientation are passed through to the SceneNode

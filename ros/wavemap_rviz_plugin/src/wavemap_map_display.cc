@@ -10,7 +10,7 @@
 #include <wavemap_common/data_structure/volumetric/cell_types/scalar_cell.h>
 #include <wavemap_common/indexing/ndtree_index.h>
 
-#include "wavemap_rviz_plugin/multi_resolution_grid_visual.h"
+#include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
 
 namespace wavemap::rviz_plugin {
 // The constructor must have no arguments, so we can't give the
@@ -195,6 +195,7 @@ std::unique_ptr<VolumetricDataStructure3D> WavemapMapDisplay::mapFromRosMsg(
     for (const auto& node_msg : wavelet_octree_msg.nodes) {
       CHECK(!stack.empty());
       WaveletOctreeType::NodeType* current_node = stack.top();
+      CHECK_NOTNULL(current_node);
       stack.pop();
 
       std::copy(node_msg.detail_coefficients.cbegin(),
@@ -221,6 +222,7 @@ std::unique_ptr<VolumetricDataStructure3D> WavemapMapDisplay::mapFromRosMsg(
     for (const auto& node_msg : octree_msg.nodes) {
       CHECK(!stack.empty());
       OctreeType::NodeType* current_node = stack.top();
+      CHECK_NOTNULL(current_node);
       stack.pop();
 
       current_node->data() = node_msg.node_value;
