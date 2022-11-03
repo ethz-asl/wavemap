@@ -15,6 +15,8 @@ MeshVisual::MeshVisual(Ogre::SceneManager* scene_manager,
 
 MeshVisual::~MeshVisual() {
   // Destroy the frame node
+  frame_node_->detachObject(mesh_object_);
+  scene_manager_->destroyManualObject(mesh_object_);
   scene_manager_->destroySceneNode(frame_node_);
 }
 
@@ -49,7 +51,6 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
     }
 
     // Get the neighboring cell values
-    zero_crossings.clear();
     std::array<FloatingPoint, 8> neighbor_values{};
     OctreeIndex neighbor_node_index = cell_index;
     for (auto dx : {0, 1}) {
@@ -67,8 +68,14 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
         }
       }
     }
+    const auto [min_value, max_value] =
+        std::minmax_element(neighbor_values.begin(), neighbor_values.end());
+    if (min_threshold < *min_value || *max_value < max_threshold) {
+      return;
+    }
 
     // Determine the cell's position
+    zero_crossings.clear();
     CHECK_GE(cell_index.height, 0);
     CHECK_LE(cell_index.height, max_height);
     const Point3D cell_center =
@@ -124,14 +131,16 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
     }
 
     CHECK_LE(zero_crossings.size(), 12);
+    if (zero_crossings.empty()) {
+      return;
+    }
     // TODO(victorr): Actually solve the QEF and add the resulting point
     mesh_object_->position(cell_center.x(), cell_center.y(), cell_center.z());
-    //    mesh_object_->normal(Ogre::Vector3::UNIT_X);
     Ogre::ColourValue color;
     const FloatingPoint cell_prob = log_odds_to_prob(cell_log_odds);
-    color.r = cell_value;
-    color.g = cell_value;
-    color.b = cell_value;
+    color.r = cell_prob;
+    color.g = cell_prob;
+    color.b = cell_prob;
     color.a = 1.f;
     mesh_object_->colour(color);
     vertex_map[cell_index.position] = vertex_map.size();
@@ -176,7 +185,7 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
               vertex_map.at({pos_idx.x(), pos_idx.y(), pos_idx.z() - 1}),
               vertex_map.at({pos_idx.x(), pos_idx.y(), pos_idx.z()}),
               vertex_map.at({pos_idx.x() - 1, pos_idx.y(), pos_idx.z()})};
-          if (max_threshold < b) {
+          if (min_threshold < a) {
             std::reverse(quad_sides.begin(), quad_sides.end());
           }
           mesh_object_->quad(quad_sides[0], quad_sides[1], quad_sides[2],
