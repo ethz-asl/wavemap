@@ -49,6 +49,7 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 # Libraries
 add_library(${PROJECT_NAME}
+    src/visuals/mesh_visual.cc
     src/visuals/multi_resolution_grid_visual.cc
     src/visuals/multi_resolution_slice_visual.cc
     src/wavemap_map_display.cc

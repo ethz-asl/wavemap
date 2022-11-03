@@ -33,6 +33,9 @@ WavemapMapDisplay::WavemapMapDisplay() {
           "Show multi-res slice", false,
           "Whether to show the octree as a multi-resolution grid.", this,
           SLOT(updateMultiResolutionSliceVisibility()));
+  mesh_visibility_property_ = std::make_unique<rviz::BoolProperty>(
+      "Show mesh", false, "Whether to show the isosurface as a mesh.", this,
+      SLOT(updateMeshVisibility()));
 
   multi_resolution_slice_height_property_ =
       std::make_unique<rviz::FloatProperty>(
@@ -56,6 +59,7 @@ void WavemapMapDisplay::reset() {
   MFDClass::reset();
   multi_resolution_grid_visual_.reset();
   multi_resolution_slice_visual_.reset();
+  mesh_visual_.reset();
 }
 
 // Update the visuals with the current occupancy thresholds
@@ -70,14 +74,20 @@ void WavemapMapDisplay::updateOccupancyThresholdsOrOpacity() {
   const FloatingPoint alpha = opacity_property_->getFloat();
 
   // Update the visuals (if they are enabled)
-  if (map_ && multi_resolution_grid_visual_) {
-    multi_resolution_grid_visual_->loadMap(*map_, min_occupancy_threshold,
-                                           max_occupancy_threshold, alpha);
-  }
-  if (map_ && multi_resolution_slice_visual_) {
-    multi_resolution_slice_visual_->loadMap(*map_, min_occupancy_threshold,
-                                            max_occupancy_threshold,
-                                            slice_height, alpha);
+  if (map_) {
+    if (multi_resolution_grid_visual_) {
+      multi_resolution_grid_visual_->loadMap(*map_, min_occupancy_threshold,
+                                             max_occupancy_threshold, alpha);
+    }
+    if (multi_resolution_slice_visual_) {
+      multi_resolution_slice_visual_->loadMap(*map_, min_occupancy_threshold,
+                                              max_occupancy_threshold,
+                                              slice_height, alpha);
+    }
+    if (mesh_visual_) {
+      mesh_visual_->loadMap(*map_, min_occupancy_threshold,
+                            max_occupancy_threshold, alpha);
+    }
   }
 }
 
@@ -109,6 +119,20 @@ void WavemapMapDisplay::updateMultiResolutionSliceVisibility() {
   } else {
     // Delete the grid visual
     multi_resolution_slice_visual_.reset();
+  }
+}
+
+void WavemapMapDisplay::updateMeshVisibility() {
+  const bool enable = mesh_visibility_property_->getBool();
+  if (enable) {
+    // Create the mesh visual if it does not yet exist
+    if (!mesh_visual_) {
+      mesh_visual_ = std::make_unique<MeshVisual>(context_->getSceneManager(),
+                                                  scene_node_);
+    }
+  } else {
+    // Delete the mesh visual
+    mesh_visual_.reset();
   }
 }
 
@@ -176,6 +200,12 @@ void WavemapMapDisplay::processMessage(
     multi_resolution_slice_visual_->loadMap(*map_, min_occupancy_threshold,
                                             max_occupancy_threshold,
                                             slice_height, alpha);
+  }
+  if (mesh_visual_) {
+    mesh_visual_->setFramePosition(position);
+    mesh_visual_->setFrameOrientation(orientation);
+    mesh_visual_->loadMap(*map_, min_occupancy_threshold,
+                          max_occupancy_threshold, alpha);
   }
 }
 
