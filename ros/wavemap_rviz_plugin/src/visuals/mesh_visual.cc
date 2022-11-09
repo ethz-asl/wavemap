@@ -1,7 +1,12 @@
 #include "wavemap_rviz_plugin/visuals/mesh_visual.h"
 
+#include <unordered_map>
+
 #include <wavemap_common/indexing/index_conversions.h>
 #include <wavemap_common/indexing/index_hashes.h>
+#include <wavemap_common/iterator/grid_iterator.h>
+
+#include "wavemap_rviz_plugin/marching_cubes.h"
 
 namespace wavemap::rviz_plugin {
 MeshVisual::MeshVisual(Ogre::SceneManager* scene_manager,
@@ -26,196 +31,146 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
                          FloatingPoint alpha) {
   // Constants
   const FloatingPoint min_cell_width = map.getMinCellWidth();
-  const int max_height = 14;
-  const FloatingPoint min_threshold = min_occupancy_log_odds;
-  const FloatingPoint max_threshold = max_occupancy_log_odds;
+  const FloatingPoint min_value_threshold =
+      logOddsToValue(min_occupancy_log_odds);
+  const FloatingPoint max_value_threshold =
+      logOddsToValue(max_occupancy_log_odds);
 
-  // Clear the previous mesh before building the new one
+  // Collect all the voxels that contain surface crossings
+  std::unordered_map<Index3D, std::array<FloatingPoint, 8>, VoxbloxIndexHash<3>>
+      surface_voxels;
+  map.forEachLeaf([=, &map, &surface_voxels](const OctreeIndex& node_index,
+                                             FloatingPoint cell_log_odds) {
+    if (cell_log_odds < max_occupancy_log_odds) {
+      return;
+    }
+
+    for (const Index3D& cell_index :
+         Grid<3>(convert::nodeIndexToMinCornerIndex(node_index),
+                 convert::nodeIndexToMaxCornerIndex(node_index))) {
+      // Get the neighboring cell values
+      std::array<FloatingPoint, 27> neighbor_values{};
+      for (LinearIndex neighbor_offset = 0; neighbor_offset < 27;
+           ++neighbor_offset) {
+        const Index3D neighbor_index =
+            cell_index + convert::linearIndexToIndex<3, 3>(neighbor_offset) -
+            Index3D::Ones();
+        const FloatingPoint neighbor_log_odds =
+            map.getCellValue(neighbor_index);
+        neighbor_values[neighbor_offset] = logOddsToValue(neighbor_log_odds);
+      }
+
+      std::array<FloatingPoint, 8> voxel_corner_values{};
+      for (LinearIndex min_corner_offset = 0; min_corner_offset < 8;
+           ++min_corner_offset) {
+        for (LinearIndex corner_idx = 0; corner_idx < 8; ++corner_idx) {
+          const Index3D corner_offset =
+              MarchingCubes::kCornerOffsets[corner_idx];
+          const LinearIndex voxel_offset = convert::indexToLinearIndex<3, 3>(
+              convert::linearIndexToIndex<2, 3>(min_corner_offset) +
+              corner_offset);
+          voxel_corner_values[corner_idx] = neighbor_values[voxel_offset];
+        }
+        const auto [min_value, max_value] = std::minmax_element(
+            voxel_corner_values.begin(), voxel_corner_values.end());
+        if (*min_value < min_value_threshold &&
+            max_value_threshold < *max_value) {
+          const Index3D voxel_min_corner =
+              cell_index +
+              convert::linearIndexToIndex<2, 3>(min_corner_offset) -
+              Index3D::Ones();
+          surface_voxels[voxel_min_corner] = voxel_corner_values;
+        }
+      }
+    }
+  });
+
+  // Convert the surface voxels to triangles using Marching Cubes
+  std::vector<Point3D> vertices;
+  for (const auto& voxel : surface_voxels) {
+    const Point3D min_corner =
+        convert::indexToMinCorner(voxel.first, min_cell_width);
+    Eigen::Matrix<FloatingPoint, 3, 8> corner_positions;
+    for (int corner_idx = 0; corner_idx < 8; ++corner_idx) {
+      const Vector3D corner_offset =
+          min_cell_width *
+          MarchingCubes::kCornerOffsets[corner_idx].cast<FloatingPoint>();
+      corner_positions.col(corner_idx) = min_corner + corner_offset;
+    }
+    MarchingCubes::meshCube(corner_positions, voxel.second, vertices);
+  }
+
+  // Weld near-identical vertices
+  std::vector<LinearIndex> indices(vertices.size());
+  {
+    constexpr FloatingPoint kTolerance = 1e-5f;
+    for (auto& vertex : vertices) {
+      vertex = (vertex / kTolerance).array().round() * kTolerance;
+    }
+    const auto vertices_original = vertices;
+    std::sort(vertices.begin(), vertices.end(), lessThan);
+    vertices.erase(std::unique(vertices.begin(), vertices.end()),
+                   vertices.end());
+    for (const Point3D& vertex_original : vertices_original) {
+      const auto lower_bound = std::lower_bound(
+          vertices.begin(), vertices.end(), vertex_original, lessThan);
+      const LinearIndex index = std::distance(vertices.begin(), lower_bound);
+      CHECK_GE(index, 0);
+      CHECK_LT(index, vertices.size());
+      indices.emplace_back(index);
+    }
+  }
+
+  // Compute normals
+  CHECK(indices.size() % 3 == 0);
+  std::vector<Vector3D> normals(vertices.size(), Vector3D::Zero());
+  const size_t num_triangles = indices.size() / 3;
+  {
+    for (LinearIndex triangle_idx = 0; triangle_idx < num_triangles;
+         ++triangle_idx) {
+      const LinearIndex index_0 = indices[3 * triangle_idx];
+      const LinearIndex index_1 = indices[3 * triangle_idx + 1];
+      const LinearIndex index_2 = indices[3 * triangle_idx + 2];
+      const Point3D vertex_0 = vertices[index_0];
+      const Point3D vertex_1 = vertices[index_1];
+      const Point3D vertex_2 = vertices[index_2];
+      const Vector3D tx = (vertex_1 - vertex_0);
+      const Vector3D ty = (vertex_2 - vertex_0);
+      const Vector3D normal = tx.cross(ty).normalized();
+      normals[index_0] += normal;
+      normals[index_1] += normal;
+      normals[index_2] += normal;
+    }
+    for (auto& normal : normals) {
+      normal.normalize();
+    }
+  }
+
+  // Clear the previous mesh and repopulate it with the new triangles
   // TODO(victorr): Switch to using beginUpdate() to update the mesh
   mesh_object_->clear();
   mesh_object_->begin("BaseWhiteNoLighting",
                       Ogre::RenderOperation::OT_TRIANGLE_LIST);
+  CHECK_EQ(vertices.size(), normals.size());
+  for (LinearIndex index = 0u; index < vertices.size(); ++index) {
+    const Point3D vertex = vertices[index];
+    mesh_object_->position(vertex.x(), vertex.y(), vertex.z());
 
-  auto log_odds_to_prob = [](FloatingPoint log_odds) {
-    const FloatingPoint odds = std::exp(log_odds);
-    return odds / (1.f + odds);
-  };
-  std::unordered_map<Index3D, Ogre::uint32, VoxbloxIndexHash<3>> vertex_map;
-  std::vector<Vector3D> zero_crossings;
-  zero_crossings.reserve(12);
-  map.forEachLeaf([=, &map, &vertex_map, &zero_crossings](
-                      const OctreeIndex& cell_index,
-                      FloatingPoint cell_log_odds) {
-    if (cell_index.height != 0) {
-      return;
-    }
+    const Vector3D normal = normals[index];
+    mesh_object_->normal(normal.x(), normal.y(), normal.z());
 
-    // Get the neighboring cell values
-    std::array<FloatingPoint, 8> neighbor_values{};
-    OctreeIndex neighbor_node_index = cell_index;
-    for (auto dx : {0, 1}) {
-      neighbor_node_index.position.x() = cell_index.position.x() + dx;
-      for (auto dy : {0, 1}) {
-        neighbor_node_index.position.y() = cell_index.position.y() + dy;
-        for (auto dz : {0, 1}) {
-          neighbor_node_index.position.z() = cell_index.position.z() + dz;
-          const Index3D neighbor_index =
-              convert::nodeIndexToMinCornerIndex(neighbor_node_index);
-          const FloatingPoint neighbor_log_odds =
-              map.getCellValue(neighbor_index);
-          neighbor_values[convert::indexToLinearIndex<2, 3>({dx, dy, dz})] =
-              log_odds_to_prob(neighbor_log_odds) - 0.5f;
-        }
-      }
-    }
-    const auto [min_value, max_value] =
-        std::minmax_element(neighbor_values.begin(), neighbor_values.end());
-    if (min_threshold < *min_value || *max_value < max_threshold) {
-      return;
-    }
-
-    // Determine the cell's position
-    zero_crossings.clear();
-    CHECK_GE(cell_index.height, 0);
-    CHECK_LE(cell_index.height, max_height);
-    const Point3D cell_center =
-        convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
-    const FloatingPoint cell_width =
-        convert::heightToCellWidth(min_cell_width, cell_index.height);
-
-    // For each edge, identify where there is a sign change.
-    auto interp = [](FloatingPoint a, FloatingPoint b) { return -a / (b - a); };
-    for (auto dx : {0, 1}) {
-      for (auto dy : {0, 1}) {
-        const auto a =
-            neighbor_values[convert::indexToLinearIndex<2, 3>({dx, dy, 0})];
-        const auto b =
-            neighbor_values[convert::indexToLinearIndex<2, 3>({dx, dy, 1})];
-        if (std::min(a, b) < min_threshold && max_threshold < std::max(a, b)) {
-          zero_crossings.emplace_back(
-              Vector3D{cell_center.x() + (dx ? cell_width : 0.f),
-                       cell_center.y() + (dy ? cell_width : 0.f),
-                       cell_center.z() + interp(a, b)});
-        }
-      }
-    }
-
-    for (auto dx : {0, 1}) {
-      for (auto dz : {0, 1}) {
-        const auto a =
-            neighbor_values[convert::indexToLinearIndex<2, 3>({dx, 0, dz})];
-        const auto b =
-            neighbor_values[convert::indexToLinearIndex<2, 3>({dx, 1, dz})];
-        if (std::min(a, b) < min_threshold && max_threshold < std::max(a, b)) {
-          zero_crossings.emplace_back(
-              Vector3D{cell_center.x() + (dx ? cell_width : 0.f),
-                       cell_center.y() + interp(a, b),
-                       cell_center.z() + (dz ? cell_width : 0.f)});
-        }
-      }
-    }
-
-    for (auto dy : {0, 1}) {
-      for (auto dz : {0, 1}) {
-        const auto a =
-            neighbor_values[convert::indexToLinearIndex<2, 3>({0, dy, dz})];
-        const auto b =
-            neighbor_values[convert::indexToLinearIndex<2, 3>({1, dy, dz})];
-        if (std::min(a, b) < min_threshold && max_threshold < std::max(a, b)) {
-          zero_crossings.emplace_back(
-              Vector3D{cell_center.x() + interp(a, b),
-                       cell_center.y() + (dy ? cell_width : 0.f),
-                       cell_center.z() + (dz ? cell_width : 0.f)});
-        }
-      }
-    }
-
-    CHECK_LE(zero_crossings.size(), 12);
-    if (zero_crossings.empty()) {
-      return;
-    }
-    // TODO(victorr): Actually solve the QEF and add the resulting point
-    mesh_object_->position(cell_center.x(), cell_center.y(), cell_center.z());
     Ogre::ColourValue color;
-    const FloatingPoint cell_prob = log_odds_to_prob(cell_log_odds);
-    color.r = cell_prob;
-    color.g = cell_prob;
-    color.b = cell_prob;
-    color.a = 1.f;
+    color.r = 0.5f * normal.x() + 0.5f;
+    color.g = 0.5f * normal.y() + 0.5f;
+    color.b = 0.5f * normal.z() + 0.5f;
+    color.a = alpha;
     mesh_object_->colour(color);
-    vertex_map[cell_index.position] = vertex_map.size();
-  });
-
-  map.forEachLeaf([=, &map, &vertex_map](const OctreeIndex& cell_index,
-                                         FloatingPoint /*cell_log_odds*/) {
-    if (cell_index.height != 0) {
-      return;
-    }
-
-    const Index3D& pos_idx = cell_index.position;
-    {
-      const auto a = map.getCellValue({pos_idx.x(), pos_idx.y(), pos_idx.z()});
-      const auto b =
-          map.getCellValue({pos_idx.x(), pos_idx.y(), pos_idx.z() + 1});
-      if (std::min(a, b) < min_threshold && max_threshold < std::max(a, b)) {
-        try {
-          std::array<Ogre::uint32, 4> quad_sides{
-              vertex_map.at({pos_idx.x() - 1, pos_idx.y() - 1, pos_idx.z()}),
-              vertex_map.at({pos_idx.x(), pos_idx.y() - 1, pos_idx.z()}),
-              vertex_map.at({pos_idx.x(), pos_idx.y(), pos_idx.z()}),
-              vertex_map.at({pos_idx.x() - 1, pos_idx.y(), pos_idx.z()})};
-          if (max_threshold < b) {
-            std::reverse(quad_sides.begin(), quad_sides.end());
-          }
-          mesh_object_->quad(quad_sides[0], quad_sides[1], quad_sides[2],
-                             quad_sides[3]);
-        } catch (const std::out_of_range&) {
-        }
-      }
-    }
-
-    {
-      const auto a = map.getCellValue({pos_idx.x(), pos_idx.y(), pos_idx.z()});
-      const auto b =
-          map.getCellValue({pos_idx.x(), pos_idx.y() + 1, pos_idx.z()});
-      if (std::min(a, b) < min_threshold && max_threshold < std::max(a, b)) {
-        try {
-          std::array<Ogre::uint32, 4> quad_sides{
-              vertex_map.at({pos_idx.x() - 1, pos_idx.y(), pos_idx.z() - 1}),
-              vertex_map.at({pos_idx.x(), pos_idx.y(), pos_idx.z() - 1}),
-              vertex_map.at({pos_idx.x(), pos_idx.y(), pos_idx.z()}),
-              vertex_map.at({pos_idx.x() - 1, pos_idx.y(), pos_idx.z()})};
-          if (min_threshold < a) {
-            std::reverse(quad_sides.begin(), quad_sides.end());
-          }
-          mesh_object_->quad(quad_sides[0], quad_sides[1], quad_sides[2],
-                             quad_sides[3]);
-        } catch (const std::out_of_range&) {
-        }
-      }
-    }
-
-    {
-      const auto a = map.getCellValue({pos_idx.x(), pos_idx.y(), pos_idx.z()});
-      const auto b =
-          map.getCellValue({pos_idx.x() + 1, pos_idx.y(), pos_idx.z()});
-      if (std::min(a, b) < min_threshold && max_threshold < std::max(a, b)) {
-        try {
-          std::array<Ogre::uint32, 4> quad_sides{
-              vertex_map.at({pos_idx.x(), pos_idx.y() - 1, pos_idx.z() - 1}),
-              vertex_map.at({pos_idx.x(), pos_idx.y(), pos_idx.z() - 1}),
-              vertex_map.at({pos_idx.x(), pos_idx.y(), pos_idx.z()}),
-              vertex_map.at({pos_idx.x(), pos_idx.y() - 1, pos_idx.z()})};
-          if (max_threshold < b) {
-            std::reverse(quad_sides.begin(), quad_sides.end());
-          }
-          mesh_object_->quad(quad_sides[0], quad_sides[1], quad_sides[2],
-                             quad_sides[3]);
-        } catch (const std::out_of_range&) {
-        }
-      }
-    }
-  });
+  }
+  for (const LinearIndex& index : indices) {
+    CHECK_GE(index, 0u);
+    CHECK_LT(index, vertices.size());
+    mesh_object_->index(index);
+  }
   mesh_object_->end();
 }
 

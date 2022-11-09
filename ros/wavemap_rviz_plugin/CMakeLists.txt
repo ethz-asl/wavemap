@@ -52,6 +52,7 @@ add_library(${PROJECT_NAME}
     src/visuals/mesh_visual.cc
     src/visuals/multi_resolution_grid_visual.cc
     src/visuals/multi_resolution_slice_visual.cc
+    src/marching_cubes.cc
     src/wavemap_map_display.cc
     ${QT_MOC})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})

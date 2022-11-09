@@ -42,6 +42,22 @@ class MeshVisual {
   Ogre::SceneManager* const scene_manager_;
 
   Ogre::ManualObject* const mesh_object_;
+
+  static FloatingPoint logOddsToValue(FloatingPoint log_odds) {
+    const FloatingPoint odds = std::exp(log_odds);
+    const FloatingPoint probability = odds / (1.f + odds);
+    return probability - 0.5f;
+  }
+
+  static bool lessThan(const Point3D& lhs, const Point3D& rhs) {
+    if (lhs.x() < rhs.x()) return true;
+    if (lhs.x() > rhs.x()) return false;
+    if (lhs.y() < rhs.y()) return true;
+    if (lhs.y() > rhs.y()) return false;
+    if (lhs.z() < rhs.z()) return true;
+    if (lhs.z() > rhs.z()) return false;
+    return false;
+  }
 };
 }  // namespace wavemap::rviz_plugin
 
