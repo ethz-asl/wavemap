@@ -44,7 +44,9 @@ class MeshVisual {
   Ogre::ManualObject* const mesh_object_;
 
   static FloatingPoint logOddsToValue(FloatingPoint log_odds) {
-    const FloatingPoint odds = std::exp(log_odds);
+    // TODO(victorr): Evaluate whether this "unbiasing" improves the surface
+    const FloatingPoint unbiased_log_odds = std::clamp(log_odds, -2.f, 2.f);
+    const FloatingPoint odds = std::exp(unbiased_log_odds);
     const FloatingPoint probability = odds / (1.f + odds);
     return probability - 0.5f;
   }

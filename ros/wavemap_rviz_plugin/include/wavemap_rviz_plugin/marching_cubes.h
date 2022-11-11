@@ -76,8 +76,8 @@ class MarchingCubes {
   // zero crossing (surface) value.
   static Point3D interpolateVertex(const Point3D& corner_1,
                                    const Point3D& corner_2,
-                                   const FloatingPoint& value_1,
-                                   const FloatingPoint& value_2) {
+                                   FloatingPoint value_1,
+                                   FloatingPoint value_2) {
     const FloatingPoint value_difference = value_1 - value_2;
     if (std::abs(value_difference) < kEpsilon) {
       return 0.5f * (corner_1 + corner_2);
