@@ -9,15 +9,16 @@ map:
   autosave_path: ""
   data_structure:
     type: "wavelet_octree"
-    min_cell_width: &min_cell_width { meters: 0.10 }
+    min_cell_width: &min_cell_width { meters: 0.025 }
     max_height: 14
 
 integrator_templates:
   - &vlp16
     integration_method:
       type: "coarse_to_fine_wavelet_integrator"
-      min_range: { meters: 0.5 }
+      min_range: { meters: 1.0 }
       max_range: { meters: 20.0 }
+      termination_height: 2
       max_acceptable_update_error: 0.1
       max_update_resolution: *min_cell_width
     projection_model:
@@ -34,13 +35,14 @@ integrator_templates:
       type: "continuous_volumetric_log_odds"
       angle_sigma: { degrees: 0.05 }
       range_sigma: { meters: 0.05 }
-      scaling_free: 0.2
-      scaling_occupied: 0.4
+      scaling_free: 0.1
+      scaling_occupied: 0.2
   - &bpearl
     integration_method:
       type: "coarse_to_fine_wavelet_integrator"
       min_range: { meters: 0.5 }
-      max_range: { meters: 4.0 }
+      max_range: { meters: 2.0 }
+      termination_height: 0
       max_acceptable_update_error: 0.1
       max_update_resolution: *min_cell_width
     projection_model:
@@ -55,8 +57,8 @@ integrator_templates:
         max_angle: { degrees: 180.0 }
     measurement_model:
       type: "continuous_volumetric_log_odds"
-      angle_sigma: { degrees: 0.05 }
-      range_sigma: { meters: 0.05 }
+      angle_sigma: { degrees: 0.025 }
+      range_sigma: { meters: 0.025 }
       scaling_free: 0.2
       scaling_occupied: 0.4
 

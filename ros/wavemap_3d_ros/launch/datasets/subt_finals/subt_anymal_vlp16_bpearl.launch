@@ -14,17 +14,34 @@
   <!-- Select the rosbag paths -->
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
   <arg if="$(eval anymal_name == 'cerberus')" name="rosbag_path"
-       value="../data/darpa/finals/cerberus/2021-09-23-16-31-51_anymal-cerberus_mission.bag"/>
+       value="
+../data/darpa/finals/cerberus/2021-09-23-16-31-51_anymal-cerberus_mission.bag
+../data/darpa/finals/cerberus/compslam_post_ros1.bag"/>
   <arg if="$(eval anymal_name == 'chimera')" name="rosbag_path"
        value="../data/darpa/finals/chimera/2021-09-23-16-28-04_anymal-chimera_mission.bag"/>
 
   <!-- Calibrations -->
   <group if="$(eval anymal_name == 'cerberus')">
+<!--    <node pkg="tf"-->
+<!--          type="static_transform_publisher"-->
+<!--          name="static_tf_base_to_imu_sensor_frame"-->
+<!--          args="-0.327 -0.004 0.206 0.000 0.000 -0.698 0.716-->
+<!--            base imu_sensor_frame 100"/>-->
+<!--    <node pkg="tf"-->
+<!--          type="static_transform_publisher"-->
+<!--          name="static_tf_imu_link_to_imu_sensor_frame"-->
+<!--          args="-0.011 0.578 0.151 0.007 0.007 1.000 -0.013-->
+<!--            imu_link imu_sensor_frame 100"/>-->
+<!--    <node pkg="tf"-->
+<!--          type="static_transform_publisher"-->
+<!--          name="static_tf_imu_sensor_frame_to_lidar"-->
+<!--          args="-0.005 -0.037 -0.063 0.000 0.000 -0.013 1.000-->
+<!--            imu_sensor_frame lidar 100"/>-->
     <node pkg="tf"
           type="static_transform_publisher"
           name="static_tf_imu_sensor_frame_to_lidar"
-          args="-0.005 -0.037 -0.063 0.000 0.000 -0.013 1.000
-            imu_sensor_frame lidar 100"/>
+          args="0.004 0.037 0.063 0.000 0.000 0.013 1.000
+            lidar imu_sensor_frame 100"/>
     <node pkg="tf"
           type="static_transform_publisher"
           name="static_tf_imu_sensor_frame_to_bpearl_front"
@@ -72,10 +89,10 @@
     <!-- Publish odometry as TF -->
     <node pkg="wavemap_3d_ros" type="odom_msg_to_tf.py" name="odom_to_tf"
           output="screen">
-      <param name="odom_topic"
-             value="/msf_loam_alphasense_imu/msf_core/odometry"/>
+      <param name="topic" value="/compslam_post_cerberus"/>
+      <param name="topic_type" value="PoseStamped"/>
       <param name="odom_frame" value="odom"/>
-      <param name="sensor_frame" value="imu_sensor_frame"/>
+      <param name="sensor_frame" value="lidar"/>
     </node>
   </group>
 
