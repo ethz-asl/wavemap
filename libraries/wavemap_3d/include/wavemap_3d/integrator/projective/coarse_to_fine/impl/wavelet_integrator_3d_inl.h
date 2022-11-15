@@ -27,7 +27,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
   constexpr FloatingPoint kNoiseThreshold = 1e-4f;
 
   // If we're at the leaf level, directly update the node
-  if (node_index.height == 0) {
+  if (node_index.height == config_.termination_height) {
     const Point3D W_node_center =
         convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
     const Point3D C_node_center =
