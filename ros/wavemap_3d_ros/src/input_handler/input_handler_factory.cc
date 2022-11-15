@@ -7,7 +7,8 @@ namespace wavemap {
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
     const param::Map& integrator_params, std::string world_frame,
     VolumetricDataStructure3D::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, const ros::NodeHandle& nh,
+    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    ros::NodeHandle nh_private,
     std::optional<InputHandlerType> default_input_handler_type) {
   std::string error_msg;
 
@@ -17,7 +18,7 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
     auto type = InputHandlerType::fromParamMap(input_params, error_msg);
     if (type.isValid()) {
       return create(type, integrator_params, world_frame, occupancy_map,
-                    transformer, nh);
+                    transformer, std::move(nh), std::move(nh_private));
     }
   }
 
@@ -26,7 +27,8 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
                  << default_input_handler_type.value().toStr()
                  << "\" will be created instead.";
     return create(default_input_handler_type.value(), integrator_params,
-                  world_frame, occupancy_map, transformer, nh);
+                  world_frame, occupancy_map, transformer, std::move(nh),
+                  std::move(nh_private));
   }
 
   LOG(ERROR) << error_msg << "No default was set. Returning nullptr.";
@@ -36,7 +38,8 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
     InputHandlerType input_handler_type, const param::Map& integrator_params,
     std::string world_frame, VolumetricDataStructure3D::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, const ros::NodeHandle& nh) {
+    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    ros::NodeHandle nh_private) {
   // Load the input handler config
   if (!param::map::keyHoldsValue<param::Map>(integrator_params, "input")) {
     return nullptr;
@@ -49,11 +52,11 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
     case InputHandlerType::kPointcloud:
       return std::make_unique<PointcloudInputHandler>(
           input_handler_config, integrator_params, world_frame, occupancy_map,
-          transformer, nh);
+          transformer, std::move(nh), std::move(nh_private));
     case InputHandlerType::kDepthImage:
       return std::make_unique<DepthImageInputHandler>(
           input_handler_config, integrator_params, world_frame, occupancy_map,
-          transformer, nh);
+          transformer, std::move(nh), std::move(nh_private));
   }
   return nullptr;
 }

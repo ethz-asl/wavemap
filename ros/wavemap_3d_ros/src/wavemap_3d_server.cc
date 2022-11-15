@@ -39,7 +39,7 @@ Wavemap3DServer::Wavemap3DServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   for (const auto& integrator_params : integrator_params_array) {
     if (integrator_params.holds<param::Map>()) {
       const auto param_map = integrator_params.get<param::Map>();
-      addInput(param_map, nh);
+      addInput(param_map, nh, nh_private);
     }
   }
 
@@ -78,10 +78,11 @@ bool Wavemap3DServer::loadMap(const std::string& file_path) {
 }
 
 InputHandler* Wavemap3DServer::addInput(const param::Map& integrator_params,
-                                        const ros::NodeHandle& nh) {
+                                        const ros::NodeHandle& nh,
+                                        ros::NodeHandle nh_private) {
   auto input_handler = InputHandlerFactory::create(
       integrator_params, config_.general.world_frame, occupancy_map_,
-      transformer_, nh);
+      transformer_, nh, std::move(nh_private));
   if (input_handler) {
     return input_handlers_.emplace_back(std::move(input_handler)).get();
   }

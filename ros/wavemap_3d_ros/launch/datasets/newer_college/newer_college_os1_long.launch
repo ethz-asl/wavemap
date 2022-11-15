@@ -1,25 +1,15 @@
 <launch>
-  <!-- General arguments -->
-  <arg name="use_batch_mode"
-       default="true"
-       doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
+  <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/ouster_os1.yaml"
+       default="$(find wavemap_3d_ros)/config/newer_college/ouster_os1.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
-  <arg name="debug_mode"
-       default="false"
-       doc="Run the mapper in a debugger (gdb)."/>
-  <arg name="show_rviz"
-       default="true"
-       doc="Automatically launch Rviz."/>
-  <arg name="record_rosbag" default="false"/>
 
   <!-- Dataset params -->
-  <arg name="pointcloud_topic"
-       default="/os1_cloud_node/points"/>
   <arg name="only_first_rosbag"
        default="false"
        doc="If true, replay only the first the rosbag in the dataset. If false, replay everything."/>
+
+  <!-- Publish the sensor poses -->
   <node pkg="tf" type="static_transform_publisher"
         name="static_tf_cam_left_os1_lidar"
         args="-0.084 -0.025 0.05 0 0 0.9238795 0.3826834 cam_left os1_lidar 100"/>
@@ -53,24 +43,7 @@
 ../data/newer_college/2020-ouster-os1-64-realsense/02_long_experiment/rooster_2020-03-10-12-15-49_14-compressed.bag
 ../data/newer_college/2020-ouster-os1-64-realsense/02_long_experiment/rooster_2020-03-10-12-18-36_15-compressed.bag"/>
 
-  <!-- Process the rosbag with wavemap -->
-  <group if="$(arg use_batch_mode)">
-    <!-- In batch mode (process the rosbag as fast as possible) -->
-    <include file="$(find wavemap_3d_ros)/launch/rosbag_processor.launch"
-             pass_all_args="true"/>
-  </group>
-  <group unless="$(arg use_batch_mode)">
-    <!-- In normal mode (replay the rosbag) -->
-    <include file="$(find wavemap_3d_ros)/launch/wavemap_server.launch"
-             pass_all_args="true"/>
-  </group>
-
-  <!-- Record rosbag -->
-  <group if="$(arg record_rosbag)">
-    <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
-    <arg name="bag_save_path" default="../catkin_ws/bags/evaluations"/>
-    <arg name="bag_prefix" default="new_college_os1_long"/>
-    <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
-          args="/wavemap_3d/map_evaluation_summary /wavemap_3d/performance_stats /wavemap_3d/occupancy_grid /wavemap_3d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
-  </group>
+  <!-- Run wavemap -->
+  <include file="$(find wavemap_3d_ros)/launch/datasets/dataset_base.launch"
+           pass_all_args="true"/>
 </launch>

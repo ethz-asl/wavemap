@@ -19,8 +19,6 @@ template <int dim>
 bool PointcloudIntegrator<dim>::isMeasurementValid(
     const Point<dim>& C_end_point) {
   if (C_end_point.hasNaN()) {
-    LOG(WARNING) << "Skipping measurement whose endpoint contains NaNs:\n"
-                 << C_end_point;
     return false;
   }
   const FloatingPoint measured_distance = C_end_point.norm();

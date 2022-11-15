@@ -45,7 +45,7 @@ class Wavemap3DServer {
   bool loadMap(const std::string& file_path);
 
   InputHandler* addInput(const param::Map& integrator_params,
-                         const ros::NodeHandle& nh);
+                         const ros::NodeHandle& nh, ros::NodeHandle nh_private);
 
  private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;

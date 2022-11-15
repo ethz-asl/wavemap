@@ -16,7 +16,7 @@ class PointcloudInputHandler : public InputHandler {
                          std::string world_frame,
                          VolumetricDataStructure3D::Ptr occupancy_map,
                          std::shared_ptr<TfTransformer> transformer,
-                         ros::NodeHandle nh);
+                         ros::NodeHandle nh, ros::NodeHandle nh_private);
 
   InputHandlerType getType() const override {
     return InputHandlerType::kPointcloud;

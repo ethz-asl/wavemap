@@ -3,9 +3,6 @@
   <arg name="use_batch_mode"
        default="true"
        doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
-  <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/ouster_os0.yaml"
-       doc="Name of the file from which to read wavemap's server params."/>
   <arg name="debug_mode"
        default="false"
        doc="Run the mapper in a debugger (gdb)."/>
@@ -13,19 +10,6 @@
        default="true"
        doc="Automatically launch Rviz."/>
   <arg name="record_rosbag" default="false"/>
-
-  <!-- Dataset params -->
-  <arg name="only_first_rosbag"
-       default="false"
-       doc="If true, replay only the first the rosbag in the dataset. If false, replay everything."/>
-
-  <!-- Select the rosbag paths -->
-  <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
-  <arg if="$(arg only_first_rosbag)" name="rosbag_path"
-       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/nc-easy-undistorted_0.bag"/>
-  <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
-../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/nc-easy-undistorted_0.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/nc-easy-undistorted_1.bag"/>
 
   <!-- Process the rosbag with wavemap -->
   <group if="$(arg use_batch_mode)">
@@ -43,7 +27,7 @@
   <group if="$(arg record_rosbag)">
     <!-- Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
     <arg name="bag_save_path" default="../catkin_ws/bags/evaluations"/>
-    <arg name="bag_prefix" default="new_college_os0_math"/>
+    <arg name="bag_prefix" default="new_college_os0_cloister"/>
     <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
           args="/wavemap_3d/map_evaluation_summary /wavemap_3d/performance_stats /wavemap_3d/occupancy_grid /wavemap_3d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
   </group>

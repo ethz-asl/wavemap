@@ -16,6 +16,7 @@
   <depend>wavemap_3d</depend>
   <depend>wavemap_common_ros</depend>
   <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
 
   <depend>wavemap_msgs</depend>
   <depend>std_srvs</depend>

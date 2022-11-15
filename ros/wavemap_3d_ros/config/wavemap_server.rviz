@@ -29,7 +29,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: Pointcloud
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -60,11 +60,15 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base:
+        bpearl_front_beam_origin:
+          Value: true
+        bpearl_rear_beam_origin:
+          Value: true
+        imu_sensor_frame:
+          Value: true
+        lidar:
           Value: true
         odom:
-          Value: true
-        os_sensor:
           Value: true
       Marker Alpha: 1
       Marker Scale: 10
@@ -74,8 +78,12 @@ Visualization Manager:
       Show Names: true
       Tree:
         odom:
-          base:
-            os_sensor:
+          imu_sensor_frame:
+            bpearl_front_beam_origin:
+              {}
+            bpearl_rear_beam_origin:
+              {}
+            lidar:
               {}
       Update Interval: 0
       Value: true
@@ -88,11 +96,11 @@ Visualization Manager:
             Min Value: -10
             Value: true
           Axis: Z
-          Channel Name: intensity
+          Channel Name: reflectivity
           Class: rviz/PointCloud2
           Color: 255; 255; 255
           Color Transformer: Intensity
-          Decay Time: 0
+          Decay Time: 1000
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
@@ -101,10 +109,10 @@ Visualization Manager:
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
-          Size (Pixels): 2
+          Size (Pixels): 1
           Size (m): 0.009999999776482582
           Style: Points
-          Topic: /input_pointclouds
+          Topic: /os_cloud_node/points_corrected
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -148,6 +156,7 @@ Visualization Manager:
           Min occupancy log odds: 9.999999747378752e-05
           Name: Map
           Queue Size: 10
+          Show mesh: false
           Show multi-res grid: true
           Show multi-res slice: false
           Slice height: 0
@@ -156,17 +165,32 @@ Visualization Manager:
           Value: true
         - Alpha: 0.8999999761581421
           Class: wavemap_rviz_plugin/WavemapOctree
-          Enabled: true
+          Enabled: false
           Max occupancy log odds: 1e+06
           Min occupancy log odds: -1e+06
           Name: Slice
           Queue Size: 10
+          Show mesh: false
           Show multi-res grid: false
           Show multi-res slice: true
           Slice height: 1
           Topic: /wavemap_3d/map
           Unreliable: false
-          Value: true
+          Value: false
+        - Alpha: 1
+          Class: wavemap_rviz_plugin/WavemapOctree
+          Enabled: false
+          Max occupancy log odds: 0.10000000149011612
+          Min occupancy log odds: -0.10000000149011612
+          Name: Mesh
+          Queue Size: 0
+          Show mesh: true
+          Show multi-res grid: false
+          Show multi-res slice: false
+          Slice height: 0
+          Topic: /wavemap_3d/map
+          Unreliable: false
+          Value: false
         - Class: rviz/MarkerArray
           Enabled: false
           Marker Topic: /wavemap_3d/occupancy_grid
@@ -221,7 +245,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 73.98982238769531
+      Distance: 43.480934143066406
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -229,17 +253,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -9.582958221435547
-        Y: -38.59550476074219
-        Z: -2
+        X: -6.075891494750977
+        Y: -9.194045066833496
+        Z: -1.9999948740005493
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 2
-      Pitch: 0.7047973871231079
+      Pitch: 0.9647971391677856
       Target Frame: <Fixed Frame>
-      Yaw: -2.336845636367798
+      Yaw: 3.8231821060180664
     Saved: ~
 Window Geometry:
   Displays:

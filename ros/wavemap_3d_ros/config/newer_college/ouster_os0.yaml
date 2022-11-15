@@ -8,7 +8,7 @@ map:
   autosave_period: { seconds: -1.0 }
   autosave_path: ""
   data_structure:
-    type: "wavelet_octree"
+    type: "octree"
     min_cell_width: &min_cell_width { meters: 0.2 }
     max_height: 14
 
@@ -40,5 +40,5 @@ integrators:
       type: "continuous_volumetric_log_odds"
       angle_sigma: { degrees: 0.05 }
       range_sigma: { meters: 0.05 }
-      scaling_free: 0.2
+      scaling_free: 0.15
       scaling_occupied: 0.4

@@ -5,6 +5,7 @@
 #include <queue>
 #include <string>
 
+#include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
 #include <wavemap_3d/integrator/projective/scanwise_integrator_3d.h>
 
@@ -17,12 +18,15 @@ class DepthImageInputHandler : public InputHandler {
                          std::string world_frame,
                          VolumetricDataStructure3D::Ptr occupancy_map,
                          std::shared_ptr<TfTransformer> transformer,
-                         ros::NodeHandle nh);
+                         ros::NodeHandle nh, ros::NodeHandle nh_private);
 
   InputHandlerType getType() const override {
     return InputHandlerType::kDepthImage;
   }
 
+  void depthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
+    depthImageCallback(*depth_image_msg);
+  }
   void depthImageCallback(const sensor_msgs::Image& depth_image_msg) {
     depth_image_queue_.emplace(depth_image_msg);
   }
@@ -30,9 +34,12 @@ class DepthImageInputHandler : public InputHandler {
  private:
   ScanwiseIntegrator3D::Ptr scanwise_integrator_;
 
-  ros::Subscriber depth_image_sub_;
+  image_transport::Subscriber depth_image_sub_;
   std::queue<sensor_msgs::Image> depth_image_queue_;
   void processQueue() override;
+
+  PosedPointcloud<Point3D> reproject(
+      const PosedRangeImage2D& posed_range_image);
 };
 }  // namespace wavemap
 
