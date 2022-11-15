@@ -1,5 +1,5 @@
 general:
-  world_frame: "odom"
+  world_frame: "map"
   publish_performance_stats: false
 
 map:
@@ -8,7 +8,7 @@ map:
   autosave_period: { seconds: -1.0 }
   autosave_path: ""
   data_structure:
-    type: "octree"
+    type: "wavelet_octree"
     min_cell_width: &min_cell_width { meters: 0.2 }
     max_height: 14
 

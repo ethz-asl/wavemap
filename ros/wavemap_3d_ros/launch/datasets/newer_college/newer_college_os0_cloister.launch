@@ -18,6 +18,12 @@
 ../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/nc-cloister-undistorted_1.bag
 ../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/nc-cloister-undistorted_2.bag"/>
 
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="static_tf_map_to_odom"
+        args="4.757164093	-51.57657326	0.9355807352	0.01479685507	0.001833175284	0.9246828432	0.3804462276
+            map odom 100"/>
+
   <!-- Run wavemap -->
   <include file="$(find wavemap_3d_ros)/launch/datasets/dataset_base.launch"
            pass_all_args="true"/>

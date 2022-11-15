@@ -55,14 +55,16 @@ void Wavemap3DServer::visualizeMap() {
     if (const auto& octree = std::dynamic_pointer_cast<
             VolumetricOctree<SaturatingOccupancyCell>>(occupancy_map_);
         octree) {
-      wavemap_msgs::Map map_msg = mapToRosMsg(*octree);
+      wavemap_msgs::Map map_msg =
+          mapToRosMsg(*octree, config_.general.world_frame);
       map_pub_.publish(map_msg);
     }
     if (const auto& wavelet_octree =
             std::dynamic_pointer_cast<WaveletOctree<SaturatingOccupancyCell>>(
                 occupancy_map_);
         wavelet_octree) {
-      wavemap_msgs::Map map_msg = mapToRosMsg(*wavelet_octree);
+      wavemap_msgs::Map map_msg =
+          mapToRosMsg(*wavelet_octree, config_.general.world_frame);
       map_pub_.publish(map_msg);
     }
   }
