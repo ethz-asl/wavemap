@@ -32,8 +32,8 @@
   <node pkg="tf"
         type="static_transform_publisher"
         name="static_tf_map_to_odom"
-        args="5.239290931	-42.3904748	0.7994981773	0.02469057068	-0.0002458271193	0.713864016	0.6998488994
-            map odom 100"/>
+        args="6.155904428 -56.59342125 0.9703247249 0.003845974844 0.003257308965 0.4101220695 0.912016714
+              map odom 100"/>
 
   <!-- Run wavemap -->
   <include file="$(find wavemap_3d_ros)/launch/datasets/dataset_base.launch"

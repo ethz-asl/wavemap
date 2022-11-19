@@ -73,7 +73,11 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  // TODO(victorr): Also prune the map
   wavemap_server.visualizeMap();
+
+  // TODO(victorr): Make this configurable
+  ros::spin();
 
   return 0;
 }

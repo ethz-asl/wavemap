@@ -17,6 +17,13 @@
 ../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/nc-easy-undistorted_0.bag
 ../data/newer_college/2021-ouster-os0-128-alphasense/collection3/easy/nc-easy-undistorted_1.bag"/>
 
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="static_tf_map_to_odom"
+        args="-23.7154 -31.2451 1.02503 -0.00587066 0.00356705 0.841367 0.54042
+              map odom 100"/>
+
+
   <!-- Run wavemap -->
   <include file="$(find wavemap_3d_ros)/launch/datasets/dataset_base.launch"
            pass_all_args="true"/>
