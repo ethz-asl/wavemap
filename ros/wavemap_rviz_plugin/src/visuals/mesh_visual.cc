@@ -102,9 +102,9 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
   // Weld near-identical vertices
   std::vector<LinearIndex> indices(vertices.size());
   {
-    constexpr FloatingPoint kTolerance = 1e-3f;
+    const FloatingPoint tolerance = 1e-3f * min_cell_width;
     for (auto& vertex : vertices) {
-      vertex = (vertex / kTolerance).array().round() * kTolerance;
+      vertex = (vertex / tolerance).array().round() * tolerance;
     }
     const auto vertices_original = vertices;
     std::sort(vertices.begin(), vertices.end(), lessThan);

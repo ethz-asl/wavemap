@@ -79,7 +79,7 @@ class MarchingCubes {
                                    FloatingPoint value_1,
                                    FloatingPoint value_2) {
     const FloatingPoint value_difference = value_1 - value_2;
-    if (std::abs(value_difference) < kEpsilon) {
+    if (std::abs(value_difference) < 1e-4f) {
       return 0.5f * (corner_1 + corner_2);
     }
     const FloatingPoint t = value_1 / value_difference;
