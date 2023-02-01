@@ -73,11 +73,12 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  // TODO(victorr): Also prune the map
+  wavemap_server.getMap()->prune();
   wavemap_server.visualizeMap();
 
-  // TODO(victorr): Make this configurable
-  ros::spin();
+  if (nh_private.param("keep_alive", false)) {
+    ros::spin();
+  }
 
   return 0;
 }

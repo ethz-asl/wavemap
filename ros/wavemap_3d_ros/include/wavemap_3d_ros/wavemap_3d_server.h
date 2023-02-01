@@ -47,6 +47,11 @@ class Wavemap3DServer {
   InputHandler* addInput(const param::Map& integrator_params,
                          const ros::NodeHandle& nh, ros::NodeHandle nh_private);
 
+  std::shared_ptr<VolumetricDataStructure3D> getMap() { return occupancy_map_; }
+  std::shared_ptr<const VolumetricDataStructure3D> getMap() const {
+    return occupancy_map_;
+  }
+
  private:
   static constexpr bool kSaveWithFloatingPointPrecision = true;
 
