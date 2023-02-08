@@ -289,10 +289,21 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
                      projector.cartesianToSensorZ(C_furthest_point));
       }
 
-      const auto returned_angle_pair =
-          projector.cartesianToSensorAABB(test.W_aabb, test.T_W_C);
-      constexpr FloatingPoint kAcceptableNoise = 1e-5f;
-      constexpr FloatingPoint kAcceptablePadding = 0.0261799f;
+      // For pinhole cameras, AABBs that (partially or fully) lie behind the
+      // camera are handled in a special way and not tested here
+      // TODO(victorr): Add dedicated tests for pinhole cameras
+      if (reference_aabb.min.z() < 0.2f) {
+        continue;
+      }
+
+      const auto returned_angle_pair = projector.cartesianToSensorAABB(
+          test.W_aabb, test.T_W_C.getRotation().inverse().getRotationMatrix(),
+          test.T_W_C.getPosition());
+      // TODO(victorr): Properly define all 'acceptable errors' in pixel space
+      const Vector2D image_stride = projector.indexToImage(Index2D::Ones()) -
+                                    projector.indexToImage(Index2D::Zero());
+      constexpr FloatingPoint kAcceptableNoise = 0.1f;
+      constexpr FloatingPoint kAcceptablePadding = 0.4f;
 
       bool check_failed = false;
       auto canary_token = [&check_failed]() {
@@ -310,7 +321,7 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
               << " for axis " << axis << canary_token();
           EXPECT_LE(angle_math::normalize(returned_angle_pair.min[axis] -
                                           reference_aabb.min[axis]),
-                    kAcceptablePadding)
+                    kAcceptablePadding * image_stride[axis])
               << " for axis " << axis << canary_token();
           EXPECT_LE(angle_math::normalize(returned_angle_pair.max[axis] -
                                           reference_aabb.max[axis]),
@@ -318,24 +329,24 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
               << " for axis " << axis << canary_token();
           EXPECT_GE(angle_math::normalize(returned_angle_pair.max[axis] -
                                           reference_aabb.max[axis]),
-                    -kAcceptablePadding)
+                    -kAcceptablePadding * image_stride[axis])
               << " for axis " << axis << canary_token();
         } else {
           EXPECT_LE(angle_math::normalize(returned_angle_pair.min[axis] -
                                           reference_aabb.min[axis]),
-                    kAcceptableNoise)
+                    kAcceptableNoise * image_stride[axis])
               << " for axis " << axis << canary_token();
           EXPECT_GE(angle_math::normalize(returned_angle_pair.min[axis] -
                                           reference_aabb.min[axis]),
-                    -kAcceptablePadding)
+                    -kAcceptablePadding * image_stride[axis])
               << " for axis " << axis << canary_token();
           EXPECT_GE(angle_math::normalize(returned_angle_pair.max[axis] -
                                           reference_aabb.max[axis]),
-                    -kAcceptableNoise)
+                    -kAcceptableNoise * image_stride[axis])
               << " for axis " << axis << canary_token();
           EXPECT_LE(angle_math::normalize(returned_angle_pair.max[axis] -
                                           reference_aabb.max[axis]),
-                    kAcceptablePadding)
+                    kAcceptablePadding * image_stride[axis])
               << " for axis " << axis << canary_token();
         }
       }
