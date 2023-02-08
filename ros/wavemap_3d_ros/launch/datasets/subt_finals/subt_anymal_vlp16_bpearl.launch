@@ -15,10 +15,10 @@
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
   <arg if="$(eval anymal_name == 'cerberus')" name="rosbag_path"
        value="
-../data/darpa/finals/cerberus/2021-09-23-16-31-51_anymal-cerberus_mission.bag
-../data/darpa/finals/cerberus/compslam_post_ros1.bag"/>
+../data/wavemap_experiments/darpa_subt_finals/dataset/finals/cerberus/2021-09-23-16-31-51_anymal-cerberus_mission.bag
+../data/wavemap_experiments/darpa_subt_finals/dataset/finals/cerberus/compslam_post_ros1.bag"/>
   <arg if="$(eval anymal_name == 'chimera')" name="rosbag_path"
-       value="../data/darpa/finals/chimera/2021-09-23-16-28-04_anymal-chimera_mission.bag"/>
+       value="../data/wavemap_experiments/darpa_subt_finals/dataset/finals/chimera/2021-09-23-16-28-04_anymal-chimera_mission.bag"/>
 
   <!-- Calibrations -->
   <group if="$(eval anymal_name == 'cerberus')">
