@@ -14,20 +14,20 @@
   <arg if="$(arg only_first_rosbag)" name="rosbag_path"
        value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_0.bag"/>
   <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_0.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_1.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_2.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_3.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_4.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_5.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_6.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_7.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_8.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_9.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_10.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_11.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_12.bag
-../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_13.bag"/>
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_0.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_1.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_2.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_3.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_4.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_5.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_6.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_7.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_8.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_9.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_10.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_11.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_12.bag
+../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_13.bag"/>
 
   <node pkg="tf"
         type="static_transform_publisher"
