@@ -35,6 +35,8 @@ class MultiResolutionGridVisual {
   void setFrameOrientation(const Ogre::Quaternion& orientation);
 
  private:
+  enum class ColorBy { kProbability, kPosition } kColorBy = ColorBy::kPosition;
+
   // The object implementing the grid visuals
   std::vector<std::unique_ptr<rviz::PointCloud>> grid_levels_;
 
@@ -45,6 +47,12 @@ class MultiResolutionGridVisual {
   // The SceneManager, kept here only so the destructor can ask it to
   // destroy the `frame_node_`.
   Ogre::SceneManager* scene_manager_;
+
+  // Map a voxel's log-odds value to a color (grey value)
+  static Ogre::ColourValue logOddsToColor(FloatingPoint log_odds);
+
+  // Map a voxel's position to a color (HSV color map)
+  static Ogre::ColourValue positionToColor(const Point3D& center_point);
 };
 }  // namespace wavemap::rviz_plugin
 
