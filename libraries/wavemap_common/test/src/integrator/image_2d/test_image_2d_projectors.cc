@@ -158,12 +158,15 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
     const Vector3D sensor_coordinates = projector.cartesianToSensor(C_point);
     const Vector2D image_coordinates = sensor_coordinates.head<2>();
     const FloatingPoint range_or_depth = sensor_coordinates[2];
+    if (range_or_depth < 1e-1f) {
+      --repetition;
+      continue;
+    }
     const Index2D image_index =
         projector.imageToNearestIndex(image_coordinates);
     if ((image_index.array() < 0 ||
          projector.getDimensions().array() <= image_index.array())
-            .any() ||
-        range_or_depth < 1e-1f) {
+            .any()) {
       --repetition;
       continue;
     }
