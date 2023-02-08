@@ -63,6 +63,26 @@ class Image2DProjectionModel {
         (index - index_rounded).cwiseProduct(index_to_image_scale_factor_);
     return {index_rounded.cast<IndexElement>(), image_coordinate_offset};
   }
+  std::pair<std::array<Index2D, 4>, std::array<ImageCoordinates, 4>>
+  imageToNearestIndicesAndOffsets(
+      const ImageCoordinates& image_coordinates) const {
+    const Vector2D index = imageToIndexReal(image_coordinates);
+    const Vector2D index_lower = index.array().floor();
+    const Vector2D index_upper = index.array().ceil();
+
+    std::array<Index2D, 4> indices{};
+    std::array<ImageCoordinates, 4> offsets{};
+    for (int neighbox_idx = 0; neighbox_idx < 4; ++neighbox_idx) {
+      const Vector2D index_rounded{
+          neighbox_idx & 0b01 ? index_upper[0] : index_lower[0],
+          neighbox_idx & 0b10 ? index_upper[1] : index_lower[1]};
+      indices[neighbox_idx] = index_rounded.cast<IndexElement>();
+      offsets[neighbox_idx] =
+          (index - index_rounded).cwiseProduct(index_to_image_scale_factor_);
+    }
+
+    return {indices, offsets};
+  }
   ImageCoordinates indexToImage(const Index2D& index) const {
     return index.cast<FloatingPoint>().cwiseProduct(
                index_to_image_scale_factor_) +
@@ -84,7 +104,9 @@ class Image2DProjectionModel {
   }
 
   virtual AABB<Vector3D> cartesianToSensorAABB(
-      const AABB<Point3D>& W_aabb, const Transformation3D& T_CW) const = 0;
+      const AABB<Point3D>& W_aabb,
+      const Transformation3D::RotationMatrix& R_C_W,
+      const Point3D& t_W_C) const = 0;
 
  protected:
   const Vector2D index_to_image_scale_factor_;

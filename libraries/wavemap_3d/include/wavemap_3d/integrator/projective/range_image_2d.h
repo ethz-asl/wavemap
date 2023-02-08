@@ -66,14 +66,24 @@ class PosedRangeImage2D : public RangeImage2D {
 
   void setPose(const Transformation3D& T_W_C) {
     T_W_C_ = T_W_C;
+    R_W_C_ = T_W_C_.getRotationMatrix();
     T_C_W_ = T_W_C.inverse();
+    R_C_W_ = T_C_W_.getRotationMatrix();
   }
   const Transformation3D& getPose() const { return T_W_C_; }
   const Transformation3D& getPoseInverse() const { return T_C_W_; }
+  const Transformation3D::RotationMatrix& getRotationMatrix() const {
+    return R_W_C_;
+  }
+  const Transformation3D::RotationMatrix& getRotationMatrixInverse() const {
+    return R_C_W_;
+  }
 
  private:
   Transformation3D T_W_C_;
   Transformation3D T_C_W_;
+  Transformation3D::RotationMatrix R_W_C_;
+  Transformation3D::RotationMatrix R_C_W_;
 };
 }  // namespace wavemap
 

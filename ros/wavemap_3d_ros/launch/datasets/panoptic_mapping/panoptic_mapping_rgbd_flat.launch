@@ -1,19 +1,12 @@
 <launch>
-  <!-- General arguments -->
+  <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/panoptic_mapping.yaml"
+       default="$(find wavemap_3d_ros)/config/panoptic_mapping/rgbd.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
-  <arg name="debug_mode"
-       default="false"
-       doc="Run the mapper in a debugger (gdb)."/>
-  <arg name="show_rviz"
-       default="true"
-       doc="Automatically launch Rviz."/>
-  <arg name="record_rosbag" default="false"/>
 
   <!-- Dataset params -->
   <arg name="base_path"
-       default="../data/panoptic_mapping/flat_dataset/run1"/>
+       default="../data/wavemap_experiments/panoptic_mapping/dataset/run1"/>
   <arg name="play_rate" default="1.0"/>
   <arg name="wait" default="false"/>
   <arg name="namespace" default="data"/>
@@ -38,7 +31,7 @@
     <remap from="~pose" to="$(arg namespace)/pose"/>
   </node>
 
-  <!-- TODO(victorr): Run wavemap -->
+  <!-- Run wavemap -->
   <include file="$(find wavemap_3d_ros)/launch/wavemap_server.launch"
            pass_all_args="true"/>
 </launch>

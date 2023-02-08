@@ -97,27 +97,45 @@ class SphericalProjector : public Image2DProjectionModel {
   //       around at +-PI and a min_angle >= max_angle will be returned.
   AABB<Vector3D> cartesianToSensorAABB(
       const AABB<wavemap::Point3D>& W_aabb,
-      const wavemap::Transformation3D& T_W_C) const final {
+      const Transformation3D::RotationMatrix& R_C_W,
+      const Point3D& t_W_C) const final {
     AABB<Vector3D> sensor_coordinate_aabb;
 
-    sensor_coordinate_aabb.min.z() = W_aabb.minDistanceTo(T_W_C.getPosition());
-    sensor_coordinate_aabb.max.z() = W_aabb.maxDistanceTo(T_W_C.getPosition());
+    sensor_coordinate_aabb.min.z() = W_aabb.minDistanceTo(t_W_C);
+    sensor_coordinate_aabb.max.z() = W_aabb.maxDistanceTo(t_W_C);
 
-    const Transformation3D T_C_W = T_W_C.inverse();
-    Eigen::Matrix<FloatingPoint, 2, 8> corner_sensor_coordinates;
+    const Point3D C_aabb_min = R_C_W * (W_aabb.min - t_W_C);
+    const Transformation3D::RotationMatrix C_aabb_edges =
+        R_C_W * (W_aabb.max - W_aabb.min).asDiagonal();
+
+    std::array<Point3D, AABB<Point3D>::kNumCorners> C_aabb_corners;
     for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
          ++corner_idx) {
-      const Point3D C_t_C_corner = T_C_W * W_aabb.corner_point(corner_idx);
-      corner_sensor_coordinates.col(corner_idx) =
-          cartesianToImageApprox(C_t_C_corner);
+      C_aabb_corners[corner_idx] = C_aabb_min;
+      for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+        if ((corner_idx >> dim_idx) & 1) {
+          C_aabb_corners[corner_idx] += C_aabb_edges.col(dim_idx);
+        }
+      }
+    }
+
+    std::array<Vector2D, AABB<Point3D>::kNumCorners> corner_sensor_coordinates;
+    for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
+         ++corner_idx) {
+      corner_sensor_coordinates[corner_idx] =
+          cartesianToImageApprox(C_aabb_corners[corner_idx]);
     }
 
     for (const int axis : {0, 1}) {
-      auto& min_coordinate = sensor_coordinate_aabb.min[axis];
-      auto& max_coordinate = sensor_coordinate_aabb.max[axis];
-
-      min_coordinate = corner_sensor_coordinates.row(axis).minCoeff();
-      max_coordinate = corner_sensor_coordinates.row(axis).maxCoeff();
+      FloatingPoint& min_coordinate = sensor_coordinate_aabb.min[axis];
+      FloatingPoint& max_coordinate = sensor_coordinate_aabb.max[axis];
+      for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
+           ++corner_idx) {
+        min_coordinate = std::min(min_coordinate,
+                                  corner_sensor_coordinates[corner_idx][axis]);
+        max_coordinate = std::max(max_coordinate,
+                                  corner_sensor_coordinates[corner_idx][axis]);
+      }
 
       const bool angle_interval_wraps_around =
           sensorAxisCouldBePeriodic()[axis] &&
@@ -128,7 +146,7 @@ class SphericalProjector : public Image2DProjectionModel {
         for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
              ++corner_idx) {
           const FloatingPoint angle =
-              corner_sensor_coordinates(axis, corner_idx);
+              corner_sensor_coordinates[corner_idx][axis];
           if (0.f < angle) {
             min_coordinate = std::min(min_coordinate, angle);
           } else {

@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     if (integrator_params.holds<wavemap::param::Map>()) {
       const auto param_map = integrator_params.get<wavemap::param::Map>();
       wavemap::InputHandler* input_handler =
-          wavemap_server.addInput(param_map, nh);
+          wavemap_server.addInput(param_map, nh, nh_private);
       if (input_handler) {
         switch (input_handler->getType().toTypeId()) {
           case wavemap::InputHandlerType::kPointcloud:
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
                 dynamic_cast<wavemap::PointcloudInputHandler*>(input_handler));
             continue;
           case wavemap::InputHandlerType::kDepthImage:
-            rosbag_processor.addCallback(
+            rosbag_processor.addCallback<const sensor_msgs::Image&>(
                 input_handler->getConfig().topic_name,
                 &wavemap::DepthImageInputHandler::depthImageCallback,
                 dynamic_cast<wavemap::DepthImageInputHandler*>(input_handler));
@@ -73,7 +73,12 @@ int main(int argc, char** argv) {
     return -1;
   }
 
+  wavemap_server.getMap()->prune();
   wavemap_server.visualizeMap();
+
+  if (nh_private.param("keep_alive", false)) {
+    ros::spin();
+  }
 
   return 0;
 }

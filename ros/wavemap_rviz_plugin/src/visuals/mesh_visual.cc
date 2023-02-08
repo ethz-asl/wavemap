@@ -53,8 +53,8 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
       for (LinearIndex neighbor_offset = 0; neighbor_offset < 27;
            ++neighbor_offset) {
         const Index3D neighbor_index =
-            cell_index + convert::linearIndexToIndex<3, 3>(neighbor_offset) -
-            Index3D::Ones();
+            cell_index - Index3D::Ones() +
+            convert::linearIndexToIndex<3, 3>(neighbor_offset);
         const FloatingPoint neighbor_log_odds =
             map.getCellValue(neighbor_index);
         neighbor_values[neighbor_offset] = logOddsToValue(neighbor_log_odds);
@@ -76,9 +76,8 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
         if (*min_value < min_value_threshold &&
             max_value_threshold < *max_value) {
           const Index3D voxel_min_corner =
-              cell_index +
-              convert::linearIndexToIndex<2, 3>(min_corner_offset) -
-              Index3D::Ones();
+              cell_index - Index3D::Ones() +
+              convert::linearIndexToIndex<2, 3>(min_corner_offset);
           surface_voxels[voxel_min_corner] = voxel_corner_values;
         }
       }
@@ -103,9 +102,9 @@ void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
   // Weld near-identical vertices
   std::vector<LinearIndex> indices(vertices.size());
   {
-    constexpr FloatingPoint kTolerance = 1e-5f;
+    const FloatingPoint tolerance = 1e-3f * min_cell_width;
     for (auto& vertex : vertices) {
-      vertex = (vertex / kTolerance).array().round() * kTolerance;
+      vertex = (vertex / tolerance).array().round() * tolerance;
     }
     const auto vertices_original = vertices;
     std::sort(vertices.begin(), vertices.end(), lessThan);

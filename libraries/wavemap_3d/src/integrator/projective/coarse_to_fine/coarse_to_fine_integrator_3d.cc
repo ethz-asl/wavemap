@@ -59,7 +59,8 @@ void CoarseToFineIntegrator3D::updateMap() {
         convert::nodeIndexToAABB(current_node, min_cell_width_);
     const IntersectionType intersection_type =
         range_image_intersector_->determineIntersectionType(
-            posed_range_image_->getPose(), W_cell_aabb);
+            W_cell_aabb, posed_range_image_->getRotationMatrixInverse(),
+            posed_range_image_->getPose().getPosition());
 
     // If we're fully in unknown space,
     // there's no need to evaluate this node or its children

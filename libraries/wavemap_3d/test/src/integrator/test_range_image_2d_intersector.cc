@@ -168,7 +168,9 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
           W_node_bottom_left + Vector3D::Constant(node_width)};
       const IntersectionType returned_intersection_type =
           range_image_intersector.determineIntersectionType(
-              posed_range_image->getPose(), W_cell_aabb);
+              W_cell_aabb,
+              posed_range_image->getPose().inverse().getRotationMatrix(),
+              posed_range_image->getPose().getPosition());
       EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
           << "Expected " << getIntersectionTypeStr(reference_intersection_type)
           << " but got " << getIntersectionTypeStr(returned_intersection_type);

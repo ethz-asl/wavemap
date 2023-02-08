@@ -1,0 +1,88 @@
+general:
+  world_frame: "odom"
+  publish_performance_stats: false
+
+map:
+  pruning_period: { seconds: 10.0 }
+  visualization_period: { seconds: 10.0 }
+  autosave_period: { seconds: -1.0 }
+  autosave_path: ""
+  data_structure:
+    type: "wavelet_octree"
+    min_cell_width: &min_cell_width { meters: 0.02 }
+    max_height: 14
+
+integrator_templates:
+  - &vlp16
+    integration_method:
+      type: "coarse_to_fine_wavelet_integrator"
+      min_range: { meters: 1.0 }
+      max_range: { meters: 30.0 }
+      termination_height: 3
+      max_acceptable_update_error: 0.1
+      max_update_resolution: *min_cell_width
+    projection_model:
+      type: "spherical_projector"
+      elevation:
+        num_cells: 16
+        min_angle: { degrees: -15.0 }
+        max_angle: { degrees: 15.0 }
+      azimuth:
+        num_cells: 1740
+        min_angle: { degrees: -180.0 }
+        max_angle: { degrees: 180.0 }
+    measurement_model:
+      type: "continuous_volumetric_log_odds"
+      angle_sigma: { degrees: 0.035 }
+      range_sigma: { meters: 0.05 }
+      scaling_free: 0.1
+      scaling_occupied: 0.2
+  - &bpearl
+    integration_method:
+      type: "coarse_to_fine_wavelet_integrator"
+      min_range: { meters: 0.3 }
+      max_range: { meters: 2.2 }
+      termination_height: 0
+      max_acceptable_update_error: 0.1
+      max_update_resolution: *min_cell_width
+    projection_model:
+      type: "spherical_projector"
+      elevation:
+        num_cells: 21
+        min_angle: { degrees: 0.0 }
+        max_angle: { degrees: 60.0 }
+      azimuth:
+        num_cells: 1800
+        min_angle: { degrees: -180.0 }
+        max_angle: { degrees: 180.0 }
+    measurement_model:
+      type: "continuous_volumetric_log_odds"
+      angle_sigma: { degrees: 0.05 }
+      range_sigma: { meters: 0.015 }
+      scaling_free: 0.3
+      scaling_occupied: 0.4
+
+integrators:
+  - <<: *vlp16
+    input:
+      type: "pointcloud"
+      topic_name: "/velodyne_points"
+      reprojected_topic_name: "/velodyne/reprojected"
+      topic_queue_length: 3
+      max_wait_for_pose: { seconds: 1.0 }
+  - <<: *bpearl
+    input:
+      type: "pointcloud"
+      topic_name: "/bpearl_front/points"
+      sensor_frame_id: "bpearl_front_beam_origin"
+      reprojected_topic_name: "/bpearl_front/reprojected"
+      topic_queue_length: 3
+      max_wait_for_pose: { seconds: 1.0 }
+  - <<: *bpearl
+    input:
+      type: "pointcloud"
+      topic_name: "/bpearl_rear/points"
+      sensor_frame_id: "bpearl_rear_beam_origin"
+      reprojected_topic_name: "/bpearl_rear/reprojected"
+      topic_queue_length: 3
+      max_wait_for_pose: { seconds: 1.0 }

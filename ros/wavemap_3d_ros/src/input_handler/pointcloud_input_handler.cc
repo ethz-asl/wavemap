@@ -6,9 +6,11 @@ namespace wavemap {
 PointcloudInputHandler::PointcloudInputHandler(
     const Config& config, const param::Map& params, std::string world_frame,
     VolumetricDataStructure3D::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh)
+    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
-                   std::move(occupancy_map), std::move(transformer), nh) {
+                   std::move(occupancy_map), std::move(transformer), nh,
+                   std::move(nh_private)) {
   // Subscribe to the pointcloud input
   pointcloud_sub_ =
       nh.subscribe(config_.topic_name, config_.topic_queue_length,
@@ -18,10 +20,13 @@ PointcloudInputHandler::PointcloudInputHandler(
 void PointcloudInputHandler::processQueue() {
   while (!pointcloud_queue_.empty()) {
     const sensor_msgs::PointCloud2& oldest_msg = pointcloud_queue_.front();
+    const std::string sensor_frame_id = config_.sensor_frame_id.empty()
+                                            ? oldest_msg.header.frame_id
+                                            : config_.sensor_frame_id;
 
     // Get the sensor pose in world frame
     Transformation3D T_W_C;
-    if (!transformer_->lookupTransform(world_frame_, oldest_msg.header.frame_id,
+    if (!transformer_->lookupTransform(world_frame_, sensor_frame_id,
                                        oldest_msg.header.stamp, T_W_C)) {
       const auto newest_msg = pointcloud_queue_.back();
       if ((newest_msg.header.stamp - oldest_msg.header.stamp).toSec() <
@@ -29,13 +34,13 @@ void PointcloudInputHandler::processQueue() {
         // Try to get this pointcloud's pose again at the next iteration
         return;
       } else {
-        ROS_WARN_STREAM("Waited "
-                        << config_.max_wait_for_pose
-                        << "s but still could not look up pose for "
-                           "pointcloud with frame \""
-                        << oldest_msg.header.frame_id << "\" in world frame \""
-                        << world_frame_ << "\" at timestamp "
-                        << oldest_msg.header.stamp << "; skipping pointcloud.");
+        ROS_WARN_STREAM("Waited " << config_.max_wait_for_pose
+                                  << "s but still could not look up pose for "
+                                     "pointcloud with frame \""
+                                  << sensor_frame_id << "\" in world frame \""
+                                  << world_frame_ << "\" at timestamp "
+                                  << oldest_msg.header.stamp
+                                  << "; skipping pointcloud.");
         pointcloud_queue_.pop();
         continue;
       }
@@ -64,14 +69,19 @@ void PointcloudInputHandler::processQueue() {
          it != it.end(); ++it) {
       t_C_points.emplace_back(it[0], it[1], it[2]);
     }
+    const PosedPointcloud posed_pointcloud(T_W_C,
+                                           Pointcloud<Point3D>(t_C_points));
+
+    // Reproject if enabled
+    if (isReprojectionEnabled()) {
+      publishReprojected(oldest_msg.header.stamp, posed_pointcloud);
+    }
 
     // Integrate the pointcloud
     ROS_INFO_STREAM("Inserting pointcloud with "
                     << t_C_points.size()
                     << " points. Remaining pointclouds in queue: "
                     << pointcloud_queue_.size() - 1 << ".");
-    const PosedPointcloud posed_pointcloud(T_W_C,
-                                           Pointcloud<Point3D>(t_C_points));
     integration_timer_.start();
     integrator_->integratePointcloud(posed_pointcloud);
     const double pointcloud_integration_time = integration_timer_.stop();

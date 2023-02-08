@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_3d)
 
 # Dependencies
-find_package(catkin REQUIRED COMPONENTS wavemap_common opencv3_catkin)
+find_package(catkin REQUIRED COMPONENTS wavemap_common cv_bridge)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
 
 # Setup catkin package
 catkin_package(INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS
-    wavemap_common opencv3_catkin)
+    wavemap_common cv_bridge)
 
 # For all targets
 include_directories(include ${catkin_INCLUDE_DIRS})

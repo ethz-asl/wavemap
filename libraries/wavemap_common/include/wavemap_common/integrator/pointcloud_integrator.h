@@ -13,6 +13,8 @@ struct PointcloudIntegratorConfig : ConfigBase<PointcloudIntegratorConfig> {
   FloatingPoint min_range = 0.5f;
   FloatingPoint max_range = 20.f;
 
+  NdtreeIndexElement termination_height = 0;
+
   // Constructors
   PointcloudIntegratorConfig() = default;
   PointcloudIntegratorConfig(FloatingPoint min_range, FloatingPoint max_range)

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <stack>
+#include <string>
 #include <utility>
 
 #include <wavemap_3d/data_structure/volumetric_octree.h>
@@ -10,10 +11,11 @@
 
 namespace wavemap {
 template <typename CellT>
-wavemap_msgs::Map mapToRosMsg(const VolumetricOctree<CellT>& map) {
+wavemap_msgs::Map mapToRosMsg(const VolumetricOctree<CellT>& map,
+                              const std::string& frame_id) {
   wavemap_msgs::Map map_msg;
   map_msg.header.stamp = ros::Time::now();
-  map_msg.header.frame_id = "odom";
+  map_msg.header.frame_id = frame_id;
 
   auto& octree_msg = map_msg.octree.template emplace_back();
   octree_msg.min_cell_width = map.getMinCellWidth();
@@ -36,10 +38,11 @@ wavemap_msgs::Map mapToRosMsg(const VolumetricOctree<CellT>& map) {
 }
 
 template <typename CellT>
-wavemap_msgs::Map mapToRosMsg(const WaveletOctree<CellT>& map) {
+wavemap_msgs::Map mapToRosMsg(const WaveletOctree<CellT>& map,
+                              const std::string& frame_id) {
   wavemap_msgs::Map map_msg;
   map_msg.header.stamp = ros::Time::now();
-  map_msg.header.frame_id = "odom";
+  map_msg.header.frame_id = frame_id;
 
   auto& wavelet_octree_msg = map_msg.wavelet_octree.template emplace_back();
   wavelet_octree_msg.min_cell_width = map.getMinCellWidth();

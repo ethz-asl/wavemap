@@ -16,44 +16,55 @@ inline FloatingPoint ScanwiseIntegrator3D::computeUpdate(
     return 0.f;
   }
 
-  const auto [image_idx, cell_offset] =
-      projection_model_->imageToNearestIndexAndOffset(
+  const auto [image_indices, cell_offsets] =
+      projection_model_->imageToNearestIndicesAndOffsets(
           sensor_coordinates.head<2>());
-  if (!posed_range_image_->isIndexWithinBounds(image_idx)) {
-    return 0.f;
+
+  FloatingPoint update = 0.f;
+  for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
+    const Index2D& image_idx = image_indices[neighbor_idx];
+    const Vector2D& cell_offset = cell_offsets[neighbor_idx];
+
+    if (!posed_range_image_->isIndexWithinBounds(image_idx)) {
+      continue;
+    }
+
+    const FloatingPoint measured_distance =
+        posed_range_image_->getRange(image_idx);
+    if (measured_distance +
+            measurement_model_.getRangeThresholdBehindSurface() <
+        sensor_coordinates.z()) {
+      continue;
+    }
+
+    // Calculate the error norm between the beam and cell projected into the
+    // image NOTE: For spherical (e.g. LiDAR) projection models, the error norm
+    //       corresponds to the relative angle between the beam and the ray
+    //       through the cell, whereas for camera models it corresponds to the
+    //       reprojection error in pixels.
+    const Vector2D cell_to_beam_offset =
+        beam_offset_image_.getBeamOffset(image_idx) - cell_offset;
+    const FloatingPoint cell_to_beam_image_error_norm =
+        projection_model_->imageOffsetToErrorNorm(sensor_coordinates.head<2>(),
+                                                  cell_to_beam_offset);
+    if (measurement_model_.getAngleThreshold() <
+        cell_to_beam_image_error_norm) {
+      continue;
+    }
+
+    if (sensor_coordinates.z() <
+        measured_distance -
+            measurement_model_.getRangeThresholdInFrontOfSurface()) {
+      update += measurement_model_.computeFreeSpaceUpdate(
+          cell_to_beam_image_error_norm);
+    } else {
+      update += measurement_model_.computeUpdate(sensor_coordinates.z(),
+                                                 cell_to_beam_image_error_norm,
+                                                 measured_distance);
+    }
   }
 
-  const FloatingPoint measured_distance =
-      posed_range_image_->getRange(image_idx);
-  if (measured_distance + measurement_model_.getRangeThresholdBehindSurface() <
-      sensor_coordinates.z()) {
-    return 0.f;
-  }
-
-  // Calculate the error norm between the beam and cell projected into the image
-  // NOTE: For spherical (e.g. LiDAR) projection models, the error norm
-  //       corresponds to the relative angle between the beam and the ray
-  //       through the cell, whereas for camera models it corresponds to the
-  //       reprojection error in pixels.
-  const Vector2D cell_to_beam_offset =
-      beam_offset_image_.getBeamOffset(image_idx) - cell_offset;
-  const FloatingPoint cell_to_beam_image_error_norm =
-      projection_model_->imageOffsetToErrorNorm(sensor_coordinates.head<2>(),
-                                                cell_to_beam_offset);
-  if (measurement_model_.getAngleThreshold() < cell_to_beam_image_error_norm) {
-    return 0.f;
-  }
-
-  if (sensor_coordinates.z() <
-      measured_distance -
-          measurement_model_.getRangeThresholdInFrontOfSurface()) {
-    return measurement_model_.computeFreeSpaceUpdate(
-        cell_to_beam_image_error_norm);
-  } else {
-    return measurement_model_.computeUpdate(sensor_coordinates.z(),
-                                            cell_to_beam_image_error_norm,
-                                            measured_distance);
-  }
+  return update;
 }
 }  // namespace wavemap
 

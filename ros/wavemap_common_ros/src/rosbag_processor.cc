@@ -37,6 +37,12 @@ bool RosbagProcessor::processAll() {
   ros::Time side_tasks_last_timestamp(0);
   const ros::Duration kSideTasksDt(0.01);
 
+  // Give the subscribers and rest of the system some time to set up
+  for (int idx = 0; idx < 5; ++idx) {
+    ros::WallDuration(0.1).sleep();
+    ros::spinOnce();
+  }
+
   for (const rosbag::MessageInstance& msg : bag_view_) {
     // Exit if CTRL+C was pressed
     if (!ros::ok()) {
