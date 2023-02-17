@@ -61,6 +61,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/integrator/image_1d/test_circular_projector.cc
       test/src/integrator/image_2d/test_image_2d_projectors.cc
       test/src/integrator/image_2d/test_spherical_projector.cc
+      test/src/integrator/test_measurement_models.cc
       test/src/iterator/test_grid_iterator.cc
       test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc

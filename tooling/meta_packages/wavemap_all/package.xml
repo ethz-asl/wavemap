@@ -13,17 +13,12 @@
     <buildtool_depend>catkin</buildtool_depend>
 
     <exec_depend>wavemap_common</exec_depend>
-    <exec_depend>wavemap_2d</exec_depend>
     <exec_depend>wavemap_3d</exec_depend>
 
     <exec_depend>wavemap_common_ros</exec_depend>
-    <exec_depend>wavemap_2d_ros</exec_depend>
     <exec_depend>wavemap_3d_ros</exec_depend>
     <exec_depend>wavemap_msgs</exec_depend>
-
     <exec_depend>wavemap_rviz_plugin</exec_depend>
-    <exec_depend>wavemap_ground_truth</exec_depend>
-    <exec_depend>wavemap_simulation</exec_depend>
 
     <export>
         <metapackage />
