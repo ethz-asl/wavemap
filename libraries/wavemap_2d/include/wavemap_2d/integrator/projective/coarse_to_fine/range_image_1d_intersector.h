@@ -7,7 +7,7 @@
 
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/aabb.h>
-#include <wavemap_common/integrator/projective/intersection_type.h>
+#include <wavemap_common/integrator/projective/update_type.h>
 
 #include "wavemap_2d/integrator/projective/coarse_to_fine/hierarchical_range_image_1d.h"
 #include "wavemap_2d/integrator/projective/range_image_1d.h"
@@ -36,7 +36,7 @@ class RangeImage1DIntersector {
   static MinMaxAnglePair getAabbMinMaxProjectedAngle(
       const Transformation2D& T_W_C, const AABB<Point2D>& W_aabb);
 
-  IntersectionType determineIntersectionType(
+  UpdateType determineUpdateType(
       const Transformation2D& T_W_C, const AABB<Point2D>& W_cell_aabb,
       const CircularProjector& circular_projector) const;
 

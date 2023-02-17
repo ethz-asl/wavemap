@@ -182,17 +182,17 @@ inline Bounds<FloatingPoint> HierarchicalRangeBounds2D::getBounds(
   }
 }
 
-inline IntersectionType HierarchicalRangeBounds2D::getIntersectionType(
+inline UpdateType HierarchicalRangeBounds2D::getUpdateType(
     const Index2D& bottom_left_image_idx, const Index2D& top_right_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
   const Bounds distance_bounds =
       getBounds(bottom_left_image_idx, top_right_image_idx);
   if (distance_bounds.upper < range_min) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnobserved;
   } else if (range_max < distance_bounds.lower) {
-    return IntersectionType::kFreeOrUnknown;
+    return UpdateType::kFreeOrUnobserved;
   } else {
-    return IntersectionType::kPossiblyOccupied;
+    return UpdateType::kPossiblyOccupied;
   }
 }
 

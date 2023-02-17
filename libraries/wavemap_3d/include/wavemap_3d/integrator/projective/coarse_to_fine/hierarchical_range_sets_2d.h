@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include <wavemap_common/integrator/projective/intersection_type.h>
+#include <wavemap_common/integrator/projective/update_type.h>
 
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
@@ -24,10 +24,10 @@ class HierarchicalRangeSets2D {
   NdtreeIndexElement getMaxHeight() const { return max_height_; }
   static FloatingPoint getRangeMin() { return kMinRepresentableRange; }
 
-  IntersectionType getIntersectionType(const Index2D& bottom_left_image_idx,
-                                       const Index2D& top_right_image_idx,
-                                       FloatingPoint range_min,
-                                       FloatingPoint range_max) const;
+  UpdateType getUpdateType(const Index2D& bottom_left_image_idx,
+                           const Index2D& top_right_image_idx,
+                           FloatingPoint range_min,
+                           FloatingPoint range_max) const;
 
  private:
   using RangeCellIdx = uint8_t;
@@ -58,7 +58,7 @@ class HierarchicalRangeSets2D {
   static std::vector<RangeCellSetImage> computeReducedLevels(
       const RangeImage2D& range_image);
 
-  IntersectionType getIntersectionType(
+  UpdateType getUpdateType(
       RangeCellIdx range_cell_min_idx, RangeCellIdx range_cell_max_idx,
       std::initializer_list<std::reference_wrapper<const RangeCellSet>>
           range_cell_sets) const;

@@ -10,11 +10,11 @@
 #include <wavemap_common/utils/approximate_trigonometry.h>
 
 namespace wavemap {
-inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
+inline UpdateType RangeImage2DIntersector::determineUpdateType(
     const AABB<Point3D>& W_cell_aabb,
     const Transformation3D::RotationMatrix& R_C_W, const Point3D& t_W_C) const {
   if (W_cell_aabb.containsPoint(t_W_C)) {
-    return IntersectionType::kPossiblyOccupied;
+    return UpdateType::kPossiblyOccupied;
   }
 
   // Get the min and max angles for any point in the cell projected into the
@@ -23,7 +23,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
       projection_model_->cartesianToSensorAABB(W_cell_aabb, R_C_W, t_W_C);
   if (max_range_ < min_sensor_coordinates.z() ||
       max_sensor_coordinates.z() < min_range_) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnobserved;
   }
 
   // Pad the min and max angles with the BeamModel's angle threshold to
@@ -47,11 +47,11 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
         (y_axis_wraps_around_ || !y_range_wraps_around ||
          y_range_fully_outside_fov)) {
       // No parts of the cell can be affected by the measurement update
-      return IntersectionType::kFullyUnknown;
+      return UpdateType::kFullyUnobserved;
     } else {
       // Make sure the cell gets enqueued for refinement, as we can't
       // guarantee anything about its children
-      return IntersectionType::kPossiblyOccupied;
+      return UpdateType::kPossiblyOccupied;
     }
   }
 
@@ -59,7 +59,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
   if ((max_image_index.array() < 0).any() ||
       (projection_model_->getDimensions().array() <= min_image_index.array())
           .any()) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnobserved;
   }
 
   // Convert the angles to range image indices
@@ -74,7 +74,7 @@ inline IntersectionType RangeImage2DIntersector::determineIntersectionType(
       min_sensor_coordinates.z() - range_threshold_behind_;
   const FloatingPoint max_z_coordinate =
       max_sensor_coordinates.z() + range_threshold_in_front_;
-  return hierarchical_range_image_.getIntersectionType(
+  return hierarchical_range_image_.getUpdateType(
       min_image_idx_rectified, max_image_idx_rectified, min_z_coordinate,
       max_z_coordinate);
 }

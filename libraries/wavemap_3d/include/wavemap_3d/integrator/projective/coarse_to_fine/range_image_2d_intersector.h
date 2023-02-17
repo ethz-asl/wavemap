@@ -8,7 +8,7 @@
 #include <wavemap_common/common.h>
 #include <wavemap_common/data_structure/aabb.h>
 #include <wavemap_common/integrator/projection_model/image_2d/image_2d_projection_model.h>
-#include <wavemap_common/integrator/projective/intersection_type.h>
+#include <wavemap_common/integrator/projective/update_type.h>
 
 #include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_bounds_2d.h"
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
@@ -33,10 +33,9 @@ class RangeImage2DIntersector {
         range_threshold_in_front_(range_threshold_in_front_of_surface),
         range_threshold_behind_(range_threshold_behind_surface) {}
 
-  IntersectionType determineIntersectionType(
-      const AABB<Point3D>& W_cell_aabb,
-      const Transformation3D::RotationMatrix& R_C_W,
-      const Point3D& t_W_C) const;
+  UpdateType determineUpdateType(const AABB<Point3D>& W_cell_aabb,
+                                 const Transformation3D::RotationMatrix& R_C_W,
+                                 const Point3D& t_W_C) const;
 
  private:
   const bool y_axis_wraps_around_;

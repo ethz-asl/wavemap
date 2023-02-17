@@ -3,13 +3,13 @@
 
 namespace wavemap {
 inline bool WaveletIntegrator2D::isApproximationErrorAcceptable(
-    IntersectionType intersection_type, FloatingPoint sphere_center_distance,
+    UpdateType update_type, FloatingPoint sphere_center_distance,
     FloatingPoint bounding_sphere_radius) const {
-  switch (intersection_type) {
-    case IntersectionType::kFreeOrUnknown:
+  switch (update_type) {
+    case UpdateType::kFreeOrUnobserved:
       return bounding_sphere_radius / sphere_center_distance <
              kMaxAcceptableUpdateError / max_gradient_over_range_fully_inside_;
-    case IntersectionType::kPossiblyOccupied:
+    case UpdateType::kPossiblyOccupied:
       return bounding_sphere_radius <
              kMaxAcceptableUpdateError / max_gradient_on_boundary_;
     default:
@@ -23,10 +23,9 @@ inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
     QuadtreeIndex::RelativeChild relative_child_index) {
   const AABB<Point2D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
-  const IntersectionType intersection_type =
-      range_image_intersector_->determineIntersectionType(
-          posed_range_image_->getPose(), W_cell_aabb, projection_model_);
-  if (intersection_type == IntersectionType::kFullyUnknown) {
+  const UpdateType update_type = range_image_intersector_->determineUpdateType(
+      posed_range_image_->getPose(), W_cell_aabb, projection_model_);
+  if (update_type == UpdateType::kFullyUnobserved) {
     return 0.f;
   }
 
@@ -39,7 +38,7 @@ inline FloatingPoint WaveletIntegrator2D::recursiveSamplerCompressor(  // NOLINT
   const FloatingPoint bounding_sphere_radius =
       kUnitSquareHalfDiagonal * node_width;
   if (node_index.height == 0 ||
-      isApproximationErrorAcceptable(intersection_type, d_C_cell,
+      isApproximationErrorAcceptable(update_type, d_C_cell,
                                      bounding_sphere_radius)) {
     const FloatingPoint sample = computeUpdate(C_node_center);
     return sample;

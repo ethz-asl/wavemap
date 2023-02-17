@@ -38,7 +38,7 @@ class WaveletIntegrator3D : public ScanwiseIntegrator3D {
       OctreeIndex ::RelativeChild relative_child_index);
 
   bool isApproximationErrorAcceptable(
-      IntersectionType intersection_type, FloatingPoint sphere_center_distance,
+      UpdateType update_type, FloatingPoint sphere_center_distance,
       FloatingPoint bounding_sphere_radius) const;
 
   void updateMap() override;

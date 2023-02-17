@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <wavemap_common/integrator/projective/intersection_type.h>
+#include <wavemap_common/integrator/projective/update_type.h>
 
 #include "wavemap_3d/data_structure/volumetric_octree_interface.h"
 #include "wavemap_3d/integrator/projective/coarse_to_fine/range_image_2d_intersector.h"
@@ -34,7 +34,7 @@ class CoarseToFineIntegrator3D : public ScanwiseIntegrator3D {
   static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
 
   bool isApproximationErrorAcceptable(
-      IntersectionType intersection_type, FloatingPoint sphere_center_distance,
+      UpdateType update_type, FloatingPoint sphere_center_distance,
       FloatingPoint bounding_sphere_radius) const;
 
   void updateMap() override;

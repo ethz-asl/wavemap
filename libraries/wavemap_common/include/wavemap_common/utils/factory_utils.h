@@ -48,8 +48,8 @@ struct TypeSelector {
   bool isValid() const { return isValidTypeId(id_); }
 
   // Static methods for convenience
-  static TypeName typeIdToStr(TypeId intersection_type) {
-    return DerivedTypeSelectorT::names[static_cast<TypeId>(intersection_type)];
+  static TypeName typeIdToStr(TypeId update_type) {
+    return DerivedTypeSelectorT::names[static_cast<TypeId>(update_type)];
   }
   static TypeId strToTypeId(const std::string& name);
   static bool isValidTypeId(TypeId type_id) {

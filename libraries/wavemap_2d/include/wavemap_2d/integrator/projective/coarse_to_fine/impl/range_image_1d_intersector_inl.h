@@ -112,7 +112,7 @@ RangeImage1DIntersector::getAabbMinMaxProjectedAngle(
   return angle_pair;
 }
 
-inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
+inline UpdateType RangeImage1DIntersector::determineUpdateType(
     const Transformation2D& T_W_C, const AABB<Point2D>& W_cell_aabb,
     const CircularProjector& circular_projector) const {
   // Get the min and max distances from any point in the cell (which is an
@@ -121,7 +121,7 @@ inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
   const FloatingPoint d_C_cell_closest =
       W_cell_aabb.minDistanceTo(T_W_C.getPosition());
   if (max_range_ < d_C_cell_closest) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnobserved;
   }
   const FloatingPoint d_C_cell_furthest =
       W_cell_aabb.maxDistanceTo(T_W_C.getPosition());
@@ -141,18 +141,18 @@ inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
     if (max_angle < circular_projector.getMinAngle() &&
         circular_projector.getMaxAngle() < min_angle) {
       // No parts of the cell can be affected by the measurement update
-      return IntersectionType::kFullyUnknown;
+      return UpdateType::kFullyUnobserved;
     } else {
       // Make sure the cell gets enqueued for refinement, as we can't
       // guarantee anything about its children
-      return IntersectionType::kPossiblyOccupied;
+      return UpdateType::kPossiblyOccupied;
     }
   }
 
   // Check if the cell is outside the observed range
   if (circular_projector.getMaxAngle() < min_angle ||
       max_angle < circular_projector.getMinAngle()) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnobserved;
   }
 
   // Convert the angles to range image indices
@@ -167,12 +167,12 @@ inline IntersectionType RangeImage1DIntersector::determineIntersectionType(
   const Bounds distance_bounds =
       hierarchical_range_image_.getRangeBounds(min_image_idx, max_image_idx);
   if (distance_bounds.upper + range_threshold_behind_ < d_C_cell_closest) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnobserved;
   } else if (d_C_cell_furthest <
              distance_bounds.lower - range_threshold_in_front_) {
-    return IntersectionType::kFreeOrUnknown;
+    return UpdateType::kFreeOrUnobserved;
   } else {
-    return IntersectionType::kPossiblyOccupied;
+    return UpdateType::kPossiblyOccupied;
   }
 }
 }  // namespace wavemap

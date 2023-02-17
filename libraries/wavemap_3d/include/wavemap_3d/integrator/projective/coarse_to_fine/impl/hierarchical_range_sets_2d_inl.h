@@ -10,23 +10,23 @@
 
 namespace wavemap {
 template <bool azimuth_wraps_pi>
-IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
+UpdateType HierarchicalRangeSets2D<azimuth_wraps_pi>::getUpdateType(
     const Index2D& bottom_left_image_idx, const Index2D& top_right_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
   if (bottom_left_image_idx == top_right_image_idx) {
     const auto range = range_image_->getRange(bottom_left_image_idx);
     if (valueOrInit(range, 0.f) < range_min) {
-      return IntersectionType::kFullyUnknown;
+      return UpdateType::kFullyUnknown;
     } else if (range_max < valueOrInit(range, 1e3f)) {
-      return IntersectionType::kFreeOrUnknown;
+      return UpdateType::kFreeOrUnknown;
     } else {
-      return IntersectionType::kPossiblyOccupied;
+      return UpdateType::kPossiblyOccupied;
     }
   }
 
   DCHECK_LE(range_min, range_max);
   if (kMaxRepresentableRange < range_min) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnknown;
   }
 
   Index2D top_right_image_idx_unwrapped = top_right_image_idx;
@@ -89,7 +89,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
     if (bottom_left_parent_idx == top_right_parent_idx_unwrapped) {
       // Since they do, checking the nodes at min_level_up is equivalent to
       // checking their common parent, so we do that instead as its cheaper
-      return getIntersectionType(
+      return getUpdateType(
           range_min_parent_idx, range_max_parent_idx,
           {levels_[parent_height_idx](bottom_left_parent_idx.x(),
                                       bottom_left_parent_idx.y())});
@@ -97,7 +97,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
                    top_right_parent_idx_unwrapped.x() ||
                bottom_left_parent_idx.y() ==
                    top_right_parent_idx_unwrapped.y()) {
-      return getIntersectionType(
+      return getUpdateType(
           range_min_parent_idx, range_max_parent_idx,
           {levels_[parent_height_idx](bottom_left_parent_idx.x(),
                                       bottom_left_parent_idx.y()),
@@ -117,17 +117,17 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
                         [range_min](auto range) {
                           return valueOrInit(range, 0.f) < range_min;
                         })) {
-          return IntersectionType::kFullyUnknown;
+          return UpdateType::kFullyUnknown;
         } else if (std::all_of(image_values.begin(), image_values.end(),
                                [range_max](auto range) {
                                  return range_max < valueOrInit(range, 1e3f);
                                })) {
-          return IntersectionType::kFreeOrUnknown;
+          return UpdateType::kFreeOrUnknown;
         } else {
-          return IntersectionType::kPossiblyOccupied;
+          return UpdateType::kPossiblyOccupied;
         }
       } else {
-        return getIntersectionType(
+        return getUpdateType(
             range_min_child_idx, range_max_child_idx,
             {levels_[child_height_idx](bottom_left_child_idx.x(),
                                        bottom_left_child_idx.y()),
@@ -142,7 +142,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
   } else {
     // Since the nodes at min_level_up are not direct neighbors we need to go
     // one level up and check all four parents there
-    return getIntersectionType(
+    return getUpdateType(
         range_min_parent_idx, range_max_parent_idx,
         {levels_[parent_height_idx](bottom_left_parent_idx.x(),
                                     bottom_left_parent_idx.y()),
@@ -286,7 +286,7 @@ HierarchicalRangeSets2D<azimuth_wraps_pi>::rangeCellIdxToRange(
 }
 
 template <bool azimuth_wraps_pi>
-IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
+UpdateType HierarchicalRangeSets2D<azimuth_wraps_pi>::getUpdateType(
     HierarchicalRangeSets2D::RangeCellIdx range_cell_min_idx,
     HierarchicalRangeSets2D::RangeCellIdx range_cell_max_idx,
     std::initializer_list<std::reference_wrapper<const RangeCellSet>>
@@ -296,7 +296,7 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
                     return range_cell_set.empty() ||
                            range_cell_set.back() < range_cell_min_idx;
                   })) {
-    return IntersectionType::kFullyUnknown;
+    return UpdateType::kFullyUnknown;
   }
 
   if (std::all_of(range_cell_sets.begin(), range_cell_sets.end(),
@@ -304,21 +304,21 @@ IntersectionType HierarchicalRangeSets2D<azimuth_wraps_pi>::getIntersectionType(
                     return range_cell_set.empty() ||
                            range_cell_max_idx < range_cell_set.front();
                   })) {
-    return IntersectionType::kFreeOrUnknown;
+    return UpdateType::kFreeOrUnknown;
   }
 
   for (const RangeCellSet& range_cell_set : range_cell_sets) {
     for (auto range_cell_idx : range_cell_set) {
       if (range_cell_min_idx <= range_cell_idx &&
           range_cell_idx <= range_cell_max_idx) {
-        return IntersectionType::kPossiblyOccupied;
+        return UpdateType::kPossiblyOccupied;
       } else if (range_cell_max_idx < range_cell_idx) {
         break;
       }
     }
   }
 
-  return IntersectionType::kFreeOrUnknown;
+  return UpdateType::kFreeOrUnknown;
 }
 }  // namespace wavemap
 

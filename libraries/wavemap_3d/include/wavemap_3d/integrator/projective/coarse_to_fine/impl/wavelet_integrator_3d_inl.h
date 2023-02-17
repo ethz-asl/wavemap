@@ -5,14 +5,14 @@
 
 namespace wavemap {
 inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(
-    IntersectionType intersection_type, FloatingPoint sphere_center_distance,
+    UpdateType update_type, FloatingPoint sphere_center_distance,
     FloatingPoint bounding_sphere_radius) const {
-  switch (intersection_type) {
-    case IntersectionType::kFreeOrUnknown:
+  switch (update_type) {
+    case UpdateType::kFreeOrUnobserved:
       return bounding_sphere_radius < (kMaxAcceptableUpdateError /
                                        max_gradient_over_range_fully_inside_) *
                                           sphere_center_distance;
-    case IntersectionType::kPossiblyOccupied:
+    case UpdateType::kPossiblyOccupied:
       return bounding_sphere_radius <
              kMaxAcceptableUpdateError / max_gradient_on_boundary_;
     default:
@@ -43,20 +43,19 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
   // free or unknown; or fully unknown
   const AABB<Point3D> W_cell_aabb =
       convert::nodeIndexToAABB(node_index, min_cell_width_);
-  const IntersectionType intersection_type =
-      range_image_intersector_->determineIntersectionType(
-          W_cell_aabb, posed_range_image_->getRotationMatrixInverse(),
-          posed_range_image_->getPose().getPosition());
+  const UpdateType update_type = range_image_intersector_->determineUpdateType(
+      W_cell_aabb, posed_range_image_->getRotationMatrixInverse(),
+      posed_range_image_->getPose().getPosition());
 
   // If we're fully in unknown space,
   // there's no need to evaluate this node or its children
-  if (intersection_type == IntersectionType::kFullyUnknown) {
+  if (update_type == UpdateType::kFullyUnobserved) {
     return 0.f;
   }
 
   // We can also stop here if the cell will result in a free space update (or
   // zero) and the map is already saturated free
-  if (intersection_type == IntersectionType::kFreeOrUnknown &&
+  if (update_type == UpdateType::kFreeOrUnobserved &&
       node_value <
           SaturatingOccupancyCell::kLowerBound + kNoiseThreshold / 10.f) {
     return 0.f;
@@ -75,7 +74,7 @@ inline FloatingPoint WaveletIntegrator3D::recursiveSamplerCompressor(  // NOLINT
       kUnitCubeHalfDiagonal * node_width;
   WaveletOctreeInterface::NodeType* node =
       parent_node.getChild(relative_child_index);
-  if (isApproximationErrorAcceptable(intersection_type, d_C_cell,
+  if (isApproximationErrorAcceptable(update_type, d_C_cell,
                                      bounding_sphere_radius)) {
     const FloatingPoint sample = computeUpdate(C_node_center);
     if (!node || !node->hasAtLeastOneChild()) {

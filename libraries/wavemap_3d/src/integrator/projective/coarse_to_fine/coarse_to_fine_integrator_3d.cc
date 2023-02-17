@@ -57,14 +57,14 @@ void CoarseToFineIntegrator3D::updateMap() {
     // free or unknown; or fully unknown
     const AABB<Point3D> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width_);
-    const IntersectionType intersection_type =
-        range_image_intersector_->determineIntersectionType(
+    const UpdateType update_type =
+        range_image_intersector_->determineUpdateType(
             W_cell_aabb, posed_range_image_->getRotationMatrixInverse(),
             posed_range_image_->getPose().getPosition());
 
     // If we're fully in unknown space,
     // there's no need to evaluate this node or its children
-    if (intersection_type == IntersectionType::kFullyUnknown) {
+    if (update_type == UpdateType::kFullyUnobserved) {
       continue;
     }
 
@@ -80,7 +80,7 @@ void CoarseToFineIntegrator3D::updateMap() {
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
     if (current_node.height == 0 ||
-        isApproximationErrorAcceptable(intersection_type, d_C_cell,
+        isApproximationErrorAcceptable(update_type, d_C_cell,
                                        bounding_sphere_radius)) {
       const FloatingPoint sample = computeUpdate(C_node_center);
       if (kEpsilon < std::abs(sample)) {

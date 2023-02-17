@@ -67,7 +67,7 @@ class RangeImage2DIntersectorTest : public FixtureBase {
   }
 };
 
-TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
+TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
   for (int repetition = 0; repetition < 3; ++repetition) {
     // Generate a random pointcloud
     const FloatingPoint min_cell_width = getRandomMinCellWidth();
@@ -147,13 +147,13 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
         }
       }
       ASSERT_TRUE(has_free || has_occupied || has_unknown);
-      IntersectionType reference_intersection_type;
+      UpdateType reference_update_type;
       if (has_occupied) {
-        reference_intersection_type = IntersectionType::kPossiblyOccupied;
+        reference_update_type = UpdateType::kPossiblyOccupied;
       } else if (has_free) {
-        reference_intersection_type = IntersectionType::kFreeOrUnknown;
+        reference_update_type = UpdateType::kFreeOrUnobserved;
       } else {
-        reference_intersection_type = IntersectionType::kFullyUnknown;
+        reference_update_type = UpdateType::kFullyUnobserved;
       }
 
       const FloatingPoint node_width =
@@ -166,14 +166,14 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageIntersectionType) {
       const AABB<Point3D> W_cell_aabb{
           W_node_bottom_left,
           W_node_bottom_left + Vector3D::Constant(node_width)};
-      const IntersectionType returned_intersection_type =
-          range_image_intersector.determineIntersectionType(
+      const UpdateType returned_update_type =
+          range_image_intersector.determineUpdateType(
               W_cell_aabb,
               posed_range_image->getPose().inverse().getRotationMatrix(),
               posed_range_image->getPose().getPosition());
-      EXPECT_TRUE(reference_intersection_type <= returned_intersection_type)
-          << "Expected " << getIntersectionTypeStr(reference_intersection_type)
-          << " but got " << getIntersectionTypeStr(returned_intersection_type);
+      EXPECT_TRUE(reference_update_type <= returned_update_type)
+          << "Expected " << getUpdateTypeStr(reference_update_type)
+          << " but got " << getUpdateTypeStr(returned_update_type);
     }
   }
 }

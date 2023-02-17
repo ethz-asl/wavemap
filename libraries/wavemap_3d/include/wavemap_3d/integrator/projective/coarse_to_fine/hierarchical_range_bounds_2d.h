@@ -11,7 +11,7 @@
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
-#include <wavemap_common/integrator/projective/intersection_type.h>
+#include <wavemap_common/integrator/projective/update_type.h>
 
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 
@@ -91,10 +91,10 @@ class HierarchicalRangeBounds2D {
     return getBounds(bottom_left_image_idx, top_right_image_idx).upper;
   }
 
-  IntersectionType getIntersectionType(const Index2D& bottom_left_image_idx,
-                                       const Index2D& top_right_image_idx,
-                                       FloatingPoint range_min,
-                                       FloatingPoint range_max) const;
+  UpdateType getUpdateType(const Index2D& bottom_left_image_idx,
+                           const Index2D& top_right_image_idx,
+                           FloatingPoint range_min,
+                           FloatingPoint range_max) const;
 
  private:
   const std::shared_ptr<const RangeImage2D> range_image_;

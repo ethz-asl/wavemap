@@ -48,10 +48,10 @@ void CoarseToFineIntegrator2D::integratePointcloud(
 
     const AABB<Point2D> W_cell_aabb =
         convert::nodeIndexToAABB(current_node, min_cell_width_);
-    const IntersectionType intersection_type =
-        range_image_intersector_->determineIntersectionType(
+    const UpdateType update_type =
+        range_image_intersector_->determineUpdateType(
             pointcloud.getPose(), W_cell_aabb, projection_model_);
-    if (intersection_type == IntersectionType::kFullyUnknown) {
+    if (update_type == UpdateType::kFullyUnobserved) {
       continue;
     }
 
@@ -64,7 +64,7 @@ void CoarseToFineIntegrator2D::integratePointcloud(
     const FloatingPoint bounding_sphere_radius =
         kUnitSquareHalfDiagonal * node_width;
     if (current_node.height == 0 ||
-        isApproximationErrorAcceptable(intersection_type, d_C_cell,
+        isApproximationErrorAcceptable(update_type, d_C_cell,
                                        bounding_sphere_radius)) {
       const FloatingPoint sample = computeUpdate(C_node_center);
       if (kEpsilon < std::abs(sample)) {
