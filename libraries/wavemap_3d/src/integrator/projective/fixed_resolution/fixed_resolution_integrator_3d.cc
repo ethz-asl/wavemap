@@ -1,6 +1,6 @@
 #include "wavemap_3d/integrator/projective/fixed_resolution/fixed_resolution_integrator_3d.h"
 
-#include <wavemap_common/iterator/grid_iterator.h>
+#include <wavemap/iterator/grid_iterator.h>
 
 namespace wavemap {
 void FixedResolutionIntegrator3D::importPointcloud(

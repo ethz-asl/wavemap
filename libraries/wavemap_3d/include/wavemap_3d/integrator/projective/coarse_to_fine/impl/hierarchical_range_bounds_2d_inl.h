@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <vector>
 
-#include <wavemap_common/iterator/grid_iterator.h>
-#include <wavemap_common/utils/bit_manipulation.h>
+#include <wavemap/iterator/grid_iterator.h>
+#include <wavemap/utils/bit_manipulation.h>
 
 namespace wavemap {
 inline Bounds<FloatingPoint> HierarchicalRangeBounds2D::getBounds(

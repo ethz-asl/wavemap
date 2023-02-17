@@ -1,6 +1,6 @@
 #include "wavemap_rviz_plugin/visuals/multi_resolution_slice_visual.h"
 
-#include <wavemap_common/indexing/index_conversions.h>
+#include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
 MultiResolutionSliceVisual::MultiResolutionSliceVisual(

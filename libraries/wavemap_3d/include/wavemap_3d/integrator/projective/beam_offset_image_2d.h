@@ -1,9 +1,9 @@
 #ifndef WAVEMAP_3D_INTEGRATOR_PROJECTIVE_BEAM_OFFSET_IMAGE_2D_H_
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_BEAM_OFFSET_IMAGE_2D_H_
 
-#include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/pointcloud.h>
-#include <wavemap_common/integrator/projection_model/image_2d/ouster_projector.h>
+#include <wavemap/common.h>
+#include <wavemap/data_structure/pointcloud.h>
+#include <wavemap/integrator/projection_model/image_2d/ouster_projector.h>
 
 namespace wavemap {
 class BeamOffsetImage2D {

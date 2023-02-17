@@ -2,9 +2,9 @@
 
 #include <unordered_map>
 
-#include <wavemap_common/indexing/index_conversions.h>
-#include <wavemap_common/indexing/index_hashes.h>
-#include <wavemap_common/iterator/grid_iterator.h>
+#include <wavemap/indexing/index_conversions.h>
+#include <wavemap/indexing/index_hashes.h>
+#include <wavemap/iterator/grid_iterator.h>
 
 #include "wavemap_rviz_plugin/marching_cubes.h"
 

@@ -1,7 +1,7 @@
 #ifndef WAVEMAP_3D_DATA_STRUCTURE_VOLUMETRIC_OCTREE_H_
 #define WAVEMAP_3D_DATA_STRUCTURE_VOLUMETRIC_OCTREE_H_
 
-#include <wavemap_common/data_structure/volumetric/volumetric_ndtree.h>
+#include <wavemap/data_structure/volumetric/volumetric_ndtree.h>
 
 #include "wavemap_3d/data_structure/volumetric_octree_interface.h"
 

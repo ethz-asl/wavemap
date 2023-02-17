@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include <wavemap_common/data_structure/aabb.h>
+#include <wavemap/data_structure/aabb.h>
 
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 #include "wavemap_3d/integrator/projective/scanwise_integrator_3d.h"

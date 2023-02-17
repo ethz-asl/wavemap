@@ -7,12 +7,12 @@
 
 #include <glog/logging.h>
 #include <ros/ros.h>
+#include <wavemap/common.h>
+#include <wavemap/utils/config_utils.h>
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d.h>
 #include <wavemap_3d/integrator/pointcloud_integrator_3d.h>
-#include <wavemap_common/common.h>
-#include <wavemap_common/utils/config_utils.h>
-#include <wavemap_common_ros/tf_transformer.h>
-#include <wavemap_common_ros/utils/timer.h>
+#include <wavemap_ros/tf_transformer.h>
+#include <wavemap_ros/utils/timer.h>
 
 #include "wavemap_3d_ros/input_handler/input_handler.h"
 

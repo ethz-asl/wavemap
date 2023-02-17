@@ -1,8 +1,8 @@
 #ifndef WAVEMAP_3D_INTEGRATOR_PROJECTIVE_RANGE_IMAGE_2D_H_
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_RANGE_IMAGE_2D_H_
 
-#include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/pointcloud.h>
+#include <wavemap/common.h>
+#include <wavemap/data_structure/pointcloud.h>
 
 namespace wavemap {
 class RangeImage2D {

@@ -2,9 +2,9 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
+#include <wavemap/iterator/grid_iterator.h>
+#include <wavemap/utils/eigen_format.h>
 #include <wavemap_3d/integrator/projective/range_image_2d.h>
-#include <wavemap_common/iterator/grid_iterator.h>
-#include <wavemap_common/utils/eigen_format.h>
 
 namespace wavemap {
 DepthImageInputHandler::DepthImageInputHandler(

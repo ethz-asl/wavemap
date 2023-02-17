@@ -5,9 +5,9 @@
 #include <bitset>
 #include <limits>
 
-#include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
-#include <wavemap_common/utils/angle_utils.h>
-#include <wavemap_common/utils/approximate_trigonometry.h>
+#include <wavemap/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
+#include <wavemap/utils/angle_utils.h>
+#include <wavemap/utils/approximate_trigonometry.h>
 
 namespace wavemap {
 inline UpdateType RangeImage2DIntersector::determineUpdateType(

@@ -4,11 +4,11 @@
 #include <memory>
 #include <string>
 
+#include <wavemap/utils/config_utils.h>
 #include <wavemap_3d/integrator/pointcloud_integrator_3d_factory.h>
-#include <wavemap_common/utils/config_utils.h>
-#include <wavemap_common_ros/tf_transformer.h>
-#include <wavemap_common_ros/utils/config_conversions.h>
-#include <wavemap_common_ros/utils/timer.h>
+#include <wavemap_ros/tf_transformer.h>
+#include <wavemap_ros/utils/config_conversions.h>
+#include <wavemap_ros/utils/timer.h>
 
 namespace wavemap {
 struct InputHandlerType : public TypeSelector<InputHandlerType> {

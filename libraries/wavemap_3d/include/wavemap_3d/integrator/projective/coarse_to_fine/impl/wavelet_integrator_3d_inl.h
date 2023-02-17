@@ -1,7 +1,7 @@
 #ifndef WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_3D_INL_H_
 #define WAVEMAP_3D_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_3D_INL_H_
 
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 namespace wavemap {
 inline bool WaveletIntegrator3D::isApproximationErrorAcceptable(

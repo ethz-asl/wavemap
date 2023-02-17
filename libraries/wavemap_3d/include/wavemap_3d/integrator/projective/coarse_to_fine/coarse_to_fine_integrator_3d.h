@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <wavemap_common/integrator/projective/update_type.h>
+#include <wavemap/integrator/projective/update_type.h>
 
 #include "wavemap_3d/data_structure/volumetric_octree_interface.h"
 #include "wavemap_3d/integrator/projective/coarse_to_fine/range_image_2d_intersector.h"

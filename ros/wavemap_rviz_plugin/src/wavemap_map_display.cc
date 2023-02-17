@@ -5,10 +5,10 @@
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 #include <tf/transform_listener.h>
+#include <wavemap/data_structure/volumetric/cell_types/scalar_cell.h>
+#include <wavemap/indexing/ndtree_index.h>
 #include <wavemap_3d/data_structure/volumetric_octree.h>
 #include <wavemap_3d/data_structure/wavelet_octree.h>
-#include <wavemap_common/data_structure/volumetric/cell_types/scalar_cell.h>
-#include <wavemap_common/indexing/ndtree_index.h>
 
 #include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
 

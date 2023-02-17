@@ -5,10 +5,10 @@
 #include <memory>
 #include <utility>
 
-#include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/aabb.h>
-#include <wavemap_common/integrator/projection_model/image_2d/image_2d_projection_model.h>
-#include <wavemap_common/integrator/projective/update_type.h>
+#include <wavemap/common.h>
+#include <wavemap/data_structure/aabb.h>
+#include <wavemap/integrator/projection_model/image_2d/image_2d_projection_model.h>
+#include <wavemap/integrator/projective/update_type.h>
 
 #include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_bounds_2d.h"
 #include "wavemap_3d/integrator/projective/range_image_2d.h"

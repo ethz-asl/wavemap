@@ -11,7 +11,7 @@
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
-#include <wavemap_common/integrator/projective/update_type.h>
+#include <wavemap/integrator/projective/update_type.h>
 
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 

@@ -2,7 +2,7 @@
 
 #include <stack>
 
-#include <wavemap_common/indexing/ndtree_index.h>
+#include <wavemap/indexing/ndtree_index.h>
 
 namespace wavemap {
 CoarseToFineIntegrator3D::CoarseToFineIntegrator3D(

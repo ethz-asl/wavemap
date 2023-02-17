@@ -1,17 +1,17 @@
 #include "wavemap_3d_ros/wavemap_3d_server.h"
 
 #include <std_srvs/Empty.h>
+#include <wavemap/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap/utils/nameof.h>
 #include <wavemap_3d/data_structure/volumetric_data_structure_3d_factory.h>
 #include <wavemap_3d/data_structure/volumetric_octree.h>
 #include <wavemap_3d/data_structure/wavelet_octree.h>
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
-#include <wavemap_common/utils/nameof.h>
-#include <wavemap_common_ros/utils/config_conversions.h>
-#include <wavemap_common_ros/utils/visualization_utils.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_msgs/MapEvaluationSummary.h>
 #include <wavemap_msgs/PerformanceStats.h>
+#include <wavemap_ros/utils/config_conversions.h>
+#include <wavemap_ros/utils/visualization_utils.h>
 
 #include "wavemap_3d_ros/input_handler/input_handler_factory.h"
 #include "wavemap_3d_ros/io/ros_msg_conversions.h"

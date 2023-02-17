@@ -1,6 +1,6 @@
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d_factory.h"
 
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap/data_structure/volumetric/cell_types/occupancy_cell.h>
 
 #include "wavemap_3d/data_structure/hashed_blocks_3d.h"
 #include "wavemap_3d/data_structure/volumetric_differencing_octree.h"

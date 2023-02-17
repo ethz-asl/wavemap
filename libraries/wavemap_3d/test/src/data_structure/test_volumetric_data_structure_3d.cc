@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <wavemap_common/common.h>
-#include <wavemap_common/data_structure/volumetric/cell_types/occupancy_cell.h>
-#include <wavemap_common/indexing/index_conversions.h>
-#include <wavemap_common/test/fixture_base.h>
-#include <wavemap_common/utils/container_print_utils.h>
+#include <wavemap/common.h>
+#include <wavemap/data_structure/volumetric/cell_types/occupancy_cell.h>
+#include <wavemap/indexing/index_conversions.h>
+#include <wavemap/test/fixture_base.h>
+#include <wavemap/utils/container_print_utils.h>
 
 #include "wavemap_3d/data_structure/hashed_blocks_3d.h"
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"

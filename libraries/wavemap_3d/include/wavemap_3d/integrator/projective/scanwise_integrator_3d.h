@@ -4,8 +4,8 @@
 #include <memory>
 #include <utility>
 
-#include <wavemap_common/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
-#include <wavemap_common/integrator/projection_model/image_2d/image_2d_projection_model.h>
+#include <wavemap/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h>
+#include <wavemap/integrator/projection_model/image_2d/image_2d_projection_model.h>
 
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"

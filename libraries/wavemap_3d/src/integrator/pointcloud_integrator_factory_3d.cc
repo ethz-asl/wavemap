@@ -1,6 +1,6 @@
-#include <wavemap_common/integrator/projection_model/image_2d/ouster_projector.h>
-#include <wavemap_common/integrator/projection_model/image_2d/pinhole_camera_projector.h>
-#include <wavemap_common/integrator/projection_model/image_2d/spherical_projector.h>
+#include <wavemap/integrator/projection_model/image_2d/ouster_projector.h>
+#include <wavemap/integrator/projection_model/image_2d/pinhole_camera_projector.h>
+#include <wavemap/integrator/projection_model/image_2d/spherical_projector.h>
 
 #include "wavemap_3d/integrator/pointcloud_integrator_3d.h"
 #include "wavemap_3d/integrator/pointcloud_integrator_3d_factory.h"

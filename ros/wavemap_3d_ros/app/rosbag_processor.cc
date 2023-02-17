@@ -1,6 +1,6 @@
 #include <rosgraph_msgs/Clock.h>
 #include <tf/tfMessage.h>
-#include <wavemap_common_ros/rosbag_processor.h>
+#include <wavemap_ros/rosbag_processor.h>
 
 #include "wavemap_3d_ros/input_handler/depth_image_input_handler.h"
 #include "wavemap_3d_ros/input_handler/pointcloud_input_handler.h"

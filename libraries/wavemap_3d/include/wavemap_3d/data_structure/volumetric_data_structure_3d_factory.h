@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include <wavemap_common/utils/config_utils.h>
-#include <wavemap_common/utils/factory_utils.h>
+#include <wavemap/utils/config_utils.h>
+#include <wavemap/utils/factory_utils.h>
 
 #include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
 

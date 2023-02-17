@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include <wavemap_common/common.h>
-#include <wavemap_common/integrator/pointcloud_integrator.h>
-#include <wavemap_common/integrator/projection_model/image_2d/spherical_projector.h>
-#include <wavemap_common/test/fixture_base.h>
-#include <wavemap_common/utils/container_print_utils.h>
-#include <wavemap_common/utils/eigen_format.h>
+#include <wavemap/common.h>
+#include <wavemap/integrator/pointcloud_integrator.h>
+#include <wavemap/integrator/projection_model/image_2d/spherical_projector.h>
+#include <wavemap/test/fixture_base.h>
+#include <wavemap/utils/container_print_utils.h>
+#include <wavemap/utils/eigen_format.h>
 
 #include "wavemap_3d/integrator/projective/coarse_to_fine/range_image_2d_intersector.h"
 

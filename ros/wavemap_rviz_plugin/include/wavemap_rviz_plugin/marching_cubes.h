@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include <wavemap_common/common.h>
+#include <wavemap/common.h>
 
 // All credits for this code go to OpenChisel:
 // https://github.com/personalrobotics/OpenChisel

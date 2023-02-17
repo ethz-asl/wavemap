@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include <wavemap_common/common.h>
-#include <wavemap_common/indexing/index_conversions.h>
-#include <wavemap_common/iterator/grid_iterator.h>
-#include <wavemap_common/test/fixture_base.h>
+#include <wavemap/common.h>
+#include <wavemap/indexing/index_conversions.h>
+#include <wavemap/iterator/grid_iterator.h>
+#include <wavemap/test/fixture_base.h>
 
 #include "wavemap_3d/integrator/projective/coarse_to_fine/hierarchical_range_bounds_2d.h"
 

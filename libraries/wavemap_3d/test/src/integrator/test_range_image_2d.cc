@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <wavemap_common/common.h>
-#include <wavemap_common/test/fixture_base.h>
+#include <wavemap/common.h>
+#include <wavemap/test/fixture_base.h>
 
 #include "wavemap_3d/integrator/projective/range_image_2d.h"
 

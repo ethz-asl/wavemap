@@ -248,37 +248,12 @@ jobs:
           cache-group: noetic-gcc-release
           cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
 
-      # TODO(victorr): Automatically loop over all wavemap_* packages
-      - name: Build wavemap_common
+      - name: Build all wavemap packages
         working-directory: ${{ env.CATKIN_WS_PATH }}
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_common --no-status --force-color
-          echo "::remove-matcher owner=problem-matcher-gcc::"
-
-      - name: Build wavemap_2d
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_2d --no-status --force-color
-          echo "::remove-matcher owner=problem-matcher-gcc::"
-
-      - name: Build wavemap_2d_ros
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_2d_ros --no-status --force-color
-          echo "::remove-matcher owner=problem-matcher-gcc::"
-
-      - name: Build wavemap_ground_truth
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: |
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_ground_truth --no-status --force-color
+          catkin build wavemap_all --no-status --force-color
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
       - name: Show statistics for ccache
@@ -313,26 +288,18 @@ jobs:
         shell: bash
         run: catkin build wavemap_all --no-status --force-color --cmake-args -DUSE_CLANG_TIDY=ON
 
-      # TODO(victorr): Automatically loop over all wavemap_* packages
-      - name: Run clang-tidy for wavemap_common
-        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_common
+      - name: Run clang-tidy for wavemap
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
         run: |
           echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
-          run-clang-tidy -header-filter="*include/wavemap_common/*" -quiet
+          run-clang-tidy -header-filter="*include/wavemap/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
-      - name: Run clang-tidy for wavemap_2d
-        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+      - name: Run clang-tidy for wavemap_ros
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_ros
         run: |
           echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
-          run-clang-tidy -header-filter="*include/wavemap_2d/*" -quiet
-          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
-
-      - name: Run clang-tidy for wavemap_2d_ros
-        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d_ros
-        run: |
-          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
-          run-clang-tidy -header-filter="*include/wavemap_2d_ros/*" -quiet
+          run-clang-tidy -header-filter="*include/wavemap_ros/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
       - name: Run clang-tidy for wavemap_ground_truth
@@ -436,11 +403,11 @@ jobs:
         run: catkin build wavemap_all --no-status --force-color --no-deps --cmake-args -DENABLE_COVERAGE_TESTING=ON --catkin-make-args tests
 
       - name: Set coverage counters to zero and create report base
-        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
         shell: bash
         run: |
           lcov --zerocounters --directory .
-          lcov --capture --initial --directory . --output-file wavemap_2d_coverage_base.info
+          lcov --capture --initial --directory . --output-file wavemap_coverage_base.info
 
       - name: Run all tests while measuring coverage
         working-directory: ${{ env.CATKIN_WS_PATH }}
@@ -459,21 +426,21 @@ jobs:
           fi
 
       - name: Create the coverage report
-        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
         shell: bash
         run: |
-          lcov --capture --directory . --output-file wavemap_2d_coverage_unit_tests.info
-          lcov --add-tracefile wavemap_2d_coverage_base.info --add-tracefile wavemap_2d_coverage_unit_tests.info --output-file wavemap_2d_coverage_total.info
-          lcov --extract wavemap_2d_coverage_total.info '*/wavemap_2d/wavemap_2d*' --output-file wavemap_2d_coverage_filtered_intermediate.info
-          lcov --remove wavemap_2d_coverage_filtered_intermediate.info '*/wavemap_2d/test/*' '*/wavemap_2d/app/*' '*/wavemap_2d/benchmark/*' --output-file wavemap_2d_coverage.info
-          rm wavemap_2d_coverage_base.info wavemap_2d_coverage_unit_tests.info wavemap_2d_coverage_total.info wavemap_2d_coverage_filtered_intermediate.info
-          lcov --list wavemap_2d_coverage.info  # Include report in logs for debugging
+          lcov --capture --directory . --output-file wavemap_coverage_unit_tests.info
+          lcov --add-tracefile wavemap_coverage_base.info --add-tracefile wavemap_coverage_unit_tests.info --output-file wavemap_coverage_total.info
+          lcov --extract wavemap_coverage_total.info '*/wavemap/wavemap*' --output-file wavemap_coverage_filtered_intermediate.info
+          lcov --remove wavemap_coverage_filtered_intermediate.info '*/wavemap/test/*' '*/wavemap/app/*' '*/wavemap/benchmark/*' --output-file wavemap_coverage.info
+          rm wavemap_coverage_base.info wavemap_coverage_unit_tests.info wavemap_coverage_total.info wavemap_coverage_filtered_intermediate.info
+          lcov --list wavemap_coverage.info  # Include report in logs for debugging
 
       - name: Upload coverage stats to Codecov
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_2d
+          directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
           flags: unittests
           fail_ci_if_error: true
           verbose: true

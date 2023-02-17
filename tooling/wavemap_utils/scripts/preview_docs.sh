@@ -2,7 +2,7 @@
 
 set -o pipefail
 
-cd "$(rospack find wavemap_common)"/../../docs/ || exit 1
+cd "$(rospack find wavemap)"/../../docs/ || exit 1
 make html
 cd _build/html/ || exit 1
 xdg-open http://0.0.0.0:8000/
