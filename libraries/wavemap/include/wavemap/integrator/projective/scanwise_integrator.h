@@ -4,17 +4,17 @@
 #include <memory>
 #include <utility>
 
+#include "wavemap/data_structure/image.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/integrator/measurement_model/range_and_angle/continuous_volumetric_log_odds.h"
 #include "wavemap/integrator/pointcloud_integrator.h"
-#include "wavemap/integrator/projection_model/image_2d/image_2d_projection_model.h"
-#include "wavemap/integrator/projective/beam_offset_image_2d.h"
-#include "wavemap/integrator/projective/range_image_2d.h"
+#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
 
 namespace wavemap {
 class ScanwiseIntegrator : public PointcloudIntegrator {
  public:
   using Ptr = std::shared_ptr<ScanwiseIntegrator>;
+  using BeamOffsetImage = Image<Vector2D>;
 
   explicit ScanwiseIntegrator(
       const PointcloudIntegratorConfig& config,
@@ -24,8 +24,8 @@ class ScanwiseIntegrator : public PointcloudIntegrator {
       : PointcloudIntegrator(config, std::move(occupancy_map)),
         measurement_model_(std::move(measurement_model)),
         projection_model_(std::move(projection_model)),
-        posed_range_image_(std::make_shared<PosedRangeImage2D>(
-            projection_model_->getDimensions())),
+        posed_range_image_(
+            std::make_shared<PosedImage<>>(projection_model_->getDimensions())),
         beam_offset_image_(projection_model_->getDimensions()) {
     // TODO(victorr): Check that the pointcloud's angular resolution is lower
     //                than the angular uncertainty of the beam model. This is
@@ -37,7 +37,7 @@ class ScanwiseIntegrator : public PointcloudIntegrator {
   // Methods to integrate new pointclouds / depth images into the map
   void integratePointcloud(
       const PosedPointcloud<Point<3>>& pointcloud) override;
-  void integrateRangeImage(const PosedRangeImage2D& range_image);
+  void integrateRangeImage(const PosedImage<>& range_image);
 
   // Accessors for debugging and visualization
   // NOTE: These accessors are for introspection only, not for modifying the
@@ -49,10 +49,10 @@ class ScanwiseIntegrator : public PointcloudIntegrator {
   std::shared_ptr<const Image2DProjectionModel> getProjectionModel() const {
     return projection_model_;
   }
-  std::shared_ptr<const PosedRangeImage2D> getPosedRangeImage() const {
+  std::shared_ptr<const PosedImage<>> getPosedRangeImage() const {
     return posed_range_image_;
   }
-  const BeamOffsetImage2D& getBeamOffsetImage() const {
+  const BeamOffsetImage& getBeamOffsetImage() const {
     return beam_offset_image_;
   }
 
@@ -60,11 +60,11 @@ class ScanwiseIntegrator : public PointcloudIntegrator {
   const ContinuousVolumetricLogOdds measurement_model_;
   const std::shared_ptr<const Image2DProjectionModel> projection_model_;
 
-  std::shared_ptr<PosedRangeImage2D> posed_range_image_;
-  BeamOffsetImage2D beam_offset_image_;
+  std::shared_ptr<PosedImage<>> posed_range_image_;
+  BeamOffsetImage beam_offset_image_;
 
   virtual void importPointcloud(const PosedPointcloud<Point3D>& pointcloud);
-  virtual void importRangeImage(const PosedRangeImage2D& range_image_input);
+  virtual void importRangeImage(const PosedImage<>& range_image_input);
 
   FloatingPoint computeUpdate(const Point3D& C_cell_center) const;
 

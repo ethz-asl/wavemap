@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/integrator/projection_model/image_1d/circular_projector.h"
+#include "wavemap/integrator/projection_model/circular_projector.h"
 #include "wavemap/test/fixture_base.h"
 
 namespace wavemap {

@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "wavemap/common.h"
+#include "wavemap/data_structure/posed_object.h"
 #include "wavemap/iterator/pointcloud_iterator.h"
 
 namespace wavemap {
@@ -57,33 +58,22 @@ class Pointcloud {
 };
 
 template <typename PointT>
-class PosedPointcloud {
+class PosedPointcloud : public PosedObject<Pointcloud<PointT>> {
  public:
-  static constexpr int kDim = dim_v<PointT>;
   using PointType = PointT;
-  using PoseType = Transformation<kDim>;
+  using PointcloudType = Pointcloud<PointType>;
 
-  PosedPointcloud() = default;
-  PosedPointcloud(const PoseType& T_W_C, Pointcloud<PointType> points_C)
-      : T_W_C_(T_W_C), points_C_(std::move(points_C)) {}
+  using PosedObject<Pointcloud<PointT>>::PosedObject;
 
-  bool empty() const { return !size(); }
-  size_t size() const { return points_C_.size(); }
+  const PointcloudType& getPointsLocal() const { return *this; }
 
-  const typename PoseType::Position& getOrigin() const {
-    return T_W_C_.getPosition();
-  }
-  const PoseType& getPose() const { return T_W_C_; }
-
-  const Pointcloud<PointType>& getPointsLocal() const { return points_C_; }
-  Pointcloud<PointType> getPointsGlobal() const {
-    return static_cast<Pointcloud<PointType>>(
-        T_W_C_.transformVectorized(points_C_.data()));
+  PointcloudType getPointsGlobal() const {
+    return static_cast<PointcloudType>(
+        Base::getPose().transformVectorized(this->data()));
   }
 
  private:
-  PoseType T_W_C_;
-  Pointcloud<PointType> points_C_;
+  using Base = PosedObject<Pointcloud<PointT>>;
 };
 }  // namespace wavemap
 

@@ -11,7 +11,7 @@
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/indexing/index_hashes.h"
 #include "wavemap/integrator/pointcloud_integrator.h"
-#include "wavemap/integrator/projection_model/image_2d/spherical_projector.h"
+#include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
@@ -89,7 +89,7 @@ class PointcloudIntegrator3DTest : public FixtureBase {
                       projection_model.indexToImage(image_index), 1.f);
     }
 
-    return {getRandomTransformation<3>(), pointcloud};
+    return PosedPointcloud<Point3D>(getRandomTransformation<3>(), pointcloud);
   }
 };
 

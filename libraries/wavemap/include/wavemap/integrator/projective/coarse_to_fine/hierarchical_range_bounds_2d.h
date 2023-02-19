@@ -12,15 +12,16 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
-#include "wavemap/integrator/projective/range_image_2d.h"
+#include "wavemap/data_structure/image.h"
 #include "wavemap/integrator/projective/update_type.h"
 
 namespace wavemap {
 class HierarchicalRangeBounds2D {
  public:
-  explicit HierarchicalRangeBounds2D(
-      std::shared_ptr<const RangeImage2D> range_image, bool azimuth_wraps_pi,
-      FloatingPoint min_range, bool show_images = false)
+  explicit HierarchicalRangeBounds2D(std::shared_ptr<const Image<>> range_image,
+                                     bool azimuth_wraps_pi,
+                                     FloatingPoint min_range,
+                                     bool show_images = false)
       : range_image_(std::move(range_image)),
         azimuth_wraps_pi_(azimuth_wraps_pi),
         min_range_(min_range) {
@@ -97,7 +98,7 @@ class HierarchicalRangeBounds2D {
                            FloatingPoint range_max) const;
 
  private:
-  const std::shared_ptr<const RangeImage2D> range_image_;
+  const std::shared_ptr<const Image<>> range_image_;
   const bool azimuth_wraps_pi_;
 
   // Below min_range, range image values are treated as unknown and set to init
@@ -106,10 +107,10 @@ class HierarchicalRangeBounds2D {
   static constexpr FloatingPoint kUnknownRangeImageValueLowerBound = 1e4f;
   static constexpr FloatingPoint kUnknownRangeImageValueUpperBound = 0.f;
 
-  const std::vector<RangeImage2D> lower_bound_levels_ = computeReducedPyramid(
+  const std::vector<Image<>> lower_bound_levels_ = computeReducedPyramid(
       *range_image_, [](auto a, auto b) { return std::min(a, b); },
       kUnknownRangeImageValueLowerBound);
-  const std::vector<RangeImage2D> upper_bound_levels_ = computeReducedPyramid(
+  const std::vector<Image<>> upper_bound_levels_ = computeReducedPyramid(
       *range_image_, [](auto a, auto b) { return std::max(a, b); },
       kUnknownRangeImageValueUpperBound);
 
@@ -119,9 +120,9 @@ class HierarchicalRangeBounds2D {
   static constexpr std::tuple<IndexElement, IndexElement> scale_ = {2, 1};
 
   template <typename BinaryFunctor>
-  std::vector<RangeImage2D> computeReducedPyramid(
-      const RangeImage2D& range_image, BinaryFunctor reduction_functor,
-      FloatingPoint init);
+  std::vector<Image<>> computeReducedPyramid(const Image<>& range_image,
+                                             BinaryFunctor reduction_functor,
+                                             FloatingPoint init);
 
   FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
                             int level_idx = 0) const {

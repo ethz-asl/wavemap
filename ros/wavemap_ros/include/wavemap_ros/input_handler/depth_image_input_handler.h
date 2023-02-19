@@ -7,6 +7,7 @@
 
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
+#include <wavemap/data_structure/image.h>
 #include <wavemap/integrator/projective/scanwise_integrator.h>
 
 #include "wavemap_ros/input_handler/input_handler.h"
@@ -38,8 +39,7 @@ class DepthImageInputHandler : public InputHandler {
   std::queue<sensor_msgs::Image> depth_image_queue_;
   void processQueue() override;
 
-  PosedPointcloud<Point3D> reproject(
-      const PosedRangeImage2D& posed_range_image);
+  PosedPointcloud<Point3D> reproject(const PosedImage<>& posed_range_image);
 };
 }  // namespace wavemap
 

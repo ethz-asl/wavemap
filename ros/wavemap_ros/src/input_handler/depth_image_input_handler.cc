@@ -2,7 +2,6 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
-#include <wavemap/integrator/projective/range_image_2d.h>
 #include <wavemap/iterator/grid_iterator.h>
 #include <wavemap/utils/eigen_format.h>
 
@@ -68,8 +67,7 @@ void DepthImageInputHandler::processQueue() {
                               config_.depth_scale_factor);
 
     // Create the posed range image input
-    PosedRangeImage2D posed_range_image(cv_image->image.rows,
-                                        cv_image->image.cols);
+    PosedImage<> posed_range_image(cv_image->image.rows, cv_image->image.cols);
     cv::cv2eigen<FloatingPoint>(cv_image->image, posed_range_image.getData());
     posed_range_image.setPose(T_W_C);
 
@@ -100,7 +98,7 @@ void DepthImageInputHandler::processQueue() {
 }
 
 PosedPointcloud<Point3D> DepthImageInputHandler::reproject(
-    const PosedRangeImage2D& posed_range_image) {
+    const PosedImage<>& posed_range_image) {
   CHECK_NOTNULL(projection_model_);
 
   std::vector<Point3D> pointcloud;
@@ -109,12 +107,12 @@ PosedPointcloud<Point3D> DepthImageInputHandler::reproject(
        Grid<2>(Index2D::Zero(),
                posed_range_image.getDimensions() - Index2D::Ones())) {
     const Vector2D image_xy = projection_model_->indexToImage(index);
-    const FloatingPoint image_z = posed_range_image.getRange(index);
+    const FloatingPoint image_z = posed_range_image.at(index);
     const Point3D C_point =
         projection_model_->sensorToCartesian(image_xy, image_z);
     pointcloud.emplace_back(C_point);
   }
 
-  return {posed_range_image.getPose(), Pointcloud<Point3D>(pointcloud)};
+  return PosedPointcloud<Point3D>(posed_range_image.getPose(), pointcloud);
 }
 }  // namespace wavemap

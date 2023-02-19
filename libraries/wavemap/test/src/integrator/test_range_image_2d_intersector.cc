@@ -2,7 +2,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/integrator/pointcloud_integrator.h"
-#include "wavemap/integrator/projection_model/image_2d/spherical_projector.h"
+#include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_2d_intersector.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/utils/container_print_utils.h"
@@ -49,17 +49,17 @@ class RangeImage2DIntersectorTest : public FixtureBase {
     return ContinuousVolumetricLogOdds(measurement_model_config);
   }
 
-  PosedRangeImage2D getRandomPosedRangeImage(IndexElement num_rows,
-                                             IndexElement num_cols,
-                                             FloatingPoint min_range,
-                                             FloatingPoint max_range) {
+  PosedImage<> getRandomPosedRangeImage(IndexElement num_rows,
+                                        IndexElement num_cols,
+                                        FloatingPoint min_range,
+                                        FloatingPoint max_range) {
     CHECK_LT(min_range, max_range);
 
-    PosedRangeImage2D posed_range_image(num_rows, num_cols);
+    PosedImage<> posed_range_image(num_rows, num_cols);
     for (const Index2D& index :
          Grid<2>(Index2D::Zero(), {num_rows - 1, num_cols - 1})) {
       const FloatingPoint range = getRandomSignedDistance(min_range, max_range);
-      posed_range_image.getRange(index) = range;
+      posed_range_image.at(index) = range;
     }
     posed_range_image.setPose(getRandomTransformation<3>());
 
@@ -76,7 +76,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
     const auto measurement_model = getRandomMeasurementModel(*projection_model);
     constexpr FloatingPoint kMaxRange = 60.f;
     const auto posed_range_image =
-        std::make_shared<PosedRangeImage2D>(getRandomPosedRangeImage(
+        std::make_shared<PosedImage<>>(getRandomPosedRangeImage(
             projection_model->getNumRows(), projection_model->getNumColumns(),
             0.f, kMaxRange));
 
@@ -133,7 +133,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
         }
 
         const FloatingPoint range_image_distance =
-            posed_range_image->getRange(range_image_index);
+            posed_range_image->at(range_image_index);
         if (d_C_cell <
             range_image_distance -
                 measurement_model.getRangeThresholdInFrontOfSurface()) {

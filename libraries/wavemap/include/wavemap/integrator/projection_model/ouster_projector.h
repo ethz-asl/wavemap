@@ -1,34 +1,42 @@
-#ifndef WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_
-#define WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_
+#ifndef WAVEMAP_INTEGRATOR_PROJECTION_MODEL_OUSTER_PROJECTOR_H_
+#define WAVEMAP_INTEGRATOR_PROJECTION_MODEL_OUSTER_PROJECTOR_H_
 
 #include <algorithm>
 #include <utility>
 
-#include "wavemap/integrator/projection_model/image_1d/circular_projector.h"
-#include "wavemap/integrator/projection_model/image_2d/image_2d_projection_model.h"
+#include "wavemap/integrator/projection_model/circular_projector.h"
+#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
 #include "wavemap/utils/approximate_trigonometry.h"
 #include "wavemap/utils/config_utils.h"
 
 namespace wavemap {
-struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
+struct OusterProjectorConfig : ConfigBase<OusterProjectorConfig> {
   CircularProjectorConfig elevation;
   CircularProjectorConfig azimuth;
+  FloatingPoint lidar_origin_to_beam_origin = 0.02767f;
+  FloatingPoint lidar_origin_to_sensor_origin_z_offset = 0.03618f;
 
   // Constructors
-  SphericalProjectorConfig() = default;
-  SphericalProjectorConfig(CircularProjectorConfig elevation,
-                           CircularProjectorConfig azimuth)
-      : elevation(std::move(elevation)), azimuth(std::move(azimuth)) {}
+  OusterProjectorConfig() = default;
+  OusterProjectorConfig(CircularProjectorConfig elevation,
+                        CircularProjectorConfig azimuth,
+                        FloatingPoint lidar_origin_to_beam_origin,
+                        FloatingPoint lidar_origin_to_sensor_origin_z_offset)
+      : elevation(std::move(elevation)),
+        azimuth(std::move(azimuth)),
+        lidar_origin_to_beam_origin(lidar_origin_to_beam_origin),
+        lidar_origin_to_sensor_origin_z_offset(
+            lidar_origin_to_sensor_origin_z_offset) {}
 
   bool isValid(bool verbose) const override;
-  static SphericalProjectorConfig from(const param::Map& params);
+  static OusterProjectorConfig from(const param::Map& params);
 };
 
-class SphericalProjector : public Image2DProjectionModel {
+class OusterProjector : public Image2DProjectionModel {
  public:
-  using Config = SphericalProjectorConfig;
+  using Config = OusterProjectorConfig;
 
-  explicit SphericalProjector(const Config& config)
+  explicit OusterProjector(const Config& config)
       : Image2DProjectionModel(
             Vector2D(config.elevation.max_angle - config.elevation.min_angle,
                      config.azimuth.max_angle - config.azimuth.min_angle)
@@ -53,18 +61,28 @@ class SphericalProjector : public Image2DProjectionModel {
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {
-    const ImageCoordinates image_coordinates = cartesianToImage(C_point);
-    const FloatingPoint range = C_point.norm();
-    return {image_coordinates.x(), image_coordinates.y(), range};
+    // Project the beam's endpoint into the 2D plane B whose origin lies at the
+    // beam's start point, X-axis is parallel to the projection of the beam onto
+    // frame C's XY-plane and Y-axis is parallel to frame C's Z-axis
+    const Point2D B_point{
+        C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
+        C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
+    const FloatingPoint elevation_angle = std::atan2(B_point.y(), B_point.x());
+    const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
+    const FloatingPoint range = B_point.norm();
+    return {elevation_angle, azimuth_angle, range};
   }
   Point3D sensorToCartesian(const Vector3D& coordinates) const final {
     const FloatingPoint elevation_angle = coordinates[0];
     const FloatingPoint azimuth_angle = coordinates[1];
     const FloatingPoint range = coordinates[2];
-    const Vector3D bearing{std::cos(elevation_angle) * std::cos(azimuth_angle),
-                           std::cos(elevation_angle) * std::sin(azimuth_angle),
-                           std::sin(elevation_angle)};
-    return range * bearing;
+    const Point2D B_point =
+        range * Vector2D(std::cos(elevation_angle), std::sin(elevation_angle)) +
+        Vector2D(config_.lidar_origin_to_beam_origin,
+                 config_.lidar_origin_to_sensor_origin_z_offset);
+    Point3D C_point{B_point.x() * std::cos(azimuth_angle),
+                    B_point.x() * std::sin(azimuth_angle), B_point.y()};
+    return C_point;
   }
   Point3D sensorToCartesian(const ImageCoordinates& image_coordinates,
                             FloatingPoint range) const final {
@@ -83,20 +101,27 @@ class SphericalProjector : public Image2DProjectionModel {
 
   // Projection from Cartesian space onto the sensor's image surface
   ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
-    const FloatingPoint elevation_angle =
-        std::atan2(C_point.z(), C_point.head<2>().norm());
+    // Project the beam's endpoint into the 2D plane B whose origin lies at the
+    // beam's start point, X-axis is parallel to the projection of the beam onto
+    // frame C's XY-plane and Y-axis is parallel to frame C's Z-axis
+    const Vector2D B_point{
+        C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
+        C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
+    const FloatingPoint elevation_angle = std::atan2(B_point.y(), B_point.x());
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
   }
-  FloatingPoint cartesianToSensorZ(
-      const wavemap::Point3D& C_point) const final {
-    return C_point.norm();
+  FloatingPoint cartesianToSensorZ(const Point3D& C_point) const final {
+    const Point2D B_point{
+        C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
+        C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
+    return B_point.norm();
   }
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
   //       around at +-PI and a min_angle >= max_angle will be returned.
   AABB<Vector3D> cartesianToSensorAABB(
-      const AABB<wavemap::Point3D>& W_aabb,
+      const AABB<Point3D>& W_aabb,
       const Transformation3D::RotationMatrix& R_C_W,
       const Point3D& t_W_C) const final {
     AABB<Vector3D> sensor_coordinate_aabb;
@@ -160,11 +185,14 @@ class SphericalProjector : public Image2DProjectionModel {
   }
 
  private:
-  const Config config_;
+  const OusterProjectorConfig config_;
 
   ImageCoordinates cartesianToImageApprox(const Point3D& C_point) const {
+    const Vector2D B_point{
+        C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
+        C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
     const FloatingPoint elevation_angle =
-        approximate::atan2()(C_point.z(), C_point.head<2>().norm());
+        approximate::atan2()(B_point.y(), B_point.x());
     const FloatingPoint azimuth_angle =
         approximate::atan2()(C_point.y(), C_point.x());
     return {elevation_angle, azimuth_angle};
@@ -172,4 +200,4 @@ class SphericalProjector : public Image2DProjectionModel {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_SPHERICAL_PROJECTOR_H_
+#endif  // WAVEMAP_INTEGRATOR_PROJECTION_MODEL_OUSTER_PROJECTOR_H_

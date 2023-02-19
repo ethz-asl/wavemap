@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "wavemap/data_structure/aabb.h"
-#include "wavemap/integrator/projective/range_image_2d.h"
+#include "wavemap/data_structure/image.h"
 #include "wavemap/integrator/projective/scanwise_integrator.h"
 
 namespace wavemap {
@@ -15,10 +15,8 @@ class FixedResolutionIntegrator : public ScanwiseIntegrator {
  private:
   AABB<Point3D> aabb_;
 
-  void importPointcloud(
-      const PosedPointcloud<wavemap::Point3D>& pointcloud) override;
-  void importRangeImage(
-      const wavemap::PosedRangeImage2D& range_image_input) override;
+  void importPointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
+  void importRangeImage(const PosedImage<>& range_image_input) override;
 
   void updateMap() override;
 };

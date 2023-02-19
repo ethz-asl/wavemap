@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/integrator/projection_model/image_2d/spherical_projector.h"
+#include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/utils/eigen_format.h"

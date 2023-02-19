@@ -1,4 +1,4 @@
-#include "wavemap/integrator/projection_model/image_2d/spherical_projector.h"
+#include "wavemap/integrator/projection_model/spherical_projector.h"
 
 #include "wavemap/utils/angle_utils.h"
 

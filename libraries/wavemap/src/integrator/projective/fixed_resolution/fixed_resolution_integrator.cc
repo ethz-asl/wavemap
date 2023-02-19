@@ -4,7 +4,7 @@
 
 namespace wavemap {
 void FixedResolutionIntegrator::importPointcloud(
-    const PosedPointcloud<wavemap::Point3D>& pointcloud) {
+    const PosedPointcloud<Point3D>& pointcloud) {
   // Reset the posed range image, beam offset image and aabb
   posed_range_image_->resetToInitialValue();
   posed_range_image_->setPose(pointcloud.getPose());
@@ -34,11 +34,10 @@ void FixedResolutionIntegrator::importPointcloud(
     // If multiple points hit the same image pixel, keep the closest point
     const FloatingPoint range = sensor_coordinates[2];
     const FloatingPoint old_range_value =
-        posed_range_image_->getRange(range_image_index);
+        posed_range_image_->at(range_image_index);
     if (old_range_value < config_.min_range || range < old_range_value) {
-      posed_range_image_->getRange(range_image_index) = range;
-      beam_offset_image_.getBeamOffset(range_image_index) =
-          beam_to_pixel_offset;
+      posed_range_image_->at(range_image_index) = range;
+      beam_offset_image_.at(range_image_index) = beam_to_pixel_offset;
     }
 
     // Update the AABB (in world frame)
@@ -58,7 +57,7 @@ void FixedResolutionIntegrator::importPointcloud(
 }
 
 void FixedResolutionIntegrator::importRangeImage(
-    const wavemap::PosedRangeImage2D& range_image_input) {
+    const PosedImage<>& range_image_input) {
   // Load the range image
   ScanwiseIntegrator::importRangeImage(range_image_input);
 

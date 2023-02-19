@@ -1,4 +1,4 @@
-#include "wavemap/integrator/projection_model/image_2d/ouster_projector.h"
+#include "wavemap/integrator/projection_model/ouster_projector.h"
 
 #include "wavemap/utils/angle_utils.h"
 

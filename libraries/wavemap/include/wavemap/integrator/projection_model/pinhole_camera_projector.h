@@ -1,9 +1,9 @@
-#ifndef WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_PINHOLE_CAMERA_PROJECTOR_H_
-#define WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_PINHOLE_CAMERA_PROJECTOR_H_
+#ifndef WAVEMAP_INTEGRATOR_PROJECTION_MODEL_PINHOLE_CAMERA_PROJECTOR_H_
+#define WAVEMAP_INTEGRATOR_PROJECTION_MODEL_PINHOLE_CAMERA_PROJECTOR_H_
 
 #include <algorithm>
 
-#include "wavemap/integrator/projection_model/image_2d/image_2d_projection_model.h"
+#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
 #include "wavemap/utils/config_utils.h"
 
 namespace wavemap {
@@ -80,13 +80,12 @@ class PinholeCameraProjector : public Image2DProjectionModel {
   ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
     return cartesianToSensor(C_point).head<2>();
   }
-  FloatingPoint cartesianToSensorZ(
-      const wavemap::Point3D& C_point) const final {
+  FloatingPoint cartesianToSensorZ(const Point3D& C_point) const final {
     return C_point.z();
   }
 
   AABB<Vector3D> cartesianToSensorAABB(
-      const AABB<wavemap::Point3D>& W_aabb,
+      const AABB<Point3D>& W_aabb,
       const Transformation3D::RotationMatrix& R_C_W,
       const Point3D& t_W_C) const final {
     const Point3D C_aabb_min = R_C_W * (W_aabb.min - t_W_C);
@@ -136,4 +135,4 @@ class PinholeCameraProjector : public Image2DProjectionModel {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMAGE_2D_PINHOLE_CAMERA_PROJECTOR_H_
+#endif  // WAVEMAP_INTEGRATOR_PROJECTION_MODEL_PINHOLE_CAMERA_PROJECTOR_H_

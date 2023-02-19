@@ -9,15 +9,15 @@
 namespace wavemap {
 class HierarchicalRangeImage2DTest : public FixtureBase {
  protected:
-  RangeImage2D getRandomRangeImage() {
+  Image<> getRandomRangeImage() {
     const int num_rows = getRandomIndexElement(100, 2048);
     const int num_cols = getRandomIndexElement(100, 2048);
     constexpr FloatingPoint kMinDistance = 0.f;
     constexpr FloatingPoint kMaxDistance = 30.f;
-    RangeImage2D range_image(num_rows, num_cols);
+    Image<> range_image(num_rows, num_cols);
     for (const Index2D& index : Grid<2>(
              Index2D::Zero(), range_image.getDimensions() - Index2D::Ones())) {
-      range_image.getRange(index) =
+      range_image.at(index) =
           getRandomSignedDistance(kMinDistance, kMaxDistance);
     }
     return range_image;
@@ -29,7 +29,7 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
     // Generate a random hierarchical range image
     constexpr bool kAzimuthMayWrap = false;
     constexpr FloatingPoint kPointcloudIntegratorMinRange = 0.5f;
-    auto range_image = std::make_shared<RangeImage2D>(getRandomRangeImage());
+    auto range_image = std::make_shared<Image<>>(getRandomRangeImage());
     const Index2D range_image_dims = range_image->getDimensions();
     const Index2D range_image_dims_scaled = range_image_dims.cwiseProduct(
         HierarchicalRangeBounds2D::getImageToPyramidScaleFactor());
@@ -68,9 +68,9 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
           // At the leaf level the bounds should match range image itself
           if ((index.position.array() < range_image_dims.array()).all()) {
             EXPECT_FLOAT_EQ(hierarchical_range_image.getLowerBound(index),
-                            range_image->getRange(index.position));
+                            range_image->at(index.position));
             EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
-                            range_image->getRange(index.position));
+                            range_image->at(index.position));
           }
         } else if (index.height == 1) {
           // At the first pyramid level, the bounds should correspond to min/max
@@ -85,7 +85,7 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                 HierarchicalRangeBounds2D::getImageToPyramidScaleFactor());
             if ((child_idx.position.array() < range_image_dims.array()).all()) {
               const FloatingPoint range_image_value =
-                  range_image->getRange(child_idx.position);
+                  range_image->at(child_idx.position);
               if (range_image_value < hierarchical_range_image.getMinRange()) {
                 child_bounds.lower =
                     std::min(child_bounds.lower,
@@ -166,7 +166,7 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
     // Generate a random hierarchical range image
     constexpr bool kAzimuthMayWrap = false;
     constexpr FloatingPoint kPointcloudIntegratorMinRange = 0.5f;
-    auto range_image = std::make_shared<RangeImage2D>(getRandomRangeImage());
+    auto range_image = std::make_shared<Image<>>(getRandomRangeImage());
     const Index2D range_image_dims = range_image->getDimensions();
     HierarchicalRangeBounds2D hierarchical_range_image(
         range_image, kAzimuthMayWrap, kPointcloudIntegratorMinRange);
@@ -193,7 +193,7 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
       // Compare against brute force
       Bounds<FloatingPoint> bounds_brute_force;
       for (const Index2D& index : Grid(start_idx, end_idx)) {
-        const FloatingPoint range_value = range_image->getRange(index);
+        const FloatingPoint range_value = range_image->at(index);
         if (hierarchical_range_image.getMinRange() < range_value) {
           bounds_brute_force.lower =
               std::min(bounds_brute_force.lower, range_value);

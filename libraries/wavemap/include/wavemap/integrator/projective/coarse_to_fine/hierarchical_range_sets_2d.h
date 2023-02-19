@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "wavemap/integrator/projective/range_image_2d.h"
+#include "wavemap/integrator/projective/image.h"
 #include "wavemap/integrator/projective/update_type.h"
 
 namespace wavemap {

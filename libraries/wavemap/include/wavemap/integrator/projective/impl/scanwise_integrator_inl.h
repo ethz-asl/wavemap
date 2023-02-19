@@ -29,8 +29,7 @@ inline FloatingPoint ScanwiseIntegrator::computeUpdate(
       continue;
     }
 
-    const FloatingPoint measured_distance =
-        posed_range_image_->getRange(image_idx);
+    const FloatingPoint measured_distance = posed_range_image_->at(image_idx);
     if (measured_distance +
             measurement_model_.getRangeThresholdBehindSurface() <
         sensor_coordinates.z()) {
@@ -43,7 +42,7 @@ inline FloatingPoint ScanwiseIntegrator::computeUpdate(
     //       through the cell, whereas for camera models it corresponds to the
     //       reprojection error in pixels.
     const Vector2D cell_to_beam_offset =
-        beam_offset_image_.getBeamOffset(image_idx) - cell_offset;
+        beam_offset_image_.at(image_idx) - cell_offset;
     const FloatingPoint cell_to_beam_image_error_norm =
         projection_model_->imageOffsetToErrorNorm(sensor_coordinates.head<2>(),
                                                   cell_to_beam_offset);

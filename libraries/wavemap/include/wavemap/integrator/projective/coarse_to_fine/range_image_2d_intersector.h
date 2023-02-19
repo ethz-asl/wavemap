@@ -7,16 +7,16 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/aabb.h"
-#include "wavemap/integrator/projection_model/image_2d/image_2d_projection_model.h"
+#include "wavemap/data_structure/image.h"
+#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
 #include "wavemap/integrator/projective/coarse_to_fine/hierarchical_range_bounds_2d.h"
-#include "wavemap/integrator/projective/range_image_2d.h"
 #include "wavemap/integrator/projective/update_type.h"
 
 namespace wavemap {
 class RangeImage2DIntersector {
  public:
   RangeImage2DIntersector(
-      std::shared_ptr<const RangeImage2D> range_image,
+      std::shared_ptr<const Image<>> range_image,
       std::shared_ptr<const Image2DProjectionModel> projection_model,
       FloatingPoint min_range, FloatingPoint max_range,
       FloatingPoint angle_threshold,

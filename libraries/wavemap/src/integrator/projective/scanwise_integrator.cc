@@ -10,8 +10,7 @@ void ScanwiseIntegrator::integratePointcloud(
   updateMap();
 }
 
-void ScanwiseIntegrator::integrateRangeImage(
-    const PosedRangeImage2D& range_image) {
+void ScanwiseIntegrator::integrateRangeImage(const PosedImage<>& range_image) {
   importRangeImage(range_image);
   updateMap();
 }
@@ -46,18 +45,17 @@ void ScanwiseIntegrator::importPointcloud(
     // pixel, keep the closest point
     const FloatingPoint range = sensor_coordinates[2];
     const FloatingPoint old_range_value =
-        posed_range_image_->getRange(range_image_index);
+        posed_range_image_->at(range_image_index);
     if (old_range_value < config_.min_range || range < old_range_value) {
-      posed_range_image_->getRange(range_image_index) = range;
-      beam_offset_image_.getBeamOffset(range_image_index) =
-          beam_to_pixel_offset;
+      posed_range_image_->at(range_image_index) = range;
+      beam_offset_image_.at(range_image_index) = beam_to_pixel_offset;
     }
   }
 }
 
 void ScanwiseIntegrator::importRangeImage(
-    const wavemap::PosedRangeImage2D& range_image_input) {
-  posed_range_image_ = std::make_shared<PosedRangeImage2D>(range_image_input);
+    const PosedImage<>& range_image_input) {
+  posed_range_image_ = std::make_shared<PosedImage<>>(range_image_input);
   beam_offset_image_.setToConstant(Vector2D::Zero());
 }
 }  // namespace wavemap

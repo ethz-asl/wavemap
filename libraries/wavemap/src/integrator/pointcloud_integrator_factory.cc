@@ -1,9 +1,9 @@
 #include "wavemap/integrator/pointcloud_integrator_factory.h"
 
 #include "wavemap/integrator/pointcloud_integrator.h"
-#include "wavemap/integrator/projection_model/image_2d/ouster_projector.h"
-#include "wavemap/integrator/projection_model/image_2d/pinhole_camera_projector.h"
-#include "wavemap/integrator/projection_model/image_2d/spherical_projector.h"
+#include "wavemap/integrator/projection_model/ouster_projector.h"
+#include "wavemap/integrator/projection_model/pinhole_camera_projector.h"
+#include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"

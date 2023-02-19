@@ -100,6 +100,7 @@ inline FloatingPoint toMeters(const Map& map) {
   }
   LOG(FATAL) << "Could not convert value to meters as it contains no sub-key "
                 "matching a supported length unit.";
+  return kNaN;
 }
 
 inline FloatingPoint toRadians(const Map& map) {
@@ -118,6 +119,7 @@ inline FloatingPoint toRadians(const Map& map) {
   }
   LOG(FATAL) << "Could not convert value to radians as it contains no sub-key "
                 "matching a supported angle unit.";
+  return kNaN;
 }
 
 inline FloatingPoint toSeconds(const Map& map) {
@@ -130,6 +132,7 @@ inline FloatingPoint toSeconds(const Map& map) {
   }
   LOG(FATAL) << "Could not convert value to seconds as it contains no sub-key "
                 "matching a supported time unit.";
+  return kNaN;
 }
 
 inline FloatingPoint toMeters(const Value& param, FloatingPoint default_value) {

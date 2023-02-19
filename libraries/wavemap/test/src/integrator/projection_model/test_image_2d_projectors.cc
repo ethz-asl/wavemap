@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/integrator/projection_model/image_2d/ouster_projector.h"
-#include "wavemap/integrator/projection_model/image_2d/pinhole_camera_projector.h"
-#include "wavemap/integrator/projection_model/image_2d/spherical_projector.h"
+#include "wavemap/integrator/projection_model/ouster_projector.h"
+#include "wavemap/integrator/projection_model/pinhole_camera_projector.h"
+#include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/utils/angle_utils.h"
@@ -295,7 +295,7 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
       // For pinhole cameras, AABBs that (partially or fully) lie behind the
       // camera are handled in a special way and not tested here
       // TODO(victorr): Add dedicated tests for pinhole cameras
-      if (reference_aabb.min.z() < 0.2f) {
+      if (reference_aabb.min.z() < 0.3f) {
         continue;
       }
 

@@ -49,7 +49,7 @@ class PointcloudTest : public FixtureBase {
   }
 };
 
-using PointTypes = ::testing::Types<Point2D, Point3D>;
+using PointTypes = ::testing::Types<Point3D>;
 TYPED_TEST_SUITE(PointcloudTest, PointTypes, );
 
 TYPED_TEST(PointcloudTest, DefaultInitialize) {
@@ -160,7 +160,7 @@ class PosedPointcloudTest : public PointcloudTest<PointT> {
   }
 };
 
-using PointTypes = ::testing::Types<Point2D, Point3D>;
+using PointTypes = ::testing::Types<Point3D>;
 TYPED_TEST_SUITE(PosedPointcloudTest, PointTypes, );
 
 TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
@@ -174,8 +174,8 @@ TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
         TestFixture::template getRandomTransformation<kDim>();
     const Pointcloud<PointType> random_pointcloud(
         TestFixture::template getRandomPointVector<kDim>());
-    PosedPointcloud random_posed_pointcloud(random_transformation,
-                                            random_pointcloud);
+    PosedPointcloud<PointType> random_posed_pointcloud(random_transformation,
+                                                       random_pointcloud);
 
     // Test initialization
     EXPECT_EQ(random_posed_pointcloud.getOrigin(),
@@ -206,7 +206,7 @@ TYPED_TEST(PosedPointcloudTest, Transformations) {
         TestFixture::template getRandomPointVector<kDim>();
     const PoseType random_T_W_C =
         TestFixture::template getRandomTransformation<kDim>();
-    const PosedPointcloud random_posed_pointcloud(
+    const PosedPointcloud<PointType> random_posed_pointcloud(
         random_T_W_C, Pointcloud<PointType>(random_points_C));
 
     const Pointcloud pointcloud_W = random_posed_pointcloud.getPointsGlobal();

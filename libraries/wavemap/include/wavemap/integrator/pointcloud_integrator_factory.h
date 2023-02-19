@@ -5,7 +5,7 @@
 
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/integrator/pointcloud_integrator.h"
-#include "wavemap/integrator/projection_model/image_2d/image_2d_projection_model.h"
+#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
 #include "wavemap/utils/config_utils.h"
 #include "wavemap/utils/factory_utils.h"
 
