@@ -6,10 +6,8 @@ project(wavemap)
 
 # Libraries
 add_subdirectory(libraries/wavemap)
-add_subdirectory(libraries/wavemap_3d)
 
 # ROS interfaces and tooling
 add_subdirectory(ros/wavemap_msgs)
 add_subdirectory(ros/wavemap_ros)
-add_subdirectory(ros/wavemap_3d_ros)
 add_subdirectory(ros/wavemap_rviz_plugin)

@@ -2,22 +2,8 @@
 #define WAVEMAP_INTEGRATOR_IMPL_POINTCLOUD_INTEGRATOR_INL_H_
 
 namespace wavemap {
-template <int dim>
-bool PointcloudIntegrator<dim>::isPointcloudValid(
-    const PosedPointcloud<Point<dim>>& pointcloud) {
-  if (const Point<dim>& origin = pointcloud.getOrigin(); origin.hasNaN()) {
-    LOG(WARNING) << "Ignoring request to integrate pointcloud whose origin "
-                    "contains NaNs:\n"
-                 << origin;
-    return false;
-  }
-
-  return true;
-}
-
-template <int dim>
-bool PointcloudIntegrator<dim>::isMeasurementValid(
-    const Point<dim>& C_end_point) {
+inline bool PointcloudIntegrator::isMeasurementValid(
+    const Point3D& C_end_point) {
   if (C_end_point.hasNaN()) {
     return false;
   }
@@ -33,9 +19,8 @@ bool PointcloudIntegrator<dim>::isMeasurementValid(
   return true;
 }
 
-template <int dim>
-Point<dim> PointcloudIntegrator<dim>::getEndPointOrMaxRange(
-    const Point<dim>& W_start_point, const Point<dim>& W_end_point,
+inline Point3D PointcloudIntegrator::getEndPointOrMaxRange(
+    const Point3D& W_start_point, const Point3D& W_end_point,
     FloatingPoint measured_distance, FloatingPoint max_range) {
   if (max_range < measured_distance) {
     return W_start_point +

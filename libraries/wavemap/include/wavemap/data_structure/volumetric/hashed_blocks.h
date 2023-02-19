@@ -10,14 +10,14 @@
 #include "wavemap/utils/int_math.h"
 
 namespace wavemap {
-template <typename CellT, int dim>
-class HashedBlocks : public virtual VolumetricDataStructureBase<dim> {
+template <typename CellT>
+class HashedBlocks : public virtual VolumetricDataStructureBase {
  public:
   using CellType = CellT;
   static constexpr bool kRequiresPruningForThresholding = false;
 
   // Use the base class' constructor
-  using VolumetricDataStructureBase<dim>::VolumetricDataStructureBase;
+  using VolumetricDataStructureBase::VolumetricDataStructureBase;
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override { return kCellsPerBlock * blocks_.size(); }
@@ -28,45 +28,43 @@ class HashedBlocks : public virtual VolumetricDataStructureBase<dim> {
     return size() * sizeof(CellDataSpecialized);
   }
 
-  Index<dim> getMinIndex() const override;
-  Index<dim> getMaxIndex() const override;
+  Index3D getMinIndex() const override;
+  Index3D getMaxIndex() const override;
 
-  FloatingPoint getCellValue(const Index<dim>& index) const override;
-  void setCellValue(const Index<dim>& index, FloatingPoint new_value) override;
-  void addToCellValue(const Index<dim>& index, FloatingPoint update) override;
+  FloatingPoint getCellValue(const Index3D& index) const override;
+  void setCellValue(const Index3D& index, FloatingPoint new_value) override;
+  void addToCellValue(const Index3D& index, FloatingPoint update) override;
 
   void forEachLeaf(
-      typename VolumetricDataStructureBase<dim>::IndexedLeafVisitorFunction
+      typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
           visitor_fn) const override;
 
-  bool save(const std::string& file_path_prefix,
-            bool use_floating_precision) const override;
-  bool load(const std::string& file_path_prefix,
-            bool used_floating_precision) override;
+  bool save(const std::string& file_path_prefix) const override;
+  bool load(const std::string& file_path_prefix) override;
 
  private:
   using CellDataSpecialized = typename CellT::Specialized;
 
-  static constexpr IndexElement kCellsPerSideLog2 = (dim == 2 ? 6 : 4);
+  static constexpr IndexElement kCellsPerSideLog2 = 4;
   static constexpr IndexElement kCellsPerSide =
       int_math::exp2(kCellsPerSideLog2);
   static constexpr IndexElement kCellsPerBlock =
-      int_math::exp2(dim * kCellsPerSideLog2);
+      int_math::exp2(kDim * kCellsPerSideLog2);
 
   using Block = std::array<CellDataSpecialized, kCellsPerBlock>;
-  using BlockIndex = Index<dim>;
-  using CellIndex = Index<dim>;
+  using BlockIndex = Index3D;
+  using CellIndex = Index3D;
 
-  std::unordered_map<BlockIndex, Block, VoxbloxIndexHash<dim>> blocks_;
+  std::unordered_map<BlockIndex, Block, VoxbloxIndexHash<3>> blocks_;
 
-  CellDataSpecialized* accessCellData(const Index<dim>& index,
+  CellDataSpecialized* accessCellData(const Index3D& index,
                                       bool auto_allocate = false);
-  const CellDataSpecialized* accessCellData(const Index<dim>& index) const;
+  const CellDataSpecialized* accessCellData(const Index3D& index) const;
 
-  BlockIndex computeBlockIndexFromIndex(const Index<dim>& index) const;
+  BlockIndex computeBlockIndexFromIndex(const Index3D& index) const;
   CellIndex computeCellIndexFromBlockIndexAndIndex(
-      const BlockIndex& block_index, const Index<dim>& index) const;
-  Index<dim> computeIndexFromBlockIndexAndCellIndex(
+      const BlockIndex& block_index, const Index3D& index) const;
+  Index3D computeIndexFromBlockIndexAndCellIndex(
       const BlockIndex& block_index, const CellIndex& cell_index) const;
 };
 }  // namespace wavemap

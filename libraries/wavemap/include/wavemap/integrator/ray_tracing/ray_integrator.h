@@ -9,20 +9,19 @@
 #include "wavemap/iterator/ray_iterator.h"
 
 namespace wavemap {
-template <int dim>
-class RayIntegrator : public PointcloudIntegrator<dim> {
+class RayIntegrator : public PointcloudIntegrator {
  public:
-  using PointcloudIntegrator<dim>::PointcloudIntegrator;
+  using PointcloudIntegrator::PointcloudIntegrator;
 
   void integratePointcloud(
-      const PosedPointcloud<Point<dim>>& pointcloud) override {
+      const PosedPointcloud<Point3D>& pointcloud) override {
     if (!Base::isPointcloudValid(pointcloud)) {
       return;
     }
 
     const FloatingPoint min_cell_width =
         Base::occupancy_map_->getMinCellWidth();
-    const Point<dim> W_start_point = pointcloud.getOrigin();
+    const Point3D W_start_point = pointcloud.getOrigin();
 
     MeasurementModelType measurement_model(min_cell_width);
     measurement_model.setStartPoint(W_start_point);
@@ -36,7 +35,7 @@ class RayIntegrator : public PointcloudIntegrator<dim> {
 
       const FloatingPoint measured_distance =
           (W_start_point - W_end_point).norm();
-      const Point<dim> W_end_point_truncated = Base::getEndPointOrMaxRange(
+      const Point3D W_end_point_truncated = Base::getEndPointOrMaxRange(
           W_start_point, W_end_point, measured_distance,
           Base::config_.max_range);
       const Ray ray(W_start_point, W_end_point_truncated, measured_distance);
@@ -48,8 +47,8 @@ class RayIntegrator : public PointcloudIntegrator<dim> {
   }
 
  private:
-  using Base = PointcloudIntegrator<dim>;
-  using MeasurementModelType = Constant1DLogOdds<dim>;
+  using Base = PointcloudIntegrator;
+  using MeasurementModelType = Constant1DLogOdds;
 };
 }  // namespace wavemap
 

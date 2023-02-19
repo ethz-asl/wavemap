@@ -1,4 +1,4 @@
-#include "../../wavemap_ros/include/wavemap_ros/tf_transformer.h"
+#include "wavemap_ros/tf_transformer.h"
 
 #include <string>
 

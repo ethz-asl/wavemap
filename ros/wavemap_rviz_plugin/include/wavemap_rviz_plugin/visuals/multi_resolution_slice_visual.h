@@ -9,8 +9,7 @@
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreVector3.h>
 #include <rviz/ogre_helpers/point_cloud.h>
-
-#include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
+#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 
 namespace wavemap::rviz_plugin {
 // Each instance of MultiResolutionGridVisual represents the visualization of a
@@ -26,7 +25,7 @@ class MultiResolutionSliceVisual {
   virtual ~MultiResolutionSliceVisual();
 
   // Configure the visual to show the data in the message
-  void loadMap(const VolumetricDataStructure3D& map,
+  void loadMap(const VolumetricDataStructureBase& map,
                FloatingPoint min_occupancy_log_odds,
                FloatingPoint max_occupancy_log_odds, FloatingPoint slice_height,
                FloatingPoint alpha);

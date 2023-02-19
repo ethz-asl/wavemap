@@ -3,11 +3,11 @@
 
 #include <algorithm>
 
-#include <wavemap/common.h>
-#include <wavemap/indexing/index_conversions.h>
-#include <wavemap/integrator/measurement_model/approximate_gaussian_distribution.h>
-#include <wavemap/utils/config_utils.h>
-#include <wavemap/utils/eigen_format.h>
+#include "wavemap/common.h"
+#include "wavemap/indexing/index_conversions.h"
+#include "wavemap/integrator/measurement_model/approximate_gaussian_distribution.h"
+#include "wavemap/utils/config_utils.h"
+#include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 struct ContinuousVolumetricLogOddsConfig
@@ -32,29 +32,28 @@ struct ContinuousVolumetricLogOddsConfig
   static ContinuousVolumetricLogOddsConfig from(const param::Map& params);
 };
 
-template <int dim>
 class ContinuousVolumetricLogOdds {
  public:
   explicit ContinuousVolumetricLogOdds(
       const ContinuousVolumetricLogOddsConfig& config)
       : config_(config.checkValid()) {}
 
-  Index<dim> getBottomLeftUpdateIndex(const Point<dim>& W_start_point,
-                                      const Point<dim>& W_end_point,
-                                      FloatingPoint measured_distance,
-                                      FloatingPoint min_cell_width_inv) const {
-    const Point<dim> bottom_left_point =
+  Index3D getBottomLeftUpdateIndex(const Point3D& W_start_point,
+                                   const Point3D& W_end_point,
+                                   FloatingPoint measured_distance,
+                                   FloatingPoint min_cell_width_inv) const {
+    const Point3D bottom_left_point =
         W_start_point.cwiseMin(W_end_point) -
-        Point<dim>::Constant(getCombinedThreshold(measured_distance));
+        Point3D::Constant(getCombinedThreshold(measured_distance));
     return convert::pointToFloorIndex(bottom_left_point, min_cell_width_inv);
   }
-  Index<dim> getTopRightUpdateIndex(const Point<dim>& W_start_point,
-                                    const Point<dim>& W_end_point,
-                                    FloatingPoint measured_distance,
-                                    FloatingPoint min_cell_width_inv) const {
-    const Point<dim> top_right_point =
+  Index3D getTopRightUpdateIndex(const Point3D& W_start_point,
+                                 const Point3D& W_end_point,
+                                 FloatingPoint measured_distance,
+                                 FloatingPoint min_cell_width_inv) const {
+    const Point3D top_right_point =
         W_start_point.cwiseMax(W_end_point) +
-        Point<dim>::Constant(getCombinedThreshold(measured_distance));
+        Point3D::Constant(getCombinedThreshold(measured_distance));
     return convert::pointToCeilIndex(top_right_point, min_cell_width_inv);
   }
 

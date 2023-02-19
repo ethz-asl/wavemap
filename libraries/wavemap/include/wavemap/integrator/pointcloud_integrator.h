@@ -24,34 +24,32 @@ struct PointcloudIntegratorConfig : ConfigBase<PointcloudIntegratorConfig> {
   static PointcloudIntegratorConfig from(const param::Map& params);
 };
 
-template <int dim>
 class PointcloudIntegrator {
  public:
   using Ptr = std::shared_ptr<PointcloudIntegrator>;
 
   PointcloudIntegrator() = delete;
-  PointcloudIntegrator(
-      const PointcloudIntegratorConfig& config,
-      typename VolumetricDataStructureBase<dim>::Ptr occupancy_map)
+  PointcloudIntegrator(const PointcloudIntegratorConfig& config,
+                       typename VolumetricDataStructureBase::Ptr occupancy_map)
       : config_(config.checkValid()),
         occupancy_map_(CHECK_NOTNULL(occupancy_map)) {}
   virtual ~PointcloudIntegrator() = default;
 
   virtual void integratePointcloud(
-      const PosedPointcloud<Point<dim>>& pointcloud) = 0;
+      const PosedPointcloud<Point3D>& pointcloud) = 0;
 
  protected:
   const PointcloudIntegratorConfig config_;
 
-  typename VolumetricDataStructureBase<dim>::Ptr occupancy_map_;
+  typename VolumetricDataStructureBase::Ptr occupancy_map_;
 
-  static bool isPointcloudValid(const PosedPointcloud<Point<dim>>& pointcloud);
-  static bool isMeasurementValid(const Point<dim>& C_end_point);
+  static bool isPointcloudValid(const PosedPointcloud<Point3D>& pointcloud);
+  static bool isMeasurementValid(const Point3D& C_end_point);
 
-  static Point<dim> getEndPointOrMaxRange(const Point<dim>& W_start_point,
-                                          const Point<dim>& W_end_point,
-                                          FloatingPoint measured_distance,
-                                          FloatingPoint max_range);
+  static Point3D getEndPointOrMaxRange(const Point3D& W_start_point,
+                                       const Point3D& W_end_point,
+                                       FloatingPoint measured_distance,
+                                       FloatingPoint max_range);
 };
 }  // namespace wavemap
 

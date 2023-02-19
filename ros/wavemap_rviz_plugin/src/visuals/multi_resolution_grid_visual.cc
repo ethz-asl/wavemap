@@ -21,7 +21,7 @@ MultiResolutionGridVisual::~MultiResolutionGridVisual() {
   scene_manager_->destroySceneNode(frame_node_);
 }
 
-void MultiResolutionGridVisual::loadMap(const VolumetricDataStructure3D& map,
+void MultiResolutionGridVisual::loadMap(const VolumetricDataStructureBase& map,
                                         FloatingPoint min_occupancy_log_odds,
                                         FloatingPoint max_occupancy_log_odds,
                                         FloatingPoint alpha) {

@@ -9,15 +9,14 @@
 #include "wavemap/iterator/grid_iterator.h"
 
 namespace wavemap {
-template <typename CellT, int dim>
-void HashedBlocks<CellT, dim>::prune() {
-  const Index<dim> min_local_cell_index = Index<dim>::Zero();
-  const Index<dim> max_local_cell_index =
-      Index<dim>::Constant(kCellsPerSide - 1);
+template <typename CellT>
+void HashedBlocks<CellT>::prune() {
+  const Index3D min_local_cell_index = Index3D::Zero();
+  const Index3D max_local_cell_index = Index3D::Constant(kCellsPerSide - 1);
   // TODO(victorr): Iterate directly over linear index instead of grid
   const Grid local_grid(min_local_cell_index, max_local_cell_index);
 
-  std::unordered_set<BlockIndex, VoxbloxIndexHash<dim>> blocks_to_delete;
+  std::unordered_set<BlockIndex, VoxbloxIndexHash<3>> blocks_to_delete;
   for (const auto& [block_index, block_data] : blocks_) {
     if (!std::any_of(
             local_grid.begin(), local_grid.end(),
@@ -36,35 +35,34 @@ void HashedBlocks<CellT, dim>::prune() {
                 });
 }
 
-template <typename CellT, int dim>
-Index<dim> HashedBlocks<CellT, dim>::getMinIndex() const {
+template <typename CellT>
+Index3D HashedBlocks<CellT>::getMaxIndex() const {
   if (!empty()) {
-    Index<dim> min_block_index =
-        Index<dim>::Constant(std::numeric_limits<IndexElement>::max());
+    Index3D max_block_index =
+        Index3D::Constant(std::numeric_limits<IndexElement>::lowest());
+    for (const auto& [block_index, block] : blocks_) {
+      max_block_index = max_block_index.cwiseMax(block_index);
+    }
+    return kCellsPerSide * (max_block_index + Index3D::Ones());
+  }
+  return Index3D::Zero();
+}
+
+template <typename CellT>
+Index3D HashedBlocks<CellT>::getMinIndex() const {
+  if (!empty()) {
+    Index3D min_block_index =
+        Index3D::Constant(std::numeric_limits<IndexElement>::max());
     for (const auto& [block_index, block] : blocks_) {
       min_block_index = min_block_index.cwiseMin(block_index);
     }
     return kCellsPerSide * min_block_index;
   }
-  return Index<dim>::Zero();
+  return Index3D::Zero();
 }
 
-template <typename CellT, int dim>
-Index<dim> HashedBlocks<CellT, dim>::getMaxIndex() const {
-  if (!empty()) {
-    Index<dim> max_block_index =
-        Index<dim>::Constant(std::numeric_limits<IndexElement>::lowest());
-    for (const auto& [block_index, block] : blocks_) {
-      max_block_index = max_block_index.cwiseMax(block_index);
-    }
-    return kCellsPerSide * (max_block_index + Index<dim>::Ones());
-  }
-  return Index<dim>::Zero();
-}
-
-template <typename CellT, int dim>
-FloatingPoint HashedBlocks<CellT, dim>::getCellValue(
-    const Index<dim>& index) const {
+template <typename CellT>
+FloatingPoint HashedBlocks<CellT>::getCellValue(const Index3D& index) const {
   const CellDataSpecialized* cell_data = accessCellData(index);
   if (cell_data) {
     return static_cast<FloatingPoint>(*cell_data);
@@ -72,9 +70,9 @@ FloatingPoint HashedBlocks<CellT, dim>::getCellValue(
   return 0.f;
 }
 
-template <typename CellT, int dim>
-void HashedBlocks<CellT, dim>::setCellValue(const Index<dim>& index,
-                                            FloatingPoint new_value) {
+template <typename CellT>
+void HashedBlocks<CellT>::setCellValue(const Index3D& index,
+                                       FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
   if (cell_data) {
@@ -85,9 +83,9 @@ void HashedBlocks<CellT, dim>::setCellValue(const Index<dim>& index,
   }
 }
 
-template <typename CellT, int dim>
-void HashedBlocks<CellT, dim>::addToCellValue(const Index<dim>& index,
-                                              FloatingPoint update) {
+template <typename CellT>
+void HashedBlocks<CellT>::addToCellValue(const Index3D& index,
+                                         FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
   CellDataSpecialized* cell_data = accessCellData(index, kAutoAllocate);
   if (cell_data) {
@@ -97,46 +95,44 @@ void HashedBlocks<CellT, dim>::addToCellValue(const Index<dim>& index,
   }
 }
 
-template <typename CellT, int dim>
-void HashedBlocks<CellT, dim>::forEachLeaf(
-    typename VolumetricDataStructureBase<dim>::IndexedLeafVisitorFunction
-        visitor_fn) const {
-  const Index<dim> min_local_cell_index = Index<dim>::Zero();
-  const Index<dim> max_local_cell_index =
-      Index<dim>::Constant(kCellsPerSide - 1);
+template <typename CellT>
+void HashedBlocks<CellT>::forEachLeaf(
+    typename VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn)
+    const {
+  const Index3D min_local_cell_index = Index3D::Zero();
+  const Index3D max_local_cell_index = Index3D::Constant(kCellsPerSide - 1);
 
   for (const auto& [block_index, block_data] : blocks_) {
     // TODO(victorr): Iterate directly over linear index instead of grid
-    for (const Index<dim>& cell_index :
+    for (const Index3D& cell_index :
          Grid(min_local_cell_index, max_local_cell_index)) {
       const FloatingPoint cell_data =
           block_data[convert::indexToLinearIndex<kCellsPerSide>(cell_index)];
-      const Index<dim> index =
+      const Index3D index =
           computeIndexFromBlockIndexAndCellIndex(block_index, cell_index);
-      const NdtreeIndex<dim> hierarchical_cell_index =
+      const OctreeIndex hierarchical_cell_index =
           convert::indexAndHeightToNodeIndex(index, 0);
       visitor_fn(hierarchical_cell_index, cell_data);
     }
   }
 }
 
-template <typename CellT, int dim>
-bool HashedBlocks<CellT, dim>::save(const std::string& /* file_path_prefix */,
-                                    bool /* use_floating_precision */) const {
+template <typename CellT>
+bool HashedBlocks<CellT>::save(
+    const std::string& /* file_path_prefix */) const {
   // TODO(victorr): Implement this
   return false;
 }
 
-template <typename CellT, int dim>
-bool HashedBlocks<CellT, dim>::load(const std::string& /* file_path_prefix */,
-                                    bool /* used_floating_precision */) {
+template <typename CellT>
+bool HashedBlocks<CellT>::load(const std::string& /* file_path_prefix */) {
   // TODO(victorr): Implement this
   return false;
 }
 
-template <typename CellT, int dim>
-typename CellT::Specialized* HashedBlocks<CellT, dim>::accessCellData(
-    const Index<dim>& index, bool auto_allocate) {
+template <typename CellT>
+typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
+    const Index3D& index, bool auto_allocate) {
   BlockIndex block_index = computeBlockIndexFromIndex(index);
   auto it = blocks_.find(block_index);
   if (it == blocks_.end()) {
@@ -151,9 +147,9 @@ typename CellT::Specialized* HashedBlocks<CellT, dim>::accessCellData(
   return &it->second[convert::indexToLinearIndex<kCellsPerSide>(cell_index)];
 }
 
-template <typename CellT, int dim>
-const typename CellT::Specialized* HashedBlocks<CellT, dim>::accessCellData(
-    const Index<dim>& index) const {
+template <typename CellT>
+const typename CellT::Specialized* HashedBlocks<CellT>::accessCellData(
+    const Index3D& index) const {
   BlockIndex block_index = computeBlockIndexFromIndex(index);
   const auto& it = blocks_.find(block_index);
   if (it != blocks_.end()) {
@@ -164,20 +160,18 @@ const typename CellT::Specialized* HashedBlocks<CellT, dim>::accessCellData(
   return nullptr;
 }
 
-template <typename CellT, int dim>
-typename HashedBlocks<CellT, dim>::BlockIndex
-HashedBlocks<CellT, dim>::computeBlockIndexFromIndex(
-    const Index<dim>& index) const {
+template <typename CellT>
+typename HashedBlocks<CellT>::BlockIndex
+HashedBlocks<CellT>::computeBlockIndexFromIndex(const Index3D& index) const {
   return int_math::div_exp2_floor(index, kCellsPerSideLog2);
 }
 
-template <typename CellT, int dim>
-typename HashedBlocks<CellT, dim>::CellIndex
-HashedBlocks<CellT, dim>::computeCellIndexFromBlockIndexAndIndex(
-    const HashedBlocks::BlockIndex& block_index,
-    const Index<dim>& index) const {
-  const Index<dim> origin = kCellsPerSide * block_index;
-  Index<dim> cell_index = index - origin;
+template <typename CellT>
+typename HashedBlocks<CellT>::CellIndex
+HashedBlocks<CellT>::computeCellIndexFromBlockIndexAndIndex(
+    const HashedBlocks::BlockIndex& block_index, const Index3D& index) const {
+  const Index3D origin = kCellsPerSide * block_index;
+  Index3D cell_index = index - origin;
 
   DCHECK((0 <= cell_index.array() && cell_index.array() < kCellsPerSide).all())
       << "(Local) cell indices should always be within range [0, "
@@ -187,8 +181,8 @@ HashedBlocks<CellT, dim>::computeCellIndexFromBlockIndexAndIndex(
   return cell_index;
 }
 
-template <typename CellT, int dim>
-Index<dim> HashedBlocks<CellT, dim>::computeIndexFromBlockIndexAndCellIndex(
+template <typename CellT>
+Index3D HashedBlocks<CellT>::computeIndexFromBlockIndexAndCellIndex(
     const HashedBlocks::BlockIndex& block_index,
     const HashedBlocks::CellIndex& cell_index) const {
   return kCellsPerSide * block_index + cell_index;

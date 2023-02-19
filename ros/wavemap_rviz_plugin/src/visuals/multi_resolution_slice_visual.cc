@@ -21,7 +21,7 @@ MultiResolutionSliceVisual::~MultiResolutionSliceVisual() {
   scene_manager_->destroySceneNode(frame_node_);
 }
 
-void MultiResolutionSliceVisual::loadMap(const VolumetricDataStructure3D& map,
+void MultiResolutionSliceVisual::loadMap(const VolumetricDataStructureBase& map,
                                          FloatingPoint min_occupancy_log_odds,
                                          FloatingPoint max_occupancy_log_odds,
                                          FloatingPoint slice_height,

@@ -6,9 +6,9 @@
 #include <rviz/visualization_manager.h>
 #include <tf/transform_listener.h>
 #include <wavemap/data_structure/volumetric/cell_types/scalar_cell.h>
+#include <wavemap/data_structure/volumetric/volumetric_octree.h>
+#include <wavemap/data_structure/volumetric/wavelet_octree.h>
 #include <wavemap/indexing/ndtree_index.h>
-#include <wavemap_3d/data_structure/volumetric_octree.h>
-#include <wavemap_3d/data_structure/wavelet_octree.h>
 
 #include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
 
@@ -209,7 +209,7 @@ void WavemapMapDisplay::processMessage(
   }
 }
 
-std::unique_ptr<VolumetricDataStructure3D> WavemapMapDisplay::mapFromRosMsg(
+std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
     const wavemap_msgs::Map& map_msg) {
   if (!map_msg.wavelet_octree.empty()) {
     using WaveletOctreeType = WaveletOctree<UnboundedScalarCell>;

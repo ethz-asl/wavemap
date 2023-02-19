@@ -8,7 +8,7 @@
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
-#include <wavemap_3d/data_structure/volumetric_data_structure_3d.h>
+#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap_msgs/Map.h>
 
 #include "wavemap_rviz_plugin/visuals/mesh_visual.h"
@@ -50,8 +50,8 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   void processMessage(const wavemap_msgs::Map::ConstPtr& map_msg) override;
 
   // Storage and message parsers for the map
-  std::unique_ptr<VolumetricDataStructure3D> map_;
-  static std::unique_ptr<VolumetricDataStructure3D> mapFromRosMsg(
+  std::unique_ptr<VolumetricDataStructureBase> map_;
+  static std::unique_ptr<VolumetricDataStructureBase> mapFromRosMsg(
       const wavemap_msgs::Map& map_msg);
 
   // Storage for the visuals

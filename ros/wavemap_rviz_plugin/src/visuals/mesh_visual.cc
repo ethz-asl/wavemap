@@ -25,7 +25,7 @@ MeshVisual::~MeshVisual() {
   scene_manager_->destroySceneNode(frame_node_);
 }
 
-void MeshVisual::loadMap(const VolumetricDataStructure3D& map,
+void MeshVisual::loadMap(const VolumetricDataStructureBase& map,
                          FloatingPoint min_occupancy_log_odds,
                          FloatingPoint max_occupancy_log_odds,
                          FloatingPoint alpha) {

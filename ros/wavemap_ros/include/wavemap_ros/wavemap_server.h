@@ -1,0 +1,83 @@
+#ifndef WAVEMAP_ROS_WAVEMAP_SERVER_H_
+#define WAVEMAP_ROS_WAVEMAP_SERVER_H_
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <glog/logging.h>
+#include <ros/ros.h>
+#include <wavemap/common.h>
+#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
+#include <wavemap/integrator/pointcloud_integrator.h>
+#include <wavemap/utils/config_utils.h>
+
+#include "wavemap_ros/input_handler/input_handler.h"
+#include "wavemap_ros/tf_transformer.h"
+#include "wavemap_ros/utils/timer.h"
+
+namespace wavemap {
+class WavemapServer {
+ public:
+  struct Config : ConfigBase<Config> {
+    struct General {
+      std::string world_frame = "odom";
+      bool publish_performance_stats = false;
+    } general;
+
+    struct Map {
+      float pruning_period = 1.f;
+      float visualization_period = 10.f;
+      float autosave_period = -1.f;
+      std::string autosave_path;
+    } map;
+
+    static Config from(const param::Map& params);
+    bool isValid(bool verbose) const override;
+  };
+
+  WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private);
+  WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
+                const Config& config);
+
+  void visualizeMap();
+  bool saveMap(const std::string& file_path) const;
+  bool loadMap(const std::string& file_path);
+
+  InputHandler* addInput(const param::Map& integrator_params,
+                         const ros::NodeHandle& nh, ros::NodeHandle nh_private);
+
+  std::shared_ptr<VolumetricDataStructureBase> getMap() {
+    return occupancy_map_;
+  }
+  std::shared_ptr<const VolumetricDataStructureBase> getMap() const {
+    return occupancy_map_;
+  }
+
+ private:
+  const Config config_;
+
+  VolumetricDataStructureBase::Ptr occupancy_map_;
+
+  std::shared_ptr<TfTransformer> transformer_;
+  std::vector<std::unique_ptr<InputHandler>> input_handlers_;
+
+  void subscribeToTimers(const ros::NodeHandle& nh);
+  ros::Timer map_pruning_timer_;
+  ros::Timer map_visualization_timer_;
+  ros::Timer map_autosave_timer_;
+
+  void subscribeToTopics(ros::NodeHandle& nh);
+
+  void advertiseTopics(ros::NodeHandle& nh_private);
+  ros::Publisher map_pub_;
+  ros::Publisher performance_stats_pub_;
+
+  void advertiseServices(ros::NodeHandle& nh_private);
+  ros::ServiceServer visualize_map_srv_;
+  ros::ServiceServer save_map_srv_;
+  ros::ServiceServer load_map_srv_;
+};
+}  // namespace wavemap
+
+#endif  // WAVEMAP_ROS_WAVEMAP_SERVER_H_

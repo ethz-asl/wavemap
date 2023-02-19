@@ -2,7 +2,7 @@
 <package format="2">
   <name>wavemap_ros</name>
   <version>0.0.0</version>
-  <description>Common components for wavemap's 2D and 3D ROS interfaces.</description>
+  <description>ROS interface for wavemap.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
   <license>BSD</license>
@@ -17,7 +17,12 @@
 
   <depend>roscpp</depend>
   <depend>rosbag</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
   <depend>minkindr_conversions</depend>
 
+  <depend>wavemap_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>sensor_msgs</depend>
   <depend>visualization_msgs</depend>
 </package>

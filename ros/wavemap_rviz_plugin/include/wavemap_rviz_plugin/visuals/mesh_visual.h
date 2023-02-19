@@ -8,8 +8,7 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreVector3.h>
-
-#include "wavemap_3d/data_structure/volumetric_data_structure_3d.h"
+#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 
 namespace wavemap::rviz_plugin {
 // Each instance of MeshVisual represents the visualization of a map's
@@ -24,7 +23,7 @@ class MeshVisual {
   virtual ~MeshVisual();
 
   // Configure the visual to show the data in the message
-  void loadMap(const VolumetricDataStructure3D& map,
+  void loadMap(const VolumetricDataStructureBase& map,
                FloatingPoint min_occupancy_log_odds,
                FloatingPoint max_occupancy_log_odds, FloatingPoint alpha);
 

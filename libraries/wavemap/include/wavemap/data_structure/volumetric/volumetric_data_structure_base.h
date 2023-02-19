@@ -23,10 +23,9 @@ struct VolumetricDataStructureConfig
   static VolumetricDataStructureConfig from(const param::Map& params);
 };
 
-template <int dim>
 class VolumetricDataStructureBase {
  public:
-  static constexpr int kDim = dim;
+  static constexpr int kDim = 3;
   using Ptr = std::shared_ptr<VolumetricDataStructureBase>;
 
   explicit VolumetricDataStructureBase(
@@ -45,25 +44,19 @@ class VolumetricDataStructureBase {
   FloatingPoint getMinCellWidth() const { return config_.min_cell_width; }
   virtual size_t getMemoryUsage() const = 0;
 
-  virtual Index<dim> getMinIndex() const = 0;
-  virtual Index<dim> getMaxIndex() const = 0;
+  virtual Index3D getMinIndex() const = 0;
+  virtual Index3D getMaxIndex() const = 0;
 
-  virtual FloatingPoint getCellValue(const Index<dim>& index) const = 0;
-  virtual void setCellValue(const Index<dim>& index,
-                            FloatingPoint new_value) = 0;
-  virtual void addToCellValue(const Index<dim>& index,
-                              FloatingPoint update) = 0;
+  virtual FloatingPoint getCellValue(const Index3D& index) const = 0;
+  virtual void setCellValue(const Index3D& index, FloatingPoint new_value) = 0;
+  virtual void addToCellValue(const Index3D& index, FloatingPoint update) = 0;
 
   using IndexedLeafVisitorFunction =
-      std::function<void(const NdtreeIndex<dim>& index, FloatingPoint value)>;
+      std::function<void(const OctreeIndex& index, FloatingPoint value)>;
   virtual void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const = 0;
 
-  virtual bool save(const std::string& file_path_prefix,
-                    bool use_floating_precision) const = 0;
-  // TODO(victorr): Automatically determine whether floating or fixed precision
-  //                was used from the file format once it has been designed
-  virtual bool load(const std::string& file_path_prefix,
-                    bool used_floating_precision) = 0;
+  virtual bool save(const std::string& file_path_prefix) const = 0;
+  virtual bool load(const std::string& file_path_prefix) = 0;
 
  protected:
   const VolumetricDataStructureConfig config_;

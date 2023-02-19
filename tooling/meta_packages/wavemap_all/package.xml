@@ -13,10 +13,7 @@
     <buildtool_depend>catkin</buildtool_depend>
 
     <exec_depend>wavemap</exec_depend>
-    <exec_depend>wavemap_3d</exec_depend>
-
     <exec_depend>wavemap_ros</exec_depend>
-    <exec_depend>wavemap_3d_ros</exec_depend>
     <exec_depend>wavemap_msgs</exec_depend>
     <exec_depend>wavemap_rviz_plugin</exec_depend>
 

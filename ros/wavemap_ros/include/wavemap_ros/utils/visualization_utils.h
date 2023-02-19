@@ -7,7 +7,8 @@
 #include <wavemap/data_structure/volumetric/cell_types/occupancy_state.h>
 #include <wavemap/indexing/index_conversions.h>
 #include <wavemap/indexing/ndtree_index.h>
-#include <wavemap_ros/utils/color.h>
+
+#include "wavemap_ros/utils/color.h"
 
 namespace wavemap {
 template <typename Map, typename ScalarToRGBAFunction>

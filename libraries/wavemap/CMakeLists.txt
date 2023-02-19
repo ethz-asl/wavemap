@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap)
 
 # Dependencies
-find_package(catkin REQUIRED COMPONENTS glog_catkin eigen_catkin minkindr)
+find_package(catkin
+    REQUIRED COMPONENTS glog_catkin eigen_catkin minkindr cv_bridge)
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
 endif ()
@@ -22,6 +23,7 @@ catkin_package(
     glog_catkin
     eigen_catkin
     minkindr
+    cv_bridge
     CFG_EXTRAS
     wavemap-extras.cmake)
 # NOTE: The test headers are normally not exported (e.g. by adding test/include
@@ -35,12 +37,18 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # Libraries
 add_library(${PROJECT_NAME}
     src/data_structure/volumetric/volumetric_data_structure_base.cc
+    src/data_structure/volumetric/volumetric_data_structure_factory.cc
     src/integrator/measurement_model/continuous_volumetric_log_odds.cc
     src/integrator/projection_model/circular_projector.cc
     src/integrator/projection_model/ouster_projector.cc
     src/integrator/projection_model/pinhole_camera_projector.cc
     src/integrator/projection_model/spherical_projector.cc
+    src/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.cc
+    src/integrator/projective/coarse_to_fine/wavelet_integrator.cc
+    src/integrator/projective/fixed_resolution/fixed_resolution_integrator.cc
+    src/integrator/projective/scanwise_integrator.cc
     src/integrator/pointcloud_integrator.cc
+    src/integrator/pointcloud_integrator_factory.cc
     src/utils/eigen_format.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
@@ -53,7 +61,8 @@ if (CATKIN_ENABLE_TESTING)
       test/src/data_structure/test_hashed_blocks.cc
       test/src/data_structure/test_ndtree.cc
       test/src/data_structure/test_pointcloud.cc
-      test/src/data_structure/test_volumetric_ndtree.cc
+      test/src/data_structure/test_volumetric_data_structure.cc
+      test/src/data_structure/test_volumetric_octree.cc
       test/src/data_structure/test_sparse_vector.cc
       test/src/data_structure/test_volumetric_cell_types.cc
       test/src/indexing/test_index_conversions.cc
@@ -61,7 +70,11 @@ if (CATKIN_ENABLE_TESTING)
       test/src/integrator/image_1d/test_circular_projector.cc
       test/src/integrator/image_2d/test_image_2d_projectors.cc
       test/src/integrator/image_2d/test_spherical_projector.cc
+      test/src/integrator/test_hierarchical_range_image_2d.cc
       test/src/integrator/test_measurement_models.cc
+      test/src/integrator/test_pointcloud_integrators.cc
+      test/src/integrator/test_range_image_2d.cc
+      test/src/integrator/test_range_image_2d_intersector.cc
       test/src/iterator/test_grid_iterator.cc
       test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc
