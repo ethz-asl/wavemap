@@ -8,7 +8,7 @@
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
 #include <wavemap/data_structure/image.h>
-#include <wavemap/integrator/projective/scanwise_integrator.h>
+#include <wavemap/integrator/projective/projective_integrator.h>
 
 #include "wavemap_ros/input_handler/input_handler.h"
 
@@ -33,7 +33,7 @@ class DepthImageInputHandler : public InputHandler {
   }
 
  private:
-  ScanwiseIntegrator::Ptr scanwise_integrator_;
+  ProjectiveIntegrator::Ptr scanwise_integrator_;
 
   image_transport::Subscriber depth_image_sub_;
   std::queue<sensor_msgs::Image> depth_image_queue_;

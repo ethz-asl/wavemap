@@ -3,7 +3,7 @@ project(wavemap)
 
 # Dependencies
 find_package(catkin
-    REQUIRED COMPONENTS glog_catkin eigen_catkin minkindr cv_bridge)
+    REQUIRED COMPONENTS glog_catkin eigen_catkin minkindr)
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
 endif ()
@@ -23,7 +23,6 @@ catkin_package(
     glog_catkin
     eigen_catkin
     minkindr
-    cv_bridge
     CFG_EXTRAS
     wavemap-extras.cmake)
 # NOTE: The test headers are normally not exported (e.g. by adding test/include
@@ -38,7 +37,9 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
     src/data_structure/volumetric/volumetric_data_structure_base.cc
     src/data_structure/volumetric/volumetric_data_structure_factory.cc
-    src/integrator/measurement_model/continuous_volumetric_log_odds.cc
+    src/integrator/measurement_model/continuous_beam.cc
+    src/integrator/measurement_model/constant_ray.cc
+    src/integrator/measurement_model/continuous_ray.cc
     src/integrator/projection_model/circular_projector.cc
     src/integrator/projection_model/ouster_projector.cc
     src/integrator/projection_model/pinhole_camera_projector.cc
@@ -46,9 +47,10 @@ add_library(${PROJECT_NAME}
     src/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.cc
     src/integrator/projective/coarse_to_fine/wavelet_integrator.cc
     src/integrator/projective/fixed_resolution/fixed_resolution_integrator.cc
-    src/integrator/projective/scanwise_integrator.cc
-    src/integrator/pointcloud_integrator.cc
-    src/integrator/pointcloud_integrator_factory.cc
+    src/integrator/projective/projective_integrator.cc
+    src/integrator/ray_tracing/ray_tracing_integrator.cc
+    src/integrator/integrator_base.cc
+    src/integrator/integrator_factory.cc
     src/utils/eigen_format.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
@@ -69,17 +71,18 @@ if (CATKIN_ENABLE_TESTING)
       test/src/indexing/test_index_conversions.cc
       test/src/indexing/test_ndtree_index.cc
       test/src/integrator/projection_model/test_circular_projector.cc
-      test/src/integrator/projection_model/test_image_2d_projectors.cc
+      test/src/integrator/projection_model/test_image_projectors.cc
       test/src/integrator/projection_model/test_spherical_projector.cc
-      test/src/integrator/test_hierarchical_range_image_2d.cc
+      test/src/integrator/test_hierarchical_range_image.cc
       test/src/integrator/test_measurement_models.cc
       test/src/integrator/test_pointcloud_integrators.cc
-      test/src/integrator/test_range_image_2d_intersector.cc
+      test/src/integrator/test_range_image_intersector.cc
       test/src/iterator/test_grid_iterator.cc
       test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc
       test/src/utils/test_approximate_trigonometry.cc
       test/src/utils/test_bit_manipulation.cc
+      test/src/utils/test_fill_utils.cc
       test/src/utils/test_int_math.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
   target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)

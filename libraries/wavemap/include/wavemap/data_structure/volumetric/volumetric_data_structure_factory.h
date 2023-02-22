@@ -3,9 +3,9 @@
 
 #include <string>
 
+#include "wavemap/config/config_base.h"
+#include "wavemap/config/type_selector.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
-#include "wavemap/utils/config_utils.h"
-#include "wavemap/utils/factory_utils.h"
 
 namespace wavemap {
 struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {

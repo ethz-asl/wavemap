@@ -8,9 +8,9 @@
 
   <!-- Wavemap params -->
   <arg name="param_file" if="$(eval anymal_name == 'caiman')"
-       value="$(find wavemap_3d_ros)/config/subt_finals/caiman_vlp16_realsense.yaml"/>
+       value="$(find wavemap_ros)/config/subt_finals/caiman_vlp16_realsense.yaml"/>
   <arg name="param_file" if="$(eval anymal_name == 'camel')"
-       value="$(find wavemap_3d_ros)/config/subt_finals/camel_vlp16_realsense.yaml"/>
+       value="$(find wavemap_ros)/config/subt_finals/camel_vlp16_realsense.yaml"/>
 
   <!-- Select the rosbag paths -->
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
@@ -74,7 +74,7 @@
     </include>
 
     <!-- Publish odometry as TF -->
-    <node pkg="wavemap_3d_ros" type="odom_msg_to_tf.py" name="odom_to_tf"
+    <node pkg="wavemap_ros" type="odom_msg_to_tf.py" name="odom_to_tf"
           output="screen">
       <param name="odom_topic"
              value="/msf_loam_alphasense_imu/msf_core/odometry"/>
@@ -84,6 +84,6 @@
   </group>
 
   <!-- Run wavemap -->
-  <include file="$(find wavemap_3d_ros)/launch/datasets/dataset_base.launch"
+  <include file="$(find wavemap_ros)/launch/datasets/dataset_base.launch"
            pass_all_args="true"/>
 </launch>

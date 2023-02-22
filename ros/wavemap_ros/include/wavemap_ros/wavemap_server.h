@@ -8,10 +8,10 @@
 #include <glog/logging.h>
 #include <ros/ros.h>
 #include <wavemap/common.h>
+#include <wavemap/config/config_base.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
-#include <wavemap/integrator/pointcloud_integrator.h>
-#include <wavemap/utils/config_utils.h>
 
+#include "wavemap/integrator/integrator_base.h"
 #include "wavemap_ros/input_handler/input_handler.h"
 #include "wavemap_ros/tf_transformer.h"
 #include "wavemap_ros/utils/timer.h"
@@ -47,10 +47,8 @@ class WavemapServer {
   InputHandler* addInput(const param::Map& integrator_params,
                          const ros::NodeHandle& nh, ros::NodeHandle nh_private);
 
-  std::shared_ptr<VolumetricDataStructureBase> getMap() {
-    return occupancy_map_;
-  }
-  std::shared_ptr<const VolumetricDataStructureBase> getMap() const {
+  VolumetricDataStructureBase::Ptr getMap() { return occupancy_map_; }
+  VolumetricDataStructureBase::ConstPtr getMap() const {
     return occupancy_map_;
   }
 

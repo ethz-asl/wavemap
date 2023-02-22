@@ -3,6 +3,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/posed_object.h"
+#include "wavemap/utils/fill_utils.h"
 
 namespace wavemap {
 template <typename DataT = FloatingPoint>
@@ -13,7 +14,7 @@ class Image {
   explicit Image(const Index2D& dimensions, DataT initial_value = DataT{})
       : Image(dimensions.x(), dimensions.y(), initial_value) {}
   Image(IndexElement num_rows, IndexElement num_columns,
-        DataT initial_value = DataT{})
+        DataT initial_value = fill::zero<DataT>())
       : initial_value_(initial_value),
         data_(Data::Constant(num_rows, num_columns, initial_value)) {}
 
@@ -56,7 +57,7 @@ class Image {
   }
 
  private:
-  const DataT initial_value_;
+  DataT initial_value_;
   Data data_;
 };
 

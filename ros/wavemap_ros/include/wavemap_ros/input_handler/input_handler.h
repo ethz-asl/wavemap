@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 
-#include <wavemap/integrator/pointcloud_integrator_factory.h>
-#include <wavemap/utils/config_utils.h>
+#include <wavemap/config/config_base.h>
+#include <wavemap/integrator/integrator_factory.h>
 
 #include "wavemap_ros/tf_transformer.h"
 #include "wavemap_ros/utils/config_conversions.h"
@@ -57,7 +57,7 @@ class InputHandler {
   const Config config_;
   const std::string world_frame_;
 
-  PointcloudIntegrator::Ptr integrator_;
+  IntegratorBase::Ptr integrator_;
   CpuTimer integration_timer_;
 
   std::shared_ptr<TfTransformer> transformer_;
@@ -67,7 +67,7 @@ class InputHandler {
 
   void publishReprojected(const ros::Time& stamp,
                           const PosedPointcloud<Point3D>& posed_pointcloud);
-  std::shared_ptr<const Image2DProjectionModel> projection_model_;
+  ProjectorBase::ConstPtr projection_model_;
   ros::Publisher reprojection_pub_;
 };
 }  // namespace wavemap

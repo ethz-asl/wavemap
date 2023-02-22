@@ -4,10 +4,10 @@
 #include <algorithm>
 #include <utility>
 
+#include "wavemap/config/config_base.h"
 #include "wavemap/integrator/projection_model/circular_projector.h"
-#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
+#include "wavemap/integrator/projection_model/projector_base.h"
 #include "wavemap/utils/approximate_trigonometry.h"
-#include "wavemap/utils/config_utils.h"
 
 namespace wavemap {
 struct OusterProjectorConfig : ConfigBase<OusterProjectorConfig> {
@@ -32,12 +32,12 @@ struct OusterProjectorConfig : ConfigBase<OusterProjectorConfig> {
   static OusterProjectorConfig from(const param::Map& params);
 };
 
-class OusterProjector : public Image2DProjectionModel {
+class OusterProjector : public ProjectorBase {
  public:
   using Config = OusterProjectorConfig;
 
   explicit OusterProjector(const Config& config)
-      : Image2DProjectionModel(
+      : ProjectorBase(
             Vector2D(config.elevation.max_angle - config.elevation.min_angle,
                      config.azimuth.max_angle - config.azimuth.min_angle)
                 .cwiseQuotient(Index2D(config.elevation.num_cells - 1,
@@ -48,10 +48,10 @@ class OusterProjector : public Image2DProjectionModel {
 
   IndexElement getNumRows() const final { return config_.elevation.num_cells; }
   IndexElement getNumColumns() const final { return config_.azimuth.num_cells; }
-  ImageCoordinates getMinImageCoordinates() const final {
+  Vector2D getMinImageCoordinates() const final {
     return {config_.elevation.min_angle, config_.azimuth.min_angle};
   }
-  ImageCoordinates getMaxImageCoordinates() const final {
+  Vector2D getMaxImageCoordinates() const final {
     return {config_.elevation.max_angle, config_.azimuth.max_angle};
   }
   Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final;
@@ -84,14 +84,13 @@ class OusterProjector : public Image2DProjectionModel {
                     B_point.x() * std::sin(azimuth_angle), B_point.y()};
     return C_point;
   }
-  Point3D sensorToCartesian(const ImageCoordinates& image_coordinates,
+  Point3D sensorToCartesian(const Vector2D& image_coordinates,
                             FloatingPoint range) const final {
     return sensorToCartesian(
         {image_coordinates.x(), image_coordinates.y(), range});
   }
-  FloatingPoint imageOffsetToErrorNorm(
-      const ImageCoordinates& linearization_point,
-      ImageCoordinates offset) const final {
+  FloatingPoint imageOffsetToErrorNorm(const Vector2D& linearization_point,
+                                       Vector2D offset) const final {
     // Scale the azimuth offset by the cosine of the elevation angle to account
     // for the change in density along the azimuth axis in function of elevation
     const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
@@ -100,7 +99,7 @@ class OusterProjector : public Image2DProjectionModel {
   }
 
   // Projection from Cartesian space onto the sensor's image surface
-  ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
+  Vector2D cartesianToImage(const Point3D& C_point) const final {
     // Project the beam's endpoint into the 2D plane B whose origin lies at the
     // beam's start point, X-axis is parallel to the projection of the beam onto
     // frame C's XY-plane and Y-axis is parallel to frame C's Z-axis
@@ -187,7 +186,7 @@ class OusterProjector : public Image2DProjectionModel {
  private:
   const OusterProjectorConfig config_;
 
-  ImageCoordinates cartesianToImageApprox(const Point3D& C_point) const {
+  Vector2D cartesianToImageApprox(const Point3D& C_point) const {
     const Vector2D B_point{
         C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
         C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};

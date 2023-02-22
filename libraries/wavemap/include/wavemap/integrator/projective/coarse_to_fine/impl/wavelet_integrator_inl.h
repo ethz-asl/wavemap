@@ -4,22 +4,6 @@
 #include "wavemap/data_structure/volumetric/cell_types/occupancy_cell.h"
 
 namespace wavemap {
-inline bool WaveletIntegrator::isApproximationErrorAcceptable(
-    UpdateType update_type, FloatingPoint sphere_center_distance,
-    FloatingPoint bounding_sphere_radius) const {
-  switch (update_type) {
-    case UpdateType::kFreeOrUnobserved:
-      return bounding_sphere_radius < (kMaxAcceptableUpdateError /
-                                       max_gradient_over_range_fully_inside_) *
-                                          sphere_center_distance;
-    case UpdateType::kPossiblyOccupied:
-      return bounding_sphere_radius <
-             kMaxAcceptableUpdateError / max_gradient_on_boundary_;
-    default:
-      return true;
-  }
-}
-
 inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const OctreeIndex& node_index, FloatingPoint node_value,
     typename WaveletOctreeInterface::NodeType& parent_node,
@@ -74,8 +58,9 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
       kUnitCubeHalfDiagonal * node_width;
   WaveletOctreeInterface::NodeType* node =
       parent_node.getChild(relative_child_index);
-  if (isApproximationErrorAcceptable(update_type, d_C_cell,
-                                     bounding_sphere_radius)) {
+  if (measurement_model_->computeWorstCaseApproximationError(
+          update_type, d_C_cell, bounding_sphere_radius) <
+      config_.termination_update_error) {
     const FloatingPoint sample = computeUpdate(C_node_center);
     if (!node || !node->hasAtLeastOneChild()) {
       return std::clamp(

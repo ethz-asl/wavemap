@@ -1,5 +1,6 @@
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 
+#include "wavemap/indexing/index_conversions.h"
 #include "wavemap/iterator/grid_iterator.h"
 
 namespace wavemap {
@@ -8,7 +9,7 @@ void FixedResolutionIntegrator::importPointcloud(
   // Reset the posed range image, beam offset image and aabb
   posed_range_image_->resetToInitialValue();
   posed_range_image_->setPose(pointcloud.getPose());
-  beam_offset_image_.setToConstant(Vector2D::Zero());
+  beam_offset_image_->resetToInitialValue();
   aabb_ = AABB<Point3D>{};
 
   // Import all the points while updating the AABB
@@ -37,7 +38,7 @@ void FixedResolutionIntegrator::importPointcloud(
         posed_range_image_->at(range_image_index);
     if (old_range_value < config_.min_range || range < old_range_value) {
       posed_range_image_->at(range_image_index) = range;
-      beam_offset_image_.at(range_image_index) = beam_to_pixel_offset;
+      beam_offset_image_->at(range_image_index) = beam_to_pixel_offset;
     }
 
     // Update the AABB (in world frame)
@@ -48,10 +49,9 @@ void FixedResolutionIntegrator::importPointcloud(
   }
 
   // Pad the aabb to account for the beam uncertainties
-  const FloatingPoint max_lateral_component =
-      measurement_model_.getCombinedThreshold(
-          config_.max_range +
-          measurement_model_.getRangeThresholdBehindSurface());
+  const FloatingPoint max_lateral_component = std::max(
+      std::sin(measurement_model_->getPaddingAngle()) * config_.max_range,
+      measurement_model_->getPaddingSurfaceBack());
   aabb_.min -= Vector3D::Constant(max_lateral_component);
   aabb_.max += Vector3D::Constant(max_lateral_component);
 }
@@ -59,7 +59,7 @@ void FixedResolutionIntegrator::importPointcloud(
 void FixedResolutionIntegrator::importRangeImage(
     const PosedImage<>& range_image_input) {
   // Load the range image
-  ScanwiseIntegrator::importRangeImage(range_image_input);
+  ProjectiveIntegrator::importRangeImage(range_image_input);
 
   // Update the AABB to contain the camera frustum
   aabb_ = AABB<Point3D>{};
@@ -78,10 +78,9 @@ void FixedResolutionIntegrator::importRangeImage(
   }
 
   // Pad the aabb to account for the beam uncertainties
-  const FloatingPoint max_lateral_component =
-      measurement_model_.getCombinedThreshold(
-          config_.max_range +
-          measurement_model_.getRangeThresholdBehindSurface());
+  const FloatingPoint max_lateral_component = std::max(
+      std::sin(measurement_model_->getPaddingAngle()) * config_.max_range,
+      measurement_model_->getPaddingSurfaceBack());
   aabb_.min -= Vector3D::Constant(max_lateral_component);
   aabb_.max += Vector3D::Constant(max_lateral_component);
 }

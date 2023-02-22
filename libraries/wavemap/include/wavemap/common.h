@@ -68,13 +68,12 @@ template <>
 inline constexpr int dim_v<Rotation3D> = 3;
 
 constexpr auto kEpsilon = constants<FloatingPoint>::kEpsilon;
+constexpr auto kNaN = std::numeric_limits<FloatingPoint>::quiet_NaN();
+
 constexpr auto kPi = constants<FloatingPoint>::kPi;
 constexpr auto kTwoPi = constants<FloatingPoint>::kTwoPi;
 constexpr auto kHalfPi = constants<FloatingPoint>::kHalfPi;
 constexpr auto kQuarterPi = constants<FloatingPoint>::kQuarterPi;
-constexpr auto kSqrt2 = constants<FloatingPoint>::kSqrt2;
-constexpr auto kSqrt2Inv = constants<FloatingPoint>::kSqrt2Inv;
-constexpr auto kNaN = std::numeric_limits<FloatingPoint>::quiet_NaN();
 }  // namespace wavemap
 
 #endif  // WAVEMAP_COMMON_H_

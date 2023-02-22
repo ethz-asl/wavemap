@@ -6,8 +6,8 @@
 #include <string>
 
 #include "wavemap/common.h"
+#include "wavemap/config/config_base.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/utils/config_utils.h"
 
 namespace wavemap {
 struct VolumetricDataStructureConfig
@@ -27,6 +27,7 @@ class VolumetricDataStructureBase {
  public:
   static constexpr int kDim = 3;
   using Ptr = std::shared_ptr<VolumetricDataStructureBase>;
+  using ConstPtr = std::shared_ptr<const VolumetricDataStructureBase>;
 
   explicit VolumetricDataStructureBase(
       const VolumetricDataStructureConfig& config)

@@ -2,44 +2,38 @@
 #define WAVEMAP_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_COARSE_TO_FINE_INTEGRATOR_H_
 
 #include <memory>
+#include <utility>
 
 #include "wavemap/data_structure/volumetric/volumetric_octree_interface.h"
-#include "wavemap/integrator/projective/coarse_to_fine/range_image_2d_intersector.h"
-#include "wavemap/integrator/projective/scanwise_integrator.h"
+#include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
+#include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/integrator/projective/update_type.h"
 
 namespace wavemap {
-class CoarseToFineIntegrator : public ScanwiseIntegrator {
+class CoarseToFineIntegrator : public ProjectiveIntegrator {
  public:
-  static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
-
-  CoarseToFineIntegrator(
-      const PointcloudIntegratorConfig& config,
-      std::shared_ptr<const Image2DProjectionModel> projection_model,
-      ContinuousVolumetricLogOdds measurement_model,
-      VolumetricDataStructureBase::Ptr occupancy_map);
+  CoarseToFineIntegrator(const ProjectiveIntegratorConfig& config,
+                         ProjectorBase::ConstPtr projection_model,
+                         std::shared_ptr<PosedImage<>> posed_range_image,
+                         std::shared_ptr<Image<Vector2D>> beam_offset_image,
+                         MeasurementModelBase::ConstPtr measurement_model,
+                         VolumetricOctreeInterface::Ptr occupancy_map)
+      : ProjectiveIntegrator(
+            config, std::move(projection_model), std::move(posed_range_image),
+            std::move(beam_offset_image), std::move(measurement_model)),
+        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))),
+        min_cell_width_(occupancy_map_->getMinCellWidth()) {}
 
  private:
-  VolumetricOctreeInterface::Ptr volumetric_octree_;
-
+  const VolumetricOctreeInterface::Ptr occupancy_map_;
   const FloatingPoint min_cell_width_;
-  std::shared_ptr<RangeImage2DIntersector> range_image_intersector_;
 
-  // TODO(victorr): Move this to the measurement model
-  const FloatingPoint max_gradient_over_range_fully_inside_ =
-      measurement_model_.getConfig().scaling_free * 366.692988883727f;
-  const FloatingPoint max_gradient_on_boundary_ =
-      measurement_model_.getConfig().scaling_occupied * 3.75000000000002f;
-  static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
-
-  bool isApproximationErrorAcceptable(
-      UpdateType update_type, FloatingPoint sphere_center_distance,
-      FloatingPoint bounding_sphere_radius) const;
+  std::shared_ptr<RangeImageIntersector> range_image_intersector_;
+  static constexpr auto kUnitCubeHalfDiagonal =
+      constants<FloatingPoint>::kSqrt3 / 2.f;
 
   void updateMap() override;
 };
 }  // namespace wavemap
-
-#include "wavemap/integrator/projective/coarse_to_fine/impl/coarse_to_fine_integrator_inl.h"
 
 #endif  // WAVEMAP_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_COARSE_TO_FINE_INTEGRATOR_H_

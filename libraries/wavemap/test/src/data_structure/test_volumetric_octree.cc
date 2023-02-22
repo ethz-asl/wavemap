@@ -7,7 +7,7 @@
 
 namespace wavemap {
 template <typename TypeParamT>
-class VolumetricNdtreeTest : public FixtureBase {
+class VolumetricOctreeTest : public FixtureBase {
  protected:
   VolumetricOctree<TypeParamT> getRandomMap() {
     VolumetricOctree<TypeParamT> random_map(getRandomMinCellWidth());
@@ -29,14 +29,14 @@ class VolumetricNdtreeTest : public FixtureBase {
 
 using TypeParams =
     ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
-TYPED_TEST_SUITE(VolumetricNdtreeTest, TypeParams, );
+TYPED_TEST_SUITE(VolumetricOctreeTest, TypeParams, );
 
 // NOTE: Insertion tests are performed as part of the test suite for the
 //       VolumetricDataStructure interface.
 // TODO(victorr): Test whether out of bounds accesses/insertions are handled
 //                correctly (e.g. throw error or do nothing and print error).
 
-TYPED_TEST(VolumetricNdtreeTest, Initialization) {
+TYPED_TEST(VolumetricOctreeTest, Initialization) {
   const FloatingPoint random_min_cell_width =
       TestFixture::getRandomMinCellWidth();
   VolumetricOctree<TypeParam> map(
@@ -46,7 +46,7 @@ TYPED_TEST(VolumetricNdtreeTest, Initialization) {
   EXPECT_EQ(map.size(), 1u);  // Contains exactly 1 node (the root)
 }
 
-TYPED_TEST(VolumetricNdtreeTest, IndexConversions) {
+TYPED_TEST(VolumetricOctreeTest, IndexConversions) {
   VolumetricOctree<TypeParam> map(
       VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
   std::vector<Index3D> random_indices = TestFixture::getRandomIndexVector(
@@ -65,7 +65,7 @@ TYPED_TEST(VolumetricNdtreeTest, IndexConversions) {
   }
 }
 
-TYPED_TEST(VolumetricNdtreeTest, Resizing) {
+TYPED_TEST(VolumetricOctreeTest, Resizing) {
   VolumetricOctree<TypeParam> map(
       VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
   ASSERT_TRUE(map.empty());
@@ -115,7 +115,7 @@ TYPED_TEST(VolumetricNdtreeTest, Resizing) {
   EXPECT_EQ(map.size(), 1u);
 }
 
-TYPED_TEST(VolumetricNdtreeTest, Pruning) {
+TYPED_TEST(VolumetricOctreeTest, Pruning) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
     VolumetricOctree<TypeParam> map(

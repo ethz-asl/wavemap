@@ -14,12 +14,12 @@
   <!-- Process the rosbag with wavemap -->
   <group if="$(arg use_batch_mode)">
     <!-- In batch mode (process the rosbag as fast as possible) -->
-    <include file="$(find wavemap_3d_ros)/launch/rosbag_processor.launch"
+    <include file="$(find wavemap_ros)/launch/rosbag_processor.launch"
              pass_all_args="true"/>
   </group>
   <group unless="$(arg use_batch_mode)">
     <!-- In normal mode (replay the rosbag) -->
-    <include file="$(find wavemap_3d_ros)/launch/wavemap_server.launch"
+    <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
              pass_all_args="true"/>
   </group>
 
@@ -29,6 +29,6 @@
     <arg name="bag_save_path" default="../catkin_ws/bags/evaluations"/>
     <arg name="bag_prefix" default="new_college_os0_cloister"/>
     <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
-          args="/wavemap_3d/map_evaluation_summary /wavemap_3d/performance_stats /wavemap_3d/occupancy_grid /wavemap_3d/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
+          args="/wavemap/map_evaluation_summary /wavemap/performance_stats /wavemap/occupancy_grid /wavemap/occupancy_grid_error --output-prefix $(arg bag_save_path)/$(arg bag_prefix)"/>
   </group>
 </launch>

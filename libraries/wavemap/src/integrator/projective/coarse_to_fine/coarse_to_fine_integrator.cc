@@ -5,35 +5,15 @@
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
-CoarseToFineIntegrator::CoarseToFineIntegrator(
-    const PointcloudIntegratorConfig& config,
-    std::shared_ptr<const Image2DProjectionModel> projection_model,
-    ContinuousVolumetricLogOdds measurement_model,
-    VolumetricDataStructureBase::Ptr occupancy_map)
-    : ScanwiseIntegrator(config, std::move(projection_model),
-                         std::move(measurement_model),
-                         std::move(occupancy_map)),
-      min_cell_width_(occupancy_map_->getMinCellWidth()) {
-  // Get a pointer to the underlying specialized octree data structure
-  volumetric_octree_ =
-      std::dynamic_pointer_cast<VolumetricOctreeInterface>(occupancy_map_);
-  CHECK(volumetric_octree_)
-      << "Coarse to fine integrator can only be used with octree-based "
-         "volumetric data structures.";
-}
-
 void CoarseToFineIntegrator::updateMap() {
   // Update the range image intersector
-  range_image_intersector_ = std::make_shared<RangeImage2DIntersector>(
-      posed_range_image_, projection_model_, config_.min_range,
-      config_.max_range, measurement_model_.getAngleThreshold(),
-      measurement_model_.getRangeThresholdInFrontOfSurface(),
-      measurement_model_.getRangeThresholdBehindSurface());
+  range_image_intersector_ = std::make_shared<RangeImageIntersector>(
+      posed_range_image_, projection_model_, *measurement_model_,
+      config_.min_range, config_.max_range);
 
   // Recursively update all relevant cells
   std::stack<OctreeIndex> stack;
-  for (const OctreeIndex& node_index :
-       volumetric_octree_->getFirstChildIndices()) {
+  for (const OctreeIndex& node_index : occupancy_map_->getFirstChildIndices()) {
     stack.emplace(node_index);
   }
   while (!stack.empty()) {
@@ -48,7 +28,7 @@ void CoarseToFineIntegrator::updateMap() {
           posed_range_image_->getPoseInverse() * W_node_center;
       const FloatingPoint sample = computeUpdate(C_node_center);
       if (kEpsilon < std::abs(sample)) {
-        volumetric_octree_->addToCellValue(current_node, sample);
+        occupancy_map_->addToCellValue(current_node, sample);
       }
       continue;
     }
@@ -80,11 +60,12 @@ void CoarseToFineIntegrator::updateMap() {
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
     if (current_node.height == 0 ||
-        isApproximationErrorAcceptable(update_type, d_C_cell,
-                                       bounding_sphere_radius)) {
+        measurement_model_->computeWorstCaseApproximationError(
+            update_type, d_C_cell, bounding_sphere_radius) <
+            config_.termination_update_error) {
       const FloatingPoint sample = computeUpdate(C_node_center);
       if (kEpsilon < std::abs(sample)) {
-        volumetric_octree_->addToCellValue(current_node, sample);
+        occupancy_map_->addToCellValue(current_node, sample);
       }
       continue;
     }

@@ -1,7 +1,7 @@
 <launch>
   <!-- General arguments -->
   <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/wavemap_server.yaml"
+       default="$(find wavemap_ros)/config/wavemap_server.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
   <arg name="debug_mode"
        default="false"
@@ -32,8 +32,8 @@
          value="gdb -ex run --args"/>
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
-    <node name="wavemap_3d" pkg="wavemap_3d_ros"
-          type="wavemap_3d_server_node"
+    <node name="wavemap" pkg="wavemap_ros"
+          type="wavemap_server_node"
           output="screen" args="-alsologtostderr"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
@@ -43,7 +43,7 @@
   <!-- Show Rviz -->
   <group if="$(arg show_rviz)">
     <arg name="rviz_file"
-         default="$(find wavemap_3d_ros)/config/wavemap_server.rviz"/>
+         default="$(find wavemap_ros)/config/wavemap_server.rviz"/>
     <node pkg="rviz" type="rviz" name="$(anon rviz)" output="screen"
           args="-d $(arg rviz_file)"/>
   </group>

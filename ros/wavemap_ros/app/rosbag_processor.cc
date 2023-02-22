@@ -8,7 +8,7 @@
 #include "wavemap_ros/wavemap_server.h"
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "wavemap_3d_rosbag_processor");
+  ros::init(argc, argv, "wavemap_rosbag_processor");
 
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);

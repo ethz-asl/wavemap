@@ -1,7 +1,7 @@
 <launch>
   <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/newer_college/ouster_os1.yaml"
+       default="$(find wavemap_ros)/config/newer_college/ouster_os1.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
 
   <!-- Dataset params -->
@@ -13,7 +13,7 @@
   <node pkg="tf" type="static_transform_publisher"
         name="static_tf_cam_left_os1_lidar"
         args="-0.084 -0.025 0.05 0 0 0.9238795 0.3826834 cam_left os1_lidar 100"/>
-  <node pkg="wavemap_3d_ros" type="csv_to_tf.py" name="csv_to_tf_pub"
+  <node pkg="wavemap_ros" type="csv_to_tf.py" name="csv_to_tf_pub"
         output="screen">
     <param name="ground_truth_pose_file_path"
            value="../data/newer_college/2020-ouster-os1-64-realsense/02_long_experiment/registered_poses.csv"/>
@@ -44,6 +44,6 @@
 ../data/newer_college/2020-ouster-os1-64-realsense/02_long_experiment/rooster_2020-03-10-12-18-36_15-compressed.bag"/>
 
   <!-- Run wavemap -->
-  <include file="$(find wavemap_3d_ros)/launch/datasets/dataset_base.launch"
+  <include file="$(find wavemap_ros)/launch/datasets/dataset_base.launch"
            pass_all_args="true"/>
 </launch>

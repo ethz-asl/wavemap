@@ -2,44 +2,40 @@
 #define WAVEMAP_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_WAVELET_INTEGRATOR_H_
 
 #include <memory>
+#include <utility>
 
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/data_structure/volumetric/wavelet_octree_interface.h"
-#include "wavemap/integrator/projective/coarse_to_fine/range_image_2d_intersector.h"
-#include "wavemap/integrator/projective/scanwise_integrator.h"
+#include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
+#include "wavemap/integrator/projective/projective_integrator.h"
 
 namespace wavemap {
-class WaveletIntegrator : public ScanwiseIntegrator {
+class WaveletIntegrator : public ProjectiveIntegrator {
  public:
-  static constexpr FloatingPoint kMaxAcceptableUpdateError = 0.1f;
-
-  WaveletIntegrator(
-      const PointcloudIntegratorConfig& config,
-      std::shared_ptr<const Image2DProjectionModel> projection_model,
-      ContinuousVolumetricLogOdds measurement_model,
-      VolumetricDataStructureBase::Ptr occupancy_map);
+  WaveletIntegrator(const ProjectiveIntegratorConfig& config,
+                    ProjectorBase::ConstPtr projection_model,
+                    std::shared_ptr<PosedImage<>> posed_range_image,
+                    std::shared_ptr<Image<Vector2D>> beam_offset_image,
+                    MeasurementModelBase::ConstPtr measurement_model,
+                    WaveletOctreeInterface::Ptr occupancy_map)
+      : ProjectiveIntegrator(
+            config, std::move(projection_model), std::move(posed_range_image),
+            std::move(beam_offset_image), std::move(measurement_model)),
+        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))),
+        min_cell_width_(occupancy_map_->getMinCellWidth()) {}
 
  private:
-  WaveletOctreeInterface::Ptr wavelet_tree_;
-
+  const WaveletOctreeInterface::Ptr occupancy_map_;
   const FloatingPoint min_cell_width_;
-  std::shared_ptr<RangeImage2DIntersector> range_image_intersector_;
 
-  // TODO(victorr): Move this to the measurement model
-  const FloatingPoint max_gradient_over_range_fully_inside_ =
-      measurement_model_.getConfig().scaling_free * 366.692988883727f;
-  const FloatingPoint max_gradient_on_boundary_ =
-      measurement_model_.getConfig().scaling_occupied * 3.75000000000002f;
-  static constexpr FloatingPoint kUnitCubeHalfDiagonal = 1.73205080757f / 2.f;
+  std::shared_ptr<RangeImageIntersector> range_image_intersector_;
+  static constexpr auto kUnitCubeHalfDiagonal =
+      constants<FloatingPoint>::kSqrt3 / 2.f;
 
   WaveletOctreeInterface::Coefficients::Scale recursiveSamplerCompressor(
       const OctreeIndex& node_index, FloatingPoint node_value,
       WaveletOctreeInterface::NodeType& parent_node,
       OctreeIndex ::RelativeChild relative_child_index);
-
-  bool isApproximationErrorAcceptable(
-      UpdateType update_type, FloatingPoint sphere_center_distance,
-      FloatingPoint bounding_sphere_radius) const;
 
   void updateMap() override;
 };

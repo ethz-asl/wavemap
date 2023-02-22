@@ -3,8 +3,8 @@
 
 #include <algorithm>
 
-#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
-#include "wavemap/utils/config_utils.h"
+#include "wavemap/config/config_base.h"
+#include "wavemap/integrator/projection_model/projector_base.h"
 
 namespace wavemap {
 struct PinholeCameraProjectorConfig : ConfigBase<PinholeCameraProjectorConfig> {
@@ -26,20 +26,20 @@ struct PinholeCameraProjectorConfig : ConfigBase<PinholeCameraProjectorConfig> {
   static PinholeCameraProjectorConfig from(const param::Map& params);
 };
 
-class PinholeCameraProjector : public Image2DProjectionModel {
+class PinholeCameraProjector : public ProjectorBase {
  public:
   using Config = PinholeCameraProjectorConfig;
 
   explicit PinholeCameraProjector(const Config& config)
-      : Image2DProjectionModel(Vector2D::Ones(), Vector2D::Zero()),
+      : ProjectorBase(Vector2D::Ones(), Vector2D::Zero()),
         config_(config.checkValid()) {}
 
   IndexElement getNumRows() const final { return config_.width; }
   IndexElement getNumColumns() const final { return config_.height; }
-  ImageCoordinates getMinImageCoordinates() const final {
+  Vector2D getMinImageCoordinates() const final {
     return indexToImage(Index2D::Zero());
   }
-  ImageCoordinates getMaxImageCoordinates() const final {
+  Vector2D getMaxImageCoordinates() const final {
     return {indexToImage({config_.width - 1, config_.height - 1})};
   }
   Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final {
@@ -65,19 +65,18 @@ class PinholeCameraProjector : public Image2DProjectionModel {
                               config_.fx * v_scaled - cyfx_, fxfy_};
     return C_point;
   }
-  Point3D sensorToCartesian(const ImageCoordinates& image_coordinates,
+  Point3D sensorToCartesian(const Vector2D& image_coordinates,
                             FloatingPoint depth) const final {
     return sensorToCartesian(
         {image_coordinates.x(), image_coordinates.y(), depth});
   }
-  FloatingPoint imageOffsetToErrorNorm(
-      const ImageCoordinates& /*linearization_point*/,
-      ImageCoordinates offset) const final {
+  FloatingPoint imageOffsetToErrorNorm(const Vector2D& /*linearization_point*/,
+                                       Vector2D offset) const final {
     return offset.norm();
   }
 
   // Projection from Cartesian space onto the sensor's image surface
-  ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
+  Vector2D cartesianToImage(const Point3D& C_point) const final {
     return cartesianToSensor(C_point).head<2>();
   }
   FloatingPoint cartesianToSensorZ(const Point3D& C_point) const final {

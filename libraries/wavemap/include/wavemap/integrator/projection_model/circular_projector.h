@@ -2,7 +2,7 @@
 #define WAVEMAP_INTEGRATOR_PROJECTION_MODEL_CIRCULAR_PROJECTOR_H_
 
 #include "wavemap/common.h"
-#include "wavemap/utils/config_utils.h"
+#include "wavemap/config/config_base.h"
 
 namespace wavemap {
 struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig> {

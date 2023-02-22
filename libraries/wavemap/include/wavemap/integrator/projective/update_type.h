@@ -9,13 +9,15 @@
 namespace wavemap {
 enum class UpdateType : int {
   kFullyUnobserved,
+  kFullyFree,
   kFreeOrUnobserved,
   kPossiblyOccupied
 };
 
 inline std::string getUpdateTypeStr(UpdateType update_type) {
-  static constexpr std::array kUpdateTypeStrs{
-      "fully_unobserved", "free_or_unobserved", "possibly_occupied"};
+  static constexpr std::array kUpdateTypeStrs{"fully_unobserved", "fully_free",
+                                              "free_or_unobserved",
+                                              "possibly_occupied"};
   return kUpdateTypeStrs[to_underlying(update_type)];
 }
 }  // namespace wavemap

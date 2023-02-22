@@ -4,10 +4,10 @@
 #include <algorithm>
 #include <utility>
 
+#include "wavemap/config/config_base.h"
 #include "wavemap/integrator/projection_model/circular_projector.h"
-#include "wavemap/integrator/projection_model/image_2d_projection_model.h"
+#include "wavemap/integrator/projection_model/projector_base.h"
 #include "wavemap/utils/approximate_trigonometry.h"
-#include "wavemap/utils/config_utils.h"
 
 namespace wavemap {
 struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
@@ -24,12 +24,12 @@ struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
   static SphericalProjectorConfig from(const param::Map& params);
 };
 
-class SphericalProjector : public Image2DProjectionModel {
+class SphericalProjector : public ProjectorBase {
  public:
   using Config = SphericalProjectorConfig;
 
   explicit SphericalProjector(const Config& config)
-      : Image2DProjectionModel(
+      : ProjectorBase(
             Vector2D(config.elevation.max_angle - config.elevation.min_angle,
                      config.azimuth.max_angle - config.azimuth.min_angle)
                 .cwiseQuotient(Index2D(config.elevation.num_cells - 1,
@@ -40,10 +40,10 @@ class SphericalProjector : public Image2DProjectionModel {
 
   IndexElement getNumRows() const final { return config_.elevation.num_cells; }
   IndexElement getNumColumns() const final { return config_.azimuth.num_cells; }
-  ImageCoordinates getMinImageCoordinates() const final {
+  Vector2D getMinImageCoordinates() const final {
     return {config_.elevation.min_angle, config_.azimuth.min_angle};
   }
-  ImageCoordinates getMaxImageCoordinates() const final {
+  Vector2D getMaxImageCoordinates() const final {
     return {config_.elevation.max_angle, config_.azimuth.max_angle};
   }
   Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final;
@@ -53,7 +53,7 @@ class SphericalProjector : public Image2DProjectionModel {
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {
-    const ImageCoordinates image_coordinates = cartesianToImage(C_point);
+    const Vector2D image_coordinates = cartesianToImage(C_point);
     const FloatingPoint range = C_point.norm();
     return {image_coordinates.x(), image_coordinates.y(), range};
   }
@@ -66,14 +66,13 @@ class SphericalProjector : public Image2DProjectionModel {
                            std::sin(elevation_angle)};
     return range * bearing;
   }
-  Point3D sensorToCartesian(const ImageCoordinates& image_coordinates,
+  Point3D sensorToCartesian(const Vector2D& image_coordinates,
                             FloatingPoint range) const final {
     return sensorToCartesian(
         {image_coordinates.x(), image_coordinates.y(), range});
   }
-  FloatingPoint imageOffsetToErrorNorm(
-      const ImageCoordinates& linearization_point,
-      ImageCoordinates offset) const final {
+  FloatingPoint imageOffsetToErrorNorm(const Vector2D& linearization_point,
+                                       Vector2D offset) const final {
     // Scale the azimuth offset by the cosine of the elevation angle to account
     // for the change in density along the azimuth axis in function of elevation
     const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
@@ -82,7 +81,7 @@ class SphericalProjector : public Image2DProjectionModel {
   }
 
   // Projection from Cartesian space onto the sensor's image surface
-  ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
+  Vector2D cartesianToImage(const Point3D& C_point) const final {
     const FloatingPoint elevation_angle =
         std::atan2(C_point.z(), C_point.head<2>().norm());
     const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
@@ -161,7 +160,7 @@ class SphericalProjector : public Image2DProjectionModel {
  private:
   const Config config_;
 
-  ImageCoordinates cartesianToImageApprox(const Point3D& C_point) const {
+  Vector2D cartesianToImageApprox(const Point3D& C_point) const {
     const FloatingPoint elevation_angle =
         approximate::atan2()(C_point.z(), C_point.head<2>().norm());
     const FloatingPoint azimuth_angle =

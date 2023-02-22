@@ -12,7 +12,7 @@
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
-class VolumetricDataStructure3DTest : public FixtureBase {
+class VolumetricDataStructureTest : public FixtureBase {
  protected:
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
 };
@@ -24,9 +24,9 @@ using VolumetricDataStructureTypes =
                      VolumetricOctree<SaturatingOccupancyCell>,
                      WaveletOctree<UnboundedOccupancyCell>,
                      WaveletOctree<SaturatingOccupancyCell>>;
-TYPED_TEST_SUITE(VolumetricDataStructure3DTest, VolumetricDataStructureTypes, );
+TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
-TYPED_TEST(VolumetricDataStructure3DTest, InitializationAndClearing) {
+TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
   std::unique_ptr<VolumetricDataStructureBase> map_base_ptr =
       std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
 
@@ -50,7 +50,7 @@ TYPED_TEST(VolumetricDataStructure3DTest, InitializationAndClearing) {
   EXPECT_LE(map_base_ptr->getMemoryUsage(), empty_map_memory_usage);
 }
 
-TYPED_TEST(VolumetricDataStructure3DTest, Pruning) {
+TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   std::unique_ptr<VolumetricDataStructureBase> map_base_ptr =
       std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
   const size_t empty_map_memory_usage = map_base_ptr->getMemoryUsage();
@@ -89,7 +89,7 @@ TYPED_TEST(VolumetricDataStructure3DTest, Pruning) {
   }
 }
 
-TYPED_TEST(VolumetricDataStructure3DTest, MinMaxIndexGetters) {
+TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     std::unique_ptr<VolumetricDataStructureBase> map_base_ptr =
@@ -126,7 +126,7 @@ TYPED_TEST(VolumetricDataStructure3DTest, MinMaxIndexGetters) {
   }
 }
 
-TYPED_TEST(VolumetricDataStructure3DTest, InsertionAndLeafVisitor) {
+TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Create a random map

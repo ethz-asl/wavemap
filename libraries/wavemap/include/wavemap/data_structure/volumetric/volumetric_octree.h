@@ -100,7 +100,7 @@ class VolumetricOctree : public virtual VolumetricOctreeInterface {
   const NodeType* getDeepestNodeAtIndex(const Index3D& index) const;
 
   template <typename T>
-  friend class VolumetricNdtreeTest_IndexConversions_Test;
+  friend class VolumetricOctreeTest_IndexConversions_Test;
 };
 }  // namespace wavemap
 

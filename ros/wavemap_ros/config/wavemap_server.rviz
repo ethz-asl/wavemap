@@ -199,7 +199,7 @@ Visualization Manager:
           Show multi-res grid: true
           Show multi-res slice: false
           Slice height: 0
-          Topic: /wavemap_3d/map
+          Topic: /wavemap/map
           Unreliable: false
           Value: true
         - Alpha: 0.8999999761581421
@@ -213,7 +213,7 @@ Visualization Manager:
           Show multi-res grid: false
           Show multi-res slice: true
           Slice height: 1
-          Topic: /wavemap_3d/map
+          Topic: /wavemap/map
           Unreliable: false
           Value: false
         - Alpha: 1
@@ -227,12 +227,12 @@ Visualization Manager:
           Show multi-res grid: false
           Show multi-res slice: false
           Slice height: 0
-          Topic: /wavemap_3d/map
+          Topic: /wavemap/map
           Unreliable: false
           Value: false
         - Class: rviz/MarkerArray
           Enabled: false
-          Marker Topic: /wavemap_3d/occupancy_grid
+          Marker Topic: /wavemap/occupancy_grid
           Name: Estimate
           Namespaces:
             {}
@@ -240,7 +240,7 @@ Visualization Manager:
           Value: false
         - Class: rviz/MarkerArray
           Enabled: false
-          Marker Topic: /wavemap_3d/occupancy_grid_ground_truth
+          Marker Topic: /wavemap/occupancy_grid_ground_truth
           Name: Ground truth
           Namespaces:
             {}
@@ -248,7 +248,7 @@ Visualization Manager:
           Value: false
         - Class: rviz/MarkerArray
           Enabled: false
-          Marker Topic: /wavemap_3d/occupancy_grid_error
+          Marker Topic: /wavemap/occupancy_grid_error
           Name: Error
           Namespaces:
             {}

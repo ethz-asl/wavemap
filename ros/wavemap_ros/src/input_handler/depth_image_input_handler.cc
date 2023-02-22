@@ -16,7 +16,7 @@ DepthImageInputHandler::DepthImageInputHandler(
                    std::move(nh_private)) {
   // Get a pointer to the underlying scanwise integrator
   scanwise_integrator_ =
-      std::dynamic_pointer_cast<ScanwiseIntegrator>(integrator_);
+      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrator_);
   CHECK(integrator_) << "Depth image inputs are currently only supported in "
                         "combination with projective integrators.";
 

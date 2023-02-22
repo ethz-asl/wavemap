@@ -3,7 +3,7 @@
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
-#include <wavemap/integrator/projective/scanwise_integrator.h>
+#include <wavemap/integrator/projective/projective_integrator.h>
 
 namespace wavemap {
 InputHandler::InputHandler(const InputHandler::Config& config,
@@ -16,14 +16,13 @@ InputHandler::InputHandler(const InputHandler::Config& config,
       world_frame_(std::move(world_frame)),
       transformer_(std::move(transformer)) {
   // Create the integrator
-  integrator_ = PointcloudIntegratorFactory::create(
-      params, std::move(occupancy_map),
-      PointcloudIntegratorType::kSingleRayIntegrator);
+  integrator_ = IntegratorFactory::create(
+      params, std::move(occupancy_map), IntegratorType::kRayTracingIntegrator);
   CHECK_NOTNULL(integrator_);
 
   // Get the projection model (if the integrator uses one)
   auto scanwise_integrator =
-      std::dynamic_pointer_cast<ScanwiseIntegrator>(integrator_);
+      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrator_);
   if (scanwise_integrator) {
     projection_model_ = scanwise_integrator->getProjectionModel();
   }

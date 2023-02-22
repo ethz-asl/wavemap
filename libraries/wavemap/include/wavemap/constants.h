@@ -19,6 +19,8 @@ struct constants {
   static constexpr auto kQuarterPi = static_cast<T>(M_PI_4);
   static constexpr auto kSqrt2 = static_cast<T>(M_SQRT2);
   static constexpr auto kSqrt2Inv = static_cast<T>(1 / M_SQRT2);
+  static constexpr auto kSqrt3 = static_cast<T>(1.73205080757f);
+  static constexpr auto kSqrt3Inv = static_cast<T>(1 / 1.73205080757f);
 };
 }  // namespace wavemap
 

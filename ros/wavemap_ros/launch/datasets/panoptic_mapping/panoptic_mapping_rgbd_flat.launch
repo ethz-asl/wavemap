@@ -1,7 +1,7 @@
 <launch>
   <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_3d_ros)/config/panoptic_mapping/rgbd.yaml"
+       default="$(find wavemap_ros)/config/panoptic_mapping/rgbd.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
 
   <!-- Dataset params -->
@@ -15,7 +15,7 @@
   <arg name="sensor_frame_name" default="depth_camera"/>
 
   <!-- Play the data -->
-  <node pkg="wavemap_3d_ros" type="panoptic_mapping_flat_data_player.py"
+  <node pkg="wavemap_ros" type="panoptic_mapping_flat_data_player.py"
         name="flat_data_player" output="screen">
     <param name="data_path" value="$(arg base_path)"/>
     <param name="play_rate" value="$(arg play_rate)"/>
@@ -32,6 +32,6 @@
   </node>
 
   <!-- Run wavemap -->
-  <include file="$(find wavemap_3d_ros)/launch/wavemap_server.launch"
+  <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
            pass_all_args="true"/>
 </launch>
