@@ -9,7 +9,7 @@ map:
   autosave_path: ""
   data_structure:
     type: "wavelet_octree"
-    min_cell_width: &min_cell_width { meters: 0.02 }
+    min_cell_width: { meters: 0.02 }
     max_height: 14
 
 integrators:
