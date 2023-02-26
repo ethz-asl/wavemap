@@ -5,7 +5,6 @@
 
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/integrator/integrator_base.h"
-#include "wavemap/integrator/projection_model/projector_base.h"
 
 namespace wavemap {
 class IntegratorFactory {

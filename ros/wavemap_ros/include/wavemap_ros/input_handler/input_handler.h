@@ -6,6 +6,7 @@
 
 #include <wavemap/config/config_base.h>
 #include <wavemap/integrator/integrator_factory.h>
+#include <wavemap/integrator/projection_model/projector_base.h>
 
 #include "wavemap_ros/tf_transformer.h"
 #include "wavemap_ros/utils/config_conversions.h"

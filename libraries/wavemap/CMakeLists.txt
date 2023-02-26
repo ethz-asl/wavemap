@@ -40,10 +40,12 @@ add_library(${PROJECT_NAME}
     src/integrator/measurement_model/continuous_beam.cc
     src/integrator/measurement_model/constant_ray.cc
     src/integrator/measurement_model/continuous_ray.cc
+    src/integrator/measurement_model/measurement_model_factory.cc
     src/integrator/projection_model/circular_projector.cc
     src/integrator/projection_model/ouster_projector.cc
     src/integrator/projection_model/pinhole_camera_projector.cc
     src/integrator/projection_model/spherical_projector.cc
+    src/integrator/projection_model/projector_factory.cc
     src/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.cc
     src/integrator/projective/coarse_to_fine/wavelet_integrator.cc
     src/integrator/projective/fixed_resolution/fixed_resolution_integrator.cc
