@@ -3,20 +3,9 @@
 
 #include <string>
 
-#include "wavemap/config/config_base.h"
-#include "wavemap/config/type_selector.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 
 namespace wavemap {
-struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
-  using TypeSelector<VolumetricDataStructureType>::TypeSelector;
-
-  enum Id : TypeId { kHashedBlocks, kOctree, kWaveletOctree };
-
-  static constexpr std::array names = {"hashed_blocks", "octree",
-                                       "wavelet_octree"};
-};
-
 class VolumetricDataStructureFactory {
  public:
   static VolumetricDataStructureBase::Ptr create(

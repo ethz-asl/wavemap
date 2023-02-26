@@ -19,11 +19,10 @@ integrators:
       topic_queue_length: 10
       max_wait_for_pose: { seconds: 1.0 }
     integration_method:
-      type: "coarse_to_fine_wavelet_integrator"
+      type: "wavelet_integrator"
       min_range: { meters: 0.1 }
       max_range: { meters: 5.0 }
-      max_acceptable_update_error: 0.1
-      max_update_resolution: *min_cell_width
+      termination_update_error: 0.1
     projection_model:
       type: "pinhole_camera_projector"
       width: 640
@@ -33,8 +32,7 @@ integrators:
       cx: 320.0
       cy: 240.0
     measurement_model:
-      type: "continuous_volumetric_log_odds"
-      angle_sigma: { radians: 0.3 }
+      type: "continuous_ray"
       range_sigma: { meters: 0.02 }
       scaling_free: 0.2
       scaling_occupied: 0.4

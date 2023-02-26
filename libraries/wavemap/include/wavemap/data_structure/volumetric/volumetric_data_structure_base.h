@@ -7,9 +7,19 @@
 
 #include "wavemap/common.h"
 #include "wavemap/config/config_base.h"
+#include "wavemap/config/type_selector.h"
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
+struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
+  using TypeSelector<VolumetricDataStructureType>::TypeSelector;
+
+  enum Id : TypeId { kHashedBlocks, kOctree, kWaveletOctree };
+
+  static constexpr std::array names = {"hashed_blocks", "octree",
+                                       "wavelet_octree"};
+};
+
 struct VolumetricDataStructureConfig
     : ConfigBase<VolumetricDataStructureConfig> {
   FloatingPoint min_cell_width = 0.1f;

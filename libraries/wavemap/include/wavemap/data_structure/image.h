@@ -11,7 +11,8 @@ class Image {
  public:
   using Data = Eigen::Matrix<DataT, Eigen::Dynamic, Eigen::Dynamic>;
 
-  explicit Image(const Index2D& dimensions, DataT initial_value = DataT{})
+  explicit Image(const Index2D& dimensions,
+                 DataT initial_value = fill::zero<DataT>())
       : Image(dimensions.x(), dimensions.y(), initial_value) {}
   Image(IndexElement num_rows, IndexElement num_columns,
         DataT initial_value = fill::zero<DataT>())
