@@ -35,6 +35,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 # Libraries
 add_library(${PROJECT_NAME}
+    src/config/param_conversions.cc
     src/data_structure/volumetric/volumetric_data_structure_base.cc
     src/data_structure/volumetric/volumetric_data_structure_factory.cc
     src/integrator/measurement_model/continuous_beam.cc

@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "wavemap/config/param_utils.h"
+#include "wavemap/config/param.h"
 
 namespace wavemap {
 template <typename DerivedTypeSelectorT>
@@ -72,7 +72,6 @@ struct TypeSelector {
   TypeSelector() = default;
   friend DerivedTypeSelectorT;
 };
-
 }  // namespace wavemap
 
 #include "wavemap/config/impl/type_selector_inl.h"
