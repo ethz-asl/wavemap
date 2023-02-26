@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_IMAGE_H_
 #define WAVEMAP_DATA_STRUCTURE_IMAGE_H_
 
+#include <memory>
+
 #include "wavemap/common.h"
 #include "wavemap/data_structure/posed_object.h"
 #include "wavemap/utils/fill_utils.h"
@@ -9,6 +11,8 @@ namespace wavemap {
 template <typename DataT = FloatingPoint>
 class Image {
  public:
+  using Ptr = std::shared_ptr<Image<DataT>>;
+  using ConstPtr = std::shared_ptr<const Image<DataT>>;
   using Data = Eigen::Matrix<DataT, Eigen::Dynamic, Eigen::Dynamic>;
 
   explicit Image(const Index2D& dimensions,

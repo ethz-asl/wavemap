@@ -97,7 +97,7 @@ void DepthImageInputHandler::processQueue() {
   }
 }
 
-PosedPointcloud<Point3D> DepthImageInputHandler::reproject(
+PosedPointcloud<> DepthImageInputHandler::reproject(
     const PosedImage<>& posed_range_image) {
   CHECK_NOTNULL(projection_model_);
 
@@ -113,6 +113,6 @@ PosedPointcloud<Point3D> DepthImageInputHandler::reproject(
     pointcloud.emplace_back(C_point);
   }
 
-  return PosedPointcloud<Point3D>(posed_range_image.getPose(), pointcloud);
+  return PosedPointcloud<>(posed_range_image.getPose(), pointcloud);
 }
 }  // namespace wavemap

@@ -67,7 +67,7 @@ class InputHandler {
   ros::Timer queue_processing_retry_timer_;
 
   void publishReprojected(const ros::Time& stamp,
-                          const PosedPointcloud<Point3D>& posed_pointcloud);
+                          const PosedPointcloud<>& posed_pointcloud);
   ProjectorBase::ConstPtr projection_model_;
   ros::Publisher reprojection_pub_;
 };

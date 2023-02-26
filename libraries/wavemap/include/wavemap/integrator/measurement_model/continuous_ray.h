@@ -33,7 +33,7 @@ class ContinuousRay : public MeasurementModelBase {
  public:
   explicit ContinuousRay(const ContinuousRayConfig& config,
                          ProjectorBase::ConstPtr projection_model,
-                         std::shared_ptr<const Image<>> range_image)
+                         Image<>::ConstPtr range_image)
       : config_(config.checkValid()),
         projection_model_(std::move(projection_model)),
         range_image_(std::move(range_image)) {}
@@ -58,7 +58,7 @@ class ContinuousRay : public MeasurementModelBase {
   const ContinuousRayConfig config_;
 
   const ProjectorBase::ConstPtr projection_model_;
-  const std::shared_ptr<const Image<>> range_image_;
+  const Image<>::ConstPtr range_image_;
 
   const FloatingPoint range_threshold_front_ = 3.f * config_.range_sigma;
   const FloatingPoint range_threshold_back_ = 6.f * config_.range_sigma;

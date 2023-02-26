@@ -29,7 +29,7 @@ class RayTracingIntegrator : public IntegratorBase {
       : config_(config.checkValid()),
         occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
 
-  void integratePointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
+  void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
 
  private:
   using MeasurementModelType = ConstantRay;

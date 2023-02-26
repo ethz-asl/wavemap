@@ -14,8 +14,8 @@ class WaveletIntegrator : public ProjectiveIntegrator {
  public:
   WaveletIntegrator(const ProjectiveIntegratorConfig& config,
                     ProjectorBase::ConstPtr projection_model,
-                    std::shared_ptr<PosedImage<>> posed_range_image,
-                    std::shared_ptr<Image<Vector2D>> beam_offset_image,
+                    PosedImage<>::Ptr posed_range_image,
+                    Image<Vector2D>::Ptr beam_offset_image,
                     MeasurementModelBase::ConstPtr measurement_model,
                     WaveletOctreeInterface::Ptr occupancy_map)
       : ProjectiveIntegrator(

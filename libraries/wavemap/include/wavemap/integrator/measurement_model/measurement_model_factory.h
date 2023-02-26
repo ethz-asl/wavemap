@@ -10,17 +10,15 @@ class MeasurementModelFactory {
  public:
   static MeasurementModelBase::Ptr create(
       const param::Map& params, ProjectorBase::ConstPtr projection_model,
-      std::shared_ptr<const Image<>> range_image,
-      std::shared_ptr<const Image<Vector2D>> beam_offset_image = nullptr,
+      Image<>::ConstPtr range_image,
+      Image<Vector2D>::ConstPtr beam_offset_image = nullptr,
       std::optional<MeasurementModelType> default_measurement_model_type =
           std::nullopt);
 
   static MeasurementModelBase::Ptr create(
       MeasurementModelType measurement_model_type,
-      ProjectorBase::ConstPtr projection_model,
-      std::shared_ptr<const Image<>> range_image,
-      std::shared_ptr<const Image<Vector2D>> beam_offset_image,
-      const param::Map& params);
+      ProjectorBase::ConstPtr projection_model, Image<>::ConstPtr range_image,
+      Image<Vector2D>::ConstPtr beam_offset_image, const param::Map& params);
 };
 }  // namespace wavemap
 

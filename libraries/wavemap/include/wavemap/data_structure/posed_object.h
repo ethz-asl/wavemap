@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_POSED_OBJECT_H_
 #define WAVEMAP_DATA_STRUCTURE_POSED_OBJECT_H_
 
+#include <memory>
 #include <utility>
 
 #include "wavemap/common.h"
@@ -9,6 +10,9 @@ namespace wavemap {
 template <typename ObjectT>
 class PosedObject : public ObjectT {
  public:
+  using Ptr = std::shared_ptr<PosedObject<ObjectT>>;
+  using ConstPtr = std::shared_ptr<const PosedObject<ObjectT>>;
+
   using ObjectT::ObjectT;
 
   template <typename... Args>

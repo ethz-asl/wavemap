@@ -32,11 +32,10 @@ class IntegratorBase {
   IntegratorBase() = default;
   virtual ~IntegratorBase() = default;
 
-  virtual void integratePointcloud(
-      const PosedPointcloud<Point3D>& pointcloud) = 0;
+  virtual void integratePointcloud(const PosedPointcloud<>& pointcloud) = 0;
 
  protected:
-  static bool isPointcloudValid(const PosedPointcloud<Point3D>& pointcloud);
+  static bool isPointcloudValid(const PosedPointcloud<>& pointcloud);
   static bool isMeasurementValid(const Point3D& C_end_point);
 
   static Point3D getEndPointOrMaxRange(const Point3D& W_start_point,

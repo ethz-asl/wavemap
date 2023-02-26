@@ -69,7 +69,7 @@ void PointcloudInputHandler::processQueue() {
          it != it.end(); ++it) {
       t_C_points.emplace_back(it[0], it[1], it[2]);
     }
-    const PosedPointcloud<Point3D> posed_pointcloud(T_W_C, t_C_points);
+    const PosedPointcloud<> posed_pointcloud(T_W_C, t_C_points);
 
     // Reproject if enabled
     if (isReprojectionEnabled()) {

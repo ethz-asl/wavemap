@@ -5,7 +5,7 @@
 
 namespace wavemap {
 void FixedResolutionIntegrator::importPointcloud(
-    const PosedPointcloud<Point3D>& pointcloud) {
+    const PosedPointcloud<>& pointcloud) {
   // Reset the posed range image, beam offset image and aabb
   posed_range_image_->resetToInitialValue();
   posed_range_image_->setPose(pointcloud.getPose());

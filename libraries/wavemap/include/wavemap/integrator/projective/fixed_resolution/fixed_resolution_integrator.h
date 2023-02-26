@@ -13,8 +13,8 @@ class FixedResolutionIntegrator : public ProjectiveIntegrator {
  public:
   FixedResolutionIntegrator(const ProjectiveIntegratorConfig& config,
                             ProjectorBase::ConstPtr projection_model,
-                            std::shared_ptr<PosedImage<>> posed_range_image,
-                            std::shared_ptr<Image<Vector2D>> beam_offset_image,
+                            PosedImage<>::Ptr posed_range_image,
+                            Image<Vector2D>::Ptr beam_offset_image,
                             MeasurementModelBase::ConstPtr measurement_model,
                             VolumetricDataStructureBase::Ptr occupancy_map)
       : ProjectiveIntegrator(
@@ -26,7 +26,7 @@ class FixedResolutionIntegrator : public ProjectiveIntegrator {
   const VolumetricDataStructureBase::Ptr occupancy_map_;
   AABB<Point3D> aabb_;
 
-  void importPointcloud(const PosedPointcloud<Point3D>& pointcloud) override;
+  void importPointcloud(const PosedPointcloud<>& pointcloud) override;
   void importRangeImage(const PosedImage<>& range_image_input) override;
 
   void updateMap() override;

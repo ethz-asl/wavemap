@@ -8,7 +8,7 @@
 #include "wavemap/iterator/pointcloud_iterator.h"
 
 namespace wavemap {
-template <typename PointT>
+template <typename PointT = Point3D>
 class Pointcloud {
  public:
   static constexpr int kDim = dim_v<PointT>;
@@ -57,7 +57,7 @@ class Pointcloud {
   PointcloudData data_;
 };
 
-template <typename PointT>
+template <typename PointT = Point3D>
 class PosedPointcloud : public PosedObject<Pointcloud<PointT>> {
  public:
   using PointType = PointT;

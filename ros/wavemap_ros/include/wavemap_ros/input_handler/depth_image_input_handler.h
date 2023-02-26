@@ -39,7 +39,7 @@ class DepthImageInputHandler : public InputHandler {
   std::queue<sensor_msgs::Image> depth_image_queue_;
   void processQueue() override;
 
-  PosedPointcloud<Point3D> reproject(const PosedImage<>& posed_range_image);
+  PosedPointcloud<> reproject(const PosedImage<>& posed_range_image);
 };
 }  // namespace wavemap
 

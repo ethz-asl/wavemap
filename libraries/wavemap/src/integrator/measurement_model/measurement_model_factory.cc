@@ -6,8 +6,7 @@
 namespace wavemap {
 MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
     const param::Map& params, ProjectorBase::ConstPtr projection_model,
-    std::shared_ptr<const Image<>> range_image,
-    std::shared_ptr<const Image<Vector2D>> beam_offset_image,
+    Image<>::ConstPtr range_image, Image<Vector2D>::ConstPtr beam_offset_image,
     std::optional<MeasurementModelType> default_measurement_model_type) {
   std::string error_msg;
 
@@ -37,10 +36,8 @@ MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
 
 MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
     MeasurementModelType measurement_model_type,
-    ProjectorBase::ConstPtr projection_model,
-    std::shared_ptr<const Image<>> range_image,
-    std::shared_ptr<const Image<Vector2D>> beam_offset_image,
-    const param::Map& params) {
+    ProjectorBase::ConstPtr projection_model, Image<>::ConstPtr range_image,
+    Image<Vector2D>::ConstPtr beam_offset_image, const param::Map& params) {
   const auto& measurement_model_params =
       param::map::keyGetValue<param::Map>(params, "measurement_model");
   switch (measurement_model_type.toTypeId()) {

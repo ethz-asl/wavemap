@@ -40,7 +40,7 @@ InputHandler::InputHandler(const InputHandler::Config& config,
 }
 
 void InputHandler::publishReprojected(
-    const ros::Time& stamp, const PosedPointcloud<Point3D>& posed_pointcloud) {
+    const ros::Time& stamp, const PosedPointcloud<>& posed_pointcloud) {
   if (!isReprojectionEnabled()) {
     return;
   }

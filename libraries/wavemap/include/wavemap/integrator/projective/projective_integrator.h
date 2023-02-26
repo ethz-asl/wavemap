@@ -35,8 +35,8 @@ class ProjectiveIntegrator : public IntegratorBase {
   explicit ProjectiveIntegrator(
       const ProjectiveIntegratorConfig& config,
       ProjectorBase::ConstPtr projection_model,
-      std::shared_ptr<PosedImage<>> posed_range_image,
-      std::shared_ptr<Image<Vector2D>> beam_offset_image,
+      PosedImage<>::Ptr posed_range_image,
+      Image<Vector2D>::Ptr beam_offset_image,
       MeasurementModelBase::ConstPtr measurement_model)
       : config_(config.checkValid()),
         projection_model_(std::move(CHECK_NOTNULL(projection_model))),
@@ -59,10 +59,10 @@ class ProjectiveIntegrator : public IntegratorBase {
   ProjectorBase::ConstPtr getProjectionModel() const {
     return projection_model_;
   }
-  std::shared_ptr<const PosedImage<>> getPosedRangeImage() const {
+  PosedImage<>::ConstPtr getPosedRangeImage() const {
     return posed_range_image_;
   }
-  std::shared_ptr<const Image<Vector2D>> getBeamOffsetImage() const {
+  Image<Vector2D>::ConstPtr getBeamOffsetImage() const {
     return beam_offset_image_;
   }
 
@@ -70,12 +70,12 @@ class ProjectiveIntegrator : public IntegratorBase {
   const ProjectiveIntegratorConfig config_;
 
   const ProjectorBase::ConstPtr projection_model_;
-  const std::shared_ptr<PosedImage<>> posed_range_image_;
-  const std::shared_ptr<Image<Vector2D>> beam_offset_image_;
+  const PosedImage<>::Ptr posed_range_image_;
+  const Image<Vector2D>::Ptr beam_offset_image_;
 
   const MeasurementModelBase::ConstPtr measurement_model_;
 
-  virtual void importPointcloud(const PosedPointcloud<Point3D>& pointcloud);
+  virtual void importPointcloud(const PosedPointcloud<>& pointcloud);
   virtual void importRangeImage(const PosedImage<>& range_image_input);
 
   virtual void updateMap() = 0;

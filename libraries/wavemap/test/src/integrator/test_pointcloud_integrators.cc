@@ -73,13 +73,13 @@ class PointcloudIntegrator3DTest : public FixtureBase {
     return config;
   }
 
-  PosedPointcloud<Point3D> getRandomPointcloud(
+  PosedPointcloud<> getRandomPointcloud(
       const SphericalProjector& projection_model,
       FloatingPoint min_distance = 0.f,
       FloatingPoint max_distance = 30.f) const {
     CHECK_LT(min_distance, max_distance);
 
-    Pointcloud<Point3D> pointcloud;
+    Pointcloud<> pointcloud;
     pointcloud.resize(projection_model.getNumRows() *
                       projection_model.getNumColumns());
 
@@ -96,7 +96,7 @@ class PointcloudIntegrator3DTest : public FixtureBase {
                       projection_model.indexToImage(image_index), 1.f);
     }
 
-    return PosedPointcloud<Point3D>(getRandomTransformation<3>(), pointcloud);
+    return PosedPointcloud<>(getRandomTransformation<3>(), pointcloud);
   }
 };
 
@@ -126,7 +126,7 @@ TEST_F(PointcloudIntegrator3DTest, RayTracingIntegrator) {
     }
 
     // Generate a random point cloud and save its end points in a hashed set
-    const PosedPointcloud<Point3D> random_pointcloud =
+    const PosedPointcloud<> random_pointcloud =
         getRandomPointcloud(*projection_model, min_distance, kMaxDistance);
     std::unordered_set<Index3D, VoxbloxIndexHash<3>> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
@@ -177,7 +177,7 @@ TEST_F(PointcloudIntegrator3DTest,
     const auto measurement_model = std::make_shared<ContinuousBeam>(
         getRandomMeasurementModelConfig(*projection_model), projection_model,
         posed_range_image, beam_offset_image);
-    const PosedPointcloud<Point3D> random_pointcloud =
+    const PosedPointcloud<> random_pointcloud =
         getRandomPointcloud(*projection_model);
 
     VolumetricDataStructureBase::Ptr reference_occupancy_map =
@@ -231,7 +231,7 @@ TEST_F(PointcloudIntegrator3DTest,
     const auto measurement_model = std::make_shared<ContinuousBeam>(
         getRandomMeasurementModelConfig(*projection_model), projection_model,
         posed_range_image, beam_offset_image);
-    const PosedPointcloud<Point3D> random_pointcloud =
+    const PosedPointcloud<> random_pointcloud =
         getRandomPointcloud(*projection_model);
 
     VolumetricDataStructureBase::Ptr reference_occupancy_map =

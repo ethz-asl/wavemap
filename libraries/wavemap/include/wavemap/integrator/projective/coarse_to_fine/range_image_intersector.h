@@ -16,7 +16,7 @@
 namespace wavemap {
 class RangeImageIntersector {
  public:
-  RangeImageIntersector(std::shared_ptr<const Image<>> range_image,
+  RangeImageIntersector(Image<>::ConstPtr range_image,
                         ProjectorBase::ConstPtr projection_model,
                         const MeasurementModelBase& measurement_model,
                         FloatingPoint min_range, FloatingPoint max_range)

@@ -31,7 +31,7 @@ RayTracingIntegratorConfig RayTracingIntegratorConfig::from(
 }
 
 void RayTracingIntegrator::integratePointcloud(
-    const PosedPointcloud<Point3D>& pointcloud) {
+    const PosedPointcloud<>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
   }

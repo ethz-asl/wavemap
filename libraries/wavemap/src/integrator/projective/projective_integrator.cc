@@ -56,7 +56,7 @@ void ProjectiveIntegrator::integrateRangeImage(
 }
 
 void ProjectiveIntegrator::importPointcloud(
-    const PosedPointcloud<Point3D>& pointcloud) {
+    const PosedPointcloud<>& pointcloud) {
   // Reset the posed range image and the beam offset image
   posed_range_image_->resetToInitialValue();
   posed_range_image_->setPose(pointcloud.getPose());

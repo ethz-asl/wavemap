@@ -37,11 +37,10 @@ struct ContinuousBeamConfig : ConfigBase<ContinuousBeamConfig> {
 
 class ContinuousBeam : public MeasurementModelBase {
  public:
-  explicit ContinuousBeam(
-      const ContinuousBeamConfig& config,
-      ProjectorBase::ConstPtr projection_model,
-      std::shared_ptr<const Image<>> range_image,
-      std::shared_ptr<const Image<Vector2D>> beam_offset_image)
+  explicit ContinuousBeam(const ContinuousBeamConfig& config,
+                          ProjectorBase::ConstPtr projection_model,
+                          Image<>::ConstPtr range_image,
+                          Image<Vector2D>::ConstPtr beam_offset_image)
       : config_(config.checkValid()),
         projection_model_(std::move(projection_model)),
         range_image_(std::move(range_image)),
@@ -67,8 +66,8 @@ class ContinuousBeam : public MeasurementModelBase {
   const ContinuousBeamConfig config_;
 
   const ProjectorBase::ConstPtr projection_model_;
-  const std::shared_ptr<const Image<>> range_image_;
-  const std::shared_ptr<const Image<Vector2D>> beam_offset_image_;
+  const Image<>::ConstPtr range_image_;
+  const Image<Vector2D>::ConstPtr beam_offset_image_;
 
   const FloatingPoint angle_threshold_ = 6.f * config_.angle_sigma;
   const FloatingPoint range_threshold_front = 3.f * config_.range_sigma;

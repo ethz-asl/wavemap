@@ -15,7 +15,7 @@
 namespace wavemap {
 class HierarchicalRangeBounds {
  public:
-  explicit HierarchicalRangeBounds(std::shared_ptr<const Image<>> range_image,
+  explicit HierarchicalRangeBounds(Image<>::ConstPtr range_image,
                                    bool azimuth_wraps_pi,
                                    FloatingPoint min_range)
       : range_image_(std::move(range_image)),
@@ -70,7 +70,7 @@ class HierarchicalRangeBounds {
                            FloatingPoint range_max) const;
 
  private:
-  const std::shared_ptr<const Image<>> range_image_;
+  const Image<>::ConstPtr range_image_;
   const bool azimuth_wraps_pi_;
 
   // Below min_range, range image values are treated as unknown and set to init
