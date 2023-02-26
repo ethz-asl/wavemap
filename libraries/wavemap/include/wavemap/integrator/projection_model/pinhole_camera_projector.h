@@ -48,6 +48,7 @@ class PinholeCameraProjector : public ProjectorBase {
   Eigen::Matrix<bool, 3, 1> sensorAxisCouldBePeriodic() const final {
     return {false, false, false};
   }
+  SiUnit getImageCoordinatesUnit() const final { return SiUnit::kPixels; }
 
   // Coordinate transforms between Cartesian and sensor space
   Vector3D cartesianToSensor(const Point3D& C_point) const final {

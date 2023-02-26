@@ -17,11 +17,11 @@ RayTracingIntegratorConfig RayTracingIntegratorConfig::from(
 
   for (const auto& [param_name, param_value] : params) {
     if (param_name == NAMEOF(min_range)) {
-      config.min_range =
-          param::convert::toMeters(param_value, config.min_range);
+      config.min_range = param::convert::toUnit<SiUnit::kMeters>(
+          param_value, config.min_range);
     } else if (param_name == NAMEOF(max_range)) {
-      config.max_range =
-          param::convert::toMeters(param_value, config.max_range);
+      config.max_range = param::convert::toUnit<SiUnit::kMeters>(
+          param_value, config.max_range);
     } else {
       LOG(WARNING) << "Ignoring unknown param with name " << param_name;
     }

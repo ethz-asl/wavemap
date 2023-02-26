@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "wavemap/common.h"
+#include "wavemap/config/param_conversions.h"
 #include "wavemap/config/type_selector.h"
 #include "wavemap/data_structure/aabb.h"
 
@@ -39,6 +40,7 @@ class ProjectorBase {
   virtual Vector2D getMaxImageCoordinates() const = 0;
   virtual Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const = 0;
   virtual Eigen::Matrix<bool, 3, 1> sensorAxisCouldBePeriodic() const = 0;
+  virtual SiUnit getImageCoordinatesUnit() const = 0;
 
   // Coordinate transforms between Cartesian and sensor space
   virtual Vector3D cartesianToSensor(const Point3D& C_point) const = 0;

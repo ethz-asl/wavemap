@@ -34,10 +34,12 @@ OusterProjectorConfig OusterProjectorConfig::from(const param::Map& params) {
           CircularProjectorConfig::from(param_value.get<param::Map>());
     } else if (param_name == NAMEOF(lidar_origin_to_beam_origin)) {
       config.lidar_origin_to_beam_origin =
-          param::convert::toMeters(param_value.get<param::Map>());
+          param::convert::toUnit<SiUnit::kMeters>(
+              param_value.get<param::Map>());
     } else if (param_name == NAMEOF(lidar_origin_to_sensor_origin_z_offset)) {
       config.lidar_origin_to_sensor_origin_z_offset =
-          param::convert::toMeters(param_value.get<param::Map>());
+          param::convert::toUnit<SiUnit::kMeters>(
+              param_value.get<param::Map>());
     } else {
       LOG(WARNING) << "Ignoring unknown param with name " << param_name;
     }

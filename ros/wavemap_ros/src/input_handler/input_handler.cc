@@ -76,7 +76,7 @@ InputHandler::Config InputHandler::Config::from(const param::Map& params) {
       param::map::keyGetValue(params, NAMEOF(config.processing_retry_period),
                               config.processing_retry_period);
 
-  config.max_wait_for_pose = param::convert::toSeconds(
+  config.max_wait_for_pose = param::convert::toUnit<SiUnit::kSeconds>(
       params, NAMEOF(config.max_wait_for_pose), config.max_wait_for_pose);
 
   config.sensor_frame_id = param::map::keyGetValue(

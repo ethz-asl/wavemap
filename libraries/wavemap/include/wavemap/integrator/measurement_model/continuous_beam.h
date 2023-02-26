@@ -32,7 +32,9 @@ struct ContinuousBeamConfig : ConfigBase<ContinuousBeamConfig> {
         scaling_occupied(scaling_occupied) {}
 
   bool isValid(bool verbose) const override;
-  static ContinuousBeamConfig from(const param::Map& params);
+  static ContinuousBeamConfig from(
+      const param::Map& params,
+      SiUnit image_coordinates_unit = SiUnit::kRadians);
 };
 
 class ContinuousBeam : public MeasurementModelBase {

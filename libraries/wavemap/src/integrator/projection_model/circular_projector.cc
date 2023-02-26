@@ -23,11 +23,11 @@ CircularProjectorConfig CircularProjectorConfig::from(
 
   for (const auto& [param_name, param_value] : params) {
     if (param_name == NAMEOF(min_angle)) {
-      config.min_angle =
-          param::convert::toRadians(param_value, config.min_angle);
+      config.min_angle = param::convert::toUnit<SiUnit::kRadians>(
+          param_value, config.min_angle);
     } else if (param_name == NAMEOF(max_angle)) {
-      config.max_angle =
-          param::convert::toRadians(param_value, config.max_angle);
+      config.max_angle = param::convert::toUnit<SiUnit::kRadians>(
+          param_value, config.max_angle);
     } else if (param_name == NAMEOF(num_cells)) {
       config.num_cells = param_value.get<IndexElement>();
     } else {

@@ -50,8 +50,8 @@ struct TypeSelector {
   bool isValid() const { return isValidTypeId(id_); }
 
   // Static methods for convenience
-  static TypeName typeIdToStr(TypeId update_type) {
-    return DerivedTypeSelectorT::names[static_cast<TypeId>(update_type)];
+  static TypeName typeIdToStr(TypeId type_id) {
+    return DerivedTypeSelectorT::names[static_cast<TypeId>(type_id)];
   }
   static TypeId strToTypeId(const std::string& name);
   static bool isValidTypeId(TypeId type_id) {

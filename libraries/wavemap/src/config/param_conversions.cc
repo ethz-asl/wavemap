@@ -1,119 +1,90 @@
 #include "wavemap/config/param_conversions.h"
 
 namespace wavemap::param::convert {
-FloatingPoint toMeters(const Map& map) {
-  if (map::hasKey(map, "meters")) {
-    if (map::keyHoldsValue<FloatingPoint>(map, "meters")) {
-      return map::keyGetValue<FloatingPoint>(map, "meters");
-    } else {
-      LOG(ERROR) << "Value held by key meters is not of type FloatingPoint.";
-    }
-  } else if (map::hasKey(map, "decimeters")) {
-    if (map::keyHoldsValue<FloatingPoint>(map, "decimeters")) {
-      return 0.1f * map::keyGetValue<FloatingPoint>(map, "decimeters");
-    } else {
-      LOG(ERROR)
-          << "Value held by key decimeters is not of type FloatingPoint.";
-    }
-  } else if (map::hasKey(map, "centimeters")) {
-    if (map::keyHoldsValue<FloatingPoint>(map, "centimeters")) {
-      return 0.01f * map::keyGetValue<FloatingPoint>(map, "centimeters");
-    } else {
-      LOG(ERROR)
-          << "Value held by key centimeters is not of type FloatingPoint.";
-    }
-  } else if (map::hasKey(map, "millimeters")) {
-    if (map::keyHoldsValue<FloatingPoint>(map, "millimeters")) {
-      return 0.001f * map::keyGetValue<FloatingPoint>(map, "millimeters");
-    } else {
-      LOG(ERROR)
-          << "Value held by key millimeters is not of type FloatingPoint.";
-    }
+// clang-format off
+static const std::map<std::string, ValueWithUnit> UnitToSi{
+    {"meters",      {1e0f,        SiUnit::kMeters}},
+    {"m",           {1e0f,        SiUnit::kMeters}},
+    {"decimeters",  {1e-1f,       SiUnit::kMeters}},
+    {"dm",          {1e-1f,       SiUnit::kMeters}},
+    {"centimeters", {1e-2f,       SiUnit::kMeters}},
+    {"cm",          {1e-2f,       SiUnit::kMeters}},
+    {"millimeters", {1e-3f,       SiUnit::kMeters}},
+    {"mm",          {1e-3f,       SiUnit::kMeters}},
+    {"radians",     {1.f,         SiUnit::kRadians}},
+    {"rad",         {1.f,         SiUnit::kRadians}},
+    {"degrees",     {kPi / 180.f, SiUnit::kRadians}},
+    {"deg",         {kPi / 180.f, SiUnit::kRadians}},
+    {"pixels",      {1.f,         SiUnit::kPixels}},
+    {"px",          {1.f,         SiUnit::kPixels}},
+    {"seconds",     {1.f,         SiUnit::kSeconds}},
+    {"sec",         {1.f,         SiUnit::kSeconds}},
+    {"s",           {1.f,         SiUnit::kSeconds}},
+};
+// clang-format on
+
+ValueWithUnit toSiUnit(const Map& map) {
+  if (map.size() != 1) {
+    LOG(ERROR) << "Value with unit should have exactly one key and value.";
+    return {kNaN, SiUnit::kInvalidTypeId};
   }
-  LOG(FATAL) << "Could not convert value to meters as it contains no sub-key "
-                "matching a supported length unit.";
-  return kNaN;
+
+  const auto [unit, value] = *map.begin();
+  if (!UnitToSi.count(unit)) {
+    LOG(ERROR) << "Value has unknown unit " << unit << ".";
+    return {kNaN, SiUnit::kInvalidTypeId};
+  }
+
+  if (!value.holds<FloatingPoint>()) {
+    LOG(ERROR) << "Value is not of type float"
+               << ".";
+    return {kNaN, SiUnit::kInvalidTypeId};
+  }
+
+  return value.get<FloatingPoint>() * UnitToSi.at(unit);
 }
 
-FloatingPoint toRadians(const Map& map) {
-  if (map::hasKey(map, "radians")) {
-    if (map::keyHoldsValue<FloatingPoint>(map, "radians")) {
-      return map::keyGetValue<FloatingPoint>(map, "radians");
-    } else {
-      LOG(ERROR) << "Value held by key radians is not of type FloatingPoint.";
-    }
-  } else if (map::hasKey(map, "degrees")) {
-    if (map::keyHoldsValue<FloatingPoint>(map, "degrees")) {
-      return kPi / 180.f * map::keyGetValue<FloatingPoint>(map, "degrees");
-    } else {
-      LOG(ERROR) << "Value held by key degrees is not of type FloatingPoint.";
-    }
+FloatingPoint toUnit(const Map& map, SiUnit unit) {
+  const auto value_with_unit = toSiUnit(map);
+  if (value_with_unit.unit.toTypeId() != unit.toTypeId()) {
+    LOG(FATAL) << "Expected unit of type " << unit.toStr() << ", but got "
+               << value_with_unit.unit.toStr()
+               << ". Returning NaN as no default is set.";
+    return kNaN;
   }
-  LOG(FATAL) << "Could not convert value to radians as it contains no sub-key "
-                "matching a supported angle unit.";
-  return kNaN;
+  return value_with_unit.value;
 }
 
-FloatingPoint toSeconds(const Map& map) {
-  if (map::hasKey(map, "seconds")) {
-    if (map::keyHoldsValue<FloatingPoint>(map, "seconds")) {
-      return map::keyGetValue<FloatingPoint>(map, "seconds");
-    } else {
-      LOG(ERROR) << "Value held by key seconds is not of type FloatingPoint.";
-    }
-  }
-  LOG(FATAL) << "Could not convert value to seconds as it contains no sub-key "
-                "matching a supported time unit.";
-  return kNaN;
-}
-
-FloatingPoint toMeters(const Value& param, FloatingPoint default_value) {
+FloatingPoint toUnit(const Value& param, SiUnit unit,
+                     FloatingPoint default_value) {
   if (param.holds<Map>()) {
     const auto& sub_map = param.get<Map>();
-    return toMeters(sub_map);
+    const auto value_with_unit = toSiUnit(sub_map);
+    if (value_with_unit.unit.toTypeId() == unit.toTypeId()) {
+      return value_with_unit.value;
+    } else {
+      LOG(ERROR) << "Expected unit of type " << unit.toStr() << ", but got "
+                 << value_with_unit.value << " with unit "
+                 << value_with_unit.unit.toStr() << ". Using default value "
+                 << default_value << " instead.";
+    }
   }
   return default_value;
 }
 
-FloatingPoint toRadians(const Value& param, FloatingPoint default_value) {
-  if (param.holds<Map>()) {
-    const auto& sub_map = param.get<Map>();
-    return toRadians(sub_map);
-  }
-  return default_value;
-}
-
-FloatingPoint toSeconds(const Value& param, FloatingPoint default_value) {
-  if (param.holds<Map>()) {
-    const auto& sub_map = param.get<Map>();
-    return toSeconds(sub_map);
-  }
-  return default_value;
-}
-
-FloatingPoint toMeters(const Map& map, const Name& key,
-                       FloatingPoint default_value) {
+FloatingPoint toUnit(const Map& map, const Name& key, SiUnit unit,
+                     FloatingPoint default_value) {
   if (map::keyHoldsValue<Map>(map, key)) {
     const auto& sub_map = map::keyGetValue<Map>(map, key);
-    return toMeters(sub_map);
-  }
-  return default_value;
-}
-
-FloatingPoint toRadians(const Map& map, const Name& key,
-                        FloatingPoint default_value) {
-  if (map::keyHoldsValue<Map>(map, key)) {
-    const auto& sub_map = map::keyGetValue<Map>(map, key);
-    return toRadians(sub_map);
-  }
-  return default_value;
-}
-
-FloatingPoint toSeconds(const Map& map, const Name& key,
-                        FloatingPoint default_value) {
-  if (map::keyHoldsValue<Map>(map, key)) {
-    const auto& sub_map = map::keyGetValue<Map>(map, key);
-    return toSeconds(sub_map);
+    const auto value_with_unit = toSiUnit(sub_map);
+    if (value_with_unit.unit.toTypeId() == unit.toTypeId()) {
+      return value_with_unit.value;
+    } else {
+      LOG(ERROR) << "Expected unit of type " << unit.toStr() << ", but got "
+                 << value_with_unit.value << " with unit "
+                 << value_with_unit.unit.toStr() << ". Using default value "
+                 << default_value << " instead.";
+    }
   }
   return default_value;
 }

@@ -168,15 +168,15 @@ WavemapServer::Config WavemapServer::Config::from(const param::Map& params) {
     const auto params_map =
         param::map::keyGetValue<param::Map>(params, NAMEOF(config.map));
 
-    config.map.pruning_period =
-        param::convert::toSeconds(params_map, NAMEOF(config.map.pruning_period),
-                                  config.map.pruning_period);
+    config.map.pruning_period = param::convert::toUnit<SiUnit::kSeconds>(
+        params_map, NAMEOF(config.map.pruning_period),
+        config.map.pruning_period);
 
-    config.map.visualization_period = param::convert::toSeconds(
+    config.map.visualization_period = param::convert::toUnit<SiUnit::kSeconds>(
         params_map, NAMEOF(config.map.visualization_period),
         config.map.visualization_period);
 
-    config.map.autosave_period = param::convert::toSeconds(
+    config.map.autosave_period = param::convert::toUnit<SiUnit::kSeconds>(
         params_map, NAMEOF(config.map.autosave_period),
         config.map.autosave_period);
 
