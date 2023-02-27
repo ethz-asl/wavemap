@@ -33,6 +33,6 @@ integrators:
       cy: 240.0
     measurement_model:
       type: "continuous_ray"
-      range_sigma: { meters: 0.02 }
+      range_sigma: { meters: 0.01 }
       scaling_free: 0.2
       scaling_occupied: 0.4

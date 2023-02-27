@@ -10,17 +10,26 @@
 #include <vector>
 
 #include "wavemap/data_structure/image.h"
+#include "wavemap/integrator/projection_model/projector_base.h"
 #include "wavemap/integrator/projective/update_type.h"
 
 namespace wavemap {
 class HierarchicalRangeBounds {
  public:
-  explicit HierarchicalRangeBounds(Image<>::ConstPtr range_image,
-                                   bool azimuth_wraps_pi,
-                                   FloatingPoint min_range)
+  explicit HierarchicalRangeBounds(
+      Image<>::ConstPtr range_image, bool azimuth_wraps_pi,
+      FloatingPoint min_range, const ProjectorBase* projection_model = nullptr)
       : range_image_(std::move(range_image)),
+        min_range_(min_range),
         azimuth_wraps_pi_(azimuth_wraps_pi),
-        min_range_(min_range) {
+        image_to_pyramid_scale_factor_(
+            computeImageToPyramidScaleFactor(projection_model)) {
+    CHECK((image_to_pyramid_scale_factor_.array() == 1).any())
+        << "For scale: " << image_to_pyramid_scale_factor_;
+    CHECK((1 <= image_to_pyramid_scale_factor_.array()).all())
+        << "For scale: " << image_to_pyramid_scale_factor_;
+    CHECK((image_to_pyramid_scale_factor_.array() <= 2).all())
+        << "For scale: " << image_to_pyramid_scale_factor_;
     DCHECK_EQ(lower_bound_levels_.size(), max_height_);
     DCHECK_EQ(upper_bound_levels_.size(), max_height_);
   }
@@ -33,8 +42,8 @@ class HierarchicalRangeBounds {
   static FloatingPoint getUnknownValueUpperBound() {
     return kUnknownValueUpperBound;
   }
-  static Index2D getImageToPyramidScaleFactor() {
-    return {std::get<0>(scale_), std::get<1>(scale_)};
+  Index2D getImageToPyramidScaleFactor() const {
+    return image_to_pyramid_scale_factor_;
   }
 
   Bounds<FloatingPoint> getBounds(const QuadtreeIndex& index) const;
@@ -73,14 +82,19 @@ class HierarchicalRangeBounds {
                            FloatingPoint range_max) const;
 
  private:
+  static constexpr FloatingPoint kUnknownValueLowerBound = 1e4f;
+  static constexpr FloatingPoint kUnknownValueUpperBound = 0.f;
+
   const Image<>::ConstPtr range_image_;
-  const bool azimuth_wraps_pi_;
 
   // Below min_range, range image values are treated as unknown and set to init
   const FloatingPoint min_range_;
 
-  static constexpr FloatingPoint kUnknownValueLowerBound = 1e4f;
-  static constexpr FloatingPoint kUnknownValueUpperBound = 0.f;
+  // Params defining how the image is mapped to the pyramid
+  const bool azimuth_wraps_pi_;
+  const Index2D image_to_pyramid_scale_factor_;
+  static Index2D computeImageToPyramidScaleFactor(
+      const ProjectorBase* projector = nullptr);
 
   const std::vector<Image<>> lower_bound_levels_ = computeReducedPyramid(
       range_image_->transform(
@@ -97,8 +111,6 @@ class HierarchicalRangeBounds {
 
   const NdtreeIndexElement max_height_ =
       static_cast<NdtreeIndexElement>(lower_bound_levels_.size());
-  // TODO(victorr): Make this configurable (or adjust it automatically)
-  static constexpr std::tuple<IndexElement, IndexElement> scale_ = {2, 1};
 
   template <typename T = FloatingPoint, typename BinaryFunctor>
   std::vector<Image<T>> computeReducedPyramid(const Image<T>& range_image,

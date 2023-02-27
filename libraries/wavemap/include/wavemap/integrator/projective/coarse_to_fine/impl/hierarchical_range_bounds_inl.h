@@ -47,12 +47,11 @@ inline Bounds<FloatingPoint> HierarchicalRangeBounds::getBounds(
   DCHECK((min_image_idx.array() <= max_image_idx_unwrapped.array()).all());
 
   const Index2D min_image_idx_scaled =
-      getImageToPyramidScaleFactor().template cwiseProduct(min_image_idx);
+      image_to_pyramid_scale_factor_.cwiseProduct(min_image_idx);
   const Index2D max_image_idx_scaled =
-      getImageToPyramidScaleFactor().template cwiseProduct(max_image_idx);
+      image_to_pyramid_scale_factor_.cwiseProduct(max_image_idx);
   const Index2D max_image_idx_unwrapped_scaled =
-      getImageToPyramidScaleFactor().template cwiseProduct(
-          max_image_idx_unwrapped);
+      image_to_pyramid_scale_factor_.cwiseProduct(max_image_idx_unwrapped);
 
   const IndexElement max_idx_diff =
       (max_image_idx_unwrapped_scaled - min_image_idx_scaled).maxCoeff();
@@ -177,12 +176,11 @@ inline bool HierarchicalRangeBounds::hasUnobserved(
   DCHECK((min_image_idx.array() <= max_image_idx_unwrapped.array()).all());
 
   const Index2D min_image_idx_scaled =
-      getImageToPyramidScaleFactor().template cwiseProduct(min_image_idx);
+      image_to_pyramid_scale_factor_.cwiseProduct(min_image_idx);
   const Index2D max_image_idx_scaled =
-      getImageToPyramidScaleFactor().template cwiseProduct(max_image_idx);
+      image_to_pyramid_scale_factor_.cwiseProduct(max_image_idx);
   const Index2D max_image_idx_unwrapped_scaled =
-      getImageToPyramidScaleFactor().template cwiseProduct(
-          max_image_idx_unwrapped);
+      image_to_pyramid_scale_factor_.cwiseProduct(max_image_idx_unwrapped);
 
   const IndexElement max_idx_diff =
       (max_image_idx_unwrapped_scaled - min_image_idx_scaled).maxCoeff();
@@ -280,6 +278,18 @@ inline UpdateType HierarchicalRangeBounds::getUpdateType(
   }
 }
 
+inline Index2D HierarchicalRangeBounds::computeImageToPyramidScaleFactor(
+    const ProjectorBase* projector) {
+  if (projector) {
+    const Vector2D stride = (projector->indexToImage(Index2D::Ones()) -
+                             projector->indexToImage(Index2D::Zero()))
+                                .cwiseAbs();
+    return (stride / stride.minCoeff()).cwiseMin(2).cast<IndexElement>();
+  } else {
+    return Index2D::Ones();
+  }
+}
+
 template <typename T, typename BinaryFunctor>
 std::vector<Image<T>> HierarchicalRangeBounds::computeReducedPyramid(
     const Image<T>& range_image, BinaryFunctor reduction_functor, T init) {
@@ -290,7 +300,7 @@ std::vector<Image<T>> HierarchicalRangeBounds::computeReducedPyramid(
 
   const Index2D range_image_dims = range_image.getDimensions();
   const Index2D range_image_dims_scaled =
-      getImageToPyramidScaleFactor().template cwiseProduct(range_image_dims);
+      image_to_pyramid_scale_factor_.cwiseProduct(range_image_dims);
   const int max_num_halvings =
       int_math::log2_ceil(range_image_dims_scaled.maxCoeff());
 
@@ -314,9 +324,9 @@ std::vector<Image<T>> HierarchicalRangeBounds::computeReducedPyramid(
       Index2D max_child_idx = min_child_idx + Index2D::Ones();
       if (level_idx == 0) {
         min_child_idx = min_child_idx.template cwiseQuotient(
-            getImageToPyramidScaleFactor());
+            image_to_pyramid_scale_factor_);
         max_child_idx = max_child_idx.template cwiseQuotient(
-            getImageToPyramidScaleFactor());
+            image_to_pyramid_scale_factor_);
       }
 
       // Reduce the values in the 2x2 block of the previous level from

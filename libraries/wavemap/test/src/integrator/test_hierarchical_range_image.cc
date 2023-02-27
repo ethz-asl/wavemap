@@ -30,11 +30,11 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
     constexpr bool kAzimuthMayWrap = false;
     constexpr FloatingPoint kPointcloudIntegratorMinRange = 0.5f;
     auto range_image = std::make_shared<Image<>>(getRandomRangeImage());
-    const Index2D range_image_dims = range_image->getDimensions();
-    const Index2D range_image_dims_scaled = range_image_dims.cwiseProduct(
-        HierarchicalRangeBounds::getImageToPyramidScaleFactor());
     HierarchicalRangeBounds hierarchical_range_image(
         range_image, kAzimuthMayWrap, kPointcloudIntegratorMinRange);
+    const Index2D range_image_dims = range_image->getDimensions();
+    const Index2D range_image_dims_scaled = range_image_dims.cwiseProduct(
+        hierarchical_range_image.getImageToPyramidScaleFactor());
 
     // Test all the bounds from top to bottom
     const NdtreeIndexElement max_height =
@@ -56,12 +56,12 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                   hierarchical_range_image.getLowerBound(index))
             << "For index " << index.toString() << ", range image size "
             << range_image_dims << " and scale factor "
-            << HierarchicalRangeBounds::getImageToPyramidScaleFactor();
+            << hierarchical_range_image.getImageToPyramidScaleFactor();
         EXPECT_EQ(hierarchical_range_image.getBounds(index).upper,
                   hierarchical_range_image.getUpperBound(index))
             << "For index " << index.toString() << ", range image width "
             << range_image_dims << " and scale factor "
-            << HierarchicalRangeBounds::getImageToPyramidScaleFactor();
+            << hierarchical_range_image.getImageToPyramidScaleFactor();
 
         // Check if the values returned by the accessors are correct
         if (index.height == 0) {
@@ -86,7 +86,7 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
             QuadtreeIndex child_idx =
                 index.computeChildIndex(relative_child_idx);
             child_idx.position = child_idx.position.cwiseQuotient(
-                HierarchicalRangeBounds::getImageToPyramidScaleFactor());
+                hierarchical_range_image.getImageToPyramidScaleFactor());
             if ((child_idx.position.array() < range_image_dims.array()).all()) {
               const FloatingPoint range_image_value =
                   range_image->at(child_idx.position);

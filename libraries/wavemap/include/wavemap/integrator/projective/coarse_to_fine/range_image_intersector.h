@@ -22,7 +22,7 @@ class RangeImageIntersector {
                         FloatingPoint min_range, FloatingPoint max_range)
       : y_axis_wraps_around_(projection_model->sensorAxisIsPeriodic().y()),
         hierarchical_range_image_(std::move(range_image), y_axis_wraps_around_,
-                                  min_range),
+                                  min_range, projection_model.get()),
         projection_model_(std::move(projection_model)),
         min_range_(min_range),
         max_range_(max_range),
