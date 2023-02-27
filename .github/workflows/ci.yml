@@ -44,7 +44,7 @@ jobs:
         run: |
           apk add --no-cache tar
           mkdir -p ccache
-          echo "{date}={$(date -u "+%Y-%m-%d_%H-%M-%S")}" >> $GITHUB_OUTPUT
+          echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
 
       - name: Pull in ccache's cache
         uses: actions/cache@v3
@@ -59,7 +59,7 @@ jobs:
         id: start-time
         run: |
           stamp=$(date +%s)
-          echo "{stamp}={$stamp}" >> $GITHUB_OUTPUT
+          echo "stamp=${stamp}" >> $GITHUB_OUTPUT
 
       - name: Build the ${{ env.DOCKER_TARGET }} image
         uses: docker/build-push-action@v3
@@ -89,7 +89,7 @@ jobs:
           if [ $threshold -le $runtime ]; then
             answer=true
           fi
-          echo "{answer}={$answer}" >> $GITHUB_OUTPUT
+          echo "answer=${answer}" >> $GITHUB_OUTPUT
 
       - name: Test the ${{ env.DOCKER_TARGET }} image
         run: docker run --rm ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
