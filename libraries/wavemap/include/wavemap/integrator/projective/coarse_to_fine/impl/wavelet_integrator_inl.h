@@ -1,12 +1,12 @@
 #ifndef WAVEMAP_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
 #define WAVEMAP_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_IMPL_WAVELET_INTEGRATOR_INL_H_
 
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_cell.h"
+#include <utility>
 
 namespace wavemap {
 inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const OctreeIndex& node_index, FloatingPoint node_value,
-    typename WaveletOctreeInterface::NodeType& parent_node,
+    typename WaveletOctree::NodeType& parent_node,
     OctreeIndex::RelativeChild relative_child_index) {
   constexpr FloatingPoint kNoiseThreshold = 1e-4f;
 
@@ -17,9 +17,10 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const Point3D C_node_center =
         posed_range_image_->getPoseInverse() * W_node_center;
     const FloatingPoint sample = computeUpdate(C_node_center);
-    return std::clamp(sample + node_value,
-                      SaturatingOccupancyCell::kLowerBound - kNoiseThreshold,
-                      SaturatingOccupancyCell::kUpperBound + kNoiseThreshold) -
+    return std::clamp(
+               sample + node_value,
+               occupancy_map_->getConfig().min_log_odds - kNoiseThreshold,
+               occupancy_map_->getConfig().max_log_odds + kNoiseThreshold) -
            node_value;
   }
 
@@ -41,7 +42,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
   // zero) and the map is already saturated free
   if (update_type == UpdateType::kFreeOrUnobserved &&
       node_value <
-          SaturatingOccupancyCell::kLowerBound + kNoiseThreshold / 10.f) {
+          occupancy_map_->getConfig().min_log_odds + kNoiseThreshold / 10.f) {
     return 0.f;
   }
 
@@ -56,8 +57,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
       projection_model_->cartesianToSensorZ(C_node_center);
   const FloatingPoint bounding_sphere_radius =
       kUnitCubeHalfDiagonal * node_width;
-  WaveletOctreeInterface::NodeType* node =
-      parent_node.getChild(relative_child_index);
+  WaveletOctree::NodeType* node = parent_node.getChild(relative_child_index);
   if (measurement_model_->computeWorstCaseApproximationError(
           update_type, d_C_cell, bounding_sphere_radius) <
       config_.termination_update_error) {
@@ -65,8 +65,8 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     if (!node || !node->hasAtLeastOneChild()) {
       return std::clamp(
                  sample + node_value,
-                 SaturatingOccupancyCell::kLowerBound - kNoiseThreshold,
-                 SaturatingOccupancyCell::kUpperBound + kNoiseThreshold) -
+                 occupancy_map_->getConfig().min_log_odds - kNoiseThreshold,
+                 occupancy_map_->getConfig().max_log_odds + kNoiseThreshold) -
              node_value;
     } else {
       return sample;
@@ -78,10 +78,10 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     // Allocate the current node if it has not yet been allocated
     node = parent_node.allocateChild(relative_child_index);
   }
-  const WaveletOctreeInterface::Coefficients::CoefficientsArray
-      child_scale_coefficients = WaveletOctreeInterface::Transform::backward(
-          {node_value, node->data()});
-  WaveletOctreeInterface::Coefficients::CoefficientsArray
+  const WaveletOctree::Coefficients::CoefficientsArray
+      child_scale_coefficients =
+          WaveletOctree::Transform::backward({node_value, node->data()});
+  WaveletOctree::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
   for (OctreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
@@ -96,8 +96,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
 
   // Update the current node's wavelet detail coefficients
   const auto [scale_update, detail_updates] =
-      WaveletOctreeInterface::Transform::forward(
-          child_scale_coefficient_updates);
+      WaveletOctree::Transform::forward(child_scale_coefficient_updates);
   node->data() += detail_updates;
 
   // Propagate the wavelet scale coefficient upward

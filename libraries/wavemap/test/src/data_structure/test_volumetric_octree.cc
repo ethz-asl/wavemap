@@ -1,58 +1,31 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
 #include "wavemap/test/fixture_base.h"
 
 namespace wavemap {
-template <typename TypeParamT>
-class VolumetricOctreeTest : public FixtureBase {
- protected:
-  VolumetricOctree<TypeParamT> getRandomMap() {
-    VolumetricOctree<TypeParamT> random_map(getRandomMinCellWidth());
-    const Index<TypeParamT::kDim> min_index =
-        -getRandomIndex<TypeParamT::kDim>().cwiseAbs();
-    const Index<TypeParamT::kDim> max_index =
-        getRandomIndex<TypeParamT::kDim>().cwiseAbs();
-    random_map.addToCellValue(min_index, 0.f);
-    random_map.addToCellValue(max_index, 0.f);
-    for (Index<TypeParamT::kDim> index = min_index; index.x() <= max_index.x();
-         ++index.x()) {
-      for (index.y() = min_index.y(); index.y() <= max_index.y(); ++index.y()) {
-        random_map.addToCellValue(index, getRandomUpdate());
-      }
-    }
-    return random_map;
-  }
-};
-
-using TypeParams =
-    ::testing::Types<UnboundedOccupancyCell, SaturatingOccupancyCell>;
-TYPED_TEST_SUITE(VolumetricOctreeTest, TypeParams, );
+using VolumetricOctreeTest = FixtureBase;
 
 // NOTE: Insertion tests are performed as part of the test suite for the
 //       VolumetricDataStructure interface.
 // TODO(victorr): Test whether out of bounds accesses/insertions are handled
 //                correctly (e.g. throw error or do nothing and print error).
 
-TYPED_TEST(VolumetricOctreeTest, Initialization) {
-  const FloatingPoint random_min_cell_width =
-      TestFixture::getRandomMinCellWidth();
-  VolumetricOctree<TypeParam> map(
-      VolumetricDataStructureConfig{random_min_cell_width});
+TEST_F(VolumetricOctreeTest, Initialization) {
+  const FloatingPoint random_min_cell_width = getRandomMinCellWidth();
+  VolumetricOctree map(VolumetricDataStructureConfig{random_min_cell_width});
   EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 1u);  // Contains exactly 1 node (the root)
 }
 
-TYPED_TEST(VolumetricOctreeTest, IndexConversions) {
-  VolumetricOctree<TypeParam> map(
-      VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
-  std::vector<Index3D> random_indices = TestFixture::getRandomIndexVector(
+TEST_F(VolumetricOctreeTest, IndexConversions) {
+  VolumetricOctree map(VolumetricDataStructureConfig{getRandomMinCellWidth()});
+  std::vector<Index3D> random_indices = getRandomIndexVector(
       map.getMinPossibleIndex(), map.getMaxPossibleIndex());
-  random_indices.template emplace_back(map.getMinPossibleIndex());
-  random_indices.template emplace_back(map.getMaxPossibleIndex());
+  random_indices.emplace_back(map.getMinPossibleIndex());
+  random_indices.emplace_back(map.getMaxPossibleIndex());
   for (const Index3D& index : random_indices) {
     // NOTE: Since the Index is converted into an internal NodeIndex at height
     //       0, the NodeIndex's min and max corner Indexes should be the same.
@@ -65,16 +38,15 @@ TYPED_TEST(VolumetricOctreeTest, IndexConversions) {
   }
 }
 
-TYPED_TEST(VolumetricOctreeTest, Resizing) {
-  VolumetricOctree<TypeParam> map(
-      VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
+TEST_F(VolumetricOctreeTest, Resizing) {
+  VolumetricOctree map(VolumetricDataStructureConfig{getRandomMinCellWidth()});
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), 1u);
 
   const Index3D kMinIndex = Index3D::Constant(-2e3);
   const Index3D kMaxIndex = Index3D::Constant(2e3);
   const std::vector<Index3D> random_indices =
-      TestFixture::template getRandomIndexVector<3>(kMinIndex, kMaxIndex);
+      getRandomIndexVector<3>(kMinIndex, kMaxIndex);
 
   const Index3D& first_random_index = random_indices[0];
   map.addToCellValue(first_random_index, 0.f);
@@ -115,14 +87,13 @@ TYPED_TEST(VolumetricOctreeTest, Resizing) {
   EXPECT_EQ(map.size(), 1u);
 }
 
-TYPED_TEST(VolumetricOctreeTest, Pruning) {
+TEST_F(VolumetricOctreeTest, Pruning) {
   constexpr int kNumRepetitions = 10;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    VolumetricOctree<TypeParam> map(
-        VolumetricDataStructureConfig{TestFixture::getRandomMinCellWidth()});
-    const std::vector<Index3D> random_indices =
-        TestFixture::template getRandomIndexVector<3>(
-            map.getMinPossibleIndex(), map.getMaxPossibleIndex());
+    VolumetricOctree map(
+        VolumetricDataStructureConfig{getRandomMinCellWidth()});
+    const std::vector<Index3D> random_indices = getRandomIndexVector<3>(
+        map.getMinPossibleIndex(), map.getMaxPossibleIndex());
 
     // Check that zero values are inserted but removed after pruning
     ASSERT_TRUE(map.empty());

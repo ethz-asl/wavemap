@@ -7,8 +7,10 @@ if [ "$CI" ]; then
   flags="--no-status --force-color"
 fi
 
-catkin build wavemap_all "$flags"
-catkin build wavemap_all "$flags" --no-deps --catkin-make-args tests
+# shellcheck disable=SC2086
+catkin build wavemap_all $flags
+# shellcheck disable=SC2086
+catkin build wavemap_all $flags --no-deps --catkin-make-args tests
 
 pushd "$(catkin locate --devel wavemap)/../.." >>/dev/null || exit 1
 all_tests_passed=1

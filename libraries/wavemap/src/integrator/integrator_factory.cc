@@ -1,5 +1,7 @@
 #include "wavemap/integrator/integrator_factory.h"
 
+#include "wavemap/data_structure/volumetric/volumetric_octree.h"
+#include "wavemap/data_structure/volumetric/wavelet_octree.h"
 #include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/measurement_model/measurement_model_factory.h"
 #include "wavemap/integrator/projection_model/projector_factory.h"
@@ -81,14 +83,14 @@ IntegratorBase::Ptr IntegratorFactory::create(
     }
     case IntegratorType::kCoarseToFineIntegrator: {
       auto octree_map =
-          std::dynamic_pointer_cast<VolumetricOctreeInterface>(occupancy_map);
+          std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map);
       return std::make_shared<CoarseToFineIntegrator>(
           integrator_config, projection_model, posed_range_image,
           beam_offset_image, measurement_model, std::move(octree_map));
     }
     case IntegratorType::kWaveletIntegrator: {
       auto wavelet_map =
-          std::dynamic_pointer_cast<WaveletOctreeInterface>(occupancy_map);
+          std::dynamic_pointer_cast<WaveletOctree>(occupancy_map);
       return std::make_shared<WaveletIntegrator>(
           integrator_config, projection_model, posed_range_image,
           beam_offset_image, measurement_model, std::move(wavelet_map));

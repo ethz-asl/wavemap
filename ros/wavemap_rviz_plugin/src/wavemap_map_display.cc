@@ -5,7 +5,6 @@
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 #include <tf/transform_listener.h>
-#include <wavemap/data_structure/volumetric/cell_types/scalar_cell.h>
 #include <wavemap/data_structure/volumetric/volumetric_octree.h>
 #include <wavemap/data_structure/volumetric/wavelet_octree.h>
 #include <wavemap/indexing/ndtree_index.h>
@@ -212,19 +211,18 @@ void WavemapMapDisplay::processMessage(
 std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
     const wavemap_msgs::Map& map_msg) {
   if (!map_msg.wavelet_octree.empty()) {
-    using WaveletOctreeType = WaveletOctree<UnboundedScalarCell>;
     const auto& wavelet_octree_msg = map_msg.wavelet_octree.front();
     auto wavelet_octree =
-        std::make_unique<WaveletOctreeType>(wavelet_octree_msg.min_cell_width);
+        std::make_unique<WaveletOctree>(wavelet_octree_msg.min_cell_width);
 
     wavelet_octree->getRootScale() =
         wavelet_octree_msg.root_node_scale_coefficient;
 
-    std::stack<WaveletOctreeType::NodeType*> stack;
+    std::stack<WaveletOctree::NodeType*> stack;
     stack.template emplace(&wavelet_octree->getRootNode());
     for (const auto& node_msg : wavelet_octree_msg.nodes) {
       CHECK(!stack.empty());
-      WaveletOctreeType::NodeType* current_node = stack.top();
+      WaveletOctree::NodeType* current_node = stack.top();
       CHECK_NOTNULL(current_node);
       stack.pop();
 
@@ -243,15 +241,14 @@ std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
     }
     return wavelet_octree;
   } else if (!map_msg.octree.empty()) {
-    using OctreeType = VolumetricOctree<UnboundedScalarCell>;
     const auto& octree_msg = map_msg.octree.front();
-    auto octree = std::make_unique<OctreeType>(octree_msg.min_cell_width);
+    auto octree = std::make_unique<VolumetricOctree>(octree_msg.min_cell_width);
 
-    std::stack<OctreeType::NodeType*> stack;
+    std::stack<VolumetricOctree::NodeType*> stack;
     stack.template emplace(&octree->getRootNode());
     for (const auto& node_msg : octree_msg.nodes) {
       CHECK(!stack.empty());
-      OctreeType::NodeType* current_node = stack.top();
+      VolumetricOctree::NodeType* current_node = stack.top();
       CHECK_NOTNULL(current_node);
       stack.pop();
 

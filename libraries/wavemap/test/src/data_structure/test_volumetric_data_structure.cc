@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap/data_structure/volumetric/hashed_blocks.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
@@ -18,12 +17,7 @@ class VolumetricDataStructureTest : public FixtureBase {
 };
 
 using VolumetricDataStructureTypes =
-    ::testing::Types<HashedBlocks<UnboundedOccupancyCell>,
-                     HashedBlocks<SaturatingOccupancyCell>,
-                     VolumetricOctree<UnboundedOccupancyCell>,
-                     VolumetricOctree<SaturatingOccupancyCell>,
-                     WaveletOctree<UnboundedOccupancyCell>,
-                     WaveletOctree<SaturatingOccupancyCell>>;
+    ::testing::Types<HashedBlocks, VolumetricOctree, WaveletOctree>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
@@ -148,7 +142,9 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
           map_base_ptr->prune();
         }
         reference_map[index] =
-            TypeParam::CellType::add(reference_map[index], update);
+            std::clamp(reference_map[index] + update,
+                       map_base_ptr->getConfig().min_log_odds,
+                       map_base_ptr->getConfig().max_log_odds);
         reference_min_index = reference_min_index.cwiseMin(index);
         reference_max_index = reference_max_index.cwiseMax(index);
       }

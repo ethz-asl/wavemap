@@ -9,7 +9,7 @@ void WaveletIntegrator::updateMap() {
 
   // Recursively update all relevant cells
   const auto first_child_indices = occupancy_map_->getFirstChildIndices();
-  WaveletOctreeInterface::Coefficients::CoefficientsArray
+  WaveletOctree::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
   for (OctreeIndex::RelativeChild relative_child_idx = 0;
        relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
@@ -20,8 +20,7 @@ void WaveletIntegrator::updateMap() {
                                    relative_child_idx);
   }
   const auto [scale_update, detail_updates] =
-      WaveletOctreeInterface::Transform::forward(
-          child_scale_coefficient_updates);
+      WaveletOctree::Transform::forward(child_scale_coefficient_updates);
   occupancy_map_->getRootNode().data() += detail_updates;
   occupancy_map_->getRootScale() += scale_update;
 }

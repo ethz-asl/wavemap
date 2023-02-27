@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 
-#include "wavemap/data_structure/volumetric/volumetric_octree_interface.h"
+#include "wavemap/data_structure/volumetric/volumetric_octree.h"
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/integrator/projective/update_type.h"
@@ -17,7 +17,7 @@ class CoarseToFineIntegrator : public ProjectiveIntegrator {
                          PosedImage<>::Ptr posed_range_image,
                          Image<Vector2D>::Ptr beam_offset_image,
                          MeasurementModelBase::ConstPtr measurement_model,
-                         VolumetricOctreeInterface::Ptr occupancy_map)
+                         VolumetricOctree::Ptr occupancy_map)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
             std::move(beam_offset_image), std::move(measurement_model)),
@@ -25,7 +25,7 @@ class CoarseToFineIntegrator : public ProjectiveIntegrator {
         min_cell_width_(occupancy_map_->getMinCellWidth()) {}
 
  private:
-  const VolumetricOctreeInterface::Ptr occupancy_map_;
+  const VolumetricOctree::Ptr occupancy_map_;
   const FloatingPoint min_cell_width_;
 
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;

@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_BLOCKS_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_BLOCKS_H_
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -10,10 +11,10 @@
 #include "wavemap/utils/int_math.h"
 
 namespace wavemap {
-template <typename CellT>
-class HashedBlocks : public virtual VolumetricDataStructureBase {
+class HashedBlocks : public VolumetricDataStructureBase {
  public:
-  using CellType = CellT;
+  using Ptr = std::shared_ptr<HashedBlocks>;
+  using ConstPtr = std::shared_ptr<const HashedBlocks>;
   static constexpr bool kRequiresPruningForThresholding = false;
 
   // Use the base class' constructor
@@ -25,7 +26,7 @@ class HashedBlocks : public virtual VolumetricDataStructureBase {
   void clear() override { blocks_.clear(); }
 
   size_t getMemoryUsage() const override {
-    return size() * sizeof(CellDataSpecialized);
+    return size() * sizeof(FloatingPoint);
   }
 
   Index3D getMinIndex() const override;
@@ -43,23 +44,21 @@ class HashedBlocks : public virtual VolumetricDataStructureBase {
   bool load(const std::string& file_path_prefix) override;
 
  private:
-  using CellDataSpecialized = typename CellT::Specialized;
-
   static constexpr IndexElement kCellsPerSideLog2 = 4;
   static constexpr IndexElement kCellsPerSide =
       int_math::exp2(kCellsPerSideLog2);
   static constexpr IndexElement kCellsPerBlock =
       int_math::exp2(kDim * kCellsPerSideLog2);
 
-  using Block = std::array<CellDataSpecialized, kCellsPerBlock>;
+  using Block = std::array<FloatingPoint, kCellsPerBlock>;
   using BlockIndex = Index3D;
   using CellIndex = Index3D;
 
   std::unordered_map<BlockIndex, Block, VoxbloxIndexHash<3>> blocks_;
 
-  CellDataSpecialized* accessCellData(const Index3D& index,
-                                      bool auto_allocate = false);
-  const CellDataSpecialized* accessCellData(const Index3D& index) const;
+  FloatingPoint* accessCellData(const Index3D& index,
+                                bool auto_allocate = false);
+  const FloatingPoint* accessCellData(const Index3D& index) const;
 
   BlockIndex computeBlockIndexFromIndex(const Index3D& index) const;
   CellIndex computeCellIndexFromBlockIndexAndIndex(

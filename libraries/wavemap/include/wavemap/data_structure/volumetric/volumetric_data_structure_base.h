@@ -24,6 +24,9 @@ struct VolumetricDataStructureConfig
     : ConfigBase<VolumetricDataStructureConfig> {
   FloatingPoint min_cell_width = 0.1f;
 
+  FloatingPoint min_log_odds = -2.f;
+  FloatingPoint max_log_odds = 4.f;
+
   // Constructors
   VolumetricDataStructureConfig() = default;
   VolumetricDataStructureConfig(FloatingPoint min_cell_width)  // NOLINT
@@ -71,6 +74,13 @@ class VolumetricDataStructureBase {
 
  protected:
   const VolumetricDataStructureConfig config_;
+
+  FloatingPoint clamp(FloatingPoint value) const {
+    return std::clamp(value, config_.min_log_odds, config_.max_log_odds);
+  }
+  FloatingPoint clampedAdd(FloatingPoint value, FloatingPoint update) const {
+    return clamp(value + update);
+  }
 };
 }  // namespace wavemap
 

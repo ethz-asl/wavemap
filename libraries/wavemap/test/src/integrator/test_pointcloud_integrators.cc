@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap/data_structure/volumetric/hashed_blocks.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
@@ -137,8 +136,7 @@ TEST_F(PointcloudIntegrator3DTest, RayTracingIntegrator) {
 
     // Set up the occupancy map, integrator and integrate the point cloud
     VolumetricDataStructureBase::Ptr occupancy_map =
-        std::make_shared<HashedBlocks<SaturatingOccupancyCell>>(
-            data_structure_config);
+        std::make_shared<HashedBlocks>(data_structure_config);
     IntegratorBase::Ptr pointcloud_integrator =
         std::make_shared<RayTracingIntegrator>(ray_tracing_integrator_config,
                                                occupancy_map);
@@ -181,17 +179,15 @@ TEST_F(PointcloudIntegrator3DTest,
         getRandomPointcloud(*projection_model);
 
     VolumetricDataStructureBase::Ptr reference_occupancy_map =
-        std::make_shared<HashedBlocks<UnboundedOccupancyCell>>(
-            data_structure_config);
+        std::make_shared<HashedBlocks>(data_structure_config);
     IntegratorBase::Ptr reference_integrator =
         std::make_shared<FixedResolutionIntegrator>(
             projective_integrator_config, projection_model, posed_range_image,
             beam_offset_image, measurement_model, reference_occupancy_map);
     reference_integrator->integratePointcloud(random_pointcloud);
 
-    VolumetricOctreeInterface::Ptr evaluated_occupancy_map =
-        std::make_shared<VolumetricOctree<UnboundedOccupancyCell>>(
-            data_structure_config);
+    VolumetricOctree::Ptr evaluated_occupancy_map =
+        std::make_shared<VolumetricOctree>(data_structure_config);
     IntegratorBase::Ptr evaluated_integrator =
         std::make_shared<CoarseToFineIntegrator>(
             projective_integrator_config, projection_model, posed_range_image,
@@ -235,17 +231,15 @@ TEST_F(PointcloudIntegrator3DTest,
         getRandomPointcloud(*projection_model);
 
     VolumetricDataStructureBase::Ptr reference_occupancy_map =
-        std::make_shared<HashedBlocks<UnboundedOccupancyCell>>(
-            data_structure_config);
+        std::make_shared<HashedBlocks>(data_structure_config);
     IntegratorBase::Ptr reference_integrator =
         std::make_shared<FixedResolutionIntegrator>(
             projective_integrator_config, projection_model, posed_range_image,
             beam_offset_image, measurement_model, reference_occupancy_map);
     reference_integrator->integratePointcloud(random_pointcloud);
 
-    WaveletOctreeInterface::Ptr evaluated_occupancy_map =
-        std::make_shared<WaveletOctree<UnboundedOccupancyCell>>(
-            data_structure_config);
+    WaveletOctree::Ptr evaluated_occupancy_map =
+        std::make_shared<WaveletOctree>(data_structure_config);
     IntegratorBase::Ptr evaluated_integrator =
         std::make_shared<WaveletIntegrator>(
             projective_integrator_config, projection_model, posed_range_image,

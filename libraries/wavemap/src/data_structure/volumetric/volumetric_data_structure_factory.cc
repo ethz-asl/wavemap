@@ -1,6 +1,5 @@
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_factory.h"
 
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_cell.h"
 #include "wavemap/data_structure/volumetric/hashed_blocks.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
 #include "wavemap/data_structure/volumetric/wavelet_octree.h"
@@ -31,12 +30,11 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
   const auto config = VolumetricDataStructureConfig::from(params);
   switch (data_structure_type.toTypeId()) {
     case VolumetricDataStructureType::kHashedBlocks:
-      return std::make_shared<HashedBlocks<SaturatingOccupancyCell>>(config);
+      return std::make_shared<HashedBlocks>(config);
     case VolumetricDataStructureType::kOctree:
-      return std::make_shared<VolumetricOctree<SaturatingOccupancyCell>>(
-          config);
+      return std::make_shared<VolumetricOctree>(config);
     case VolumetricDataStructureType::kWaveletOctree:
-      return std::make_shared<WaveletOctree<SaturatingOccupancyCell>>(config);
+      return std::make_shared<WaveletOctree>(config);
     default:
       LOG(ERROR) << "Attempted to create data structure with unknown type ID: "
                  << data_structure_type.toTypeId() << ". Returning nullptr.";

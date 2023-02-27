@@ -1,7 +1,6 @@
 #include "wavemap_ros/wavemap_server.h"
 
 #include <std_srvs/Empty.h>
-#include <wavemap/data_structure/volumetric/cell_types/occupancy_cell.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_factory.h>
 #include <wavemap/data_structure/volumetric/volumetric_octree.h>
 #include <wavemap/data_structure/volumetric/wavelet_octree.h>
@@ -51,16 +50,15 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
 void WavemapServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
-    if (const auto& octree = std::dynamic_pointer_cast<
-            VolumetricOctree<SaturatingOccupancyCell>>(occupancy_map_);
+    if (const auto& octree =
+            std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map_);
         octree) {
       wavemap_msgs::Map map_msg =
           mapToRosMsg(*octree, config_.general.world_frame);
       map_pub_.publish(map_msg);
     }
     if (const auto& wavelet_octree =
-            std::dynamic_pointer_cast<WaveletOctree<SaturatingOccupancyCell>>(
-                occupancy_map_);
+            std::dynamic_pointer_cast<WaveletOctree>(occupancy_map_);
         wavelet_octree) {
       wavemap_msgs::Map map_msg =
           mapToRosMsg(*wavelet_octree, config_.general.world_frame);

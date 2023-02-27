@@ -36,6 +36,9 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # Libraries
 add_library(${PROJECT_NAME}
     src/config/param_conversions.cc
+    src/data_structure/volumetric/hashed_blocks.cc
+    src/data_structure/volumetric/volumetric_octree.cc
+    src/data_structure/volumetric/wavelet_octree.cc
     src/data_structure/volumetric/volumetric_data_structure_base.cc
     src/data_structure/volumetric/volumetric_data_structure_factory.cc
     src/integrator/measurement_model/continuous_beam.cc
@@ -70,7 +73,6 @@ if (CATKIN_ENABLE_TESTING)
       test/src/data_structure/test_volumetric_data_structure.cc
       test/src/data_structure/test_volumetric_octree.cc
       test/src/data_structure/test_sparse_vector.cc
-      test/src/data_structure/test_volumetric_cell_types.cc
       test/src/indexing/test_index_conversions.cc
       test/src/indexing/test_ndtree_index.cc
       test/src/integrator/projection_model/test_circular_projector.cc

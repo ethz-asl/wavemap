@@ -11,6 +11,7 @@ add_wavemap_compile_definitions_and_options()
 cs_add_library(${PROJECT_NAME}
     src/rosbag_processor.cc
     src/tf_transformer.cc
+    src/io/ros_msg_conversions.cc
     src/utils/config_conversions.cc
     src/input_handler/depth_image_input_handler.cc
     src/input_handler/input_handler.cc
