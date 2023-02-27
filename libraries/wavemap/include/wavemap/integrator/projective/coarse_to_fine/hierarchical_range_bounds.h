@@ -27,11 +27,11 @@ class HierarchicalRangeBounds {
 
   NdtreeIndexElement getMaxHeight() const { return max_height_; }
   FloatingPoint getMinRange() const { return min_range_; }
-  static FloatingPoint getUnknownRangeImageValueLowerBound() {
-    return kUnknownRangeImageValueLowerBound;
+  static FloatingPoint getUnknownValueLowerBound() {
+    return kUnknownValueLowerBound;
   }
-  static FloatingPoint getUnknownRangeImageValueUpperBound() {
-    return kUnknownRangeImageValueUpperBound;
+  static FloatingPoint getUnknownValueUpperBound() {
+    return kUnknownValueUpperBound;
   }
   static Index2D getImageToPyramidScaleFactor() {
     return {std::get<0>(scale_), std::get<1>(scale_)};
@@ -48,24 +48,27 @@ class HierarchicalRangeBounds {
     //       computation of unused (return) values during inlining.
     return getBounds(index).upper;
   }
+  bool hasUnobserved(const QuadtreeIndex& index) const;
 
-  Bounds<FloatingPoint> getBounds(const Index2D& bottom_left_image_idx,
-                                  const Index2D& top_right_image_idx) const;
-  FloatingPoint getLowerBound(const Index2D& bottom_left_image_idx,
-                              const Index2D& top_right_image_idx) const {
+  Bounds<FloatingPoint> getBounds(const Index2D& min_image_idx,
+                                  const Index2D& max_image_idx) const;
+  FloatingPoint getLowerBound(const Index2D& min_image_idx,
+                              const Index2D& max_image_idx) const {
     // NOTE: We reuse getBounds() and trust the compiler to optimize out the
     // computation of unused (return) values during inlining.
-    return getBounds(bottom_left_image_idx, top_right_image_idx).lower;
+    return getBounds(min_image_idx, max_image_idx).lower;
   }
-  FloatingPoint getUpperBound(const Index2D& bottom_left_image_idx,
-                              const Index2D& top_right_image_idx) const {
+  FloatingPoint getUpperBound(const Index2D& min_image_idx,
+                              const Index2D& max_image_idx) const {
     // NOTE: We reuse getBounds() and trust the compiler to optimize out the
     // computation of unused (return) values during inlining.
-    return getBounds(bottom_left_image_idx, top_right_image_idx).upper;
+    return getBounds(min_image_idx, max_image_idx).upper;
   }
+  bool hasUnobserved(const Index2D& min_image_idx,
+                     const Index2D& max_image_idx) const;
 
-  UpdateType getUpdateType(const Index2D& bottom_left_image_idx,
-                           const Index2D& top_right_image_idx,
+  UpdateType getUpdateType(const Index2D& min_image_idx,
+                           const Index2D& max_image_idx,
                            FloatingPoint range_min,
                            FloatingPoint range_max) const;
 
@@ -76,28 +79,34 @@ class HierarchicalRangeBounds {
   // Below min_range, range image values are treated as unknown and set to init
   const FloatingPoint min_range_;
 
-  static constexpr FloatingPoint kUnknownRangeImageValueLowerBound = 1e4f;
-  static constexpr FloatingPoint kUnknownRangeImageValueUpperBound = 0.f;
+  static constexpr FloatingPoint kUnknownValueLowerBound = 1e4f;
+  static constexpr FloatingPoint kUnknownValueUpperBound = 0.f;
 
   const std::vector<Image<>> lower_bound_levels_ = computeReducedPyramid(
-      *range_image_, [](auto a, auto b) { return std::min(a, b); },
-      kUnknownRangeImageValueLowerBound);
+      range_image_->transform(
+          [=](auto val) { return valueOrInit(val, kUnknownValueLowerBound); }),
+      [](auto a, auto b) { return std::min(a, b); }, kUnknownValueLowerBound);
   const std::vector<Image<>> upper_bound_levels_ = computeReducedPyramid(
-      *range_image_, [](auto a, auto b) { return std::max(a, b); },
-      kUnknownRangeImageValueUpperBound);
+      range_image_->transform(
+          [=](auto val) { return valueOrInit(val, kUnknownValueUpperBound); }),
+      [](auto a, auto b) { return std::max(a, b); }, kUnknownValueUpperBound);
+  const std::vector<Image<bool>> unobserved_mask_levels_ =
+      computeReducedPyramid(
+          range_image_->transform([=](auto val) { return isUnobserved(val); }),
+          [](auto a, auto b) { return a || b; }, true);
 
   const NdtreeIndexElement max_height_ =
       static_cast<NdtreeIndexElement>(lower_bound_levels_.size());
   // TODO(victorr): Make this configurable (or adjust it automatically)
   static constexpr std::tuple<IndexElement, IndexElement> scale_ = {2, 1};
 
-  template <typename BinaryFunctor>
-  std::vector<Image<>> computeReducedPyramid(const Image<>& range_image,
-                                             BinaryFunctor reduction_functor,
-                                             FloatingPoint init);
+  template <typename T = FloatingPoint, typename BinaryFunctor>
+  std::vector<Image<T>> computeReducedPyramid(const Image<T>& range_image,
+                                              BinaryFunctor reduction_functor,
+                                              T init);
 
-  FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init,
-                            int level_idx = 0) const {
+  bool isUnobserved(FloatingPoint value) const { return value < min_range_; }
+  FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init) const {
     // NOTE: Point clouds often contain points near the sensor, for example
     //       from missing returns being encoded as zeros, wires or cages around
     //       the sensor or more generally points hitting the robot or operator's
@@ -111,7 +120,7 @@ class HierarchicalRangeBounds {
     //       so low values quickly spread and end up making large intervals very
     //       conservative, which in turns results in very large parts of the
     //       observed volume to be marked as possibly occupied.
-    if (level_idx == 0 && value < min_range_) {
+    if (isUnobserved(value)) {
       return init;
     }
     return value;

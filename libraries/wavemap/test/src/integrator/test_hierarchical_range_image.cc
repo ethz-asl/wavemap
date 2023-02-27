@@ -71,11 +71,15 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                             range_image->at(index.position));
             EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
                             range_image->at(index.position));
+            EXPECT_EQ(hierarchical_range_image.hasUnobserved(index),
+                      range_image->at(index.position) <
+                          hierarchical_range_image.getMinRange());
           }
         } else if (index.height == 1) {
           // At the first pyramid level, the bounds should correspond to min/max
           // pooling the range image with a downsampling factor of 2
           Bounds<FloatingPoint> child_bounds;
+          bool has_unobserved = false;
           for (NdtreeIndexRelativeChild relative_child_idx = 0;
                relative_child_idx < QuadtreeIndex::kNumChildren;
                ++relative_child_idx) {
@@ -87,14 +91,13 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
               const FloatingPoint range_image_value =
                   range_image->at(child_idx.position);
               if (range_image_value < hierarchical_range_image.getMinRange()) {
-                child_bounds.lower =
-                    std::min(child_bounds.lower,
-                             HierarchicalRangeBounds::
-                                 getUnknownRangeImageValueLowerBound());
-                child_bounds.upper =
-                    std::max(child_bounds.upper,
-                             HierarchicalRangeBounds::
-                                 getUnknownRangeImageValueUpperBound());
+                child_bounds.lower = std::min(
+                    child_bounds.lower,
+                    HierarchicalRangeBounds::getUnknownValueLowerBound());
+                child_bounds.upper = std::max(
+                    child_bounds.upper,
+                    HierarchicalRangeBounds::getUnknownValueUpperBound());
+                has_unobserved = true;
               } else {
                 child_bounds.lower =
                     std::min(child_bounds.lower, range_image_value);
@@ -102,14 +105,13 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                     std::max(child_bounds.upper, range_image_value);
               }
             } else {
-              child_bounds.lower =
-                  std::min(child_bounds.lower,
-                           HierarchicalRangeBounds::
-                               getUnknownRangeImageValueLowerBound());
-              child_bounds.upper =
-                  std::max(child_bounds.upper,
-                           HierarchicalRangeBounds::
-                               getUnknownRangeImageValueUpperBound());
+              child_bounds.lower = std::min(
+                  child_bounds.lower,
+                  HierarchicalRangeBounds::getUnknownValueLowerBound());
+              child_bounds.upper = std::max(
+                  child_bounds.upper,
+                  HierarchicalRangeBounds::getUnknownValueUpperBound());
+              has_unobserved = true;
             }
           }
 
@@ -117,10 +119,13 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                           child_bounds.lower);
           EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
                           child_bounds.upper);
+          EXPECT_EQ(hierarchical_range_image.hasUnobserved(index),
+                    has_unobserved);
         } else {
           // At all other levels, the bounds correspond to min/max the bounds of
           // the previous level
           Bounds<FloatingPoint> child_bounds;
+          bool has_unobserved = false;
           for (NdtreeIndexRelativeChild relative_child_idx = 0;
                relative_child_idx < QuadtreeIndex::kNumChildren;
                ++relative_child_idx) {
@@ -139,15 +144,16 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
               child_bounds.upper =
                   std::max(child_bounds.upper,
                            hierarchical_range_image.getUpperBound(child_idx));
+              has_unobserved |=
+                  hierarchical_range_image.hasUnobserved(child_idx);
             } else {
-              child_bounds.lower =
-                  std::min(child_bounds.lower,
-                           HierarchicalRangeBounds::
-                               getUnknownRangeImageValueLowerBound());
-              child_bounds.upper =
-                  std::max(child_bounds.upper,
-                           HierarchicalRangeBounds::
-                               getUnknownRangeImageValueUpperBound());
+              child_bounds.lower = std::min(
+                  child_bounds.lower,
+                  HierarchicalRangeBounds::getUnknownValueLowerBound());
+              child_bounds.upper = std::max(
+                  child_bounds.upper,
+                  HierarchicalRangeBounds::getUnknownValueUpperBound());
+              has_unobserved = true;
             }
           }
 
@@ -155,6 +161,8 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
                           child_bounds.lower);
           EXPECT_FLOAT_EQ(hierarchical_range_image.getUpperBound(index),
                           child_bounds.upper);
+          EXPECT_EQ(hierarchical_range_image.hasUnobserved(index),
+                    has_unobserved);
         }
       }
     }
@@ -182,6 +190,8 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
       // Check if the different accessors return the same values
       const Bounds bounds =
           hierarchical_range_image.getBounds(start_idx, end_idx);
+      const bool has_unobserved =
+          hierarchical_range_image.hasUnobserved(start_idx, end_idx);
       const FloatingPoint lower_bound =
           hierarchical_range_image.getLowerBound(start_idx, end_idx);
       const FloatingPoint upper_bound =
@@ -192,6 +202,7 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
 
       // Compare against brute force
       Bounds<FloatingPoint> bounds_brute_force;
+      bool has_unobserved_brute_force = false;
       for (const Index2D& index : Grid(start_idx, end_idx)) {
         const FloatingPoint range_value = range_image->at(index);
         if (hierarchical_range_image.getMinRange() < range_value) {
@@ -200,16 +211,18 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
           bounds_brute_force.upper =
               std::max(bounds_brute_force.upper, range_value);
         } else {
-          bounds_brute_force.lower = std::min(
-              bounds_brute_force.lower,
-              HierarchicalRangeBounds::getUnknownRangeImageValueLowerBound());
-          bounds_brute_force.upper = std::max(
-              bounds_brute_force.upper,
-              HierarchicalRangeBounds::getUnknownRangeImageValueUpperBound());
+          bounds_brute_force.lower =
+              std::min(bounds_brute_force.lower,
+                       HierarchicalRangeBounds::getUnknownValueLowerBound());
+          bounds_brute_force.upper =
+              std::max(bounds_brute_force.upper,
+                       HierarchicalRangeBounds::getUnknownValueUpperBound());
+          has_unobserved_brute_force = true;
         }
       }
       EXPECT_LE(lower_bound, bounds_brute_force.lower);
       EXPECT_GE(upper_bound, bounds_brute_force.upper);
+      EXPECT_TRUE(has_unobserved_brute_force <= has_unobserved);
     }
   }
 }

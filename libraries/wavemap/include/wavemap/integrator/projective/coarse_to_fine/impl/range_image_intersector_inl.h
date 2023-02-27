@@ -10,7 +10,6 @@
 #include "wavemap/utils/approximate_trigonometry.h"
 
 namespace wavemap {
-// TODO(victorr): Update this method to correctly handle kFullyFree
 inline UpdateType RangeImageIntersector::determineUpdateType(
     const AABB<Point3D>& W_cell_aabb,
     const Transformation3D::RotationMatrix& R_C_W, const Point3D& t_W_C) const {
@@ -27,14 +26,14 @@ inline UpdateType RangeImageIntersector::determineUpdateType(
     return UpdateType::kFullyUnobserved;
   }
 
-  // Pad the min and max angles with the BeamModel's angle threshold to
+  // Pad the min and max angles with the measurement model's angle threshold to
   // account for the beam's non-zero width (angular uncertainty)
   const Index2D min_image_index = projection_model_->imageToFloorIndex(
       min_sensor_coordinates.head<2>() - Vector2D::Constant(angle_threshold_));
   const Index2D max_image_index = projection_model_->imageToCeilIndex(
       max_sensor_coordinates.head<2>() + Vector2D::Constant(angle_threshold_));
 
-  // If the angle wraps around Pi, we can't use the hierarchical range image
+  // If the angle wraps around, we can't always use the hierarchical range image
   const bool x_range_wraps_around = max_image_index.x() < min_image_index.x();
   const bool y_range_wraps_around = max_image_index.y() < min_image_index.y();
   if (x_range_wraps_around || (!y_axis_wraps_around_ && y_range_wraps_around)) {
@@ -63,12 +62,6 @@ inline UpdateType RangeImageIntersector::determineUpdateType(
     return UpdateType::kFullyUnobserved;
   }
 
-  // Convert the angles to range image indices
-  const Index2D min_image_idx_rectified =
-      min_image_index.cwiseMax(Index2D::Zero());
-  const Index2D max_image_idx_rectified = max_image_index.cwiseMin(
-      projection_model_->getDimensions() - Index2D::Ones());
-
   // Check if the cell overlaps with the approximate but conservative distance
   // bounds of the hierarchical range image
   const FloatingPoint min_z_coordinate =
@@ -76,8 +69,7 @@ inline UpdateType RangeImageIntersector::determineUpdateType(
   const FloatingPoint max_z_coordinate =
       max_sensor_coordinates.z() + range_threshold_in_front_;
   return hierarchical_range_image_.getUpdateType(
-      min_image_idx_rectified, max_image_idx_rectified, min_z_coordinate,
-      max_z_coordinate);
+      min_image_index, max_image_index, min_z_coordinate, max_z_coordinate);
 }
 }  // namespace wavemap
 

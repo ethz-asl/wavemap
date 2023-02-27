@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_IMAGE_H_
 #define WAVEMAP_DATA_STRUCTURE_IMAGE_H_
 
+#include <algorithm>
 #include <memory>
 
 #include "wavemap/common.h"
@@ -8,20 +9,22 @@
 #include "wavemap/utils/fill_utils.h"
 
 namespace wavemap {
-template <typename DataT = FloatingPoint>
+template <typename PixelT = FloatingPoint>
 class Image {
  public:
-  using Ptr = std::shared_ptr<Image<DataT>>;
-  using ConstPtr = std::shared_ptr<const Image<DataT>>;
-  using Data = Eigen::Matrix<DataT, Eigen::Dynamic, Eigen::Dynamic>;
+  using Ptr = std::shared_ptr<Image<PixelT>>;
+  using ConstPtr = std::shared_ptr<const Image<PixelT>>;
+  using Data = Eigen::Matrix<PixelT, Eigen::Dynamic, Eigen::Dynamic>;
 
   explicit Image(const Index2D& dimensions,
-                 DataT initial_value = fill::zero<DataT>())
+                 PixelT initial_value = fill::zero<PixelT>())
       : Image(dimensions.x(), dimensions.y(), initial_value) {}
   Image(IndexElement num_rows, IndexElement num_columns,
-        DataT initial_value = fill::zero<DataT>())
+        PixelT initial_value = fill::zero<PixelT>())
       : initial_value_(initial_value),
         data_(Data::Constant(num_rows, num_columns, initial_value)) {}
+  explicit Image(const Data& data, PixelT initial_value = fill::zero<PixelT>())
+      : initial_value_(initial_value), data_(data) {}
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.size(); }
@@ -30,7 +33,7 @@ class Image {
   }
   void clear() { resize(0, 0); }
 
-  void setToConstant(DataT value) { data_.setConstant(value); }
+  void setToConstant(PixelT value) { data_.setConstant(value); }
   void resetToInitialValue() { setToConstant(initial_value_); }
 
   IndexElement getNumRows() const {
@@ -48,26 +51,33 @@ class Image {
         .all();
   }
 
-  DataT& at(Index2D index) {
+  PixelT& at(Index2D index) {
     DCHECK((0 <= index.array()).all());
     DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());
     return data_(index.x(), index.y());
   }
-  const DataT& at(Index2D index) const {
+  const PixelT& at(Index2D index) const {
     DCHECK((0 <= index.array()).all());
     DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());
     return data_(index.x(), index.y());
+  }
+
+  template <typename CwiseFunctor,
+            typename R = std::invoke_result_t<CwiseFunctor, PixelT>>
+  Image<R> transform(CwiseFunctor functor) const {
+    return Image<R>(typename Image<R>::Data(data_.array().unaryExpr(functor)),
+                    initial_value_);
   }
 
  private:
-  DataT initial_value_;
+  PixelT initial_value_;
   Data data_;
 };
 
-template <typename DataT = FloatingPoint>
-using PosedImage = PosedObject<Image<DataT>>;
+template <typename PixelT = FloatingPoint>
+using PosedImage = PosedObject<Image<PixelT>>;
 }  // namespace wavemap
 
 #endif  // WAVEMAP_DATA_STRUCTURE_IMAGE_H_

@@ -114,7 +114,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
           convert::nodeIndexToMaxCornerIndex(query_index);
       bool has_free = false;
       bool has_occupied = false;
-      bool has_unknown = false;
+      bool has_unobserved = false;
       const Transformation3D T_C_W = posed_range_image->getPoseInverse();
       for (const Index3D& reference_index :
            Grid(min_reference_index, max_reference_index)) {
@@ -123,7 +123,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
         const Point3D C_cell_center = T_C_W * W_cell_center;
         const FloatingPoint d_C_cell = C_cell_center.norm();
         if (integrator_config.max_range < d_C_cell) {
-          has_unknown = true;
+          has_unobserved = true;
           continue;
         }
 
@@ -133,7 +133,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
             (posed_range_image->getDimensions().array() <=
              range_image_index.array())
                 .any()) {
-          has_unknown = true;
+          has_unobserved = true;
           continue;
         }
 
@@ -146,15 +146,17 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
                                    measurement_model.getPaddingSurfaceBack()) {
           has_occupied = true;
         } else {
-          has_unknown = true;
+          has_unobserved = true;
         }
       }
-      ASSERT_TRUE(has_free || has_occupied || has_unknown);
+      ASSERT_TRUE(has_free || has_occupied || has_unobserved);
       UpdateType reference_update_type;
       if (has_occupied) {
         reference_update_type = UpdateType::kPossiblyOccupied;
-      } else if (has_free) {
+      } else if (has_free && has_unobserved) {
         reference_update_type = UpdateType::kFreeOrUnobserved;
+      } else if (has_free) {
+        reference_update_type = UpdateType::kFullyFree;
       } else {
         reference_update_type = UpdateType::kFullyUnobserved;
       }
