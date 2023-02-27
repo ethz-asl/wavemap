@@ -14,7 +14,7 @@ runs:
     - name: Get the current date (used for cache matching)
       id: get-date
       shell: bash
-      run: echo "::set-output name=date::$(date -u "+%Y-%m-%d_%H-%M-%S")"
+      run: echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
 
     - name: Setup ccache cache sharing
       uses: actions/cache@v3
