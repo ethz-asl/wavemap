@@ -32,6 +32,8 @@ class MeasurementModelBase {
   using Ptr = std::shared_ptr<MeasurementModelBase>;
   using ConstPtr = std::shared_ptr<const MeasurementModelBase>;
 
+  virtual ~MeasurementModelBase() = default;
+
   virtual FloatingPoint getPaddingAngle() const = 0;
   virtual FloatingPoint getPaddingSurfaceFront() const = 0;
   virtual FloatingPoint getPaddingSurfaceBack() const = 0;
