@@ -17,6 +17,7 @@
   <depend>rviz</depend>
   <depend>wavemap_msgs</depend>
   <depend>wavemap</depend>
+  <depend>qtbase5-dev</depend>
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
