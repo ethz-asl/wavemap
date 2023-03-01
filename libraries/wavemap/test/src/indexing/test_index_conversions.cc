@@ -1,8 +1,11 @@
+#include <bitset>
+
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/utils/container_print_utils.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
@@ -133,6 +136,57 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
           << " to node center " << EigenFormat::oneLine(node_center)
           << " and back should yield the same node index, but got "
           << roundtrip_node_index.toString() << " instead.";
+    }
+  }
+}
+
+TYPED_TEST(IndexConversionsTest, MortonCodes) {
+  constexpr int kDim = TypeParam::kDim;
+  constexpr IndexElement kMaxCoordinate = convert::kMortonCoordinateMax<kDim>;
+  auto bitset_printer = [](Index<kDim> index) -> std::string {
+    std::ostringstream ss;
+    for (int idx = 0; idx < kDim; ++idx) {
+      ss << std::bitset<64>(index[idx]) << "\n";
+    }
+    return ss.str();
+  };
+  // Test fully random indices
+  const auto random_indices = TestFixture::template getRandomIndexVector<kDim>(
+      2000, 2000, Index<kDim>::Zero(), Index<kDim>::Constant(kMaxCoordinate));
+  for (const auto& index : random_indices) {
+    const MortonCode morton_code = convert::indexToMorton(index);
+    const Index<kDim> round_trip_index =
+        convert::mortonToIndex<kDim>(morton_code);
+    EXPECT_EQ(round_trip_index, index)
+        << "For original index " << EigenFormat::oneLine(index) << "(\n"
+        << bitset_printer(index) << "), morton code " << morton_code << " (\n"
+        << std::bitset<64>(morton_code) << "\n) and round trip index "
+        << EigenFormat::oneLine(round_trip_index) << "(\n"
+        << bitset_printer(round_trip_index) << ")";
+  }
+  // Test the last coordinate over its full range
+  Index<kDim> index = TestFixture::template getRandomIndex<kDim>(
+      Index<kDim>::Zero(), Index<kDim>::Constant(kMaxCoordinate));
+  LOG(INFO) << "kMortonCoordinateMaxBit<" << kDim
+            << ">: " << convert::kMortonCoordinateMaxBits<kDim>;
+  LOG(INFO) << "kMortonCoordinateMax<" << kDim
+            << ">: " << convert::kMortonCoordinateMax<kDim>;
+  const auto test_range_bounds = {
+      std::pair<size_t, size_t>{0, 1024},
+      {kMaxCoordinate / 2 - 1024, kMaxCoordinate / 2 + 1024},
+      {kMaxCoordinate - 1024, kMaxCoordinate}};
+  for (const auto& [lower, upper] : test_range_bounds) {
+    for (size_t idx = lower; idx <= upper; ++idx) {
+      index[kDim - 1] = idx;
+      const MortonCode morton_code = convert::indexToMorton(index);
+      const Index<kDim> round_trip_index =
+          convert::mortonToIndex<kDim>(morton_code);
+      EXPECT_EQ(round_trip_index, index)
+          << "For original index " << EigenFormat::oneLine(index) << "(\n"
+          << bitset_printer(index) << "), morton code " << morton_code << " (\n"
+          << std::bitset<64>(morton_code) << "\n) and round trip index "
+          << EigenFormat::oneLine(round_trip_index) << "(\n"
+          << bitset_printer(round_trip_index) << ")";
     }
   }
 }
