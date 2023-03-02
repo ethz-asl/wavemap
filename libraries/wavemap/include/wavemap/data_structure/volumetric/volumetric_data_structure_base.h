@@ -69,9 +69,6 @@ class VolumetricDataStructureBase {
       std::function<void(const OctreeIndex& index, FloatingPoint value)>;
   virtual void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const = 0;
 
-  virtual bool save(const std::string& file_path_prefix) const = 0;
-  virtual bool load(const std::string& file_path_prefix) = 0;
-
  protected:
   const VolumetricDataStructureConfig config_;
 

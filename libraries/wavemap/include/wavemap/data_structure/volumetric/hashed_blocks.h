@@ -40,9 +40,6 @@ class HashedBlocks : public VolumetricDataStructureBase {
       typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
           visitor_fn) const override;
 
-  bool save(const std::string& file_path_prefix) const override;
-  bool load(const std::string& file_path_prefix) override;
-
  private:
   static constexpr IndexElement kCellsPerSideLog2 = 4;
   static constexpr IndexElement kCellsPerSide =

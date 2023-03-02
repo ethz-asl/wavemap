@@ -117,16 +117,4 @@ void VolumetricOctree::forEachLeaf(
     }
   }
 }
-
-bool VolumetricOctree::save(
-    const std::string& /*file_path_prefix*/) const {  // NOLINT
-  // TODO(victorr): Implement this
-  return false;
-}
-
-bool VolumetricOctree::load(
-    const std::string& /*file_path_prefix*/) {  // NOLINT
-  // TODO(victorr): Implement this
-  return false;
-}
 }  // namespace wavemap

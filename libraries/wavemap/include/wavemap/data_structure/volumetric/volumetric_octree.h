@@ -58,9 +58,6 @@ class VolumetricOctree : public VolumetricDataStructureBase {
 
   size_t getMemoryUsage() const override { return ndtree_.getMemoryUsage(); }
 
-  bool save(const std::string& file_path_prefix) const override;
-  bool load(const std::string& file_path_prefix) override;
-
  private:
   struct StackElement {
     const OctreeIndex node_index;

@@ -68,11 +68,15 @@ void WavemapServer::visualizeMap() {
 }
 
 bool WavemapServer::saveMap(const std::string& file_path) const {
-  return !occupancy_map_->empty() && occupancy_map_->save(file_path);
+  LOG(ERROR) << "Could not save map to " << file_path
+             << ". Map saving not yet implemented.";
+  return false;
 }
 
 bool WavemapServer::loadMap(const std::string& file_path) {
-  return occupancy_map_->load(file_path);
+  LOG(ERROR) << "Could not load map from " << file_path
+             << ". Map loading not yet implemented.";
+  return false;
 }
 
 InputHandler* WavemapServer::addInput(const param::Map& integrator_params,

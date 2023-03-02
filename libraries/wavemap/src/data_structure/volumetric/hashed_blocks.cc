@@ -69,15 +69,4 @@ void HashedBlocks::forEachLeaf(
     }
   }
 }
-
-bool HashedBlocks::save(
-    const std::string& /* file_path_prefix */) const {  // NOLINT
-  // TODO(victorr): Implement this
-  return false;
-}
-
-bool HashedBlocks::load(const std::string& /* file_path_prefix */) {  // NOLINT
-  // TODO(victorr): Implement this
-  return false;
-}
 }  // namespace wavemap

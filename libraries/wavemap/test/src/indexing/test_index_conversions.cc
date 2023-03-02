@@ -167,10 +167,6 @@ TYPED_TEST(IndexConversionsTest, MortonCodes) {
   // Test the last coordinate over its full range
   Index<kDim> index = TestFixture::template getRandomIndex<kDim>(
       Index<kDim>::Zero(), Index<kDim>::Constant(kMaxCoordinate));
-  LOG(INFO) << "kMortonCoordinateMaxBit<" << kDim
-            << ">: " << convert::kMortonCoordinateMaxBits<kDim>;
-  LOG(INFO) << "kMortonCoordinateMax<" << kDim
-            << ">: " << convert::kMortonCoordinateMax<kDim>;
   const auto test_range_bounds = {
       std::pair<size_t, size_t>{0, 1024},
       {kMaxCoordinate / 2 - 1024, kMaxCoordinate / 2 + 1024},
