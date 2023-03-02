@@ -104,7 +104,12 @@ constexpr T repeat_block(int block_width, T block_contents) {
   constexpr int type_width = 8 * sizeof(T);
   const int num_blocks = type_width / block_width +
                          (type_width % block_width != 0);  // Div rounding up
-  block_contents &= (1 << block_width) - 1;  // Clip off bits beyond block width
+  // Clip off potential stray bits outside the block
+  if (block_width < type_width) {
+    constexpr auto kOne = static_cast<std::make_unsigned_t<T>>(1);
+    block_contents &= (kOne << block_width) - kOne;
+  }
+  // Stack the block until all bits of type T are covered
   std::make_unsigned_t<T> result{};
   for (int idx = 0; idx < num_blocks; ++idx) {
     result |= block_contents << (idx * block_width);
