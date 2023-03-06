@@ -39,6 +39,7 @@ class WaveletOctree : public VolumetricDataStructureBase {
   Index3D getMaxPossibleIndex() const;
 
   FloatingPoint getCellValue(const Index3D& index) const override;
+  FloatingPoint getCellValue(const OctreeIndex& index) const;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
   void setCellValue(const OctreeIndex& index, FloatingPoint new_value);
   void addToCellValue(const Index3D& index, FloatingPoint update) override;

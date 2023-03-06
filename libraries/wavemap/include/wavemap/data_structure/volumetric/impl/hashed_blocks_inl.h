@@ -69,13 +69,13 @@ inline const FloatingPoint* HashedBlocks::accessCellData(
 }
 
 inline HashedBlocks::BlockIndex HashedBlocks::computeBlockIndexFromIndex(
-    const Index3D& index) const {
+    const Index3D& index) {
   return int_math::div_exp2_floor(index, kCellsPerSideLog2);
 }
 
 inline HashedBlocks::CellIndex
 HashedBlocks::computeCellIndexFromBlockIndexAndIndex(
-    const HashedBlocks::BlockIndex& block_index, const Index3D& index) const {
+    const HashedBlocks::BlockIndex& block_index, const Index3D& index) {
   const Index3D origin = kCellsPerSide * block_index;
   Index3D cell_index = index - origin;
 
@@ -89,7 +89,7 @@ HashedBlocks::computeCellIndexFromBlockIndexAndIndex(
 
 inline Index3D HashedBlocks::computeIndexFromBlockIndexAndCellIndex(
     const HashedBlocks::BlockIndex& block_index,
-    const HashedBlocks::CellIndex& cell_index) const {
+    const HashedBlocks::CellIndex& cell_index) {
   return kCellsPerSide * block_index + cell_index;
 }
 }  // namespace wavemap

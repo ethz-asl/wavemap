@@ -34,12 +34,18 @@ inline Index3D WaveletOctree::getMaxPossibleIndex() const {
 }
 
 inline FloatingPoint WaveletOctree::getCellValue(const Index3D& index) const {
-  const OctreeIndex deepest_possible_node_index = toInternal(index);
-  const MortonCode morton_code =
-      deepest_possible_node_index.computeMortonCode();
+  const OctreeIndex node_index = convert::indexAndHeightToNodeIndex(index, 0);
+  return getCellValue(node_index);
+}
+
+inline FloatingPoint WaveletOctree::getCellValue(
+    const OctreeIndex& index) const {
+  const OctreeIndex internal_index = toInternal(index);
+  const MortonCode morton_code = internal_index.computeMortonCode();
   const NodeType* node = &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
-  for (int parent_height = kMaxHeight; 0 < parent_height; --parent_height) {
+  for (int parent_height = kMaxHeight; internal_index.height < parent_height;
+       --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     value = Transform::backwardSingleChild({value, node->data()}, child_index);
@@ -57,17 +63,17 @@ inline void WaveletOctree::setCellValue(const Index3D& index,
   setCellValue(node_index, new_value);
 }
 
-inline void WaveletOctree::setCellValue(const OctreeIndex& node_index,
+inline void WaveletOctree::setCellValue(const OctreeIndex& index,
                                         FloatingPoint new_value) {
-  const OctreeIndex internal_node_index = toInternal(node_index);
-  const MortonCode morton_code = internal_node_index.computeMortonCode();
+  const OctreeIndex internal_index = toInternal(index);
+  const MortonCode morton_code = internal_index.computeMortonCode();
   std::vector<NodeType*> node_ptrs;
-  const int height_difference = kMaxHeight - node_index.height;
+  const int height_difference = kMaxHeight - internal_index.height;
   node_ptrs.reserve(height_difference);
   node_ptrs.emplace_back(&ndtree_.getRootNode());
   FloatingPoint current_value = root_scale_coefficient_;
-  for (int parent_height = kMaxHeight; node_index.height + 1 < parent_height;
-       --parent_height) {
+  for (int parent_height = kMaxHeight;
+       internal_index.height + 1 < parent_height; --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     NodeType* current_parent = node_ptrs.back();
@@ -81,8 +87,8 @@ inline void WaveletOctree::setCellValue(const OctreeIndex& node_index,
   DCHECK_EQ(node_ptrs.size(), height_difference);
 
   Coefficients::Parent coefficients{new_value - current_value, {}};
-  for (int parent_height = node_index.height + 1; parent_height <= kMaxHeight;
-       ++parent_height) {
+  for (int parent_height = internal_index.height + 1;
+       parent_height <= kMaxHeight; ++parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     NodeType* current_node = node_ptrs.back();
@@ -101,17 +107,17 @@ inline void WaveletOctree::addToCellValue(const Index3D& index,
   addToCellValue(node_index, update);
 }
 
-inline void WaveletOctree::addToCellValue(const OctreeIndex& node_index,
+inline void WaveletOctree::addToCellValue(const OctreeIndex& index,
                                           FloatingPoint update) {
-  const OctreeIndex internal_node_index = toInternal(node_index);
-  const MortonCode morton_code = internal_node_index.computeMortonCode();
+  const OctreeIndex internal_index = toInternal(index);
+  const MortonCode morton_code = internal_index.computeMortonCode();
 
   std::vector<NodeType*> node_ptrs;
-  const int height_difference = kMaxHeight - node_index.height;
+  const int height_difference = kMaxHeight - internal_index.height;
   node_ptrs.reserve(height_difference);
   node_ptrs.emplace_back(&ndtree_.getRootNode());
-  for (int parent_height = kMaxHeight; node_index.height + 1 < parent_height;
-       --parent_height) {
+  for (int parent_height = kMaxHeight;
+       internal_index.height + 1 < parent_height; --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     NodeType* current_parent = node_ptrs.back();
@@ -123,8 +129,8 @@ inline void WaveletOctree::addToCellValue(const OctreeIndex& node_index,
   DCHECK_EQ(node_ptrs.size(), height_difference);
 
   Coefficients::Parent coefficients{update, {}};
-  for (int parent_height = node_index.height + 1; parent_height <= kMaxHeight;
-       ++parent_height) {
+  for (int parent_height = internal_index.height + 1;
+       parent_height <= kMaxHeight; ++parent_height) {
     NodeType* current_node = node_ptrs.back();
     node_ptrs.pop_back();
     const NdtreeIndexRelativeChild child_index =
@@ -137,11 +143,11 @@ inline void WaveletOctree::addToCellValue(const OctreeIndex& node_index,
 }
 
 inline WaveletOctree::NodeType* WaveletOctree::getNode(
-    const OctreeIndex& node_index) {
-  const OctreeIndex internal_node_index = toInternal(node_index);
-  const MortonCode morton_code = internal_node_index.computeMortonCode();
+    const OctreeIndex& index) {
+  const OctreeIndex internal_index = toInternal(index);
+  const MortonCode morton_code = internal_index.computeMortonCode();
   NodeType* node = &ndtree_.getRootNode();
-  for (int parent_height = kMaxHeight; node_index.height < parent_height;
+  for (int parent_height = kMaxHeight; internal_index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
@@ -154,11 +160,11 @@ inline WaveletOctree::NodeType* WaveletOctree::getNode(
 }
 
 inline const WaveletOctree::NodeType* WaveletOctree::getNode(
-    const OctreeIndex& node_index) const {
-  const OctreeIndex internal_node_index = toInternal(node_index);
-  const MortonCode morton_code = internal_node_index.computeMortonCode();
+    const OctreeIndex& index) const {
+  const OctreeIndex internal_index = toInternal(index);
+  const MortonCode morton_code = internal_index.computeMortonCode();
   const NodeType* node = &ndtree_.getRootNode();
-  for (int parent_height = kMaxHeight; node_index.height < parent_height;
+  for (int parent_height = kMaxHeight; internal_index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);

@@ -57,11 +57,11 @@ class HashedBlocks : public VolumetricDataStructureBase {
                                 bool auto_allocate = false);
   const FloatingPoint* accessCellData(const Index3D& index) const;
 
-  BlockIndex computeBlockIndexFromIndex(const Index3D& index) const;
-  CellIndex computeCellIndexFromBlockIndexAndIndex(
-      const BlockIndex& block_index, const Index3D& index) const;
-  Index3D computeIndexFromBlockIndexAndCellIndex(
-      const BlockIndex& block_index, const CellIndex& cell_index) const;
+  static BlockIndex computeBlockIndexFromIndex(const Index3D& index);
+  static CellIndex computeCellIndexFromBlockIndexAndIndex(
+      const BlockIndex& block_index, const Index3D& index);
+  static Index3D computeIndexFromBlockIndexAndCellIndex(
+      const BlockIndex& block_index, const CellIndex& cell_index);
 };
 }  // namespace wavemap
 

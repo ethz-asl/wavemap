@@ -26,18 +26,6 @@ void HashedBlocks::prune() {
                 });
 }
 
-Index3D HashedBlocks::getMaxIndex() const {
-  if (!empty()) {
-    Index3D max_block_index =
-        Index3D::Constant(std::numeric_limits<IndexElement>::lowest());
-    for (const auto& [block_index, block] : blocks_) {
-      max_block_index = max_block_index.cwiseMax(block_index);
-    }
-    return kCellsPerSide * (max_block_index + Index3D::Ones());
-  }
-  return Index3D::Zero();
-}
-
 Index3D HashedBlocks::getMinIndex() const {
   if (!empty()) {
     Index3D min_block_index =
@@ -46,6 +34,18 @@ Index3D HashedBlocks::getMinIndex() const {
       min_block_index = min_block_index.cwiseMin(block_index);
     }
     return kCellsPerSide * min_block_index;
+  }
+  return Index3D::Zero();
+}
+
+Index3D HashedBlocks::getMaxIndex() const {
+  if (!empty()) {
+    Index3D max_block_index =
+        Index3D::Constant(std::numeric_limits<IndexElement>::lowest());
+    for (const auto& [block_index, block] : blocks_) {
+      max_block_index = max_block_index.cwiseMax(block_index);
+    }
+    return kCellsPerSide * (max_block_index + Index3D::Ones());
   }
   return Index3D::Zero();
 }
