@@ -78,7 +78,7 @@ typename Ndtree<NodeDataType, dim, max_height>::NodeType*
 Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index,
                                                bool auto_allocate) {
   NodeType* current_parent = &root_node_;
-  const MortonCode morton_code = index.template computeMortonCode();
+  const MortonCode morton_code = index.computeMortonCode();
   for (int height = max_height; 0 < height; --height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
