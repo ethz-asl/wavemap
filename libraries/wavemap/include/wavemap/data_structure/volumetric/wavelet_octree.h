@@ -76,7 +76,7 @@ class WaveletOctree : public VolumetricDataStructureBase {
   };
 
   Coefficients::Scale root_scale_coefficient_{};
-  Ndtree<Coefficients::Details, kDim, kMaxHeight - 1> ndtree_;
+  Ndtree<Coefficients::Details, kDim> ndtree_{kMaxHeight - 1};
 
   static OctreeIndex getInternalRootNodeIndex() {
     return OctreeIndex{kMaxHeight, OctreeIndex::Position::Zero()};

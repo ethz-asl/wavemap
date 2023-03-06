@@ -49,11 +49,11 @@ class VolumetricOctree : public VolumetricDataStructureBase {
   const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
   template <TraversalOrder traversal_order>
   auto getNodeIterator() {
-    return ndtree_.template getIterator<traversal_order>();
+    return ndtree_.getIterator<traversal_order>();
   }
   template <TraversalOrder traversal_order>
   auto getNodeIterator() const {
-    return ndtree_.template getIterator<traversal_order>();
+    return ndtree_.getIterator<traversal_order>();
   }
 
   size_t getMemoryUsage() const override { return ndtree_.getMemoryUsage(); }
@@ -65,7 +65,7 @@ class VolumetricOctree : public VolumetricDataStructureBase {
     const FloatingPoint parent_value{};
   };
 
-  Ndtree<FloatingPoint, kDim, kMaxHeight> ndtree_;
+  Ndtree<FloatingPoint, kDim> ndtree_{kMaxHeight};
 
   static OctreeIndex getInternalRootNodeIndex() {
     return OctreeIndex{kMaxHeight, OctreeIndex::Position::Zero()};

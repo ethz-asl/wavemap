@@ -311,7 +311,7 @@ std::vector<Image<T>> HierarchicalRangeBounds::computeReducedPyramid(
     const Index2D level_dims =
         int_math::div_exp2_ceil(range_image_dims_scaled, level_idx + 1);
     Image<T>& current_level =
-        pyramid.template emplace_back(level_dims.x(), level_dims.y(), init);
+        pyramid.emplace_back(level_dims.x(), level_dims.y(), init);
 
     // Reduce from the previous level or from the range image (for level 0)
     const Image<T>& previous_level =
@@ -323,10 +323,10 @@ std::vector<Image<T>> HierarchicalRangeBounds::computeReducedPyramid(
       Index2D min_child_idx = 2 * idx;
       Index2D max_child_idx = min_child_idx + Index2D::Ones();
       if (level_idx == 0) {
-        min_child_idx = min_child_idx.template cwiseQuotient(
-            image_to_pyramid_scale_factor_);
-        max_child_idx = max_child_idx.template cwiseQuotient(
-            image_to_pyramid_scale_factor_);
+        min_child_idx =
+            min_child_idx.cwiseQuotient(image_to_pyramid_scale_factor_);
+        max_child_idx =
+            max_child_idx.cwiseQuotient(image_to_pyramid_scale_factor_);
       }
 
       // Reduce the values in the 2x2 block of the previous level from

@@ -46,7 +46,7 @@ inline FloatingPoint* HashedBlocks::accessCellData(const Index3D& index,
   auto it = blocks_.find(block_index);
   if (it == blocks_.end()) {
     if (auto_allocate) {
-      it = blocks_.template emplace(block_index, Block{}).first;
+      it = blocks_.emplace(block_index, Block{}).first;
     } else {
       return nullptr;
     }

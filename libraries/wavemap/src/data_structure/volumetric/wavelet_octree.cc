@@ -82,9 +82,8 @@ void WaveletOctree::forEachLeaf(
   }
 
   std::stack<StackElement> stack;
-  stack.template emplace(StackElement{getInternalRootNodeIndex(),
-                                      ndtree_.getRootNode(),
-                                      root_scale_coefficient_});
+  stack.emplace(StackElement{getInternalRootNodeIndex(), ndtree_.getRootNode(),
+                             root_scale_coefficient_});
   while (!stack.empty()) {
     const OctreeIndex node_index = stack.top().node_index;
     const NodeType& node = stack.top().node;
@@ -101,8 +100,8 @@ void WaveletOctree::forEachLeaf(
           child_scale_coefficients[child_idx];
       if (node.hasChild(child_idx)) {
         const NodeType& child_node = *node.getChild(child_idx);
-        stack.template emplace(StackElement{child_node_index, child_node,
-                                            child_scale_coefficient});
+        stack.emplace(StackElement{child_node_index, child_node,
+                                   child_scale_coefficient});
       } else {
         const OctreeIndex external_node_index =
             toExternalNodeIndex(child_node_index);

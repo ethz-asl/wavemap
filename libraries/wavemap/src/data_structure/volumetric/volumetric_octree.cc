@@ -13,7 +13,7 @@ void VolumetricOctree::prune() {
               recursive_fn(node_value, *node.getChild(child_idx));
             } else if (kEpsilon < std::abs(node_value)) {
               // Always propagate non-zero internal node value down to leaves
-              recursive_fn(node_value, *node.template allocateChild(child_idx));
+              recursive_fn(node_value, *node.allocateChild(child_idx));
             }
           }
         }
@@ -89,7 +89,7 @@ Index3D VolumetricOctree::getMaxIndex() const {
 void VolumetricOctree::forEachLeaf(
     VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
   std::stack<StackElement> stack;
-  stack.template emplace(
+  stack.emplace(
       StackElement{getInternalRootNodeIndex(), ndtree_.getRootNode(), 0.f});
   while (!stack.empty()) {
     const OctreeIndex node_index = stack.top().node_index;
@@ -103,8 +103,7 @@ void VolumetricOctree::forEachLeaf(
             node_index.computeChildIndex(child_idx);
         if (node.hasChild(child_idx)) {
           const NodeType& child_node = *node.getChild(child_idx);
-          stack.template emplace(
-              StackElement{child_node_index, child_node, node_value});
+          stack.emplace(StackElement{child_node_index, child_node, node_value});
         } else {
           const OctreeIndex external_node_index =
               toExternalNodeIndex(child_node_index);

@@ -17,7 +17,7 @@ void HashedBlocks::prune() {
                       cell_index)];
               return cell_value != FloatingPoint{};
             })) {
-      blocks_to_delete.template emplace(block_index);
+      blocks_to_delete.emplace(block_index);
     }
   }
   std::for_each(blocks_to_delete.cbegin(), blocks_to_delete.cend(),

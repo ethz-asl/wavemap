@@ -12,13 +12,13 @@
 #include "wavemap/iterator/subtree_iterator.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim, int max_height>
+template <typename NodeDataType, int dim>
 class Ndtree {
  public:
   using IndexType = NdtreeIndex<dim>;
   using NodeType = NdtreeNode<NodeDataType, dim>;
 
-  Ndtree() = default;
+  explicit Ndtree(int max_height) : max_height_(max_height) {}
   ~Ndtree() = default;
 
   bool empty() const { return root_node_.empty(); }
@@ -51,6 +51,7 @@ class Ndtree {
 
  private:
   NodeType root_node_;
+  const int max_height_;
 };
 }  // namespace wavemap
 

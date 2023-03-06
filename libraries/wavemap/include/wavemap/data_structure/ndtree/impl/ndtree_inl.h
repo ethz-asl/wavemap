@@ -8,14 +8,14 @@
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim, int max_height>
-size_t Ndtree<NodeDataType, dim, max_height>::size() const {
+template <typename NodeDataType, int dim>
+size_t Ndtree<NodeDataType, dim>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
   return std::distance(subtree_iterator.begin(), subtree_iterator.end());
 }
 
-template <typename NodeDataType, int dim, int max_height>
-void Ndtree<NodeDataType, dim, max_height>::prune() {
+template <typename NodeDataType, int dim>
+void Ndtree<NodeDataType, dim>::prune() {
   for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
     if (node.hasChildrenArray()) {
       bool has_non_empty_child = false;
@@ -39,12 +39,12 @@ void Ndtree<NodeDataType, dim, max_height>::prune() {
   }
 }
 
-template <typename NodeDataType, int dim, int max_height>
-size_t Ndtree<NodeDataType, dim, max_height>::getMemoryUsage() const {
+template <typename NodeDataType, int dim>
+size_t Ndtree<NodeDataType, dim>::getMemoryUsage() const {
   size_t memory_usage = 0u;
 
   std::stack<const NodeType*> stack;
-  stack.template emplace(&root_node_);
+  stack.emplace(&root_node_);
   while (!stack.empty()) {
     const NodeType* node = stack.top();
     stack.pop();
@@ -54,7 +54,7 @@ size_t Ndtree<NodeDataType, dim, max_height>::getMemoryUsage() const {
       for (typename IndexType::RelativeChild child_idx = 0;
            child_idx < IndexType::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
-          stack.template emplace(node->getChild(child_idx));
+          stack.emplace(node->getChild(child_idx));
         }
       }
     }
@@ -63,8 +63,8 @@ size_t Ndtree<NodeDataType, dim, max_height>::getMemoryUsage() const {
   return memory_usage;
 }
 
-template <typename NodeDataType, int dim, int max_height>
-bool Ndtree<NodeDataType, dim, max_height>::removeNode(const IndexType& index) {
+template <typename NodeDataType, int dim>
+bool Ndtree<NodeDataType, dim>::removeNode(const IndexType& index) {
   IndexType parent_index = index.computeParentIndex();
   NodeType* parent_node = getNode(parent_index, /*auto_allocate*/ false);
   if (parent_node) {
@@ -73,13 +73,12 @@ bool Ndtree<NodeDataType, dim, max_height>::removeNode(const IndexType& index) {
   return false;
 }
 
-template <typename NodeDataType, int dim, int max_height>
-typename Ndtree<NodeDataType, dim, max_height>::NodeType*
-Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index,
-                                               bool auto_allocate) {
+template <typename NodeDataType, int dim>
+typename Ndtree<NodeDataType, dim>::NodeType*
+Ndtree<NodeDataType, dim>::getNode(const IndexType& index, bool auto_allocate) {
   NodeType* current_parent = &root_node_;
   const MortonCode morton_code = index.computeMortonCode();
-  for (int height = max_height; 0 < height; --height) {
+  for (int height = max_height_; 0 < height; --height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
     // Check if the child is allocated
@@ -97,12 +96,12 @@ Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index,
   return current_parent;
 }
 
-template <typename NodeDataType, int dim, int max_height>
-const typename Ndtree<NodeDataType, dim, max_height>::NodeType*
-Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index) const {
+template <typename NodeDataType, int dim>
+const typename Ndtree<NodeDataType, dim>::NodeType*
+Ndtree<NodeDataType, dim>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
   const MortonCode morton_code = index.computeMortonCode();
-  for (int height = max_height; 0 < height; --height) {
+  for (int height = max_height_; 0 < height; --height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
     // Check if the child is allocated
