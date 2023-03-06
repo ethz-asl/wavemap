@@ -45,6 +45,10 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
 
   // Test parent and child conversions
   for (const TypeParam& node_index : random_indices) {
+    if (node_index.height <= 0) {
+      // The node does not have children
+      continue;
+    }
     // Test round trips between children and parents
     const auto child_indices = node_index.computeChildIndices();
     for (typename TypeParam::RelativeChild relative_child_idx = 0;
