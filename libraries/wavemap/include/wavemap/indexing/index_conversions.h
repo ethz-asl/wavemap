@@ -8,7 +8,6 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/aabb.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/utils/bit_manipulation.h"
 #include "wavemap/utils/int_math.h"
 
 namespace wavemap::convert {
@@ -175,36 +174,6 @@ inline Index<dim> nodeIndexToMaxCornerIndex(
       int_math::exp2(node_index.height) - 1;
   Index<dim> index =
       nodeIndexToMinCornerIndex(node_index).array() + max_child_offset;
-  return index;
-}
-
-template <int dim>
-constexpr int kMortonCoordinateMaxBits = 8 * sizeof(MortonCode) / dim;
-template <int dim>
-constexpr IndexElement kMortonCoordinateMax =
-    std::min((1ul << kMortonCoordinateMaxBits<dim>)-1ul,
-             static_cast<size_t>(std::numeric_limits<IndexElement>::max()));
-
-template <int dim>
-inline MortonCode indexToMorton(const Index<dim>& index) {
-  uint64_t morton = 0u;
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
-  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    DCHECK_GE(index[dim_idx], 0);
-    DCHECK_LE(index[dim_idx], kMortonCoordinateMax<dim>);
-    morton |= bit_manip::expand<uint64_t>(index[dim_idx], pattern << dim_idx);
-  }
-  return morton;
-}
-
-template <int dim>
-inline Index<dim> mortonToIndex(MortonCode morton) {
-  Index<dim> index;
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
-  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    index[dim_idx] = bit_manip::bit_cast_signed(
-        bit_manip::compress<uint64_t>(morton, pattern << dim_idx));
-  }
   return index;
 }
 }  // namespace wavemap::convert

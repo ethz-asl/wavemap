@@ -71,7 +71,7 @@ void CoarseToFineIntegrator::updateMap() {
     }
 
     // Since the approximation error would still be too big, refine
-    for (OctreeIndex::RelativeChild relative_child_idx = 0;
+    for (NdtreeIndexRelativeChild relative_child_idx = 0;
          relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
       stack.emplace(current_node.computeChildIndex(relative_child_idx));
     }

@@ -45,31 +45,6 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
 
   // Test parent and child conversions
   for (const TypeParam& node_index : random_indices) {
-    // Check all parents from the random node up to the root of the tree
-    const std::vector<TypeParam> parent_index_list =
-        node_index.template computeParentIndices<TestFixture::kMaxHeight>();
-    TypeParam parent_index_iterative = node_index;
-    for (typename TypeParam::Element height = node_index.height + 1;
-         height <= TestFixture::kMaxHeight; ++height) {
-      parent_index_iterative = parent_index_iterative.computeParentIndex();
-      const typename TypeParam::Element ancestor_idx =
-          TestFixture::kMaxHeight - height;
-      EXPECT_EQ(parent_index_list[ancestor_idx], parent_index_iterative)
-          << "For parent_index_list[ancestor_idx] "
-          << parent_index_list[ancestor_idx].toString()
-          << " and parent_index_iterative "
-          << parent_index_iterative.toString();
-      EXPECT_EQ(node_index.computeParentIndex(height), parent_index_iterative)
-          << "For node_index.computeParentIndex(height) "
-          << node_index.computeParentIndex(height).toString()
-          << " and parent_index_iterative "
-          << parent_index_iterative.toString();
-    }
-    if (node_index.height == TestFixture::kMaxHeight) {
-      EXPECT_EQ(parent_index_list.size(), 0)
-          << "The list of parent indices for the root node should be empty.";
-    }
-
     // Test round trips between children and parents
     const auto child_indices = node_index.computeChildIndices();
     for (typename TypeParam::RelativeChild relative_child_idx = 0;
@@ -79,6 +54,14 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
       EXPECT_EQ(child_index.computeRelativeChildIndex(), relative_child_idx)
           << "The child's index relative to its parent \""
           << std::to_string(child_index.computeRelativeChildIndex())
+          << "\" should match the requested relative child index \""
+          << std::to_string(relative_child_idx) << "\".";
+      EXPECT_EQ(child_index.computeRelativeChildIndex(
+                    child_index.computeMortonCode(), node_index.height),
+                relative_child_idx)
+          << "The child's index relative to its parent \""
+          << std::to_string(child_index.computeRelativeChildIndex(
+                 child_index.computeMortonCode(), node_index.height))
           << "\" should match the requested relative child index \""
           << std::to_string(relative_child_idx) << "\".";
       EXPECT_EQ(child_index, child_indices[relative_child_idx])

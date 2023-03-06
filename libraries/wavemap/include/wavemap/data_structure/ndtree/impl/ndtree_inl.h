@@ -78,9 +78,10 @@ typename Ndtree<NodeDataType, dim, max_height>::NodeType*
 Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index,
                                                bool auto_allocate) {
   NodeType* current_parent = &root_node_;
-  const std::vector<typename IndexType::RelativeChild> child_indices =
-      index.template computeRelativeChildIndices<max_height>();
-  for (const typename IndexType::RelativeChild child_index : child_indices) {
+  const MortonCode morton_code = index.template computeMortonCode();
+  for (int height = max_height; 0 < height; --height) {
+    const NdtreeIndexRelativeChild child_index =
+        NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       if (auto_allocate) {
@@ -100,9 +101,10 @@ template <typename NodeDataType, int dim, int max_height>
 const typename Ndtree<NodeDataType, dim, max_height>::NodeType*
 Ndtree<NodeDataType, dim, max_height>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
-  const std::vector<typename IndexType::RelativeChild> child_indices =
-      index.template computeRelativeChildIndices<max_height>();
-  for (const typename IndexType::RelativeChild child_index : child_indices) {
+  const MortonCode morton_code = index.computeMortonCode();
+  for (int height = max_height; 0 < height; --height) {
+    const NdtreeIndexRelativeChild child_index =
+        NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       return nullptr;

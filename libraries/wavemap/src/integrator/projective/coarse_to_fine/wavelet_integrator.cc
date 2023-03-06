@@ -11,7 +11,7 @@ void WaveletIntegrator::updateMap() {
   const auto first_child_indices = occupancy_map_->getFirstChildIndices();
   WaveletOctree::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
-  for (OctreeIndex::RelativeChild relative_child_idx = 0;
+  for (NdtreeIndexRelativeChild relative_child_idx = 0;
        relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
     const OctreeIndex& child_index = first_child_indices[relative_child_idx];
     child_scale_coefficient_updates[relative_child_idx] =

@@ -7,7 +7,7 @@ void VolumetricOctree::prune() {
         // Process the children first
         const FloatingPoint node_value = parent_value + node.data();
         if (node.hasChildrenArray()) {
-          for (OctreeIndex::RelativeChild child_idx = 0;
+          for (NdtreeIndexRelativeChild child_idx = 0;
                child_idx < OctreeIndex::kNumChildren; ++child_idx) {
             if (node.hasChild(child_idx)) {
               recursive_fn(node_value, *node.getChild(child_idx));
@@ -23,7 +23,7 @@ void VolumetricOctree::prune() {
           bool all_children_are_identical_leaves = true;
           FloatingPoint first_child_value = clampedAdd(
               node_value, node.getChild(0) ? node.getChild(0)->data() : 0.f);
-          for (OctreeIndex::RelativeChild child_idx = 0;
+          for (NdtreeIndexRelativeChild child_idx = 0;
                child_idx < OctreeIndex::kNumChildren; ++child_idx) {
             // Check whether the child has children (i.e. is not a leaf)
             const NodeType* child = node.getChild(child_idx);
@@ -97,7 +97,7 @@ void VolumetricOctree::forEachLeaf(
     const FloatingPoint node_value = stack.top().parent_value + node.data();
     stack.pop();
     if (node.hasChildrenArray()) {
-      for (OctreeIndex::RelativeChild child_idx = 0;
+      for (NdtreeIndexRelativeChild child_idx = 0;
            child_idx < OctreeIndex::kNumChildren; ++child_idx) {
         const OctreeIndex child_node_index =
             node_index.computeChildIndex(child_idx);

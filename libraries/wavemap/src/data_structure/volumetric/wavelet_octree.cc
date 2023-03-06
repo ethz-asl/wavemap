@@ -10,7 +10,7 @@ void WaveletOctree::prune() {
             Transform::backward({scale_coefficient, node.data()});
 
         bool has_at_least_one_child = false;
-        for (OctreeIndex::RelativeChild child_idx = 0;
+        for (NdtreeIndexRelativeChild child_idx = 0;
              child_idx < OctreeIndex::kNumChildren; ++child_idx) {
           if (node.hasChild(child_idx)) {
             NodeType& child_node = *node.getChild(child_idx);
@@ -93,7 +93,7 @@ void WaveletOctree::forEachLeaf(
 
     const Coefficients::CoefficientsArray child_scale_coefficients =
         Transform::backward({node_scale_coefficient, {node.data()}});
-    for (OctreeIndex::RelativeChild child_idx = 0;
+    for (NdtreeIndexRelativeChild child_idx = 0;
          child_idx < OctreeIndex::kNumChildren; ++child_idx) {
       const OctreeIndex child_node_index =
           node_index.computeChildIndex(child_idx);

@@ -7,7 +7,7 @@ namespace wavemap {
 inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const OctreeIndex& node_index, FloatingPoint node_value,
     typename WaveletOctree::NodeType& parent_node,
-    OctreeIndex::RelativeChild relative_child_index) {
+    NdtreeIndexRelativeChild relative_child_index) {
   constexpr FloatingPoint kNoiseThreshold = 1e-4f;
 
   // If we're at the leaf level, directly update the node
@@ -83,7 +83,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
           WaveletOctree::Transform::backward({node_value, node->data()});
   WaveletOctree::Coefficients::CoefficientsArray
       child_scale_coefficient_updates;
-  for (OctreeIndex::RelativeChild relative_child_idx = 0;
+  for (NdtreeIndexRelativeChild relative_child_idx = 0;
        relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
     const OctreeIndex child_index =
         node_index.computeChildIndex(relative_child_idx);

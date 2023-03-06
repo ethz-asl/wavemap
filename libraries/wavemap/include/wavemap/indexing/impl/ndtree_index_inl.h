@@ -4,7 +4,33 @@
 #include <string>
 #include <vector>
 
+#include "wavemap/utils/bit_manipulation.h"
+
 namespace wavemap {
+namespace convert {
+template <int dim>
+MortonCode indexToMorton(const Index<dim>& index) {
+  uint64_t morton = 0u;
+  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
+  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+    DCHECK_GE(index[dim_idx], 0);
+    DCHECK_LE(index[dim_idx], kMortonCoordinateMax<dim>);
+    morton |= bit_manip::expand<uint64_t>(index[dim_idx], pattern << dim_idx);
+  }
+  return morton;
+}
+
+template <int dim>
+Index<dim> mortonToIndex(MortonCode morton) {
+  Index<dim> index;
+  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
+  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+    index[dim_idx] = bit_manip::compress<uint64_t>(morton, pattern << dim_idx);
+  }
+  return index;
+}
+}  // namespace convert
+
 template <int dim>
 NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex() const {
   return {height + 1, int_math::div_exp2_floor(position, 1)};
@@ -16,25 +42,6 @@ NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex(
   DCHECK_GE(parent_height, height);
   const Element height_difference = parent_height - height;
   return {parent_height, int_math::div_exp2_floor(position, height_difference)};
-}
-
-template <int dim>
-template <typename NdtreeIndex<dim>::Element max_height>
-std::vector<NdtreeIndex<dim>> NdtreeIndex<dim>::computeParentIndices() const {
-  DCHECK_LE(height, max_height);
-  const int height_difference = max_height - height;
-  if (height_difference == 0) {
-    return {};
-  }
-
-  std::vector<NdtreeIndex> parent_indices(height_difference);
-  parent_indices[height_difference - 1] = computeParentIndex();
-  for (Element ancestor_idx = height_difference - 2; 0 <= ancestor_idx;
-       --ancestor_idx) {
-    parent_indices[ancestor_idx] =
-        parent_indices[ancestor_idx + 1].computeParentIndex();
-  }
-  return parent_indices;
 }
 
 template <int dim>
@@ -66,8 +73,7 @@ typename NdtreeIndex<dim>::ChildArray NdtreeIndex<dim>::computeChildIndices()
 }
 
 template <int dim>
-typename NdtreeIndex<dim>::RelativeChild
-NdtreeIndex<dim>::computeRelativeChildIndex() const {
+NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex() const {
   RelativeChild child_index = 0;
   for (int i = 0; i < dim; ++i) {
     child_index += (position[i] & 0b1) << i;
@@ -76,19 +82,14 @@ NdtreeIndex<dim>::computeRelativeChildIndex() const {
 }
 
 template <int dim>
-template <typename NdtreeIndex<dim>::Element max_height>
-std::vector<typename NdtreeIndex<dim>::RelativeChild>
-NdtreeIndex<dim>::computeRelativeChildIndices() const {
-  DCHECK_LE(height, max_height);
+NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex(
+    MortonCode morton, NdtreeIndex::Element parent_height) {
+  return (morton >> ((parent_height - 1) * dim)) & kRelativeChildIndexMask;
+}
 
-  const int depth = max_height - height;
-  std::vector<RelativeChild> child_indices(depth);
-  NdtreeIndex node_index = *this;
-  for (Element depth_idx = depth - 1; 0 <= depth_idx; --depth_idx) {
-    child_indices[depth_idx] = node_index.computeRelativeChildIndex();
-    node_index = node_index.computeParentIndex();
-  }
-  return child_indices;
+template <int dim>
+MortonCode NdtreeIndex<dim>::computeMortonCode() const {
+  return convert::indexToMorton(position) << (height * dim);
 }
 
 template <int dim>
