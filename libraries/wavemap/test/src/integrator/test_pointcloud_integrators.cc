@@ -4,6 +4,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/volumetric/hashed_blocks.h"
+#include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
 #include "wavemap/data_structure/volumetric/wavelet_octree.h"
@@ -12,6 +13,7 @@
 #include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap/integrator/projective/coarse_to_fine/hashed_wavelet_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
@@ -242,6 +244,58 @@ TEST_F(PointcloudIntegrator3DTest,
         std::make_shared<WaveletOctree>(data_structure_config);
     IntegratorBase::Ptr evaluated_integrator =
         std::make_shared<WaveletIntegrator>(
+            projective_integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model, evaluated_occupancy_map);
+    evaluated_integrator->integratePointcloud(random_pointcloud);
+
+    evaluated_occupancy_map->prune();
+    const Index3D min_index = reference_occupancy_map->getMinIndex().cwiseMin(
+        evaluated_occupancy_map->getMinIndex());
+    const Index3D max_index = reference_occupancy_map->getMaxIndex().cwiseMax(
+        evaluated_occupancy_map->getMaxIndex());
+
+    for (const Index3D& index : Grid(min_index, max_index)) {
+      const FloatingPoint cell_value_in_reference_map =
+          reference_occupancy_map->getCellValue(index);
+      const FloatingPoint cell_value_in_evaluated_map =
+          evaluated_occupancy_map->getCellValue(index);
+      EXPECT_NEAR(cell_value_in_evaluated_map, cell_value_in_reference_map,
+                  projective_integrator_config.termination_update_error)
+          << "For cell index " << EigenFormat::oneLine(index);
+    }
+  }
+}
+
+TEST_F(PointcloudIntegrator3DTest,
+       FixedResolutionAndHashedWaveletIntegratorEquivalence) {
+  constexpr int kNumRepetitions = 3;
+  for (int idx = 0; idx < kNumRepetitions; ++idx) {
+    const auto projective_integrator_config =
+        getRandomProjectiveIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto posed_range_image =
+        std::make_shared<PosedImage<>>(projection_model->getDimensions());
+    const auto beam_offset_image =
+        std::make_shared<Image<Vector2D>>(projection_model->getDimensions());
+    const auto measurement_model = std::make_shared<ContinuousBeam>(
+        getRandomMeasurementModelConfig(*projection_model), projection_model,
+        posed_range_image, beam_offset_image);
+    const PosedPointcloud<> random_pointcloud =
+        getRandomPointcloud(*projection_model);
+
+    VolumetricDataStructureBase::Ptr reference_occupancy_map =
+        std::make_shared<HashedBlocks>(data_structure_config);
+    IntegratorBase::Ptr reference_integrator =
+        std::make_shared<FixedResolutionIntegrator>(
+            projective_integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model, reference_occupancy_map);
+    reference_integrator->integratePointcloud(random_pointcloud);
+
+    HashedWaveletOctree::Ptr evaluated_occupancy_map =
+        std::make_shared<HashedWaveletOctree>(data_structure_config);
+    IntegratorBase::Ptr evaluated_integrator =
+        std::make_shared<HashedWaveletIntegrator>(
             projective_integrator_config, projection_model, posed_range_image,
             beam_offset_image, measurement_model, evaluated_occupancy_map);
     evaluated_integrator->integratePointcloud(random_pointcloud);

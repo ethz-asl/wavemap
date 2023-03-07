@@ -1,6 +1,7 @@
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_factory.h"
 
 #include "wavemap/data_structure/volumetric/hashed_blocks.h"
+#include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
 #include "wavemap/data_structure/volumetric/wavelet_octree.h"
 
@@ -35,6 +36,8 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
       return std::make_shared<VolumetricOctree>(config);
     case VolumetricDataStructureType::kWaveletOctree:
       return std::make_shared<WaveletOctree>(config);
+    case VolumetricDataStructureType::kHashedWaveletOctree:
+      return std::make_shared<HashedWaveletOctree>(config);
     default:
       LOG(ERROR) << "Attempted to create data structure with unknown type ID: "
                  << data_structure_type.toTypeId() << ". Returning nullptr.";

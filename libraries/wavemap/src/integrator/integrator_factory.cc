@@ -6,6 +6,7 @@
 #include "wavemap/integrator/measurement_model/measurement_model_factory.h"
 #include "wavemap/integrator/projection_model/projector_factory.h"
 #include "wavemap/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap/integrator/projective/coarse_to_fine/hashed_wavelet_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
@@ -43,6 +44,8 @@ IntegratorBase::Ptr IntegratorFactory::create(
   // If we're using a ray tracing based integrator, we can build it directly
   if (integrator_type == IntegratorType::kRayTracingIntegrator) {
     if (!param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
+      LOG(ERROR) << "Integrator config did not specify the integration method. "
+                    "Returning nullptr.";
       return nullptr;
     }
     const auto integrator_config = RayTracingIntegratorConfig::from(
@@ -53,6 +56,8 @@ IntegratorBase::Ptr IntegratorFactory::create(
 
   // Load the projective integrator config
   if (!param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
+    LOG(ERROR) << "Integrator config did not specify the integration method. "
+                  "Returning nullptr.";
     return nullptr;
   }
   const auto integrator_config = ProjectiveIntegratorConfig::from(
@@ -84,21 +89,57 @@ IntegratorBase::Ptr IntegratorFactory::create(
     case IntegratorType::kCoarseToFineIntegrator: {
       auto octree_map =
           std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map);
-      return std::make_shared<CoarseToFineIntegrator>(
-          integrator_config, projection_model, posed_range_image,
-          beam_offset_image, measurement_model, std::move(octree_map));
+      if (octree_map) {
+        return std::make_shared<CoarseToFineIntegrator>(
+            integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model, std::move(octree_map));
+      } else {
+        LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
+                   << " only supports data structures of type "
+                   << VolumetricDataStructureType::typeIdToStr(
+                          VolumetricDataStructureType::kOctree)
+                   << ". Returning nullptr.";
+      }
+      break;
     }
     case IntegratorType::kWaveletIntegrator: {
       auto wavelet_map =
           std::dynamic_pointer_cast<WaveletOctree>(occupancy_map);
-      return std::make_shared<WaveletIntegrator>(
-          integrator_config, projection_model, posed_range_image,
-          beam_offset_image, measurement_model, std::move(wavelet_map));
+      if (wavelet_map) {
+        return std::make_shared<WaveletIntegrator>(
+            integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model, std::move(wavelet_map));
+      } else {
+        LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
+                   << " only supports data structures of type "
+                   << VolumetricDataStructureType::typeIdToStr(
+                          VolumetricDataStructureType::kWaveletOctree)
+                   << ". Returning nullptr.";
+      }
+      break;
+    }
+    case IntegratorType::kHashedWaveletIntegrator: {
+      auto hashed_wavelet_map =
+          std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map);
+      if (hashed_wavelet_map) {
+        return std::make_shared<HashedWaveletIntegrator>(
+            integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model,
+            std::move(hashed_wavelet_map));
+      } else {
+        LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
+                   << " only supports data structures of type "
+                   << VolumetricDataStructureType::typeIdToStr(
+                          VolumetricDataStructureType::kHashedWaveletOctree)
+                   << ". Returning nullptr.";
+      }
+      break;
     }
     default:
       LOG(ERROR) << "Attempted to create integrator with unknown type ID: "
                  << integrator_type.toTypeId() << ". Returning nullptr.";
-      return nullptr;
+      break;
   }
+  return nullptr;
 }
 }  // namespace wavemap

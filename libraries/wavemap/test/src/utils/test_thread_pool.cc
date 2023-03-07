@@ -7,8 +7,7 @@
 
 TEST(ThreadPoolTest, WaitAll) {
   auto dummy_fn = []() {
-    std::cout << std::this_thread::get_id() << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   };
 
   wavemap::ThreadPool pool(2);

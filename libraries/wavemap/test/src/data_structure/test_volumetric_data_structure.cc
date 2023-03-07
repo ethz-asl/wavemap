@@ -2,6 +2,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/volumetric/hashed_blocks.h"
+#include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
 #include "wavemap/data_structure/volumetric/wavelet_octree.h"
@@ -17,7 +18,8 @@ class VolumetricDataStructureTest : public FixtureBase {
 };
 
 using VolumetricDataStructureTypes =
-    ::testing::Types<HashedBlocks, VolumetricOctree, WaveletOctree>;
+    ::testing::Types<HashedBlocks, VolumetricOctree, WaveletOctree,
+                     HashedWaveletOctree>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
@@ -166,38 +168,49 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
 
     // Check that the indexed leaf value visitor visits all non-zero cells
     const size_t reference_map_size = reference_map.size();
-    map_base_ptr->forEachLeaf([&reference_map](const OctreeIndex& node_index,
-                                               FloatingPoint value) {
-      const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
-      // Check that the values are correct
-      if (reference_map.count(index)) {
-        EXPECT_NEAR(value, reference_map[index],
-                    TestFixture::kAcceptableReconstructionError *
-                        (1.f + reference_map[index]));
-        // Remove cell from the reference map to indicate it was visited
-        reference_map.erase(index);
-      } else {
-        EXPECT_NEAR(value, 0.f, TestFixture::kAcceptableReconstructionError);
-      }
-    });
+    std::unordered_map<Index3D, FloatingPoint, VoxbloxIndexHash<3>>
+        false_positive_map;
+    map_base_ptr->forEachLeaf(
+        [&reference_map, &false_positive_map](const OctreeIndex& node_index,
+                                              FloatingPoint value) {
+          const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
+          // Check that the values are correct
+          if (reference_map.count(index)) {
+            EXPECT_NEAR(value, reference_map[index],
+                        TestFixture::kAcceptableReconstructionError *
+                            (1.f + reference_map[index]))
+                << "At node index " << node_index.toString();
+            // Remove cell from the reference map to indicate it was visited
+            reference_map.erase(index);
+          } else {
+            EXPECT_NEAR(value, 0.f, TestFixture::kAcceptableReconstructionError)
+                << "At node index " << node_index.toString();
+            if (TestFixture::kAcceptableReconstructionError < std::abs(value)) {
+              false_positive_map.emplace(index, value);
+            }
+          }
+        });
     // If all non-zero values were visited, reference map should now be empty
-    // TODO(victorr): Clean up the printing
     auto IndexToString = [](const Index3D& index) -> std::string {
       std::stringstream ss;
       ss << EigenFormat::oneLine(index);
       return ss.str();
     };
+    auto PrintMap = [IndexToString](const auto& map) -> std::string {
+      return std::accumulate(
+          std::next(map.cbegin()), map.cend(),
+          IndexToString(map.cbegin()->first) + ": " +
+              std::to_string(map.cbegin()->second) + "\n",
+          [&IndexToString](auto str, const auto& kv) -> std::string {
+            return std::move(str) + IndexToString(kv.first) + ": " +
+                   std::to_string(kv.second) + "\n";
+          });
+    };
     EXPECT_TRUE(reference_map.empty())
         << "Leaf visitor missed " << reference_map.size() << " out of "
         << reference_map_size << " non-zero reference map values:\n"
-        << std::accumulate(
-               std::next(reference_map.cbegin()), reference_map.cend(),
-               IndexToString(reference_map.cbegin()->first) + ": " +
-                   std::to_string(reference_map.cbegin()->second) + "\n",
-               [&IndexToString](auto str, const auto& kv) -> std::string {
-                 return std::move(str) + IndexToString(kv.first) + ": " +
-                        std::to_string(kv.second) + "\n";
-               });
+        << PrintMap(reference_map) << "and falsely returned:\n"
+        << PrintMap(false_positive_map);
   }
 }
 

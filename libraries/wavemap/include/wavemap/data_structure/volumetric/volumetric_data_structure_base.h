@@ -14,10 +14,15 @@ namespace wavemap {
 struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
   using TypeSelector<VolumetricDataStructureType>::TypeSelector;
 
-  enum Id : TypeId { kHashedBlocks, kOctree, kWaveletOctree };
+  enum Id : TypeId {
+    kHashedBlocks,
+    kOctree,
+    kWaveletOctree,
+    kHashedWaveletOctree
+  };
 
-  static constexpr std::array names = {"hashed_blocks", "octree",
-                                       "wavelet_octree"};
+  static constexpr std::array names = {
+      "hashed_blocks", "octree", "wavelet_octree", "hashed_wavelet_octree"};
 };
 
 struct VolumetricDataStructureConfig

@@ -17,12 +17,14 @@ struct IntegratorType : TypeSelector<IntegratorType> {
     kRayTracingIntegrator,
     kFixedResolutionIntegrator,
     kCoarseToFineIntegrator,
-    kWaveletIntegrator
+    kWaveletIntegrator,
+    kHashedWaveletIntegrator
   };
 
   static constexpr std::array names = {
       "ray_tracing_integrator", "fixed_resolution_integrator",
-      "coarse_to_fine_integrator", "wavelet_integrator"};
+      "coarse_to_fine_integrator", "wavelet_integrator",
+      "hashed_wavelet_integrator"};
 };
 
 class IntegratorBase {
