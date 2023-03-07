@@ -40,7 +40,7 @@ void CoarseToFineIntegrator::updateMap() {
     const UpdateType update_type =
         range_image_intersector_->determineUpdateType(
             W_cell_aabb, posed_range_image_->getRotationMatrixInverse(),
-            posed_range_image_->getPose().getPosition());
+            posed_range_image_->getOrigin());
 
     // If we're fully in unknown space,
     // there's no need to evaluate this node or its children

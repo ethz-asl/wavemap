@@ -63,7 +63,7 @@ void FixedResolutionIntegrator::importRangeImage(
 
   // Update the AABB to contain the camera frustum
   aabb_ = AABB<Point3D>{};
-  aabb_.includePoint(posed_range_image_->getPose().getPosition());  // sensor
+  aabb_.includePoint(posed_range_image_->getOrigin());  // sensor
   for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
     const Index2D frustum_corner_image_index =
         posed_range_image_->getDimensions().cwiseProduct(

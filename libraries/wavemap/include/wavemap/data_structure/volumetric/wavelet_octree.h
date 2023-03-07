@@ -19,12 +19,11 @@ class WaveletOctree : public VolumetricDataStructureBase {
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
 
-  // TODO(victorr): Make this configurable
-  static constexpr NdtreeIndexElement kMaxHeight = 14;
   static constexpr bool kRequiresPruningForThresholding = true;
 
-  // Use the base class' constructor
-  using VolumetricDataStructureBase::VolumetricDataStructureBase;
+  explicit WaveletOctree(const VolumetricDataStructureConfig& config,
+                         NdtreeIndexElement max_height = 14)
+      : VolumetricDataStructureBase(config), max_height_(max_height) {}
 
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
@@ -76,13 +75,14 @@ class WaveletOctree : public VolumetricDataStructureBase {
     const Coefficients::Scale scale_coefficient{};
   };
 
+  const NdtreeIndexElement max_height_;
   Coefficients::Scale root_scale_coefficient_{};
-  Ndtree<Coefficients::Details, kDim> ndtree_{kMaxHeight - 1};
+  Ndtree<Coefficients::Details, kDim> ndtree_{max_height_ - 1};
 
-  static OctreeIndex getInternalRootNodeIndex() {
-    return OctreeIndex{kMaxHeight, OctreeIndex::Position::Zero()};
+  OctreeIndex getInternalRootNodeIndex() const {
+    return OctreeIndex{max_height_, OctreeIndex::Position::Zero()};
   }
-  const OctreeIndex root_node_index_offset_{kMaxHeight - 1,
+  const OctreeIndex root_node_index_offset_{max_height_ - 1,
                                             OctreeIndex::Position::Ones()};
   const Index3D root_index_offset_ =
       convert::nodeIndexToMinCornerIndex(root_node_index_offset_);

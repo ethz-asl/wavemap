@@ -44,7 +44,7 @@ inline FloatingPoint WaveletOctree::getCellValue(
   const MortonCode morton_code = internal_index.computeMortonCode();
   const NodeType* node = &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
-  for (int parent_height = kMaxHeight; internal_index.height < parent_height;
+  for (int parent_height = max_height_; internal_index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
@@ -68,11 +68,11 @@ inline void WaveletOctree::setCellValue(const OctreeIndex& index,
   const OctreeIndex internal_index = toInternal(index);
   const MortonCode morton_code = internal_index.computeMortonCode();
   std::vector<NodeType*> node_ptrs;
-  const int height_difference = kMaxHeight - internal_index.height;
+  const int height_difference = max_height_ - internal_index.height;
   node_ptrs.reserve(height_difference);
   node_ptrs.emplace_back(&ndtree_.getRootNode());
   FloatingPoint current_value = root_scale_coefficient_;
-  for (int parent_height = kMaxHeight;
+  for (int parent_height = max_height_;
        internal_index.height + 1 < parent_height; --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
@@ -88,7 +88,7 @@ inline void WaveletOctree::setCellValue(const OctreeIndex& index,
 
   Coefficients::Parent coefficients{new_value - current_value, {}};
   for (int parent_height = internal_index.height + 1;
-       parent_height <= kMaxHeight; ++parent_height) {
+       parent_height <= max_height_; ++parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     NodeType* current_node = node_ptrs.back();
@@ -113,10 +113,10 @@ inline void WaveletOctree::addToCellValue(const OctreeIndex& index,
   const MortonCode morton_code = internal_index.computeMortonCode();
 
   std::vector<NodeType*> node_ptrs;
-  const int height_difference = kMaxHeight - internal_index.height;
+  const int height_difference = max_height_ - internal_index.height;
   node_ptrs.reserve(height_difference);
   node_ptrs.emplace_back(&ndtree_.getRootNode());
-  for (int parent_height = kMaxHeight;
+  for (int parent_height = max_height_;
        internal_index.height + 1 < parent_height; --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
@@ -130,7 +130,7 @@ inline void WaveletOctree::addToCellValue(const OctreeIndex& index,
 
   Coefficients::Parent coefficients{update, {}};
   for (int parent_height = internal_index.height + 1;
-       parent_height <= kMaxHeight; ++parent_height) {
+       parent_height <= max_height_; ++parent_height) {
     NodeType* current_node = node_ptrs.back();
     node_ptrs.pop_back();
     const NdtreeIndexRelativeChild child_index =
@@ -147,7 +147,7 @@ inline WaveletOctree::NodeType* WaveletOctree::getNode(
   const OctreeIndex internal_index = toInternal(index);
   const MortonCode morton_code = internal_index.computeMortonCode();
   NodeType* node = &ndtree_.getRootNode();
-  for (int parent_height = kMaxHeight; internal_index.height < parent_height;
+  for (int parent_height = max_height_; internal_index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
@@ -164,7 +164,7 @@ inline const WaveletOctree::NodeType* WaveletOctree::getNode(
   const OctreeIndex internal_index = toInternal(index);
   const MortonCode morton_code = internal_index.computeMortonCode();
   const NodeType* node = &ndtree_.getRootNode();
-  for (int parent_height = kMaxHeight; internal_index.height < parent_height;
+  for (int parent_height = max_height_; internal_index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);

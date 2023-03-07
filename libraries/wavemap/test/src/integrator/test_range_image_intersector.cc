@@ -95,12 +95,10 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
     constexpr NdtreeIndexElement kMaxHeight = 6;
     const Index3D min_index = convert::pointToCeilIndex<3>(
-        posed_range_image->getPose().getPosition() -
-            Vector3D::Constant(kMaxRange),
+        posed_range_image->getOrigin() - Vector3D::Constant(kMaxRange),
         min_cell_width_inv);
     const Index3D max_index = convert::pointToCeilIndex<3>(
-        posed_range_image->getPose().getPosition() +
-            Vector3D::Constant(kMaxRange),
+        posed_range_image->getOrigin() + Vector3D::Constant(kMaxRange),
         min_cell_width_inv);
     for (const Index3D& index :
          getRandomIndexVector(min_index, max_index, 50, 100)) {
@@ -175,7 +173,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
           range_image_intersector.determineUpdateType(
               W_cell_aabb,
               posed_range_image->getPose().inverse().getRotationMatrix(),
-              posed_range_image->getPose().getPosition());
+              posed_range_image->getOrigin());
       EXPECT_TRUE(reference_update_type <= returned_update_type)
           << "Expected " << getUpdateTypeStr(reference_update_type)
           << " but got " << getUpdateTypeStr(returned_update_type);
