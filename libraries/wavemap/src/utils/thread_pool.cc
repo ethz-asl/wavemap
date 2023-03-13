@@ -18,12 +18,13 @@ ThreadPool::~ThreadPool() {
   for (auto& worker : workers_) {
     worker.join();
   }
+  wait_all_condition_.notify_all();
 }
 
 void ThreadPool::wait_all() {
-  while (task_count_ > 0) {
-    std::this_thread::yield();
-  }
+  auto lock = std::unique_lock<std::mutex>(tasks_mutex_);
+  wait_all_condition_.wait(lock,
+                           [this] { return terminate_ || task_count_ == 0; });
 }
 
 void ThreadPool::worker_loop() {
@@ -48,6 +49,11 @@ void ThreadPool::worker_loop() {
     // Execute the task
     task();
     task_count_--;
+
+    // Notify the waiting threads if we're done
+    if (task_count_ == 0) {
+      wait_all_condition_.notify_all();
+    }
   }
 }
 }  // namespace wavemap

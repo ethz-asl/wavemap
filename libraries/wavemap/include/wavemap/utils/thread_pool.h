@@ -72,6 +72,8 @@ class ThreadPool {
   std::mutex tasks_mutex_;
   //! Worker thread notification condition variable
   std::condition_variable worker_condition_;
+  //! Waiting thread notification condition variable
+  std::condition_variable wait_all_condition_;
   //! Flag indicating the termination of all workers
   std::atomic<bool> terminate_;
 };
