@@ -25,22 +25,21 @@ void HashedWaveletIntegrator::updateMap() {
     thread_pool_.add_task([this, block_node_index]() {
       // Recursively update all relevant cells
       auto& block = occupancy_map_->getBlock(block_node_index.position);
-      HashedWaveletOctree::Coefficients::CoefficientsArray
-          child_scale_coefficient_updates;
+      auto child_scale_coefficients = HashedWaveletOctree::Transform::backward(
+          {block.getRootScale(), block.getRootNode().data()});
       for (NdtreeIndexRelativeChild relative_child_idx = 0;
            relative_child_idx < OctreeIndex::kNumChildren;
            ++relative_child_idx) {
         const OctreeIndex& child_index =
             block_node_index.computeChildIndex(relative_child_idx);
-        child_scale_coefficient_updates[relative_child_idx] =
-            recursiveSamplerCompressor(child_index, block.getRootScale(),
-                                       block.getRootNode(), relative_child_idx);
+        recursiveSamplerCompressor(
+            block.getRootNode(), child_index,
+            child_scale_coefficients[relative_child_idx]);
       }
-      const auto [scale_update, detail_updates] =
-          HashedWaveletOctree::Transform::forward(
-              child_scale_coefficient_updates);
-      block.getRootNode().data() += detail_updates;
-      block.getRootScale() += scale_update;
+      const auto [scale, details] =
+          HashedWaveletOctree::Transform::forward(child_scale_coefficients);
+      block.getRootNode().data() = details;
+      block.getRootScale() = scale;
     });
   }
   thread_pool_.wait_all();
