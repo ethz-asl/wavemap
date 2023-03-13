@@ -40,7 +40,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
 
   // We can also stop here if the cell will result in a free space update (or
   // zero) and the map is already saturated free
-  if (update_type == UpdateType::kFreeOrUnobserved &&
+  if (update_type != UpdateType::kPossiblyOccupied &&
       node_value <
           occupancy_map_->getConfig().min_log_odds + kNoiseThreshold / 10.f) {
     return 0.f;

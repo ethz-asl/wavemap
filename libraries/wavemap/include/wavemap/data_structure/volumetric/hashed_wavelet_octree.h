@@ -80,16 +80,17 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
   IndexElement getTreeHeight() const { return kTreeHeight; }
+  Index3D getBlockSize() const { return Index3D::Constant(kCellsPerBlockSide); }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
   void addToCellValue(const Index3D& index, FloatingPoint update) override;
-  Block& getBlock(const Index3D& block_index) {
-    if (!blocks_.count(block_index)) {
-      blocks_.try_emplace(block_index, this);
-    }
-    return blocks_.at(block_index);
-  }
+
+  bool hasBlock(const Index3D& block_index) const;
+  Block& getOrAllocateBlock(const Index3D& block_index);
+  Block& getBlock(const Index3D& block_index);
+  const Block& getBlock(const Index3D& block_index) const;
+  auto& getBlocks() { return blocks_; }
   const auto& getBlocks() const { return blocks_; }
 
   void forEachLeaf(
@@ -103,7 +104,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     const WaveletOctree::Coefficients::Scale scale_coefficient{};
   };
 
-  static constexpr IndexElement kTreeHeight = 8;
+  static constexpr IndexElement kTreeHeight = 7;
   static constexpr IndexElement kCellsPerBlockSide =
       int_math::exp2(kTreeHeight);
 
@@ -116,5 +117,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
       const BlockIndex& block_index, const Index3D& index);
 };
 }  // namespace wavemap
+
+#include "wavemap/data_structure/volumetric/impl/hashed_wavelet_octree_inl.h"
 
 #endif  // WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_

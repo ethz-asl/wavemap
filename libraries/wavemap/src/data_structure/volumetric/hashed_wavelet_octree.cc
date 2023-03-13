@@ -3,14 +3,6 @@
 #include <unordered_set>
 
 namespace wavemap {
-size_t HashedWaveletOctree::size() const {
-  size_t size = 0u;
-  for (const auto& [block_index, block] : blocks_) {
-    size += block.size();
-  }
-  return size;
-}
-
 void HashedWaveletOctree::prune() {
   std::unordered_set<BlockIndex, VoxbloxIndexHash<3>> blocks_to_remove;
   for (auto& [block_index, block] : blocks_) {
@@ -57,57 +49,6 @@ Index3D HashedWaveletOctree::getMaxIndex() const {
   return Index3D::Zero();
 }
 
-FloatingPoint HashedWaveletOctree::getCellValue(const Index3D& index) const {
-  const BlockIndex block_index = computeBlockIndexFromIndex(index);
-  if (blocks_.count(block_index)) {
-    const auto& block = blocks_.at(block_index);
-    const CellIndex cell_index =
-        computeCellIndexFromBlockIndexAndIndex(block_index, index);
-    return block.getCellValue(cell_index);
-  }
-  return 0.f;
-}
-
-void HashedWaveletOctree::setCellValue(const Index3D& index,
-                                       FloatingPoint new_value) {
-  const BlockIndex block_index = computeBlockIndexFromIndex(index);
-  if (!blocks_.count(block_index)) {
-    blocks_.try_emplace(block_index, this);
-  }
-  auto& block = blocks_.at(block_index);
-  const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, index);
-  block.setCellValue(cell_index, new_value);
-}
-
-void HashedWaveletOctree::addToCellValue(const Index3D& index,
-                                         FloatingPoint update) {
-  const BlockIndex block_index = computeBlockIndexFromIndex(index);
-  if (!blocks_.count(block_index)) {
-    blocks_.try_emplace(block_index, this);
-  }
-  auto& block = blocks_.at(block_index);
-  const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, index);
-  block.addToCellValue(cell_index, update);
-}
-
-void HashedWaveletOctree::forEachLeaf(
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
-  for (const auto& [block_index, block] : blocks_) {
-    block.forEachLeaf(block_index, visitor_fn);
-  }
-}
-
-HashedWaveletOctree::CellIndex
-HashedWaveletOctree::computeCellIndexFromBlockIndexAndIndex(
-    const HashedWaveletOctree::BlockIndex& block_index, const Index3D& index) {
-  const Index3D origin = kCellsPerBlockSide * block_index;
-  const Index3D cell_index = index - origin;
-  CHECK((0 <= cell_index.array()).all());
-  return convert::indexAndHeightToNodeIndex(cell_index, 0);
-}
-
 void HashedWaveletOctree::Block::prune() {
   std::function<Coefficients::Scale(NodeType&, Coefficients::Scale)>
       recursive_fn = [&recursive_fn, this](
@@ -150,24 +91,6 @@ void HashedWaveletOctree::Block::prune() {
 
   root_scale_coefficient_ -=
       recursive_fn(ndtree_.getRootNode(), root_scale_coefficient_);
-}
-
-FloatingPoint HashedWaveletOctree::Block::getCellValue(
-    const OctreeIndex& index) const {
-  const MortonCode morton_code = index.computeMortonCode();
-  const NodeType* node = &ndtree_.getRootNode();
-  FloatingPoint value = root_scale_coefficient_;
-  for (int parent_height = kTreeHeight; index.height < parent_height;
-       --parent_height) {
-    const NdtreeIndexRelativeChild child_index =
-        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    value = Transform::backwardSingleChild({value, node->data()}, child_index);
-    if (!node->hasChild(child_index)) {
-      break;
-    }
-    node = node->getChild(child_index);
-  }
-  return value;
 }
 
 void HashedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
