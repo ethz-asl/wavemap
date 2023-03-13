@@ -55,12 +55,6 @@ Index3D HashedWaveletOctree::getMaxIndex() const {
   return Index3D::Zero();
 }
 
-void HashedWaveletOctree::Block::prune() {
-  root_scale_coefficient_ -=
-      recursivePrune(ndtree_.getRootNode(), root_scale_coefficient_);
-  setNeedsThresholding(false);
-}
-
 void HashedWaveletOctree::Block::threshold() {
   if (getNeedsThresholding()) {
     root_scale_coefficient_ -=
@@ -69,8 +63,18 @@ void HashedWaveletOctree::Block::threshold() {
   }
 }
 
+void HashedWaveletOctree::Block::prune() {
+  if (getNeedsPruning()) {
+    root_scale_coefficient_ -=
+        recursivePrune(ndtree_.getRootNode(), root_scale_coefficient_);
+    setNeedsPruning(false);
+    setNeedsThresholding(false);
+  }
+}
+
 void HashedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
                                               FloatingPoint new_value) {
+  setNeedsPruning();
   setNeedsThresholding();
   const MortonCode morton_code = index.computeMortonCode();
   std::vector<NodeType*> node_ptrs;
@@ -109,6 +113,7 @@ void HashedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
 
 void HashedWaveletOctree::Block::addToCellValue(const OctreeIndex& index,
                                                 FloatingPoint update) {
+  setNeedsPruning();
   setNeedsThresholding();
   const MortonCode morton_code = index.computeMortonCode();
 

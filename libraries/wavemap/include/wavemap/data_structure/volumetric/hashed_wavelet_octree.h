@@ -50,10 +50,13 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     NodeType& getRootNode() { return ndtree_.getRootNode(); }
     const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
 
+    void setNeedsPruning(bool value = true) { needs_pruning_ = value; }
+    bool getNeedsPruning() const { return needs_pruning_; }
     void setNeedsThresholding(bool value = true) {
       needs_thresholding_ = value;
     }
     bool getNeedsThresholding() const { return needs_thresholding_; }
+
     template <TraversalOrder traversal_order>
     auto getNodeIterator() {
       return ndtree_.getIterator<traversal_order>();
@@ -70,6 +73,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     Ndtree<Coefficients::Details, 3> ndtree_{kTreeHeight - 1};
 
     bool needs_thresholding_ = false;
+    bool needs_pruning_ = false;
     HashedWaveletOctree* parent_;
 
     Coefficients::Scale recursiveThreshold(
