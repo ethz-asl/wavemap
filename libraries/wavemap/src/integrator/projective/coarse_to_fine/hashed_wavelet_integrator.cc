@@ -10,24 +10,25 @@ void HashedWaveletIntegrator::updateMap() {
       config_.min_range, config_.max_range);
 
   // Find all the indices of blocks that need updating
-  BlockList job_list;
+  BlockList blocks_to_update;
   const auto [fov_min_idx, fov_max_idx] =
       getFovMinMaxIndices(posed_range_image_->getOrigin());
   for (const auto& block_index :
        Grid(fov_min_idx.position, fov_max_idx.position)) {
-    recursiveTester(OctreeIndex{fov_min_idx.height, block_index}, job_list);
+    recursiveTester(OctreeIndex{fov_min_idx.height, block_index},
+                    blocks_to_update);
   }
 
-  // Update the blocks
-  for (const auto& block_node_index : job_list) {
-    // Make sure the block has been allocated
-    occupancy_map_->getOrAllocateBlock(block_node_index.position);
+  // Make sure the to-be-updated blocks are allocated
+  for (const auto& block_index : blocks_to_update) {
+    occupancy_map_->getOrAllocateBlock(block_index.position);
+  }
 
-    // Update it in the threadpool
-    thread_pool_.add_task([this, block_node_index]() {
-      // Recursively update all relevant cells
-      auto& block = occupancy_map_->getBlock(block_node_index.position);
-      recursiveSamplerCompressor(block.getRootNode(), block_node_index,
+  // Update it with the threadpool
+  for (const auto& block_index : blocks_to_update) {
+    thread_pool_.add_task([this, block_index]() {
+      auto& block = occupancy_map_->getBlock(block_index.position);
+      recursiveSamplerCompressor(block.getRootNode(), block_index,
                                  block.getRootScale());
     });
   }
@@ -81,27 +82,28 @@ void HashedWaveletIntegrator::recursiveSamplerCompressor(
       stack.pop();
       if (stack.empty()) {
         root_node_scale = scale;
+        return;
       } else {
         const NdtreeIndexRelativeChild current_child_idx =
             stack.top().next_child_idx - 1;
         stack.top().child_scale_coefficients[current_child_idx] = scale;
+        continue;
       }
-      continue;
     }
 
     // Evaluate stack element's active child
     const NdtreeIndexRelativeChild current_child_idx =
         stack.top().next_child_idx;
     ++stack.top().next_child_idx;
-    CHECK_GE(current_child_idx, 0);
-    CHECK_LT(current_child_idx, OctreeIndex::kNumChildren);
+    DCHECK_GE(current_child_idx, 0);
+    DCHECK_LT(current_child_idx, OctreeIndex::kNumChildren);
 
     HashedWaveletOctree::NodeType& parent_node = stack.top().parent_node;
     FloatingPoint& node_value =
         stack.top().child_scale_coefficients[current_child_idx];
     const OctreeIndex node_index =
         stack.top().parent_node_index.computeChildIndex(current_child_idx);
-    CHECK_GE(node_index.height, 0);
+    DCHECK_GE(node_index.height, 0);
 
     // If we're at the leaf level, directly update the node
     if (node_index.height == config_.termination_height) {

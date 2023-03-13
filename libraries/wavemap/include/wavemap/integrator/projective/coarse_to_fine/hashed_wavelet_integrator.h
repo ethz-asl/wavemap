@@ -44,7 +44,8 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
       const Point3D& sensor_origin) const;
 
   using BlockList = std::vector<OctreeIndex>;
-  void recursiveTester(const OctreeIndex& node_index, BlockList& job_list);
+  void recursiveTester(const OctreeIndex& node_index,
+                       BlockList& update_job_list);
 
   void recursiveSamplerCompressor(
       HashedWaveletOctree::NodeType& root_node,
