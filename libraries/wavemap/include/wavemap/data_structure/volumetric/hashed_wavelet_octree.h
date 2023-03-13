@@ -78,8 +78,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
 
     Coefficients::Scale recursiveThreshold(
         NodeType& node, Coefficients::Scale scale_coefficient);
-    Coefficients::Scale recursivePrune(NodeType& node,
-                                       Coefficients::Scale scale_coefficient);
+    void recursivePrune(NodeType& node);
   };
 
   // Use the base class' constructor
