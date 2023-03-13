@@ -28,8 +28,7 @@ void HashedWaveletIntegrator::updateMap() {
   for (const auto& block_index : blocks_to_update) {
     thread_pool_.add_task([this, block_index]() {
       auto& block = occupancy_map_->getBlock(block_index.position);
-      recursiveSamplerCompressor(block.getRootNode(), block_index,
-                                 block.getRootScale());
+      updateBlock(block, block_index);
     });
   }
   thread_pool_.wait_all();
@@ -57,10 +56,12 @@ HashedWaveletIntegrator::getFovMinMaxIndices(
   return {fov_min_idx, fov_max_idx};
 }
 
-void HashedWaveletIntegrator::recursiveSamplerCompressor(
-    HashedWaveletOctree::NodeType& root_node,
-    const OctreeIndex& root_node_index,
-    HashedWaveletOctree::Coefficients::Scale& root_node_scale) {
+void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
+                                          const OctreeIndex& block_index) {
+  HashedWaveletOctree::NodeType& root_node = block.getRootNode();
+  HashedWaveletOctree::Coefficients::Scale& root_node_scale =
+      block.getRootScale();
+
   struct StackElement {
     HashedWaveletOctree::NodeType& parent_node;
     const OctreeIndex parent_node_index;
@@ -69,7 +70,7 @@ void HashedWaveletIntegrator::recursiveSamplerCompressor(
         child_scale_coefficients;
   };
   std::stack<StackElement> stack;
-  stack.emplace(StackElement{root_node, root_node_index, 0,
+  stack.emplace(StackElement{root_node, block_index, 0,
                              HashedWaveletOctree::Transform::backward(
                                  {root_node_scale, root_node.data()})});
 
@@ -163,6 +164,7 @@ void HashedWaveletIntegrator::recursiveSamplerCompressor(
                        max_log_odds_ + kNoiseThreshold);
       } else {
         node_value += sample;
+        block.setNeedsThresholding();
       }
       continue;
     }

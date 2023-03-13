@@ -26,7 +26,8 @@ class WavemapServer {
     } general;
 
     struct Map {
-      float pruning_period = 1.f;
+      float thresholding_period = 1.f;
+      float pruning_period = 10.f;
       float visualization_period = 10.f;
       float autosave_period = -1.f;
       std::string autosave_path;
@@ -62,6 +63,7 @@ class WavemapServer {
 
   void subscribeToTimers(const ros::NodeHandle& nh);
   ros::Timer map_pruning_timer_;
+  ros::Timer map_thresholding_timer_;
   ros::Timer map_visualization_timer_;
   ros::Timer map_autosave_timer_;
 

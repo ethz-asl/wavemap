@@ -47,12 +47,9 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
   void recursiveTester(const OctreeIndex& node_index,
                        BlockList& update_job_list);
 
-  void recursiveSamplerCompressor(
-      HashedWaveletOctree::NodeType& root_node,
-      const OctreeIndex& root_node_index,
-      HashedWaveletOctree::Coefficients::Scale& root_node_scale);
-
   void updateMap() override;
+  void updateBlock(HashedWaveletOctree::Block& block,
+                   const OctreeIndex& block_index);
 };
 }  // namespace wavemap
 

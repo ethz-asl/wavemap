@@ -18,13 +18,14 @@ class VolumetricOctree : public VolumetricDataStructureBase {
 
   // TODO(victorr): Make this configurable
   static constexpr NdtreeIndexElement kMaxHeight = 14;
-  static constexpr bool kRequiresPruningForThresholding = true;
+  static constexpr bool kRequiresExplicitThresholding = true;
 
   // Use the base class' constructor
   using VolumetricDataStructureBase::VolumetricDataStructureBase;
 
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
+  void threshold() override;
   void prune() override;
   void clear() override { return ndtree_.clear(); }
 

@@ -19,7 +19,7 @@ class WaveletOctree : public VolumetricDataStructureBase {
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
 
-  static constexpr bool kRequiresPruningForThresholding = true;
+  static constexpr bool kRequiresExplicitThresholding = true;
 
   explicit WaveletOctree(const VolumetricDataStructureConfig& config,
                          NdtreeIndexElement max_height = 14)
@@ -27,6 +27,7 @@ class WaveletOctree : public VolumetricDataStructureBase {
 
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
+  void threshold() override;
   void prune() override;
   void clear() override;
 
@@ -106,6 +107,11 @@ class WaveletOctree : public VolumetricDataStructureBase {
         int_math::div_exp2_floor(root_index_offset_, node_index.height);
     return {node_index.height, node_index.position - height_adjusted_offset};
   }
+
+  Coefficients::Scale recursiveThreshold(NodeType& node,
+                                         Coefficients::Scale scale_coefficient);
+  Coefficients::Scale recursivePrune(NodeType& node,
+                                     Coefficients::Scale scale_coefficient);
 };
 }  // namespace wavemap
 

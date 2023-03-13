@@ -54,6 +54,7 @@ class VolumetricDataStructureBase {
 
   virtual bool empty() const = 0;
   virtual size_t size() const = 0;
+  virtual void threshold() = 0;
   virtual void prune() = 0;
   virtual void clear() = 0;
 

@@ -140,7 +140,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     for (const Index3D& index : random_indices) {
       for (const FloatingPoint update : TestFixture::getRandomUpdateVector()) {
         map_base_ptr->addToCellValue(index, update);
-        if (TypeParam::kRequiresPruningForThresholding) {
+        if (TypeParam::kRequiresExplicitThresholding) {
           map_base_ptr->prune();
         }
         reference_map[index] =

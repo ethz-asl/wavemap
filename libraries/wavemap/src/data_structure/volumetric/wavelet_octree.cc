@@ -1,48 +1,14 @@
 #include "wavemap/data_structure/volumetric/wavelet_octree.h"
 
 namespace wavemap {
-void WaveletOctree::prune() {
-  std::function<Coefficients::Scale(NodeType&, Coefficients::Scale)>
-      recursive_fn = [&recursive_fn, this](
-                         NodeType& node,
-                         Coefficients::Scale scale_coefficient) {
-        Coefficients::CoefficientsArray child_scale_coefficients =
-            Transform::backward({scale_coefficient, node.data()});
-
-        bool has_at_least_one_child = false;
-        for (NdtreeIndexRelativeChild child_idx = 0;
-             child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-          if (node.hasChild(child_idx)) {
-            NodeType& child_node = *node.getChild(child_idx);
-            child_scale_coefficients[child_idx] =
-                recursive_fn(child_node, child_scale_coefficients[child_idx]);
-            if (!child_node.hasChildrenArray() &&
-                std::all_of(child_node.data().cbegin(),
-                            child_node.data().cend(), [](auto coefficient) {
-                              return std::abs(coefficient) < 1e-3f;
-                            })) {
-              node.deleteChild(child_idx);
-            } else {
-              has_at_least_one_child = true;
-            }
-          } else {
-            child_scale_coefficients[child_idx] -=
-                clamp(child_scale_coefficients[child_idx]);
-          }
-        }
-        if (!has_at_least_one_child) {
-          node.deleteChildrenArray();
-        }
-
-        const auto [scale_update, detail_updates] =
-            Transform::forward(child_scale_coefficients);
-        node.data() -= detail_updates;
-
-        return scale_update;
-      };
-
+void WaveletOctree::threshold() {
   root_scale_coefficient_ -=
-      recursive_fn(ndtree_.getRootNode(), root_scale_coefficient_);
+      recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
+}
+
+void WaveletOctree::prune() {
+  root_scale_coefficient_ -=
+      recursivePrune(ndtree_.getRootNode(), root_scale_coefficient_);
 }
 
 Index3D WaveletOctree::getMinIndex() const {
@@ -109,5 +75,65 @@ void WaveletOctree::forEachLeaf(
       }
     }
   }
+}
+
+WaveletOctree::Coefficients::Scale WaveletOctree::recursiveThreshold(  // NOLINT
+    WaveletOctree::NodeType& node, float scale_coefficient) {
+  Coefficients::CoefficientsArray child_scale_coefficients =
+      Transform::backward({scale_coefficient, node.data()});
+
+  for (NdtreeIndexRelativeChild child_idx = 0;
+       child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    if (node.hasChild(child_idx)) {
+      NodeType& child_node = *node.getChild(child_idx);
+      child_scale_coefficients[child_idx] =
+          recursiveThreshold(child_node, child_scale_coefficients[child_idx]);
+    } else {
+      child_scale_coefficients[child_idx] -=
+          clamp(child_scale_coefficients[child_idx]);
+    }
+  }
+
+  const auto [scale_update, detail_updates] =
+      Transform::forward(child_scale_coefficients);
+  node.data() -= detail_updates;
+
+  return scale_update;
+}
+
+WaveletOctree::Coefficients::Scale WaveletOctree::recursivePrune(  // NOLINT
+    WaveletOctree::NodeType& node, float scale_coefficient) {
+  Coefficients::CoefficientsArray child_scale_coefficients =
+      Transform::backward({scale_coefficient, node.data()});
+
+  bool has_at_least_one_child = false;
+  for (NdtreeIndexRelativeChild child_idx = 0;
+       child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    if (node.hasChild(child_idx)) {
+      NodeType& child_node = *node.getChild(child_idx);
+      child_scale_coefficients[child_idx] =
+          recursivePrune(child_node, child_scale_coefficients[child_idx]);
+      if (!child_node.hasChildrenArray() &&
+          std::all_of(
+              child_node.data().cbegin(), child_node.data().cend(),
+              [](auto coefficient) { return std::abs(coefficient) < 1e-3f; })) {
+        node.deleteChild(child_idx);
+      } else {
+        has_at_least_one_child = true;
+      }
+    } else {
+      child_scale_coefficients[child_idx] -=
+          clamp(child_scale_coefficients[child_idx]);
+    }
+  }
+  if (!has_at_least_one_child) {
+    node.deleteChildrenArray();
+  }
+
+  const auto [scale_update, detail_updates] =
+      Transform::forward(child_scale_coefficients);
+  node.data() -= detail_updates;
+
+  return scale_update;
 }
 }  // namespace wavemap

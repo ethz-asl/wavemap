@@ -1,6 +1,12 @@
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
 
 namespace wavemap {
+void VolumetricOctree::threshold() {
+  LOG(WARNING) << "Pure thresholding is not implemented for VolumetricOctrees. "
+                  "Will prune instead.";
+  prune();
+}
+
 void VolumetricOctree::prune() {
   std::function<void(FloatingPoint, NodeType&)> recursive_fn =
       [&recursive_fn, this](FloatingPoint parent_value, NodeType& node) {

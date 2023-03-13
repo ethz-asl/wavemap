@@ -99,6 +99,14 @@ InputHandler* WavemapServer::addInput(const param::Map& integrator_params,
 }
 
 void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
+  if (0.f < config_.map.thresholding_period) {
+    ROS_INFO_STREAM("Registering map thresholding timer with period "
+                    << config_.map.thresholding_period << "s");
+    map_thresholding_timer_ = nh.createTimer(
+        ros::Duration(config_.map.thresholding_period),
+        [this](const auto& /*event*/) { occupancy_map_->threshold(); });
+  }
+
   if (0.f < config_.map.pruning_period) {
     ROS_INFO_STREAM("Registering map pruning timer with period "
                     << config_.map.pruning_period << "s");
@@ -176,6 +184,10 @@ WavemapServer::Config WavemapServer::Config::from(const param::Map& params) {
   if (param::map::keyHoldsValue<param::Map>(params, NAMEOF(config.map))) {
     const auto params_map =
         param::map::keyGetValue<param::Map>(params, NAMEOF(config.map));
+
+    config.map.thresholding_period = param::convert::toUnit<SiUnit::kSeconds>(
+        params_map, NAMEOF(config.map.thresholding_period),
+        config.map.thresholding_period);
 
     config.map.pruning_period = param::convert::toUnit<SiUnit::kSeconds>(
         params_map, NAMEOF(config.map.pruning_period),

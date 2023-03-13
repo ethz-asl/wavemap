@@ -15,13 +15,16 @@ class HashedBlocks : public VolumetricDataStructureBase {
  public:
   using Ptr = std::shared_ptr<HashedBlocks>;
   using ConstPtr = std::shared_ptr<const HashedBlocks>;
-  static constexpr bool kRequiresPruningForThresholding = false;
+  static constexpr bool kRequiresExplicitThresholding = false;
 
   // Use the base class' constructor
   using VolumetricDataStructureBase::VolumetricDataStructureBase;
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override { return kCellsPerBlock * blocks_.size(); }
+  void threshold() override {
+    // Not needed. Data is already tresholded when added.
+  }
   void prune() override;
   void clear() override { blocks_.clear(); }
 

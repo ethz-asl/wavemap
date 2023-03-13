@@ -19,7 +19,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
   using Coefficients = HaarCoefficients<FloatingPoint, 3>;
   using Transform = HaarTransform<FloatingPoint, 3>;
   using NodeType = NdtreeNode<typename Coefficients::Details, 3>;
-  static constexpr bool kRequiresPruningForThresholding = true;
+  static constexpr bool kRequiresExplicitThresholding = true;
 
   using BlockIndex = Index3D;
   using CellIndex = OctreeIndex;
@@ -31,6 +31,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
 
     bool empty() const { return ndtree_.empty(); }
     size_t size() const { return ndtree_.size(); }
+    void threshold();
     void prune();
 
     FloatingPoint getCellValue(const OctreeIndex& index) const;
@@ -49,6 +50,10 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     NodeType& getRootNode() { return ndtree_.getRootNode(); }
     const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
 
+    void setNeedsThresholding(bool value = true) {
+      needs_thresholding_ = value;
+    }
+    bool getNeedsThresholding() const { return needs_thresholding_; }
     template <TraversalOrder traversal_order>
     auto getNodeIterator() {
       return ndtree_.getIterator<traversal_order>();
@@ -64,7 +69,13 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     Coefficients::Scale root_scale_coefficient_{};
     Ndtree<Coefficients::Details, 3> ndtree_{kTreeHeight - 1};
 
+    bool needs_thresholding_ = false;
     HashedWaveletOctree* parent_;
+
+    Coefficients::Scale recursiveThreshold(
+        NodeType& node, Coefficients::Scale scale_coefficient);
+    Coefficients::Scale recursivePrune(NodeType& node,
+                                       Coefficients::Scale scale_coefficient);
   };
 
   // Use the base class' constructor
@@ -72,6 +83,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override;
+  void threshold() override;
   void prune() override;
   void clear() override { blocks_.clear(); }
 
