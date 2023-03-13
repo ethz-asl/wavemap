@@ -3,12 +3,12 @@ general:
   publish_performance_stats: false
 
 map:
-  pruning_period: { seconds: 10.0 }
+  pruning_period: { seconds: 2.0 }
   visualization_period: { seconds: 10.0 }
   autosave_period: { seconds: -1.0 }
   autosave_path: ""
   data_structure:
-    type: "wavelet_octree"
+    type: "hashed_wavelet_octree"
     min_cell_width: { meters: 0.1 }
     max_height: 14
 
@@ -19,7 +19,7 @@ integrators:
       topic_queue_length: 10
       max_wait_for_pose: { seconds: 1.0 }
     integration_method:
-      type: "wavelet_integrator"
+      type: "hashed_wavelet_integrator"
       min_range: { meters: 1.0 }
       max_range: { meters: 15.0 }
       termination_update_error: 0.1

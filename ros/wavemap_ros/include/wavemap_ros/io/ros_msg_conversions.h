@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 
+#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/data_structure/volumetric/volumetric_octree.h>
 #include <wavemap/data_structure/volumetric/wavelet_octree.h>
 #include <wavemap_msgs/Map.h>
@@ -15,6 +16,9 @@ wavemap_msgs::Map mapToRosMsg(const VolumetricOctree& map,
                               const std::string& frame_id);
 
 wavemap_msgs::Map mapToRosMsg(const WaveletOctree& map,
+                              const std::string& frame_id);
+
+wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
                               const std::string& frame_id);
 
 void octreeFromRosMsg(const wavemap_msgs::Octree& octree_msg,

@@ -5,6 +5,7 @@
 #include <rviz/frame_manager.h>
 #include <rviz/visualization_manager.h>
 #include <tf/transform_listener.h>
+#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/data_structure/volumetric/volumetric_octree.h>
 #include <wavemap/data_structure/volumetric/wavelet_octree.h>
 #include <wavemap/indexing/ndtree_index.h>
@@ -211,41 +212,81 @@ void WavemapMapDisplay::processMessage(
 std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
     const wavemap_msgs::Map& map_msg) {
   if (!map_msg.wavelet_octree.empty()) {
-    const auto& wavelet_octree_msg = map_msg.wavelet_octree.front();
-    auto wavelet_octree =
-        std::make_unique<WaveletOctree>(wavelet_octree_msg.min_cell_width);
+    VolumetricDataStructureConfig config;
+    config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
 
-    wavelet_octree->getRootScale() =
-        wavelet_octree_msg.root_node_scale_coefficient;
+    if (map_msg.wavelet_octree.size() == 1) {
+      const auto& wavelet_octree_msg = map_msg.wavelet_octree.front();
+      auto wavelet_octree =
+          std::make_unique<WaveletOctree>(wavelet_octree_msg.min_cell_width);
 
-    std::stack<WaveletOctree::NodeType*> stack;
-    stack.template emplace(&wavelet_octree->getRootNode());
-    for (const auto& node_msg : wavelet_octree_msg.nodes) {
-      CHECK(!stack.empty());
-      WaveletOctree::NodeType* current_node = stack.top();
-      CHECK_NOTNULL(current_node);
-      stack.pop();
+      wavelet_octree->getRootScale() =
+          wavelet_octree_msg.root_node_scale_coefficient;
 
-      std::copy(node_msg.detail_coefficients.cbegin(),
-                node_msg.detail_coefficients.cend(),
-                current_node->data().begin());
-      for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
-           0 <= relative_child_idx; --relative_child_idx) {
-        const bool child_exists =
-            node_msg.allocated_children_bitset & (1 << relative_child_idx);
-        if (child_exists) {
-          stack.template emplace(
-              current_node->allocateChild(relative_child_idx));
+      std::stack<WaveletOctree::NodeType*> stack;
+      stack.emplace(&wavelet_octree->getRootNode());
+      for (const auto& node_msg : wavelet_octree_msg.nodes) {
+        CHECK(!stack.empty());
+        WaveletOctree::NodeType* current_node = stack.top();
+        CHECK_NOTNULL(current_node);
+        stack.pop();
+
+        std::copy(node_msg.detail_coefficients.cbegin(),
+                  node_msg.detail_coefficients.cend(),
+                  current_node->data().begin());
+        for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
+             0 <= relative_child_idx; --relative_child_idx) {
+          const bool child_exists =
+              node_msg.allocated_children_bitset & (1 << relative_child_idx);
+          if (child_exists) {
+            stack.emplace(current_node->allocateChild(relative_child_idx));
+          }
         }
       }
+      return wavelet_octree;
+    } else {
+      auto hashed_wavelet_octree =
+          std::make_unique<HashedWaveletOctree>(config);
+      for (const auto& block_msg : map_msg.wavelet_octree) {
+        const Index3D block_index{block_msg.root_node_offset[0],
+                                  block_msg.root_node_offset[1],
+                                  block_msg.root_node_offset[2]};
+        CHECK(!block_index.hasNaN()) << block_index;
+        auto& block = hashed_wavelet_octree->getOrAllocateBlock(block_index);
+
+        block.getRootScale() = block_msg.root_node_scale_coefficient;
+
+        std::stack<WaveletOctree::NodeType*> stack;
+        stack.emplace(&block.getRootNode());
+        for (const auto& node_msg : block_msg.nodes) {
+          CHECK(!stack.empty());
+          WaveletOctree::NodeType* current_node = stack.top();
+          CHECK_NOTNULL(current_node);
+          stack.pop();
+
+          std::copy(node_msg.detail_coefficients.cbegin(),
+                    node_msg.detail_coefficients.cend(),
+                    current_node->data().begin());
+          for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
+               0 <= relative_child_idx; --relative_child_idx) {
+            const bool child_exists =
+                node_msg.allocated_children_bitset & (1 << relative_child_idx);
+            if (child_exists) {
+              stack.emplace(current_node->allocateChild(relative_child_idx));
+            }
+          }
+        }
+      }
+      CHECK_EQ(hashed_wavelet_octree->getBlocks().size(),
+               map_msg.wavelet_octree.size());
+      return hashed_wavelet_octree;
     }
-    return wavelet_octree;
   } else if (!map_msg.octree.empty()) {
     const auto& octree_msg = map_msg.octree.front();
     auto octree = std::make_unique<VolumetricOctree>(octree_msg.min_cell_width);
 
     std::stack<VolumetricOctree::NodeType*> stack;
-    stack.template emplace(&octree->getRootNode());
+    stack.emplace(&octree->getRootNode());
     for (const auto& node_msg : octree_msg.nodes) {
       CHECK(!stack.empty());
       VolumetricOctree::NodeType* current_node = stack.top();
@@ -258,8 +299,7 @@ std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
         const bool child_exists =
             node_msg.allocated_children_bitset & (1 << relative_child_idx);
         if (child_exists) {
-          stack.template emplace(
-              current_node->allocateChild(relative_child_idx));
+          stack.emplace(current_node->allocateChild(relative_child_idx));
         }
       }
     }

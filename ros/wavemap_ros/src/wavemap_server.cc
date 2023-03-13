@@ -50,18 +50,25 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
 void WavemapServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
-    if (const auto& octree =
+    if (const auto octree =
             std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map_);
         octree) {
       wavemap_msgs::Map map_msg =
           mapToRosMsg(*octree, config_.general.world_frame);
       map_pub_.publish(map_msg);
     }
-    if (const auto& wavelet_octree =
+    if (const auto wavelet_octree =
             std::dynamic_pointer_cast<WaveletOctree>(occupancy_map_);
         wavelet_octree) {
       wavemap_msgs::Map map_msg =
           mapToRosMsg(*wavelet_octree, config_.general.world_frame);
+      map_pub_.publish(map_msg);
+    }
+    if (const auto hashed_wavelet_octree =
+            std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map_);
+        hashed_wavelet_octree) {
+      wavemap_msgs::Map map_msg =
+          mapToRosMsg(*hashed_wavelet_octree, config_.general.world_frame);
       map_pub_.publish(map_msg);
     }
   }
