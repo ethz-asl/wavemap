@@ -64,7 +64,8 @@ void HashedWaveletOctree::Block::threshold() {
 }
 
 void HashedWaveletOctree::Block::prune() {
-  if (getNeedsPruning()) {
+  if (getNeedsPruning() &&
+      kDoNotPruneIfUsedInLastNSec < getTimeSinceLastUpdated()) {
     threshold();
     recursivePrune(ndtree_.getRootNode());
     setNeedsPruning(false);
@@ -75,6 +76,7 @@ void HashedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
                                               FloatingPoint new_value) {
   setNeedsPruning();
   setNeedsThresholding();
+  setLastUpdatedStamp();
   const MortonCode morton_code = index.computeMortonCode();
   std::vector<NodeType*> node_ptrs;
   const int height_difference = kTreeHeight - index.height;
@@ -114,6 +116,7 @@ void HashedWaveletOctree::Block::addToCellValue(const OctreeIndex& index,
                                                 FloatingPoint update) {
   setNeedsPruning();
   setNeedsThresholding();
+  setLastUpdatedStamp();
   const MortonCode morton_code = index.computeMortonCode();
 
   std::vector<NodeType*> node_ptrs;

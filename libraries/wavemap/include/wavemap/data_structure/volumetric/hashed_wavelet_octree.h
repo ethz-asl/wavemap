@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -26,6 +27,9 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
 
   class Block {
    public:
+    using Clock = std::chrono::steady_clock;
+    using Time = std::chrono::time_point<Clock>;
+
     explicit Block(HashedWaveletOctree* parent)
         : parent_(CHECK_NOTNULL(parent)) {}
 
@@ -56,6 +60,11 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
       needs_thresholding_ = value;
     }
     bool getNeedsThresholding() const { return needs_thresholding_; }
+    void setLastUpdatedStamp(Time stamp = Clock::now()) {
+      last_updated_stamp_ = stamp;
+    }
+    Time getLastUpdatedStamp() const { return last_updated_stamp_; }
+    FloatingPoint getTimeSinceLastUpdated() const;
 
     template <TraversalOrder traversal_order>
     auto getNodeIterator() {
@@ -72,9 +81,11 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     Coefficients::Scale root_scale_coefficient_{};
     Ndtree<Coefficients::Details, 3> ndtree_{kTreeHeight - 1};
 
+    HashedWaveletOctree* parent_;
+
     bool needs_thresholding_ = false;
     bool needs_pruning_ = false;
-    HashedWaveletOctree* parent_;
+    Time last_updated_stamp_ = Clock::now();
 
     Coefficients::Scale recursiveThreshold(
         NodeType& node, Coefficients::Scale scale_coefficient);
@@ -122,6 +133,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
   static constexpr IndexElement kTreeHeight = 7;
   static constexpr IndexElement kCellsPerBlockSide =
       int_math::exp2(kTreeHeight);
+  static constexpr FloatingPoint kDoNotPruneIfUsedInLastNSec = 5.f;
 
   std::unordered_map<BlockIndex, Block, VoxbloxIndexHash<3>> blocks_;
 

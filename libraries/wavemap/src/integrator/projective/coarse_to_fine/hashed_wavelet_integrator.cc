@@ -62,6 +62,7 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
   HashedWaveletOctree::Coefficients::Scale& root_node_scale =
       block.getRootScale();
   block.setNeedsPruning();
+  block.setLastUpdatedStamp();
 
   struct StackElement {
     HashedWaveletOctree::NodeType& parent_node;
