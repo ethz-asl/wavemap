@@ -29,7 +29,7 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
   const HashedWaveletOctree::Ptr occupancy_map_;
   const FloatingPoint min_cell_width_ = occupancy_map_->getMinCellWidth();
   const FloatingPoint min_cell_width_inv_ = 1.f / min_cell_width_;
-  ThreadPool thread_pool_{2};
+  ThreadPool thread_pool_;
 
   static constexpr FloatingPoint kNoiseThreshold = 1e-4f;
   const FloatingPoint min_log_odds_ = occupancy_map_->getConfig().min_log_odds;

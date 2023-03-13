@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_UTILS_THREAD_POOL_H_
 #define WAVEMAP_UTILS_THREAD_POOL_H_
 
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -25,8 +26,8 @@ class ThreadPool {
    *
    * \param thread_count number of worker threads
    */
-  explicit ThreadPool(size_t thread_count = std::max(
-                          1u, std::thread::hardware_concurrency() / 2));
+  explicit ThreadPool(
+      size_t thread_count = std::max(1u, std::thread::hardware_concurrency()));
 
   // Prevent copying etc. of this class
   ThreadPool(ThreadPool const& other) = delete;
