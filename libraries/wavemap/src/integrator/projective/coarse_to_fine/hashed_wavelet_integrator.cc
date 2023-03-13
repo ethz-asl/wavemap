@@ -1,5 +1,7 @@
 #include "wavemap/integrator/projective/coarse_to_fine/hashed_wavelet_integrator.h"
 
+#include <stack>
+
 namespace wavemap {
 void HashedWaveletIntegrator::updateMap() {
   // Update the range image intersector
@@ -25,21 +27,8 @@ void HashedWaveletIntegrator::updateMap() {
     thread_pool_.add_task([this, block_node_index]() {
       // Recursively update all relevant cells
       auto& block = occupancy_map_->getBlock(block_node_index.position);
-      auto child_scale_coefficients = HashedWaveletOctree::Transform::backward(
-          {block.getRootScale(), block.getRootNode().data()});
-      for (NdtreeIndexRelativeChild relative_child_idx = 0;
-           relative_child_idx < OctreeIndex::kNumChildren;
-           ++relative_child_idx) {
-        const OctreeIndex& child_index =
-            block_node_index.computeChildIndex(relative_child_idx);
-        recursiveSamplerCompressor(
-            block.getRootNode(), child_index,
-            child_scale_coefficients[relative_child_idx]);
-      }
-      const auto [scale, details] =
-          HashedWaveletOctree::Transform::forward(child_scale_coefficients);
-      block.getRootNode().data() = details;
-      block.getRootScale() = scale;
+      recursiveSamplerCompressor(block.getRootNode(), block_node_index,
+                                 block.getRootScale());
     });
   }
   thread_pool_.wait_all();
@@ -65,5 +54,125 @@ HashedWaveletIntegrator::getFovMinMaxIndices(
           occupancy_map_->getBlockSize(),
       height);
   return {fov_min_idx, fov_max_idx};
+}
+
+void HashedWaveletIntegrator::recursiveSamplerCompressor(
+    HashedWaveletOctree::NodeType& root_node,
+    const OctreeIndex& root_node_index,
+    HashedWaveletOctree::Coefficients::Scale& root_node_scale) {
+  struct StackElement {
+    HashedWaveletOctree::NodeType& parent_node;
+    const OctreeIndex parent_node_index;
+    NdtreeIndexRelativeChild next_child_idx;
+    HashedWaveletOctree::Coefficients::CoefficientsArray
+        child_scale_coefficients;
+  };
+  std::stack<StackElement> stack;
+  stack.emplace(StackElement{root_node, root_node_index, 0,
+                             HashedWaveletOctree::Transform::backward(
+                                 {root_node_scale, root_node.data()})});
+
+  while (!stack.empty()) {
+    // If the current stack element has fully been processed, propagate upward
+    if (OctreeIndex::kNumChildren <= stack.top().next_child_idx) {
+      const auto [scale, details] = HashedWaveletOctree::Transform::forward(
+          stack.top().child_scale_coefficients);
+      stack.top().parent_node.data() = details;
+      stack.pop();
+      if (stack.empty()) {
+        root_node_scale = scale;
+      } else {
+        const NdtreeIndexRelativeChild current_child_idx =
+            stack.top().next_child_idx - 1;
+        stack.top().child_scale_coefficients[current_child_idx] = scale;
+      }
+      continue;
+    }
+
+    // Evaluate stack element's active child
+    const NdtreeIndexRelativeChild current_child_idx =
+        stack.top().next_child_idx;
+    ++stack.top().next_child_idx;
+    CHECK_GE(current_child_idx, 0);
+    CHECK_LT(current_child_idx, OctreeIndex::kNumChildren);
+
+    HashedWaveletOctree::NodeType& parent_node = stack.top().parent_node;
+    FloatingPoint& node_value =
+        stack.top().child_scale_coefficients[current_child_idx];
+    const OctreeIndex node_index =
+        stack.top().parent_node_index.computeChildIndex(current_child_idx);
+    CHECK_GE(node_index.height, 0);
+
+    // If we're at the leaf level, directly update the node
+    if (node_index.height == config_.termination_height) {
+      const Point3D W_node_center =
+          convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
+      const Point3D C_node_center =
+          posed_range_image_->getPoseInverse() * W_node_center;
+      const FloatingPoint sample = computeUpdate(C_node_center);
+      node_value =
+          std::clamp(sample + node_value, min_log_odds_ - kNoiseThreshold,
+                     max_log_odds_ + kNoiseThreshold);
+      continue;
+    }
+
+    // Otherwise, test whether the current node is fully occupied;
+    // free or unknown; or fully unknown
+    const AABB<Point3D> W_cell_aabb =
+        convert::nodeIndexToAABB(node_index, min_cell_width_);
+    const UpdateType update_type =
+        range_image_intersector_->determineUpdateType(
+            W_cell_aabb, posed_range_image_->getRotationMatrixInverse(),
+            posed_range_image_->getOrigin());
+
+    // If we're fully in unknown space,
+    // there's no need to evaluate this node or its children
+    if (update_type == UpdateType::kFullyUnobserved) {
+      continue;
+    }
+
+    // We can also stop here if the cell will result in a free space update
+    // (or zero) and the map is already saturated free
+    if (update_type != UpdateType::kPossiblyOccupied &&
+        node_value < min_log_odds_ + kNoiseThreshold / 10.f) {
+      continue;
+    }
+
+    // Test if the worst-case error for the intersection type at the current
+    // resolution falls within the acceptable approximation error
+    const FloatingPoint node_width = W_cell_aabb.width<0>();
+    const Point3D W_node_center =
+        W_cell_aabb.min + Vector3D::Constant(node_width / 2.f);
+    const Point3D C_node_center =
+        posed_range_image_->getPoseInverse() * W_node_center;
+    const FloatingPoint d_C_cell =
+        projection_model_->cartesianToSensorZ(C_node_center);
+    const FloatingPoint bounding_sphere_radius =
+        kUnitCubeHalfDiagonal * node_width;
+    HashedWaveletOctree::NodeType* node =
+        parent_node.getChild(node_index.computeRelativeChildIndex());
+    if (measurement_model_->computeWorstCaseApproximationError(
+            update_type, d_C_cell, bounding_sphere_radius) <
+        config_.termination_update_error) {
+      const FloatingPoint sample = computeUpdate(C_node_center);
+      if (!node || !node->hasAtLeastOneChild()) {
+        node_value =
+            std::clamp(sample + node_value, min_log_odds_ - kNoiseThreshold,
+                       max_log_odds_ + kNoiseThreshold);
+      } else {
+        node_value += sample;
+      }
+      continue;
+    }
+
+    // Since the approximation error would still be too big, refine
+    if (!node) {
+      // Allocate the current node if it has not yet been allocated
+      node = parent_node.allocateChild(node_index.computeRelativeChildIndex());
+    }
+    stack.emplace(StackElement{
+        *node, node_index, 0,
+        HashedWaveletOctree::Transform::backward({node_value, node->data()})});
+  }
 }
 }  // namespace wavemap
