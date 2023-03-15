@@ -75,6 +75,15 @@ class PinholeCameraProjector : public ProjectorBase {
                                        Vector2D offset) const final {
     return offset.norm();
   }
+  std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
+      const Vector2D& /*linearization_point*/,
+      CellToBeamOffsetArray offsets) const final {
+    std::array<FloatingPoint, 4> error_norms{};
+    for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
+      error_norms[offset_idx] = offsets.col(offset_idx).norm();
+    }
+    return error_norms;
+  }
 
   // Projection from Cartesian space onto the sensor's image surface
   Vector2D cartesianToImage(const Point3D& C_point) const final {

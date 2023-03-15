@@ -79,22 +79,10 @@ class ContinuousBeam : public MeasurementModelBase {
   //       angular/range uncertainty extends the non-zero regions with another 3
   //       sigma.
 
-  FloatingPoint computeBeamUpdate(const Vector3D& sensor_coordinates,
-                                  const Index2D& image_index,
-                                  const Vector2D& cell_offset) const;
-
-  // Compute the full measurement update, i.e. valid anywhere
-  FloatingPoint computeFullBeamUpdate(
-      FloatingPoint cell_to_sensor_distance,
-      FloatingPoint cell_to_beam_image_error_norm,
-      FloatingPoint measured_distance) const;
-
-  // Compute the measurement update given that we're fully in free space, i.e.
-  // only in the interval [ 0, measured_distance - range_threshold_in_front [
-  // NOTE: Using this method is optional. It's slightly cheaper and more
-  // accurate, but the difference is minor.
-  FloatingPoint computeFreeSpaceBeamUpdate(
-      FloatingPoint cell_to_beam_image_error_norm) const;
+  // Compute the measurement update for a single beam
+  FloatingPoint computeBeamUpdate(FloatingPoint cell_to_sensor_distance,
+                                  FloatingPoint cell_to_beam_image_error_norm,
+                                  FloatingPoint measured_distance) const;
 };
 }  // namespace wavemap
 

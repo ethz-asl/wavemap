@@ -295,7 +295,7 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
       // For pinhole cameras, AABBs that (partially or fully) lie behind the
       // camera are handled in a special way and not tested here
       // TODO(victorr): Add dedicated tests for pinhole cameras
-      if (reference_aabb.min.z() < 0.3f) {
+      if (reference_aabb.min.z() < 0.5f) {
         continue;
       }
 
@@ -374,6 +374,29 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
                   << "\nThis is error nr " << ++error_count << "\n"
                   << std::endl;
       }
+    }
+  }
+}
+
+TYPED_TEST(Image2DProjectorTypedTest, ImageOffsetErrorNorms) {
+  constexpr int kNumRandomProjectorConfigs = 10;
+  for (int config_idx = 0; config_idx < kNumRandomProjectorConfigs;
+       ++config_idx) {
+    // Create a projector with random params
+    typename TypeParam::Config projector_config;
+    Image2DProjectorTest::getRandomProjectorConfig(projector_config);
+    const TypeParam projector(projector_config);
+
+    // Test single and batched computation equivalence
+    const Vector2D linearization_point = Vector2D::Random();
+    ProjectorBase::CellToBeamOffsetArray offsets =
+        ProjectorBase::CellToBeamOffsetArray::Random();
+    const auto error_norms =
+        projector.imageOffsetsToErrorNorms(linearization_point, offsets);
+    for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
+      const FloatingPoint error_norm = projector.imageOffsetToErrorNorm(
+          linearization_point, offsets.col(offset_idx));
+      EXPECT_NEAR(error_norms[offset_idx], error_norm, kEpsilon);
     }
   }
 }

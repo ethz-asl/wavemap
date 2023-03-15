@@ -32,77 +32,95 @@ inline FloatingPoint ContinuousBeam::computeWorstCaseApproximationError(
 
 inline FloatingPoint ContinuousBeam::computeUpdate(
     const Vector3D& sensor_coordinates) const {
+  const FloatingPoint cell_to_sensor_distance = sensor_coordinates.z();
+
   switch (config_.beam_selector_type.toTypeId()) {
     case BeamSelectorType::kNearestNeighbor: {
+      // Get the measured distance and cell to beam offset
       const auto [image_index, cell_offset] =
           projection_model_->imageToNearestIndexAndOffset(
               sensor_coordinates.head<2>());
-      return computeBeamUpdate(sensor_coordinates, image_index, cell_offset);
+      if (!range_image_->isIndexWithinBounds(image_index)) {
+        return 0.f;
+      }
+      const FloatingPoint measured_distance = range_image_->at(image_index);
+      const Vector2D cell_to_beam_offset =
+          beam_offset_image_->at(image_index) - cell_offset;
+
+      // Compute the image error norm
+      const FloatingPoint cell_to_beam_image_error_norm =
+          projection_model_->imageOffsetToErrorNorm(
+              sensor_coordinates.head<2>(), cell_to_beam_offset);
+
+      // Compute the update
+      return computeBeamUpdate(cell_to_sensor_distance,
+                               cell_to_beam_image_error_norm,
+                               measured_distance);
     }
+
     case BeamSelectorType::kAllNeighbors: {
-      FloatingPoint update = 0.f;
+      // Get the measured distances and cell to beam offsets
+      std::array<FloatingPoint, 4> measured_distances{};
+      ProjectorBase::CellToBeamOffsetArray cell_to_beam_offsets =
+          ProjectorBase::CellToBeamOffsetArray::Zero();
       const auto [image_indices, cell_offsets] =
           projection_model_->imageToNearestIndicesAndOffsets(
               sensor_coordinates.head<2>());
       for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
         const Index2D& image_index = image_indices[neighbor_idx];
         const Vector2D& cell_offset = cell_offsets[neighbor_idx];
+        // Get the measured distance and cell to beam offset
+        if (!range_image_->isIndexWithinBounds(image_index)) {
+          continue;
+        }
+        measured_distances[neighbor_idx] = range_image_->at(image_index);
+        cell_to_beam_offsets.col(neighbor_idx) =
+            beam_offset_image_->at(image_index) - cell_offset;
+      }
+
+      // Compute the image error norms
+      const auto cell_to_beam_image_error_norms =
+          projection_model_->imageOffsetsToErrorNorms(
+              sensor_coordinates.head<2>(), cell_to_beam_offsets);
+
+      // Compute the update
+      FloatingPoint update = 0.f;
+      for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
         update +=
-            computeBeamUpdate(sensor_coordinates, image_index, cell_offset);
+            computeBeamUpdate(cell_to_sensor_distance,
+                              cell_to_beam_image_error_norms[neighbor_idx],
+                              measured_distances[neighbor_idx]);
       }
       return update;
     }
+
     default:
       return 0.f;
   }
 }
 
 inline FloatingPoint ContinuousBeam::computeBeamUpdate(
-    const Vector3D& sensor_coordinates, const Index2D& image_index,
-    const Vector2D& cell_offset) const {
-  if (!range_image_->isIndexWithinBounds(image_index)) {
-    return 0.f;
-  }
-
-  const FloatingPoint measured_distance = range_image_->at(image_index);
-
-  // Compute the distance between the sample and beam projected in image space
-  // NOTE: For spherical (e.g. LiDAR) projection models, the error norm
-  //       corresponds to the relative angle between the beam and the ray
-  //       through the cell, whereas for camera models it corresponds to the
-  //       reprojection error in pixels.
-  const Vector2D cell_to_beam_offset =
-      beam_offset_image_->at(image_index) - cell_offset;
-  const FloatingPoint cell_to_beam_image_error_norm =
-      projection_model_->imageOffsetToErrorNorm(sensor_coordinates.head<2>(),
-                                                cell_to_beam_offset);
-
-  if (range_threshold_back_ < sensor_coordinates.z() - measured_distance) {
-    return 0.f;
-  }
-
-  if (angle_threshold_ < cell_to_beam_image_error_norm) {
-    return 0.f;
-  }
-
-  if (sensor_coordinates.z() < measured_distance - range_threshold_front) {
-    return computeFreeSpaceBeamUpdate(cell_to_beam_image_error_norm);
-  } else {
-    return computeFullBeamUpdate(sensor_coordinates.z(),
-                                 cell_to_beam_image_error_norm,
-                                 measured_distance);
-  }
-}
-
-inline FloatingPoint ContinuousBeam::computeFullBeamUpdate(
     FloatingPoint cell_to_sensor_distance,
     FloatingPoint cell_to_beam_image_error_norm,
     FloatingPoint measured_distance) const {
-  const FloatingPoint f =
-      (cell_to_sensor_distance - measured_distance) / config_.range_sigma;
-  const FloatingPoint range_contrib =
-      ApproximateGaussianDistribution::cumulative(f) -
-      0.5f * ApproximateGaussianDistribution::cumulative(f - 3.f) - 0.5f;
+  const bool fully_in_unknown_space =
+      angle_threshold_ < cell_to_beam_image_error_norm ||
+      measured_distance + range_threshold_back_ < cell_to_sensor_distance;
+  if (fully_in_unknown_space) {
+    return 0.f;
+  }
+
+  const bool fully_in_free_space =
+      cell_to_sensor_distance < measured_distance - range_threshold_front;
+  constexpr FloatingPoint kFreeSpaceRangeContrib = -0.5f;
+  FloatingPoint range_contrib = kFreeSpaceRangeContrib;
+  if (!fully_in_free_space) {
+    const FloatingPoint f =
+        (cell_to_sensor_distance - measured_distance) / config_.range_sigma;
+    range_contrib =
+        ApproximateGaussianDistribution::cumulative(f) -
+        0.5f * ApproximateGaussianDistribution::cumulative(f - 3.f) - 0.5f;
+  }
 
   const FloatingPoint g = cell_to_beam_image_error_norm / config_.angle_sigma;
   const FloatingPoint angle_contrib =
@@ -111,26 +129,9 @@ inline FloatingPoint ContinuousBeam::computeFullBeamUpdate(
 
   const FloatingPoint contribs = range_contrib * angle_contrib;
   const FloatingPoint scaled_contribs =
-      (contribs < 0.f) ? config_.scaling_free * contribs
-                       : config_.scaling_occupied * contribs;
-
-  const FloatingPoint p = scaled_contribs + 0.5f;
-  const FloatingPoint log_odds = std::log(p / (1.f - p));
-  DCHECK(!std::isnan(log_odds) && std::isfinite(log_odds));
-  return log_odds;
-}
-
-inline FloatingPoint ContinuousBeam::computeFreeSpaceBeamUpdate(
-    FloatingPoint cell_to_beam_image_error_norm) const {
-  constexpr FloatingPoint kFreeSpaceRangeContrib = -0.5f;
-
-  const FloatingPoint g = cell_to_beam_image_error_norm / config_.angle_sigma;
-  const FloatingPoint angle_contrib =
-      ApproximateGaussianDistribution::cumulative(g + 3.f) -
-      ApproximateGaussianDistribution::cumulative(g - 3.f);
-
-  const FloatingPoint contribs = kFreeSpaceRangeContrib * angle_contrib;
-  const FloatingPoint scaled_contribs = config_.scaling_free * contribs;
+      (fully_in_free_space || contribs < 0.f)
+          ? config_.scaling_free * contribs
+          : config_.scaling_occupied * contribs;
 
   const FloatingPoint p = scaled_contribs + 0.5f;
   const FloatingPoint log_odds = std::log(p / (1.f - p));
