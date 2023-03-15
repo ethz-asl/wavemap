@@ -51,39 +51,15 @@ class PinholeCameraProjector : public ProjectorBase {
   SiUnit getImageCoordinatesUnit() const final { return SiUnit::kPixels; }
 
   // Coordinate transforms between Cartesian and sensor space
-  Vector3D cartesianToSensor(const Point3D& C_point) const final {
-    const FloatingPoint w_clamped = std::max(C_point.z(), kEpsilon);
-    const FloatingPoint uw = config_.fx * C_point.x() / w_clamped + config_.cx;
-    const FloatingPoint vw = config_.fy * C_point.y() / w_clamped + config_.cy;
-    return {uw, vw, C_point.z()};
-  }
-  Point3D sensorToCartesian(const Vector3D& coordinates) const final {
-    const FloatingPoint u_scaled = coordinates[0];
-    const FloatingPoint v_scaled = coordinates[1];
-    const FloatingPoint w = coordinates[2];
-    Point3D C_point = w * fxfy_inv_ *
-                      Point3D{config_.fy * u_scaled - cxfy_,
-                              config_.fx * v_scaled - cyfx_, fxfy_};
-    return C_point;
-  }
+  Vector3D cartesianToSensor(const Point3D& C_point) const final;
+  Point3D sensorToCartesian(const Vector3D& coordinates) const final;
   Point3D sensorToCartesian(const Vector2D& image_coordinates,
-                            FloatingPoint depth) const final {
-    return sensorToCartesian(
-        {image_coordinates.x(), image_coordinates.y(), depth});
-  }
+                            FloatingPoint depth) const final;
   FloatingPoint imageOffsetToErrorNorm(const Vector2D& /*linearization_point*/,
-                                       Vector2D offset) const final {
-    return offset.norm();
-  }
+                                       Vector2D offset) const final;
   std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
       const Vector2D& /*linearization_point*/,
-      CellToBeamOffsetArray offsets) const final {
-    std::array<FloatingPoint, 4> error_norms{};
-    for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
-      error_norms[offset_idx] = offsets.col(offset_idx).norm();
-    }
-    return error_norms;
-  }
+      CellToBeamOffsetArray offsets) const final;
 
   // Projection from Cartesian space onto the sensor's image surface
   Vector2D cartesianToImage(const Point3D& C_point) const final {
@@ -96,43 +72,7 @@ class PinholeCameraProjector : public ProjectorBase {
   AABB<Vector3D> cartesianToSensorAABB(
       const AABB<Point3D>& W_aabb,
       const Transformation3D::RotationMatrix& R_C_W,
-      const Point3D& t_W_C) const final {
-    const Point3D C_aabb_min = R_C_W * (W_aabb.min - t_W_C);
-    const Transformation3D::RotationMatrix C_aabb_edges =
-        R_C_W * (W_aabb.max - W_aabb.min).asDiagonal();
-
-    std::array<Point3D, AABB<Point3D>::kNumCorners> C_aabb_corners;
-    for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
-         ++corner_idx) {
-      C_aabb_corners[corner_idx] = C_aabb_min;
-      for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-        if ((corner_idx >> dim_idx) & 1) {
-          C_aabb_corners[corner_idx] += C_aabb_edges.col(dim_idx);
-        }
-      }
-    }
-
-    std::array<Vector3D, AABB<Point3D>::kNumCorners> corner_sensor_coordinates;
-    for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
-         ++corner_idx) {
-      corner_sensor_coordinates[corner_idx] =
-          cartesianToSensor(C_aabb_corners[corner_idx]);
-    }
-
-    AABB<Vector3D> sensor_coordinate_aabb;
-    for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-      for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
-           ++corner_idx) {
-        sensor_coordinate_aabb.min[dim_idx] =
-            std::min(sensor_coordinate_aabb.min[dim_idx],
-                     corner_sensor_coordinates[corner_idx][dim_idx]);
-        sensor_coordinate_aabb.max[dim_idx] =
-            std::max(sensor_coordinate_aabb.max[dim_idx],
-                     corner_sensor_coordinates[corner_idx][dim_idx]);
-      }
-    }
-    return sensor_coordinate_aabb;
-  }
+      const Point3D& t_W_C) const final;
 
  private:
   const PinholeCameraProjectorConfig config_;
@@ -143,5 +83,7 @@ class PinholeCameraProjector : public ProjectorBase {
   const FloatingPoint cyfx_ = config_.cy * config_.fx;
 };
 }  // namespace wavemap
+
+#include "wavemap/integrator/projection_model/impl/pinhole_camera_projector_inl.h"
 
 #endif  // WAVEMAP_INTEGRATOR_PROJECTION_MODEL_PINHOLE_CAMERA_PROJECTOR_H_
