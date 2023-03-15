@@ -64,11 +64,11 @@ void HashedWaveletOctree::Block::threshold() {
 }
 
 void HashedWaveletOctree::Block::prune() {
-  if (getNeedsPruning()) {
-    root_scale_coefficient_ -=
-        recursivePrune(ndtree_.getRootNode(), root_scale_coefficient_);
+  if (getNeedsPruning() &&
+      kDoNotPruneIfUsedInLastNSec < getTimeSinceLastUpdated()) {
+    threshold();
+    recursivePrune(ndtree_.getRootNode());
     setNeedsPruning(false);
-    setNeedsThresholding(false);
   }
 }
 
@@ -76,6 +76,7 @@ void HashedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
                                               FloatingPoint new_value) {
   setNeedsPruning();
   setNeedsThresholding();
+  setLastUpdatedStamp();
   const MortonCode morton_code = index.computeMortonCode();
   std::vector<NodeType*> node_ptrs;
   const int height_difference = kTreeHeight - index.height;
@@ -115,6 +116,7 @@ void HashedWaveletOctree::Block::addToCellValue(const OctreeIndex& index,
                                                 FloatingPoint update) {
   setNeedsPruning();
   setNeedsThresholding();
+  setLastUpdatedStamp();
   const MortonCode morton_code = index.computeMortonCode();
 
   std::vector<NodeType*> node_ptrs;
@@ -207,40 +209,26 @@ HashedWaveletOctree::Block::recursiveThreshold(  // NOLINT
   return scale_update;
 }
 
-HashedWaveletOctree::Coefficients::Scale
-HashedWaveletOctree::Block::recursivePrune(  // NOLINT
-    HashedWaveletOctree::NodeType& node, float scale_coefficient) {
-  Coefficients::CoefficientsArray child_scale_coefficients =
-      Transform::backward({scale_coefficient, node.data()});
-
+void HashedWaveletOctree::Block::recursivePrune(  // NOLINT
+    HashedWaveletOctree::NodeType& node) {
   bool has_at_least_one_child = false;
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
     if (node.hasChild(child_idx)) {
       NodeType& child_node = *node.getChild(child_idx);
-      child_scale_coefficients[child_idx] =
-          recursivePrune(child_node, child_scale_coefficients[child_idx]);
-      if (!child_node.hasChildrenArray() &&
-          std::all_of(
-              child_node.data().cbegin(), child_node.data().cend(),
-              [](auto coefficient) { return std::abs(coefficient) < 1e-3f; })) {
+      recursivePrune(child_node);
+      const bool detail_coefficients_all_zero = std::all_of(
+          child_node.data().cbegin(), child_node.data().cend(),
+          [](auto coefficient) { return std::abs(coefficient) < 1e-3f; });
+      if (!child_node.hasChildrenArray() && detail_coefficients_all_zero) {
         node.deleteChild(child_idx);
       } else {
         has_at_least_one_child = true;
       }
-    } else {
-      child_scale_coefficients[child_idx] -=
-          parent_->clamp(child_scale_coefficients[child_idx]);
     }
   }
   if (!has_at_least_one_child) {
     node.deleteChildrenArray();
   }
-
-  const auto [scale_update, detail_updates] =
-      Transform::forward(child_scale_coefficients);
-  node.data() -= detail_updates;
-
-  return scale_update;
 }
 }  // namespace wavemap

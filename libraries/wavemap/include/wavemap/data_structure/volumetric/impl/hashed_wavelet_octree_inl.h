@@ -78,6 +78,13 @@ HashedWaveletOctree::computeCellIndexFromBlockIndexAndIndex(
   return convert::indexAndHeightToNodeIndex(cell_index, 0);
 }
 
+inline FloatingPoint HashedWaveletOctree::Block::getTimeSinceLastUpdated()
+    const {
+  return (std::chrono::duration<FloatingPoint>(Clock::now() -
+                                               last_updated_stamp_))
+      .count();
+}
+
 inline FloatingPoint HashedWaveletOctree::Block::getCellValue(
     const OctreeIndex& index) const {
   const MortonCode morton_code = index.computeMortonCode();
