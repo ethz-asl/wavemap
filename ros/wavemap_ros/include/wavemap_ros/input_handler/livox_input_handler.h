@@ -1,5 +1,6 @@
 #ifndef WAVEMAP_ROS_INPUT_HANDLER_LIVOX_INPUT_HANDLER_H_
 #define WAVEMAP_ROS_INPUT_HANDLER_LIVOX_INPUT_HANDLER_H_
+#ifdef LIVOX_AVAILABLE
 
 #include <memory>
 #include <queue>
@@ -31,4 +32,5 @@ class LivoxInputHandler : public InputHandler {
 };
 }  // namespace wavemap
 
+#endif
 #endif  // WAVEMAP_ROS_INPUT_HANDLER_LIVOX_INPUT_HANDLER_H_

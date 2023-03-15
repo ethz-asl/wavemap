@@ -59,9 +59,15 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
           input_handler_config, integrator_params, std::move(world_frame),
           std::move(occupancy_map), std::move(transformer), nh, nh_private);
     case InputHandlerType::kLivox:
+#ifdef LIVOX_AVAILABLE
       return std::make_unique<LivoxInputHandler>(
           input_handler_config, integrator_params, std::move(world_frame),
           std::move(occupancy_map), std::move(transformer), nh, nh_private);
+#else
+      LOG(ERROR) << "Livox support is currently not available. Please install "
+                    "livox_ros_driver2 and rebuild wavemap.";
+      return nullptr;
+#endif
   }
   return nullptr;
 }

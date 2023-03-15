@@ -4,6 +4,15 @@ project(wavemap_ros)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
+# Optional dependencies
+set(OPTIONAL_SRCS "")
+find_package(livox_ros_driver2)
+if (livox_ros_driver2_FOUND)
+  include_directories(${livox_ros_driver2_INCLUDE_DIRS})
+  list(APPEND OPTIONAL_SRCS src/input_handler/livox_input_handler.cc)
+  add_compile_definitions(LIVOX_AVAILABLE)
+endif ()
+
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
 
@@ -17,8 +26,8 @@ cs_add_library(${PROJECT_NAME}
     src/input_handler/input_handler.cc
     src/input_handler/input_handler_factory.cc
     src/input_handler/pointcloud_input_handler.cc
-    src/input_handler/livox_input_handler.cc
-    src/wavemap_server.cc)
+    src/wavemap_server.cc
+    ${OPTIONAL_SRCS})
 
 # Binaries
 add_executable(wavemap_server_node app/server_node.cc)
