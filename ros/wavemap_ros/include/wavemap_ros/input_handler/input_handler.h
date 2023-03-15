@@ -16,9 +16,9 @@ namespace wavemap {
 struct InputHandlerType : public TypeSelector<InputHandlerType> {
   using TypeSelector<InputHandlerType>::TypeSelector;
 
-  enum Id : TypeId { kPointcloud, kDepthImage };
+  enum Id : TypeId { kPointcloud, kDepthImage, kLivox };
 
-  static constexpr std::array names = {"pointcloud", "depth_image"};
+  static constexpr std::array names = {"pointcloud", "depth_image", "livox"};
 };
 
 class InputHandler {

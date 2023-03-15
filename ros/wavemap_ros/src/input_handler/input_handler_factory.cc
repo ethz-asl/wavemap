@@ -1,6 +1,7 @@
 #include "wavemap_ros/input_handler/input_handler_factory.h"
 
 #include "wavemap_ros/input_handler/depth_image_input_handler.h"
+#include "wavemap_ros/input_handler/livox_input_handler.h"
 #include "wavemap_ros/input_handler/pointcloud_input_handler.h"
 
 namespace wavemap {
@@ -18,7 +19,7 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
     auto type = InputHandlerType::fromParamMap(input_params, error_msg);
     if (type.isValid()) {
       return create(type, integrator_params, world_frame, occupancy_map,
-                    transformer, std::move(nh), std::move(nh_private));
+                    std::move(transformer), nh, nh_private);
     }
   }
 
@@ -27,8 +28,8 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
                  << default_input_handler_type.value().toStr()
                  << "\" will be created instead.";
     return create(default_input_handler_type.value(), integrator_params,
-                  world_frame, occupancy_map, transformer, std::move(nh),
-                  std::move(nh_private));
+                  std::move(world_frame), std::move(occupancy_map),
+                  std::move(transformer), nh, nh_private);
   }
 
   LOG(ERROR) << error_msg << "No default was set. Returning nullptr.";
@@ -51,12 +52,16 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
   switch (input_handler_type.toTypeId()) {
     case InputHandlerType::kPointcloud:
       return std::make_unique<PointcloudInputHandler>(
-          input_handler_config, integrator_params, world_frame, occupancy_map,
-          transformer, std::move(nh), std::move(nh_private));
+          input_handler_config, integrator_params, std::move(world_frame),
+          std::move(occupancy_map), std::move(transformer), nh, nh_private);
     case InputHandlerType::kDepthImage:
       return std::make_unique<DepthImageInputHandler>(
-          input_handler_config, integrator_params, world_frame, occupancy_map,
-          transformer, std::move(nh), std::move(nh_private));
+          input_handler_config, integrator_params, std::move(world_frame),
+          std::move(occupancy_map), std::move(transformer), nh, nh_private);
+    case InputHandlerType::kLivox:
+      return std::make_unique<LivoxInputHandler>(
+          input_handler_config, integrator_params, std::move(world_frame),
+          std::move(occupancy_map), std::move(transformer), nh, nh_private);
   }
   return nullptr;
 }

@@ -10,12 +10,12 @@ map:
   autosave_path: ""
   data_structure:
     type: "hashed_wavelet_octree"
-    min_cell_width: { meters: 0.05 }
+    min_cell_width: { meters: 0.1 }
     max_height: 14
 
 integrators:
   - input:
-      type: "pointcloud"
+      type: "livox"
       topic_name: "/livox/lidar"
       reprojected_topic_name: "/wavemap/input"
       sensor_frame_id: "imu_forward_prop"
@@ -24,12 +24,12 @@ integrators:
     integration_method:
       type: "hashed_wavelet_integrator"
       min_range: { meters: 0.5 }
-      max_range: { meters: 15.0 }
+      max_range: { meters: 12.0 }
       termination_update_error: 0.1
     projection_model:
       type: "spherical_projector"
       elevation:
-        num_cells: 128
+        num_cells: 64
         min_angle: { degrees: -7.0 }
         max_angle: { degrees: 52.0 }
       azimuth:
