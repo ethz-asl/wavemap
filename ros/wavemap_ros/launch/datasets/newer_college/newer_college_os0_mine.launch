@@ -1,7 +1,7 @@
 <launch>
   <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_ros)/config/newer_college/ouster_os0.yaml"
+       default="$(find wavemap_ros)/config/ouster_os0.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
 
   <!-- Dataset params -->
