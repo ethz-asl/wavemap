@@ -22,6 +22,21 @@ void HashedWaveletOctree::prune() {
   }
 }
 
+void HashedWaveletOctree::pruneDistant() {
+  std::unordered_set<BlockIndex, VoxbloxIndexHash<3>> blocks_to_remove;
+  for (auto& [block_index, block] : blocks_) {
+    if (kDoNotPruneIfUsedInLastNSec < block.getTimeSinceLastUpdated()) {
+      block.prune();
+    }
+    if (block.empty()) {
+      blocks_to_remove.emplace(block_index);
+    }
+  }
+  for (const auto& index : blocks_to_remove) {
+    blocks_.erase(index);
+  }
+}
+
 size_t HashedWaveletOctree::getMemoryUsage() const {
   // TODO(victorr): Also include the memory usage of the unordered map itself
   size_t memory_usage = 0u;
@@ -64,8 +79,7 @@ void HashedWaveletOctree::Block::threshold() {
 }
 
 void HashedWaveletOctree::Block::prune() {
-  if (getNeedsPruning() &&
-      kDoNotPruneIfUsedInLastNSec < getTimeSinceLastUpdated()) {
+  if (getNeedsPruning()) {
     threshold();
     recursivePrune(ndtree_.getRootNode());
     setNeedsPruning(false);

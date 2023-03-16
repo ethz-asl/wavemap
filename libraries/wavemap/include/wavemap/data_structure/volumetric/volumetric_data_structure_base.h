@@ -56,6 +56,11 @@ class VolumetricDataStructureBase {
   virtual size_t size() const = 0;
   virtual void threshold() = 0;
   virtual void prune() = 0;
+  virtual void pruneDistant() {
+    // NOTE: This method can be overriden by derived classes to provide more
+    //       efficient selective pruning strategies. Otherwise, just prune all.
+    prune();
+  }
   virtual void clear() = 0;
 
   virtual const VolumetricDataStructureConfig& getConfig() const {
