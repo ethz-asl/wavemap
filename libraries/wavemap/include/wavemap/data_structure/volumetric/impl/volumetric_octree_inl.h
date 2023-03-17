@@ -46,10 +46,9 @@ inline void VolumetricOctree::setCellValue(const Index3D& index,
 inline void VolumetricOctree::setCellValue(const OctreeIndex& node_index,
                                            FloatingPoint new_value) {
   constexpr bool kAutoAllocate = true;
-  const OctreeIndex internal_node_index = toInternal(node_index);
-  NodeType* node = ndtree_.getNode(internal_node_index, kAutoAllocate);
-  if (node) {
-    node->data() = new_value;
+  const OctreeIndex internal_index = toInternal(node_index);
+  if (auto* data = ndtree_.getNodeData(internal_index, kAutoAllocate); data) {
+    *data = new_value;
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << node_index.toString();
   }
@@ -64,10 +63,9 @@ inline void VolumetricOctree::addToCellValue(const Index3D& index,
 inline void VolumetricOctree::addToCellValue(const OctreeIndex& node_index,
                                              FloatingPoint update) {
   constexpr bool kAutoAllocate = true;
-  const OctreeIndex internal_node_index = toInternal(node_index);
-  NodeType* node = ndtree_.getNode(internal_node_index, kAutoAllocate);
-  if (node) {
-    node->data() += update;
+  const OctreeIndex internal_index = toInternal(node_index);
+  if (auto* data = ndtree_.getNodeData(internal_index, kAutoAllocate); data) {
+    *data += update;
   } else {
     LOG(ERROR) << "Failed to allocate cell at index: " << node_index.toString();
   }

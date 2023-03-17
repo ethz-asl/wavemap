@@ -141,40 +141,6 @@ inline void WaveletOctree::addToCellValue(const OctreeIndex& index,
   }
   root_scale_coefficient_ += coefficients.scale;
 }
-
-inline WaveletOctree::NodeType* WaveletOctree::getNode(
-    const OctreeIndex& index) {
-  const OctreeIndex internal_index = toInternal(index);
-  const MortonCode morton_code = convert::nodeIndexToMorton(internal_index);
-  NodeType* node = &ndtree_.getRootNode();
-  for (int parent_height = max_height_; internal_index.height < parent_height;
-       --parent_height) {
-    const NdtreeIndexRelativeChild child_index =
-        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    if (!node->hasChild(child_index)) {
-      node->template allocateChild(child_index);
-    }
-    node = node->getChild(child_index);
-  }
-  return node;
-}
-
-inline const WaveletOctree::NodeType* WaveletOctree::getNode(
-    const OctreeIndex& index) const {
-  const OctreeIndex internal_index = toInternal(index);
-  const MortonCode morton_code = convert::nodeIndexToMorton(internal_index);
-  const NodeType* node = &ndtree_.getRootNode();
-  for (int parent_height = max_height_; internal_index.height < parent_height;
-       --parent_height) {
-    const NdtreeIndexRelativeChild child_index =
-        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    if (!node->hasChild(child_index)) {
-      return nullptr;
-    }
-    node = node->getChild(child_index);
-  }
-  return node;
-}
 }  // namespace wavemap
 
 #endif  // WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_IMPL_WAVELET_OCTREE_INL_H_

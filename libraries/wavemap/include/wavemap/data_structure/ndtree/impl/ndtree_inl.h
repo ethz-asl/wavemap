@@ -70,7 +70,7 @@ size_t Ndtree<NodeDataType, dim>::getMemoryUsage() const {
 }
 
 template <typename NodeDataType, int dim>
-bool Ndtree<NodeDataType, dim>::removeNode(const IndexType& index) {
+bool Ndtree<NodeDataType, dim>::deleteNode(const IndexType& index) {
   IndexType parent_index = index.computeParentIndex();
   NodeType* parent_node = getNode(parent_index, /*auto_allocate*/ false);
   if (parent_node) {
@@ -80,11 +80,29 @@ bool Ndtree<NodeDataType, dim>::removeNode(const IndexType& index) {
 }
 
 template <typename NodeDataType, int dim>
+NodeDataType* Ndtree<NodeDataType, dim>::getNodeData(
+    const Ndtree::IndexType& index, bool auto_allocate) {
+  if (NodeType* node = getNode(index, auto_allocate); node) {
+    return &node->data();
+  }
+  return nullptr;
+}
+
+template <typename NodeDataType, int dim>
+const NodeDataType* Ndtree<NodeDataType, dim>::getNodeData(
+    const Ndtree::IndexType& index) const {
+  if (const NodeType* node = getNode(index); node) {
+    return &node->data();
+  }
+  return nullptr;
+}
+
+template <typename NodeDataType, int dim>
 typename Ndtree<NodeDataType, dim>::NodeType*
 Ndtree<NodeDataType, dim>::getNode(const IndexType& index, bool auto_allocate) {
   NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
-  for (int height = max_height_; 0 < height; --height) {
+  for (int height = max_height_; index.height < height; --height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
     // Check if the child is allocated
@@ -107,7 +125,7 @@ const typename Ndtree<NodeDataType, dim>::NodeType*
 Ndtree<NodeDataType, dim>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
-  for (int height = max_height_; 0 < height; --height) {
+  for (int height = max_height_; index.height < height; --height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
     // Check if the child is allocated

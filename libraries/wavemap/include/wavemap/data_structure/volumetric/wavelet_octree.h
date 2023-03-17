@@ -55,8 +55,6 @@ class WaveletOctree : public VolumetricDataStructureBase {
   }
   NodeType& getRootNode() { return ndtree_.getRootNode(); }
   const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
-  NodeType* getNode(const OctreeIndex& node_index);
-  const NodeType* getNode(const OctreeIndex& node_index) const;
 
   template <TraversalOrder traversal_order>
   auto getNodeIterator() {

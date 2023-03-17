@@ -31,9 +31,9 @@ class Ndtree {
     constexpr bool kAutoAllocate = true;
     getNode(index, kAutoAllocate);
   }
-  bool removeNode(const IndexType& index);
-  NodeType* getNode(const IndexType& index, bool auto_allocate = false);
-  const NodeType* getNode(const IndexType& index) const;
+  bool deleteNode(const IndexType& index);
+  NodeDataType* getNodeData(const IndexType& index, bool auto_allocate = false);
+  const NodeDataType* getNodeData(const IndexType& index) const;
 
   NodeType& getRootNode() { return root_node_; }
   const NodeType& getRootNode() const { return root_node_; }
@@ -52,6 +52,9 @@ class Ndtree {
  private:
   NodeType root_node_;
   const int max_height_;
+
+  NodeType* getNode(const IndexType& index, bool auto_allocate = false);
+  const NodeType* getNode(const IndexType& index) const;
 };
 }  // namespace wavemap
 
