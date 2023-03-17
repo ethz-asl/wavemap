@@ -41,8 +41,8 @@
   <node pkg="tf"
         type="static_transform_publisher"
         name="link_body_livox_frame"
-        args="0.0 0.0 0.0 0.0 0.0 0.0 1.000
-            body livox_frame 100"/>
+        args="-0.0110 -0.02329 0.04412 0.0 0.0 0.0 1.000
+            imu_forward_prop livox_frame 100"/>
 
   <!-- Run wavemap -->
   <include file="$(find wavemap_ros)/launch/wavemap_server.launch"

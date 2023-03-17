@@ -18,7 +18,6 @@ integrators:
       type: "livox"
       topic_name: "/livox/lidar"
       reprojected_topic_name: "/wavemap/input"
-      sensor_frame_id: "imu_forward_prop"
       topic_queue_length: 10
       max_wait_for_pose: { seconds: 1.0 }
     integration_method:

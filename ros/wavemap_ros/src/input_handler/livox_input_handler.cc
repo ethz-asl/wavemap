@@ -72,7 +72,7 @@ void LivoxInputHandler::processQueue() {
     }
 
     // Buffer the transforms
-    constexpr int kNumTimeIntervals = 100;
+    constexpr int kNumTimeIntervals = 400;
     constexpr int kNumTimeSteps = kNumTimeIntervals + 1;
     std::vector<std::pair<uint64_t, Transformation3D>> timed_poses;
     timed_poses.reserve(kNumTimeSteps);
