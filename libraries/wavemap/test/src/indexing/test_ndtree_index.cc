@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
+#include "wavemap/indexing/index_conversions.h"
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/utils/eigen_format.h"
@@ -61,11 +62,11 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
           << "\" should match the requested relative child index \""
           << std::to_string(relative_child_idx) << "\".";
       EXPECT_EQ(child_index.computeRelativeChildIndex(
-                    child_index.computeMortonCode(), node_index.height),
+                    convert::nodeIndexToMorton(child_index), node_index.height),
                 relative_child_idx)
           << "The child's index relative to its parent \""
           << std::to_string(child_index.computeRelativeChildIndex(
-                 child_index.computeMortonCode(), node_index.height))
+                 convert::nodeIndexToMorton(child_index), node_index.height))
           << "\" should match the requested relative child index \""
           << std::to_string(relative_child_idx) << "\".";
       EXPECT_EQ(child_index, child_indices[relative_child_idx])

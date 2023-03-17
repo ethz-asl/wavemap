@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_IMPL_HASHED_WAVELET_OCTREE_INL_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_IMPL_HASHED_WAVELET_OCTREE_INL_H_
 
+#include "wavemap/indexing/index_conversions.h"
+
 namespace wavemap {
 inline size_t HashedWaveletOctree::size() const {
   size_t size = 0u;
@@ -87,7 +89,7 @@ inline FloatingPoint HashedWaveletOctree::Block::getTimeSinceLastUpdated()
 
 inline FloatingPoint HashedWaveletOctree::Block::getCellValue(
     const OctreeIndex& index) const {
-  const MortonCode morton_code = index.computeMortonCode();
+  const MortonCode morton_code = convert::nodeIndexToMorton(index);
   const NodeType* node = &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
   for (int parent_height = kTreeHeight; index.height < parent_height;

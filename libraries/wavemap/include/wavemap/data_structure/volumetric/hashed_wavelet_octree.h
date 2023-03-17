@@ -7,8 +7,10 @@
 #include <unordered_map>
 
 #include "wavemap/common.h"
+#include "wavemap/data_structure/ndtree/ndtree.h"
+#include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
+#include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
-#include "wavemap/data_structure/volumetric/wavelet_octree.h"
 #include "wavemap/indexing/index_hashes.h"
 #include "wavemap/utils/int_math.h"
 
@@ -127,8 +129,8 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
  private:
   struct StackElement {
     const OctreeIndex node_index;
-    const WaveletOctree::NodeType& node;
-    const WaveletOctree::Coefficients::Scale scale_coefficient{};
+    const NodeType& node;
+    const Coefficients::Scale scale_coefficient{};
   };
 
   static constexpr IndexElement kTreeHeight = 7;

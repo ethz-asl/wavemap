@@ -142,7 +142,8 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
 
 TYPED_TEST(IndexConversionsTest, MortonCodes) {
   constexpr int kDim = TypeParam::kDim;
-  constexpr IndexElement kMaxCoordinate = convert::kMortonCoordinateMax<kDim>;
+  constexpr IndexElement kMaxCoordinate =
+      convert::kMortonMaxSingleCoordinate<kDim>;
   auto bitset_printer = [](Index<kDim> index) -> std::string {
     std::ostringstream ss;
     for (int idx = 0; idx < kDim; ++idx) {

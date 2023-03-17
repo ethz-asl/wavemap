@@ -13,15 +13,12 @@ class NdtreeNode {
  public:
   using IndexType = NdtreeIndex<dim>;
 
-  NdtreeNode() : data_{} {}
+  NdtreeNode() = default;
   explicit NdtreeNode(NodeDataType data) : data_(data) {}
   ~NdtreeNode() = default;
 
   bool empty() const { return data_ == NodeDataType{} && !hasChildrenArray(); }
-  void clear() {
-    deleteChildrenArray();
-    data() = NodeDataType{};
-  }
+  void clear();
 
   friend bool operator==(const NdtreeNode& lhs, const NdtreeNode& rhs) {
     return &rhs == &lhs;
@@ -32,17 +29,16 @@ class NdtreeNode {
 
   bool hasChildrenArray() const { return static_cast<bool>(children_); }
   void allocateChildrenArrayIfNeeded();
-  void deleteChildrenArray();
+  void deleteChildrenArray() { children_.reset(); }
 
-  bool hasChild(typename IndexType::RelativeChild child_index) const;
+  bool hasChild(NdtreeIndexRelativeChild child_index) const;
   bool hasAtLeastOneChild() const;
   template <typename... NodeConstructorArgs>
-  NdtreeNode* allocateChild(typename IndexType::RelativeChild child_index,
+  NdtreeNode* allocateChild(NdtreeIndexRelativeChild child_index,
                             NodeConstructorArgs&&... args);
-  bool deleteChild(typename IndexType::RelativeChild child_index);
-  NdtreeNode* getChild(typename IndexType::RelativeChild child_index);
-  const NdtreeNode* getChild(
-      typename IndexType::RelativeChild child_index) const;
+  bool deleteChild(NdtreeIndexRelativeChild child_index);
+  NdtreeNode* getChild(NdtreeIndexRelativeChild child_index);
+  const NdtreeNode* getChild(NdtreeIndexRelativeChild child_index) const;
 
   size_t getMemoryUsage() const;
 
@@ -50,7 +46,7 @@ class NdtreeNode {
   using ChildrenArray =
       std::array<std::unique_ptr<NdtreeNode>, IndexType::kNumChildren>;
 
-  NodeDataType data_;
+  NodeDataType data_{};
   std::unique_ptr<ChildrenArray> children_;
 };
 }  // namespace wavemap

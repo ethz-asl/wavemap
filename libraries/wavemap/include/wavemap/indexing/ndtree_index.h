@@ -9,21 +9,6 @@
 #include "wavemap/utils/int_math.h"
 
 namespace wavemap {
-namespace convert {
-template <int dim>
-constexpr int kMortonCoordinateMaxBits = 8 * sizeof(MortonCode) / dim;
-template <int dim>
-constexpr IndexElement kMortonCoordinateMax =
-    (dim < 3) ? std::numeric_limits<IndexElement>::max()
-              : (1ul << kMortonCoordinateMaxBits<dim>)-1ul;
-
-template <int dim>
-inline MortonCode indexToMorton(const Index<dim>& index);
-
-template <int dim>
-inline Index<dim> mortonToIndex(MortonCode morton);
-}  // namespace convert
-
 using NdtreeIndexElement = int;
 using NdtreeIndexRelativeChild = uint8_t;
 
@@ -60,7 +45,6 @@ struct NdtreeIndex {
   RelativeChild computeRelativeChildIndex() const;
   static RelativeChild computeRelativeChildIndex(MortonCode morton,
                                                  Element parent_height);
-  MortonCode computeMortonCode() const;
 
   std::string toString() const;
 

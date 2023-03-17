@@ -6,6 +6,12 @@
 
 namespace wavemap {
 template <typename NodeDataType, int dim>
+void NdtreeNode<NodeDataType, dim>::clear() {
+  deleteChildrenArray();
+  data() = NodeDataType{};
+}
+
+template <typename NodeDataType, int dim>
 void NdtreeNode<NodeDataType, dim>::allocateChildrenArrayIfNeeded() {
   if (!hasChildrenArray()) {
     children_ = std::make_unique<ChildrenArray>();
@@ -13,13 +19,8 @@ void NdtreeNode<NodeDataType, dim>::allocateChildrenArrayIfNeeded() {
 }
 
 template <typename NodeDataType, int dim>
-void NdtreeNode<NodeDataType, dim>::deleteChildrenArray() {
-  children_.reset();
-}
-
-template <typename NodeDataType, int dim>
 bool NdtreeNode<NodeDataType, dim>::hasChild(
-    typename IndexType::RelativeChild child_index) const {
+    NdtreeIndexRelativeChild child_index) const {
   return getChild(child_index);
 }
 
@@ -36,8 +37,7 @@ bool NdtreeNode<NodeDataType, dim>::hasAtLeastOneChild() const {
 template <typename NodeDataType, int dim>
 template <typename... NodeConstructorArgs>
 NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::allocateChild(
-    typename IndexType::RelativeChild child_index,
-    NodeConstructorArgs&&... args) {
+    NdtreeIndexRelativeChild child_index, NodeConstructorArgs&&... args) {
   allocateChildrenArrayIfNeeded();
   children_->operator[](child_index) =
       std::make_unique<NdtreeNode>(std::forward<NodeConstructorArgs>(args)...);
@@ -46,8 +46,8 @@ NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::allocateChild(
 
 template <typename NodeDataType, int dim>
 bool NdtreeNode<NodeDataType, dim>::deleteChild(
-    typename IndexType::RelativeChild child_index) {
-  if (hasChild(child_index)) {
+    NdtreeIndexRelativeChild child_index) {
+  if (hasChildrenArray()) {
     children_->operator[](child_index).reset();
     return true;
   }
@@ -56,7 +56,7 @@ bool NdtreeNode<NodeDataType, dim>::deleteChild(
 
 template <typename NodeDataType, int dim>
 NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::getChild(
-    typename IndexType::RelativeChild child_index) {
+    NdtreeIndexRelativeChild child_index) {
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }
@@ -65,7 +65,7 @@ NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::getChild(
 
 template <typename NodeDataType, int dim>
 const NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::getChild(
-    typename IndexType::RelativeChild child_index) const {
+    NdtreeIndexRelativeChild child_index) const {
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }

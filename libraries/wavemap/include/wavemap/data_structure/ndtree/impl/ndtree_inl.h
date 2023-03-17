@@ -5,9 +5,15 @@
 #include <vector>
 
 #include "wavemap/data_structure/pointcloud.h"
+#include "wavemap/indexing/index_conversions.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
+template <typename NodeDataType, int dim>
+Ndtree<NodeDataType, dim>::Ndtree(int max_height) : max_height_(max_height) {
+  CHECK_LE(max_height_, convert::kMortonMaxTreeHeight<dim>);
+}
+
 template <typename NodeDataType, int dim>
 size_t Ndtree<NodeDataType, dim>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
@@ -77,7 +83,7 @@ template <typename NodeDataType, int dim>
 typename Ndtree<NodeDataType, dim>::NodeType*
 Ndtree<NodeDataType, dim>::getNode(const IndexType& index, bool auto_allocate) {
   NodeType* current_parent = &root_node_;
-  const MortonCode morton_code = index.computeMortonCode();
+  const MortonCode morton_code = convert::nodeIndexToMorton(index);
   for (int height = max_height_; 0 < height; --height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
@@ -100,7 +106,7 @@ template <typename NodeDataType, int dim>
 const typename Ndtree<NodeDataType, dim>::NodeType*
 Ndtree<NodeDataType, dim>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
-  const MortonCode morton_code = index.computeMortonCode();
+  const MortonCode morton_code = convert::nodeIndexToMorton(index);
   for (int height = max_height_; 0 < height; --height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);

@@ -91,7 +91,7 @@ void HashedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
   setNeedsPruning();
   setNeedsThresholding();
   setLastUpdatedStamp();
-  const MortonCode morton_code = index.computeMortonCode();
+  const MortonCode morton_code = convert::nodeIndexToMorton(index);
   std::vector<NodeType*> node_ptrs;
   const int height_difference = kTreeHeight - index.height;
   node_ptrs.reserve(height_difference);
@@ -131,7 +131,7 @@ void HashedWaveletOctree::Block::addToCellValue(const OctreeIndex& index,
   setNeedsPruning();
   setNeedsThresholding();
   setLastUpdatedStamp();
-  const MortonCode morton_code = index.computeMortonCode();
+  const MortonCode morton_code = convert::nodeIndexToMorton(index);
 
   std::vector<NodeType*> node_ptrs;
   const int height_difference = kTreeHeight - index.height;

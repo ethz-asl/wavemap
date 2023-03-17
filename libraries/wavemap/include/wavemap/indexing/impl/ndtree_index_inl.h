@@ -7,30 +7,6 @@
 #include "wavemap/utils/bit_manipulation.h"
 
 namespace wavemap {
-namespace convert {
-template <int dim>
-MortonCode indexToMorton(const Index<dim>& index) {
-  uint64_t morton = 0u;
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
-  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    DCHECK_GE(index[dim_idx], 0);
-    DCHECK_LE(index[dim_idx], kMortonCoordinateMax<dim>);
-    morton |= bit_manip::expand<uint64_t>(index[dim_idx], pattern << dim_idx);
-  }
-  return morton;
-}
-
-template <int dim>
-Index<dim> mortonToIndex(MortonCode morton) {
-  Index<dim> index;
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
-  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    index[dim_idx] = bit_manip::compress<uint64_t>(morton, pattern << dim_idx);
-  }
-  return index;
-}
-}  // namespace convert
-
 template <int dim>
 NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex() const {
   return {height + 1, int_math::div_exp2_floor(position, 1)};
@@ -85,11 +61,6 @@ template <int dim>
 NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex(
     MortonCode morton, NdtreeIndex::Element parent_height) {
   return (morton >> ((parent_height - 1) * dim)) & kRelativeChildIndexMask;
-}
-
-template <int dim>
-MortonCode NdtreeIndex<dim>::computeMortonCode() const {
-  return convert::indexToMorton(position) << (height * dim);
 }
 
 template <int dim>

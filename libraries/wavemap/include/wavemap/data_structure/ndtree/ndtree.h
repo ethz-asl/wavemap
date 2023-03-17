@@ -18,7 +18,7 @@ class Ndtree {
   using IndexType = NdtreeIndex<dim>;
   using NodeType = NdtreeNode<NodeDataType, dim>;
 
-  explicit Ndtree(int max_height) : max_height_(max_height) {}
+  explicit Ndtree(int max_height);
   ~Ndtree() = default;
 
   bool empty() const { return root_node_.empty(); }
