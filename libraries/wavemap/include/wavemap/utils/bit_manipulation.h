@@ -23,6 +23,14 @@ inline constexpr uint64_t parity(uint64_t bitstring) {
   return __builtin_parityll(bitstring);
 }
 
+inline constexpr uint32_t clz(uint32_t bitstring) {
+  return __builtin_clz(bitstring);
+}
+
+inline constexpr uint64_t clz(uint64_t bitstring) {
+  return __builtin_clzll(bitstring);
+}
+
 #if defined(__BMI2__) || defined(__AVX2__)
 inline uint32_t expand(uint32_t source, uint32_t selector) {
   return _pdep_u32(source, selector);
@@ -97,6 +105,12 @@ constexpr T popcount(T bitstring) {
 template <typename T>
 constexpr T parity(T bitstring) {
   return detail::parity(bit_cast_unsigned(bitstring));
+}
+
+template <typename T>
+constexpr T clz(T bitstring) {
+  DCHECK_NE(bitstring, static_cast<T>(0));
+  return detail::clz(bit_cast_unsigned(bitstring));
 }
 
 template <typename T>

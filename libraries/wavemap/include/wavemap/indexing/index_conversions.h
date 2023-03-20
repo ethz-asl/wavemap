@@ -92,7 +92,7 @@ inline LinearIndex indexToLinearIndex(const Index<dim>& index) {
 
 template <int cells_per_side, int dim>
 inline Index<dim> linearIndexToIndex(LinearIndex linear_index) {
-  DCHECK(linear_index < std::pow(cells_per_side, dim));
+  DCHECK_LT(linear_index, std::pow(cells_per_side, dim));
   constexpr auto pow_sequence =
       int_math::pow_sequence<IndexElement, cells_per_side, dim>();
   Index<dim> index;

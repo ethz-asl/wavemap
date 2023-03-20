@@ -169,6 +169,22 @@ TEST_F(BitManipulationTest, Parity) {
   EXPECT_EQ(bit_manip::parity(0b11101010010111), 1);
 }
 
+TEST_F(BitManipulationTest, CountLeadingZeros) {
+  EXPECT_EQ(bit_manip::clz(static_cast<uint32_t>(1) << 0), 31);
+  EXPECT_EQ(bit_manip::clz(static_cast<uint32_t>(1) << 30), 1);
+  EXPECT_EQ(bit_manip::clz(static_cast<uint32_t>(1) << 31), 0);
+
+  EXPECT_EQ(bit_manip::clz(static_cast<int32_t>(1)) << 0, 31);
+  EXPECT_EQ(bit_manip::clz(static_cast<int32_t>(1) << 30), 1);
+
+  EXPECT_EQ(bit_manip::clz(static_cast<uint64_t>(1)) << 0, 63);
+  EXPECT_EQ(bit_manip::clz(static_cast<uint64_t>(1) << 62), 1);
+  EXPECT_EQ(bit_manip::clz(static_cast<uint64_t>(1) << 63), 0);
+
+  EXPECT_EQ(bit_manip::clz(static_cast<int64_t>(1)) << 0, 63);
+  EXPECT_EQ(bit_manip::clz(static_cast<int64_t>(1) << 62), 1);
+}
+
 TEST_F(BitManipulationTest, RepeatBlock) {
   EXPECT_EQ(bit_manip::repeat_block<uint32_t>(2, 0b01),
             0b01010101010101010101010101010101);

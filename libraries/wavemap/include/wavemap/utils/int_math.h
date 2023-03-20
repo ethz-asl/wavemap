@@ -4,21 +4,30 @@
 #include <limits>
 
 #include "wavemap/common.h"
+#include "wavemap/utils/bit_manipulation.h"
 
 namespace wavemap::int_math {
-constexpr int exp2(int exponent) { return 1 << exponent; }
-
-constexpr int log2_floor(int value) {
-  DCHECK(value != 0);
-  return std::numeric_limits<int>::digits - __builtin_clz(value);
+template <typename T>
+constexpr T exp2(T exponent) {
+  static_assert(std::is_integral_v<T>);
+  return static_cast<T>(1) << exponent;
 }
 
-constexpr int log2_ceil(int value) {
-  const int log2_floored = log2_floor(value);
-  if (__builtin_popcount(value) == 1) {
+template <typename T>
+constexpr T log2_floor(T value) {
+  static_assert(std::is_integral_v<T>);
+  DCHECK_NE(value, static_cast<T>(0));
+  return std::numeric_limits<T>::digits - bit_manip::clz(value);
+}
+
+template <typename T>
+constexpr T log2_ceil(T value) {
+  static_assert(std::is_integral_v<T>);
+  const T log2_floored = log2_floor(value);
+  if (bit_manip::popcount(value) == static_cast<T>(1)) {
     return log2_floored;
   } else {
-    return log2_floored + 1;
+    return log2_floored + static_cast<T>(1);
   }
 }
 
