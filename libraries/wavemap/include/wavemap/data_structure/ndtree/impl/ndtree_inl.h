@@ -25,8 +25,8 @@ void Ndtree<NodeDataType, dim>::prune() {
   for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
     if (node.hasChildrenArray()) {
       bool has_non_empty_child = false;
-      for (int child_idx = 0; child_idx < IndexType::kNumChildren;
-           ++child_idx) {
+      for (NdtreeIndexRelativeChild child_idx = 0;
+           child_idx < IndexType::kNumChildren; ++child_idx) {
         NodeType* child_ptr = node.getChild(child_idx);
         if (child_ptr) {
           if (child_ptr->empty()) {
@@ -57,7 +57,7 @@ size_t Ndtree<NodeDataType, dim>::getMemoryUsage() const {
     memory_usage += node->getMemoryUsage();
 
     if (node->hasChildrenArray()) {
-      for (typename IndexType::RelativeChild child_idx = 0;
+      for (NdtreeIndexRelativeChild child_idx = 0;
            child_idx < IndexType::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           stack.emplace(node->getChild(child_idx));
@@ -102,9 +102,10 @@ typename Ndtree<NodeDataType, dim>::NodeType*
 Ndtree<NodeDataType, dim>::getNode(const IndexType& index, bool auto_allocate) {
   NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
-  for (int height = max_height_; index.height < height; --height) {
+  for (int parent_height = max_height_; index.height < parent_height;
+       --parent_height) {
     const NdtreeIndexRelativeChild child_index =
-        NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
+        NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, parent_height);
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       if (auto_allocate) {
@@ -125,9 +126,10 @@ const typename Ndtree<NodeDataType, dim>::NodeType*
 Ndtree<NodeDataType, dim>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
-  for (int height = max_height_; index.height < height; --height) {
+  for (int parent_height = max_height_; index.height < parent_height;
+       --parent_height) {
     const NdtreeIndexRelativeChild child_index =
-        NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, height);
+        NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, parent_height);
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       return nullptr;

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "wavemap/utils/bit_manipulation.h"
+#include "wavemap/utils/tree_math.h"
 
 namespace wavemap {
 template <int dim>
@@ -60,7 +61,25 @@ NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex() const {
 template <int dim>
 NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex(
     MortonCode morton, NdtreeIndex::Element parent_height) {
-  return (morton >> ((parent_height - 1) * dim)) & kRelativeChildIndexMask;
+  const Element child_height = parent_height - 1;
+  static constexpr MortonCode kRelativeChildIndexMask = (1 << dim) - 1;
+  return (morton >> (child_height * dim)) & kRelativeChildIndexMask;
+}
+
+template <int dim>
+LinearIndex NdtreeIndex<dim>::computeLinearOffset(
+    MortonCode morton, NdtreeIndex::Element parent_height,
+    NdtreeIndex::Element child_height) {
+  const Element height_difference = parent_height - child_height;
+  const LinearIndex parent_to_first_child_offset =
+      tree_math::perfect_tree::num_total_nodes_fast<dim>(height_difference);
+
+  const MortonCode relative_child_index_mask =
+      (static_cast<MortonCode>(1) << (height_difference * dim)) - 1;
+  const LinearIndex first_child_to_child_offset =
+      (morton >> (child_height * dim)) & relative_child_index_mask;
+
+  return parent_to_first_child_offset + first_child_to_child_offset;
 }
 
 template <int dim>

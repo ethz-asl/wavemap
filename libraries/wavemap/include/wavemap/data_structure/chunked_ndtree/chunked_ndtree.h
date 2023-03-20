@@ -1,35 +1,35 @@
-#ifndef WAVEMAP_DATA_STRUCTURE_NDTREE_NDTREE_H_
-#define WAVEMAP_DATA_STRUCTURE_NDTREE_NDTREE_H_
+#ifndef WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_H_
+#define WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_H_
 
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/ndtree/ndtree_node.h"
+#include "wavemap/data_structure/chunked_ndtree/chunked_ndtree_node.h"
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/iterator/subtree_iterator.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim>
-class Ndtree {
+template <typename NodeDataType, int dim, int chunk_height>
+class ChunkedNdtree {
  public:
   using IndexType = NdtreeIndex<dim>;
-  using NodeType = NdtreeNode<NodeDataType, dim>;
+  using NodeType = ChunkedNdtreeNode<NodeDataType, dim, chunk_height>;
 
-  explicit Ndtree(int max_height);
-  ~Ndtree() = default;
+  explicit ChunkedNdtree(int max_height) : max_height_(max_height) {
+    CHECK_EQ(max_height_ % chunk_height, 0);
+  }
+  ~ChunkedNdtree() = default;
 
   bool empty() const { return root_node_.empty(); }
   size_t size() const;
   void clear() { root_node_.clear(); }
   void prune();
 
-  bool hasNode(const IndexType& index) const { return getNode(index); }
-  void allocateNode(const IndexType& index) {
-    getNode(index, /*auto_allocate*/ true);
-  }
-  bool deleteNode(const IndexType& index);
+  bool hasNode(const IndexType& index) const;
+  void allocateNode(const IndexType& index);
+  void resetNode(const IndexType& index);
   NodeDataType* getNodeData(const IndexType& index, bool auto_allocate = false);
   const NodeDataType* getNodeData(const IndexType& index) const;
 
@@ -51,11 +51,13 @@ class Ndtree {
   NodeType root_node_;
   const int max_height_;
 
-  NodeType* getNode(const IndexType& index, bool auto_allocate = false);
-  const NodeType* getNode(const IndexType& index) const;
+  std::pair<NodeType*, LinearIndex> getNodeAndRelativeIndex(
+      const IndexType& index, bool auto_allocate = false);
+  std::pair<const NodeType*, LinearIndex> getNodeAndRelativeIndex(
+      const IndexType& index) const;
 };
 }  // namespace wavemap
 
-#include "wavemap/data_structure/ndtree/impl/ndtree_inl.h"
+#include "wavemap/data_structure/chunked_ndtree/impl/chunked_ndtree_inl.h"
 
-#endif  // WAVEMAP_DATA_STRUCTURE_NDTREE_NDTREE_H_
+#endif  // WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_H_

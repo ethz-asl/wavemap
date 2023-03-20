@@ -45,11 +45,11 @@ struct NdtreeIndex {
   RelativeChild computeRelativeChildIndex() const;
   static RelativeChild computeRelativeChildIndex(MortonCode morton,
                                                  Element parent_height);
+  static LinearIndex computeLinearOffset(MortonCode morton,
+                                         Element parent_height,
+                                         Element child_height);
 
   std::string toString() const;
-
- private:
-  static constexpr MortonCode kRelativeChildIndexMask = (1 << dim) - 1;
 };
 
 using BinaryTreeIndex = NdtreeIndex<1>;

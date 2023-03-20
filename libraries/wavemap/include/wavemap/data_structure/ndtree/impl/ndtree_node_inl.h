@@ -47,7 +47,7 @@ NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::allocateChild(
 template <typename NodeDataType, int dim>
 bool NdtreeNode<NodeDataType, dim>::deleteChild(
     NdtreeIndexRelativeChild child_index) {
-  if (hasChildrenArray()) {
+  if (hasChild(child_index)) {
     children_->operator[](child_index).reset();
     return true;
   }
