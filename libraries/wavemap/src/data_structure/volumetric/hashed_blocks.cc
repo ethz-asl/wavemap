@@ -7,7 +7,7 @@ void HashedBlocks::prune() {
   // TODO(victorr): Iterate directly over linear index instead of grid
   const Grid local_grid(min_local_cell_index, max_local_cell_index);
 
-  std::unordered_set<BlockIndex, VoxbloxIndexHash<3>> blocks_to_delete;
+  std::unordered_set<BlockIndex, IndexHash<3>> blocks_to_delete;
   for (const auto& [block_index, block_data] : blocks_) {
     if (!std::any_of(
             local_grid.begin(), local_grid.end(),

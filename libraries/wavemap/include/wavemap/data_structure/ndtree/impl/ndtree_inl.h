@@ -26,7 +26,7 @@ void Ndtree<NodeDataT, dim>::prune() {
     if (node.hasChildrenArray()) {
       bool has_non_empty_child = false;
       for (NdtreeIndexRelativeChild child_idx = 0;
-           child_idx < IndexType::kNumChildren; ++child_idx) {
+           child_idx < NodeType::kNumChildren; ++child_idx) {
         NodeType* child_ptr = node.getChild(child_idx);
         if (child_ptr) {
           if (child_ptr->empty()) {
@@ -58,7 +58,7 @@ size_t Ndtree<NodeDataT, dim>::getMemoryUsage() const {
 
     if (node->hasChildrenArray()) {
       for (NdtreeIndexRelativeChild child_idx = 0;
-           child_idx < IndexType::kNumChildren; ++child_idx) {
+           child_idx < NodeType::kNumChildren; ++child_idx) {
         if (node->hasChild(child_idx)) {
           stack.emplace(node->getChild(child_idx));
         }

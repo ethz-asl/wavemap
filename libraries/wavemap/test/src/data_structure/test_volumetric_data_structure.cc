@@ -135,8 +135,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
         Index3D::Constant(std::numeric_limits<IndexElement>::max());
     Index3D reference_max_index =
         Index3D::Constant(std::numeric_limits<IndexElement>::lowest());
-    std::unordered_map<Index3D, FloatingPoint, VoxbloxIndexHash<3>>
-        reference_map;
+    std::unordered_map<Index3D, FloatingPoint, IndexHash<3>> reference_map;
     for (const Index3D& index : random_indices) {
       for (const FloatingPoint update : TestFixture::getRandomUpdateVector()) {
         map_base_ptr->addToCellValue(index, update);
@@ -168,8 +167,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
 
     // Check that the indexed leaf value visitor visits all non-zero cells
     const size_t reference_map_size = reference_map.size();
-    std::unordered_map<Index3D, FloatingPoint, VoxbloxIndexHash<3>>
-        false_positive_map;
+    std::unordered_map<Index3D, FloatingPoint, IndexHash<3>> false_positive_map;
     map_base_ptr->forEachLeaf(
         [&reference_map, &false_positive_map](const OctreeIndex& node_index,
                                               FloatingPoint value) {

@@ -129,7 +129,7 @@ TEST_F(PointcloudIntegrator3DTest, RayTracingIntegrator) {
     // Generate a random point cloud and save its end points in a hashed set
     const PosedPointcloud<> random_pointcloud =
         getRandomPointcloud(*projection_model, min_distance, kMaxDistance);
-    std::unordered_set<Index3D, VoxbloxIndexHash<3>> ray_end_points;
+    std::unordered_set<Index3D, IndexHash<3>> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index3D index =
           convert::pointToNearestIndex<3>(end_point, min_cell_width_inv);

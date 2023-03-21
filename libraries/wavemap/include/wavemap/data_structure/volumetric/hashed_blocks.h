@@ -54,7 +54,7 @@ class HashedBlocks : public VolumetricDataStructureBase {
   using BlockIndex = Index3D;
   using CellIndex = Index3D;
 
-  std::unordered_map<BlockIndex, Block, VoxbloxIndexHash<3>> blocks_;
+  std::unordered_map<BlockIndex, Block, IndexHash<3>> blocks_;
 
   FloatingPoint* accessCellData(const Index3D& index,
                                 bool auto_allocate = false);

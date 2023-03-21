@@ -37,7 +37,7 @@ void MeshVisual::loadMap(const VolumetricDataStructureBase& map,
       logOddsToValue(max_occupancy_log_odds);
 
   // Collect all the voxels that contain surface crossings
-  std::unordered_map<Index3D, std::array<FloatingPoint, 8>, VoxbloxIndexHash<3>>
+  std::unordered_map<Index3D, std::array<FloatingPoint, 8>, IndexHash<3>>
       surface_voxels;
   map.forEachLeaf([=, &map, &surface_voxels](const OctreeIndex& node_index,
                                              FloatingPoint cell_log_odds) {

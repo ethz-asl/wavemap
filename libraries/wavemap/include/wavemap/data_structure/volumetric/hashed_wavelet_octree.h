@@ -138,7 +138,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
       int_math::exp2(kTreeHeight);
   static constexpr FloatingPoint kDoNotPruneIfUsedInLastNSec = 5.f;
 
-  std::unordered_map<BlockIndex, Block, VoxbloxIndexHash<3>> blocks_;
+  std::unordered_map<BlockIndex, Block, IndexHash<3>> blocks_;
 
   static BlockIndex computeBlockIndexFromIndex(const Index3D& index) {
     return int_math::div_exp2_floor(index, kTreeHeight);

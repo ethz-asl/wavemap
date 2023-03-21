@@ -10,7 +10,7 @@ void HashedWaveletOctree::threshold() {
 }
 
 void HashedWaveletOctree::prune() {
-  std::unordered_set<BlockIndex, VoxbloxIndexHash<3>> blocks_to_remove;
+  std::unordered_set<BlockIndex, IndexHash<3>> blocks_to_remove;
   for (auto& [block_index, block] : blocks_) {
     block.prune();
     if (block.empty()) {
@@ -23,7 +23,7 @@ void HashedWaveletOctree::prune() {
 }
 
 void HashedWaveletOctree::pruneDistant() {
-  std::unordered_set<BlockIndex, VoxbloxIndexHash<3>> blocks_to_remove;
+  std::unordered_set<BlockIndex, IndexHash<3>> blocks_to_remove;
   for (auto& [block_index, block] : blocks_) {
     if (kDoNotPruneIfUsedInLastNSec < block.getTimeSinceLastUpdated()) {
       block.prune();

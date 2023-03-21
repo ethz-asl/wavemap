@@ -4,10 +4,11 @@
 #include <numeric>
 
 #include "wavemap/common.h"
+#include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
 template <int dim>
-struct VoxbloxIndexHash {
+struct IndexHash {
   static constexpr auto coefficients =
       int_math::pow_sequence<size_t, 17191u, dim>();
 
@@ -17,16 +18,16 @@ struct VoxbloxIndexHash {
   }
 };
 
-// NOTE: This hash function is introduced in K. Museth, “VDB: High-resolution
-//       sparse volumes with dynamic topology,” ACM Trans. Graph., 2013.
-struct VDBIndexHash {
-  // TODO(victorr): Pick a better estimate for this value
-  // NOTE: kLog2N should equal log_2 of the estimated hash map size
-  static constexpr size_t kLog2N = 16u;
+template <int dim>
+struct NdtreeIndexHash {
+  static constexpr auto coefficients =
+      int_math::pow_sequence<size_t, 17191u, dim + 1>();
 
-  size_t operator()(const Index2D& index) const {
-    return static_cast<size_t>(((1 << kLog2N) - 1) &
-                               (index.x() * 73856093 ^ index.y() * 19349663));
+  size_t operator()(const NdtreeIndex<dim>& index) const {
+    return std::transform_reduce(coefficients.cbegin(),
+                                 std::prev(coefficients.cend()),
+                                 index.position.data(), 0u) +
+           coefficients.back() * index.height;
   }
 };
 }  // namespace wavemap
