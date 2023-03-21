@@ -5,35 +5,49 @@
 #include <utility>
 
 namespace wavemap {
-template <typename NodeDataType, int dim, int height>
-bool ChunkedNdtreeNode<NodeDataType, dim, height>::empty() const {
+template <typename DataT, int dim, int height>
+bool ChunkedNdtreeNode<DataT, dim, height>::empty() const {
   return !hasChildrenArray() &&
          std::all_of(data_.cbegin(), data_.cend(),
-                     [](auto val) { return val == NodeDataType{}; });
+                     [](auto val) { return val == DataT{}; });
 }
 
-template <typename NodeDataType, int dim, int height>
-void ChunkedNdtreeNode<NodeDataType, dim, height>::clear() {
+template <typename DataT, int dim, int height>
+void ChunkedNdtreeNode<DataT, dim, height>::clear() {
   deleteChildrenArray();
-  data() = NodeDataType{};
+  std::fill(data_.begin(), data_.end(), DataT{});
 }
 
-template <typename NodeDataType, int dim, int height>
-void ChunkedNdtreeNode<NodeDataType, dim,
-                       height>::allocateChildrenArrayIfNeeded() {
+template <typename DataT, int dim, int height>
+DataT& ChunkedNdtreeNode<DataT, dim, height>::data(LinearIndex linear_index) {
+  CHECK_GE(linear_index, 0u);
+  CHECK_LT(linear_index, kNumInnerNodes);
+  return data_[linear_index];
+}
+
+template <typename DataT, int dim, int height>
+const DataT& ChunkedNdtreeNode<DataT, dim, height>::data(
+    LinearIndex linear_index) const {
+  CHECK_GE(linear_index, 0u);
+  CHECK_LT(linear_index, kNumInnerNodes);
+  return data_[linear_index];
+}
+
+template <typename DataT, int dim, int height>
+void ChunkedNdtreeNode<DataT, dim, height>::allocateChildrenArrayIfNeeded() {
   if (!hasChildrenArray()) {
     children_ = std::make_unique<ChildrenArray>();
   }
 }
 
-template <typename NodeDataType, int dim, int height>
-bool ChunkedNdtreeNode<NodeDataType, dim, height>::hasChild(
+template <typename DataT, int dim, int height>
+bool ChunkedNdtreeNode<DataT, dim, height>::hasChild(
     LinearIndex child_index) const {
   return getChild(child_index);
 }
 
-template <typename NodeDataType, int dim, int height>
-bool ChunkedNdtreeNode<NodeDataType, dim, height>::hasAtLeastOneChild() const {
+template <typename DataT, int dim, int height>
+bool ChunkedNdtreeNode<DataT, dim, height>::hasAtLeastOneChild() const {
   if (hasChildrenArray()) {
     return std::any_of(
         children_->cbegin(), children_->cend(),
@@ -42,17 +56,18 @@ bool ChunkedNdtreeNode<NodeDataType, dim, height>::hasAtLeastOneChild() const {
   return false;
 }
 
-template <typename NodeDataType, int dim, int height>
-ChunkedNdtreeNode<NodeDataType, dim, height>*
-ChunkedNdtreeNode<NodeDataType, dim, height>::allocateChild(
-    LinearIndex child_index) {
+template <typename DataT, int dim, int height>
+ChunkedNdtreeNode<DataT, dim, height>*
+ChunkedNdtreeNode<DataT, dim, height>::allocateChild(LinearIndex child_index) {
+  CHECK_GE(child_index, 0u);
+  CHECK_LT(child_index, kNumChildren);
   allocateChildrenArrayIfNeeded();
   children_->operator[](child_index) = std::make_unique<ChunkedNdtreeNode>();
   return children_->operator[](child_index).get();
 }
 
-template <typename NodeDataType, int dim, int height>
-bool ChunkedNdtreeNode<NodeDataType, dim, height>::deleteChild(
+template <typename DataT, int dim, int height>
+bool ChunkedNdtreeNode<DataT, dim, height>::deleteChild(
     LinearIndex child_index) {
   if (hasChild(child_index)) {
     children_->operator[](child_index).reset();
@@ -61,29 +76,31 @@ bool ChunkedNdtreeNode<NodeDataType, dim, height>::deleteChild(
   return false;
 }
 
-template <typename NodeDataType, int dim, int height>
-ChunkedNdtreeNode<NodeDataType, dim, height>*
-ChunkedNdtreeNode<NodeDataType, dim, height>::getChild(
-    LinearIndex child_index) {
+template <typename DataT, int dim, int height>
+ChunkedNdtreeNode<DataT, dim, height>*
+ChunkedNdtreeNode<DataT, dim, height>::getChild(LinearIndex child_index) {
+  CHECK_GE(child_index, 0u);
+  CHECK_LT(child_index, kNumChildren);
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }
   return nullptr;
 }
 
-template <typename NodeDataType, int dim, int height>
-const ChunkedNdtreeNode<NodeDataType, dim, height>*
-ChunkedNdtreeNode<NodeDataType, dim, height>::getChild(
-    LinearIndex child_index) const {
+template <typename DataT, int dim, int height>
+const ChunkedNdtreeNode<DataT, dim, height>*
+ChunkedNdtreeNode<DataT, dim, height>::getChild(LinearIndex child_index) const {
+  CHECK_GE(child_index, 0u);
+  CHECK_LT(child_index, kNumChildren);
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }
   return nullptr;
 }
 
-template <typename NodeDataType, int dim, int height>
-size_t ChunkedNdtreeNode<NodeDataType, dim, height>::getMemoryUsage() const {
-  size_t memory_usage = sizeof(ChunkedNdtreeNode<NodeDataType, dim, height>);
+template <typename DataT, int dim, int height>
+size_t ChunkedNdtreeNode<DataT, dim, height>::getMemoryUsage() const {
+  size_t memory_usage = sizeof(ChunkedNdtreeNode<DataT, dim, height>);
   if (hasChildrenArray()) {
     memory_usage += sizeof(ChildrenArray);
   }

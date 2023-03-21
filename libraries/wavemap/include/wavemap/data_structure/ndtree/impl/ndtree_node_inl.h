@@ -5,27 +5,27 @@
 #include <utility>
 
 namespace wavemap {
-template <typename NodeDataType, int dim>
-void NdtreeNode<NodeDataType, dim>::clear() {
+template <typename DataT, int dim>
+void NdtreeNode<DataT, dim>::clear() {
   deleteChildrenArray();
-  data() = NodeDataType{};
+  data() = DataT{};
 }
 
-template <typename NodeDataType, int dim>
-void NdtreeNode<NodeDataType, dim>::allocateChildrenArrayIfNeeded() {
+template <typename DataT, int dim>
+void NdtreeNode<DataT, dim>::allocateChildrenArrayIfNeeded() {
   if (!hasChildrenArray()) {
     children_ = std::make_unique<ChildrenArray>();
   }
 }
 
-template <typename NodeDataType, int dim>
-bool NdtreeNode<NodeDataType, dim>::hasChild(
+template <typename DataT, int dim>
+bool NdtreeNode<DataT, dim>::hasChild(
     NdtreeIndexRelativeChild child_index) const {
   return getChild(child_index);
 }
 
-template <typename NodeDataType, int dim>
-bool NdtreeNode<NodeDataType, dim>::hasAtLeastOneChild() const {
+template <typename DataT, int dim>
+bool NdtreeNode<DataT, dim>::hasAtLeastOneChild() const {
   if (hasChildrenArray()) {
     return std::any_of(
         children_->cbegin(), children_->cend(),
@@ -34,19 +34,20 @@ bool NdtreeNode<NodeDataType, dim>::hasAtLeastOneChild() const {
   return false;
 }
 
-template <typename NodeDataType, int dim>
+template <typename DataT, int dim>
 template <typename... NodeConstructorArgs>
-NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::allocateChild(
+NdtreeNode<DataT, dim>* NdtreeNode<DataT, dim>::allocateChild(
     NdtreeIndexRelativeChild child_index, NodeConstructorArgs&&... args) {
+  CHECK_GE(child_index, 0u);
+  CHECK_LT(child_index, kNumChildren);
   allocateChildrenArrayIfNeeded();
   children_->operator[](child_index) =
       std::make_unique<NdtreeNode>(std::forward<NodeConstructorArgs>(args)...);
   return children_->operator[](child_index).get();
 }
 
-template <typename NodeDataType, int dim>
-bool NdtreeNode<NodeDataType, dim>::deleteChild(
-    NdtreeIndexRelativeChild child_index) {
+template <typename DataT, int dim>
+bool NdtreeNode<DataT, dim>::deleteChild(NdtreeIndexRelativeChild child_index) {
   if (hasChild(child_index)) {
     children_->operator[](child_index).reset();
     return true;
@@ -54,17 +55,19 @@ bool NdtreeNode<NodeDataType, dim>::deleteChild(
   return false;
 }
 
-template <typename NodeDataType, int dim>
-NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::getChild(
+template <typename DataT, int dim>
+NdtreeNode<DataT, dim>* NdtreeNode<DataT, dim>::getChild(
     NdtreeIndexRelativeChild child_index) {
+  CHECK_GE(child_index, 0u);
+  CHECK_LT(child_index, kNumChildren);
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
   }
   return nullptr;
 }
 
-template <typename NodeDataType, int dim>
-const NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::getChild(
+template <typename DataT, int dim>
+const NdtreeNode<DataT, dim>* NdtreeNode<DataT, dim>::getChild(
     NdtreeIndexRelativeChild child_index) const {
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
@@ -72,9 +75,9 @@ const NdtreeNode<NodeDataType, dim>* NdtreeNode<NodeDataType, dim>::getChild(
   return nullptr;
 }
 
-template <typename NodeDataType, int dim>
-size_t NdtreeNode<NodeDataType, dim>::getMemoryUsage() const {
-  size_t memory_usage = sizeof(NdtreeNode<NodeDataType, dim>);
+template <typename DataT, int dim>
+size_t NdtreeNode<DataT, dim>::getMemoryUsage() const {
+  size_t memory_usage = sizeof(NdtreeNode<DataT, dim>);
   if (hasChildrenArray()) {
     memory_usage += sizeof(ChildrenArray);
   }

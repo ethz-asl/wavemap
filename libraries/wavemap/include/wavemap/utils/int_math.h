@@ -72,6 +72,11 @@ constexpr std::array<T, dim> pow_sequence() {
   }
   return pow_sequence;
 }
+
+template <typename T>
+constexpr T div_round_up(T numerator, T denominator) {
+  return numerator / denominator + (numerator % denominator != 0);
+}
 }  // namespace wavemap::int_math
 
 #endif  // WAVEMAP_UTILS_INT_MATH_H_

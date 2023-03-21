@@ -132,26 +132,35 @@ class FixtureBase : public ::testing::Test {
   }
 
   template <typename NdtreeIndexT>
+  NdtreeIndexT getRandomNdtreeIndex(
+      typename NdtreeIndexT::Position min_index,
+      typename NdtreeIndexT::Position max_index,
+      typename NdtreeIndexT::Element min_height,
+      typename NdtreeIndexT::Element max_height) const {
+    CHECK((min_index.array() <= max_index.array()).all());
+    CHECK_LE(min_height, max_height);
+    typename NdtreeIndexT::Position position_index;
+    for (int i = 0; i < NdtreeIndexT::kDim; ++i) {
+      position_index[i] = getRandomIndexElement(min_index[i], max_index[i]);
+    }
+    return NdtreeIndexT{getRandomNdtreeIndexHeight(min_height, max_height),
+                        position_index};
+  }
+
+  template <typename NdtreeIndexT>
   std::vector<NdtreeIndexT> getRandomNdtreeIndexVector(
       typename NdtreeIndexT::Position min_index,
       typename NdtreeIndexT::Position max_index,
       typename NdtreeIndexT::Element min_height,
       typename NdtreeIndexT::Element max_height, size_t min_num_indices = 2u,
       size_t max_num_indices = 100u) const {
-    CHECK((min_index.array() <= max_index.array()).all());
-    CHECK_LE(min_height, max_height);
-
     const size_t num_indices = random_number_generator_->getRandomInteger(
         min_num_indices, max_num_indices);
 
     std::vector<NdtreeIndexT> random_indices(num_indices);
     std::generate(random_indices.begin(), random_indices.end(), [&]() {
-      typename NdtreeIndexT::Position position_index;
-      for (int i = 0; i < NdtreeIndexT::kDim; ++i) {
-        position_index[i] = getRandomIndexElement(min_index[i], max_index[i]);
-      }
-      return NdtreeIndexT{getRandomNdtreeIndexHeight(min_height, max_height),
-                          position_index};
+      return getRandomNdtreeIndex<NdtreeIndexT>(min_index, max_index,
+                                                min_height, max_height);
     });
     return random_indices;
   }

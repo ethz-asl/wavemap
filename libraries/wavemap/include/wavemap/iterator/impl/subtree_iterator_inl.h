@@ -16,8 +16,7 @@ template <typename NodeT>
 void SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPreorder>::
     enqueueNodeChildren(NodeT* parent_ptr) {
   if (parent_ptr->hasChildrenArray()) {
-    for (int child_idx = NodeT::IndexType::kNumChildren - 1; 0 <= child_idx;
-         --child_idx) {
+    for (int child_idx = NodeT::kNumChildren - 1; 0 <= child_idx; --child_idx) {
       NodeT* child_ptr = parent_ptr->getChild(child_idx);
       if (child_ptr) {
         upcoming_nodes_.template emplace_front(child_ptr);
@@ -39,7 +38,7 @@ SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>::operator++() {
   // Otherwise enqueue the next node and its first children
   StackElement& node_and_state = upcoming_nodes_.front();
   for (++node_and_state.last_expanded_child_idx;
-       node_and_state.last_expanded_child_idx < NodeT::IndexType::kNumChildren;
+       node_and_state.last_expanded_child_idx < NodeT::kNumChildren;
        ++node_and_state.last_expanded_child_idx) {
     NodeT* child_ptr = node_and_state.node_ptr->getChild(
         node_and_state.last_expanded_child_idx);
@@ -58,7 +57,7 @@ void SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>::
     // If the node has descendants, recursively enqueue all of its
     // descendants that have the lowest index on their respective level
     for (NdtreeIndexRelativeChild child_idx = 0;
-         child_idx < NodeT::IndexType::kNumChildren; ++child_idx) {
+         child_idx < NodeT::kNumChildren; ++child_idx) {
       NodeT* child_ptr = parent_ptr->getChild(child_idx);
       if (child_ptr) {
         upcoming_nodes_.template emplace_front(
@@ -70,7 +69,7 @@ void SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>::
   } else {
     // Otherwise, only enqueue the node itself
     upcoming_nodes_.template emplace_front(
-        StackElement{parent_ptr, NodeT::IndexType::kNumChildren});
+        StackElement{parent_ptr, NodeT::kNumChildren});
   }
 }
 
@@ -89,7 +88,7 @@ void SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>::enqueueNodeChildren(
     NodeT* parent_ptr) {
   if (parent_ptr->hasChildrenArray()) {
     for (NdtreeIndexRelativeChild child_idx = 0;
-         child_idx < NodeT::IndexType::kNumChildren; ++child_idx) {
+         child_idx < NodeT::kNumChildren; ++child_idx) {
       NodeT* child_ptr = parent_ptr->getChild(child_idx);
       if (child_ptr) {
         upcoming_nodes_.template emplace_back(child_ptr);

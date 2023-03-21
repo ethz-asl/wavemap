@@ -67,19 +67,25 @@ NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex(
 }
 
 template <int dim>
-LinearIndex NdtreeIndex<dim>::computeLinearOffset(
+LinearIndex NdtreeIndex<dim>::computeLevelTraversalDistance(
     MortonCode morton, NdtreeIndex::Element parent_height,
     NdtreeIndex::Element child_height) {
   const Element height_difference = parent_height - child_height;
-  const LinearIndex parent_to_first_child_offset =
-      tree_math::perfect_tree::num_total_nodes_fast<dim>(height_difference);
-
   const MortonCode relative_child_index_mask =
       (static_cast<MortonCode>(1) << (height_difference * dim)) - 1;
-  const LinearIndex first_child_to_child_offset =
-      (morton >> (child_height * dim)) & relative_child_index_mask;
+  return (morton >> (child_height * dim)) & relative_child_index_mask;
+}
 
-  return parent_to_first_child_offset + first_child_to_child_offset;
+template <int dim>
+LinearIndex NdtreeIndex<dim>::computeTreeTraversalDistance(
+    MortonCode morton, NdtreeIndex::Element parent_height,
+    NdtreeIndex::Element child_height) {
+  const Element height_difference = parent_height - child_height;
+  const LinearIndex parent_to_first_child_distance =
+      tree_math::perfect_tree::num_total_nodes_fast<dim>(height_difference);
+  const LinearIndex first_child_to_child_distance =
+      computeLevelTraversalDistance(morton, parent_height, child_height);
+  return parent_to_first_child_distance + first_child_to_child_distance;
 }
 
 template <int dim>

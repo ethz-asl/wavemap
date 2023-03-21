@@ -11,11 +11,13 @@
 #include "wavemap/iterator/subtree_iterator.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim>
+template <typename NodeDataT, int dim>
 class Ndtree {
  public:
   using IndexType = NdtreeIndex<dim>;
-  using NodeType = NdtreeNode<NodeDataType, dim>;
+  using NodeType = NdtreeNode<NodeDataT, dim>;
+  using NodeDataType = NodeDataT;
+  static constexpr int kChunkHeight = 1;
 
   explicit Ndtree(int max_height);
   ~Ndtree() = default;
@@ -30,9 +32,10 @@ class Ndtree {
     getNode(index, /*auto_allocate*/ true);
   }
   bool deleteNode(const IndexType& index);
-  NodeDataType* getNodeData(const IndexType& index, bool auto_allocate = false);
-  const NodeDataType* getNodeData(const IndexType& index) const;
+  NodeDataT* getNodeData(const IndexType& index, bool auto_allocate = true);
+  const NodeDataT* getNodeData(const IndexType& index) const;
 
+  int getMaxHeight() const { return max_height_; }
   NodeType& getRootNode() { return root_node_; }
   const NodeType& getRootNode() const { return root_node_; }
 
@@ -51,7 +54,7 @@ class Ndtree {
   NodeType root_node_;
   const int max_height_;
 
-  NodeType* getNode(const IndexType& index, bool auto_allocate = false);
+  NodeType* getNode(const IndexType& index, bool auto_allocate);
   const NodeType* getNode(const IndexType& index) const;
 };
 }  // namespace wavemap

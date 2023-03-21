@@ -9,19 +9,19 @@
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim>
-Ndtree<NodeDataType, dim>::Ndtree(int max_height) : max_height_(max_height) {
+template <typename NodeDataT, int dim>
+Ndtree<NodeDataT, dim>::Ndtree(int max_height) : max_height_(max_height) {
   CHECK_LE(max_height_, convert::kMortonMaxTreeHeight<dim>);
 }
 
-template <typename NodeDataType, int dim>
-size_t Ndtree<NodeDataType, dim>::size() const {
+template <typename NodeDataT, int dim>
+size_t Ndtree<NodeDataT, dim>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
   return std::distance(subtree_iterator.begin(), subtree_iterator.end());
 }
 
-template <typename NodeDataType, int dim>
-void Ndtree<NodeDataType, dim>::prune() {
+template <typename NodeDataT, int dim>
+void Ndtree<NodeDataT, dim>::prune() {
   for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
     if (node.hasChildrenArray()) {
       bool has_non_empty_child = false;
@@ -45,8 +45,8 @@ void Ndtree<NodeDataType, dim>::prune() {
   }
 }
 
-template <typename NodeDataType, int dim>
-size_t Ndtree<NodeDataType, dim>::getMemoryUsage() const {
+template <typename NodeDataT, int dim>
+size_t Ndtree<NodeDataT, dim>::getMemoryUsage() const {
   size_t memory_usage = 0u;
 
   std::stack<const NodeType*> stack;
@@ -69,8 +69,8 @@ size_t Ndtree<NodeDataType, dim>::getMemoryUsage() const {
   return memory_usage;
 }
 
-template <typename NodeDataType, int dim>
-bool Ndtree<NodeDataType, dim>::deleteNode(const IndexType& index) {
+template <typename NodeDataT, int dim>
+bool Ndtree<NodeDataT, dim>::deleteNode(const IndexType& index) {
   IndexType parent_index = index.computeParentIndex();
   NodeType* parent_node = getNode(parent_index, /*auto_allocate*/ false);
   if (parent_node) {
@@ -79,17 +79,17 @@ bool Ndtree<NodeDataType, dim>::deleteNode(const IndexType& index) {
   return false;
 }
 
-template <typename NodeDataType, int dim>
-NodeDataType* Ndtree<NodeDataType, dim>::getNodeData(
-    const Ndtree::IndexType& index, bool auto_allocate) {
+template <typename NodeDataT, int dim>
+NodeDataT* Ndtree<NodeDataT, dim>::getNodeData(const Ndtree::IndexType& index,
+                                               bool auto_allocate) {
   if (NodeType* node = getNode(index, auto_allocate); node) {
     return &node->data();
   }
   return nullptr;
 }
 
-template <typename NodeDataType, int dim>
-const NodeDataType* Ndtree<NodeDataType, dim>::getNodeData(
+template <typename NodeDataT, int dim>
+const NodeDataT* Ndtree<NodeDataT, dim>::getNodeData(
     const Ndtree::IndexType& index) const {
   if (const NodeType* node = getNode(index); node) {
     return &node->data();
@@ -97,9 +97,9 @@ const NodeDataType* Ndtree<NodeDataType, dim>::getNodeData(
   return nullptr;
 }
 
-template <typename NodeDataType, int dim>
-typename Ndtree<NodeDataType, dim>::NodeType*
-Ndtree<NodeDataType, dim>::getNode(const IndexType& index, bool auto_allocate) {
+template <typename NodeDataT, int dim>
+typename Ndtree<NodeDataT, dim>::NodeType* Ndtree<NodeDataT, dim>::getNode(
+    const IndexType& index, bool auto_allocate) {
   NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
   for (int parent_height = max_height_; index.height < parent_height;
@@ -121,9 +121,9 @@ Ndtree<NodeDataType, dim>::getNode(const IndexType& index, bool auto_allocate) {
   return current_parent;
 }
 
-template <typename NodeDataType, int dim>
-const typename Ndtree<NodeDataType, dim>::NodeType*
-Ndtree<NodeDataType, dim>::getNode(const IndexType& index) const {
+template <typename NodeDataT, int dim>
+const typename Ndtree<NodeDataT, dim>::NodeType*
+Ndtree<NodeDataT, dim>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
   for (int parent_height = max_height_; index.height < parent_height;

@@ -45,9 +45,13 @@ struct NdtreeIndex {
   RelativeChild computeRelativeChildIndex() const;
   static RelativeChild computeRelativeChildIndex(MortonCode morton,
                                                  Element parent_height);
-  static LinearIndex computeLinearOffset(MortonCode morton,
-                                         Element parent_height,
-                                         Element child_height);
+
+  static LinearIndex computeLevelTraversalDistance(MortonCode morton,
+                                                   Element parent_height,
+                                                   Element child_height);
+  static LinearIndex computeTreeTraversalDistance(MortonCode morton,
+                                                  Element parent_height,
+                                                  Element child_height);
 
   std::string toString() const;
 };

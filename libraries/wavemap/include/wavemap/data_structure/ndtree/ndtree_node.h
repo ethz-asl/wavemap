@@ -8,24 +8,25 @@
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim>
+template <typename DataT, int dim>
 class NdtreeNode {
  public:
-  using IndexType = NdtreeIndex<dim>;
+  using DataType = DataT;
+  static constexpr int kNumChildren = NdtreeIndex<dim>::kNumChildren;
 
   NdtreeNode() = default;
-  explicit NdtreeNode(NodeDataType data) : data_(data) {}
+  explicit NdtreeNode(DataT data) : data_(data) {}
   ~NdtreeNode() = default;
 
-  bool empty() const { return data_ == NodeDataType{} && !hasChildrenArray(); }
+  bool empty() const { return data_ == DataT{} && !hasChildrenArray(); }
   void clear();
 
   friend bool operator==(const NdtreeNode& lhs, const NdtreeNode& rhs) {
     return &rhs == &lhs;
   }
 
-  NodeDataType& data() { return data_; }
-  const NodeDataType& data() const { return data_; }
+  DataT& data() { return data_; }
+  const DataT& data() const { return data_; }
 
   bool hasChildrenArray() const { return static_cast<bool>(children_); }
   void allocateChildrenArrayIfNeeded();
@@ -43,10 +44,9 @@ class NdtreeNode {
   size_t getMemoryUsage() const;
 
  private:
-  using ChildrenArray =
-      std::array<std::unique_ptr<NdtreeNode>, IndexType::kNumChildren>;
+  using ChildrenArray = std::array<std::unique_ptr<NdtreeNode>, kNumChildren>;
 
-  NodeDataType data_{};
+  DataT data_{};
   std::unique_ptr<ChildrenArray> children_;
 };
 }  // namespace wavemap

@@ -11,15 +11,15 @@
 #include "wavemap/iterator/subtree_iterator.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim, int chunk_height>
+template <typename NodeDataT, int dim, int chunk_height>
 class ChunkedNdtree {
  public:
   using IndexType = NdtreeIndex<dim>;
-  using NodeType = ChunkedNdtreeNode<NodeDataType, dim, chunk_height>;
+  using NodeType = ChunkedNdtreeNode<NodeDataT, dim, chunk_height>;
+  using NodeDataType = NodeDataT;
+  static constexpr int kChunkHeight = chunk_height;
 
-  explicit ChunkedNdtree(int max_height) : max_height_(max_height) {
-    CHECK_EQ(max_height_ % chunk_height, 0);
-  }
+  explicit ChunkedNdtree(int max_height);
   ~ChunkedNdtree() = default;
 
   bool empty() const { return root_node_.empty(); }
@@ -30,9 +30,10 @@ class ChunkedNdtree {
   bool hasNode(const IndexType& index) const;
   void allocateNode(const IndexType& index);
   void resetNode(const IndexType& index);
-  NodeDataType* getNodeData(const IndexType& index, bool auto_allocate = false);
-  const NodeDataType* getNodeData(const IndexType& index) const;
+  NodeDataT* getNodeData(const IndexType& index, bool auto_allocate = true);
+  const NodeDataT* getNodeData(const IndexType& index) const;
 
+  int getMaxHeight() const { return max_height_; }
   NodeType& getRootNode() { return root_node_; }
   const NodeType& getRootNode() const { return root_node_; }
 
@@ -52,7 +53,7 @@ class ChunkedNdtree {
   const int max_height_;
 
   std::pair<NodeType*, LinearIndex> getNodeAndRelativeIndex(
-      const IndexType& index, bool auto_allocate = false);
+      const IndexType& index, bool auto_allocate);
   std::pair<const NodeType*, LinearIndex> getNodeAndRelativeIndex(
       const IndexType& index) const;
 };

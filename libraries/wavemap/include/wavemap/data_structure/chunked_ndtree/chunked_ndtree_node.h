@@ -10,14 +10,15 @@
 #include "wavemap/utils/tree_math.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim, int height>
+template <typename DataT, int dim, int height>
 class ChunkedNdtreeNode {
  public:
-  using IndexType = NdtreeIndex<dim>;
+  using DataType = DataT;
+
   static constexpr int kNumInnerNodes =
-      tree_math::perfect_tree::num_inner_nodes<dim>(height);
+      tree_math::perfect_tree::num_total_nodes<dim>(height);
   static constexpr int kNumChildren =
-      tree_math::perfect_tree::num_leaf_nodes<dim>(height);
+      tree_math::perfect_tree::num_leaf_nodes<dim>(height + 1);
 
   ChunkedNdtreeNode() = default;
   ~ChunkedNdtreeNode() = default;
@@ -30,10 +31,8 @@ class ChunkedNdtreeNode {
     return &rhs == &lhs;
   }
 
-  NodeDataType& data(LinearIndex linear_index) { return data_[linear_index]; }
-  const NodeDataType& data(LinearIndex linear_index) const {
-    return data_[linear_index];
-  }
+  DataT& data(LinearIndex linear_index);
+  const DataT& data(LinearIndex linear_index) const;
 
   bool hasChildrenArray() const { return static_cast<bool>(children_); }
   void allocateChildrenArrayIfNeeded();
@@ -49,7 +48,7 @@ class ChunkedNdtreeNode {
   size_t getMemoryUsage() const;
 
  private:
-  using DataArray = std::array<NodeDataType, kNumInnerNodes>;
+  using DataArray = std::array<DataT, kNumInnerNodes>;
   using ChildrenArray =
       std::array<std::unique_ptr<ChunkedNdtreeNode>, kNumChildren>;
 

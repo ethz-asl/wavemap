@@ -10,16 +10,23 @@
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-template <typename NodeDataType, int dim, int chunk_height>
-size_t ChunkedNdtree<NodeDataType, dim, chunk_height>::size() const {
+template <typename NodeDataT, int dim, int chunk_height>
+ChunkedNdtree<NodeDataT, dim, chunk_height>::ChunkedNdtree(int max_height)
+    : max_height_(chunk_height *
+                  int_math::div_round_up(max_height, chunk_height)) {
+  CHECK_EQ(max_height_ % chunk_height, 0);
+}
+
+template <typename NodeDataT, int dim, int chunk_height>
+size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
   const size_t num_chunks =
       std::distance(subtree_iterator.begin(), subtree_iterator.end());
   return num_chunks * NodeType::kNumInnerNodes;
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-void ChunkedNdtree<NodeDataType, dim, chunk_height>::prune() {
+template <typename NodeDataT, int dim, int chunk_height>
+void ChunkedNdtree<NodeDataT, dim, chunk_height>::prune() {
   for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
     if (node.hasChildrenArray()) {
       bool has_non_empty_child = false;
@@ -43,53 +50,53 @@ void ChunkedNdtree<NodeDataType, dim, chunk_height>::prune() {
   }
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-bool ChunkedNdtree<NodeDataType, dim, chunk_height>::hasNode(
+template <typename NodeDataT, int dim, int chunk_height>
+bool ChunkedNdtree<NodeDataT, dim, chunk_height>::hasNode(
     const ChunkedNdtree::IndexType& index) const {
   return getNodeAndRelativeIndex(index).first;
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-void ChunkedNdtree<NodeDataType, dim, chunk_height>::allocateNode(
+template <typename NodeDataT, int dim, int chunk_height>
+void ChunkedNdtree<NodeDataT, dim, chunk_height>::allocateNode(
     const ChunkedNdtree::IndexType& index) {
   getNodeAndRelativeIndex(index, /*auto_allocate*/ true);
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-void ChunkedNdtree<NodeDataType, dim, chunk_height>::resetNode(
+template <typename NodeDataT, int dim, int chunk_height>
+void ChunkedNdtree<NodeDataT, dim, chunk_height>::resetNode(
     const ChunkedNdtree::IndexType& index) {
   auto [chunked_node, relative_index] =
       getNodeAndRelativeIndex(index, /*auto_allocate*/ false);
   if (chunked_node) {
-    chunked_node.data(relative_index) = NodeDataType{};
+    chunked_node.data(relative_index) = NodeDataT{};
     // TODO Set the node's descendants in the chunked node to zero
     // TODO Reset all descendant child pointers
   }
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-NodeDataType* ChunkedNdtree<NodeDataType, dim, chunk_height>::getNodeData(
+template <typename NodeDataT, int dim, int chunk_height>
+NodeDataT* ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeData(
     const ChunkedNdtree::IndexType& index, bool auto_allocate) {
   auto [chunked_node, relative_index] =
       getNodeAndRelativeIndex(index, auto_allocate);
   if (chunked_node) {
-    return &chunked_node.data(relative_index);
+    return &chunked_node->data(relative_index);
   }
   return nullptr;
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-const NodeDataType* ChunkedNdtree<NodeDataType, dim, chunk_height>::getNodeData(
+template <typename NodeDataT, int dim, int chunk_height>
+const NodeDataT* ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeData(
     const ChunkedNdtree::IndexType& index) const {
   auto [chunked_node, relative_index] = getNodeAndRelativeIndex(index);
   if (chunked_node) {
-    return &chunked_node.data(relative_index);
+    return &chunked_node->data(relative_index);
   }
   return nullptr;
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-size_t ChunkedNdtree<NodeDataType, dim, chunk_height>::getMemoryUsage() const {
+template <typename NodeDataT, int dim, int chunk_height>
+size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::getMemoryUsage() const {
   size_t memory_usage = 0u;
 
   std::stack<const NodeType*> stack;
@@ -112,20 +119,22 @@ size_t ChunkedNdtree<NodeDataType, dim, chunk_height>::getMemoryUsage() const {
   return memory_usage;
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-std::pair<typename ChunkedNdtree<NodeDataType, dim, chunk_height>::NodeType*,
+template <typename NodeDataT, int dim, int chunk_height>
+std::pair<typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeType*,
           LinearIndex>
-ChunkedNdtree<NodeDataType, dim, chunk_height>::getNodeAndRelativeIndex(
+ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
     const ChunkedNdtree::IndexType& index, bool auto_allocate) {
-  NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const int chunk_top_height =
+      chunk_height * int_math::div_round_up(index.height, chunk_height);
 
-  int parent_height = max_height_;
-  int child_height = parent_height - chunk_height;
-  for (; index.height < child_height;
-       parent_height -= chunk_height, child_height -= chunk_height) {
-    LinearIndex child_index = NdtreeIndex<dim>::computeRelativeChildIndex(
-        morton_code, parent_height, child_height);
+  NodeType* current_parent = &root_node_;
+  for (int parent_height = max_height_; chunk_top_height < parent_height;
+       parent_height -= chunk_height) {
+    const int child_height = parent_height - chunk_height;
+    const LinearIndex child_index =
+        NdtreeIndex<dim>::computeLevelTraversalDistance(
+            morton_code, parent_height, child_height);
     // Check if the child is allocated
     if (!current_parent->hasChild(child_index)) {
       if (auto_allocate) {
@@ -134,43 +143,42 @@ ChunkedNdtree<NodeDataType, dim, chunk_height>::getNodeAndRelativeIndex(
         return {nullptr, 0u};
       }
     }
-
     current_parent = current_parent->getChild(child_index);
   }
 
-  child_height = index.height;
-  LinearIndex relative_index = NdtreeIndex<dim>::computeRelativeChildIndex(
-      morton_code, parent_height, child_height);
+  const LinearIndex relative_index =
+      NdtreeIndex<dim>::computeTreeTraversalDistance(
+          morton_code, chunk_top_height, index.height);
 
   return {current_parent, relative_index};
 }
 
-template <typename NodeDataType, int dim, int chunk_height>
-std::pair<
-    const typename ChunkedNdtree<NodeDataType, dim, chunk_height>::NodeType*,
-    LinearIndex>
-ChunkedNdtree<NodeDataType, dim, chunk_height>::getNodeAndRelativeIndex(
+template <typename NodeDataT, int dim, int chunk_height>
+std::pair<const typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeType*,
+          LinearIndex>
+ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
     const ChunkedNdtree::IndexType& index) const {
-  const NodeType* current_parent = &root_node_;
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const int chunk_top_height =
+      chunk_height * int_math::div_round_up(index.height, chunk_height);
 
-  int parent_height = max_height_;
-  int child_height = parent_height - chunk_height;
-  for (; index.height < child_height;
-       parent_height -= chunk_height, child_height -= chunk_height) {
-    LinearIndex child_index = NdtreeIndex<dim>::computeRelativeChildIndex(
-        morton_code, parent_height, child_height);
+  const NodeType* current_parent = &root_node_;
+  for (int parent_height = max_height_; chunk_top_height < parent_height;
+       parent_height -= chunk_height) {
+    const int child_height = parent_height - chunk_height;
+    const LinearIndex child_index =
+        NdtreeIndex<dim>::computeLevelTraversalDistance(
+            morton_code, parent_height, child_height);
     // Return if the child is not allocated
     if (!current_parent->hasChild(child_index)) {
       return {nullptr, 0u};
     }
-
     current_parent = current_parent->getChild(child_index);
   }
 
-  child_height = index.height;
-  LinearIndex relative_index = NdtreeIndex<dim>::computeRelativeChildIndex(
-      morton_code, parent_height, child_height);
+  const LinearIndex relative_index =
+      NdtreeIndex<dim>::computeTreeTraversalDistance(
+          morton_code, chunk_top_height, index.height);
 
   return {current_parent, relative_index};
 }
