@@ -109,7 +109,7 @@ constexpr T parity(T bitstring) {
 
 template <typename T>
 constexpr T clz(T bitstring) {
-  DCHECK_NE(bitstring, static_cast<T>(0));
+  DCHECK(bitstring != static_cast<T>(0));
   return detail::clz(bit_cast_unsigned(bitstring));
 }
 

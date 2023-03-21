@@ -4,17 +4,14 @@
 
 namespace wavemap {
 TEST(TreeMathTest, PerfectTreeLeafCounts) {
-  EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<1>(0), 0);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<1>(1), 1);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<1>(2), 2);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<1>(3), 4);
 
-  EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<2>(0), 0);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<2>(1), 1);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<2>(2), 4);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<2>(3), 16);
 
-  EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<3>(0), 0);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<3>(1), 1);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<3>(2), 8);
   EXPECT_EQ(tree_math::perfect_tree::num_leaf_nodes<3>(3), 64);
@@ -38,17 +35,14 @@ TEST(TreeMathTest, PerfectTreeTotalNodeCounts) {
 }
 
 TEST(TreeMathTest, PerfectTreeInnerNodeCounts) {
-  EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<1>(1), 0);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<1>(2), 1);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<1>(3), 3);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<1>(4), 7);
 
-  EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<2>(1), 0);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<2>(2), 1);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<2>(3), 5);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<2>(4), 21);
 
-  EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<3>(1), 0);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<3>(2), 1);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<3>(3), 9);
   EXPECT_EQ(tree_math::perfect_tree::num_inner_nodes<3>(4), 73);

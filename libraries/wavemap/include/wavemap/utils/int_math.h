@@ -16,7 +16,7 @@ constexpr T exp2(T exponent) {
 template <typename T>
 constexpr T log2_floor(T value) {
   static_assert(std::is_integral_v<T>);
-  DCHECK_NE(value, static_cast<T>(0));
+  DCHECK(value != static_cast<T>(0));
   return std::numeric_limits<T>::digits - bit_manip::clz(value);
 }
 
