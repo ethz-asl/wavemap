@@ -37,8 +37,10 @@ void DepthImageInputHandler::processQueue() {
 
     // Get the sensor pose in world frame
     Transformation3D T_W_C;
-    if (!transformer_->lookupTransform(world_frame_, sensor_frame_id,
-                                       oldest_msg.header.stamp, T_W_C)) {
+    const ros::Time stamp =
+        oldest_msg.header.stamp + ros::Duration(config_.time_delay);
+    if (!transformer_->lookupTransform(world_frame_, sensor_frame_id, stamp,
+                                       T_W_C)) {
       const auto newest_msg = depth_image_queue_.back();
       if ((newest_msg.header.stamp - oldest_msg.header.stamp).toSec() <
           config_.max_wait_for_pose) {
@@ -49,8 +51,7 @@ void DepthImageInputHandler::processQueue() {
                                   << "s but still could not look up pose for "
                                      "depth image with frame \""
                                   << sensor_frame_id << "\" in world frame \""
-                                  << world_frame_ << "\" at timestamp "
-                                  << oldest_msg.header.stamp
+                                  << world_frame_ << "\" at timestamp " << stamp
                                   << "; skipping depth image.");
         depth_image_queue_.pop();
         continue;
@@ -74,7 +75,7 @@ void DepthImageInputHandler::processQueue() {
     // Reproject if enabled
     if (isReprojectionEnabled()) {
       const auto posed_pointcloud = reproject(posed_range_image);
-      publishReprojected(oldest_msg.header.stamp, posed_pointcloud);
+      publishReprojected(stamp, posed_pointcloud);
     }
 
     // Integrate the depth image

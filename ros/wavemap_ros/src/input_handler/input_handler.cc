@@ -87,6 +87,8 @@ InputHandler::Config InputHandler::Config::from(const param::Map& params) {
                               config.image_transport_hints);
   config.depth_scale_factor = param::map::keyGetValue(
       params, NAMEOF(config.depth_scale_factor), config.depth_scale_factor);
+  config.time_delay = param::convert::toUnit<SiUnit::kSeconds>(
+      params, NAMEOF(config.time_delay), config.time_delay);
 
   config.reprojected_topic_name =
       param::map::keyGetValue(params, NAMEOF(config.reprojected_topic_name),

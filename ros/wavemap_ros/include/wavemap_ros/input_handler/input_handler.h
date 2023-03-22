@@ -33,6 +33,7 @@ class InputHandler {
     std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
     std::string image_transport_hints = "raw";
     float depth_scale_factor = 1.f;
+    float time_delay = 0.f;
 
     std::string reprojected_topic_name;  // Leave blank to disable
 
