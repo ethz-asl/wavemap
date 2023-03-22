@@ -10,7 +10,7 @@ PointcloudInputHandler::PointcloudInputHandler(
     ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
                    std::move(occupancy_map), std::move(transformer), nh,
-                   std::move(nh_private)) {
+                   nh_private) {
   // Subscribe to the pointcloud input
   pointcloud_sub_ =
       nh.subscribe(config_.topic_name, config_.topic_queue_length,
@@ -82,7 +82,9 @@ void PointcloudInputHandler::processQueue() {
                     << " points. Remaining pointclouds in queue: "
                     << pointcloud_queue_.size() - 1 << ".");
     integration_timer_.start();
-    integrator_->integratePointcloud(posed_pointcloud);
+    for (const auto& integrator : integrators_) {
+      integrator->integratePointcloud(posed_pointcloud);
+    }
     const double pointcloud_integration_time = integration_timer_.stop();
     const double total_pointcloud_integration_time =
         integration_timer_.getTotal();

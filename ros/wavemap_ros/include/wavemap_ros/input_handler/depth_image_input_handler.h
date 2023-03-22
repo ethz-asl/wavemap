@@ -4,6 +4,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <vector>
 
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
@@ -33,7 +34,7 @@ class DepthImageInputHandler : public InputHandler {
   }
 
  private:
-  ProjectiveIntegrator::Ptr scanwise_integrator_;
+  std::vector<ProjectiveIntegrator::Ptr> scanwise_integrators_;
 
   image_transport::Subscriber depth_image_sub_;
   std::queue<sensor_msgs::Image> depth_image_queue_;

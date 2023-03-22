@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <wavemap/config/config_base.h>
 #include <wavemap/integrator/integrator_factory.h>
@@ -59,7 +60,7 @@ class InputHandler {
   const Config config_;
   const std::string world_frame_;
 
-  IntegratorBase::Ptr integrator_;
+  std::vector<IntegratorBase::Ptr> integrators_;
   CpuTimer integration_timer_;
 
   std::shared_ptr<TfTransformer> transformer_;

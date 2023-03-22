@@ -141,7 +141,9 @@ void LivoxInputHandler::processQueue() {
                     << " points. Remaining pointclouds in queue: "
                     << pointcloud_queue_.size() - 1 << ".");
     integration_timer_.start();
-    integrator_->integratePointcloud(posed_pointcloud);
+    for (const auto& integrator : integrators_) {
+      integrator->integratePointcloud(posed_pointcloud);
+    }
     const double pointcloud_integration_time = integration_timer_.stop();
     const double total_pointcloud_integration_time =
         integration_timer_.getTotal();

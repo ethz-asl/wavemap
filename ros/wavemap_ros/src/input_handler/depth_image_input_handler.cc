@@ -13,12 +13,16 @@ DepthImageInputHandler::DepthImageInputHandler(
     ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
                    std::move(occupancy_map), std::move(transformer), nh,
-                   std::move(nh_private)) {
-  // Get a pointer to the underlying scanwise integrator
-  scanwise_integrator_ =
-      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrator_);
-  CHECK(integrator_) << "Depth image inputs are currently only supported in "
-                        "combination with projective integrators.";
+                   nh_private) {
+  // Get pointers to the underlying scanwise integrators
+  for (const auto& integrator : integrators_) {
+    auto scanwise_integrator =
+        std::dynamic_pointer_cast<ProjectiveIntegrator>(integrator);
+    CHECK(scanwise_integrator)
+        << "Depth image inputs are currently only supported in "
+           "combination with projective integrators.";
+    scanwise_integrators_.emplace_back(std::move(scanwise_integrator));
+  }
 
   // Subscribe to the depth image input
   image_transport::ImageTransport it(nh);
@@ -84,7 +88,9 @@ void DepthImageInputHandler::processQueue() {
                     << " points. Remaining pointclouds in queue: "
                     << depth_image_queue_.size() - 1 << ".");
     integration_timer_.start();
-    scanwise_integrator_->integrateRangeImage(posed_range_image);
+    for (const auto& integrator : scanwise_integrators_) {
+      integrator->integrateRangeImage(posed_range_image);
+    }
     const double pointcloud_integration_time = integration_timer_.stop();
     const double total_pointcloud_integration_time =
         integration_timer_.getTotal();

@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 
   // Setup input handlers
   const wavemap::param::Array integrator_params_array =
-      wavemap::param::convert::toParamArray(nh_private, "integrators");
+      wavemap::param::convert::toParamArray(nh_private, "inputs");
   for (const auto& integrator_params : integrator_params_array) {
     if (integrator_params.holds<wavemap::param::Map>()) {
       const auto param_map = integrator_params.get<wavemap::param::Map>();

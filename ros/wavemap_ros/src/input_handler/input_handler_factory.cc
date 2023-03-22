@@ -6,28 +6,24 @@
 
 namespace wavemap {
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
-    const param::Map& integrator_params, std::string world_frame,
+    const param::Map& params, std::string world_frame,
     VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private,
     std::optional<InputHandlerType> default_input_handler_type) {
   std::string error_msg;
 
-  if (param::map::keyHoldsValue<param::Map>(integrator_params, "input")) {
-    const auto& input_params =
-        param::map::keyGetValue<param::Map>(integrator_params, "input");
-    auto type = InputHandlerType::fromParamMap(input_params, error_msg);
-    if (type.isValid()) {
-      return create(type, integrator_params, world_frame, occupancy_map,
-                    std::move(transformer), nh, nh_private);
-    }
+  auto type = InputHandlerType::fromParamMap(params, error_msg);
+  if (type.isValid()) {
+    return create(type, params, world_frame, occupancy_map,
+                  std::move(transformer), nh, nh_private);
   }
 
   if (default_input_handler_type.has_value()) {
     LOG(WARNING) << error_msg << " Default type \""
                  << default_input_handler_type.value().toStr()
                  << "\" will be created instead.";
-    return create(default_input_handler_type.value(), integrator_params,
+    return create(default_input_handler_type.value(), params,
                   std::move(world_frame), std::move(occupancy_map),
                   std::move(transformer), nh, nh_private);
   }
@@ -37,31 +33,27 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
 }
 
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
-    InputHandlerType input_handler_type, const param::Map& integrator_params,
+    InputHandlerType input_handler_type, const param::Map& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private) {
   // Load the input handler config
-  if (!param::map::keyHoldsValue<param::Map>(integrator_params, "input")) {
-    return nullptr;
-  }
-  const auto input_handler_config = InputHandler::Config::from(
-      param::map::keyGetValue<param::Map>(integrator_params, "input"));
+  const auto input_handler_config = InputHandler::Config::from(params);
 
   // Create the input handler
   switch (input_handler_type.toTypeId()) {
     case InputHandlerType::kPointcloud:
       return std::make_unique<PointcloudInputHandler>(
-          input_handler_config, integrator_params, std::move(world_frame),
+          input_handler_config, params, std::move(world_frame),
           std::move(occupancy_map), std::move(transformer), nh, nh_private);
     case InputHandlerType::kDepthImage:
       return std::make_unique<DepthImageInputHandler>(
-          input_handler_config, integrator_params, std::move(world_frame),
+          input_handler_config, params, std::move(world_frame),
           std::move(occupancy_map), std::move(transformer), nh, nh_private);
     case InputHandlerType::kLivox:
 #ifdef LIVOX_AVAILABLE
       return std::make_unique<LivoxInputHandler>(
-          input_handler_config, integrator_params, std::move(world_frame),
+          input_handler_config, params, std::move(world_frame),
           std::move(occupancy_map), std::move(transformer), nh, nh_private);
 #else
       LOG(ERROR) << "Livox support is currently not available. Please install "

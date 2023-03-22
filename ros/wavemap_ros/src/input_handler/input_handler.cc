@@ -15,14 +15,22 @@ InputHandler::InputHandler(const InputHandler::Config& config,
     : config_(config.checkValid()),
       world_frame_(std::move(world_frame)),
       transformer_(std::move(transformer)) {
-  // Create the integrator
-  integrator_ = IntegratorFactory::create(
-      params, std::move(occupancy_map), IntegratorType::kRayTracingIntegrator);
-  CHECK_NOTNULL(integrator_);
+  // Create the integrators
+  CHECK(param::map::keyHoldsValue<param::Array>(params, "integrators"));
+  const auto integrators =
+      param::map::keyGetValue<param::Array>(params, "integrators");
+  for (const auto& integrator_params : integrators) {
+    CHECK(integrator_params.holds<param::Map>());
+    auto integrator = IntegratorFactory::create(
+        integrator_params.get<param::Map>(), occupancy_map,
+        IntegratorType::kRayTracingIntegrator);
+    CHECK_NOTNULL(integrator);
+    integrators_.emplace_back(std::move(integrator));
+  }
 
   // Get the projection model (if the integrator uses one)
   auto scanwise_integrator =
-      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrator_);
+      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
   if (scanwise_integrator) {
     projection_model_ = scanwise_integrator->getProjectionModel();
   }
