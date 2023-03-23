@@ -24,8 +24,7 @@ ThreadPool::~ThreadPool() {
 void ThreadPool::wait_all() {
   auto lock = std::unique_lock<std::mutex>(tasks_mutex_);
   wait_all_condition_.wait(lock,
-                           [this] { return terminate_ || task_count_ <= 0; });
-  task_count_ = 0;
+                           [this] { return terminate_ || task_count_ == 0; });
 }
 
 void ThreadPool::worker_loop() {
@@ -53,6 +52,7 @@ void ThreadPool::worker_loop() {
 
     // Notify the waiting threads if we're done
     if (task_count_ == 0) {
+      auto lock = std::unique_lock<std::mutex>(tasks_mutex_);
       wait_all_condition_.notify_all();
     }
   }
