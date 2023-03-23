@@ -133,7 +133,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     const Coefficients::Scale scale_coefficient{};
   };
 
-  static constexpr IndexElement kTreeHeight = 7;
+  static constexpr IndexElement kTreeHeight = 9;
   static constexpr IndexElement kCellsPerBlockSide =
       int_math::exp2(kTreeHeight);
   static constexpr FloatingPoint kDoNotPruneIfUsedInLastNSec = 5.f;

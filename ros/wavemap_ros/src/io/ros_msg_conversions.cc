@@ -69,17 +69,37 @@ wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
     wavelet_octree_msg.root_node_offset.emplace_back(block_index.z());
     wavelet_octree_msg.root_node_scale_coefficient = block.getRootScale();
 
-    for (const auto& node :
-         block.getNodeIterator<TraversalOrder::kDepthFirstPreorder>()) {
+    constexpr FloatingPoint kNumericalNoise = 1e-3f;
+    const auto min_log_odds = map.getConfig().min_log_odds + kNumericalNoise;
+    const auto max_log_odds = map.getConfig().max_log_odds - kNumericalNoise;
+
+    struct StackElement {
+      const FloatingPoint scale;
+      const HashedWaveletOctree::NodeType& node;
+    };
+    std::stack<StackElement> stack;
+    stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
+
+    while (!stack.empty()) {
+      const FloatingPoint scale = stack.top().scale;
+      const auto& node = stack.top().node;
+      stack.pop();
+
       wavemap_msgs::WaveletOctreeNode node_msg;
       std::copy(node.data().cbegin(), node.data().cend(),
                 node_msg.detail_coefficients.begin());
 
-      for (int relative_child_idx = 0;
-           relative_child_idx < OctreeIndex::kNumChildren;
-           ++relative_child_idx) {
-        if (node.hasChild(relative_child_idx)) {
-          node_msg.allocated_children_bitset += (1 << relative_child_idx);
+      const auto child_scales =
+          HashedWaveletOctree::Transform::backward({scale, node.data()});
+      for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
+           0 <= relative_child_idx; --relative_child_idx) {
+        const auto* child = node.getChild(relative_child_idx);
+        const auto child_scale = child_scales[relative_child_idx];
+        if (child) {
+          if (min_log_odds < child_scale && child_scale < max_log_odds) {
+            node_msg.allocated_children_bitset += (1 << relative_child_idx);
+            stack.push(StackElement{child_scale, *child});
+          }
         }
       }
       wavelet_octree_msg.nodes.emplace_back(node_msg);
