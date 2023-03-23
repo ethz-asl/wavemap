@@ -68,7 +68,8 @@ void WavemapServer::visualizeMap() {
             std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map_);
         hashed_wavelet_octree) {
       wavemap_msgs::Map map_msg =
-          mapToRosMsg(*hashed_wavelet_octree, config_.general.world_frame);
+          mapToRosMsg(*hashed_wavelet_octree, config_.general.world_frame,
+                      config_.map.visualization_period);
       map_pub_.publish(map_msg);
     }
   }

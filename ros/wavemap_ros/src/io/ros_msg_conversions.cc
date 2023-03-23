@@ -55,13 +55,19 @@ wavemap_msgs::Map mapToRosMsg(const WaveletOctree& map,
   return map_msg;
 }
 
-wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
-                              const std::string& frame_id) {
+wavemap_msgs::Map mapToRosMsg(
+    const HashedWaveletOctree& map, const std::string& frame_id,
+    std::optional<FloatingPoint> ignore_blocks_older_than) {
   wavemap_msgs::Map map_msg;
   map_msg.header.stamp = ros::Time::now();
   map_msg.header.frame_id = frame_id;
 
   for (const auto& [block_index, block] : map.getBlocks()) {
+    if (ignore_blocks_older_than.has_value() &&
+        ignore_blocks_older_than < block.getTimeSinceLastUpdated()) {
+      continue;
+    }
+
     auto& wavelet_octree_msg = map_msg.wavelet_octree.emplace_back();
     wavelet_octree_msg.min_cell_width = map.getMinCellWidth();
     wavelet_octree_msg.root_node_offset.emplace_back(block_index.x());

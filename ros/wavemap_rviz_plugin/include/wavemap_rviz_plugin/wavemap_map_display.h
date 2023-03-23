@@ -50,9 +50,9 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   void processMessage(const wavemap_msgs::Map::ConstPtr& map_msg) override;
 
   // Storage and message parsers for the map
-  std::unique_ptr<VolumetricDataStructureBase> map_;
-  static std::unique_ptr<VolumetricDataStructureBase> mapFromRosMsg(
-      const wavemap_msgs::Map& map_msg);
+  std::mutex map_mutex_;
+  std::shared_ptr<VolumetricDataStructureBase> map_;
+  void updateMapFromRosMsg(const wavemap_msgs::Map& map_msg);
 
   // Storage for the visuals
   // NOTE: Visuals are enabled when they are allocated, and automatically

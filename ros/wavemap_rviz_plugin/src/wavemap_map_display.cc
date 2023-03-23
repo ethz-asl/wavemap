@@ -74,6 +74,7 @@ void WavemapMapDisplay::updateOccupancyThresholdsOrOpacity() {
   const FloatingPoint alpha = opacity_property_->getFloat();
 
   // Update the visuals (if they are enabled)
+  std::lock_guard<std::mutex> lock(map_mutex_);
   if (map_) {
     if (multi_resolution_grid_visual_) {
       multi_resolution_grid_visual_->loadMap(*map_, min_occupancy_threshold,
@@ -146,6 +147,7 @@ void WavemapMapDisplay::updateMultiResolutionSliceHeight() {
   const FloatingPoint alpha = opacity_property_->getFloat();
 
   // Update the visuals (if they are enabled)
+  std::lock_guard<std::mutex> lock(map_mutex_);
   if (map_ && multi_resolution_slice_visual_) {
     multi_resolution_slice_visual_->loadMap(*map_, min_occupancy_threshold,
                                             max_occupancy_threshold,
@@ -161,7 +163,7 @@ void WavemapMapDisplay::processMessage(
     ROS_WARN("Ignoring request to process non-existent octree msg (nullptr).");
     return;
   }
-  map_ = mapFromRosMsg(*map_msg);
+  updateMapFromRosMsg(*map_msg);
 
   // Here we call the rviz::FrameManager to get the transform from the
   // fixed frame to the frame in the header of this WavemapOctree message. If
@@ -181,6 +183,10 @@ void WavemapMapDisplay::processMessage(
   updateMultiResolutionSliceVisibility();
 
   // Update the multi-resolution grid and slice visual's contents if they exist
+  std::lock_guard<std::mutex> lock(map_mutex_);
+  if (!map_) {
+    return;
+  }
   const FloatingPoint min_occupancy_threshold =
       min_occupancy_threshold_property_->getFloat();
   const FloatingPoint max_occupancy_threshold =
@@ -209,17 +215,21 @@ void WavemapMapDisplay::processMessage(
   }
 }
 
-std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
-    const wavemap_msgs::Map& map_msg) {
+void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
+  std::lock_guard<std::mutex> lock(map_mutex_);
   if (!map_msg.wavelet_octree.empty()) {
-    VolumetricDataStructureConfig config;
-    config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
-
     if (map_msg.wavelet_octree.size() == 1) {
-      const auto& wavelet_octree_msg = map_msg.wavelet_octree.front();
-      auto wavelet_octree =
-          std::make_unique<WaveletOctree>(wavelet_octree_msg.min_cell_width);
+      auto wavelet_octree = std::dynamic_pointer_cast<WaveletOctree>(map_);
+      if (wavelet_octree) {
+        wavelet_octree->clear();
+      } else {
+        VolumetricDataStructureConfig config;
+        config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
+        wavelet_octree = std::make_shared<WaveletOctree>(config);
+        map_ = wavelet_octree;
+      }
 
+      const auto& wavelet_octree_msg = map_msg.wavelet_octree.front();
       wavelet_octree->getRootScale() =
           wavelet_octree_msg.root_node_scale_coefficient;
 
@@ -243,10 +253,16 @@ std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
           }
         }
       }
-      return wavelet_octree;
     } else {
       auto hashed_wavelet_octree =
-          std::make_unique<HashedWaveletOctree>(config);
+          std::dynamic_pointer_cast<HashedWaveletOctree>(map_);
+      if (!hashed_wavelet_octree) {
+        VolumetricDataStructureConfig config;
+        config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
+        hashed_wavelet_octree = std::make_shared<HashedWaveletOctree>(config);
+        map_ = hashed_wavelet_octree;
+      }
+
       for (const auto& block_msg : map_msg.wavelet_octree) {
         const Index3D block_index{block_msg.root_node_offset[0],
                                   block_msg.root_node_offset[1],
@@ -277,14 +293,19 @@ std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
           }
         }
       }
-      CHECK_EQ(hashed_wavelet_octree->getBlocks().size(),
-               map_msg.wavelet_octree.size());
-      return hashed_wavelet_octree;
     }
   } else if (!map_msg.octree.empty()) {
-    const auto& octree_msg = map_msg.octree.front();
-    auto octree = std::make_unique<VolumetricOctree>(octree_msg.min_cell_width);
+    auto octree = std::dynamic_pointer_cast<VolumetricOctree>(map_);
+    if (octree) {
+      octree->clear();
+    } else {
+      VolumetricDataStructureConfig config;
+      config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
+      octree = std::make_shared<VolumetricOctree>(config);
+      map_ = octree;
+    }
 
+    const auto& octree_msg = map_msg.octree.front();
     std::stack<VolumetricOctree::NodeType*> stack;
     stack.emplace(&octree->getRootNode());
     for (const auto& node_msg : octree_msg.nodes) {
@@ -303,10 +324,7 @@ std::unique_ptr<VolumetricDataStructureBase> WavemapMapDisplay::mapFromRosMsg(
         }
       }
     }
-    return octree;
   }
-
-  return nullptr;
 }
 }  // namespace wavemap::rviz_plugin
 

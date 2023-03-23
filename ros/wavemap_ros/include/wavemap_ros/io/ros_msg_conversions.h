@@ -18,8 +18,9 @@ wavemap_msgs::Map mapToRosMsg(const VolumetricOctree& map,
 wavemap_msgs::Map mapToRosMsg(const WaveletOctree& map,
                               const std::string& frame_id);
 
-wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
-                              const std::string& frame_id);
+wavemap_msgs::Map mapToRosMsg(
+    const HashedWaveletOctree& map, const std::string& frame_id,
+    std::optional<FloatingPoint> ignore_blocks_older_than = std::nullopt);
 
 void octreeFromRosMsg(const wavemap_msgs::Octree& octree_msg,
                       VolumetricOctree& octree);
