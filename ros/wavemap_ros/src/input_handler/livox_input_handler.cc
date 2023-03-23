@@ -38,60 +38,75 @@ void LivoxInputHandler::processQueue() {
               [](const auto& lhs, const auto& rhs) {
                 return lhs.offset_time < rhs.offset_time;
               });
+    const uint64_t start_time =
+        oldest_msg.timebase + oldest_msg.points.front().offset_time;
+    const uint64_t end_time =
+        oldest_msg.timebase + oldest_msg.points.back().offset_time;
+
+    // Calculate the step size for the undistortion transform buffer
+    constexpr int kNumTimeIntervals = 400;
+    constexpr int kNumTimeSteps = kNumTimeIntervals + 1;
+    const uint64_t step_size = (oldest_msg.points.back().offset_time -
+                                oldest_msg.points.front().offset_time) /
+                               (kNumTimeIntervals - 1);
+    const uint64_t buffer_start_time = start_time - step_size;
+    const uint64_t buffer_end_time = end_time + step_size;
 
     // Make sure all transforms are available
-    uint64_t start_time =
-        oldest_msg.timebase + oldest_msg.points.front().offset_time;
-    uint64_t end_time =
-        oldest_msg.timebase + oldest_msg.points.back().offset_time;
-    if (!transformer_->isTransformAvailable(world_frame_, sensor_frame_id,
-                                            nanoSecondsToRosTime(end_time))) {
+    if (!transformer_->isTransformAvailable(
+            world_frame_, sensor_frame_id,
+            nanoSecondsToRosTime(buffer_end_time))) {
       const auto newest_msg = pointcloud_queue_.back();
-      if ((newest_msg.header.stamp - nanoSecondsToRosTime(end_time)).toSec() <
-          config_.max_wait_for_pose) {
+      if ((newest_msg.header.stamp - nanoSecondsToRosTime(buffer_end_time))
+              .toSec() < config_.max_wait_for_pose) {
         // Try to get this pointcloud's pose again at the next iteration
         return;
       } else {
         ROS_WARN_STREAM("Waited " << config_.max_wait_for_pose
-                                  << "s but still could not look up pose for "
-                                     "pointcloud with frame \""
+                                  << "s but still could not look up end pose "
+                                     "for pointcloud with frame \""
                                   << sensor_frame_id << "\" in world frame \""
-                                  << world_frame_ << "\" at timestamp "
-                                  << end_time << ". Skipping pointcloud.");
+                                  << world_frame_
+                                  << "\" spanning time interval [" << start_time
+                                  << ", " << end_time
+                                  << "]. Skipping pointcloud.");
         pointcloud_queue_.pop();
         continue;
       }
     }
-    if (!transformer_->isTransformAvailable(world_frame_, sensor_frame_id,
-                                            nanoSecondsToRosTime(start_time))) {
-      ROS_WARN_STREAM(
-          "Pointcloud end pose is available but start pose is not. Skipping "
-          "pointcloud.");
+    if (!transformer_->isTransformAvailable(
+            world_frame_, sensor_frame_id,
+            nanoSecondsToRosTime(buffer_start_time))) {
+      ROS_WARN_STREAM("Pointcloud end pose is available but start pose at time "
+                      << start_time << " is not. Skipping pointcloud.");
       pointcloud_queue_.pop();
       continue;
     }
 
     // Buffer the transforms
-    constexpr int kNumTimeIntervals = 400;
-    constexpr int kNumTimeSteps = kNumTimeIntervals + 1;
     std::vector<std::pair<uint64_t, Transformation3D>> timed_poses;
     timed_poses.reserve(kNumTimeSteps);
-    const uint64_t step_size = (oldest_msg.points.back().offset_time -
-                                oldest_msg.points.front().offset_time) /
-                               (kNumTimeIntervals - 1);
+    bool pose_buffering_failed = false;
     for (unsigned int step_idx = 0u; step_idx < kNumTimeSteps; ++step_idx) {
       auto& timed_pose = timed_poses.emplace_back();
       timed_pose.first = start_time + step_idx * step_size;
       if (!transformer_->lookupTransform(world_frame_, sensor_frame_id,
                                          nanoSecondsToRosTime(timed_pose.first),
                                          timed_pose.second)) {
-        ROS_WARN_STREAM("Failed to buffer intermediate pose at timestamp "
-                        << nanoSecondsToRosTime(timed_pose.first)
-                        << " This should never happen. Skipping "
-                           "pointcloud.");
-        pointcloud_queue_.pop();
-        continue;
+        ROS_WARN_STREAM("Failed to buffer intermediate pose at time "
+                        << nanoSecondsToRosTime(timed_pose.first) << ".");
+        pose_buffering_failed = true;
+        break;
       }
+    }
+    if (pose_buffering_failed) {
+      ROS_WARN_STREAM(
+          "Could not buffer all transforms for pointcloud spanning time "
+          "interval ["
+          << start_time << ", " << end_time
+          << "]. This should never happen. Skipping pointcloud.");
+      pointcloud_queue_.pop();
+      continue;
     }
 
     // Motion undistort the points
