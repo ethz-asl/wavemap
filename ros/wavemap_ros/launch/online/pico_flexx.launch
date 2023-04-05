@@ -40,14 +40,14 @@
         type="livox_ros_driver2_node" required="true"
         output="screen" args="$(arg bd_list)"/>
 
-    <!-- Undistort the Kinect's depth images -->
-    <node pkg="nodelet" type="nodelet" name="rectify_depth"
-          args="load image_proc/rectify manager --no-bond"
-          respawn="true">
-      <remap from="image_mono" to="pico_flexx/image_depth"/>
-      <remap from="image_rect" to="pico_flexx/image_rect"/>
-      <param name="interpolation" value="0"/>
-    </node>
+  <!-- Undistort the Kinect's depth images -->
+  <node pkg="nodelet" type="nodelet" name="rectify_depth"
+        args="load image_proc/rectify manager --no-bond"
+        respawn="true">
+    <remap from="image_mono" to="pico_flexx/image_depth"/>
+    <remap from="image_rect" to="pico_flexx/image_rect"/>
+    <param name="interpolation" value="0"/>
+  </node>
 
   <!-- Run odometry -->
   <rosparam command="load"
@@ -62,14 +62,6 @@
   <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping"
         output="screen"/>
 
-  <!-- Show the Kinect URDF in Rviz -->
-  <param name="robot_description"
-         command="xacro $(find azure_kinect_ros_driver)/urdf/azure_kinect.urdf.xacro"/>
-  <node name="joint_state_publisher" pkg="joint_state_publisher"
-        type="joint_state_publisher"/>
-  <node name="robot_state_publisher" pkg="robot_state_publisher"
-        type="state_publisher"/>
-
   <!-- Link TF frames -->
   <node pkg="tf"
         type="static_transform_publisher"
@@ -81,13 +73,16 @@
         name="link_body_livox_frame"
         args="-0.0110 -0.02329 0.04412 0.0 0.0 0.0 1.000
             imu_forward_prop livox_frame 100"/>
-    <node pkg="tf"
-          type="static_transform_publisher"
-          name="link_body_pico_flexx_frame"
-          args="0.01 -0.02 0 0 1.525 0.04
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="link_body_pico_flexx_frame"
+        args="0.01 -0.02 0 0 1.525 0.04
               imu_forward_prop pico_flexx_optical_frame 100"/>
 
   <!-- Run wavemap -->
   <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
            pass_all_args="true"/>
+
+  <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
+        args="/wavemap/depth_cam_input /laserMapping/imu_forward_prop --output-prefix /home/victor/catkin_ws/lidar_align_pico_flexx"/>
 </launch>
