@@ -112,6 +112,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
   Index3D getBlockSize() const { return Index3D::Constant(kCellsPerBlockSide); }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
+  FloatingPoint getCellValue(const OctreeIndex& index) const;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
   void addToCellValue(const Index3D& index, FloatingPoint update) override;
 
@@ -143,8 +144,12 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
   static BlockIndex computeBlockIndexFromIndex(const Index3D& index) {
     return int_math::div_exp2_floor(index, kTreeHeight);
   }
+  static BlockIndex computeBlockIndexFromIndex(const OctreeIndex& node_index) {
+    const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
+    return int_math::div_exp2_floor(index, kTreeHeight);
+  }
   static CellIndex computeCellIndexFromBlockIndexAndIndex(
-      const BlockIndex& block_index, const Index3D& index);
+      const BlockIndex& block_index, OctreeIndex index);
 };
 }  // namespace wavemap
 

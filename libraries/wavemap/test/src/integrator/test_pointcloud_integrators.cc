@@ -249,20 +249,30 @@ TEST_F(PointcloudIntegrator3DTest,
     evaluated_integrator->integratePointcloud(random_pointcloud);
 
     evaluated_occupancy_map->prune();
-    const Index3D min_index = reference_occupancy_map->getMinIndex().cwiseMin(
-        evaluated_occupancy_map->getMinIndex());
-    const Index3D max_index = reference_occupancy_map->getMaxIndex().cwiseMax(
-        evaluated_occupancy_map->getMaxIndex());
 
-    for (const Index3D& index : Grid(min_index, max_index)) {
-      const FloatingPoint cell_value_in_reference_map =
-          reference_occupancy_map->getCellValue(index);
-      const FloatingPoint cell_value_in_evaluated_map =
-          evaluated_occupancy_map->getCellValue(index);
-      EXPECT_NEAR(cell_value_in_evaluated_map, cell_value_in_reference_map,
-                  projective_integrator_config.termination_update_error)
-          << "For cell index " << EigenFormat::oneLine(index);
-    }
+    // Compare the evaluated map against the fixed resolution reference
+    // Make sure all cells of the reference map are accounted for
+    reference_occupancy_map->forEachLeaf(
+        [&](const OctreeIndex& node_index, FloatingPoint reference_value) {
+          const FloatingPoint evaluated_value =
+              evaluated_occupancy_map->getCellValue(node_index);
+          EXPECT_NEAR(evaluated_value, reference_value,
+                      projective_integrator_config.termination_update_error)
+              << "For cell index " << node_index.toString();
+        });
+    // Make sure the evaluated map contains no spurious cells
+    evaluated_occupancy_map->forEachLeaf([&](const OctreeIndex& node_index,
+                                             FloatingPoint evaluated_value) {
+      const Index3D min_index = convert::nodeIndexToMinCornerIndex(node_index);
+      const Index3D max_index = convert::nodeIndexToMinCornerIndex(node_index);
+      for (const auto& index : Grid(min_index, max_index)) {
+        const FloatingPoint reference_value =
+            reference_occupancy_map->getCellValue(index);
+        EXPECT_NEAR(evaluated_value, reference_value,
+                    projective_integrator_config.termination_update_error)
+            << "For cell index " << EigenFormat::oneLine(index);
+      }
+    });
   }
 }
 
@@ -301,20 +311,30 @@ TEST_F(PointcloudIntegrator3DTest,
     evaluated_integrator->integratePointcloud(random_pointcloud);
 
     evaluated_occupancy_map->prune();
-    const Index3D min_index = reference_occupancy_map->getMinIndex().cwiseMin(
-        evaluated_occupancy_map->getMinIndex());
-    const Index3D max_index = reference_occupancy_map->getMaxIndex().cwiseMax(
-        evaluated_occupancy_map->getMaxIndex());
 
-    for (const Index3D& index : Grid(min_index, max_index)) {
-      const FloatingPoint cell_value_in_reference_map =
-          reference_occupancy_map->getCellValue(index);
-      const FloatingPoint cell_value_in_evaluated_map =
-          evaluated_occupancy_map->getCellValue(index);
-      EXPECT_NEAR(cell_value_in_evaluated_map, cell_value_in_reference_map,
-                  projective_integrator_config.termination_update_error)
-          << "For cell index " << EigenFormat::oneLine(index);
-    }
+    // Compare the evaluated map against the fixed resolution reference
+    // Make sure all cells of the reference map are accounted for
+    reference_occupancy_map->forEachLeaf(
+        [&](const OctreeIndex& node_index, FloatingPoint reference_value) {
+          const FloatingPoint evaluated_value =
+              evaluated_occupancy_map->getCellValue(node_index);
+          EXPECT_NEAR(evaluated_value, reference_value,
+                      projective_integrator_config.termination_update_error)
+              << "For cell index " << node_index.toString();
+        });
+    // Make sure the evaluated map contains no spurious cells
+    evaluated_occupancy_map->forEachLeaf([&](const OctreeIndex& node_index,
+                                             FloatingPoint evaluated_value) {
+      const Index3D min_index = convert::nodeIndexToMinCornerIndex(node_index);
+      const Index3D max_index = convert::nodeIndexToMinCornerIndex(node_index);
+      for (const auto& index : Grid(min_index, max_index)) {
+        const FloatingPoint reference_value =
+            reference_occupancy_map->getCellValue(index);
+        EXPECT_NEAR(evaluated_value, reference_value,
+                    projective_integrator_config.termination_update_error)
+            << "For cell index " << EigenFormat::oneLine(index);
+      }
+    });
   }
 }
 }  // namespace wavemap

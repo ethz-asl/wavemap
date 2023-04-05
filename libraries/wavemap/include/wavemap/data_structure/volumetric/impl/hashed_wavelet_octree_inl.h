@@ -18,6 +18,18 @@ inline FloatingPoint HashedWaveletOctree::getCellValue(
   if (hasBlock(block_index)) {
     const auto& block = getBlock(block_index);
     const CellIndex cell_index =
+        computeCellIndexFromBlockIndexAndIndex(block_index, {0, index});
+    return block.getCellValue(cell_index);
+  }
+  return 0.f;
+}
+
+inline FloatingPoint HashedWaveletOctree::getCellValue(
+    const OctreeIndex& index) const {
+  const BlockIndex block_index = computeBlockIndexFromIndex(index);
+  if (hasBlock(block_index)) {
+    const auto& block = getBlock(block_index);
+    const CellIndex cell_index =
         computeCellIndexFromBlockIndexAndIndex(block_index, index);
     return block.getCellValue(cell_index);
   }
@@ -29,7 +41,7 @@ inline void HashedWaveletOctree::setCellValue(const Index3D& index,
   const BlockIndex block_index = computeBlockIndexFromIndex(index);
   auto& block = getOrAllocateBlock(block_index);
   const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, index);
+      computeCellIndexFromBlockIndexAndIndex(block_index, {0, index});
   block.setCellValue(cell_index, new_value);
 }
 
@@ -38,7 +50,7 @@ inline void HashedWaveletOctree::addToCellValue(const Index3D& index,
   const BlockIndex block_index = computeBlockIndexFromIndex(index);
   auto& block = getOrAllocateBlock(block_index);
   const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, index);
+      computeCellIndexFromBlockIndexAndIndex(block_index, {0, index});
   block.addToCellValue(cell_index, update);
 }
 
@@ -73,11 +85,12 @@ inline void HashedWaveletOctree::forEachLeaf(
 
 inline HashedWaveletOctree::CellIndex
 HashedWaveletOctree::computeCellIndexFromBlockIndexAndIndex(
-    const HashedWaveletOctree::BlockIndex& block_index, const Index3D& index) {
-  const Index3D origin = kCellsPerBlockSide * block_index;
-  const Index3D cell_index = index - origin;
-  DCHECK((0 <= cell_index.array()).all());
-  return convert::indexAndHeightToNodeIndex(cell_index, 0);
+    const HashedWaveletOctree::BlockIndex& block_index, OctreeIndex index) {
+  DCHECK_LE(index.height, kTreeHeight);
+  const IndexElement height_difference = kTreeHeight - index.height;
+  index.position -= int_math::mult_exp2(block_index, height_difference);
+  DCHECK((0 <= index.position.array()).all());
+  return index;
 }
 
 inline FloatingPoint HashedWaveletOctree::Block::getTimeSinceLastUpdated()
