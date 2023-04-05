@@ -76,13 +76,13 @@
   <node pkg="tf"
         type="static_transform_publisher"
         name="link_body_pico_flexx_frame"
-        args="0.01 -0.02 0 0 1.525 0.04
+        args="0.0147759 -0.0456035 0.0114806 -0.00833771 1.54018 -0.0138098
               imu_forward_prop pico_flexx_optical_frame 100"/>
 
   <!-- Run wavemap -->
   <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
            pass_all_args="true"/>
 
-  <node pkg="rosbag" type="record" name="rosbag_record" output="screen"
-        args="/wavemap/depth_cam_input /laserMapping/imu_forward_prop --output-prefix /home/victor/catkin_ws/lidar_align_pico_flexx"/>
+<!--  <node pkg="rosbag" type="record" name="rosbag_record" output="screen"-->
+<!--        args="/wavemap/depth_cam_input /laserMapping/imu_forward_prop &#45;&#45;output-prefix /home/victor/catkin_ws/lidar_align_pico_flexx"/>-->
 </launch>

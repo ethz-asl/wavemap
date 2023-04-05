@@ -20,7 +20,7 @@ inputs:
     #    depth_scale_factor: 0.001
     topic_queue_length: 1
     max_wait_for_pose: { seconds: 1.0 }
-    time_delay: { seconds: -0.01 }
+    time_delay: { seconds: -0.00727598 }
     integrators:
       - integration_method:
           type: "hashed_wavelet_integrator"
@@ -57,7 +57,26 @@ inputs:
           cy: 86.22309112548828
         measurement_model:
           type: "continuous_ray"
-          range_sigma: { meters: 0.005 }
+          range_sigma: { meters: 0.01 }
+          scaling_free: 0.2
+          scaling_occupied: 0.4
+      - integration_method:
+          type: "hashed_wavelet_integrator"
+          min_range: { meters: 2.0 }
+          max_range: { meters: 3.0 }
+          termination_update_error: 0.1
+          termination_height: 2
+        projection_model:
+          type: "pinhole_camera_projector"
+          width: 224
+          height: 172
+          fx: 204.2710723876953
+          fy: 204.2710723876953
+          cx: 109.85344696044922
+          cy: 86.22309112548828
+        measurement_model:
+          type: "continuous_ray"
+          range_sigma: { meters: 0.02 }
           scaling_free: 0.2
           scaling_occupied: 0.4
 
@@ -69,8 +88,8 @@ inputs:
     integrators:
       - integration_method:
           type: "hashed_wavelet_integrator"
-          min_range: { meters: 1.5 }
-          max_range: { meters: 10.0 }
+          min_range: { meters: 1.0 }
+          max_range: { meters: 8.0 }
           termination_update_error: 0.1
           termination_height: 3
         projection_model:
