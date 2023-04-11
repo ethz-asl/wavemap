@@ -4,11 +4,28 @@
 #include <memory>
 #include <utility>
 
+#include "wavemap/utils/data_utils.h"
+
 namespace wavemap {
+template <typename DataT, int dim>
+bool NdtreeNode<DataT, dim>::empty() const {
+  return !hasChildrenArray() && !hasNonZeroData();
+}
+
 template <typename DataT, int dim>
 void NdtreeNode<DataT, dim>::clear() {
   deleteChildrenArray();
   data() = DataT{};
+}
+
+template <typename DataT, int dim>
+bool NdtreeNode<DataT, dim>::hasNonZeroData() const {
+  return data_utils::is_non_zero(data_);
+}
+
+template <typename DataT, int dim>
+bool NdtreeNode<DataT, dim>::hasNonZeroData(FloatingPoint threshold) const {
+  return data_utils::is_non_zero(data_, threshold);
 }
 
 template <typename DataT, int dim>

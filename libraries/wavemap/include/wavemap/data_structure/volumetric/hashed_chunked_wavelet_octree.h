@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_
-#define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_
+#ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_CHUNKED_WAVELET_OCTREE_H_
+#define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_CHUNKED_WAVELET_OCTREE_H_
 
 #include <chrono>
 #include <memory>
@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/ndtree/ndtree.h"
+#include "wavemap/data_structure/chunked_ndtree/chunked_ndtree.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
@@ -15,13 +15,17 @@
 #include "wavemap/utils/int_math.h"
 
 namespace wavemap {
-class HashedWaveletOctree : public VolumetricDataStructureBase {
+class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
  public:
-  using Ptr = std::shared_ptr<HashedWaveletOctree>;
-  using ConstPtr = std::shared_ptr<const HashedWaveletOctree>;
+  static constexpr IndexElement kChunkHeight = 3;
+  static constexpr IndexElement kTreeHeight = 9;
+
+  using Ptr = std::shared_ptr<HashedChunkedWaveletOctree>;
+  using ConstPtr = std::shared_ptr<const HashedChunkedWaveletOctree>;
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
-  using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
+  using NodeChunkType =
+      NdtreeNodeChunk<typename Coefficients::Details, kDim, kChunkHeight>;
   static constexpr bool kRequiresExplicitThresholding = true;
 
   using BlockIndex = Index3D;
@@ -32,11 +36,11 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     using Clock = std::chrono::steady_clock;
     using Time = std::chrono::time_point<Clock>;
 
-    explicit Block(HashedWaveletOctree* parent)
+    explicit Block(HashedChunkedWaveletOctree* parent)
         : parent_(CHECK_NOTNULL(parent)) {}
 
-    bool empty() const { return ndtree_.empty(); }
-    size_t size() const { return ndtree_.size(); }
+    bool empty() const { return chunked_ndtree_.empty(); }
+    size_t size() const { return chunked_ndtree_.size(); }
     void threshold();
     void prune();
 
@@ -53,8 +57,10 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     const Coefficients::Scale& getRootScale() const {
       return root_scale_coefficient_;
     }
-    NodeType& getRootNode() { return ndtree_.getRootNode(); }
-    const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
+    NodeChunkType& getRootChunk() { return chunked_ndtree_.getRootChunk(); }
+    const NodeChunkType& getRootChunk() const {
+      return chunked_ndtree_.getRootChunk();
+    }
 
     void setNeedsPruning(bool value = true) { needs_pruning_ = value; }
     bool getNeedsPruning() const { return needs_pruning_; }
@@ -69,29 +75,30 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     FloatingPoint getTimeSinceLastUpdated() const;
 
     template <TraversalOrder traversal_order>
-    auto getNodeIterator() {
-      return ndtree_.getIterator<traversal_order>();
+    auto getChunkIterator() {
+      return chunked_ndtree_.getIterator<traversal_order>();
     }
     template <TraversalOrder traversal_order>
-    auto getNodeIterator() const {
-      return ndtree_.getIterator<traversal_order>();
+    auto getChunkIterator() const {
+      return chunked_ndtree_.getIterator<traversal_order>();
     }
 
-    size_t getMemoryUsage() const { return ndtree_.getMemoryUsage(); }
+    size_t getMemoryUsage() const { return chunked_ndtree_.getMemoryUsage(); }
 
    private:
     Coefficients::Scale root_scale_coefficient_{};
-    Ndtree<Coefficients::Details, kDim> ndtree_{kTreeHeight - 1};
+    ChunkedNdtree<Coefficients::Details, kDim, kChunkHeight> chunked_ndtree_{
+        kTreeHeight - 1};
 
-    HashedWaveletOctree* parent_;
+    HashedChunkedWaveletOctree* parent_;
 
     bool needs_thresholding_ = false;
     bool needs_pruning_ = false;
     Time last_updated_stamp_ = Clock::now();
 
     Coefficients::Scale recursiveThreshold(
-        NodeType& node, Coefficients::Scale scale_coefficient);
-    void recursivePrune(NodeType& node);
+        NodeChunkType& chunk, Coefficients::Scale scale_coefficient);
+    void recursivePrune(NodeChunkType& chunk);
   };
 
   // Use the base class' constructor
@@ -130,11 +137,10 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
  private:
   struct StackElement {
     const OctreeIndex node_index;
-    const NodeType& node;
+    const NodeChunkType& chunk;
     const Coefficients::Scale scale_coefficient{};
   };
 
-  static constexpr IndexElement kTreeHeight = 9;
   static constexpr IndexElement kCellsPerBlockSide =
       int_math::exp2(kTreeHeight);
   static constexpr FloatingPoint kDoNotPruneIfUsedInLastNSec = 5.f;
@@ -145,6 +151,8 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
     return int_math::div_exp2_floor(index, kTreeHeight);
   }
   static BlockIndex computeBlockIndexFromIndex(const OctreeIndex& node_index) {
+    // TODO(victorr): Divide by height difference directly instead of round trip
+    //                through height 0
     const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
     return int_math::div_exp2_floor(index, kTreeHeight);
   }
@@ -153,6 +161,6 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
 };
 }  // namespace wavemap
 
-#include "wavemap/data_structure/volumetric/impl/hashed_wavelet_octree_inl.h"
+#include "wavemap/data_structure/volumetric/impl/hashed_chunked_wavelet_octree_inl.h"
 
-#endif  // WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_
+#endif  // WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_CHUNKED_WAVELET_OCTREE_H_

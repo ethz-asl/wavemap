@@ -22,20 +22,21 @@ size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
   const size_t num_chunks =
       std::distance(subtree_iterator.begin(), subtree_iterator.end());
-  return num_chunks * NodeType::kNumInnerNodes;
+  return num_chunks * NodeChunkType::kNumInnerNodes;
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
 void ChunkedNdtree<NodeDataT, dim, chunk_height>::prune() {
-  for (NodeType& node : getIterator<TraversalOrder::kDepthFirstPostorder>()) {
-    if (node.hasChildrenArray()) {
+  for (NodeChunkType& chunk :
+       getIterator<TraversalOrder::kDepthFirstPostorder>()) {
+    if (chunk.hasChildrenArray()) {
       bool has_non_empty_child = false;
-      for (LinearIndex child_idx = 0; child_idx < NodeType::kNumChildren;
+      for (LinearIndex child_idx = 0; child_idx < NodeChunkType::kNumChildren;
            ++child_idx) {
-        NodeType* child_ptr = node.getChild(child_idx);
+        NodeChunkType* child_ptr = chunk.getChild(child_idx);
         if (child_ptr) {
           if (child_ptr->empty()) {
-            node.deleteChild(child_idx);
+            chunk.deleteChild(child_idx);
           } else {
             has_non_empty_child = true;
           }
@@ -44,7 +45,7 @@ void ChunkedNdtree<NodeDataT, dim, chunk_height>::prune() {
 
       // Free up the children array if it only contains null pointers
       if (!has_non_empty_child) {
-        node.deleteChildrenArray();
+        chunk.deleteChildrenArray();
       }
     }
   }
@@ -99,18 +100,18 @@ template <typename NodeDataT, int dim, int chunk_height>
 size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::getMemoryUsage() const {
   size_t memory_usage = 0u;
 
-  std::stack<const NodeType*> stack;
-  stack.emplace(&root_node_);
+  std::stack<const NodeChunkType*> stack;
+  stack.emplace(&root_chunk_);
   while (!stack.empty()) {
-    const NodeType* node = stack.top();
+    const NodeChunkType* chunk = stack.top();
     stack.pop();
-    memory_usage += node->getMemoryUsage();
+    memory_usage += chunk->getMemoryUsage();
 
-    if (node->hasChildrenArray()) {
-      for (LinearIndex child_idx = 0; child_idx < NodeType::kNumChildren;
+    if (chunk->hasChildrenArray()) {
+      for (LinearIndex child_idx = 0; child_idx < NodeChunkType::kNumChildren;
            ++child_idx) {
-        if (node->hasChild(child_idx)) {
-          stack.emplace(node->getChild(child_idx));
+        if (chunk->hasChild(child_idx)) {
+          stack.emplace(chunk->getChild(child_idx));
         }
       }
     }
@@ -120,7 +121,7 @@ size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::getMemoryUsage() const {
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
-std::pair<typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeType*,
+std::pair<typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeChunkType*,
           LinearIndex>
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
     const ChunkedNdtree::IndexType& index, bool auto_allocate) {
@@ -128,7 +129,7 @@ ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
   const int chunk_top_height =
       chunk_height * int_math::div_round_up(index.height, chunk_height);
 
-  NodeType* current_parent = &root_node_;
+  NodeChunkType* current_parent = &root_chunk_;
   for (int parent_height = max_height_; chunk_top_height < parent_height;
        parent_height -= chunk_height) {
     const int child_height = parent_height - chunk_height;
@@ -154,15 +155,16 @@ ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
-std::pair<const typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeType*,
-          LinearIndex>
+std::pair<
+    const typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeChunkType*,
+    LinearIndex>
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
     const ChunkedNdtree::IndexType& index) const {
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
   const int chunk_top_height =
       chunk_height * int_math::div_round_up(index.height, chunk_height);
 
-  const NodeType* current_parent = &root_node_;
+  const NodeChunkType* current_parent = &root_chunk_;
   for (int parent_height = max_height_; chunk_top_height < parent_height;
        parent_height -= chunk_height) {
     const int child_height = parent_height - chunk_height;

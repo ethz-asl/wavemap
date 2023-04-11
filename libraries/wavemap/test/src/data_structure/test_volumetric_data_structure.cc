@@ -2,6 +2,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/volumetric/hashed_blocks.h"
+#include "wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree.h"
 #include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
@@ -19,7 +20,7 @@ class VolumetricDataStructureTest : public FixtureBase {
 
 using VolumetricDataStructureTypes =
     ::testing::Types<HashedBlocks, VolumetricOctree, WaveletOctree,
-                     HashedWaveletOctree>;
+                     HashedWaveletOctree, HashedChunkedWaveletOctree>;
 TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
@@ -139,6 +140,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     for (const Index3D& index : random_indices) {
       for (const FloatingPoint update : TestFixture::getRandomUpdateVector()) {
         map_base_ptr->addToCellValue(index, update);
+        EXPECT_TRUE(map_base_ptr->getCellValue(index) != 0.f);
         if (TypeParam::kRequiresExplicitThresholding) {
           map_base_ptr->prune();
         }
@@ -195,14 +197,18 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
       return ss.str();
     };
     auto PrintMap = [IndexToString](const auto& map) -> std::string {
-      return std::accumulate(
-          std::next(map.cbegin()), map.cend(),
-          IndexToString(map.cbegin()->first) + ": " +
-              std::to_string(map.cbegin()->second) + "\n",
-          [&IndexToString](auto str, const auto& kv) -> std::string {
-            return std::move(str) + IndexToString(kv.first) + ": " +
-                   std::to_string(kv.second) + "\n";
-          });
+      if (map.empty()) {
+        return "[empty]";
+      } else {
+        return std::accumulate(
+            std::next(map.cbegin()), map.cend(),
+            IndexToString(map.cbegin()->first) + ": " +
+                std::to_string(map.cbegin()->second) + "\n",
+            [&IndexToString](auto str, const auto& kv) -> std::string {
+              return std::move(str) + IndexToString(kv.first) + ": " +
+                     std::to_string(kv.second) + "\n";
+            });
+      }
     };
     EXPECT_TRUE(reference_map.empty())
         << "Leaf visitor missed " << reference_map.size() << " out of "

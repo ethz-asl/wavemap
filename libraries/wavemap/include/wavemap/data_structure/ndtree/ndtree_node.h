@@ -18,13 +18,15 @@ class NdtreeNode {
   explicit NdtreeNode(DataT data) : data_(data) {}
   ~NdtreeNode() = default;
 
-  bool empty() const { return data_ == DataT{} && !hasChildrenArray(); }
+  bool empty() const;
   void clear();
 
   friend bool operator==(const NdtreeNode& lhs, const NdtreeNode& rhs) {
     return &rhs == &lhs;
   }
 
+  bool hasNonZeroData() const;
+  bool hasNonZeroData(FloatingPoint threshold) const;
   DataT& data() { return data_; }
   const DataT& data() const { return data_; }
 

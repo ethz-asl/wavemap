@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_H_
-#define WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_H_
+#ifndef WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_NDTREE_NODE_CHUNK_H_
+#define WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_NDTREE_NODE_CHUNK_H_
 
 #include <array>
 #include <limits>
@@ -11,7 +11,7 @@
 
 namespace wavemap {
 template <typename DataT, int dim, int height>
-class ChunkedNdtreeNode {
+class NdtreeNodeChunk {
  public:
   using DataType = DataT;
 
@@ -20,17 +20,19 @@ class ChunkedNdtreeNode {
   static constexpr int kNumChildren =
       tree_math::perfect_tree::num_leaf_nodes<dim>(height + 1);
 
-  ChunkedNdtreeNode() = default;
-  ~ChunkedNdtreeNode() = default;
+  NdtreeNodeChunk() = default;
+  ~NdtreeNodeChunk() = default;
 
   bool empty() const;
   void clear();
 
-  friend bool operator==(const ChunkedNdtreeNode& lhs,
-                         const ChunkedNdtreeNode& rhs) {
+  friend bool operator==(const NdtreeNodeChunk& lhs,
+                         const NdtreeNodeChunk& rhs) {
     return &rhs == &lhs;
   }
 
+  bool hasNonZeroData() const;
+  bool hasNonZeroData(FloatingPoint threshold) const;
   DataT& data(LinearIndex linear_index);
   const DataT& data(LinearIndex linear_index) const;
 
@@ -40,23 +42,23 @@ class ChunkedNdtreeNode {
 
   bool hasChild(LinearIndex child_index) const;
   bool hasAtLeastOneChild() const;
-  ChunkedNdtreeNode* allocateChild(LinearIndex child_index);
+  NdtreeNodeChunk* allocateChild(LinearIndex child_index);
   bool deleteChild(LinearIndex child_index);
-  ChunkedNdtreeNode* getChild(LinearIndex child_index);
-  const ChunkedNdtreeNode* getChild(LinearIndex child_index) const;
+  NdtreeNodeChunk* getChild(LinearIndex child_index);
+  const NdtreeNodeChunk* getChild(LinearIndex child_index) const;
 
   size_t getMemoryUsage() const;
 
  private:
   using DataArray = std::array<DataT, kNumInnerNodes>;
   using ChildrenArray =
-      std::array<std::unique_ptr<ChunkedNdtreeNode>, kNumChildren>;
+      std::array<std::unique_ptr<NdtreeNodeChunk>, kNumChildren>;
 
   DataArray data_{};
   std::unique_ptr<ChildrenArray> children_;
 };
 }  // namespace wavemap
 
-#include "wavemap/data_structure/chunked_ndtree/impl/chunked_ndtree_node_inl.h"
+#include "wavemap/data_structure/chunked_ndtree/impl/ndtree_node_chunk_inl.h"
 
-#endif  // WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_H_
+#endif  // WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_NDTREE_NODE_CHUNK_H_

@@ -37,6 +37,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}
     src/config/param_conversions.cc
     src/data_structure/volumetric/hashed_blocks.cc
+    src/data_structure/volumetric/hashed_chunked_wavelet_octree.cc
     src/data_structure/volumetric/hashed_wavelet_octree.cc
     src/data_structure/volumetric/volumetric_octree.cc
     src/data_structure/volumetric/wavelet_octree.cc
@@ -90,6 +91,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/iterator/test_subtree_iterator.cc
       test/src/utils/test_approximate_trigonometry.cc
       test/src/utils/test_bit_manipulation.cc
+      test/src/utils/test_data_utils.cc
       test/src/utils/test_fill_utils.cc
       test/src/utils/test_int_math.cc
       test/src/utils/test_tree_math.cc
