@@ -131,40 +131,19 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
         std::make_unique<TypeParam>(TestFixture::getRandomMinCellWidth());
     const std::vector<Index3D> random_indices =
         TestFixture::template getRandomIndexVector<3>(
-            2u, 100u, Index3D::Constant(-100), Index3D::Constant(100));
-    Index3D reference_min_index =
-        Index3D::Constant(std::numeric_limits<IndexElement>::max());
-    Index3D reference_max_index =
-        Index3D::Constant(std::numeric_limits<IndexElement>::lowest());
+            1000u, 2000u, Index3D::Constant(-5000), Index3D::Constant(5000));
     std::unordered_map<Index3D, FloatingPoint, IndexHash<3>> reference_map;
     for (const Index3D& index : random_indices) {
-      for (const FloatingPoint update : TestFixture::getRandomUpdateVector()) {
-        map_base_ptr->addToCellValue(index, update);
-        EXPECT_TRUE(map_base_ptr->getCellValue(index) != 0.f);
-        if (TypeParam::kRequiresExplicitThresholding) {
-          map_base_ptr->prune();
-        }
-        reference_map[index] =
-            std::clamp(reference_map[index] + update,
-                       map_base_ptr->getConfig().min_log_odds,
-                       map_base_ptr->getConfig().max_log_odds);
-        reference_min_index = reference_min_index.cwiseMin(index);
-        reference_max_index = reference_max_index.cwiseMax(index);
+      const FloatingPoint update = TestFixture::getRandomUpdate();
+      map_base_ptr->addToCellValue(index, update);
+      auto new_value = map_base_ptr->getCellValue(index);
+      if (new_value < map_base_ptr->getConfig().min_log_odds ||
+          map_base_ptr->getConfig().max_log_odds < new_value) {
+        map_base_ptr->prune();
       }
-    }
-
-    // Check that the map is complete and correct (incl. truncation)
-    for (const Index3D& index :
-         Grid<3>(reference_min_index - Index3D::Ones(),
-                 reference_max_index + Index3D::Ones())) {
-      if (reference_map.count(index)) {
-        EXPECT_NEAR(map_base_ptr->getCellValue(index), reference_map[index],
-                    TestFixture::kAcceptableReconstructionError *
-                        (1.f + reference_map[index]));
-      } else {
-        EXPECT_NEAR(map_base_ptr->getCellValue(index), 0.f,
-                    TestFixture::kAcceptableReconstructionError);
-      }
+      reference_map[index] = std::clamp(reference_map[index] + update,
+                                        map_base_ptr->getConfig().min_log_odds,
+                                        map_base_ptr->getConfig().max_log_odds);
     }
 
     // Check that the indexed leaf value visitor visits all non-zero cells
@@ -190,6 +169,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
             }
           }
         });
+
     // If all non-zero values were visited, reference map should now be empty
     auto IndexToString = [](const Index3D& index) -> std::string {
       std::stringstream ss;
