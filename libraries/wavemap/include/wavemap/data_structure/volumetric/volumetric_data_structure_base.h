@@ -18,11 +18,13 @@ struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
     kHashedBlocks,
     kOctree,
     kWaveletOctree,
-    kHashedWaveletOctree
+    kHashedWaveletOctree,
+    kHashedChunkedWaveletOctree
   };
 
   static constexpr std::array names = {
-      "hashed_blocks", "octree", "wavelet_octree", "hashed_wavelet_octree"};
+      "hashed_blocks", "octree", "wavelet_octree", "hashed_wavelet_octree",
+      "hashed_chunked_wavelet_octree"};
 };
 
 struct VolumetricDataStructureConfig

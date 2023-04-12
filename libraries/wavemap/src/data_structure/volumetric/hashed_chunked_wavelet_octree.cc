@@ -210,7 +210,7 @@ void HashedChunkedWaveletOctree::Block::forEachLeaf(
   }
 
   std::stack<StackElement> stack;
-  stack.emplace(StackElement{OctreeIndex{kTreeHeight, block_index},
+  stack.emplace(StackElement{{kTreeHeight, block_index},
                              chunked_ndtree_.getRootChunk(),
                              root_scale_coefficient_});
   while (!stack.empty()) {

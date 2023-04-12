@@ -34,6 +34,7 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 # Libraries
+# cmake-lint: disable=C0301
 add_library(${PROJECT_NAME}
     src/config/param_conversions.cc
     src/data_structure/volumetric/hashed_blocks.cc
@@ -53,6 +54,7 @@ add_library(${PROJECT_NAME}
     src/integrator/projection_model/spherical_projector.cc
     src/integrator/projection_model/projector_factory.cc
     src/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.cc
+    src/integrator/projective/coarse_to_fine/hashed_chunked_wavelet_integrator.cc
     src/integrator/projective/coarse_to_fine/hashed_wavelet_integrator.cc
     src/integrator/projective/coarse_to_fine/wavelet_integrator.cc
     src/integrator/projective/fixed_resolution/fixed_resolution_integrator.cc

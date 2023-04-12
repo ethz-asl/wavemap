@@ -13,6 +13,7 @@
 #include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap/integrator/projective/coarse_to_fine/hashed_chunked_wavelet_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/hashed_wavelet_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
@@ -306,6 +307,68 @@ TEST_F(PointcloudIntegrator3DTest,
         std::make_shared<HashedWaveletOctree>(data_structure_config);
     IntegratorBase::Ptr evaluated_integrator =
         std::make_shared<HashedWaveletIntegrator>(
+            projective_integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model, evaluated_occupancy_map);
+    evaluated_integrator->integratePointcloud(random_pointcloud);
+
+    evaluated_occupancy_map->prune();
+
+    // Compare the evaluated map against the fixed resolution reference
+    // Make sure all cells of the reference map are accounted for
+    reference_occupancy_map->forEachLeaf(
+        [&](const OctreeIndex& node_index, FloatingPoint reference_value) {
+          const FloatingPoint evaluated_value =
+              evaluated_occupancy_map->getCellValue(node_index);
+          EXPECT_NEAR(evaluated_value, reference_value,
+                      projective_integrator_config.termination_update_error)
+              << "For cell index " << node_index.toString();
+        });
+    // Make sure the evaluated map contains no spurious cells
+    evaluated_occupancy_map->forEachLeaf([&](const OctreeIndex& node_index,
+                                             FloatingPoint evaluated_value) {
+      const Index3D min_index = convert::nodeIndexToMinCornerIndex(node_index);
+      const Index3D max_index = convert::nodeIndexToMinCornerIndex(node_index);
+      for (const auto& index : Grid(min_index, max_index)) {
+        const FloatingPoint reference_value =
+            reference_occupancy_map->getCellValue(index);
+        EXPECT_NEAR(evaluated_value, reference_value,
+                    projective_integrator_config.termination_update_error)
+            << "For cell index " << EigenFormat::oneLine(index);
+      }
+    });
+  }
+}
+
+TEST_F(PointcloudIntegrator3DTest,
+       FixedResolutionAndHashedChunkedWaveletIntegratorEquivalence) {
+  constexpr int kNumRepetitions = 3;
+  for (int idx = 0; idx < kNumRepetitions; ++idx) {
+    const auto projective_integrator_config =
+        getRandomProjectiveIntegratorConfig();
+    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
+    const auto projection_model = getRandomProjectionModel();
+    const auto posed_range_image =
+        std::make_shared<PosedImage<>>(projection_model->getDimensions());
+    const auto beam_offset_image =
+        std::make_shared<Image<Vector2D>>(projection_model->getDimensions());
+    const auto measurement_model = std::make_shared<ContinuousBeam>(
+        getRandomMeasurementModelConfig(*projection_model), projection_model,
+        posed_range_image, beam_offset_image);
+    const PosedPointcloud<> random_pointcloud =
+        getRandomPointcloud(*projection_model);
+
+    VolumetricDataStructureBase::Ptr reference_occupancy_map =
+        std::make_shared<HashedBlocks>(data_structure_config);
+    IntegratorBase::Ptr reference_integrator =
+        std::make_shared<FixedResolutionIntegrator>(
+            projective_integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model, reference_occupancy_map);
+    reference_integrator->integratePointcloud(random_pointcloud);
+
+    HashedChunkedWaveletOctree::Ptr evaluated_occupancy_map =
+        std::make_shared<HashedChunkedWaveletOctree>(data_structure_config);
+    IntegratorBase::Ptr evaluated_integrator =
+        std::make_shared<HashedChunkedWaveletIntegrator>(
             projective_integrator_config, projection_model, posed_range_image,
             beam_offset_image, measurement_model, evaluated_occupancy_map);
     evaluated_integrator->integratePointcloud(random_pointcloud);

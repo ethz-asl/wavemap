@@ -1,11 +1,10 @@
 #include "wavemap/integrator/integrator_factory.h"
 
-#include "wavemap/data_structure/volumetric/volumetric_octree.h"
-#include "wavemap/data_structure/volumetric/wavelet_octree.h"
 #include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/measurement_model/measurement_model_factory.h"
 #include "wavemap/integrator/projection_model/projector_factory.h"
 #include "wavemap/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
+#include "wavemap/integrator/projective/coarse_to_fine/hashed_chunked_wavelet_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/hashed_wavelet_integrator.h"
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
@@ -132,6 +131,24 @@ IntegratorBase::Ptr IntegratorFactory::create(
                    << VolumetricDataStructureType::typeIdToStr(
                           VolumetricDataStructureType::kHashedWaveletOctree)
                    << ". Returning nullptr.";
+      }
+      break;
+    }
+    case IntegratorType::kHashedChunkedWaveletIntegrator: {
+      auto hashed_chunked_wavelet_map =
+          std::dynamic_pointer_cast<HashedChunkedWaveletOctree>(occupancy_map);
+      if (hashed_chunked_wavelet_map) {
+        return std::make_shared<HashedChunkedWaveletIntegrator>(
+            integrator_config, projection_model, posed_range_image,
+            beam_offset_image, measurement_model,
+            std::move(hashed_chunked_wavelet_map));
+      } else {
+        LOG(ERROR)
+            << "Integrator of type " << integrator_type.toStr()
+            << " only supports data structures of type "
+            << VolumetricDataStructureType::typeIdToStr(
+                   VolumetricDataStructureType::kHashedChunkedWaveletOctree)
+            << ". Returning nullptr.";
       }
       break;
     }

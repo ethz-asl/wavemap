@@ -94,18 +94,21 @@ wavemap_msgs::Map mapToRosMsg(
       wavemap_msgs::WaveletOctreeNode node_msg;
       std::copy(node.data().cbegin(), node.data().cend(),
                 node_msg.detail_coefficients.begin());
+      node_msg.allocated_children_bitset = 0;
 
       const auto child_scales =
           HashedWaveletOctree::Transform::backward({scale, node.data()});
       for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
-        const auto* child = node.getChild(relative_child_idx);
         const auto child_scale = child_scales[relative_child_idx];
+        if (child_scale < min_log_odds || max_log_odds < child_scale) {
+          continue;
+        }
+
+        const auto* child = node.getChild(relative_child_idx);
         if (child) {
-          if (min_log_odds < child_scale && child_scale < max_log_odds) {
-            node_msg.allocated_children_bitset += (1 << relative_child_idx);
-            stack.push(StackElement{child_scale, *child});
-          }
+          stack.emplace(StackElement{child_scale, *child});
+          node_msg.allocated_children_bitset += (1 << relative_child_idx);
         }
       }
       wavelet_octree_msg.nodes.emplace_back(node_msg);
@@ -115,26 +118,93 @@ wavemap_msgs::Map mapToRosMsg(
   return map_msg;
 }
 
-void octreeFromRosMsg(const wavemap_msgs::Octree& octree_msg,
-                      VolumetricOctree& octree) {
-  octree.clear();
+wavemap_msgs::Map mapToRosMsg(
+    const HashedChunkedWaveletOctree& map, const std::string& frame_id,
+    std::optional<FloatingPoint> ignore_blocks_older_than) {
+  wavemap_msgs::Map map_msg;
+  map_msg.header.stamp = ros::Time::now();
+  map_msg.header.frame_id = frame_id;
 
-  std::stack<typename VolumetricOctree::NodeType*> stack;
-  stack.emplace(&octree.getRootNode());
-  for (const auto& node_msg : octree_msg.nodes) {
-    CHECK(!stack.empty());
-    const auto current_node = stack.top();
-    stack.pop();
+  for (const auto& [block_index, block] : map.getBlocks()) {
+    if (ignore_blocks_older_than.has_value() &&
+        ignore_blocks_older_than < block.getTimeSinceLastUpdated()) {
+      continue;
+    }
 
-    current_node->data() = node_msg.node_value;
-    for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
-         0 <= relative_child_idx; --relative_child_idx) {
-      const bool child_exists =
-          node_msg.allocated_children_bitset & (1 << relative_child_idx);
-      if (child_exists) {
-        stack.emplace(current_node->allocateChild(relative_child_idx));
+    auto& wavelet_octree_msg = map_msg.wavelet_octree.emplace_back();
+    wavelet_octree_msg.min_cell_width = map.getMinCellWidth();
+    wavelet_octree_msg.root_node_offset.emplace_back(block_index.x());
+    wavelet_octree_msg.root_node_offset.emplace_back(block_index.y());
+    wavelet_octree_msg.root_node_offset.emplace_back(block_index.z());
+    wavelet_octree_msg.root_node_scale_coefficient = block.getRootScale();
+
+    constexpr FloatingPoint kNumericalNoise = 1e-3f;
+    const auto min_log_odds = map.getConfig().min_log_odds + kNumericalNoise;
+    const auto max_log_odds = map.getConfig().max_log_odds - kNumericalNoise;
+    const auto tree_height = map.getTreeHeight();
+    const auto chunk_height = map.getChunkHeight();
+
+    struct StackElement {
+      const OctreeIndex node_index;
+      const HashedChunkedWaveletOctree::NodeChunkType& chunk;
+      const FloatingPoint scale_coefficient;
+    };
+    std::stack<StackElement> stack;
+    stack.emplace(StackElement{{tree_height, block_index},
+                               block.getRootChunk(),
+                               block.getRootScale()});
+
+    while (!stack.empty()) {
+      const OctreeIndex index = stack.top().node_index;
+      const FloatingPoint scale = stack.top().scale_coefficient;
+      const auto& chunk = stack.top().chunk;
+      stack.pop();
+
+      const MortonCode morton_code = convert::nodeIndexToMorton(index);
+      const int chunk_top_height =
+          chunk_height * int_math::div_round_up(index.height, chunk_height);
+      const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
+          morton_code, chunk_top_height, index.height);
+
+      wavemap_msgs::WaveletOctreeNode node_msg;
+      std::copy(chunk.data(value_index).cbegin(),
+                chunk.data(value_index).cend(),
+                node_msg.detail_coefficients.begin());
+      node_msg.allocated_children_bitset = 0;
+
+      const HashedWaveletOctree::Coefficients::CoefficientsArray child_scales =
+          HashedWaveletOctree::Transform::backward(
+              {scale, {chunk.data(value_index)}});
+
+      for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
+           0 <= relative_child_idx; --relative_child_idx) {
+        const OctreeIndex child_index =
+            index.computeChildIndex(relative_child_idx);
+        const FloatingPoint child_scale = child_scales[relative_child_idx];
+        if (child_scale < min_log_odds || max_log_odds < child_scale) {
+          continue;
+        }
+
+        if (child_index.height % chunk_height != 0) {
+          stack.emplace(StackElement{child_index, chunk, child_scale});
+          node_msg.allocated_children_bitset += (1 << relative_child_idx);
+          continue;
+        }
+
+        const MortonCode child_morton = convert::nodeIndexToMorton(child_index);
+        const LinearIndex linear_child_index =
+            OctreeIndex::computeLevelTraversalDistance(
+                child_morton, chunk_top_height, child_index.height);
+        if (chunk.hasChild(linear_child_index)) {
+          const auto& child_chunk = *chunk.getChild(linear_child_index);
+          stack.emplace(StackElement{child_index, child_chunk, child_scale});
+          node_msg.allocated_children_bitset += (1 << relative_child_idx);
+        }
       }
+      wavelet_octree_msg.nodes.emplace_back(node_msg);
     }
   }
+
+  return map_msg;
 }
 }  // namespace wavemap

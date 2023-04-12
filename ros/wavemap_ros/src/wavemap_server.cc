@@ -2,8 +2,6 @@
 
 #include <std_srvs/Empty.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_factory.h>
-#include <wavemap/data_structure/volumetric/volumetric_octree.h>
-#include <wavemap/data_structure/volumetric/wavelet_octree.h>
 #include <wavemap/utils/nameof.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>
@@ -70,6 +68,15 @@ void WavemapServer::visualizeMap() {
       wavemap_msgs::Map map_msg =
           mapToRosMsg(*hashed_wavelet_octree, config_.general.world_frame,
                       config_.map.visualization_period);
+      map_pub_.publish(map_msg);
+    }
+    if (const auto hashed_chunked_wavelet_octree =
+            std::dynamic_pointer_cast<HashedChunkedWaveletOctree>(
+                occupancy_map_);
+        hashed_chunked_wavelet_octree) {
+      wavemap_msgs::Map map_msg = mapToRosMsg(*hashed_chunked_wavelet_octree,
+                                              config_.general.world_frame,
+                                              config_.map.visualization_period);
       map_pub_.publish(map_msg);
     }
   }
