@@ -19,13 +19,13 @@ wavemap_msgs::Map mapToRosMsg(const VolumetricOctree& map,
 wavemap_msgs::Map mapToRosMsg(const WaveletOctree& map,
                               const std::string& frame_id);
 
-wavemap_msgs::Map mapToRosMsg(
-    const HashedWaveletOctree& map, const std::string& frame_id,
-    std::optional<FloatingPoint> ignore_blocks_older_than = std::nullopt);
+wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
+                              const std::string& frame_id,
+                              FloatingPoint ignore_blocks_older_than = -1.f);
 
-wavemap_msgs::Map mapToRosMsg(
-    const HashedChunkedWaveletOctree& map, const std::string& frame_id,
-    std::optional<FloatingPoint> ignore_blocks_older_than = std::nullopt);
+wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
+                              const std::string& frame_id,
+                              FloatingPoint ignore_blocks_older_than = -1.f);
 }  // namespace wavemap
 
 #endif  // WAVEMAP_ROS_IO_ROS_MSG_CONVERSIONS_H_
