@@ -159,13 +159,11 @@ void LivoxInputHandler::processQueue() {
     for (const auto& integrator : integrators_) {
       integrator->integratePointcloud(posed_pointcloud);
     }
-    const double pointcloud_integration_time = integration_timer_.stop();
-    const double total_pointcloud_integration_time =
-        integration_timer_.getTotal();
+    integration_timer_.stop();
     ROS_INFO_STREAM("Integrated new pointcloud in "
-                    << pointcloud_integration_time
+                    << integration_timer_.getLastEpisodeWallTime()
                     << "s. Total integration time: "
-                    << total_pointcloud_integration_time << "s.");
+                    << integration_timer_.getTotalWallTime() << "s.");
 
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();

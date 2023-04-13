@@ -85,25 +85,11 @@ void PointcloudInputHandler::processQueue() {
     for (const auto& integrator : integrators_) {
       integrator->integratePointcloud(posed_pointcloud);
     }
-    const double pointcloud_integration_time = integration_timer_.stop();
-    const double total_pointcloud_integration_time =
-        integration_timer_.getTotal();
+    integration_timer_.stop();
     ROS_INFO_STREAM("Integrated new pointcloud in "
-                    << pointcloud_integration_time
+                    << integration_timer_.getLastEpisodeWallTime()
                     << "s. Total integration time: "
-                    << total_pointcloud_integration_time << "s.");
-
-    //  if (config_.publish_performance_stats) {
-    //    const size_t map_memory_usage = occupancy_map_->getMemoryUsage();
-    //    ROS_INFO_STREAM("Map memory usage: " << map_memory_usage / 1e6 <<
-    //    "MB.");
-    //
-    //    wavemap_msgs::PerformanceStats performance_stats_msg;
-    //    performance_stats_msg.map_memory_usage = map_memory_usage;
-    //    performance_stats_msg.total_pointcloud_integration_time =
-    //        total_pointcloud_integration_time;
-    //    performance_stats_pub_.publish(performance_stats_msg);
-    //  }
+                    << integration_timer_.getTotalWallTime() << "s.");
 
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();

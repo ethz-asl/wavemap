@@ -91,13 +91,11 @@ void DepthImageInputHandler::processQueue() {
     for (const auto& integrator : scanwise_integrators_) {
       integrator->integrateRangeImage(posed_range_image);
     }
-    const double pointcloud_integration_time = integration_timer_.stop();
-    const double total_pointcloud_integration_time =
-        integration_timer_.getTotal();
-    ROS_INFO_STREAM("Integrated new depth image in "
-                    << pointcloud_integration_time
+    integration_timer_.stop();
+    ROS_INFO_STREAM("Integrated new pointcloud in "
+                    << integration_timer_.getLastEpisodeWallTime()
                     << "s. Total integration time: "
-                    << total_pointcloud_integration_time << "s.");
+                    << integration_timer_.getTotalWallTime() << "s.");
 
     // Remove the depth image from the queue
     depth_image_queue_.pop();

@@ -61,7 +61,7 @@ class InputHandler {
   const std::string world_frame_;
 
   std::vector<IntegratorBase::Ptr> integrators_;
-  CpuTimer integration_timer_;
+  Timer integration_timer_;
 
   std::shared_ptr<TfTransformer> transformer_;
 
