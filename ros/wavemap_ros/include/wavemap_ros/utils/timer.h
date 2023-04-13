@@ -8,7 +8,7 @@
 namespace wavemap {
 struct Time : timespec {
   Time() : timespec{} {}
-  Time(int32_t sec, int32_t nsec) : timespec{sec, nsec} {}
+  Time(int64_t sec, int64_t nsec) : timespec{sec, nsec} {}
 
   double toSec() const {
     return static_cast<double>(tv_sec) + static_cast<double>(tv_nsec) * 1e-9;
