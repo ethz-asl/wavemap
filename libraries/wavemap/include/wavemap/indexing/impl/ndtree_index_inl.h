@@ -24,9 +24,11 @@ NdtreeIndex<dim> NdtreeIndex<dim>::computeParentIndex(
 template <int dim>
 NdtreeIndex<dim> NdtreeIndex<dim>::computeChildIndex(
     RelativeChild relative_child_index) const {
-  NdtreeIndex child_index = *this;
+  DCHECK_GE(relative_child_index, 0);
+  DCHECK_LT(relative_child_index, kNumChildren);
 
   // Compute index of first child
+  NdtreeIndex child_index = *this;
   child_index.position *= 2;
   child_index.height -= 1;
 

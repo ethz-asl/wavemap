@@ -9,7 +9,7 @@ map:
   autosave_period: { seconds: -1.0 }
   autosave_path: ""
   data_structure:
-    type: "hashed_wavelet_octree"
+    type: "hashed_chunked_wavelet_octree"
     min_cell_width: { meters: 0.05 }
     max_height: 14
 
@@ -20,7 +20,7 @@ inputs:
     max_wait_for_pose: { seconds: 1.0 }
     integrators:
       - integration_method:
-          type: "hashed_wavelet_integrator"
+          type: "hashed_chunked_wavelet_integrator"
           min_range: { meters: 1.0 }
           max_range: { meters: 15.0 }
           termination_update_error: 0.1

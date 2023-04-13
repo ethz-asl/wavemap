@@ -37,10 +37,9 @@ void HashedChunkedWaveletIntegrator::updateMap() {
 std::pair<OctreeIndex, OctreeIndex>
 HashedChunkedWaveletIntegrator::getFovMinMaxIndices(
     const Point3D& sensor_origin) const {
-  const IndexElement height =
-      1 + std::max(static_cast<IndexElement>(std::ceil(
-                       std::log2(config_.max_range / min_cell_width_))),
-                   tree_height_);
+  const int height = 1 + std::max(static_cast<int>(std::ceil(std::log2(
+                                      config_.max_range / min_cell_width_))),
+                                  tree_height_);
   const OctreeIndex fov_min_idx = convert::indexAndHeightToNodeIndex<3>(
       convert::pointToFloorIndex<3>(
           sensor_origin - Vector3D::Constant(config_.max_range),
@@ -58,9 +57,6 @@ HashedChunkedWaveletIntegrator::getFovMinMaxIndices(
 
 void HashedChunkedWaveletIntegrator::updateBlock(
     HashedChunkedWaveletOctree::Block& block, const OctreeIndex& block_index) {
-  HashedChunkedWaveletOctree::NodeChunkType& root_chunk = block.getRootChunk();
-  HashedChunkedWaveletOctree::Coefficients::Scale& root_node_scale =
-      block.getRootScale();
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
@@ -71,33 +67,34 @@ void HashedChunkedWaveletIntegrator::updateBlock(
     HashedChunkedWaveletOctree::Coefficients::CoefficientsArray
         child_scale_coefficients;
   };
-  std::stack<StackElement> stack;
-  stack.emplace(StackElement{root_chunk, block_index, 0,
-                             HashedChunkedWaveletOctree::Transform::backward(
-                                 {root_node_scale, root_chunk.data(0u)})});
+  std::stack<StackElement, std::vector<StackElement>> stack;
+  stack.emplace(
+      StackElement{block.getRootChunk(), block_index, 0,
+                   HashedChunkedWaveletOctree::Transform::backward(
+                       {block.getRootScale(), block.getRootChunk().data(0u)})});
 
   while (!stack.empty()) {
     // If the current stack element has fully been processed, propagate upward
     if (OctreeIndex::kNumChildren <= stack.top().next_child_idx) {
-      const auto [scale, details] =
+      const auto [new_scale, new_details] =
           HashedChunkedWaveletOctree::Transform::forward(
               stack.top().child_scale_coefficients);
       const MortonCode morton_code =
           convert::nodeIndexToMorton(stack.top().parent_node_index);
-      const IndexElement parent_height = stack.top().parent_node_index.height;
-      const IndexElement chunk_top_height =
+      const int parent_height = stack.top().parent_node_index.height;
+      const int chunk_top_height =
           chunk_height_ * int_math::div_round_up(parent_height, chunk_height_);
       const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
           morton_code, chunk_top_height, parent_height);
-      stack.top().parent_chunk.data(value_index) = details;
+      stack.top().parent_chunk.data(value_index) = new_details;
       stack.pop();
       if (stack.empty()) {
-        root_node_scale = scale;
+        block.getRootScale() = new_scale;
         return;
       } else {
         const NdtreeIndexRelativeChild current_child_idx =
             stack.top().next_child_idx - 1;
-        stack.top().child_scale_coefficients[current_child_idx] = scale;
+        stack.top().child_scale_coefficients[current_child_idx] = new_scale;
         continue;
       }
     }
@@ -111,10 +108,10 @@ void HashedChunkedWaveletIntegrator::updateBlock(
 
     HashedChunkedWaveletOctree::NodeChunkType& parent_chunk =
         stack.top().parent_chunk;
-    FloatingPoint& node_value =
-        stack.top().child_scale_coefficients[current_child_idx];
     const OctreeIndex node_index =
         stack.top().parent_node_index.computeChildIndex(current_child_idx);
+    FloatingPoint& node_value =
+        stack.top().child_scale_coefficients[current_child_idx];
     DCHECK_GE(node_index.height, 0);
 
     // If we're at the leaf level, directly update the node
@@ -174,13 +171,13 @@ void HashedChunkedWaveletIntegrator::updateBlock(
 
     // Since the approximation error would still be too big, refine
     const MortonCode morton_code = convert::nodeIndexToMorton(node_index);
-    const IndexElement node_height = node_index.height;
-    const IndexElement parent_height = node_height + 1;
-    const IndexElement chunk_top_height =
+    const int node_height = node_index.height;
+    const int parent_height = node_height + 1;
+    const int parent_chunk_top_height =
         chunk_height_ * int_math::div_round_up(parent_height, chunk_height_);
-    const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
-        morton_code, chunk_top_height, parent_height);
     if (node_height % chunk_height_ != 0) {
+      const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
+          morton_code, parent_chunk_top_height, node_height);
       stack.emplace(
           StackElement{parent_chunk, node_index, 0,
                        HashedChunkedWaveletOctree::Transform::backward(
@@ -188,19 +185,17 @@ void HashedChunkedWaveletIntegrator::updateBlock(
     } else {
       const LinearIndex linear_child_index =
           OctreeIndex::computeLevelTraversalDistance(
-              morton_code, chunk_top_height, node_height);
-      if (parent_chunk.hasChild(linear_child_index)) {
-        stack.emplace(StackElement{
-            *parent_chunk.getChild(linear_child_index), node_index, 0,
-            HashedChunkedWaveletOctree::Transform::backward(
-                {node_value, parent_chunk.data(value_index)})});
-      } else {
-        // Allocate the current node if it has not yet been allocated
-        stack.emplace(StackElement{
-            *parent_chunk.allocateChild(linear_child_index), node_index, 0,
-            HashedChunkedWaveletOctree::Transform::backward(
-                {node_value, parent_chunk.data(value_index)})});
+              morton_code, parent_chunk_top_height, node_height);
+      HashedChunkedWaveletOctree::NodeChunkType* child_chunk =
+          parent_chunk.getChild(linear_child_index);
+      if (!child_chunk) {
+        child_chunk = parent_chunk.allocateChild(linear_child_index);
       }
+      constexpr LinearIndex kValueIndex = 0u;
+      stack.emplace(
+          StackElement{*child_chunk, node_index, 0,
+                       HashedChunkedWaveletOctree::Transform::backward(
+                           {node_value, child_chunk->data(kValueIndex)})});
     }
   }
 }
