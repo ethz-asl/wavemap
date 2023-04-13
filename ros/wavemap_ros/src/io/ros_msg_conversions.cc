@@ -185,19 +185,19 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
           continue;
         }
 
-        if (child_index.height % chunk_height != 0) {
+        if (child_index.height % chunk_height == 0) {
+          const MortonCode child_morton =
+              convert::nodeIndexToMorton(child_index);
+          const LinearIndex linear_child_index =
+              OctreeIndex::computeLevelTraversalDistance(
+                  child_morton, chunk_top_height, child_index.height);
+          if (chunk.hasChild(linear_child_index)) {
+            const auto& child_chunk = *chunk.getChild(linear_child_index);
+            stack.emplace(StackElement{child_index, child_chunk, child_scale});
+            node_msg.allocated_children_bitset += (1 << relative_child_idx);
+          }
+        } else {
           stack.emplace(StackElement{child_index, chunk, child_scale});
-          node_msg.allocated_children_bitset += (1 << relative_child_idx);
-          continue;
-        }
-
-        const MortonCode child_morton = convert::nodeIndexToMorton(child_index);
-        const LinearIndex linear_child_index =
-            OctreeIndex::computeLevelTraversalDistance(
-                child_morton, chunk_top_height, child_index.height);
-        if (chunk.hasChild(linear_child_index)) {
-          const auto& child_chunk = *chunk.getChild(linear_child_index);
-          stack.emplace(StackElement{child_index, child_chunk, child_scale});
           node_msg.allocated_children_bitset += (1 << relative_child_idx);
         }
       }

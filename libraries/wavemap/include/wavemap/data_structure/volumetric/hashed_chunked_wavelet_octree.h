@@ -18,7 +18,7 @@ namespace wavemap {
 class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
  public:
   static constexpr IndexElement kChunkHeight = 3;
-  static constexpr IndexElement kTreeHeight = 9;
+  static constexpr IndexElement kTreeHeight = 6;
 
   using Ptr = std::shared_ptr<HashedChunkedWaveletOctree>;
   using ConstPtr = std::shared_ptr<const HashedChunkedWaveletOctree>;
