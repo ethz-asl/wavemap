@@ -61,8 +61,7 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
     case BeamSelectorType::kAllNeighbors: {
       // Get the measured distances and cell to beam offsets
       std::array<FloatingPoint, 4> measured_distances{};
-      ProjectorBase::CellToBeamOffsetArray cell_to_beam_offsets =
-          ProjectorBase::CellToBeamOffsetArray::Zero();
+      ProjectorBase::CellToBeamOffsetArray cell_to_beam_offsets{};
       const auto [image_indices, cell_offsets] =
           projection_model_->imageToNearestIndicesAndOffsets(
               sensor_coordinates.head<2>());
@@ -74,7 +73,7 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
           continue;
         }
         measured_distances[neighbor_idx] = range_image_->at(image_index);
-        cell_to_beam_offsets.col(neighbor_idx) =
+        cell_to_beam_offsets[neighbor_idx] =
             beam_offset_image_->at(image_index) - cell_offset;
       }
 

@@ -60,19 +60,11 @@ void HashedChunkedWaveletIntegrator::updateBlock(
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
-  struct StackElement {
-    HashedChunkedWaveletOctree::NodeChunkType& parent_chunk;
-    const OctreeIndex parent_node_index;
-    NdtreeIndexRelativeChild next_child_idx;
-    HashedChunkedWaveletOctree::Coefficients::CoefficientsArray
-        child_scale_coefficients;
-  };
   std::stack<StackElement, std::vector<StackElement>> stack;
   stack.emplace(
       StackElement{block.getRootChunk(), block_index, 0,
                    HashedChunkedWaveletOctree::Transform::backward(
                        {block.getRootScale(), block.getRootChunk().data(0u)})});
-
   while (!stack.empty()) {
     // If the current stack element has fully been processed, propagate upward
     if (OctreeIndex::kNumChildren <= stack.top().next_child_idx) {
@@ -121,9 +113,8 @@ void HashedChunkedWaveletIntegrator::updateBlock(
       const Point3D C_node_center =
           posed_range_image_->getPoseInverse() * W_node_center;
       const FloatingPoint sample = computeUpdate(C_node_center);
-      node_value =
-          std::clamp(sample + node_value, min_log_odds_ - kNoiseThreshold,
-                     max_log_odds_ + kNoiseThreshold);
+      node_value = std::clamp(sample + node_value, min_log_odds_padded_,
+                              max_log_odds_padded_);
       continue;
     }
 
@@ -145,7 +136,7 @@ void HashedChunkedWaveletIntegrator::updateBlock(
     // We can also stop here if the cell will result in a free space update
     // (or zero) and the map is already saturated free
     if (update_type != UpdateType::kPossiblyOccupied &&
-        node_value < min_log_odds_ + kNoiseThreshold / 10.f) {
+        node_value < min_log_odds_shrunk_) {
       continue;
     }
 

@@ -74,7 +74,7 @@ class ProjectorBase {
   //       it corresponds to the reprojection error in pixels.
   virtual FloatingPoint imageOffsetToErrorNorm(
       const Vector2D& linearization_point, Vector2D offset) const = 0;
-  using CellToBeamOffsetArray = Eigen::Matrix<FloatingPoint, 2, 4>;
+  using CellToBeamOffsetArray = std::array<Vector2D, 4>;
   virtual std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
       const Vector2D& linearization_point,
       CellToBeamOffsetArray offsets) const = 0;

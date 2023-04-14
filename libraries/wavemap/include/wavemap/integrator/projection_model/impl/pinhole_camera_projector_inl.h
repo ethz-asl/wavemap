@@ -39,7 +39,7 @@ PinholeCameraProjector::imageOffsetsToErrorNorms(
     const Vector2D&, ProjectorBase::CellToBeamOffsetArray offsets) const {
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
-    error_norms[offset_idx] = offsets.col(offset_idx).norm();
+    error_norms[offset_idx] = offsets[offset_idx].norm();
   }
   return error_norms;
 }

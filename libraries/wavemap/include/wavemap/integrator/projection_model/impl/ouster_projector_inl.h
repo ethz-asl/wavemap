@@ -43,10 +43,12 @@ inline std::array<FloatingPoint, 4> OusterProjector::imageOffsetsToErrorNorms(
     const Vector2D& linearization_point,
     ProjectorBase::CellToBeamOffsetArray offsets) const {
   const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
-  offsets.row(1) *= cos_elevation_angle;
+  for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
+    offsets[offset_idx][1] *= cos_elevation_angle;
+  }
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
-    error_norms[offset_idx] = offsets.col(offset_idx).norm();
+    error_norms[offset_idx] = offsets[offset_idx].norm();
   }
   return error_norms;
 }

@@ -27,25 +27,35 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
         occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
 
  private:
+  using BlockList = std::vector<OctreeIndex>;
+  struct StackElement {
+    HashedChunkedWaveletOctree::NodeChunkType& parent_chunk;
+    const OctreeIndex parent_node_index;
+    NdtreeIndexRelativeChild next_child_idx;
+    HashedChunkedWaveletOctree::Coefficients::CoefficientsArray
+        child_scale_coefficients;
+  };
+
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
+  ThreadPool thread_pool_;
+  std::shared_ptr<RangeImageIntersector> range_image_intersector_;
+
+  // Cache/pre-computed commonly used values
+  static constexpr FloatingPoint kNoiseThreshold = 1e-4f;
+  static constexpr auto kUnitCubeHalfDiagonal =
+      constants<FloatingPoint>::kSqrt3 / 2.f;
   const FloatingPoint min_cell_width_ = occupancy_map_->getMinCellWidth();
   const FloatingPoint min_cell_width_inv_ = 1.f / min_cell_width_;
-  ThreadPool thread_pool_;
-
-  static constexpr FloatingPoint kNoiseThreshold = 1e-4f;
   const FloatingPoint min_log_odds_ = occupancy_map_->getConfig().min_log_odds;
   const FloatingPoint max_log_odds_ = occupancy_map_->getConfig().max_log_odds;
+  const FloatingPoint min_log_odds_padded_ = min_log_odds_ - kNoiseThreshold;
+  const FloatingPoint min_log_odds_shrunk_ = min_log_odds_ + kNoiseThreshold;
+  const FloatingPoint max_log_odds_padded_ = max_log_odds_ + kNoiseThreshold;
   const IndexElement tree_height_ = occupancy_map_->getTreeHeight();
   const IndexElement chunk_height_ = occupancy_map_->getChunkHeight();
 
-  std::shared_ptr<RangeImageIntersector> range_image_intersector_;
-  static constexpr auto kUnitCubeHalfDiagonal =
-      constants<FloatingPoint>::kSqrt3 / 2.f;
-
   std::pair<OctreeIndex, OctreeIndex> getFovMinMaxIndices(
       const Point3D& sensor_origin) const;
-
-  using BlockList = std::vector<OctreeIndex>;
   void recursiveTester(const OctreeIndex& node_index,
                        BlockList& update_job_list);
 
