@@ -328,7 +328,7 @@ HashedChunkedWaveletOctree::Block::recursiveThreshold(  // NOLINT
 
 void HashedChunkedWaveletOctree::Block::recursivePrune(  // NOLINT
     HashedChunkedWaveletOctree::NodeChunkType& chunk) {
-  constexpr FloatingPoint kNonZeroCoefficientThreshold = 1e-3f;
+  constexpr FloatingPoint kNonzeroCoefficientThreshold = 1e-3f;
   bool has_at_least_one_child = false;
   for (LinearIndex linear_child_idx = 0;
        linear_child_idx < NodeChunkType::kNumChildren; ++linear_child_idx) {
@@ -336,7 +336,7 @@ void HashedChunkedWaveletOctree::Block::recursivePrune(  // NOLINT
       NodeChunkType& child_chunk = *chunk.getChild(linear_child_idx);
       recursivePrune(child_chunk);
       if (!child_chunk.hasChildrenArray() &&
-          !child_chunk.hasNonZeroData(kNonZeroCoefficientThreshold)) {
+          !child_chunk.hasNonzeroData(kNonzeroCoefficientThreshold)) {
         chunk.deleteChild(linear_child_idx);
       } else {
         has_at_least_one_child = true;

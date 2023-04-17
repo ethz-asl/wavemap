@@ -3,7 +3,7 @@
 #include "wavemap/utils/data_utils.h"
 
 namespace wavemap {
-TEST(DataUtilsTest, IsNonZero) {
+TEST(DataUtilsTest, IsNonzero) {
   EXPECT_EQ(data_utils::is_non_zero(0), false);
   EXPECT_EQ(data_utils::is_non_zero(-1), true);
   EXPECT_EQ(data_utils::is_non_zero(1), true);

@@ -27,12 +27,12 @@ static void AccessSparseArray(benchmark::State& state) {
   // Code before the loop is not measured
   RandomNumberGenerator random_number_generator;
   constexpr uint8_t kMaxSize = 64u;
-  const FloatingPoint kPNonZero =
+  const FloatingPoint kPNonzero =
       static_cast<FloatingPoint>(state.range(0)) / 100.f;
 
   SparseVector<size_t, kMaxSize> sparse_vector;
   for (uint8_t idx = 0u; idx < kMaxSize; ++idx) {
-    const bool is_non_zero = random_number_generator.getRandomBool(kPNonZero);
+    const bool is_non_zero = random_number_generator.getRandomBool(kPNonzero);
     if (is_non_zero) {
       sparse_vector[idx] = idx;
     }

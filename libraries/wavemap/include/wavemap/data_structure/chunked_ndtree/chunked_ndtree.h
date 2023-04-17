@@ -29,7 +29,6 @@ class ChunkedNdtree {
 
   bool hasNode(const IndexType& index) const;
   void allocateNode(const IndexType& index);
-  void resetNode(const IndexType& index);
   NodeDataT* getNodeData(const IndexType& index, bool auto_allocate = true);
   const NodeDataT* getNodeData(const IndexType& index) const;
 

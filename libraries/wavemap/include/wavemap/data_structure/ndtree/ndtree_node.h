@@ -25,13 +25,12 @@ class NdtreeNode {
     return &rhs == &lhs;
   }
 
-  bool hasNonZeroData() const;
-  bool hasNonZeroData(FloatingPoint threshold) const;
+  bool hasNonzeroData() const;
+  bool hasNonzeroData(FloatingPoint threshold) const;
   DataT& data() { return data_; }
   const DataT& data() const { return data_; }
 
   bool hasChildrenArray() const { return static_cast<bool>(children_); }
-  void allocateChildrenArrayIfNeeded();
   void deleteChildrenArray() { children_.reset(); }
 
   bool hasChild(NdtreeIndexRelativeChild child_index) const;

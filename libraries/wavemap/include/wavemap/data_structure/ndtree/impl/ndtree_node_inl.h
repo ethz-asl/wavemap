@@ -9,7 +9,7 @@
 namespace wavemap {
 template <typename DataT, int dim>
 bool NdtreeNode<DataT, dim>::empty() const {
-  return !hasChildrenArray() && !hasNonZeroData();
+  return !hasChildrenArray() && !hasNonzeroData();
 }
 
 template <typename DataT, int dim>
@@ -19,20 +19,13 @@ void NdtreeNode<DataT, dim>::clear() {
 }
 
 template <typename DataT, int dim>
-bool NdtreeNode<DataT, dim>::hasNonZeroData() const {
+bool NdtreeNode<DataT, dim>::hasNonzeroData() const {
   return data_utils::is_non_zero(data_);
 }
 
 template <typename DataT, int dim>
-bool NdtreeNode<DataT, dim>::hasNonZeroData(FloatingPoint threshold) const {
+bool NdtreeNode<DataT, dim>::hasNonzeroData(FloatingPoint threshold) const {
   return data_utils::is_non_zero(data_, threshold);
-}
-
-template <typename DataT, int dim>
-void NdtreeNode<DataT, dim>::allocateChildrenArrayIfNeeded() {
-  if (!hasChildrenArray()) {
-    children_ = std::make_unique<ChildrenArray>();
-  }
 }
 
 template <typename DataT, int dim>
@@ -57,7 +50,9 @@ NdtreeNode<DataT, dim>* NdtreeNode<DataT, dim>::allocateChild(
     NdtreeIndexRelativeChild child_index, NodeConstructorArgs&&... args) {
   CHECK_GE(child_index, 0u);
   CHECK_LT(child_index, kNumChildren);
-  allocateChildrenArrayIfNeeded();
+  if (!hasChildrenArray()) {
+    children_ = std::make_unique<ChildrenArray>();
+  }
   children_->operator[](child_index) =
       std::make_unique<NdtreeNode>(std::forward<NodeConstructorArgs>(args)...);
   return children_->operator[](child_index).get();

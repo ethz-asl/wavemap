@@ -64,18 +64,6 @@ void ChunkedNdtree<NodeDataT, dim, chunk_height>::allocateNode(
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
-void ChunkedNdtree<NodeDataT, dim, chunk_height>::resetNode(
-    const ChunkedNdtree::IndexType& index) {
-  auto [chunked_node, relative_index] =
-      getNodeAndRelativeIndex(index, /*auto_allocate*/ false);
-  if (chunked_node) {
-    chunked_node.data(relative_index) = NodeDataT{};
-    // TODO Set the node's descendants in the chunked node to zero
-    // TODO Reset all descendant child pointers
-  }
-}
-
-template <typename NodeDataT, int dim, int chunk_height>
 NodeDataT* ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeData(
     const ChunkedNdtree::IndexType& index, bool auto_allocate) {
   auto [chunked_node, relative_index] =

@@ -31,8 +31,8 @@ class NdtreeNodeChunk {
     return &rhs == &lhs;
   }
 
-  bool hasNonZeroData() const;
-  bool hasNonZeroData(FloatingPoint threshold) const;
+  bool hasNonzeroData() const;
+  bool hasNonzeroData(FloatingPoint threshold) const;
   DataT& data(LinearIndex linear_index);
   const DataT& data(LinearIndex linear_index) const;
 

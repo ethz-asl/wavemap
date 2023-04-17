@@ -48,6 +48,8 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
 void WavemapServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
+    occupancy_map_->threshold();
+
     if (const auto octree =
             std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map_);
         octree) {

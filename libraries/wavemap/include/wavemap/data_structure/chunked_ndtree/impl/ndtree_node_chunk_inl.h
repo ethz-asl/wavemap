@@ -9,7 +9,7 @@
 namespace wavemap {
 template <typename DataT, int dim, int height>
 bool NdtreeNodeChunk<DataT, dim, height>::empty() const {
-  return !hasChildrenArray() && !hasNonZeroData();
+  return !hasChildrenArray() && !hasNonzeroData();
 }
 
 template <typename DataT, int dim, int height>
@@ -19,14 +19,14 @@ void NdtreeNodeChunk<DataT, dim, height>::clear() {
 }
 
 template <typename DataT, int dim, int height>
-bool NdtreeNodeChunk<DataT, dim, height>::hasNonZeroData() const {
+bool NdtreeNodeChunk<DataT, dim, height>::hasNonzeroData() const {
   return std::any_of(data_.cbegin(), data_.cend(), [](const auto& node_data) {
     return data_utils::is_non_zero(node_data);
   });
 }
 
 template <typename DataT, int dim, int height>
-bool NdtreeNodeChunk<DataT, dim, height>::hasNonZeroData(
+bool NdtreeNodeChunk<DataT, dim, height>::hasNonzeroData(
     FloatingPoint threshold) const {
   return std::any_of(data_.cbegin(), data_.cend(),
                      [threshold](const auto& node_data) {
