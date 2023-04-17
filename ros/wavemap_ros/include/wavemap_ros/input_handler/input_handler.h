@@ -53,7 +53,8 @@ class InputHandler {
   const Config& getConfig() const { return config_; }
 
   bool isReprojectionEnabled() const {
-    return !config_.reprojected_topic_name.empty();
+    return !config_.reprojected_topic_name.empty() &&
+           0 < reprojection_pub_.getNumSubscribers();
   }
 
  protected:

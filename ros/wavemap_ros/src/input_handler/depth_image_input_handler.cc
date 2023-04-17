@@ -92,7 +92,7 @@ void DepthImageInputHandler::processQueue() {
       integrator->integrateRangeImage(posed_range_image);
     }
     integration_timer_.stop();
-    ROS_INFO_STREAM("Integrated new pointcloud in "
+    ROS_INFO_STREAM("Integrated new depth image in "
                     << integration_timer_.getLastEpisodeWallTime()
                     << "s. Total integration time: "
                     << integration_timer_.getTotalWallTime() << "s.");
