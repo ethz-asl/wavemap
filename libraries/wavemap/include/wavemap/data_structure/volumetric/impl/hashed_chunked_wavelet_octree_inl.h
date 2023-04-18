@@ -114,14 +114,18 @@ inline FloatingPoint HashedChunkedWaveletOctree::Block::getCellValue(
     for (int parent_height = chunk_top_height;
          chunk_top_height - kChunkHeight < parent_height; --parent_height) {
       // Perform one decompression stage
-      const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
-          morton_code, chunk_top_height, parent_height);
+      const LinearIndex relative_node_index =
+          OctreeIndex::computeTreeTraversalDistance(
+              morton_code, chunk_top_height, parent_height);
       const NdtreeIndexRelativeChild relative_child_index =
           OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
       value = Transform::backwardSingleChild(
-          {value, current_chunk->data(value_index)}, relative_child_index);
-      // If we've reached the requested resolution, return
-      if (parent_height == index.height + 1) {
+          {value, current_chunk->nodeData(relative_node_index)},
+          relative_child_index);
+      // If we've reached the requested resolution or there are no remaining
+      // higher resolution details, return
+      if (parent_height == index.height + 1 ||
+          !current_chunk->nodeHasAtLeastOneChild(relative_node_index)) {
         return value;
       }
     }

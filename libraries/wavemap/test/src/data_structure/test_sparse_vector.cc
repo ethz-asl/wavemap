@@ -11,10 +11,10 @@ TEST(SparseVectorTest, Insertion) {
   constexpr ElementType kDefaultValue = 0u;
   constexpr size_t kFixedRandomSeed = 0u;
 
-  for (int percentage_non_zero = 0; percentage_non_zero <= 100;
-       percentage_non_zero += 10) {
-    const FloatingPoint prob_non_zero =
-        static_cast<FloatingPoint>(percentage_non_zero) / 100.f;
+  for (int percentage_nonzero = 0; percentage_nonzero <= 100;
+       percentage_nonzero += 10) {
+    const FloatingPoint prob_nonzero =
+        static_cast<FloatingPoint>(percentage_nonzero) / 100.f;
     std::vector<ElementType> dense_vector(kMaxSize, kDefaultValue);
     SparseVector<ElementType, kMaxSize> sparse_vector;
 
@@ -24,9 +24,9 @@ TEST(SparseVectorTest, Insertion) {
     size_t num_inserted_elements = 0;
     RandomNumberGenerator random_number_generator(kFixedRandomSeed);
     for (uint8_t idx = 0u; idx < kMaxSize; ++idx) {
-      const bool is_non_zero =
-          random_number_generator.getRandomBool(prob_non_zero);
-      if (is_non_zero) {
+      const bool is_nonzero =
+          random_number_generator.getRandomBool(prob_nonzero);
+      if (is_nonzero) {
         ++num_inserted_elements;
         sparse_vector[idx] = idx;
         dense_vector[idx] = idx;

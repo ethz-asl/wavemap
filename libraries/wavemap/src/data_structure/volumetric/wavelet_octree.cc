@@ -113,10 +113,7 @@ WaveletOctree::Coefficients::Scale WaveletOctree::recursivePrune(  // NOLINT
       NodeType& child_node = *node.getChild(child_idx);
       child_scale_coefficients[child_idx] =
           recursivePrune(child_node, child_scale_coefficients[child_idx]);
-      if (!child_node.hasChildrenArray() &&
-          std::all_of(
-              child_node.data().cbegin(), child_node.data().cend(),
-              [](auto coefficient) { return std::abs(coefficient) < 1e-3f; })) {
+      if (!child_node.hasChildrenArray() && !child_node.hasNonzeroData(1e-3f)) {
         node.deleteChild(child_idx);
       } else {
         has_at_least_one_child = true;

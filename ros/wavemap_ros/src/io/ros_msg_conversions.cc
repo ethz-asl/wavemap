@@ -160,21 +160,22 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
       const MortonCode morton_code = convert::nodeIndexToMorton(index);
       const int chunk_top_height =
           chunk_height * int_math::div_round_up(index.height, chunk_height);
-      const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
-          morton_code, chunk_top_height, index.height);
+      const LinearIndex relative_node_index =
+          OctreeIndex::computeTreeTraversalDistance(
+              morton_code, chunk_top_height, index.height);
 
       auto& node_msg = wavelet_octree_msg.nodes.emplace_back();
-      std::copy(chunk.data(value_index).cbegin(),
-                chunk.data(value_index).cend(),
+      const auto& node_data = chunk.nodeData(relative_node_index);
+      std::copy(node_data.cbegin(), node_data.cend(),
                 node_msg.detail_coefficients.begin());
       node_msg.allocated_children_bitset = 0;
 
-      if (!chunk.hasNonzeroChildren(value_index)) {
+      if (!chunk.nodeHasAtLeastOneChild(relative_node_index)) {
         continue;
       }
 
-      const auto child_scales = HashedWaveletOctree::Transform::backward(
-          {scale, {chunk.data(value_index)}});
+      const auto child_scales =
+          HashedWaveletOctree::Transform::backward({scale, node_data});
       for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
         const FloatingPoint child_scale = child_scales[relative_child_idx];

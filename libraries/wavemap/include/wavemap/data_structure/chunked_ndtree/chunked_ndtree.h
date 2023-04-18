@@ -51,9 +51,9 @@ class ChunkedNdtree {
   NodeChunkType root_chunk_;
   const int max_height_;
 
-  std::pair<NodeChunkType*, LinearIndex> getNodeAndRelativeIndex(
+  std::pair<NodeChunkType*, LinearIndex> getChunkAndRelativeIndex(
       const IndexType& index, bool auto_allocate);
-  std::pair<const NodeChunkType*, LinearIndex> getNodeAndRelativeIndex(
+  std::pair<const NodeChunkType*, LinearIndex> getChunkAndRelativeIndex(
       const IndexType& index) const;
 };
 }  // namespace wavemap

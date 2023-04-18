@@ -96,7 +96,11 @@ class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
     bool needs_pruning_ = false;
     Time last_updated_stamp_ = Clock::now();
 
-    Coefficients::Scale recursiveThreshold(
+    struct RecursiveThresholdReturnValue {
+      Coefficients::Scale scale;
+      bool is_nonzero_child;
+    };
+    RecursiveThresholdReturnValue recursiveThreshold(
         NodeChunkType& chunk, Coefficients::Scale scale_coefficient);
     void recursivePrune(NodeChunkType& chunk);
   };

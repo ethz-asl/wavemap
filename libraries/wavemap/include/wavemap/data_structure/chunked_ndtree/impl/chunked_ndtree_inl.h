@@ -54,22 +54,21 @@ void ChunkedNdtree<NodeDataT, dim, chunk_height>::prune() {
 template <typename NodeDataT, int dim, int chunk_height>
 bool ChunkedNdtree<NodeDataT, dim, chunk_height>::hasNode(
     const ChunkedNdtree::IndexType& index) const {
-  return getNodeAndRelativeIndex(index).first;
+  return getChunkAndRelativeIndex(index).first;
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
 void ChunkedNdtree<NodeDataT, dim, chunk_height>::allocateNode(
     const ChunkedNdtree::IndexType& index) {
-  getNodeAndRelativeIndex(index, /*auto_allocate*/ true);
+  getChunkAndRelativeIndex(index, /*auto_allocate*/ true);
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
 NodeDataT* ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeData(
     const ChunkedNdtree::IndexType& index, bool auto_allocate) {
-  auto [chunked_node, relative_index] =
-      getNodeAndRelativeIndex(index, auto_allocate);
-  if (chunked_node) {
-    return &chunked_node->data(relative_index);
+  auto [chunk, relative_index] = getChunkAndRelativeIndex(index, auto_allocate);
+  if (chunk) {
+    return &chunk->nodeData(relative_index);
   }
   return nullptr;
 }
@@ -77,9 +76,9 @@ NodeDataT* ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeData(
 template <typename NodeDataT, int dim, int chunk_height>
 const NodeDataT* ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeData(
     const ChunkedNdtree::IndexType& index) const {
-  auto [chunked_node, relative_index] = getNodeAndRelativeIndex(index);
-  if (chunked_node) {
-    return &chunked_node->data(relative_index);
+  auto [chunk, relative_index] = getChunkAndRelativeIndex(index);
+  if (chunk) {
+    return &chunk->nodeData(relative_index);
   }
   return nullptr;
 }
@@ -111,7 +110,7 @@ size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::getMemoryUsage() const {
 template <typename NodeDataT, int dim, int chunk_height>
 std::pair<typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeChunkType*,
           LinearIndex>
-ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
+ChunkedNdtree<NodeDataT, dim, chunk_height>::getChunkAndRelativeIndex(
     const ChunkedNdtree::IndexType& index, bool auto_allocate) {
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
   const int chunk_top_height =
@@ -146,7 +145,7 @@ template <typename NodeDataT, int dim, int chunk_height>
 std::pair<
     const typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeChunkType*,
     LinearIndex>
-ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeAndRelativeIndex(
+ChunkedNdtree<NodeDataT, dim, chunk_height>::getChunkAndRelativeIndex(
     const ChunkedNdtree::IndexType& index) const {
   const MortonCode morton_code = convert::nodeIndexToMorton(index);
   const int chunk_top_height =

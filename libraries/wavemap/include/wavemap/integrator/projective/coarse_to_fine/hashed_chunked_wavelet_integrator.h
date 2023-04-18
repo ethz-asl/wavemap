@@ -34,6 +34,7 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
     NdtreeIndexRelativeChild next_child_idx;
     HashedChunkedWaveletOctree::Coefficients::CoefficientsArray
         child_scale_coefficients;
+    bool has_nonzero_child;
   };
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;

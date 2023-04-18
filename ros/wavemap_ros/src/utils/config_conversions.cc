@@ -64,7 +64,7 @@ param::Value toParamValue(  // NOLINT
       break;
     case XmlRpc::XmlRpcValue::TypeDateTime:
       ROS_ERROR(
-          "Encountered a data-time field when parsing ROS params. These "
+          "Encountered a date-time field when parsing ROS params. These "
           "are not yet supported and will be ignored.");
       break;
     case XmlRpc::XmlRpcValue::TypeBase64:

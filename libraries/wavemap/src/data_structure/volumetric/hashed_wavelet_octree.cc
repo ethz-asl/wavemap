@@ -233,10 +233,7 @@ void HashedWaveletOctree::Block::recursivePrune(  // NOLINT
     if (node.hasChild(child_idx)) {
       NodeType& child_node = *node.getChild(child_idx);
       recursivePrune(child_node);
-      const bool detail_coefficients_all_zero = std::all_of(
-          child_node.data().cbegin(), child_node.data().cend(),
-          [](auto coefficient) { return std::abs(coefficient) < 1e-3f; });
-      if (!child_node.hasChildrenArray() && detail_coefficients_all_zero) {
+      if (!child_node.hasChildrenArray() && !child_node.hasNonzeroData(1e-3f)) {
         node.deleteChild(child_idx);
       } else {
         has_at_least_one_child = true;

@@ -66,13 +66,13 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   EXPECT_LE(map_base_ptr->getMemoryUsage(), empty_map_memory_usage);
 
   // Check that pruning removes no non-zero cells
-  const auto non_zero_cell_indexes =
+  const auto nonzero_cell_indexes =
       TestFixture::template getRandomIndexVector<3>(kMinNumRandomIndices,
                                                     kMaxNumRandomIndices);
   for (const Index3D& index : zero_cell_indexes) {
     map_base_ptr->setCellValue(index, 0.f);
   }
-  for (const Index3D& index : non_zero_cell_indexes) {
+  for (const Index3D& index : nonzero_cell_indexes) {
     map_base_ptr->setCellValue(index, 1.f);
   }
   const size_t size_before_pruning = map_base_ptr->size();
@@ -81,7 +81,7 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   EXPECT_FALSE(map_base_ptr->empty());
   EXPECT_LE(map_base_ptr->size(), size_before_pruning);
   EXPECT_LE(map_base_ptr->getMemoryUsage(), memory_usage_before_pruning);
-  for (const Index3D& index : non_zero_cell_indexes) {
+  for (const Index3D& index : nonzero_cell_indexes) {
     EXPECT_EQ(map_base_ptr->getCellValue(index), 1.f);
   }
 }

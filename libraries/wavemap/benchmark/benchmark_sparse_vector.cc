@@ -32,8 +32,8 @@ static void AccessSparseArray(benchmark::State& state) {
 
   SparseVector<size_t, kMaxSize> sparse_vector;
   for (uint8_t idx = 0u; idx < kMaxSize; ++idx) {
-    const bool is_non_zero = random_number_generator.getRandomBool(kPNonzero);
-    if (is_non_zero) {
+    const bool is_nonzero = random_number_generator.getRandomBool(kPNonzero);
+    if (is_nonzero) {
       sparse_vector[idx] = idx;
     }
   }

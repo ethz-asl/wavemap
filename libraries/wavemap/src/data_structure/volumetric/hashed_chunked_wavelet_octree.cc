@@ -75,7 +75,8 @@ Index3D HashedChunkedWaveletOctree::getMaxIndex() const {
 void HashedChunkedWaveletOctree::Block::threshold() {
   if (getNeedsThresholding()) {
     root_scale_coefficient_ = recursiveThreshold(chunked_ndtree_.getRootChunk(),
-                                                 root_scale_coefficient_);
+                                                 root_scale_coefficient_)
+                                  .scale;
     setNeedsThresholding(false);
   }
 }
@@ -108,12 +109,13 @@ void HashedChunkedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
     for (int parent_height = chunk_top_height;
          chunk_top_height - kChunkHeight < parent_height; --parent_height) {
       // Perform one decompression stage
-      const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
-          morton_code, chunk_top_height, parent_height);
+      const LinearIndex relative_node_index =
+          OctreeIndex::computeTreeTraversalDistance(
+              morton_code, chunk_top_height, parent_height);
       const NdtreeIndexRelativeChild relative_child_index =
           OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
       current_value = Transform::backwardSingleChild(
-          {current_value, current_chunk->data(value_index)},
+          {current_value, current_chunk->nodeData(relative_node_index)},
           relative_child_index);
       // If we've reached the requested resolution, stop descending
       if (parent_height == index.height + 1) {
@@ -144,14 +146,17 @@ void HashedChunkedWaveletOctree::Block::setCellValue(const OctreeIndex& index,
     NodeChunkType* current_chunk = chunk_ptrs[chunk_depth];
     // Get the index of the data w.r.t. the chunk
     const int chunk_top_height = kTreeHeight - chunk_depth * kChunkHeight;
-    const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
-        morton_code, chunk_top_height, parent_height);
+    const LinearIndex relative_node_index =
+        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
+                                                  parent_height);
     // Compute and apply the transformed update
     const NdtreeIndexRelativeChild relative_child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     coefficients =
         Transform::forwardSingleChild(coefficients.scale, relative_child_index);
-    current_chunk->data(value_index) += coefficients.details;
+    current_chunk->nodeData(relative_node_index) += coefficients.details;
+    // TODO(victorr): Flag should skip last level
+    current_chunk->nodeHasAtLeastOneChild(relative_node_index) = true;
   }
   root_scale_coefficient_ += coefficients.scale;
 }
@@ -190,14 +195,17 @@ void HashedChunkedWaveletOctree::Block::addToCellValue(const OctreeIndex& index,
     NodeChunkType* current_chunk = chunk_ptrs[chunk_depth];
     // Get the index of the data w.r.t. the chunk
     const int chunk_top_height = kTreeHeight - chunk_depth * kChunkHeight;
-    const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
-        morton_code, chunk_top_height, parent_height);
+    const LinearIndex relative_node_index =
+        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
+                                                  parent_height);
     // Compute and apply the transformed update
     const NdtreeIndexRelativeChild relative_child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     coefficients =
         Transform::forwardSingleChild(coefficients.scale, relative_child_index);
-    current_chunk->data(value_index) += coefficients.details;
+    current_chunk->nodeData(relative_node_index) += coefficients.details;
+    // TODO(victorr): Flag should skip last level
+    current_chunk->nodeHasAtLeastOneChild(relative_node_index) = true;
   }
   root_scale_coefficient_ += coefficients.scale;
 }
@@ -222,10 +230,14 @@ void HashedChunkedWaveletOctree::Block::forEachLeaf(
     const MortonCode morton_code = convert::nodeIndexToMorton(index);
     const int chunk_top_height =
         kChunkHeight * int_math::div_round_up(index.height, kChunkHeight);
-    const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
-        morton_code, chunk_top_height, index.height);
+    const LinearIndex relative_node_index =
+        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
+                                                  index.height);
     const Coefficients::CoefficientsArray child_scale_coefficients =
-        Transform::backward({scale_coefficient, {chunk.data(value_index)}});
+        Transform::backward(
+            {scale_coefficient, chunk.nodeData(relative_node_index)});
+    const bool parent_has_nonzero_children =
+        chunk.nodeHasAtLeastOneChild(relative_node_index);
 
     for (NdtreeIndexRelativeChild relative_child_idx = 0;
          relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
@@ -234,29 +246,33 @@ void HashedChunkedWaveletOctree::Block::forEachLeaf(
       const FloatingPoint child_scale_coefficient =
           child_scale_coefficients[relative_child_idx];
 
-      if (child_index.height % kChunkHeight != 0) {
-        stack.emplace(
-            StackElement{child_index, chunk, child_scale_coefficient});
-        continue;
-      }
-
-      const MortonCode child_morton = convert::nodeIndexToMorton(child_index);
-      const LinearIndex linear_child_index =
-          OctreeIndex::computeLevelTraversalDistance(
-              child_morton, chunk_top_height, child_index.height);
-
-      if (chunk.hasChild(linear_child_index)) {
-        const NodeChunkType& child_chunk = *chunk.getChild(linear_child_index);
-        stack.emplace(
-            StackElement{child_index, child_chunk, child_scale_coefficient});
+      const bool child_in_same_chunk = child_index.height % kChunkHeight != 0;
+      if (child_in_same_chunk) {
+        if (parent_has_nonzero_children) {
+          stack.emplace(
+              StackElement{child_index, chunk, child_scale_coefficient});
+        } else {
+          visitor_fn(child_index, child_scale_coefficient);
+        }
       } else {
-        visitor_fn(child_index, child_scale_coefficient);
+        const MortonCode child_morton = convert::nodeIndexToMorton(child_index);
+        const LinearIndex relative_child_chunk_index =
+            OctreeIndex::computeLevelTraversalDistance(
+                child_morton, chunk_top_height, child_index.height);
+        if (chunk.hasChild(relative_child_chunk_index)) {
+          const NodeChunkType& child_chunk =
+              *chunk.getChild(relative_child_chunk_index);
+          stack.emplace(
+              StackElement{child_index, child_chunk, child_scale_coefficient});
+        } else {
+          visitor_fn(child_index, child_scale_coefficient);
+        }
       }
     }
   }
 }
 
-HashedChunkedWaveletOctree::Coefficients::Scale
+HashedChunkedWaveletOctree::Block::RecursiveThresholdReturnValue
 HashedChunkedWaveletOctree::Block::recursiveThreshold(  // NOLINT
     HashedChunkedWaveletOctree::NodeChunkType& chunk, float scale_coefficient) {
   constexpr auto tree_size = [](auto tree_height) {
@@ -271,6 +287,7 @@ HashedChunkedWaveletOctree::Block::recursiveThreshold(  // NOLINT
   // Decompress
   std::array<Coefficients::Scale, tree_size(kChunkHeight + 1)>
       chunk_scale_coefficients{};
+  std::bitset<tree_size(kChunkHeight + 1)> is_nonzero_child{};
   chunk_scale_coefficients[0] = scale_coefficient;
   for (int level_idx = 0; level_idx < kChunkHeight; ++level_idx) {
     const int first_idx = tree_size(level_idx);
@@ -280,7 +297,7 @@ HashedChunkedWaveletOctree::Block::recursiveThreshold(  // NOLINT
       const int src_idx = first_idx + relative_idx;
       const Coefficients::CoefficientsArray child_scale_coefficients =
           Transform::backward(
-              {chunk_scale_coefficients[src_idx], chunk.data(src_idx)});
+              {chunk_scale_coefficients[src_idx], chunk.nodeData(src_idx)});
       const int first_dest_idx = last_idx + 8 * relative_idx;
       std::move(child_scale_coefficients.begin(),
                 child_scale_coefficients.end(),
@@ -295,8 +312,10 @@ HashedChunkedWaveletOctree::Block::recursiveThreshold(  // NOLINT
     const LinearIndex array_idx = first_leaf_idx + child_idx;
     if (chunk.hasChild(child_idx)) {
       NodeChunkType& child_chunk = *chunk.getChild(child_idx);
-      chunk_scale_coefficients[array_idx] =
+      const auto rv =
           recursiveThreshold(child_chunk, chunk_scale_coefficients[array_idx]);
+      chunk_scale_coefficients[array_idx] = rv.scale;
+      is_nonzero_child[array_idx] = rv.is_nonzero_child;
     } else {
       chunk_scale_coefficients[array_idx] =
           parent_->clamp(chunk_scale_coefficients[array_idx]);
@@ -314,16 +333,24 @@ HashedChunkedWaveletOctree::Block::recursiveThreshold(  // NOLINT
       std::move(chunk_scale_coefficients.begin() + first_src_idx,
                 chunk_scale_coefficients.begin() + first_src_idx + 8,
                 scale_coefficients_subset.begin());
+      bool has_nonzero_child = false;
+      for (int src_idx = first_src_idx; src_idx < first_src_idx + 8;
+           ++src_idx) {
+        has_nonzero_child |= is_nonzero_child[src_idx];
+      }
 
       const int dst_idx = first_idx + relative_idx;
-      auto [scale_update, detail_updates] =
+      auto [new_scale, new_details] =
           Transform::forward(scale_coefficients_subset);
-      chunk.data(dst_idx) = detail_updates;
-      chunk_scale_coefficients[dst_idx] = scale_update;
+      chunk_scale_coefficients[dst_idx] = new_scale;
+      chunk.nodeData(dst_idx) = new_details;
+      chunk.nodeHasAtLeastOneChild(dst_idx) = has_nonzero_child;
+      is_nonzero_child[dst_idx] =
+          has_nonzero_child || data_utils::is_nonzero(new_details);
     }
   }
 
-  return chunk_scale_coefficients[0];
+  return {chunk_scale_coefficients[0], is_nonzero_child[0]};
 }
 
 void HashedChunkedWaveletOctree::Block::recursivePrune(  // NOLINT
