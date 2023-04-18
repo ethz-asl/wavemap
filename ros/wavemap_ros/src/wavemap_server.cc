@@ -11,7 +11,6 @@
 #include "wavemap_ros/input_handler/input_handler_factory.h"
 #include "wavemap_ros/io/ros_msg_conversions.h"
 #include "wavemap_ros/utils/config_conversions.h"
-#include "wavemap_ros/utils/visualization_utils.h"
 
 namespace wavemap {
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private)

@@ -59,11 +59,10 @@ void InputHandler::publishReprojected(
 
   pointcloud_msg.points.reserve(posed_pointcloud.size());
   for (const auto& point : posed_pointcloud.getPointsGlobal()) {
-    geometry_msgs::Point32 point_msg;
+    auto& point_msg = pointcloud_msg.points.emplace_back();
     point_msg.x = point.x();
     point_msg.y = point.y();
     point_msg.z = point.z();
-    pointcloud_msg.points.emplace_back(point_msg);
   }
 
   sensor_msgs::PointCloud2 pointcloud2_msg;

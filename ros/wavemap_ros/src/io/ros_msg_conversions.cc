@@ -12,7 +12,7 @@ wavemap_msgs::Map mapToRosMsg(const VolumetricOctree& map,
 
   for (const auto& node :
        map.getNodeIterator<TraversalOrder::kDepthFirstPreorder>()) {
-    wavemap_msgs::OctreeNode node_msg;
+    auto& node_msg = octree_msg.nodes.emplace_back();
     node_msg.node_value = node.data();
 
     for (int relative_child_idx = 0;
@@ -21,7 +21,6 @@ wavemap_msgs::Map mapToRosMsg(const VolumetricOctree& map,
         node_msg.allocated_children_bitset += (1 << relative_child_idx);
       }
     }
-    octree_msg.nodes.emplace_back(node_msg);
   }
 
   return map_msg;
@@ -39,7 +38,7 @@ wavemap_msgs::Map mapToRosMsg(const WaveletOctree& map,
 
   for (const auto& node :
        map.getNodeIterator<TraversalOrder::kDepthFirstPreorder>()) {
-    wavemap_msgs::WaveletOctreeNode node_msg;
+    auto& node_msg = wavelet_octree_msg.nodes.emplace_back();
     std::copy(node.data().cbegin(), node.data().cend(),
               node_msg.detail_coefficients.begin());
 
@@ -49,7 +48,6 @@ wavemap_msgs::Map mapToRosMsg(const WaveletOctree& map,
         node_msg.allocated_children_bitset += (1 << relative_child_idx);
       }
     }
-    wavelet_octree_msg.nodes.emplace_back(node_msg);
   }
 
   return map_msg;
@@ -91,7 +89,7 @@ wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
       const auto& node = stack.top().node;
       stack.pop();
 
-      wavemap_msgs::WaveletOctreeNode node_msg;
+      auto& node_msg = wavelet_octree_msg.nodes.emplace_back();
       std::copy(node.data().cbegin(), node.data().cend(),
                 node_msg.detail_coefficients.begin());
       node_msg.allocated_children_bitset = 0;
@@ -111,7 +109,6 @@ wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
           node_msg.allocated_children_bitset += (1 << relative_child_idx);
         }
       }
-      wavelet_octree_msg.nodes.emplace_back(node_msg);
     }
   }
 
@@ -166,25 +163,27 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
       const LinearIndex value_index = OctreeIndex::computeTreeTraversalDistance(
           morton_code, chunk_top_height, index.height);
 
-      wavemap_msgs::WaveletOctreeNode node_msg;
+      auto& node_msg = wavelet_octree_msg.nodes.emplace_back();
       std::copy(chunk.data(value_index).cbegin(),
                 chunk.data(value_index).cend(),
                 node_msg.detail_coefficients.begin());
       node_msg.allocated_children_bitset = 0;
 
-      const HashedWaveletOctree::Coefficients::CoefficientsArray child_scales =
-          HashedWaveletOctree::Transform::backward(
-              {scale, {chunk.data(value_index)}});
+      if (!chunk.hasNonzeroChildren(value_index)) {
+        continue;
+      }
 
+      const auto child_scales = HashedWaveletOctree::Transform::backward(
+          {scale, {chunk.data(value_index)}});
       for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
-        const OctreeIndex child_index =
-            index.computeChildIndex(relative_child_idx);
         const FloatingPoint child_scale = child_scales[relative_child_idx];
         if (child_scale < min_log_odds || max_log_odds < child_scale) {
           continue;
         }
 
+        const OctreeIndex child_index =
+            index.computeChildIndex(relative_child_idx);
         if (child_index.height % chunk_height == 0) {
           const MortonCode child_morton =
               convert::nodeIndexToMorton(child_index);
@@ -201,7 +200,6 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
           node_msg.allocated_children_bitset += (1 << relative_child_idx);
         }
       }
-      wavelet_octree_msg.nodes.emplace_back(node_msg);
     }
   }
 
