@@ -38,9 +38,9 @@ inputs:
           cy: 146.1179962158203
         measurement_model:
           type: "continuous_ray"
-          range_sigma: { meters: 0.01 }
-          scaling_free: 0.2
-          scaling_occupied: 0.4
+          range_sigma: { meters: 0.005 }
+          scaling_free: 0.4
+          scaling_occupied: 0.8
       - integration_method:
           type: "hashed_chunked_wavelet_integrator"
           min_range: { meters: 1.0 }
@@ -57,9 +57,9 @@ inputs:
           cy: 146.1179962158203
         measurement_model:
           type: "continuous_ray"
-          range_sigma: { meters: 0.02 }
-          scaling_free: 0.2
-          scaling_occupied: 0.4
+          range_sigma: { meters: 0.01 }
+          scaling_free: 0.4
+          scaling_occupied: 0.8
 
   - type: "livox"
     topic_name: "/livox/lidar"

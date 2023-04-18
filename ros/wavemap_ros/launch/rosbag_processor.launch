@@ -9,6 +9,9 @@
   <arg name="show_rviz"
        default="true"
        doc="Automatically launch Rviz."/>
+  <arg name="exit_when_done"
+       default="true"
+       doc="Shutdown ROS when wavemap exits."/>
 
   <!-- Dataset params -->
   <arg name="rosbag_path"
@@ -23,7 +26,8 @@
 
     <node name="wavemap" pkg="wavemap_ros"
           type="wavemap_rosbag_processor"
-          output="screen" args="-alsologtostderr" required="true"
+          output="screen" args="-alsologtostderr"
+          required="$(arg exit_when_done)"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
       <param name="rosbag_path" value="$(arg rosbag_path)"/>
