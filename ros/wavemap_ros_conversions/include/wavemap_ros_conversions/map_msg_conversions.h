@@ -38,7 +38,14 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
                               FloatingPoint ignore_blocks_older_than = -1.f);
 
 void rosMsgToMap(const wavemap_msgs::Map& map_msg,
-                 VolumetricDataStructureBase::Ptr map);
+                 VolumetricDataStructureBase::Ptr& map);
+
+void rosMsgToMap(const wavemap_msgs::Map& map_msg, VolumetricOctree::Ptr& map);
+
+void rosMsgToMap(const wavemap_msgs::Map& map_msg, WaveletOctree::Ptr& map);
+
+void rosMsgToMap(const wavemap_msgs::Map& map_msg,
+                 HashedWaveletOctree::Ptr& map);
 }  // namespace wavemap::convert
 
 #endif  // WAVEMAP_ROS_CONVERSIONS_MAP_MSG_CONVERSIONS_H_
