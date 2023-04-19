@@ -7,10 +7,10 @@
 #include <wavemap_msgs/Map.h>
 #include <wavemap_msgs/MapEvaluationSummary.h>
 #include <wavemap_msgs/PerformanceStats.h>
+#include <wavemap_ros_conversions/config_conversions.h>
+#include <wavemap_ros_conversions/map_msg_conversions.h>
 
 #include "wavemap_ros/input_handler/input_handler_factory.h"
-#include "wavemap_ros/io/ros_msg_conversions.h"
-#include "wavemap_ros/utils/config_conversions.h"
 
 namespace wavemap {
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
@@ -49,37 +49,10 @@ void WavemapServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
     occupancy_map_->threshold();
 
-    if (const auto octree =
-            std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map_);
-        octree) {
-      wavemap_msgs::Map map_msg =
-          mapToRosMsg(*octree, config_.general.world_frame);
-      map_pub_.publish(map_msg);
-    }
-    if (const auto wavelet_octree =
-            std::dynamic_pointer_cast<WaveletOctree>(occupancy_map_);
-        wavelet_octree) {
-      wavemap_msgs::Map map_msg =
-          mapToRosMsg(*wavelet_octree, config_.general.world_frame);
-      map_pub_.publish(map_msg);
-    }
-    if (const auto hashed_wavelet_octree =
-            std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map_);
-        hashed_wavelet_octree) {
-      wavemap_msgs::Map map_msg =
-          mapToRosMsg(*hashed_wavelet_octree, config_.general.world_frame,
-                      config_.map.visualization_period);
-      map_pub_.publish(map_msg);
-    }
-    if (const auto hashed_chunked_wavelet_octree =
-            std::dynamic_pointer_cast<HashedChunkedWaveletOctree>(
-                occupancy_map_);
-        hashed_chunked_wavelet_octree) {
-      wavemap_msgs::Map map_msg = mapToRosMsg(*hashed_chunked_wavelet_octree,
-                                              config_.general.world_frame,
-                                              config_.map.visualization_period);
-      map_pub_.publish(map_msg);
-    }
+    const wavemap_msgs::Map map_msg = convert::mapToRosMsg(
+        occupancy_map_, config_.general.world_frame, ros::Time::now(),
+        config_.map.visualization_period);
+    map_pub_.publish(map_msg);
   }
 }
 

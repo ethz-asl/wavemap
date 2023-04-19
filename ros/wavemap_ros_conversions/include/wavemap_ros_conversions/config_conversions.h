@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_UTILS_CONFIG_CONVERSIONS_H_
-#define WAVEMAP_ROS_UTILS_CONFIG_CONVERSIONS_H_
+#ifndef WAVEMAP_ROS_CONVERSIONS_CONFIG_CONVERSIONS_H_
+#define WAVEMAP_ROS_CONVERSIONS_CONFIG_CONVERSIONS_H_
 
 #include <string>
 
@@ -17,4 +17,4 @@ param::Array toParamArray(const XmlRpc::XmlRpcValue& xml_rpc_value);
 param::Value toParamValue(const XmlRpc::XmlRpcValue& xml_rpc_value);
 }  // namespace wavemap::param::convert
 
-#endif  // WAVEMAP_ROS_UTILS_CONFIG_CONVERSIONS_H_
+#endif  // WAVEMAP_ROS_CONVERSIONS_CONFIG_CONVERSIONS_H_

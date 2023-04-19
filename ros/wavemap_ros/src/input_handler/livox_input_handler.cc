@@ -1,8 +1,7 @@
 #include "wavemap_ros/input_handler/livox_input_handler.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
-
-#include "wavemap_ros/utils/time_conversions.h"
+#include <wavemap_ros_conversions/time_conversions.h>
 
 namespace wavemap {
 LivoxInputHandler::LivoxInputHandler(
@@ -55,9 +54,10 @@ void LivoxInputHandler::processQueue() {
     // Make sure all transforms are available
     if (!transformer_->isTransformAvailable(
             world_frame_, sensor_frame_id,
-            nanoSecondsToRosTime(buffer_end_time))) {
+            convert::nanoSecondsToRosTime(buffer_end_time))) {
       const auto newest_msg = pointcloud_queue_.back();
-      if ((newest_msg.header.stamp - nanoSecondsToRosTime(buffer_end_time))
+      if ((newest_msg.header.stamp -
+           convert::nanoSecondsToRosTime(buffer_end_time))
               .toSec() < config_.max_wait_for_pose) {
         // Try to get this pointcloud's pose again at the next iteration
         return;
@@ -76,7 +76,7 @@ void LivoxInputHandler::processQueue() {
     }
     if (!transformer_->isTransformAvailable(
             world_frame_, sensor_frame_id,
-            nanoSecondsToRosTime(buffer_start_time))) {
+            convert::nanoSecondsToRosTime(buffer_start_time))) {
       ROS_WARN_STREAM("Pointcloud end pose is available but start pose at time "
                       << start_time << " is not. Skipping pointcloud.");
       pointcloud_queue_.pop();
@@ -90,11 +90,13 @@ void LivoxInputHandler::processQueue() {
     for (unsigned int step_idx = 0u; step_idx < kNumTimeSteps; ++step_idx) {
       auto& timed_pose = timed_poses.emplace_back();
       timed_pose.first = start_time + step_idx * step_size;
-      if (!transformer_->lookupTransform(world_frame_, sensor_frame_id,
-                                         nanoSecondsToRosTime(timed_pose.first),
-                                         timed_pose.second)) {
+      if (!transformer_->lookupTransform(
+              world_frame_, sensor_frame_id,
+              convert::nanoSecondsToRosTime(timed_pose.first),
+              timed_pose.second)) {
         ROS_WARN_STREAM("Failed to buffer intermediate pose at time "
-                        << nanoSecondsToRosTime(timed_pose.first) << ".");
+                        << convert::nanoSecondsToRosTime(timed_pose.first)
+                        << ".");
         pose_buffering_failed = true;
         break;
       }

@@ -1,4 +1,4 @@
-#include "wavemap_ros/utils/config_conversions.h"
+#include "wavemap_ros_conversions/config_conversions.h"
 
 namespace wavemap::param::convert {
 param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {

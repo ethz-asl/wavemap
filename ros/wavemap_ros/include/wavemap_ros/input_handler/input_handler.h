@@ -10,7 +10,6 @@
 #include <wavemap/integrator/projection_model/projector_base.h>
 
 #include "wavemap_ros/tf_transformer.h"
-#include "wavemap_ros/utils/config_conversions.h"
 #include "wavemap_ros/utils/timer.h"
 
 namespace wavemap {

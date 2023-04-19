@@ -2,6 +2,7 @@
 
 #include <rosgraph_msgs/Clock.h>
 #include <tf/tfMessage.h>
+#include <wavemap_ros_conversions/config_conversions.h>
 
 #include "wavemap_ros/input_handler/depth_image_input_handler.h"
 #include "wavemap_ros/input_handler/pointcloud_input_handler.h"

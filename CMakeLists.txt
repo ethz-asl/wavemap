@@ -9,5 +9,6 @@ add_subdirectory(libraries/wavemap)
 
 # ROS interfaces and tooling
 add_subdirectory(ros/wavemap_msgs)
+add_subdirectory(ros/wavemap_ros_conversions)
 add_subdirectory(ros/wavemap_ros)
 add_subdirectory(ros/wavemap_rviz_plugin)

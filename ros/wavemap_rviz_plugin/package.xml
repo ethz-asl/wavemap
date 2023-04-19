@@ -16,6 +16,7 @@
 
   <depend>rviz</depend>
   <depend>wavemap_msgs</depend>
+  <depend>wavemap_ros_conversions</depend>
   <depend>wavemap</depend>
   <depend>qtbase5-dev</depend>
 

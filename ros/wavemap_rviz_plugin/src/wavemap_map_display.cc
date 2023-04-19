@@ -9,6 +9,7 @@
 #include <wavemap/data_structure/volumetric/volumetric_octree.h>
 #include <wavemap/data_structure/volumetric/wavelet_octree.h>
 #include <wavemap/indexing/ndtree_index.h>
+#include <wavemap_ros_conversions/map_msg_conversions.h>
 
 #include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
 
@@ -217,114 +218,7 @@ void WavemapMapDisplay::processMessage(
 
 void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
   std::lock_guard<std::mutex> lock(map_mutex_);
-  if (!map_msg.wavelet_octree.empty()) {
-    if (map_msg.wavelet_octree.size() == 1) {
-      auto wavelet_octree = std::dynamic_pointer_cast<WaveletOctree>(map_);
-      if (wavelet_octree) {
-        wavelet_octree->clear();
-      } else {
-        VolumetricDataStructureConfig config;
-        config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
-        wavelet_octree = std::make_shared<WaveletOctree>(config);
-        map_ = wavelet_octree;
-      }
-
-      const auto& wavelet_octree_msg = map_msg.wavelet_octree.front();
-      wavelet_octree->getRootScale() =
-          wavelet_octree_msg.root_node_scale_coefficient;
-
-      std::stack<WaveletOctree::NodeType*> stack;
-      stack.emplace(&wavelet_octree->getRootNode());
-      for (const auto& node_msg : wavelet_octree_msg.nodes) {
-        CHECK(!stack.empty());
-        WaveletOctree::NodeType* current_node = stack.top();
-        CHECK_NOTNULL(current_node);
-        stack.pop();
-
-        std::copy(node_msg.detail_coefficients.cbegin(),
-                  node_msg.detail_coefficients.cend(),
-                  current_node->data().begin());
-        for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
-             0 <= relative_child_idx; --relative_child_idx) {
-          const bool child_exists =
-              node_msg.allocated_children_bitset & (1 << relative_child_idx);
-          if (child_exists) {
-            stack.emplace(current_node->allocateChild(relative_child_idx));
-          }
-        }
-      }
-    } else {
-      auto hashed_wavelet_octree =
-          std::dynamic_pointer_cast<HashedWaveletOctree>(map_);
-      if (!hashed_wavelet_octree) {
-        VolumetricDataStructureConfig config;
-        config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
-        hashed_wavelet_octree = std::make_shared<HashedWaveletOctree>(config);
-        map_ = hashed_wavelet_octree;
-      }
-
-      for (const auto& block_msg : map_msg.wavelet_octree) {
-        const Index3D block_index{block_msg.root_node_offset[0],
-                                  block_msg.root_node_offset[1],
-                                  block_msg.root_node_offset[2]};
-        CHECK(!block_index.hasNaN()) << block_index;
-        auto& block = hashed_wavelet_octree->getOrAllocateBlock(block_index);
-
-        block.getRootScale() = block_msg.root_node_scale_coefficient;
-
-        std::stack<WaveletOctree::NodeType*> stack;
-        stack.emplace(&block.getRootNode());
-        for (const auto& node_msg : block_msg.nodes) {
-          CHECK(!stack.empty());
-          WaveletOctree::NodeType* current_node = stack.top();
-          CHECK_NOTNULL(current_node);
-          stack.pop();
-
-          std::copy(node_msg.detail_coefficients.cbegin(),
-                    node_msg.detail_coefficients.cend(),
-                    current_node->data().begin());
-          for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
-               0 <= relative_child_idx; --relative_child_idx) {
-            const bool child_exists =
-                node_msg.allocated_children_bitset & (1 << relative_child_idx);
-            if (child_exists) {
-              stack.emplace(current_node->allocateChild(relative_child_idx));
-            }
-          }
-        }
-      }
-    }
-  } else if (!map_msg.octree.empty()) {
-    auto octree = std::dynamic_pointer_cast<VolumetricOctree>(map_);
-    if (octree) {
-      octree->clear();
-    } else {
-      VolumetricDataStructureConfig config;
-      config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
-      octree = std::make_shared<VolumetricOctree>(config);
-      map_ = octree;
-    }
-
-    const auto& octree_msg = map_msg.octree.front();
-    std::stack<VolumetricOctree::NodeType*> stack;
-    stack.emplace(&octree->getRootNode());
-    for (const auto& node_msg : octree_msg.nodes) {
-      CHECK(!stack.empty());
-      VolumetricOctree::NodeType* current_node = stack.top();
-      CHECK_NOTNULL(current_node);
-      stack.pop();
-
-      current_node->data() = node_msg.node_value;
-      for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
-           0 <= relative_child_idx; --relative_child_idx) {
-        const bool child_exists =
-            node_msg.allocated_children_bitset & (1 << relative_child_idx);
-        if (child_exists) {
-          stack.emplace(current_node->allocateChild(relative_child_idx));
-        }
-      }
-    }
-  }
+  convert::rosMsgToMap(map_msg, map_);
 }
 }  // namespace wavemap::rviz_plugin
 

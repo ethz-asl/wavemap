@@ -6,7 +6,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_rviz_plugin)
 
 # Dependencies
-find_package(catkin REQUIRED COMPONENTS rviz wavemap_msgs wavemap)
+find_package(catkin
+    REQUIRED COMPONENTS rviz wavemap wavemap_msgs wavemap_ros_conversions)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
@@ -14,7 +15,7 @@ add_wavemap_compile_definitions_and_options()
 add_compile_options(-Wno-pedantic -Wno-register)
 
 # Setup catkin package
-catkin_package(CATKIN_DEPENDS wavemap_msgs wavemap)
+catkin_package(CATKIN_DEPENDS wavemap wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
 include_directories(include ${catkin_INCLUDE_DIRS})
