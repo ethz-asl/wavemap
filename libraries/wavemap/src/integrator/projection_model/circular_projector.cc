@@ -1,6 +1,9 @@
 #include "wavemap/integrator/projection_model/circular_projector.h"
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(CircularProjectorConfig, (min_angle, SiUnit::kRadians),
+                       (max_angle, SiUnit::kRadians), (num_cells));
+
 bool CircularProjectorConfig::isValid(bool verbose) const {
   bool is_valid = true;
 
@@ -15,26 +18,5 @@ bool CircularProjectorConfig::isValid(bool verbose) const {
   is_valid &= IS_PARAM_GT(num_cells, 1, verbose);
 
   return is_valid;
-}
-
-CircularProjectorConfig CircularProjectorConfig::from(
-    const param::Map& params) {
-  CircularProjectorConfig config;
-
-  for (const auto& [param_name, param_value] : params) {
-    if (param_name == NAMEOF(min_angle)) {
-      config.min_angle = param::convert::toUnit<SiUnit::kRadians>(
-          param_value, config.min_angle);
-    } else if (param_name == NAMEOF(max_angle)) {
-      config.max_angle = param::convert::toUnit<SiUnit::kRadians>(
-          param_value, config.max_angle);
-    } else if (param_name == NAMEOF(num_cells)) {
-      config.num_cells = param_value.get<IndexElement>();
-    } else {
-      LOG(WARNING) << "Ignoring unknown param with name " << param_name;
-    }
-  }
-
-  return config;
 }
 }  // namespace wavemap

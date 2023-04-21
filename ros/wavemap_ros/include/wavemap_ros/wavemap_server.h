@@ -17,29 +17,22 @@
 #include "wavemap_ros/utils/timer.h"
 
 namespace wavemap {
+struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 4> {
+  std::string world_frame = "odom";
+  float thresholding_period = 1.f;
+  float pruning_period = 10.f;
+  float visualization_period = 10.f;
+
+  static MemberMap memberMap;
+
+  bool isValid(bool verbose) const override;
+};
+
 class WavemapServer {
  public:
-  struct Config : ConfigBase<Config> {
-    struct General {
-      std::string world_frame = "odom";
-      bool publish_performance_stats = false;
-    } general;
-
-    struct Map {
-      float thresholding_period = 1.f;
-      float pruning_period = 10.f;
-      float visualization_period = 10.f;
-      float autosave_period = -1.f;
-      std::string autosave_path;
-    } map;
-
-    static Config from(const param::Map& params);
-    bool isValid(bool verbose) const override;
-  };
-
   WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private);
   WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                const Config& config);
+                const WavemapServerConfig& config);
 
   void visualizeMap();
   bool saveMap(const std::string& file_path) const;
@@ -54,7 +47,7 @@ class WavemapServer {
   }
 
  private:
-  const Config config_;
+  const WavemapServerConfig config_;
 
   VolumetricDataStructureBase::Ptr occupancy_map_;
 

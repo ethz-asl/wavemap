@@ -28,11 +28,13 @@ struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
 };
 
 struct VolumetricDataStructureConfig
-    : ConfigBase<VolumetricDataStructureConfig> {
+    : ConfigBase<VolumetricDataStructureConfig, 3> {
   FloatingPoint min_cell_width = 0.1f;
 
   FloatingPoint min_log_odds = -2.f;
   FloatingPoint max_log_odds = 4.f;
+
+  static MemberMap memberMap;
 
   // Constructors
   VolumetricDataStructureConfig() = default;
@@ -40,7 +42,6 @@ struct VolumetricDataStructureConfig
       : min_cell_width(min_cell_width) {}
 
   bool isValid(bool verbose) const override;
-  static VolumetricDataStructureConfig from(const param::Map& params);
 };
 
 class VolumetricDataStructureBase {

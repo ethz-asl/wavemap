@@ -9,9 +9,11 @@
 #include "wavemap/iterator/ray_iterator.h"
 
 namespace wavemap {
-struct RayTracingIntegratorConfig : ConfigBase<RayTracingIntegratorConfig> {
+struct RayTracingIntegratorConfig : ConfigBase<RayTracingIntegratorConfig, 2> {
   FloatingPoint min_range = 0.5f;
   FloatingPoint max_range = 20.f;
+
+  static MemberMap memberMap;
 
   // Constructors
   RayTracingIntegratorConfig() = default;
@@ -19,7 +21,6 @@ struct RayTracingIntegratorConfig : ConfigBase<RayTracingIntegratorConfig> {
       : min_range(min_range), max_range(max_range) {}
 
   bool isValid(bool verbose) const override;
-  static RayTracingIntegratorConfig from(const param::Map& params);
 };
 
 class RayTracingIntegrator : public IntegratorBase {

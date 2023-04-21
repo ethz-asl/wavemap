@@ -6,7 +6,25 @@
 #include <wavemap/integrator/projective/projective_integrator.h>
 
 namespace wavemap {
-InputHandler::InputHandler(const InputHandler::Config& config,
+DECLARE_CONFIG_MEMBERS(InputHandlerConfig, (topic_name), (topic_queue_length),
+                       (processing_retry_period, SiUnit::kSeconds),
+                       (max_wait_for_pose, SiUnit::kSeconds), (sensor_frame_id),
+                       (image_transport_hints), (depth_scale_factor),
+                       (time_delay, SiUnit::kSeconds),
+                       (reprojected_topic_name));
+
+bool InputHandlerConfig::isValid(bool verbose) const {
+  bool all_valid = true;
+
+  all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
+  all_valid &= IS_PARAM_GT(topic_queue_length, 0, verbose);
+  all_valid &= IS_PARAM_GT(processing_retry_period, 0.f, verbose);
+  all_valid &= IS_PARAM_GE(max_wait_for_pose, 0.f, verbose);
+
+  return all_valid;
+}
+
+InputHandler::InputHandler(const InputHandlerConfig& config,
                            const param::Map& params, std::string world_frame,
                            VolumetricDataStructureBase::Ptr occupancy_map,
                            std::shared_ptr<TfTransformer> transformer,
@@ -68,50 +86,5 @@ void InputHandler::publishReprojected(
   sensor_msgs::PointCloud2 pointcloud2_msg;
   sensor_msgs::convertPointCloudToPointCloud2(pointcloud_msg, pointcloud2_msg);
   reprojection_pub_.publish(pointcloud2_msg);
-}
-
-InputHandler::Config InputHandler::Config::from(const param::Map& params) {
-  Config config;
-
-  config.topic_name = param::map::keyGetValue(params, NAMEOF(config.topic_name),
-                                              config.topic_name);
-
-  config.topic_queue_length = param::map::keyGetValue(
-      params, NAMEOF(config.topic_queue_length), config.topic_queue_length);
-
-  config.processing_retry_period =
-      param::map::keyGetValue(params, NAMEOF(config.processing_retry_period),
-                              config.processing_retry_period);
-
-  config.max_wait_for_pose = param::convert::toUnit<SiUnit::kSeconds>(
-      params, NAMEOF(config.max_wait_for_pose), config.max_wait_for_pose);
-
-  config.sensor_frame_id = param::map::keyGetValue(
-      params, NAMEOF(config.sensor_frame_id), config.sensor_frame_id);
-
-  config.image_transport_hints =
-      param::map::keyGetValue(params, NAMEOF(config.image_transport_hints),
-                              config.image_transport_hints);
-  config.depth_scale_factor = param::map::keyGetValue(
-      params, NAMEOF(config.depth_scale_factor), config.depth_scale_factor);
-  config.time_delay = param::convert::toUnit<SiUnit::kSeconds>(
-      params, NAMEOF(config.time_delay), config.time_delay);
-
-  config.reprojected_topic_name =
-      param::map::keyGetValue(params, NAMEOF(config.reprojected_topic_name),
-                              config.reprojected_topic_name);
-
-  return config;
-}
-
-bool InputHandler::Config::isValid(bool verbose) const {
-  bool all_valid = true;
-
-  all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
-  all_valid &= IS_PARAM_GT(topic_queue_length, 0, verbose);
-  all_valid &= IS_PARAM_GT(processing_retry_period, 0.f, verbose);
-  all_valid &= IS_PARAM_GE(max_wait_for_pose, 0.f, verbose);
-
-  return all_valid;
 }
 }  // namespace wavemap

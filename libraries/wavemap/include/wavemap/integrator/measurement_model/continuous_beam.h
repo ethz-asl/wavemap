@@ -13,13 +13,16 @@
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-struct ContinuousBeamConfig : ConfigBase<ContinuousBeamConfig> {
+struct ContinuousBeamConfig
+    : ConfigBase<ContinuousBeamConfig, 5, BeamSelectorType> {
   FloatingPoint angle_sigma = 0.f;
   FloatingPoint range_sigma = 0.f;
   FloatingPoint scaling_free = 0.5f;
   FloatingPoint scaling_occupied = 0.5f;
 
   BeamSelectorType beam_selector_type = BeamSelectorType::kAllNeighbors;
+
+  static MemberMap memberMap;
 
   // Constructors
   ContinuousBeamConfig() = default;
@@ -32,9 +35,6 @@ struct ContinuousBeamConfig : ConfigBase<ContinuousBeamConfig> {
         scaling_occupied(scaling_occupied) {}
 
   bool isValid(bool verbose) const override;
-  static ContinuousBeamConfig from(
-      const param::Map& params,
-      SiUnit image_coordinates_unit = SiUnit::kRadians);
 };
 
 class ContinuousBeam : public MeasurementModelBase {

@@ -13,7 +13,7 @@
 namespace wavemap {
 class LivoxInputHandler : public InputHandler {
  public:
-  LivoxInputHandler(const Config& config, const param::Map& params,
+  LivoxInputHandler(const InputHandlerConfig& config, const param::Map& params,
                     std::string world_frame,
                     VolumetricDataStructureBase::Ptr occupancy_map,
                     std::shared_ptr<TfTransformer> transformer,

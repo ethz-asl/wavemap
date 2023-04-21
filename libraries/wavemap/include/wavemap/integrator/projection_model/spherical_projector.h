@@ -10,9 +10,12 @@
 #include "wavemap/utils/approximate_trigonometry.h"
 
 namespace wavemap {
-struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
+struct SphericalProjectorConfig
+    : ConfigBase<SphericalProjectorConfig, 2, CircularProjectorConfig> {
   CircularProjectorConfig elevation;
   CircularProjectorConfig azimuth;
+
+  static MemberMap memberMap;
 
   // Constructors
   SphericalProjectorConfig() = default;
@@ -21,7 +24,6 @@ struct SphericalProjectorConfig : ConfigBase<SphericalProjectorConfig> {
       : elevation(std::move(elevation)), azimuth(std::move(azimuth)) {}
 
   bool isValid(bool verbose) const override;
-  static SphericalProjectorConfig from(const param::Map& params);
 };
 
 class SphericalProjector : public ProjectorBase {

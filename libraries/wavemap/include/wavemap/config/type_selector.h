@@ -26,8 +26,9 @@ struct TypeSelector {
     // Force the derived config classes to specify:
     // - an enum with Ids
     // - an array of names
-    // NOTE: These static assert have to be placed in a method that's guaranteed
-    //       to be evaluated by the compiler, making the dtor is a good option.
+    // NOTE: These static asserts have to be placed in a method that's
+    //       guaranteed to be evaluated by the compiler, making the dtor is a
+    //       good option.
     static_assert(std::is_enum_v<typename DerivedTypeSelectorT::Id>,
                   "Derived TypeSelector type must define an enum called Id.");
     static_assert(

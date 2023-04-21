@@ -1,6 +1,10 @@
 #include "wavemap/integrator/projective/projective_integrator.h"
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(ProjectiveIntegratorConfig, (min_range, SiUnit::kMeters),
+                       (max_range, SiUnit::kMeters), (termination_height),
+                       (termination_update_error));
+
 bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
   bool is_valid = true;
 
@@ -11,33 +15,6 @@ bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
   is_valid &= IS_PARAM_GT(termination_update_error, 0.f, verbose);
 
   return is_valid;
-}
-
-ProjectiveIntegratorConfig ProjectiveIntegratorConfig::from(
-    const param::Map& params) {
-  ProjectiveIntegratorConfig config;
-
-  for (const auto& [param_name, param_value] : params) {
-    if (param_name == NAMEOF(min_range)) {
-      config.min_range = param::convert::toUnit<SiUnit::kMeters>(
-          param_value, config.min_range);
-    } else if (param_name == NAMEOF(max_range)) {
-      config.max_range = param::convert::toUnit<SiUnit::kMeters>(
-          param_value, config.max_range);
-    } else if (param_name == NAMEOF(termination_height)) {
-      if (param_value.holds<NdtreeIndexElement>()) {
-        config.termination_height = param_value.get<NdtreeIndexElement>();
-      }
-    } else if (param_name == NAMEOF(termination_update_error)) {
-      if (param_value.holds<FloatingPoint>()) {
-        config.termination_update_error = param_value.get<FloatingPoint>();
-      }
-    } else {
-      LOG(WARNING) << "Ignoring unknown param with name " << param_name;
-    }
-  }
-
-  return config;
 }
 
 void ProjectiveIntegrator::integratePointcloud(

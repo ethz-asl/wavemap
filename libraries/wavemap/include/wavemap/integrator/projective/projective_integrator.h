@@ -12,12 +12,14 @@
 #include "wavemap/integrator/projection_model/projector_base.h"
 
 namespace wavemap {
-struct ProjectiveIntegratorConfig : ConfigBase<ProjectiveIntegratorConfig> {
+struct ProjectiveIntegratorConfig : ConfigBase<ProjectiveIntegratorConfig, 4> {
   FloatingPoint min_range = 0.5f;
   FloatingPoint max_range = 20.f;
 
   NdtreeIndexElement termination_height = 0;
   FloatingPoint termination_update_error = 0.1f;
+
+  static MemberMap memberMap;
 
   // Constructors
   ProjectiveIntegratorConfig() = default;
@@ -25,7 +27,6 @@ struct ProjectiveIntegratorConfig : ConfigBase<ProjectiveIntegratorConfig> {
       : min_range(min_range), max_range(max_range) {}
 
   bool isValid(bool verbose) const override;
-  static ProjectiveIntegratorConfig from(const param::Map& params);
 };
 
 class ProjectiveIntegrator : public IntegratorBase {

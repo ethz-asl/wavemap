@@ -6,9 +6,11 @@
 #include "wavemap/indexing/index_conversions.h"
 
 namespace wavemap {
-struct ConstantRayConfig : ConfigBase<ConstantRayConfig> {
+struct ConstantRayConfig : ConfigBase<ConstantRayConfig, 2> {
   FloatingPoint log_odds_occupied = 0.85f;
   FloatingPoint log_odds_free = -0.4f;
+
+  static MemberMap memberMap;
 
   // Constructors
   ConstantRayConfig() = default;
@@ -17,7 +19,6 @@ struct ConstantRayConfig : ConfigBase<ConstantRayConfig> {
       : log_odds_occupied(log_odds_occupied), log_odds_free(log_odds_free) {}
 
   bool isValid(bool /*verbose*/) const override { return true; }
-  static ConstantRayConfig from(const param::Map& params);
 };
 
 class ConstantRay {

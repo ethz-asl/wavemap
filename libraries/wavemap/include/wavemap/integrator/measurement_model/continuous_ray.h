@@ -10,12 +10,15 @@
 #include "wavemap/integrator/projective/update_type.h"
 
 namespace wavemap {
-struct ContinuousRayConfig : ConfigBase<ContinuousRayConfig> {
+struct ContinuousRayConfig
+    : ConfigBase<ContinuousRayConfig, 4, BeamSelectorType> {
   FloatingPoint range_sigma = 0.f;
   FloatingPoint scaling_free = 0.5f;
   FloatingPoint scaling_occupied = 0.5f;
 
   BeamSelectorType beam_selector_type = BeamSelectorType::kNearestNeighbor;
+
+  static MemberMap memberMap;
 
   // Constructors
   ContinuousRayConfig() = default;
@@ -26,7 +29,6 @@ struct ContinuousRayConfig : ConfigBase<ContinuousRayConfig> {
         scaling_occupied(scaling_occupied) {}
 
   bool isValid(bool verbose) const override;
-  static ContinuousRayConfig from(const param::Map& params);
 };
 
 class ContinuousRay : public MeasurementModelBase {

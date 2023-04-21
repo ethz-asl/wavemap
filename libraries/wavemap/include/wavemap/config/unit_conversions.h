@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_CONFIG_PARAM_CONVERSIONS_H_
-#define WAVEMAP_CONFIG_PARAM_CONVERSIONS_H_
+#ifndef WAVEMAP_CONFIG_UNIT_CONVERSIONS_H_
+#define WAVEMAP_CONFIG_UNIT_CONVERSIONS_H_
 
 #include "wavemap/common.h"
 #include "wavemap/config/param.h"
@@ -52,4 +52,4 @@ FloatingPoint toUnit(const Map& map, const Name& key,
 }  // namespace param::convert
 }  // namespace wavemap
 
-#endif  // WAVEMAP_CONFIG_PARAM_CONVERSIONS_H_
+#endif  // WAVEMAP_CONFIG_UNIT_CONVERSIONS_H_

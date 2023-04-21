@@ -49,9 +49,8 @@ MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
                                              std::move(range_image));
     }
     case MeasurementModelType::kContinuousBeam: {
-      const auto continuous_beam_config = ContinuousBeamConfig::from(
-          measurement_model_params,
-          projection_model->getImageCoordinatesUnit());
+      const auto continuous_beam_config =
+          ContinuousBeamConfig::from(measurement_model_params);
       return std::make_shared<ContinuousBeam>(
           continuous_beam_config, std::move(projection_model),
           std::move(range_image), std::move(beam_offset_image));

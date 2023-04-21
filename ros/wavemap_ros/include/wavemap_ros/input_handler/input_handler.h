@@ -21,27 +21,28 @@ struct InputHandlerType : public TypeSelector<InputHandlerType> {
   static constexpr std::array names = {"pointcloud", "depth_image", "livox"};
 };
 
+struct InputHandlerConfig : public ConfigBase<InputHandlerConfig, 9> {
+  std::string topic_name = "scan";
+  int topic_queue_length = 10;
+
+  float processing_retry_period = 0.05f;
+  float max_wait_for_pose = 1.f;
+
+  std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
+  std::string image_transport_hints = "raw";
+  float depth_scale_factor = 1.f;
+  float time_delay = 0.f;
+
+  std::string reprojected_topic_name;  // Leave blank to disable
+
+  static MemberMap memberMap;
+
+  bool isValid(bool verbose) const override;
+};
+
 class InputHandler {
  public:
-  struct Config : public ConfigBase<Config> {
-    std::string topic_name = "scan";
-    int topic_queue_length = 10;
-
-    float processing_retry_period = 0.05f;
-    float max_wait_for_pose = 1.f;
-
-    std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
-    std::string image_transport_hints = "raw";
-    float depth_scale_factor = 1.f;
-    float time_delay = 0.f;
-
-    std::string reprojected_topic_name;  // Leave blank to disable
-
-    static Config from(const param::Map& params);
-    bool isValid(bool verbose) const override;
-  };
-
-  InputHandler(const Config& config, const param::Map& params,
+  InputHandler(const InputHandlerConfig& config, const param::Map& params,
                std::string world_frame,
                VolumetricDataStructureBase::Ptr occupancy_map,
                std::shared_ptr<TfTransformer> transformer,
@@ -49,7 +50,7 @@ class InputHandler {
   virtual ~InputHandler() = default;
 
   virtual InputHandlerType getType() const = 0;
-  const Config& getConfig() const { return config_; }
+  const InputHandlerConfig& getConfig() const { return config_; }
 
   bool isReprojectionEnabled() const {
     return !config_.reprojected_topic_name.empty() &&
@@ -57,7 +58,7 @@ class InputHandler {
   }
 
  protected:
-  const Config config_;
+  const InputHandlerConfig config_;
   const std::string world_frame_;
 
   std::vector<IntegratorBase::Ptr> integrators_;

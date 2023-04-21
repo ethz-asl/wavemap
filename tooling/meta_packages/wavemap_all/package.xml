@@ -1,24 +1,25 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>wavemap_all</name>
-    <version>0.0.0</version>
-    <description>Metapackage that builds all wavemap packages.</description>
+  <name>wavemap_all</name>
+  <version>0.0.0</version>
+  <description>Metapackage that builds all wavemap packages.</description>
 
-    <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
-    <license>BSD</license>
-    <url>https://github.com/victorreijgwart/wavemap</url>
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/victorreijgwart/wavemap</url>
 
-    <author email="victorr@ethz.ch">Victor Reijgwart</author>
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
-    <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 
-    <exec_depend>wavemap</exec_depend>
-    <exec_depend>wavemap_ros</exec_depend>
-    <exec_depend>wavemap_msgs</exec_depend>
-    <exec_depend>wavemap_rviz_plugin</exec_depend>
-    <exec_depend>wavemap_utils</exec_depend>
+  <exec_depend>wavemap</exec_depend>
+  <exec_depend>wavemap_msgs</exec_depend>
+  <exec_depend>wavemap_ros_conversions</exec_depend>
+  <exec_depend>wavemap_ros</exec_depend>
+  <exec_depend>wavemap_rviz_plugin</exec_depend>
+  <exec_depend>wavemap_utils</exec_depend>
 
-    <export>
-        <metapackage />
-    </export>
+  <export>
+    <metapackage/>
+  </export>
 </package>

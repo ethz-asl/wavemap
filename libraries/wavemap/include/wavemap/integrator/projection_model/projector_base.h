@@ -5,8 +5,8 @@
 #include <utility>
 
 #include "wavemap/common.h"
-#include "wavemap/config/param_conversions.h"
 #include "wavemap/config/type_selector.h"
+#include "wavemap/config/unit_conversions.h"
 #include "wavemap/data_structure/aabb.h"
 
 namespace wavemap {

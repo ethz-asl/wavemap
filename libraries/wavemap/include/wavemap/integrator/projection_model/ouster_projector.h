@@ -10,11 +10,14 @@
 #include "wavemap/utils/approximate_trigonometry.h"
 
 namespace wavemap {
-struct OusterProjectorConfig : ConfigBase<OusterProjectorConfig> {
+struct OusterProjectorConfig
+    : ConfigBase<OusterProjectorConfig, 4, CircularProjectorConfig> {
   CircularProjectorConfig elevation;
   CircularProjectorConfig azimuth;
   FloatingPoint lidar_origin_to_beam_origin = 0.02767f;
   FloatingPoint lidar_origin_to_sensor_origin_z_offset = 0.03618f;
+
+  static MemberMap memberMap;
 
   // Constructors
   OusterProjectorConfig() = default;
@@ -29,7 +32,6 @@ struct OusterProjectorConfig : ConfigBase<OusterProjectorConfig> {
             lidar_origin_to_sensor_origin_z_offset) {}
 
   bool isValid(bool verbose) const override;
-  static OusterProjectorConfig from(const param::Map& params);
 };
 
 class OusterProjector : public ProjectorBase {

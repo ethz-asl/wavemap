@@ -13,12 +13,26 @@
 #include "wavemap_ros/input_handler/input_handler_factory.h"
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(WavemapServerConfig, (world_frame),
+                       (thresholding_period, SiUnit::kSeconds),
+                       (pruning_period, SiUnit::kSeconds),
+                       (visualization_period, SiUnit::kSeconds));
+
+bool WavemapServerConfig::isValid(bool verbose) const {
+  bool all_valid = true;
+
+  all_valid &= IS_PARAM_NE(world_frame, std::string(""), verbose);
+
+  return all_valid;
+}
+
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
     : WavemapServer(nh, nh_private,
-                    Config::from(param::convert::toParamMap(nh_private, ""))) {}
+                    WavemapServerConfig::from(
+                        param::convert::toParamMap(nh_private, "map"))) {}
 
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                             const WavemapServer::Config& config)
+                             const WavemapServerConfig& config)
     : config_(config.checkValid()),
       transformer_(std::make_shared<TfTransformer>()) {
   // Setup data structure
@@ -49,9 +63,9 @@ void WavemapServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
     occupancy_map_->threshold();
 
-    const wavemap_msgs::Map map_msg = convert::mapToRosMsg(
-        occupancy_map_, config_.general.world_frame, ros::Time::now(),
-        config_.map.visualization_period);
+    const wavemap_msgs::Map map_msg =
+        convert::mapToRosMsg(occupancy_map_, config_.world_frame,
+                             ros::Time::now(), config_.visualization_period);
     map_pub_.publish(map_msg);
   }
 }
@@ -71,9 +85,9 @@ bool WavemapServer::loadMap(const std::string& file_path) {
 InputHandler* WavemapServer::addInput(const param::Map& integrator_params,
                                       const ros::NodeHandle& nh,
                                       ros::NodeHandle nh_private) {
-  auto input_handler = InputHandlerFactory::create(
-      integrator_params, config_.general.world_frame, occupancy_map_,
-      transformer_, nh, nh_private);
+  auto input_handler =
+      InputHandlerFactory::create(integrator_params, config_.world_frame,
+                                  occupancy_map_, transformer_, nh, nh_private);
   if (input_handler) {
     return input_handlers_.emplace_back(std::move(input_handler)).get();
   }
@@ -81,36 +95,28 @@ InputHandler* WavemapServer::addInput(const param::Map& integrator_params,
 }
 
 void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
-  if (0.f < config_.map.thresholding_period) {
+  if (0.f < config_.thresholding_period) {
     ROS_INFO_STREAM("Registering map thresholding timer with period "
-                    << config_.map.thresholding_period << "s");
+                    << config_.thresholding_period << "s");
     map_thresholding_timer_ = nh.createTimer(
-        ros::Duration(config_.map.thresholding_period),
+        ros::Duration(config_.thresholding_period),
         [this](const auto& /*event*/) { occupancy_map_->threshold(); });
   }
 
-  if (0.f < config_.map.pruning_period) {
+  if (0.f < config_.pruning_period) {
     ROS_INFO_STREAM("Registering map pruning timer with period "
-                    << config_.map.pruning_period << "s");
+                    << config_.pruning_period << "s");
     map_pruning_timer_ = nh.createTimer(
-        ros::Duration(config_.map.pruning_period),
+        ros::Duration(config_.pruning_period),
         [this](const auto& /*event*/) { occupancy_map_->prune(); });
   }
 
-  if (0.f < config_.map.visualization_period) {
+  if (0.f < config_.visualization_period) {
     ROS_INFO_STREAM("Registering map visualization timer with period "
-                    << config_.map.visualization_period << "s");
+                    << config_.visualization_period << "s");
     map_visualization_timer_ =
-        nh.createTimer(ros::Duration(config_.map.visualization_period),
+        nh.createTimer(ros::Duration(config_.visualization_period),
                        [this](const auto& /*event*/) { visualizeMap(); });
-  }
-
-  if (0.f < config_.map.autosave_period && !config_.map.autosave_path.empty()) {
-    ROS_INFO_STREAM("Registering autosave timer with period "
-                    << config_.map.autosave_period << "s");
-    map_autosave_timer_ = nh.createTimer(
-        ros::Duration(config_.map.autosave_period),
-        [this](const auto& /*event*/) { saveMap(config_.map.autosave_path); });
   }
 }
 
@@ -118,8 +124,6 @@ void WavemapServer::subscribeToTopics(ros::NodeHandle& /*nh*/) {}
 
 void WavemapServer::advertiseTopics(ros::NodeHandle& nh_private) {
   map_pub_ = nh_private.advertise<wavemap_msgs::Map>("map", 10, true);
-  performance_stats_pub_ = nh_private.advertise<wavemap_msgs::PerformanceStats>(
-      "performance_stats", 10, true);
 }
 
 void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
@@ -143,58 +147,5 @@ void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
         response.success = loadMap(request.file_path);
         return true;
       });
-}
-
-WavemapServer::Config WavemapServer::Config::from(const param::Map& params) {
-  Config config;
-
-  // General
-  if (param::map::keyHoldsValue<param::Map>(params, NAMEOF(config.general))) {
-    const auto params_general =
-        param::map::keyGetValue<param::Map>(params, NAMEOF(config.general));
-
-    config.general.world_frame = param::map::keyGetValue(
-        params_general, NAMEOF(config.general.world_frame),
-        config.general.world_frame);
-
-    config.general.publish_performance_stats = param::map::keyGetValue(
-        params_general, NAMEOF(config.general.publish_performance_stats),
-        config.general.publish_performance_stats);
-  }
-
-  // Map
-  if (param::map::keyHoldsValue<param::Map>(params, NAMEOF(config.map))) {
-    const auto params_map =
-        param::map::keyGetValue<param::Map>(params, NAMEOF(config.map));
-
-    config.map.thresholding_period = param::convert::toUnit<SiUnit::kSeconds>(
-        params_map, NAMEOF(config.map.thresholding_period),
-        config.map.thresholding_period);
-
-    config.map.pruning_period = param::convert::toUnit<SiUnit::kSeconds>(
-        params_map, NAMEOF(config.map.pruning_period),
-        config.map.pruning_period);
-
-    config.map.visualization_period = param::convert::toUnit<SiUnit::kSeconds>(
-        params_map, NAMEOF(config.map.visualization_period),
-        config.map.visualization_period);
-
-    config.map.autosave_period = param::convert::toUnit<SiUnit::kSeconds>(
-        params_map, NAMEOF(config.map.autosave_period),
-        config.map.autosave_period);
-
-    config.map.autosave_path = param::map::keyGetValue(
-        params_map, NAMEOF(config.map.autosave_path), config.map.autosave_path);
-  }
-
-  return config;
-}
-
-bool WavemapServer::Config::isValid(bool verbose) const {
-  bool all_valid = true;
-
-  all_valid &= IS_PARAM_NE(general.world_frame, std::string(""), verbose);
-
-  return all_valid;
 }
 }  // namespace wavemap

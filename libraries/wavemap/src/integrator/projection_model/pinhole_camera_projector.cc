@@ -43,6 +43,9 @@ AABB<Vector3D> PinholeCameraProjector::cartesianToSensorAABB(
   return sensor_coordinate_aabb;
 }
 
+DECLARE_CONFIG_MEMBERS(PinholeCameraProjectorConfig, (width), (height), (fx),
+                       (fy), (cx), (cy));
+
 bool PinholeCameraProjectorConfig::isValid(bool verbose) const {
   bool is_valid = true;
 
@@ -53,30 +56,5 @@ bool PinholeCameraProjectorConfig::isValid(bool verbose) const {
   is_valid &= IS_PARAM_GT(fy, 0.f, verbose);
 
   return is_valid;
-}
-
-PinholeCameraProjectorConfig PinholeCameraProjectorConfig::from(
-    const param::Map& params) {
-  PinholeCameraProjectorConfig config;
-
-  for (const auto& [param_name, param_value] : params) {
-    if (param_name == NAMEOF(width)) {
-      config.width = param_value.get<IndexElement>();
-    } else if (param_name == NAMEOF(height)) {
-      config.height = param_value.get<IndexElement>();
-    } else if (param_name == NAMEOF(fx)) {
-      config.fx = param_value.get<FloatingPoint>();
-    } else if (param_name == NAMEOF(fy)) {
-      config.fy = param_value.get<FloatingPoint>();
-    } else if (param_name == NAMEOF(cx)) {
-      config.cx = param_value.get<FloatingPoint>();
-    } else if (param_name == NAMEOF(cy)) {
-      config.cy = param_value.get<FloatingPoint>();
-    } else {
-      LOG(WARNING) << "Ignoring unknown param with name " << param_name;
-    }
-  }
-
-  return config;
 }
 }  // namespace wavemap

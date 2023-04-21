@@ -1,13 +1,8 @@
-general:
-  world_frame: "map"
-  publish_performance_stats: false
-
 map:
+  world_frame: "map"
   thresholding_period: { seconds: 2.0 }
   pruning_period: { seconds: 10.0 }
   visualization_period: { seconds: 2.0 }
-  autosave_period: { seconds: -1.0 }
-  autosave_path: ""
   data_structure:
     type: "hashed_chunked_wavelet_octree"
     min_cell_width: { meters: 0.05 }

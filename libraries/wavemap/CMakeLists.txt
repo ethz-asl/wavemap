@@ -36,7 +36,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # Libraries
 # cmake-lint: disable=C0301
 add_library(${PROJECT_NAME}
-    src/config/param_conversions.cc
+    src/config/unit_conversions.cc
     src/data_structure/volumetric/hashed_blocks.cc
     src/data_structure/volumetric/hashed_chunked_wavelet_octree.cc
     src/data_structure/volumetric/hashed_wavelet_octree.cc

@@ -5,10 +5,12 @@
 #include "wavemap/config/config_base.h"
 
 namespace wavemap {
-struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig> {
+struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig, 3> {
   FloatingPoint min_angle = 0.f;
   FloatingPoint max_angle = 0.f;
   IndexElement num_cells = 0;
+
+  static MemberMap memberMap;
 
   // Constructors
   CircularProjectorConfig() = default;
@@ -17,7 +19,6 @@ struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig> {
       : min_angle(min_angle), max_angle(max_angle), num_cells(num_cells) {}
 
   bool isValid(bool verbose) const override;
-  static CircularProjectorConfig from(const param::Map& params);
 };
 
 class CircularProjector {

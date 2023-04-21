@@ -38,7 +38,7 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private) {
   // Load the input handler config
-  const auto input_handler_config = InputHandler::Config::from(params);
+  const auto input_handler_config = InputHandlerConfig::from(params);
 
   // Create the input handler
   switch (input_handler_type.toTypeId()) {

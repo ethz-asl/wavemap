@@ -92,33 +92,12 @@ AABB<Vector3D> OusterProjector::cartesianToSensorAABB(
   return sensor_coordinate_aabb;
 }
 
+DECLARE_CONFIG_MEMBERS(OusterProjectorConfig, (elevation), (azimuth),
+                       (lidar_origin_to_beam_origin, SiUnit::kMeters),
+                       (lidar_origin_to_sensor_origin_z_offset,
+                        SiUnit::kMeters));
+
 bool OusterProjectorConfig::isValid(bool verbose) const {
   return elevation.isValid(verbose) && azimuth.isValid(verbose);
-}
-
-OusterProjectorConfig OusterProjectorConfig::from(const param::Map& params) {
-  OusterProjectorConfig config;
-
-  for (const auto& [param_name, param_value] : params) {
-    if (param_name == NAMEOF(elevation)) {
-      config.elevation =
-          CircularProjectorConfig::from(param_value.get<param::Map>());
-    } else if (param_name == NAMEOF(azimuth)) {
-      config.azimuth =
-          CircularProjectorConfig::from(param_value.get<param::Map>());
-    } else if (param_name == NAMEOF(lidar_origin_to_beam_origin)) {
-      config.lidar_origin_to_beam_origin =
-          param::convert::toUnit<SiUnit::kMeters>(
-              param_value.get<param::Map>());
-    } else if (param_name == NAMEOF(lidar_origin_to_sensor_origin_z_offset)) {
-      config.lidar_origin_to_sensor_origin_z_offset =
-          param::convert::toUnit<SiUnit::kMeters>(
-              param_value.get<param::Map>());
-    } else {
-      LOG(WARNING) << "Ignoring unknown param with name " << param_name;
-    }
-  }
-
-  return config;
 }
 }  // namespace wavemap

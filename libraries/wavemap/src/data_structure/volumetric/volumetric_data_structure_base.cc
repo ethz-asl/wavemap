@@ -3,23 +3,11 @@
 #include "wavemap/utils/nameof.h"
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(VolumetricDataStructureConfig,
+                       (min_cell_width, SiUnit::kMeters), (min_log_odds),
+                       (max_log_odds));
+
 bool VolumetricDataStructureConfig::isValid(bool verbose) const {
   return IS_PARAM_GT(min_cell_width, 0.f, verbose);
-}
-
-VolumetricDataStructureConfig VolumetricDataStructureConfig::from(
-    const param::Map& params) {
-  VolumetricDataStructureConfig config;
-
-  for (const auto& [param_name, param_value] : params) {
-    if (param_name == NAMEOF(min_cell_width)) {
-      config.min_cell_width = param::convert::toUnit<SiUnit::kMeters>(
-          param_value, config.min_cell_width);
-    } else {
-      LOG(WARNING) << "Ignoring unknown param with name " << param_name;
-    }
-  }
-
-  return config;
 }
 }  // namespace wavemap

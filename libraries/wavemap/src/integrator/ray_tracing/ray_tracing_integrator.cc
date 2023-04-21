@@ -1,6 +1,9 @@
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(RayTracingIntegratorConfig, (min_range, SiUnit::kMeters),
+                       (max_range, SiUnit::kMeters));
+
 bool RayTracingIntegratorConfig::isValid(bool verbose) const {
   bool is_valid = true;
 
@@ -9,25 +12,6 @@ bool RayTracingIntegratorConfig::isValid(bool verbose) const {
   is_valid &= IS_PARAM_LT(min_range, max_range, verbose);
 
   return is_valid;
-}
-
-RayTracingIntegratorConfig RayTracingIntegratorConfig::from(
-    const param::Map& params) {
-  RayTracingIntegratorConfig config;
-
-  for (const auto& [param_name, param_value] : params) {
-    if (param_name == NAMEOF(min_range)) {
-      config.min_range = param::convert::toUnit<SiUnit::kMeters>(
-          param_value, config.min_range);
-    } else if (param_name == NAMEOF(max_range)) {
-      config.max_range = param::convert::toUnit<SiUnit::kMeters>(
-          param_value, config.max_range);
-    } else {
-      LOG(WARNING) << "Ignoring unknown param with name " << param_name;
-    }
-  }
-
-  return config;
 }
 
 void RayTracingIntegrator::integratePointcloud(

@@ -7,13 +7,16 @@
 #include "wavemap/integrator/projection_model/projector_base.h"
 
 namespace wavemap {
-struct PinholeCameraProjectorConfig : ConfigBase<PinholeCameraProjectorConfig> {
+struct PinholeCameraProjectorConfig
+    : ConfigBase<PinholeCameraProjectorConfig, 6> {
   IndexElement width = 0;
   IndexElement height = 0;
   FloatingPoint fx = 0.f;
   FloatingPoint fy = 0.f;
   FloatingPoint cx = 0.f;
   FloatingPoint cy = 0.f;
+
+  static MemberMap memberMap;
 
   // Constructors
   PinholeCameraProjectorConfig() = default;
@@ -23,7 +26,6 @@ struct PinholeCameraProjectorConfig : ConfigBase<PinholeCameraProjectorConfig> {
       : width(width), height(height), fx(fx), fy(fy), cx(cx), cy(cy) {}
 
   bool isValid(bool verbose) const override;
-  static PinholeCameraProjectorConfig from(const param::Map& params);
 };
 
 class PinholeCameraProjector : public ProjectorBase {

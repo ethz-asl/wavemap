@@ -12,8 +12,8 @@
 namespace wavemap {
 class PointcloudInputHandler : public InputHandler {
  public:
-  PointcloudInputHandler(const Config& config, const param::Map& params,
-                         std::string world_frame,
+  PointcloudInputHandler(const InputHandlerConfig& config,
+                         const param::Map& params, std::string world_frame,
                          VolumetricDataStructureBase::Ptr occupancy_map,
                          std::shared_ptr<TfTransformer> transformer,
                          ros::NodeHandle nh, ros::NodeHandle nh_private);
