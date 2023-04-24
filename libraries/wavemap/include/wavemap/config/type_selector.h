@@ -6,6 +6,10 @@
 #include "wavemap/config/param.h"
 
 namespace wavemap {
+namespace param {
+static constexpr auto kTypeSelectorKey = "type";
+}
+
 template <typename DerivedTypeSelectorT>
 struct TypeSelector {
   using TypeId = int;

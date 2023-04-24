@@ -19,17 +19,19 @@ TypeSelector<DerivedNamedTypeSetT>::strToTypeId(const std::string& name) {
 template <typename DerivedNamedTypeSetT>
 DerivedNamedTypeSetT TypeSelector<DerivedNamedTypeSetT>::fromParamMap(
     const param::Map& params, std::string& error_msg) {
-  if (!param::map::hasKey(params, "type")) {
+  if (!param::map::hasKey(params, param::kTypeSelectorKey)) {
     error_msg = "Type param is not set.";
     return kInvalidTypeId;
   }
 
-  if (!param::map::keyHoldsValue<std::string>(params, "type")) {
+  if (!param::map::keyHoldsValue<std::string>(params,
+                                              param::kTypeSelectorKey)) {
     error_msg = "Type param is not a string.";
     return kInvalidTypeId;
   }
 
-  const auto type_name = param::map::keyGetValue<std::string>(params, "type");
+  const auto type_name =
+      param::map::keyGetValue<std::string>(params, param::kTypeSelectorKey);
   DerivedNamedTypeSetT type_id(type_name);
   if (!type_id.isValid()) {
     error_msg = "Type param does not match a known type.";

@@ -4,6 +4,9 @@
 #include <string>
 
 #include <boost/preprocessor/comma_if.hpp>
+#include <boost/preprocessor/comparison/equal.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
@@ -12,10 +15,11 @@
 
 namespace wavemap {
 #define MEMBER_NAME_FROM_TUPLE(member_name_tuple) \
-  BOOST_PP_TUPLE_ELEM(2, 0, member_name_tuple)
+  BOOST_PP_TUPLE_ELEM(0, member_name_tuple)
 
-#define MEMBER_UNIT_FROM_TUPLE(member_name_tuple) \
-  BOOST_PP_TUPLE_ELEM(2, 1, member_name_tuple)
+#define MEMBER_UNIT_FROM_TUPLE(member_name_tuple)                         \
+  BOOST_PP_IIF(BOOST_PP_EQUAL(BOOST_PP_TUPLE_SIZE(member_name_tuple), 2), \
+               BOOST_PP_TUPLE_ELEM(1, member_name_tuple), BOOST_PP_EMPTY())
 
 // clang-format off
 #define ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED(r, class_name, i,            \
@@ -144,23 +148,38 @@ ConfigDerivedT
 ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
     const param::Map& params) {
   ConfigDerivedT config;
+  const auto& member_map = ConfigDerivedT::memberMap;
 
-  for (const auto& [param_name, param_value] : params) {
-    const auto& member_it = std::find_if(
-        ConfigDerivedT::memberMap.begin(), ConfigDerivedT::memberMap.end(),
-        [name = param_name](const MemberMetadata& member) {
-          return member.name == name;
-        });
-    if (member_it != ConfigDerivedT::memberMap.end()) {
-      const auto& unit = member_it->unit;
-      std::visit(
-          [&](auto&& ptr) {
-            detail::loadParam(param_name, param_value, config, ptr, unit);
-          },
-          member_it->ptr);
-    } else {
-      LOG(WARNING) << "Ignoring unknown param with name " << param_name;
+  for (const auto& param_kv : params) {
+    const auto& param_name = param_kv.first;
+    const auto& param_value = param_kv.second;
+
+    // Skip keys used for TypeSelectors
+    // NOTE: These keys are used by the factory methods to decide which module
+    //       (and config) type should be instantiated. They do not refer to
+    //       actual members of the configs themselves and can thus be ignored in
+    //       the current method.
+    if (param_name == param::kTypeSelectorKey) {
+      continue;
     }
+
+    // See if the current param name matches one of the config's members
+    const auto& member_it = std::find_if(
+        member_map.begin(), member_map.end(),
+        [&](const auto& member) { return member.name == param_name; });
+
+    // If so, load it
+    if (member_it != member_map.end()) {
+      const auto& unit = member_it->unit;
+      auto param_loader = [&](auto&& ptr) {
+        detail::loadParam(param_name, param_value, config, ptr, unit);
+      };
+      std::visit(param_loader, member_it->ptr);
+      continue;
+    }
+
+    // Issue a warning for unrecognized param names
+    LOG(WARNING) << "Ignoring unknown param with name " << param_name;
   }
 
   return config;
