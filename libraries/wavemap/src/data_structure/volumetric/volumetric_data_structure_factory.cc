@@ -29,18 +29,27 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
 
 VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
     VolumetricDataStructureType data_structure_type, const param::Map& params) {
-  const auto config = VolumetricDataStructureConfig::from(params);
   switch (data_structure_type.toTypeId()) {
-    case VolumetricDataStructureType::kHashedBlocks:
+    case VolumetricDataStructureType::kHashedBlocks: {
+      const auto config = VolumetricDataStructureConfig::from(params);
       return std::make_shared<HashedBlocks>(config);
-    case VolumetricDataStructureType::kOctree:
+    }
+    case VolumetricDataStructureType::kOctree: {
+      const auto config = VolumetricOctreeConfig::from(params);
       return std::make_shared<VolumetricOctree>(config);
-    case VolumetricDataStructureType::kWaveletOctree:
+    }
+    case VolumetricDataStructureType::kWaveletOctree: {
+      const auto config = WaveletOctreeConfig::from(params);
       return std::make_shared<WaveletOctree>(config);
-    case VolumetricDataStructureType::kHashedWaveletOctree:
+    }
+    case VolumetricDataStructureType::kHashedWaveletOctree: {
+      const auto config = HashedWaveletOctreeConfig::from(params);
       return std::make_shared<HashedWaveletOctree>(config);
-    case VolumetricDataStructureType::kHashedChunkedWaveletOctree:
+    }
+    case VolumetricDataStructureType::kHashedChunkedWaveletOctree: {
+      const auto config = HashedChunkedWaveletOctreeConfig::from(params);
       return std::make_shared<HashedChunkedWaveletOctree>(config);
+    }
     default:
       LOG(ERROR) << "Attempted to create data structure with unknown type ID: "
                  << data_structure_type.toTypeId() << ". Returning nullptr.";

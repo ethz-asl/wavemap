@@ -58,29 +58,30 @@ HashedWaveletIntegrator::getFovMinMaxIndices(
 
 void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
                                           const OctreeIndex& block_index) {
-  HashedWaveletOctree::NodeType& root_node = block.getRootNode();
-  HashedWaveletOctree::Coefficients::Scale& root_node_scale =
+  HashedWaveletOctreeBlock::NodeType& root_node = block.getRootNode();
+  HashedWaveletOctreeBlock::Coefficients::Scale& root_node_scale =
       block.getRootScale();
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
   struct StackElement {
-    HashedWaveletOctree::NodeType& parent_node;
+    HashedWaveletOctreeBlock::NodeType& parent_node;
     const OctreeIndex parent_node_index;
     NdtreeIndexRelativeChild next_child_idx;
-    HashedWaveletOctree::Coefficients::CoefficientsArray
+    HashedWaveletOctreeBlock::Coefficients::CoefficientsArray
         child_scale_coefficients;
   };
   std::stack<StackElement> stack;
   stack.emplace(StackElement{root_node, block_index, 0,
-                             HashedWaveletOctree::Transform::backward(
+                             HashedWaveletOctreeBlock::Transform::backward(
                                  {root_node_scale, root_node.data()})});
 
   while (!stack.empty()) {
     // If the current stack element has fully been processed, propagate upward
     if (OctreeIndex::kNumChildren <= stack.top().next_child_idx) {
-      const auto [scale, details] = HashedWaveletOctree::Transform::forward(
-          stack.top().child_scale_coefficients);
+      const auto [scale, details] =
+          HashedWaveletOctreeBlock::Transform::forward(
+              stack.top().child_scale_coefficients);
       stack.top().parent_node.data() = details;
       stack.pop();
       if (stack.empty()) {
@@ -101,7 +102,7 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
     DCHECK_GE(current_child_idx, 0);
     DCHECK_LT(current_child_idx, OctreeIndex::kNumChildren);
 
-    HashedWaveletOctree::NodeType& parent_node = stack.top().parent_node;
+    HashedWaveletOctreeBlock::NodeType& parent_node = stack.top().parent_node;
     FloatingPoint& node_value =
         stack.top().child_scale_coefficients[current_child_idx];
     const OctreeIndex node_index =
@@ -154,7 +155,7 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
         projection_model_->cartesianToSensorZ(C_node_center);
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
-    HashedWaveletOctree::NodeType* node =
+    HashedWaveletOctreeBlock::NodeType* node =
         parent_node.getChild(node_index.computeRelativeChildIndex());
     if (measurement_model_->computeWorstCaseApproximationError(
             update_type, d_C_cell, bounding_sphere_radius) <
@@ -176,9 +177,9 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
       // Allocate the current node if it has not yet been allocated
       node = parent_node.allocateChild(node_index.computeRelativeChildIndex());
     }
-    stack.emplace(StackElement{
-        *node, node_index, 0,
-        HashedWaveletOctree::Transform::backward({node_value, node->data()})});
+    stack.emplace(StackElement{*node, node_index, 0,
+                               HashedWaveletOctreeBlock::Transform::backward(
+                                   {node_value, node->data()})});
   }
 }
 }  // namespace wavemap

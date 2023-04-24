@@ -112,12 +112,12 @@ wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
     wavelet_octree_msg.root_node_scale_coefficient = block.getRootScale();
 
     constexpr FloatingPoint kNumericalNoise = 1e-3f;
-    const auto min_log_odds = map.getConfig().min_log_odds + kNumericalNoise;
-    const auto max_log_odds = map.getConfig().max_log_odds - kNumericalNoise;
+    const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
+    const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
 
     struct StackElement {
       const FloatingPoint scale;
-      const HashedWaveletOctree::NodeType& node;
+      const HashedWaveletOctreeBlock::NodeType& node;
     };
     std::stack<StackElement> stack;
     stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
@@ -133,7 +133,7 @@ wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
       node_msg.allocated_children_bitset = 0;
 
       const auto child_scales =
-          HashedWaveletOctree::Transform::backward({scale, node.data()});
+          HashedWaveletOctreeBlock::Transform::backward({scale, node.data()});
       for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
         const auto child_scale = child_scales[relative_child_idx];
@@ -175,14 +175,14 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
     wavelet_octree_msg.root_node_scale_coefficient = block.getRootScale();
 
     constexpr FloatingPoint kNumericalNoise = 1e-3f;
-    const auto min_log_odds = map.getConfig().min_log_odds + kNumericalNoise;
-    const auto max_log_odds = map.getConfig().max_log_odds - kNumericalNoise;
+    const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
+    const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
     const auto tree_height = map.getTreeHeight();
     const auto chunk_height = map.getChunkHeight();
 
     struct StackElement {
       const OctreeIndex node_index;
-      const HashedChunkedWaveletOctree::NodeChunkType& chunk;
+      const HashedChunkedWaveletOctreeBlock::NodeChunkType& chunk;
       const FloatingPoint scale_coefficient;
     };
     std::stack<StackElement> stack;
@@ -214,7 +214,7 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
       }
 
       const auto child_scales =
-          HashedWaveletOctree::Transform::backward({scale, node_data});
+          HashedWaveletOctreeBlock::Transform::backward({scale, node_data});
       for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
         const FloatingPoint child_scale = child_scales[relative_child_idx];
@@ -279,7 +279,7 @@ void rosMsgToMap(const wavemap_msgs::Map& map_msg, VolumetricOctree::Ptr& map) {
   if (map) {
     map->clear();
   } else {
-    VolumetricDataStructureConfig config;
+    VolumetricOctreeConfig config;
     config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
     map = std::make_shared<VolumetricOctree>(config);
   }
@@ -309,7 +309,7 @@ void rosMsgToMap(const wavemap_msgs::Map& map_msg, WaveletOctree::Ptr& map) {
   if (map) {
     map->clear();
   } else {
-    VolumetricDataStructureConfig config;
+    WaveletOctreeConfig config;
     config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
     map = std::make_shared<WaveletOctree>(config);
   }
@@ -342,7 +342,7 @@ void rosMsgToMap(const wavemap_msgs::Map& map_msg, WaveletOctree::Ptr& map) {
 void rosMsgToMap(const wavemap_msgs::Map& map_msg,
                  HashedWaveletOctree::Ptr& map) {
   if (!map) {
-    VolumetricDataStructureConfig config;
+    HashedWaveletOctreeConfig config;
     config.min_cell_width = map_msg.wavelet_octree.front().min_cell_width;
     map = std::make_shared<HashedWaveletOctree>(config);
   }

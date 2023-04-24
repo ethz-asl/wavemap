@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "wavemap/common.h"
+#include "wavemap/config/config_base.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/indexing/index_hashes.h"
 #include "wavemap/utils/int_math.h"
@@ -15,6 +16,7 @@ class HashedBlocks : public VolumetricDataStructureBase {
  public:
   using Ptr = std::shared_ptr<HashedBlocks>;
   using ConstPtr = std::shared_ptr<const HashedBlocks>;
+  using Config = VolumetricDataStructureConfig;
   static constexpr bool kRequiresExplicitThresholding = false;
 
   // Use the base class' constructor

@@ -3,9 +3,10 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/image.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 
 namespace wavemap {
-using ImageTest = FixtureBase;
+class ImageTest : public FixtureBase, public GeometryGenerator {};
 
 TEST_F(ImageTest, ConstructorAndAccessors) {
   for (int idx = 0; idx < 10; ++idx) {

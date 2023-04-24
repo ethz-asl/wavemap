@@ -6,12 +6,13 @@
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/angle_utils.h"
 #include "wavemap/utils/container_print_utils.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-class Image2DProjectorTest : public FixtureBase {
+class Image2DProjectorTest : public FixtureBase, public GeometryGenerator {
  protected:
   static constexpr FloatingPoint kMinAngleIntervalWidth = kPi / 16.f;
 
@@ -60,7 +61,7 @@ class Image2DProjectorTest : public FixtureBase {
         : W_aabb(std::move(W_aabb)), T_W_C(T_W_C) {}
   };
 
-  std::vector<AABBAndPose> getTestAABBsAndPoses() const {
+  std::vector<AABBAndPose> getTestAABBsAndPoses() {
     // Manually define initial AABBs
     std::list<AABB<Point3D>> aabbs{
         {Point3D::Constant(kEpsilon), Point3D::Ones()},
@@ -154,7 +155,7 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
   for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
     // Get a random point in Cartesian space and ensure it's in the FoV
     const Point3D C_point =
-        FixtureBase::getRandomPoint<3>(min_range, max_range);
+        GeometryGenerator::getRandomPoint<3>(min_range, max_range);
     const Vector3D sensor_coordinates = projector.cartesianToSensor(C_point);
     const Vector2D image_coordinates = sensor_coordinates.head<2>();
     const FloatingPoint range_or_depth = sensor_coordinates[2];
@@ -186,7 +187,7 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
   // Test sensor -> Cartesian -> sensor round trips
   for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
     // Get a random point in sensor coordinates and ensure it's in the FoV
-    const Index2D image_index = FixtureBase::getRandomIndex<2>(
+    const Index2D image_index = GeometryGenerator::getRandomIndex<2>(
         Index2D::Zero(), projector.getDimensions());
     const Vector2D image_coordinates = projector.indexToImage(image_index);
     const Point3D C_point = projector.sensorToCartesian(image_coordinates, 1.f);
@@ -205,7 +206,7 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
   // Test index -> image -> index round trips
   for (int repetition = 0; repetition < kNumRepetitions; ++repetition) {
     // Get a random point in sensor coordinates and ensure it's in the FoV
-    const Index2D image_index = FixtureBase::getRandomIndex<2>(
+    const Index2D image_index = GeometryGenerator::getRandomIndex<2>(
         Index2D::Zero(), projector.getDimensions());
     const Vector2D image_coordinates = projector.indexToImage(image_index);
     const Index2D image_index_roundtrip =

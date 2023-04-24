@@ -32,8 +32,8 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
   ThreadPool thread_pool_;
 
   static constexpr FloatingPoint kNoiseThreshold = 1e-4f;
-  const FloatingPoint min_log_odds_ = occupancy_map_->getConfig().min_log_odds;
-  const FloatingPoint max_log_odds_ = occupancy_map_->getConfig().max_log_odds;
+  const FloatingPoint min_log_odds_ = occupancy_map_->getMinLogOdds();
+  const FloatingPoint max_log_odds_ = occupancy_map_->getMaxLogOdds();
   const IndexElement tree_height_ = occupancy_map_->getTreeHeight();
 
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;

@@ -19,9 +19,9 @@
 namespace wavemap {
 struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 4> {
   std::string world_frame = "odom";
-  float thresholding_period = 1.f;
-  float pruning_period = 10.f;
-  float visualization_period = 10.f;
+  FloatingPoint thresholding_period = 1.f;
+  FloatingPoint pruning_period = 10.f;
+  FloatingPoint visualization_period = 10.f;
 
   static MemberMap memberMap;
 

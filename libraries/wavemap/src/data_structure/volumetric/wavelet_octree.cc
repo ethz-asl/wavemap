@@ -1,6 +1,19 @@
 #include "wavemap/data_structure/volumetric/wavelet_octree.h"
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(WaveletOctreeConfig, (min_cell_width, SiUnit::kMeters),
+                       (min_log_odds), (max_log_odds), (tree_height));
+
+bool WaveletOctreeConfig::isValid(bool verbose) const {
+  bool is_valid = true;
+
+  is_valid &= IS_PARAM_GT(min_cell_width, 0.f, verbose);
+  is_valid &= IS_PARAM_LT(min_log_odds, max_log_odds, verbose);
+  is_valid &= IS_PARAM_GT(tree_height, 0, verbose);
+
+  return is_valid;
+}
+
 void WaveletOctree::threshold() {
   root_scale_coefficient_ -=
       recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
@@ -47,9 +60,15 @@ void WaveletOctree::forEachLeaf(
     return;
   }
 
+  struct StackElement {
+    const OctreeIndex node_index;
+    const NodeType& node;
+    const Coefficients::Scale scale_coefficient{};
+  };
   std::stack<StackElement> stack;
   stack.emplace(StackElement{getInternalRootNodeIndex(), ndtree_.getRootNode(),
                              root_scale_coefficient_});
+
   while (!stack.empty()) {
     const OctreeIndex node_index = stack.top().node_index;
     const NodeType& node = stack.top().node;
@@ -78,7 +97,7 @@ void WaveletOctree::forEachLeaf(
 }
 
 WaveletOctree::Coefficients::Scale WaveletOctree::recursiveThreshold(  // NOLINT
-    WaveletOctree::NodeType& node, float scale_coefficient) {
+    WaveletOctree::NodeType& node, FloatingPoint scale_coefficient) {
   Coefficients::CoefficientsArray child_scale_coefficients =
       Transform::backward({scale_coefficient, node.data()});
 
@@ -102,7 +121,7 @@ WaveletOctree::Coefficients::Scale WaveletOctree::recursiveThreshold(  // NOLINT
 }
 
 WaveletOctree::Coefficients::Scale WaveletOctree::recursivePrune(  // NOLINT
-    WaveletOctree::NodeType& node, float scale_coefficient) {
+    WaveletOctree::NodeType& node, FloatingPoint scale_coefficient) {
   Coefficients::CoefficientsArray child_scale_coefficients =
       Transform::backward({scale_coefficient, node.data()});
 

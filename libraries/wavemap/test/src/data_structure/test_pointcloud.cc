@@ -3,11 +3,12 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/pointcloud.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 template <typename PointT>
-class PointcloudTest : public FixtureBase {
+class PointcloudTest : public FixtureBase, public GeometryGenerator {
  protected:
   static void compare(const std::vector<PointT>& point_vector,
                       const Pointcloud<PointT>& pointcloud) {
@@ -38,7 +39,7 @@ class PointcloudTest : public FixtureBase {
     }
   }
 
-  typename Pointcloud<PointT>::PointcloudData getRandomPointMatrix() const {
+  typename Pointcloud<PointT>::PointcloudData getRandomPointMatrix() {
     constexpr FloatingPoint kMaxCoordinate = 1e3;
     const Eigen::Index random_length = getRandomPointcloudSize();
     typename Pointcloud<PointT>::PointcloudData random_point_matrix =
@@ -88,7 +89,7 @@ TYPED_TEST(PointcloudTest, InitializeFromStl) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const auto random_point_vector =
-        TestFixture::template getRandomPointVector<dim_v<TypeParam>>();
+        GeometryGenerator::getRandomPointVector<dim_v<TypeParam>>();
     Pointcloud<TypeParam> random_pointcloud(random_point_vector);
     TestFixture::compare(random_point_vector, random_pointcloud);
   }
@@ -127,7 +128,7 @@ TYPED_TEST(PointcloudTest, Iterators) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const auto random_point_vector =
-        TestFixture::template getRandomPointVector<dim_v<TypeParam>>();
+        GeometryGenerator::getRandomPointVector<dim_v<TypeParam>>();
 
     Pointcloud<TypeParam> random_pointcloud(random_point_vector);
     size_t point_idx = 0u;
@@ -171,9 +172,9 @@ TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Initialize
     const PoseType random_transformation =
-        TestFixture::template getRandomTransformation<kDim>();
+        GeometryGenerator::getRandomTransformation<kDim>();
     const Pointcloud<PointType> random_pointcloud(
-        TestFixture::template getRandomPointVector<kDim>());
+        GeometryGenerator::getRandomPointVector<kDim>());
     PosedPointcloud<PointType> random_posed_pointcloud(random_transformation,
                                                        random_pointcloud);
 
@@ -203,9 +204,9 @@ TYPED_TEST(PosedPointcloudTest, Transformations) {
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const std::vector<PointType> random_points_C =
-        TestFixture::template getRandomPointVector<kDim>();
+        GeometryGenerator::getRandomPointVector<kDim>();
     const PoseType random_T_W_C =
-        TestFixture::template getRandomTransformation<kDim>();
+        GeometryGenerator::getRandomTransformation<kDim>();
     const PosedPointcloud<PointType> random_posed_pointcloud(
         random_T_W_C, Pointcloud<PointType>(random_points_C));
 

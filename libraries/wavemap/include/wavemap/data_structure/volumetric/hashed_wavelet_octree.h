@@ -1,101 +1,62 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_H_
 
-#include <chrono>
 #include <memory>
-#include <string>
 #include <unordered_map>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/ndtree/ndtree.h"
-#include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
-#include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
+#include "wavemap/config/config_base.h"
+#include "wavemap/data_structure/volumetric/hashed_wavelet_octree_block.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/indexing/index_hashes.h"
 #include "wavemap/utils/int_math.h"
 
 namespace wavemap {
+struct HashedWaveletOctreeConfig : ConfigBase<HashedWaveletOctreeConfig, 5> {
+  FloatingPoint min_cell_width = 0.1f;
+
+  FloatingPoint min_log_odds = -2.f;
+  FloatingPoint max_log_odds = 4.f;
+
+  IndexElement tree_height = 6;
+  FloatingPoint only_prune_blocks_if_unused_for = 5.f;
+
+  static MemberMap memberMap;
+
+  // Constructors
+  HashedWaveletOctreeConfig() = default;
+  HashedWaveletOctreeConfig(FloatingPoint min_cell_width,
+                            FloatingPoint min_log_odds,
+                            FloatingPoint max_log_odds,
+                            IndexElement tree_height,
+                            FloatingPoint only_prune_blocks_if_unused_for)
+      : min_cell_width(min_cell_width),
+        min_log_odds(min_log_odds),
+        max_log_odds(max_log_odds),
+        tree_height(tree_height),
+        only_prune_blocks_if_unused_for(only_prune_blocks_if_unused_for) {}
+
+  // Conversion to DataStructureBase config
+  operator VolumetricDataStructureConfig() const {  // NOLINT
+    return {min_cell_width, min_log_odds, max_log_odds};
+  }
+
+  bool isValid(bool verbose) const override;
+};
+
 class HashedWaveletOctree : public VolumetricDataStructureBase {
  public:
   using Ptr = std::shared_ptr<HashedWaveletOctree>;
   using ConstPtr = std::shared_ptr<const HashedWaveletOctree>;
-  using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
-  using Transform = HaarTransform<FloatingPoint, kDim>;
-  using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
+  using Config = HashedWaveletOctreeConfig;
   static constexpr bool kRequiresExplicitThresholding = true;
 
-  using BlockIndex = Index3D;
+  using Block = HashedWaveletOctreeBlock;
+  using BlockIndex = Block::BlockIndex;
   using CellIndex = OctreeIndex;
 
-  class Block {
-   public:
-    using Clock = std::chrono::steady_clock;
-    using Time = std::chrono::time_point<Clock>;
-
-    explicit Block(HashedWaveletOctree* parent)
-        : parent_(CHECK_NOTNULL(parent)) {}
-
-    bool empty() const { return ndtree_.empty(); }
-    size_t size() const { return ndtree_.size(); }
-    void threshold();
-    void prune();
-
-    FloatingPoint getCellValue(const OctreeIndex& index) const;
-    void setCellValue(const OctreeIndex& index, FloatingPoint new_value);
-    void addToCellValue(const OctreeIndex& index, FloatingPoint update);
-
-    void forEachLeaf(
-        const BlockIndex& block_index,
-        typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
-            visitor_fn) const;
-
-    Coefficients::Scale& getRootScale() { return root_scale_coefficient_; }
-    const Coefficients::Scale& getRootScale() const {
-      return root_scale_coefficient_;
-    }
-    NodeType& getRootNode() { return ndtree_.getRootNode(); }
-    const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
-
-    void setNeedsPruning(bool value = true) { needs_pruning_ = value; }
-    bool getNeedsPruning() const { return needs_pruning_; }
-    void setNeedsThresholding(bool value = true) {
-      needs_thresholding_ = value;
-    }
-    bool getNeedsThresholding() const { return needs_thresholding_; }
-    void setLastUpdatedStamp(Time stamp = Clock::now()) {
-      last_updated_stamp_ = stamp;
-    }
-    Time getLastUpdatedStamp() const { return last_updated_stamp_; }
-    FloatingPoint getTimeSinceLastUpdated() const;
-
-    template <TraversalOrder traversal_order>
-    auto getNodeIterator() {
-      return ndtree_.getIterator<traversal_order>();
-    }
-    template <TraversalOrder traversal_order>
-    auto getNodeIterator() const {
-      return ndtree_.getIterator<traversal_order>();
-    }
-
-    size_t getMemoryUsage() const { return ndtree_.getMemoryUsage(); }
-
-   private:
-    Coefficients::Scale root_scale_coefficient_{};
-    Ndtree<Coefficients::Details, kDim> ndtree_{kTreeHeight - 1};
-
-    HashedWaveletOctree* parent_;
-
-    bool needs_thresholding_ = false;
-    bool needs_pruning_ = false;
-    Time last_updated_stamp_ = Clock::now();
-
-    Coefficients::Scale recursiveThreshold(
-        NodeType& node, Coefficients::Scale scale_coefficient);
-    void recursivePrune(NodeType& node);
-  };
-
-  // Use the base class' constructor
-  using VolumetricDataStructureBase::VolumetricDataStructureBase;
+  explicit HashedWaveletOctree(const HashedWaveletOctreeConfig& config)
+      : VolumetricDataStructureBase(config), config_(config.checkValid()) {}
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override;
@@ -108,8 +69,10 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
 
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
-  IndexElement getTreeHeight() const { return kTreeHeight; }
-  Index3D getBlockSize() const { return Index3D::Constant(kCellsPerBlockSide); }
+  IndexElement getTreeHeight() const { return config_.tree_height; }
+  Index3D getBlockSize() const {
+    return Index3D::Constant(cells_per_block_side_);
+  }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;
@@ -128,28 +91,22 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
           visitor_fn) const override;
 
  private:
-  struct StackElement {
-    const OctreeIndex node_index;
-    const NodeType& node;
-    const Coefficients::Scale scale_coefficient{};
-  };
+  const HashedWaveletOctreeConfig config_;
 
-  static constexpr IndexElement kTreeHeight = 6;
-  static constexpr IndexElement kCellsPerBlockSide =
-      int_math::exp2(kTreeHeight);
-  static constexpr FloatingPoint kDoNotPruneIfUsedInLastNSec = 5.f;
+  const IndexElement cells_per_block_side_ =
+      int_math::exp2(config_.tree_height);
 
   std::unordered_map<BlockIndex, Block, IndexHash<kDim>> blocks_;
 
-  static BlockIndex computeBlockIndexFromIndex(const Index3D& index) {
-    return int_math::div_exp2_floor(index, kTreeHeight);
+  BlockIndex computeBlockIndexFromIndex(const Index3D& index) const {
+    return int_math::div_exp2_floor(index, config_.tree_height);
   }
-  static BlockIndex computeBlockIndexFromIndex(const OctreeIndex& node_index) {
+  BlockIndex computeBlockIndexFromIndex(const OctreeIndex& node_index) const {
     const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
-    return int_math::div_exp2_floor(index, kTreeHeight);
+    return int_math::div_exp2_floor(index, config_.tree_height);
   }
-  static CellIndex computeCellIndexFromBlockIndexAndIndex(
-      const BlockIndex& block_index, OctreeIndex index);
+  CellIndex computeCellIndexFromBlockIndexAndIndex(
+      const BlockIndex& block_index, OctreeIndex index) const;
 };
 }  // namespace wavemap
 

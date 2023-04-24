@@ -61,7 +61,8 @@ inline bool HashedWaveletOctree::hasBlock(const Index3D& block_index) const {
 inline HashedWaveletOctree::Block& HashedWaveletOctree::getOrAllocateBlock(
     const Index3D& block_index) {
   if (!hasBlock(block_index)) {
-    blocks_.try_emplace(block_index, this);
+    blocks_.try_emplace(block_index, config_.tree_height, config_.min_log_odds,
+                        config_.max_log_odds);
   }
   return blocks_.at(block_index);
 }
@@ -85,37 +86,13 @@ inline void HashedWaveletOctree::forEachLeaf(
 
 inline HashedWaveletOctree::CellIndex
 HashedWaveletOctree::computeCellIndexFromBlockIndexAndIndex(
-    const HashedWaveletOctree::BlockIndex& block_index, OctreeIndex index) {
-  DCHECK_LE(index.height, kTreeHeight);
-  const IndexElement height_difference = kTreeHeight - index.height;
+    const HashedWaveletOctree::BlockIndex& block_index,
+    OctreeIndex index) const {
+  DCHECK_LE(index.height, config_.tree_height);
+  const IndexElement height_difference = config_.tree_height - index.height;
   index.position -= int_math::mult_exp2(block_index, height_difference);
   DCHECK((0 <= index.position.array()).all());
   return index;
-}
-
-inline FloatingPoint HashedWaveletOctree::Block::getTimeSinceLastUpdated()
-    const {
-  return (std::chrono::duration<FloatingPoint>(Clock::now() -
-                                               last_updated_stamp_))
-      .count();
-}
-
-inline FloatingPoint HashedWaveletOctree::Block::getCellValue(
-    const OctreeIndex& index) const {
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
-  const NodeType* node = &ndtree_.getRootNode();
-  FloatingPoint value = root_scale_coefficient_;
-  for (int parent_height = kTreeHeight; index.height < parent_height;
-       --parent_height) {
-    const NdtreeIndexRelativeChild child_index =
-        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    value = Transform::backwardSingleChild({value, node->data()}, child_index);
-    if (!node->hasChild(child_index)) {
-      break;
-    }
-    node = node->getChild(child_index);
-  }
-  return value;
 }
 }  // namespace wavemap
 

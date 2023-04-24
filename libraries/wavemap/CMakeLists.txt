@@ -39,7 +39,9 @@ add_library(${PROJECT_NAME}
     src/config/unit_conversions.cc
     src/data_structure/volumetric/hashed_blocks.cc
     src/data_structure/volumetric/hashed_chunked_wavelet_octree.cc
+    src/data_structure/volumetric/hashed_chunked_wavelet_octree_block.cc
     src/data_structure/volumetric/hashed_wavelet_octree.cc
+    src/data_structure/volumetric/hashed_wavelet_octree_block.cc
     src/data_structure/volumetric/volumetric_octree.cc
     src/data_structure/volumetric/wavelet_octree.cc
     src/data_structure/volumetric/volumetric_data_structure_base.cc

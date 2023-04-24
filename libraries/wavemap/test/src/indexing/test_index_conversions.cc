@@ -5,6 +5,7 @@
 #include "wavemap/common.h"
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/container_print_utils.h"
 #include "wavemap/utils/eigen_format.h"
 
@@ -13,7 +14,7 @@ namespace wavemap {
 //                - Index
 //                - Point
 template <typename TypeParamT>
-class IndexConversionsTest : public FixtureBase {
+class IndexConversionsTest : public FixtureBase, public GeometryGenerator {
  protected:
   static constexpr NdtreeIndexElement kMaxHeight = 14;
   const typename NdtreeIndex<TypeParamT::kDim>::Position
@@ -35,7 +36,7 @@ TYPED_TEST(IndexConversionsTest, LinearIndexConversions) {
   constexpr int kDim = TypeParam::kDim;
   constexpr int kCellsPerSide = 16;
   const std::vector<Index<kDim>> test_indices =
-      TestFixture::template getRandomIndexVector<kDim>(
+      GeometryGenerator::getRandomIndexVector<kDim>(
           1000, 2000, Index<kDim>::Zero(),
           Index<kDim>::Constant(kCellsPerSide - 1));
   for (const Index<kDim>& index : test_indices) {
@@ -55,7 +56,7 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
 
   // Generate a combination of random and handpicked node indices for testing
   std::vector<NdtreeIndex<kDim>> random_indices =
-      TestFixture::template getRandomNdtreeIndexVector<NdtreeIndex<kDim>>(
+      GeometryGenerator::getRandomNdtreeIndexVector<NdtreeIndex<kDim>>(
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, 1, TestFixture::kMaxHeight);
   random_indices.emplace_back(NdtreeIndex<kDim>{0, {0, 0}});
@@ -152,7 +153,7 @@ TYPED_TEST(IndexConversionsTest, MortonCodes) {
     return ss.str();
   };
   // Test fully random indices
-  const auto random_indices = TestFixture::template getRandomIndexVector<kDim>(
+  const auto random_indices = GeometryGenerator::getRandomIndexVector<kDim>(
       2000, 2000, Index<kDim>::Zero(), Index<kDim>::Constant(kMaxCoordinate));
   for (const auto& index : random_indices) {
     const MortonCode morton_code = convert::indexToMorton(index);
@@ -166,7 +167,7 @@ TYPED_TEST(IndexConversionsTest, MortonCodes) {
         << bitset_printer(round_trip_index) << ")";
   }
   // Test the last coordinate over its full range
-  Index<kDim> index = TestFixture::template getRandomIndex<kDim>(
+  Index<kDim> index = GeometryGenerator::getRandomIndex<kDim>(
       Index<kDim>::Zero(), Index<kDim>::Constant(kMaxCoordinate));
   const auto test_range_bounds = {
       std::pair<size_t, size_t>{0, 1024},

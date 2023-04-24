@@ -4,10 +4,11 @@
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-class SphericalProjectorTest : public FixtureBase {
+class SphericalProjectorTest : public FixtureBase, public GeometryGenerator {
  protected:
   SphericalProjector getRandomProjectionModel() {
     const FloatingPoint min_elevation_angle = getRandomAngle(-kQuarterPi, 0.f);

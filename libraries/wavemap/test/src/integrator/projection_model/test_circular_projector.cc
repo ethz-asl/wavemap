@@ -3,9 +3,10 @@
 #include "wavemap/common.h"
 #include "wavemap/integrator/projection_model/circular_projector.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 
 namespace wavemap {
-using CircularProjectorTest = FixtureBase;
+class CircularProjectorTest : public FixtureBase, public GeometryGenerator {};
 
 TEST_F(CircularProjectorTest, InitializationAndAccessors) {
   for (int repetition = 0; repetition < 1000; ++repetition) {

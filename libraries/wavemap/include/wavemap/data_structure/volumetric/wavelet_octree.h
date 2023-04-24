@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 
+#include "wavemap/config/config_base.h"
 #include "wavemap/data_structure/ndtree/ndtree.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
@@ -11,19 +12,46 @@
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
+struct WaveletOctreeConfig : ConfigBase<WaveletOctreeConfig, 4> {
+  FloatingPoint min_cell_width = 0.1f;
+
+  FloatingPoint min_log_odds = -2.f;
+  FloatingPoint max_log_odds = 4.f;
+
+  IndexElement tree_height = 14;
+
+  static MemberMap memberMap;
+
+  // Constructors
+  WaveletOctreeConfig() = default;
+  WaveletOctreeConfig(FloatingPoint min_cell_width, FloatingPoint min_log_odds,
+                      FloatingPoint max_log_odds, IndexElement tree_height)
+      : min_cell_width(min_cell_width),
+        min_log_odds(min_log_odds),
+        max_log_odds(max_log_odds),
+        tree_height(tree_height) {}
+
+  // Conversion to DataStructureBase config
+  operator VolumetricDataStructureConfig() const {  // NOLINT
+    return {min_cell_width, min_log_odds, max_log_odds};
+  }
+
+  bool isValid(bool verbose) const override;
+};
+
 class WaveletOctree : public VolumetricDataStructureBase {
  public:
   using Ptr = std::shared_ptr<WaveletOctree>;
   using ConstPtr = std::shared_ptr<const WaveletOctree>;
+  using Config = WaveletOctreeConfig;
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
 
   static constexpr bool kRequiresExplicitThresholding = true;
 
-  explicit WaveletOctree(const VolumetricDataStructureConfig& config,
-                         NdtreeIndexElement max_height = 14)
-      : VolumetricDataStructureBase(config), max_height_(max_height) {}
+  explicit WaveletOctree(const WaveletOctreeConfig& config)
+      : VolumetricDataStructureBase(config), config_(config.checkValid()) {}
 
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
@@ -68,20 +96,15 @@ class WaveletOctree : public VolumetricDataStructureBase {
   size_t getMemoryUsage() const override { return ndtree_.getMemoryUsage(); }
 
  private:
-  struct StackElement {
-    const OctreeIndex node_index;
-    const NodeType& node;
-    const Coefficients::Scale scale_coefficient{};
-  };
+  const WaveletOctreeConfig config_;
 
-  const NdtreeIndexElement max_height_;
+  Ndtree<Coefficients::Details, kDim> ndtree_{config_.tree_height - 1};
   Coefficients::Scale root_scale_coefficient_{};
-  Ndtree<Coefficients::Details, kDim> ndtree_{max_height_ - 1};
 
   OctreeIndex getInternalRootNodeIndex() const {
-    return OctreeIndex{max_height_, OctreeIndex::Position::Zero()};
+    return OctreeIndex{config_.tree_height, OctreeIndex::Position::Zero()};
   }
-  const OctreeIndex root_node_index_offset_{max_height_ - 1,
+  const OctreeIndex root_node_index_offset_{config_.tree_height - 1,
                                             OctreeIndex::Position::Ones()};
   const Index3D root_index_offset_ =
       convert::nodeIndexToMinCornerIndex(root_node_index_offset_);

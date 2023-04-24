@@ -17,10 +17,9 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
     const Point3D C_node_center =
         posed_range_image_->getPoseInverse() * W_node_center;
     const FloatingPoint sample = computeUpdate(C_node_center);
-    return std::clamp(
-               sample + node_value,
-               occupancy_map_->getConfig().min_log_odds - kNoiseThreshold,
-               occupancy_map_->getConfig().max_log_odds + kNoiseThreshold) -
+    return std::clamp(sample + node_value,
+                      occupancy_map_->getMinLogOdds() - kNoiseThreshold,
+                      occupancy_map_->getMaxLogOdds() + kNoiseThreshold) -
            node_value;
   }
 
@@ -41,8 +40,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
   // We can also stop here if the cell will result in a free space update (or
   // zero) and the map is already saturated free
   if (update_type != UpdateType::kPossiblyOccupied &&
-      node_value <
-          occupancy_map_->getConfig().min_log_odds + kNoiseThreshold / 10.f) {
+      node_value < occupancy_map_->getMinLogOdds() + kNoiseThreshold / 10.f) {
     return 0.f;
   }
 
@@ -63,10 +61,9 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
       config_.termination_update_error) {
     const FloatingPoint sample = computeUpdate(C_node_center);
     if (!node || !node->hasAtLeastOneChild()) {
-      return std::clamp(
-                 sample + node_value,
-                 occupancy_map_->getConfig().min_log_odds - kNoiseThreshold,
-                 occupancy_map_->getConfig().max_log_odds + kNoiseThreshold) -
+      return std::clamp(sample + node_value,
+                        occupancy_map_->getMinLogOdds() - kNoiseThreshold,
+                        occupancy_map_->getMaxLogOdds() + kNoiseThreshold) -
              node_value;
     } else {
       return sample;

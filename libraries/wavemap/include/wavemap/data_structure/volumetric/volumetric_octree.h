@@ -4,24 +4,52 @@
 #include <memory>
 #include <string>
 
+#include "wavemap/config/config_base.h"
 #include "wavemap/data_structure/ndtree/ndtree.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
+struct VolumetricOctreeConfig : ConfigBase<VolumetricOctreeConfig, 4> {
+  FloatingPoint min_cell_width = 0.1f;
+
+  FloatingPoint min_log_odds = -2.f;
+  FloatingPoint max_log_odds = 4.f;
+
+  IndexElement tree_height = 14;
+
+  static MemberMap memberMap;
+
+  // Constructors
+  VolumetricOctreeConfig() = default;
+  VolumetricOctreeConfig(FloatingPoint min_cell_width,
+                         FloatingPoint min_log_odds, FloatingPoint max_log_odds,
+                         IndexElement tree_height)
+      : min_cell_width(min_cell_width),
+        min_log_odds(min_log_odds),
+        max_log_odds(max_log_odds),
+        tree_height(tree_height) {}
+
+  // Conversion to DataStructureBase config
+  operator VolumetricDataStructureConfig() const {  // NOLINT
+    return {min_cell_width, min_log_odds, max_log_odds};
+  }
+
+  bool isValid(bool verbose) const override;
+};
+
 class VolumetricOctree : public VolumetricDataStructureBase {
  public:
   using Ptr = std::shared_ptr<VolumetricOctree>;
   using ConstPtr = std::shared_ptr<const VolumetricOctree>;
+  using Config = VolumetricOctreeConfig;
   using NodeType = NdtreeNode<FloatingPoint, kDim>;
 
-  // TODO(victorr): Make this configurable
-  static constexpr NdtreeIndexElement kMaxHeight = 14;
   static constexpr bool kRequiresExplicitThresholding = true;
 
-  // Use the base class' constructor
-  using VolumetricDataStructureBase::VolumetricDataStructureBase;
+  explicit VolumetricOctree(const VolumetricOctreeConfig& config)
+      : VolumetricDataStructureBase(config), config_(config.checkValid()) {}
 
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
@@ -31,6 +59,7 @@ class VolumetricOctree : public VolumetricDataStructureBase {
 
   typename OctreeIndex::ChildArray getFirstChildIndices() const;
 
+  IndexElement getTreeHeight() const { return config_.tree_height; }
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
   Index3D getMinPossibleIndex() const;
@@ -60,18 +89,14 @@ class VolumetricOctree : public VolumetricDataStructureBase {
   size_t getMemoryUsage() const override { return ndtree_.getMemoryUsage(); }
 
  private:
-  struct StackElement {
-    const OctreeIndex node_index;
-    const NodeType& node;
-    const FloatingPoint parent_value{};
-  };
+  const VolumetricOctreeConfig config_;
 
-  Ndtree<FloatingPoint, kDim> ndtree_{kMaxHeight};
+  Ndtree<FloatingPoint, kDim> ndtree_{config_.tree_height};
 
-  static OctreeIndex getInternalRootNodeIndex() {
-    return OctreeIndex{kMaxHeight, OctreeIndex::Position::Zero()};
+  OctreeIndex getInternalRootNodeIndex() const {
+    return OctreeIndex{config_.tree_height, OctreeIndex::Position::Zero()};
   }
-  const OctreeIndex root_node_index_offset_{kMaxHeight - 1,
+  const OctreeIndex root_node_index_offset_{config_.tree_height - 1,
                                             OctreeIndex::Position::Ones()};
   const Index3D root_index_offset_ =
       convert::nodeIndexToMinCornerIndex(root_node_index_offset_);

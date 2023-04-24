@@ -6,11 +6,12 @@
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 template <typename NdtreeIndexT>
-class NdtreeIndexTest : public FixtureBase {
+class NdtreeIndexTest : public FixtureBase, public GeometryGenerator {
  protected:
   static constexpr NdtreeIndexElement kMaxHeight = 14;
   const typename NdtreeIndexT::Position kMinNdtreePositionIndex =
@@ -18,9 +19,7 @@ class NdtreeIndexTest : public FixtureBase {
   const typename NdtreeIndexT::Position kMaxNdtreePositionIndex =
       NdtreeIndexT::Position::Constant(int_math::exp2(kMaxHeight));
 
-  FloatingPoint getRandomRootNodeWidth() const {
-    return random_number_generator_->getRandomRealNumber(0.1f, 1e3f);
-  }
+  FloatingPoint getRandomRootNodeWidth() { return getRandomFloat(0.1f, 1e3f); }
 };
 
 using NdTreeIndexTypes =
@@ -30,7 +29,7 @@ TYPED_TEST_SUITE(NdtreeIndexTest, NdTreeIndexTypes, );
 TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
   // Generate a combination of random and handpicked node indices for testing
   std::vector<TypeParam> random_indices =
-      TestFixture::template getRandomNdtreeIndexVector<TypeParam>(
+      GeometryGenerator::getRandomNdtreeIndexVector<TypeParam>(
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, 0, 0);
   for (auto& index : random_indices) {
@@ -96,7 +95,7 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
 TYPED_TEST(NdtreeIndexTest, LinearOffsets) {
   // Generate a combination of random and handpicked node indices for testing
   std::vector<TypeParam> random_indices =
-      TestFixture::template getRandomNdtreeIndexVector<TypeParam>(
+      GeometryGenerator::getRandomNdtreeIndexVector<TypeParam>(
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, 0, 0);
   random_indices.emplace_back(TypeParam{0, TypeParam::Position::Zero()});

@@ -4,10 +4,11 @@
 #include "wavemap/data_structure/ndtree/ndtree.h"
 #include "wavemap/indexing/index_hashes.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 
 namespace wavemap {
 template <typename NdtreeT>
-using NdtreeTest = FixtureBase;
+class NdtreeTest : public FixtureBase, public GeometryGenerator {};
 
 using NdtreeTypes =
     ::testing::Types<Ndtree<int, 1>, Ndtree<int, 2>, Ndtree<int, 3>,
@@ -33,8 +34,8 @@ TYPED_TEST(NdtreeTest, AllocatingAndClearing) {
     const PositionType max_child_pos = convert::nodeIndexToMaxCornerIndex(
         IndexType{tree_height, PositionType::Zero()});
     const auto random_index =
-        TestFixture::template getRandomNdtreeIndex<IndexType>(
-            min_child_pos, max_child_pos, 0, 0)
+        GeometryGenerator::getRandomNdtreeIndex<IndexType>(min_child_pos,
+                                                           max_child_pos, 0, 0)
             .computeParentIndex(test_height);
     const bool index_is_inside_root_chunk_node =
         (tree_height - random_index.height) < TypeParam::kChunkHeight;
@@ -76,11 +77,10 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
       const int random_height =
           TestFixture::getRandomNdtreeIndexHeight(0, tree_height);
       const auto random_index =
-          TestFixture::template getRandomNdtreeIndex<IndexType>(
+          GeometryGenerator::getRandomNdtreeIndex<IndexType>(
               min_child_pos, max_child_pos, 0, 0)
               .computeParentIndex(random_height);
-      const int random_value =
-          TestFixture::random_number_generator_->getRandomInteger(1, 100000);
+      const int random_value = TestFixture::getRandomInteger(1, 100000);
 
       // Avoid inserting multiple values at the same index
       if (inserted_values.count(random_index)) {

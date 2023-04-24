@@ -3,11 +3,12 @@
 #include "wavemap/common.h"
 #include "wavemap/iterator/grid_iterator.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 template <typename TypeParamT>
-using GridIteratorTest = FixtureBase;
+class GridIteratorTest : public FixtureBase, public GeometryGenerator {};
 
 template <int dim>
 struct TypeParamTemplate {
@@ -54,12 +55,10 @@ TYPED_TEST(GridIteratorTest, EquivalenceToNestedLoops) {
   constexpr int kNumTestGrids = 20;
 
   for (int i = 0; i < kNumTestGrids; ++i) {
-    const Index<kDim> bottom_left_idx =
-        TestFixture::template getRandomIndex<kDim>(Index<kDim>::Constant(-4e1),
-                                                   Index<kDim>::Zero());
-    const Index<kDim> top_right_idx =
-        TestFixture::template getRandomIndex<kDim>(Index<kDim>::Zero(),
-                                                   Index<kDim>::Constant(4e1));
+    const Index<kDim> bottom_left_idx = GeometryGenerator::getRandomIndex<kDim>(
+        Index<kDim>::Constant(-4e1), Index<kDim>::Zero());
+    const Index<kDim> top_right_idx = GeometryGenerator::getRandomIndex<kDim>(
+        Index<kDim>::Zero(), Index<kDim>::Constant(4e1));
 
     Grid grid(bottom_left_idx, top_right_idx);
     auto grid_it = grid.begin();

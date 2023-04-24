@@ -62,7 +62,8 @@ inline bool HashedChunkedWaveletOctree::hasBlock(
 inline HashedChunkedWaveletOctree::Block&
 HashedChunkedWaveletOctree::getOrAllocateBlock(const Index3D& block_index) {
   if (!hasBlock(block_index)) {
-    blocks_.try_emplace(block_index, this);
+    blocks_.try_emplace(block_index, config_.tree_height, config_.min_log_odds,
+                        config_.max_log_odds);
   }
   return blocks_.at(block_index);
 }
@@ -87,61 +88,12 @@ inline void HashedChunkedWaveletOctree::forEachLeaf(
 inline HashedChunkedWaveletOctree::CellIndex
 HashedChunkedWaveletOctree::computeCellIndexFromBlockIndexAndIndex(
     const HashedChunkedWaveletOctree::BlockIndex& block_index,
-    OctreeIndex index) {
-  DCHECK_LE(index.height, kTreeHeight);
-  const IndexElement height_difference = kTreeHeight - index.height;
+    OctreeIndex index) const {
+  DCHECK_LE(index.height, config_.tree_height);
+  const IndexElement height_difference = config_.tree_height - index.height;
   index.position -= int_math::mult_exp2(block_index, height_difference);
   DCHECK((0 <= index.position.array()).all());
   return index;
-}
-
-inline FloatingPoint
-HashedChunkedWaveletOctree::Block::getTimeSinceLastUpdated() const {
-  return (std::chrono::duration<FloatingPoint>(Clock::now() -
-                                               last_updated_stamp_))
-      .count();
-}
-
-inline FloatingPoint HashedChunkedWaveletOctree::Block::getCellValue(
-    const OctreeIndex& index) const {
-  // Descend the tree chunk by chunk
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
-  const NodeChunkType* current_chunk = &chunked_ndtree_.getRootChunk();
-  FloatingPoint value = root_scale_coefficient_;
-  for (int chunk_top_height = kTreeHeight; index.height < chunk_top_height;
-       chunk_top_height -= kChunkHeight) {
-    // Decompress level by level
-    for (int parent_height = chunk_top_height;
-         chunk_top_height - kChunkHeight < parent_height; --parent_height) {
-      // Perform one decompression stage
-      const LinearIndex relative_node_index =
-          OctreeIndex::computeTreeTraversalDistance(
-              morton_code, chunk_top_height, parent_height);
-      const NdtreeIndexRelativeChild relative_child_index =
-          OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-      value = Transform::backwardSingleChild(
-          {value, current_chunk->nodeData(relative_node_index)},
-          relative_child_index);
-      // If we've reached the requested resolution or there are no remaining
-      // higher resolution details, return
-      if (parent_height == index.height + 1 ||
-          !current_chunk->nodeHasAtLeastOneChild(relative_node_index)) {
-        return value;
-      }
-    }
-
-    // Descend to the next chunk if it exists
-    const LinearIndex linear_child_index =
-        OctreeIndex::computeLevelTraversalDistance(
-            morton_code, chunk_top_height, chunk_top_height - kChunkHeight);
-    // If there are no remaining higher resolution details, return
-    if (!current_chunk->hasChild(linear_child_index)) {
-      break;
-    }
-    current_chunk = current_chunk->getChild(linear_child_index);
-  }
-
-  return value;
 }
 }  // namespace wavemap
 

@@ -11,13 +11,13 @@ class HaarCellTest : public FixtureBase {
  protected:
   static constexpr FloatingPoint kReconstructionErrorTolerance = 1e-3f;
 
-  FloatingPoint getRandomWaveletCoefficient() const {
-    return random_number_generator_->getRandomRealNumber(-1e2f, 1e2f);
+  FloatingPoint getRandomWaveletCoefficient() {
+    return getRandomFloat(-1e2f, 1e2f);
   }
 
   typename HaarCoefficients<typename TypeParamT::ValueType,
                             TypeParamT::kDim>::CoefficientsArray
-  getRandomWaveletCoefficientArray() const {
+  getRandomWaveletCoefficientArray() {
     typename HaarCoefficients<typename TypeParamT::ValueType,
                               TypeParamT::kDim>::CoefficientsArray coefficients;
     std::generate(coefficients.begin(), coefficients.end(),

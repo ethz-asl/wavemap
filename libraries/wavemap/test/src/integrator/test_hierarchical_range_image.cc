@@ -5,9 +5,11 @@
 #include "wavemap/integrator/projective/coarse_to_fine/hierarchical_range_bounds.h"
 #include "wavemap/iterator/grid_iterator.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 
 namespace wavemap {
-class HierarchicalRangeImage2DTest : public FixtureBase {
+class HierarchicalRangeImage2DTest : public FixtureBase,
+                                     public GeometryGenerator {
  protected:
   Image<> getRandomRangeImage() {
     const int num_rows = getRandomIndexElement(100, 2048);
@@ -182,10 +184,10 @@ TEST_F(HierarchicalRangeImage2DTest, RangeBoundQueries) {
     // Test range bounds on all sub-intervals and compare to brute force
     for (int subrange_idx = 0; subrange_idx < 1000; ++subrange_idx) {
       // Get bottom left and upper right corners of random sub-interval
-      const Index2D start_idx = FixtureBase::getRandomIndex<2>(
+      const Index2D start_idx = getRandomIndex<2>(
           Index2D::Zero(), range_image_dims - Index2D::Ones());
-      const Index2D end_idx = FixtureBase::getRandomIndex<2>(
-          start_idx, range_image_dims - Index2D::Ones());
+      const Index2D end_idx =
+          getRandomIndex<2>(start_idx, range_image_dims - Index2D::Ones());
 
       // Check if the different accessors return the same values
       const Bounds bounds =

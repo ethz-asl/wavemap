@@ -7,11 +7,13 @@
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/container_print_utils.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-class RangeImage2DIntersectorTest : public FixtureBase {
+class RangeImage2DIntersectorTest : public FixtureBase,
+                                    public GeometryGenerator {
  protected:
   ProjectiveIntegratorConfig getRandomPointcloudIntegratorConfig() {
     const FloatingPoint min_range = getRandomSignedDistance(1e-1f, 3.f);
@@ -41,11 +43,9 @@ class RangeImage2DIntersectorTest : public FixtureBase {
                 projection_model.getDimensions().cast<FloatingPoint>())
             .minCoeff() /
         (2.f * 6.f);
-    config.angle_sigma = random_number_generator_->getRandomRealNumber(
-        max_angle_sigma_without_overlap / 10.f,
-        max_angle_sigma_without_overlap);
-    config.range_sigma =
-        random_number_generator_->getRandomRealNumber(1e-3f, 5e-2f);
+    config.angle_sigma = getRandomFloat(max_angle_sigma_without_overlap / 10.f,
+                                        max_angle_sigma_without_overlap);
+    config.range_sigma = getRandomFloat(1e-3f, 5e-2f);
     return config;
   }
 

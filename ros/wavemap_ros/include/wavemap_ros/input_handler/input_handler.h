@@ -25,13 +25,13 @@ struct InputHandlerConfig : public ConfigBase<InputHandlerConfig, 9> {
   std::string topic_name = "scan";
   int topic_queue_length = 10;
 
-  float processing_retry_period = 0.05f;
-  float max_wait_for_pose = 1.f;
+  FloatingPoint processing_retry_period = 0.05f;
+  FloatingPoint max_wait_for_pose = 1.f;
 
   std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
   std::string image_transport_hints = "raw";
-  float depth_scale_factor = 1.f;
-  float time_delay = 0.f;
+  FloatingPoint depth_scale_factor = 1.f;
+  FloatingPoint time_delay = 0.f;
 
   std::string reprojected_topic_name;  // Leave blank to disable
 

@@ -8,6 +8,11 @@ DECLARE_CONFIG_MEMBERS(VolumetricDataStructureConfig,
                        (max_log_odds));
 
 bool VolumetricDataStructureConfig::isValid(bool verbose) const {
-  return IS_PARAM_GT(min_cell_width, 0.f, verbose);
+  bool is_valid = true;
+
+  is_valid &= IS_PARAM_GT(min_cell_width, 0.f, verbose);
+  is_valid &= IS_PARAM_LT(min_log_odds, max_log_odds, verbose);
+
+  return is_valid;
 }
 }  // namespace wavemap

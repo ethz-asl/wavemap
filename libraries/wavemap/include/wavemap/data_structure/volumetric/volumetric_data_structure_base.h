@@ -38,8 +38,12 @@ struct VolumetricDataStructureConfig
 
   // Constructors
   VolumetricDataStructureConfig() = default;
-  VolumetricDataStructureConfig(FloatingPoint min_cell_width)  // NOLINT
-      : min_cell_width(min_cell_width) {}
+  VolumetricDataStructureConfig(FloatingPoint min_cell_width,
+                                FloatingPoint min_log_odds,
+                                FloatingPoint max_log_odds)
+      : min_cell_width(min_cell_width),
+        min_log_odds(min_log_odds),
+        max_log_odds(max_log_odds) {}
 
   bool isValid(bool verbose) const override;
 };
@@ -66,10 +70,9 @@ class VolumetricDataStructureBase {
   }
   virtual void clear() = 0;
 
-  virtual const VolumetricDataStructureConfig& getConfig() const {
-    return config_;
-  }
   FloatingPoint getMinCellWidth() const { return config_.min_cell_width; }
+  FloatingPoint getMinLogOdds() const { return config_.min_log_odds; }
+  FloatingPoint getMaxLogOdds() const { return config_.max_log_odds; }
   virtual size_t getMemoryUsage() const = 0;
 
   virtual Index3D getMinIndex() const = 0;

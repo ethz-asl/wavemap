@@ -19,66 +19,19 @@
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
 #include "wavemap/iterator/grid_iterator.h"
+#include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
-class PointcloudIntegratorTest : public FixtureBase {
+class PointcloudIntegratorTest : public FixtureBase,
+                                 public GeometryGenerator,
+                                 public ConfigGenerator {
  protected:
-  RayTracingIntegratorConfig getRandomRayTracingIntegratorConfig() {
-    RayTracingIntegratorConfig config;
-    config.min_range = getRandomSignedDistance(0.2f, 3.f);
-    config.max_range = getRandomSignedDistance(config.min_range, 20.f);
-    return config;
-  }
-
-  ProjectiveIntegratorConfig getRandomProjectiveIntegratorConfig() {
-    ProjectiveIntegratorConfig config;
-    config.min_range = getRandomSignedDistance(0.2f, 3.f);
-    config.max_range = getRandomSignedDistance(config.min_range, 20.f);
-    return config;
-  }
-
-  VolumetricDataStructureConfig getRandomVolumetricDataStructureConfig() {
-    const FloatingPoint min_cell_width = getRandomMinCellWidth(0.05f, 1.f);
-    return VolumetricDataStructureConfig{min_cell_width};
-  }
-
-  std::shared_ptr<SphericalProjector> getRandomProjectionModel() {
-    const FloatingPoint min_elevation_angle = getRandomAngle(-kQuarterPi, 0.f);
-    const FloatingPoint max_elevation_angle =
-        getRandomAngle(min_elevation_angle + kPi / 8.f, kQuarterPi);
-    const FloatingPoint min_azimuth_angle = -kPi;
-    const FloatingPoint max_azimuth_angle = kPi;
-    const int num_rows = int_math::exp2(getRandomIndexElement(4, 6));
-    const int num_cols = int_math::exp2(getRandomIndexElement(7, 10));
-    return std::make_shared<SphericalProjector>(SphericalProjectorConfig{
-        {min_elevation_angle, max_elevation_angle, num_rows},
-        {min_azimuth_angle, max_azimuth_angle, num_cols}});
-  }
-
-  ContinuousBeamConfig getRandomMeasurementModelConfig(
-      const SphericalProjector& projection_model) {
-    ContinuousBeamConfig config;
-    const FloatingPoint max_angle_sigma_without_overlap =
-        (projection_model.getMaxImageCoordinates() -
-         projection_model.getMinImageCoordinates())
-            .cwiseQuotient(
-                projection_model.getDimensions().cast<FloatingPoint>())
-            .minCoeff() /
-        (2.f * 6.f);
-    config.angle_sigma = random_number_generator_->getRandomRealNumber(
-        max_angle_sigma_without_overlap / 10.f,
-        max_angle_sigma_without_overlap);
-    config.range_sigma =
-        random_number_generator_->getRandomRealNumber(5e-3f, 1e-1f);
-    return config;
-  }
-
   PosedPointcloud<> getRandomPointcloud(
       const SphericalProjector& projection_model,
-      FloatingPoint min_distance = 0.f,
-      FloatingPoint max_distance = 30.f) const {
+      FloatingPoint min_distance = 0.f, FloatingPoint max_distance = 30.f) {
     CHECK_LT(min_distance, max_distance);
 
     Pointcloud<> pointcloud;
@@ -125,16 +78,18 @@ TYPED_TEST(PointcloudIntegratorTypedTest,
   constexpr int kNumPointclouds = 10;
   for (int idx = 0; idx < kNumRepetitions; ++idx) {
     const auto projective_integrator_config =
-        TestFixture::getRandomProjectiveIntegratorConfig();
-    const auto data_structure_config =
-        TestFixture::getRandomVolumetricDataStructureConfig();
-    const auto projection_model = TestFixture::getRandomProjectionModel();
+        ConfigGenerator::getRandomConfig<ProjectiveIntegratorConfig>();
+    const auto data_structure_config = ConfigGenerator::getRandomConfig<
+        typename TypeParam::DataStructureType::Config>();
+    const auto projection_model = std::make_shared<SphericalProjector>(
+        ConfigGenerator::getRandomConfig<SphericalProjectorConfig>());
     const auto posed_range_image =
         std::make_shared<PosedImage<>>(projection_model->getDimensions());
     const auto beam_offset_image =
         std::make_shared<Image<Vector2D>>(projection_model->getDimensions());
     const auto measurement_model = std::make_shared<ContinuousBeam>(
-        TestFixture::getRandomMeasurementModelConfig(*projection_model),
+        ConfigGenerator::getRandomConfig<ContinuousBeamConfig>(
+            *projection_model),
         projection_model, posed_range_image, beam_offset_image);
 
     VolumetricDataStructureBase::Ptr reference_occupancy_map =
@@ -193,9 +148,11 @@ TYPED_TEST(PointcloudIntegratorTypedTest,
 TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
   for (int idx = 0; idx < 3; ++idx) {
     const auto ray_tracing_integrator_config =
-        getRandomRayTracingIntegratorConfig();
-    const auto data_structure_config = getRandomVolumetricDataStructureConfig();
-    const auto projection_model = getRandomProjectionModel();
+        getRandomConfig<RayTracingIntegratorConfig>();
+    const auto data_structure_config =
+        getRandomConfig<VolumetricDataStructureConfig>();
+    const auto projection_model =
+        SphericalProjector(getRandomConfig<SphericalProjectorConfig>());
     const FloatingPoint min_cell_width_inv =
         1.f / data_structure_config.min_cell_width;
 
@@ -205,10 +162,10 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
     constexpr FloatingPoint kMaxDistance = 200.f;
     const FloatingPoint min_distance =
         data_structure_config.min_cell_width *
-        projection_model->getDimensions()
+        projection_model.getDimensions()
             .cast<FloatingPoint>()
-            .cwiseQuotient(projection_model->getMaxImageCoordinates() -
-                           projection_model->getMinImageCoordinates())
+            .cwiseQuotient(projection_model.getMaxImageCoordinates() -
+                           projection_model.getMinImageCoordinates())
             .maxCoeff();
     if (kMaxDistance <= min_distance) {
       --idx;
@@ -217,7 +174,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
 
     // Generate a random point cloud and save its end points in a hashed set
     const PosedPointcloud<> random_pointcloud =
-        getRandomPointcloud(*projection_model, min_distance, kMaxDistance);
+        getRandomPointcloud(projection_model, min_distance, kMaxDistance);
     std::unordered_set<Index3D, IndexHash<3>> ray_end_points;
     for (const auto& end_point : random_pointcloud.getPointsGlobal()) {
       const Index3D index =

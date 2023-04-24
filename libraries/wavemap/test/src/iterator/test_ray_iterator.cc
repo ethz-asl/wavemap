@@ -3,11 +3,12 @@
 #include "wavemap/common.h"
 #include "wavemap/iterator/ray_iterator.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 template <typename TypeParamT>
-using RayIteratorTest = FixtureBase;
+class RayIteratorTest : public FixtureBase, public GeometryGenerator {};
 
 template <int dim>
 struct TypeParamTemplate {
@@ -40,8 +41,8 @@ TYPED_TEST(RayIteratorTest, IterationOrderAndCompleteness) {
   }
   // Fill the rest of the vector with random rays
   std::generate_n(test_rays.end(), kNumTestRays - test_rays.size(), [this]() {
-    return TestRay{TestFixture::template getRandomPoint<kDim>(),
-                   TestFixture::template getRandomTranslation<kDim>()};
+    return TestRay{GeometryGenerator::getRandomPoint<kDim>(),
+                   GeometryGenerator::getRandomTranslation<kDim>()};
   });
 
   for (const auto& test_ray : test_rays) {

@@ -248,10 +248,10 @@ TEST_F(BitManipulationTest, RepeatBlock) {
 
 TEST_F(BitManipulationTest, ExpandCompress) {
   for (uint64_t idx = 0u; idx < (1 << 20); ++idx) {
-    const uint64_t source = random_number_generator_->getRandomInteger(
-        0ul, std::numeric_limits<uint64_t>::max());
-    const uint64_t selector = random_number_generator_->getRandomInteger(
-        0ul, std::numeric_limits<uint64_t>::max());
+    const uint64_t source =
+        getRandomInteger(0ul, std::numeric_limits<uint64_t>::max());
+    const uint64_t selector =
+        getRandomInteger(0ul, std::numeric_limits<uint64_t>::max());
     const uint64_t num_bits = bit_manip::popcount(selector);
     const uint64_t source_truncated = source & ((1ull << num_bits) - 1);
     const uint64_t expanded = bit_manip::expand(source, selector);

@@ -28,14 +28,6 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
 
  private:
   using BlockList = std::vector<OctreeIndex>;
-  struct StackElement {
-    HashedChunkedWaveletOctree::NodeChunkType& parent_chunk;
-    const OctreeIndex parent_node_index;
-    NdtreeIndexRelativeChild next_child_idx;
-    HashedChunkedWaveletOctree::Coefficients::CoefficientsArray
-        child_scale_coefficients;
-    bool has_nonzero_child;
-  };
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
   ThreadPool thread_pool_;
@@ -47,8 +39,8 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
       constants<FloatingPoint>::kSqrt3 / 2.f;
   const FloatingPoint min_cell_width_ = occupancy_map_->getMinCellWidth();
   const FloatingPoint min_cell_width_inv_ = 1.f / min_cell_width_;
-  const FloatingPoint min_log_odds_ = occupancy_map_->getConfig().min_log_odds;
-  const FloatingPoint max_log_odds_ = occupancy_map_->getConfig().max_log_odds;
+  const FloatingPoint min_log_odds_ = occupancy_map_->getMinLogOdds();
+  const FloatingPoint max_log_odds_ = occupancy_map_->getMaxLogOdds();
   const FloatingPoint min_log_odds_padded_ = min_log_odds_ - kNoiseThreshold;
   const FloatingPoint min_log_odds_shrunk_ = min_log_odds_ + kNoiseThreshold;
   const FloatingPoint max_log_odds_padded_ = max_log_odds_ + kNoiseThreshold;

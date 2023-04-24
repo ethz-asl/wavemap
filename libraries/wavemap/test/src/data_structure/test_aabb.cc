@@ -3,11 +3,12 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/aabb.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 template <typename PointT>
-using AabbTest = FixtureBase;
+class AabbTest : public FixtureBase, public GeometryGenerator {};
 
 // TODO(victorr): Template AABB class and tests directly on dim instead
 using PointTypes = ::testing::Types<Point2D, Point3D>;
@@ -15,7 +16,7 @@ TYPED_TEST_SUITE(AabbTest, PointTypes, );
 
 TYPED_TEST(AabbTest, InitializationAndInclusion) {
   for (const auto& random_point :
-       TestFixture::template getRandomPointVector<dim_v<TypeParam>>()) {
+       GeometryGenerator::getRandomPointVector<dim_v<TypeParam>>()) {
     AABB<TypeParam> aabb;
     EXPECT_FALSE(aabb.containsPoint(random_point))
         << "The uninitialized AABB should be empty.";

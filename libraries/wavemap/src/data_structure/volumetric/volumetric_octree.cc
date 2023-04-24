@@ -1,6 +1,20 @@
 #include "wavemap/data_structure/volumetric/volumetric_octree.h"
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(VolumetricOctreeConfig,
+                       (min_cell_width, SiUnit::kMeters), (min_log_odds),
+                       (max_log_odds), (tree_height));
+
+bool VolumetricOctreeConfig::isValid(bool verbose) const {
+  bool is_valid = true;
+
+  is_valid &= IS_PARAM_GT(min_cell_width, 0.f, verbose);
+  is_valid &= IS_PARAM_LT(min_log_odds, max_log_odds, verbose);
+  is_valid &= IS_PARAM_GT(tree_height, 0, verbose);
+
+  return is_valid;
+}
+
 void VolumetricOctree::threshold() {
   LOG(WARNING) << "Pure thresholding is not implemented for VolumetricOctrees. "
                   "Will prune instead.";
@@ -94,9 +108,15 @@ Index3D VolumetricOctree::getMaxIndex() const {
 
 void VolumetricOctree::forEachLeaf(
     VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
+  struct StackElement {
+    const OctreeIndex node_index;
+    const NodeType& node;
+    const FloatingPoint parent_value{};
+  };
   std::stack<StackElement> stack;
   stack.emplace(
       StackElement{getInternalRootNodeIndex(), ndtree_.getRootNode(), 0.f});
+
   while (!stack.empty()) {
     const OctreeIndex node_index = stack.top().node_index;
     const NodeType& node = stack.top().node;
