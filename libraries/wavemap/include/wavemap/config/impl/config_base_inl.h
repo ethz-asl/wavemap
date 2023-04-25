@@ -4,11 +4,10 @@
 #include <string>
 
 #include <boost/preprocessor/comma_if.hpp>
-#include <boost/preprocessor/comparison/equal.hpp>
-#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/comparison/greater.hpp>
+#include <boost/preprocessor/control/expr_iif.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
-#include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/preprocessor/seq/size.hpp>
 #include <boost/preprocessor/seq/variadic_seq_to_seq.hpp>
 #include <boost/preprocessor/stringize.hpp>
@@ -19,9 +18,10 @@ namespace wavemap {
 #define MEMBER_NAME_FROM_TUPLE(member_name_tuple) \
   BOOST_PP_TUPLE_ELEM(0, member_name_tuple)
 
-#define MEMBER_UNIT_FROM_TUPLE(member_name_tuple)                         \
-  BOOST_PP_IIF(BOOST_PP_EQUAL(BOOST_PP_TUPLE_SIZE(member_name_tuple), 2), \
-               BOOST_PP_TUPLE_ELEM(1, member_name_tuple), BOOST_PP_EMPTY())
+#define MEMBER_UNIT_FROM_TUPLE(member_name_tuple)                  \
+  BOOST_PP_EXPR_IIF(                                               \
+      BOOST_PP_GREATER(BOOST_PP_TUPLE_SIZE(member_name_tuple), 1), \
+      BOOST_PP_TUPLE_ELEM(1, member_name_tuple))
 
 #define ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED(r, class_name,      \
                                                member_name_tuple)  \
@@ -46,17 +46,15 @@ namespace wavemap {
   BOOST_PP_SEQ_FOR_EACH(ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED, class_name,   \
                         BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence))
 
-#define APPEND_CONFIG_MEMBER_METADATA(r, class_name, i, member_name_tuple)     \
-  BOOST_PP_COMMA_IF(i) MemberMetadata {                                        \
-    BOOST_PP_STRINGIZE(MEMBER_NAME_FROM_TUPLE(member_name_tuple)),             \
-                       &class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple), \
-                       MEMBER_UNIT_FROM_TUPLE(member_name_tuple)               \
-  }
+#define APPEND_CONFIG_MEMBER_METADATA(r, class_name, member_name_tuple) \
+  MemberMetadata{BOOST_PP_STRINGIZE(MEMBER_NAME_FROM_TUPLE(member_name_tuple)),                       \
+      &class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple),           \
+      MEMBER_UNIT_FROM_TUPLE(member_name_tuple)},
 
-#define GENERATE_CONFIG_MEMBER_MAP(class_name, member_sequence)            \
-  class_name::MemberMap class_name::memberMap {                            \
-    BOOST_PP_SEQ_FOR_EACH_I(APPEND_CONFIG_MEMBER_METADATA, class_name,     \
-                            BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence)) \
+#define GENERATE_CONFIG_MEMBER_MAP(class_name, member_sequence)          \
+  class_name::MemberMap class_name::memberMap {                          \
+    BOOST_PP_SEQ_FOR_EACH(APPEND_CONFIG_MEMBER_METADATA, class_name,     \
+                          BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence)) \
   }
 
 #define DECLARE_CONFIG_MEMBERS(class_name, member_sequence)             \

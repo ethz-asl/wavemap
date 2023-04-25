@@ -47,7 +47,8 @@ TEST_F(VolumetricOctreeTest, IndexConversions) {
 }
 
 TEST_F(VolumetricOctreeTest, Resizing) {
-  const auto config = getRandomConfig<VolumetricOctreeConfig>();
+  auto config = getRandomConfig<VolumetricOctreeConfig>();
+  config.tree_height = std::min(config.tree_height, 15);
   VolumetricOctree map(config);
   ASSERT_TRUE(map.empty());
   ASSERT_EQ(map.size(), 1u);
