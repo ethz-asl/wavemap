@@ -14,6 +14,8 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
+  FLAGS_alsologtostderr = true;
+  FLAGS_colorlogtostderr = true;
 
   // Setup the wavemap server node
   ros::NodeHandle nh;

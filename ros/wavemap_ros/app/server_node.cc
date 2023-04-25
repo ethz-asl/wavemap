@@ -8,6 +8,8 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
+  FLAGS_alsologtostderr = true;
+  FLAGS_colorlogtostderr = true;
 
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");

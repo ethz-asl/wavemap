@@ -26,7 +26,7 @@
 
     <node name="wavemap" pkg="wavemap_ros"
           type="wavemap_rosbag_processor"
-          output="screen" args="-alsologtostderr"
+          output="screen"
           required="$(arg exit_when_done)"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>

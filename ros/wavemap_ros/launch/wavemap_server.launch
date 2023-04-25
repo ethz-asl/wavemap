@@ -34,7 +34,7 @@
 
     <node name="wavemap" pkg="wavemap_ros"
           type="wavemap_server_node"
-          output="screen" args="-alsologtostderr"
+          output="screen"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
     </node>
