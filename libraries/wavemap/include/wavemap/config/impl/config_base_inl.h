@@ -12,16 +12,12 @@
 #include <boost/preprocessor/seq/variadic_seq_to_seq.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/tuple/rem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
 
 namespace wavemap {
 #define MEMBER_NAME_FROM_TUPLE(member_name_tuple) \
   BOOST_PP_TUPLE_ELEM(0, member_name_tuple)
-
-#define MEMBER_UNIT_FROM_TUPLE(member_name_tuple)                  \
-  BOOST_PP_EXPR_IIF(                                               \
-      BOOST_PP_GREATER(BOOST_PP_TUPLE_SIZE(member_name_tuple), 1), \
-      BOOST_PP_TUPLE_ELEM(1, member_name_tuple))
 
 #define ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED(r, class_name,      \
                                                member_name_tuple)  \
@@ -47,9 +43,9 @@ namespace wavemap {
                         BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence))
 
 #define APPEND_CONFIG_MEMBER_METADATA(r, class_name, member_name_tuple) \
-  MemberMetadata{BOOST_PP_STRINGIZE(MEMBER_NAME_FROM_TUPLE(member_name_tuple)),                       \
-      &class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple),           \
-      MEMBER_UNIT_FROM_TUPLE(member_name_tuple)},
+  MemberMetadata{                                                       \
+      BOOST_PP_STRINGIZE(MEMBER_NAME_FROM_TUPLE(member_name_tuple)),    \
+                         &class_name::BOOST_PP_TUPLE_REM() member_name_tuple},
 
 #define GENERATE_CONFIG_MEMBER_MAP(class_name, member_sequence)          \
   class_name::MemberMap class_name::memberMap {                          \
