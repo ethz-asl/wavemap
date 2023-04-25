@@ -76,12 +76,6 @@ void DepthImageInputHandler::processQueue() {
     cv::cv2eigen<FloatingPoint>(cv_image->image, posed_range_image.getData());
     posed_range_image.setPose(T_W_C);
 
-    // Reproject if enabled
-    if (isReprojectionEnabled()) {
-      const auto posed_pointcloud = reproject(posed_range_image);
-      publishReprojected(stamp, posed_pointcloud);
-    }
-
     // Integrate the depth image
     ROS_INFO_STREAM("Inserting depth image with "
                     << EigenFormat::oneLine(posed_range_image.getDimensions())
@@ -97,6 +91,22 @@ void DepthImageInputHandler::processQueue() {
                     << "s. Total integration time: "
                     << integration_timer_.getTotalWallTime() << "s.");
 
+    // Publish debugging visualizations
+    if (shouldPublishReprojectedPointcloud()) {
+      const auto posed_pointcloud = reproject(posed_range_image);
+      publishReprojectedPointcloud(stamp, posed_pointcloud);
+    }
+    if (shouldPublishProjectedRangeImage()) {
+      auto projective_integrator =
+          std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
+      if (projective_integrator) {
+        const auto& range_image = projective_integrator->getPosedRangeImage();
+        if (range_image) {
+          publishProjectedRangeImage(stamp, *range_image);
+        }
+      }
+    }
+
     // Remove the depth image from the queue
     depth_image_queue_.pop();
   }
@@ -104,17 +114,22 @@ void DepthImageInputHandler::processQueue() {
 
 PosedPointcloud<> DepthImageInputHandler::reproject(
     const PosedImage<>& posed_range_image) {
-  CHECK_NOTNULL(projection_model_);
+  auto projective_integrator =
+      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
+  if (!projective_integrator) {
+    return {};
+  }
+  const auto& projection_model = projective_integrator->getProjectionModel();
 
   std::vector<Point3D> pointcloud;
   pointcloud.reserve(posed_range_image.size());
   for (const Index2D& index :
        Grid<2>(Index2D::Zero(),
                posed_range_image.getDimensions() - Index2D::Ones())) {
-    const Vector2D image_xy = projection_model_->indexToImage(index);
+    const Vector2D image_xy = projection_model->indexToImage(index);
     const FloatingPoint image_z = posed_range_image.at(index);
     const Point3D C_point =
-        projection_model_->sensorToCartesian(image_xy, image_z);
+        projection_model->sensorToCartesian(image_xy, image_z);
     pointcloud.emplace_back(C_point);
   }
 

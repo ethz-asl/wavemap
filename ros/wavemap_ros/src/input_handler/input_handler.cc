@@ -1,8 +1,11 @@
 #include "wavemap_ros/input_handler/input_handler.h"
 
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/core/eigen.hpp>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
+#include <wavemap/integrator/integrator_factory.h>
 #include <wavemap/integrator/projective/projective_integrator.h>
 
 namespace wavemap {
@@ -15,7 +18,8 @@ DECLARE_CONFIG_MEMBERS(InputHandlerConfig,
                       (image_transport_hints)
                       (depth_scale_factor)
                       (time_delay, SiUnit::kSeconds)
-                      (reprojected_topic_name));
+                      (reprojected_pointcloud_topic_name)
+                      (projected_range_image_topic_name));
 
 bool InputHandlerConfig::isValid(bool verbose) const {
   bool all_valid = true;
@@ -50,31 +54,27 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
     integrators_.emplace_back(std::move(integrator));
   }
 
-  // Get the projection model (if the integrator uses one)
-  auto scanwise_integrator =
-      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
-  if (scanwise_integrator) {
-    projection_model_ = scanwise_integrator->getProjectionModel();
-  }
-
   // Start the queue processing retry timer
   queue_processing_retry_timer_ =
       nh.createTimer(ros::Duration(config_.processing_retry_period),
                      [this](const auto& /*event*/) { processQueue(); });
 
   // Advertise the reprojected pointcloud publisher if enabled
-  if (!config_.reprojected_topic_name.empty()) {
-    reprojection_pub_ = nh_private.advertise<sensor_msgs::PointCloud2>(
-        config_.reprojected_topic_name, config_.topic_queue_length);
+  if (!config_.reprojected_pointcloud_topic_name.empty()) {
+    reprojected_pointcloud_pub_ =
+        nh_private.advertise<sensor_msgs::PointCloud2>(
+            config_.reprojected_pointcloud_topic_name,
+            config_.topic_queue_length);
+  }
+  if (!config_.projected_range_image_topic_name.empty()) {
+    image_transport::ImageTransport it_private(nh_private);
+    projected_range_image_pub_ = it_private.advertise(
+        config_.projected_range_image_topic_name, config_.topic_queue_length);
   }
 }
 
-void InputHandler::publishReprojected(
+void InputHandler::publishReprojectedPointcloud(
     const ros::Time& stamp, const PosedPointcloud<>& posed_pointcloud) {
-  if (!isReprojectionEnabled()) {
-    return;
-  }
-
   sensor_msgs::PointCloud pointcloud_msg;
   pointcloud_msg.header.stamp = stamp;
   pointcloud_msg.header.frame_id = world_frame_;
@@ -89,6 +89,15 @@ void InputHandler::publishReprojected(
 
   sensor_msgs::PointCloud2 pointcloud2_msg;
   sensor_msgs::convertPointCloudToPointCloud2(pointcloud_msg, pointcloud2_msg);
-  reprojection_pub_.publish(pointcloud2_msg);
+  reprojected_pointcloud_pub_.publish(pointcloud2_msg);
+}
+
+void InputHandler::publishProjectedRangeImage(const ros::Time& stamp,
+                                              const Image<>& range_image) {
+  cv_bridge::CvImage cv_image;
+  cv_image.header.stamp = stamp;
+  cv_image.encoding = "32FC1";
+  cv::eigen2cv(range_image.getData(), cv_image.image);
+  projected_range_image_pub_.publish(cv_image.toImageMsg());
 }
 }  // namespace wavemap

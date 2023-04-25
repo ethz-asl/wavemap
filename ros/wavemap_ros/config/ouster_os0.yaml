@@ -14,6 +14,8 @@ inputs:
       topic_name: "/os_cloud_node/points_corrected"
       topic_queue_length: 10
       max_wait_for_pose: { seconds: 1.0 }
+      # reprojected_pointcloud_topic_name: "/wavemap/reprojected_pointcloud"
+      # projected_range_image_topic_name: "/wavemap/projected_range_image"
     integrators:
       - integration_method:
           type: "hashed_chunked_wavelet_integrator"

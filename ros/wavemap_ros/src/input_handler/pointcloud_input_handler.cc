@@ -1,6 +1,7 @@
 #include "wavemap_ros/input_handler/pointcloud_input_handler.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <wavemap/integrator/projective/projective_integrator.h>
 
 namespace wavemap {
 PointcloudInputHandler::PointcloudInputHandler(
@@ -71,11 +72,6 @@ void PointcloudInputHandler::processQueue() {
     }
     const PosedPointcloud<> posed_pointcloud(T_W_C, t_C_points);
 
-    // Reproject if enabled
-    if (isReprojectionEnabled()) {
-      publishReprojected(oldest_msg.header.stamp, posed_pointcloud);
-    }
-
     // Integrate the pointcloud
     ROS_INFO_STREAM("Inserting pointcloud with "
                     << t_C_points.size()
@@ -90,6 +86,21 @@ void PointcloudInputHandler::processQueue() {
                     << integration_timer_.getLastEpisodeWallTime()
                     << "s. Total integration time: "
                     << integration_timer_.getTotalWallTime() << "s.");
+
+    // Publish debugging visualizations
+    if (shouldPublishReprojectedPointcloud()) {
+      publishReprojectedPointcloud(oldest_msg.header.stamp, posed_pointcloud);
+    }
+    if (shouldPublishProjectedRangeImage()) {
+      auto projective_integrator =
+          std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
+      if (projective_integrator) {
+        const auto& range_image = projective_integrator->getPosedRangeImage();
+        if (range_image) {
+          publishProjectedRangeImage(oldest_msg.header.stamp, *range_image);
+        }
+      }
+    }
 
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();
