@@ -1,18 +1,19 @@
 map:
-  world_frame: "map"
-  thresholding_period: { seconds: 2.0 }
-  pruning_period: { seconds: 10.0 }
-  visualization_period: { seconds: 2.0 }
+  general:
+    world_frame: "map"
+    thresholding_period: { seconds: 2.0 }
+    pruning_period: { seconds: 10.0 }
+    visualization_period: { seconds: 2.0 }
   data_structure:
     type: "hashed_chunked_wavelet_octree"
     min_cell_width: { meters: 0.05 }
-    max_height: 14
 
 inputs:
   - type: "pointcloud"
-    topic_name: "/os_cloud_node/points_corrected"
-    topic_queue_length: 10
-    max_wait_for_pose: { seconds: 1.0 }
+    general:
+      topic_name: "/os_cloud_node/points_corrected"
+      topic_queue_length: 10
+      max_wait_for_pose: { seconds: 1.0 }
     integrators:
       - integration_method:
           type: "hashed_chunked_wavelet_integrator"

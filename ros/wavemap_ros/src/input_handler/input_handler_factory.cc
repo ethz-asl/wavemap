@@ -38,7 +38,17 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private) {
   // Load the input handler config
-  const auto input_handler_config = InputHandlerConfig::from(params);
+  if (!param::map::hasKey(params, "general")) {
+    LOG(ERROR) << "Integrator params must have section named \"general\".";
+    return nullptr;
+  }
+  if (!param::map::keyHoldsValue<param::Map>(params, "general")) {
+    LOG(ERROR) << "Integrator param key \"general\" must contain a map "
+                  "(dictionary) of parameters.";
+    return nullptr;
+  }
+  const auto input_handler_config = InputHandlerConfig::from(
+      param::map::keyGetValue<param::Map>(params, "general"));
 
   // Create the input handler
   switch (input_handler_type.toTypeId()) {

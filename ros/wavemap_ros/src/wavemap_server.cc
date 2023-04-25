@@ -29,8 +29,8 @@ bool WavemapServerConfig::isValid(bool verbose) const {
 
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
     : WavemapServer(nh, nh_private,
-                    WavemapServerConfig::from(
-                        param::convert::toParamMap(nh_private, "map"))) {}
+                    WavemapServerConfig::from(param::convert::toParamMap(
+                        nh_private, "map/general"))) {}
 
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                              const WavemapServerConfig& config)
