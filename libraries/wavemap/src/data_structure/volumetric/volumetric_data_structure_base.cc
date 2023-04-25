@@ -4,8 +4,9 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(VolumetricDataStructureConfig,
-                       (min_cell_width, SiUnit::kMeters), (min_log_odds),
-                       (max_log_odds));
+                      (min_cell_width, SiUnit::kMeters)
+                      (min_log_odds)
+                      (max_log_odds));
 
 bool VolumetricDataStructureConfig::isValid(bool verbose) const {
   bool is_valid = true;

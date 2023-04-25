@@ -6,12 +6,16 @@
 #include <wavemap/integrator/projective/projective_integrator.h>
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(InputHandlerConfig, (topic_name), (topic_queue_length),
-                       (processing_retry_period, SiUnit::kSeconds),
-                       (max_wait_for_pose, SiUnit::kSeconds), (sensor_frame_id),
-                       (image_transport_hints), (depth_scale_factor),
-                       (time_delay, SiUnit::kSeconds),
-                       (reprojected_topic_name));
+DECLARE_CONFIG_MEMBERS(InputHandlerConfig,
+                      (topic_name)
+                      (topic_queue_length)
+                      (processing_retry_period, SiUnit::kSeconds)
+                      (max_wait_for_pose, SiUnit::kSeconds)
+                      (sensor_frame_id)
+                      (image_transport_hints)
+                      (depth_scale_factor)
+                      (time_delay, SiUnit::kSeconds)
+                      (reprojected_topic_name));
 
 bool InputHandlerConfig::isValid(bool verbose) const {
   bool all_valid = true;

@@ -7,11 +7,13 @@
 #include <boost/preprocessor/comparison/equal.hpp>
 #include <boost/preprocessor/control/iif.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
+#include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/seq/variadic_seq_to_seq.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
-#include <boost/preprocessor/variadic/size.hpp>
-#include <boost/preprocessor/variadic/to_seq.hpp>
+#include <boost/preprocessor/tuple/size.hpp>
 
 namespace wavemap {
 #define MEMBER_NAME_FROM_TUPLE(member_name_tuple) \
@@ -21,47 +23,46 @@ namespace wavemap {
   BOOST_PP_IIF(BOOST_PP_EQUAL(BOOST_PP_TUPLE_SIZE(member_name_tuple), 2), \
                BOOST_PP_TUPLE_ELEM(1, member_name_tuple), BOOST_PP_EMPTY())
 
-// clang-format off
-#define ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED(r, class_name, i,            \
-                                               member_name_tuple)           \
-  static_assert(                                                            \
-      class_name::MemberTypes::contains_t<                                  \
-          decltype(class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple))>, \
+#define ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED(r, class_name,      \
+                                               member_name_tuple)  \
+  static_assert(                                                   \
+      class_name::MemberTypes::contains_t<decltype(                \
+          class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple))>, \
       BOOST_PP_STRINGIZE(                                                   \
           The type of class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple) \
           is not supported by default and has not been announced as a       \
           CustomMemberType. Make sure to include this custom type in the    \
           CustomMemberTypes parameter pack passed to ConfigBase.));
-// clang-format on
 
-#define ASSERT_ALL_CONFIG_MEMBERS_DECLARED(class_name, ...)                   \
+#define ASSERT_ALL_CONFIG_MEMBERS_DECLARED(class_name, member_sequence)       \
   static_assert(                                                              \
-      class_name::kNumMembers == BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),         \
+      class_name::kNumMembers ==                                              \
+          BOOST_PP_SEQ_SIZE(BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence)),   \
       "The number of config members declared through DECLARE_CONFIG_MEMBERS " \
       "must match the number of members announced through the num_members "   \
       "template argument passed to ConfigBase.");
 
-#define ASSERT_ALL_CONFIG_MEMBER_TYPES_SUPPORTED(class_name, ...)             \
-  BOOST_PP_SEQ_FOR_EACH_I(ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED, class_name, \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
+#define ASSERT_ALL_CONFIG_MEMBER_TYPES_SUPPORTED(class_name, member_sequence) \
+  BOOST_PP_SEQ_FOR_EACH(ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED, class_name,   \
+                        BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence))
 
-#define APPEND_CONFIG_MEMBER_METADATA(r, class_name, i, member_name_tuple) \
-  BOOST_PP_COMMA_IF(i) MemberMetadata {                                    \
-    BOOST_PP_STRINGIZE(MEMBER_NAME_FROM_TUPLE(member_name_tuple)),         \
-        &class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple),            \
-        MEMBER_UNIT_FROM_TUPLE(member_name_tuple)                          \
+#define APPEND_CONFIG_MEMBER_METADATA(r, class_name, i, member_name_tuple)     \
+  BOOST_PP_COMMA_IF(i) MemberMetadata {                                        \
+    BOOST_PP_STRINGIZE(MEMBER_NAME_FROM_TUPLE(member_name_tuple)),             \
+                       &class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple), \
+                       MEMBER_UNIT_FROM_TUPLE(member_name_tuple)               \
   }
 
-#define GENERATE_CONFIG_MEMBER_MAP(class_name, ...)                    \
-  class_name::MemberMap class_name::memberMap {                        \
-    BOOST_PP_SEQ_FOR_EACH_I(APPEND_CONFIG_MEMBER_METADATA, class_name, \
-                            BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))     \
+#define GENERATE_CONFIG_MEMBER_MAP(class_name, member_sequence)            \
+  class_name::MemberMap class_name::memberMap {                            \
+    BOOST_PP_SEQ_FOR_EACH_I(APPEND_CONFIG_MEMBER_METADATA, class_name,     \
+                            BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence)) \
   }
 
-#define DECLARE_CONFIG_MEMBERS(class_name, ...)                     \
-  ASSERT_ALL_CONFIG_MEMBERS_DECLARED(class_name, __VA_ARGS__)       \
-  ASSERT_ALL_CONFIG_MEMBER_TYPES_SUPPORTED(class_name, __VA_ARGS__) \
-  GENERATE_CONFIG_MEMBER_MAP(class_name, __VA_ARGS__)
+#define DECLARE_CONFIG_MEMBERS(class_name, member_sequence)             \
+  ASSERT_ALL_CONFIG_MEMBERS_DECLARED(class_name, member_sequence)       \
+  ASSERT_ALL_CONFIG_MEMBER_TYPES_SUPPORTED(class_name, member_sequence) \
+  GENERATE_CONFIG_MEMBER_MAP(class_name, member_sequence)
 
 namespace detail {
 // Loader for PrimitiveValueTypes

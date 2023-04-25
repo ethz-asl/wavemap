@@ -1,8 +1,9 @@
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(RayTracingIntegratorConfig, (min_range, SiUnit::kMeters),
-                       (max_range, SiUnit::kMeters));
+DECLARE_CONFIG_MEMBERS(RayTracingIntegratorConfig,
+                      (min_range, SiUnit::kMeters)
+                      (max_range, SiUnit::kMeters));
 
 bool RayTracingIntegratorConfig::isValid(bool verbose) const {
   bool is_valid = true;

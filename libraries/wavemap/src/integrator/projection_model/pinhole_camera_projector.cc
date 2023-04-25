@@ -43,8 +43,8 @@ AABB<Vector3D> PinholeCameraProjector::cartesianToSensorAABB(
   return sensor_coordinate_aabb;
 }
 
-DECLARE_CONFIG_MEMBERS(PinholeCameraProjectorConfig, (width), (height), (fx),
-                       (fy), (cx), (cy));
+DECLARE_CONFIG_MEMBERS(PinholeCameraProjectorConfig,
+                      (width)(height)(fx)(fy)(cx)(cy));
 
 bool PinholeCameraProjectorConfig::isValid(bool verbose) const {
   bool is_valid = true;

@@ -2,8 +2,10 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(VolumetricOctreeConfig,
-                       (min_cell_width, SiUnit::kMeters), (min_log_odds),
-                       (max_log_odds), (tree_height));
+                      (min_cell_width, SiUnit::kMeters)
+                      (min_log_odds)
+                      (max_log_odds)
+                      (tree_height));
 
 bool VolumetricOctreeConfig::isValid(bool verbose) const {
   bool is_valid = true;

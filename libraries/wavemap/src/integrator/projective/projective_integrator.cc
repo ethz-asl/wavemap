@@ -1,9 +1,11 @@
 #include "wavemap/integrator/projective/projective_integrator.h"
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(ProjectiveIntegratorConfig, (min_range, SiUnit::kMeters),
-                       (max_range, SiUnit::kMeters), (termination_height),
-                       (termination_update_error));
+DECLARE_CONFIG_MEMBERS(ProjectiveIntegratorConfig,
+                      (min_range, SiUnit::kMeters)
+                      (max_range, SiUnit::kMeters)
+                      (termination_height)
+                      (termination_update_error));
 
 bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
   bool is_valid = true;

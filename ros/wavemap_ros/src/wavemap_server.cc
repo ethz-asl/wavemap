@@ -13,10 +13,11 @@
 #include "wavemap_ros/input_handler/input_handler_factory.h"
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(WavemapServerConfig, (world_frame),
-                       (thresholding_period, SiUnit::kSeconds),
-                       (pruning_period, SiUnit::kSeconds),
-                       (visualization_period, SiUnit::kSeconds));
+DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
+                      (world_frame)
+                      (thresholding_period, SiUnit::kSeconds)
+                      (pruning_period, SiUnit::kSeconds)
+                      (visualization_period, SiUnit::kSeconds));
 
 bool WavemapServerConfig::isValid(bool verbose) const {
   bool all_valid = true;

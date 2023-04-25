@@ -92,7 +92,7 @@ AABB<Vector3D> SphericalProjector::cartesianToSensorAABB(
   return sensor_coordinate_aabb;
 }
 
-DECLARE_CONFIG_MEMBERS(SphericalProjectorConfig, (elevation), (azimuth));
+DECLARE_CONFIG_MEMBERS(SphericalProjectorConfig, (elevation)(azimuth));
 
 bool SphericalProjectorConfig::isValid(bool verbose) const {
   return elevation.isValid(verbose) && azimuth.isValid(verbose);

@@ -1,9 +1,11 @@
 #include "wavemap/integrator/measurement_model/continuous_ray.h"
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(ContinuousRayConfig, (range_sigma, SiUnit::kMeters),
-                       (scaling_free), (scaling_occupied),
-                       (beam_selector_type));
+DECLARE_CONFIG_MEMBERS(ContinuousRayConfig,
+                      (range_sigma, SiUnit::kMeters)
+                      (scaling_free)
+                      (scaling_occupied)
+                      (beam_selector_type));
 
 bool ContinuousRayConfig::isValid(bool verbose) const {
   bool is_valid = true;

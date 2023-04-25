@@ -146,7 +146,7 @@ jobs:
       - name: Install pre-commit's dependencies
         run: |
           apt-get update
-          apt-get install -q -y --no-install-recommends git python3-pip clang-format cppcheck libxml2-utils wget
+          apt-get install -q -y --no-install-recommends git python3-pip clang-format-11 cppcheck libxml2-utils wget
           pip3 install pre-commit cpplint
           wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
           chmod +x /bin/hadolint
