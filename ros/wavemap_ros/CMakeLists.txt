@@ -4,6 +4,9 @@ project(wavemap_ros)
 find_package(catkin_simple REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
+# Find OpenCV explicitly to avoid issues on Jetson
+find_package(OpenCV REQUIRED)
+
 # Optional dependencies
 set(OPTIONAL_SRCS "")
 find_package(livox_ros_driver2)
@@ -26,9 +29,11 @@ cs_add_library(${PROJECT_NAME}
     src/input_handler/pointcloud_input_handler.cc
     src/wavemap_server.cc
     ${OPTIONAL_SRCS})
+# Link OpenCV explicitly to avoid issues on Jetson
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 
 # Binaries
-add_executable(wavemap_server_node app/server_node.cc)
+cs_add_executable(wavemap_server_node app/server_node.cc)
 target_link_libraries(wavemap_server_node ${PROJECT_NAME})
 
 cs_add_executable(wavemap_rosbag_processor app/rosbag_processor.cc)
