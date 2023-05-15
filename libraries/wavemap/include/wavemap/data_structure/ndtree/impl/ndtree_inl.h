@@ -11,7 +11,7 @@
 namespace wavemap {
 template <typename NodeDataT, int dim>
 Ndtree<NodeDataT, dim>::Ndtree(int max_height) : max_height_(max_height) {
-  CHECK_LE(max_height_, convert::kMortonMaxTreeHeight<dim>);
+  CHECK_LE(max_height_, morton::kMaxTreeHeight<dim>);
 }
 
 template <typename NodeDataT, int dim>
@@ -101,7 +101,7 @@ template <typename NodeDataT, int dim>
 typename Ndtree<NodeDataT, dim>::NodeType* Ndtree<NodeDataT, dim>::getNode(
     const IndexType& index, bool auto_allocate) {
   NodeType* current_parent = &root_node_;
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   for (int parent_height = max_height_; index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
@@ -125,7 +125,7 @@ template <typename NodeDataT, int dim>
 const typename Ndtree<NodeDataT, dim>::NodeType*
 Ndtree<NodeDataT, dim>::getNode(const IndexType& index) const {
   const NodeType* current_parent = &root_node_;
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   for (int parent_height = max_height_; index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =

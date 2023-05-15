@@ -62,25 +62,25 @@ NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex() const {
 
 template <int dim>
 NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex(
-    MortonCode morton, NdtreeIndex::Element parent_height) {
+    MortonIndex morton, NdtreeIndex::Element parent_height) {
   const Element child_height = parent_height - 1;
-  static constexpr MortonCode kRelativeChildIndexMask = (1 << dim) - 1;
+  static constexpr MortonIndex kRelativeChildIndexMask = (1 << dim) - 1;
   return (morton >> (child_height * dim)) & kRelativeChildIndexMask;
 }
 
 template <int dim>
 LinearIndex NdtreeIndex<dim>::computeLevelTraversalDistance(
-    MortonCode morton, NdtreeIndex::Element parent_height,
+    MortonIndex morton, NdtreeIndex::Element parent_height,
     NdtreeIndex::Element child_height) {
   const Element height_difference = parent_height - child_height;
-  const MortonCode relative_child_index_mask =
-      (static_cast<MortonCode>(1) << (height_difference * dim)) - 1;
+  const MortonIndex relative_child_index_mask =
+      (static_cast<MortonIndex>(1) << (height_difference * dim)) - 1;
   return (morton >> (child_height * dim)) & relative_child_index_mask;
 }
 
 template <int dim>
 LinearIndex NdtreeIndex<dim>::computeTreeTraversalDistance(
-    MortonCode morton, NdtreeIndex::Element parent_height,
+    MortonIndex morton, NdtreeIndex::Element parent_height,
     NdtreeIndex::Element child_height) {
   const Element height_difference = parent_height - child_height;
   const LinearIndex parent_to_first_child_distance =

@@ -81,7 +81,7 @@ void HashedChunkedWaveletIntegrator::updateBlock(
       const auto [new_scale, new_details] =
           HashedChunkedWaveletOctreeBlock::Transform::forward(
               stack.top().child_scale_coefficients);
-      const MortonCode morton_code =
+      const MortonIndex morton_code =
           convert::nodeIndexToMorton(stack.top().parent_node_index);
       const int parent_height = stack.top().parent_node_index.height;
       const int chunk_top_height =
@@ -176,7 +176,7 @@ void HashedChunkedWaveletIntegrator::updateBlock(
     }
 
     // Since the approximation error would still be too big, refine
-    const MortonCode morton_code = convert::nodeIndexToMorton(node_index);
+    const MortonIndex morton_code = convert::nodeIndexToMorton(node_index);
     const int node_height = node_index.height;
     auto& parent_chunk = stack.top().parent_chunk;
     const int parent_height = node_height + 1;

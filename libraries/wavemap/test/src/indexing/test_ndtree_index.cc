@@ -122,7 +122,7 @@ TYPED_TEST(NdtreeIndexTest, LinearOffsets) {
         level_traversal_bfs_distance = 0u;
       }
 
-      const MortonCode morton = convert::nodeIndexToMorton(current_index);
+      const MortonIndex morton = convert::nodeIndexToMorton(current_index);
       EXPECT_EQ(TypeParam::computeLevelTraversalDistance(
                     morton, parent_index.height, current_index.height),
                 level_traversal_bfs_distance);

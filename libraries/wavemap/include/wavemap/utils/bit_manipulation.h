@@ -5,6 +5,8 @@
 
 #if defined(__BMI2__) || defined(__AVX2__)
 #include <immintrin.h>
+#define BIT_EXPAND_AVAILABLE
+#define BIT_COMPRESS_AVAILABLE
 #endif
 
 namespace wavemap::bit_manip {
@@ -31,19 +33,45 @@ inline constexpr uint64_t clz(uint64_t bitstring) {
   return __builtin_clzll(bitstring);
 }
 
-#if defined(__BMI2__) || defined(__AVX2__)
+#ifdef BIT_EXPAND_AVAILABLE
 inline uint32_t expand(uint32_t source, uint32_t selector) {
   return _pdep_u32(source, selector);
 }
 inline uint64_t expand(uint64_t source, uint64_t selector) {
   return _pdep_u64(source, selector);
 }
+#else
+template <typename T>
+T expand(T source, T selector) {
+  static_assert(
+      "Method bit_manip::expand is not available for the current hardware, "
+      "either because it has yet to be implemented or because general-purpose "
+      "bit expansion cannot efficiently be performed/emulated on this "
+      "hardware. For portability, it is recommended to implement case-specific "
+      "fallbacks for bit_manip::expand wherever it is used. These fallbacks "
+      "can be toggled by checking whether the preprocessor variable "
+      "BIT_EXPAND_AVAILABLE is set.");
+}
+#endif
 
+#ifdef BIT_COMPRESS_AVAILABLE
 inline uint32_t compress(uint32_t source, uint32_t selector) {
   return _pext_u32(source, selector);
 }
 inline uint64_t compress(uint64_t source, uint64_t selector) {
   return _pext_u64(source, selector);
+}
+#else
+template <typename T>
+T compress(T source, T selector) {
+  static_assert(
+      "Method bit_manip::compress is not available for the current hardware, "
+      "either because it has yet to be implemented or because general-purpose "
+      "bit compression cannot efficiently be performed/emulated on this "
+      "hardware. For portability, it is recommended to implement case-specific "
+      "fallbacks for bit_manip::compress wherever it is used. These fallbacks "
+      "can be toggled by checking whether the preprocessor variable "
+      "BIT_COMPRESS_AVAILABLE is set.");
 }
 #endif
 }  // namespace detail

@@ -246,6 +246,7 @@ TEST_F(BitManipulationTest, RepeatBlock) {
             0x9249249249249249);
 }
 
+#if defined(BIT_EXPAND_AVAILABLE) && defined(BIT_COMPRESS_AVAILABLE)
 TEST_F(BitManipulationTest, ExpandCompress) {
   for (uint64_t idx = 0u; idx < (1 << 20); ++idx) {
     const uint64_t source =
@@ -265,4 +266,5 @@ TEST_F(BitManipulationTest, ExpandCompress) {
         << std::bitset<64>(source_truncated);
   }
 }
+#endif
 }  // namespace wavemap

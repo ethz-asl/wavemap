@@ -25,7 +25,7 @@ void HashedChunkedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
   setLastUpdatedStamp();
 
   // Descend the tree chunk by chunk while decompressing, and caching chunk ptrs
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   std::array<NodeChunkType*, kMaxChunkStackDepth> chunk_ptrs{};
   chunk_ptrs[0] = &chunked_ndtree_.getRootChunk();
   FloatingPoint current_value = root_scale_coefficient_;
@@ -96,7 +96,7 @@ void HashedChunkedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
   setNeedsThresholding();
   setLastUpdatedStamp();
 
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   std::array<NodeChunkType*, kMaxChunkStackDepth> chunk_ptrs{};
   chunk_ptrs[0] = &chunked_ndtree_.getRootChunk();
   const int last_chunk_depth = (tree_height_ - index.height - 1) / kChunkHeight;
@@ -161,7 +161,7 @@ void HashedChunkedWaveletOctreeBlock::forEachLeaf(
     const FloatingPoint scale_coefficient = stack.top().scale_coefficient;
     stack.pop();
 
-    const MortonCode morton_code = convert::nodeIndexToMorton(index);
+    const MortonIndex morton_code = convert::nodeIndexToMorton(index);
     const int chunk_top_height =
         kChunkHeight * int_math::div_round_up(index.height, kChunkHeight);
     const LinearIndex relative_node_index =
@@ -189,7 +189,8 @@ void HashedChunkedWaveletOctreeBlock::forEachLeaf(
           visitor_fn(child_index, child_scale_coefficient);
         }
       } else {
-        const MortonCode child_morton = convert::nodeIndexToMorton(child_index);
+        const MortonIndex child_morton =
+            convert::nodeIndexToMorton(child_index);
         const LinearIndex relative_child_chunk_index =
             OctreeIndex::computeLevelTraversalDistance(
                 child_morton, chunk_top_height, child_index.height);

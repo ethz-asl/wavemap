@@ -9,6 +9,7 @@
 #include "wavemap/data_structure/aabb.h"
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/utils/int_math.h"
+#include "wavemap/utils/morton_encoding.h"
 
 namespace wavemap::convert {
 // TODO(victorr): Check styleguide on whether these classless methods names
@@ -178,36 +179,17 @@ inline Index<dim> nodeIndexToMaxCornerIndex(
 }
 
 template <int dim>
-constexpr int kMortonMaxTreeHeight = 8 * sizeof(MortonCode) / dim;
-template <int dim>
-constexpr IndexElement kMortonMaxSingleCoordinate =
-    (dim < 3) ? std::numeric_limits<IndexElement>::max()
-              : (1ul << kMortonMaxTreeHeight<dim>)-1ul;
-
-template <int dim>
-MortonCode indexToMorton(const Index<dim>& index) {
-  uint64_t morton = 0u;
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
-  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    DCHECK_GE(index[dim_idx], 0);
-    DCHECK_LE(index[dim_idx], kMortonMaxSingleCoordinate<dim>);
-    morton |= bit_manip::expand<uint64_t>(index[dim_idx], pattern << dim_idx);
-  }
-  return morton;
+MortonIndex indexToMorton(const Index<dim>& index) {
+  return morton::encode<dim>(index);
 }
 
 template <int dim>
-Index<dim> mortonToIndex(MortonCode morton) {
-  Index<dim> index;
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
-  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    index[dim_idx] = bit_manip::compress<uint64_t>(morton, pattern << dim_idx);
-  }
-  return index;
+Index<dim> mortonToIndex(MortonIndex morton) {
+  return morton::decode<dim>(morton);
 }
 
 template <int dim>
-inline MortonCode nodeIndexToMorton(const NdtreeIndex<dim>& node_index) {
+inline MortonIndex nodeIndexToMorton(const NdtreeIndex<dim>& node_index) {
   return convert::indexToMorton(node_index.position)
          << (node_index.height * dim);
 }

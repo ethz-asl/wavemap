@@ -196,7 +196,7 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
       const auto& chunk = stack.top().chunk;
       stack.pop();
 
-      const MortonCode morton_code = convert::nodeIndexToMorton(index);
+      const MortonIndex morton_code = convert::nodeIndexToMorton(index);
       const int chunk_top_height =
           chunk_height * int_math::div_round_up(index.height, chunk_height);
       const LinearIndex relative_node_index =
@@ -225,7 +225,7 @@ wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
         const OctreeIndex child_index =
             index.computeChildIndex(relative_child_idx);
         if (child_index.height % chunk_height == 0) {
-          const MortonCode child_morton =
+          const MortonIndex child_morton =
               convert::nodeIndexToMorton(child_index);
           const LinearIndex linear_child_index =
               OctreeIndex::computeLevelTraversalDistance(

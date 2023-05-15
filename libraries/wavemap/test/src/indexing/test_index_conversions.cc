@@ -143,8 +143,7 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
 
 TYPED_TEST(IndexConversionsTest, MortonCodes) {
   constexpr int kDim = TypeParam::kDim;
-  constexpr IndexElement kMaxCoordinate =
-      convert::kMortonMaxSingleCoordinate<kDim>;
+  constexpr IndexElement kMaxCoordinate = morton::kMaxSingleCoordinate<kDim>;
   auto bitset_printer = [](Index<kDim> index) -> std::string {
     std::ostringstream ss;
     for (int idx = 0; idx < kDim; ++idx) {
@@ -156,7 +155,7 @@ TYPED_TEST(IndexConversionsTest, MortonCodes) {
   const auto random_indices = GeometryGenerator::getRandomIndexVector<kDim>(
       2000, 2000, Index<kDim>::Zero(), Index<kDim>::Constant(kMaxCoordinate));
   for (const auto& index : random_indices) {
-    const MortonCode morton_code = convert::indexToMorton(index);
+    const MortonIndex morton_code = convert::indexToMorton(index);
     const Index<kDim> round_trip_index =
         convert::mortonToIndex<kDim>(morton_code);
     EXPECT_EQ(round_trip_index, index)
@@ -176,7 +175,7 @@ TYPED_TEST(IndexConversionsTest, MortonCodes) {
   for (const auto& [lower, upper] : test_range_bounds) {
     for (size_t idx = lower; idx <= upper; ++idx) {
       index[kDim - 1] = idx;
-      const MortonCode morton_code = convert::indexToMorton(index);
+      const MortonIndex morton_code = convert::indexToMorton(index);
       const Index<kDim> round_trip_index =
           convert::mortonToIndex<kDim>(morton_code);
       EXPECT_EQ(round_trip_index, index)

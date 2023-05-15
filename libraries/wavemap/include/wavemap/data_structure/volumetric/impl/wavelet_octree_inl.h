@@ -41,7 +41,7 @@ inline FloatingPoint WaveletOctree::getCellValue(const Index3D& index) const {
 inline FloatingPoint WaveletOctree::getCellValue(
     const OctreeIndex& index) const {
   const OctreeIndex internal_index = toInternal(index);
-  const MortonCode morton_code = convert::nodeIndexToMorton(internal_index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(internal_index);
   const NodeType* node = &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
   for (int parent_height = config_.tree_height;
@@ -66,7 +66,7 @@ inline void WaveletOctree::setCellValue(const Index3D& index,
 inline void WaveletOctree::setCellValue(const OctreeIndex& index,
                                         FloatingPoint new_value) {
   const OctreeIndex internal_index = toInternal(index);
-  const MortonCode morton_code = convert::nodeIndexToMorton(internal_index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(internal_index);
   std::vector<NodeType*> node_ptrs;
   const int height_difference = config_.tree_height - internal_index.height;
   node_ptrs.reserve(height_difference);
@@ -110,7 +110,7 @@ inline void WaveletOctree::addToCellValue(const Index3D& index,
 inline void WaveletOctree::addToCellValue(const OctreeIndex& index,
                                           FloatingPoint update) {
   const OctreeIndex internal_index = toInternal(index);
-  const MortonCode morton_code = convert::nodeIndexToMorton(internal_index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(internal_index);
 
   std::vector<NodeType*> node_ptrs;
   const int height_difference = config_.tree_height - internal_index.height;

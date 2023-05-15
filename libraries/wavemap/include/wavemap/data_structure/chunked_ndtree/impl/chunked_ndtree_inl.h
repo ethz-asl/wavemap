@@ -112,7 +112,7 @@ std::pair<typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeChunkType*,
           LinearIndex>
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getChunkAndRelativeIndex(
     const ChunkedNdtree::IndexType& index, bool auto_allocate) {
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   const int chunk_top_height =
       chunk_height * int_math::div_round_up(index.height, chunk_height);
 
@@ -147,7 +147,7 @@ std::pair<
     LinearIndex>
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getChunkAndRelativeIndex(
     const ChunkedNdtree::IndexType& index) const {
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   const int chunk_top_height =
       chunk_height * int_math::div_round_up(index.height, chunk_height);
 

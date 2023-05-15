@@ -75,7 +75,7 @@ inline const VolumetricOctree::NodeType*
 VolumetricOctree::getDeepestNodeAtIndex(const Index3D& index) const {
   const OctreeIndex deepest_possible_internal_node_index = toInternal(index);
   const NodeType* node = &ndtree_.getRootNode();
-  const MortonCode morton_code =
+  const MortonIndex morton_code =
       convert::nodeIndexToMorton(deepest_possible_internal_node_index);
   for (int parent_height = config_.tree_height; 0 < parent_height;
        --parent_height) {

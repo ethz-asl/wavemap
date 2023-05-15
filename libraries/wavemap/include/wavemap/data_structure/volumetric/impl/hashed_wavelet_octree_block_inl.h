@@ -10,7 +10,7 @@ inline FloatingPoint HashedWaveletOctreeBlock::getTimeSinceLastUpdated() const {
 
 inline FloatingPoint HashedWaveletOctreeBlock::getCellValue(
     const OctreeIndex& index) const {
-  const MortonCode morton_code = convert::nodeIndexToMorton(index);
+  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   const NodeType* node = &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
   for (int parent_height = tree_height_; index.height < parent_height;
