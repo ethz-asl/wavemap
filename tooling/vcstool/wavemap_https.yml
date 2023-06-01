@@ -22,12 +22,8 @@ repositories:
   minkindr:
     type: git
     url: https://github.com/ethz-asl/minkindr.git
-    version: fix/rotation_2d_templated_type
+    version: master
   minkindr_ros:
     type: git
     url: https://github.com/ethz-asl/minkindr_ros.git
-    version: master
-  opencv3_catkin:
-    type: git
-    url: https://github.com/ethz-asl/opencv3_catkin.git
     version: master

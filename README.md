@@ -1,4 +1,6 @@
 # Wavemap
+![wavemap_cover](https://github.com/ethz-asl/wavemap/assets/6238939/a51bef62-01f3-40f5-a302-cabc59b0eed8)
+
 Wavemap is a hierarchical, multi-resolution occupancy mapping framework. By employing Haar wavelet compression and a hierarchical measurement integration scheme, it achieves both high memory and computational efficiency. Among others, these efficiency improvements make the use of demanding uncertainty-aware sensor models tractable and allow wavemap to achieve exceptional recall rates on challenging obstacles such as thin objects.
 
 The framework is very flexible and supports several data structures, integration schemes, measurement models and projection models out of the box. Inputs can be provided both as point clouds or depth images. Furthermore, any number of inputs with potentially different settings and weights can simultaneously be fused into a single map.
@@ -91,5 +93,3 @@ The basic requirements for running wavemap are:
 2. a source of dense depth or 3D LiDAR data data.
 
 *More instructions coming soon*
-
-# Contributors
