@@ -1,0 +1,30 @@
+<launch>
+  <!-- Wavemap params -->
+  <arg name="param_file"
+       default="$(find wavemap_3d_ros)/config/newer_college/ouster_os0.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
+
+  <!-- Dataset params -->
+  <arg name="only_first_rosbag"
+       default="false"
+       doc="If true, replay only the first the rosbag in the dataset. If false, replay everything."/>
+
+  <!-- Select the rosbag paths -->
+  <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+  <arg if="$(arg only_first_rosbag)" name="rosbag_path"
+       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister/nc-cloister-undistorted_0.bag"/>
+  <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
+../data/wavemap_experiments/newer_college/rosbags/cloister/nc-cloister-undistorted_0.bag
+../data/wavemap_experiments/newer_college/rosbags/cloister/nc-cloister-undistorted_1.bag
+../data/wavemap_experiments/newer_college/rosbags/cloister/nc-cloister-undistorted_2.bag"/>
+
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="static_tf_map_to_odom"
+        args="6.094395235 -56.55157441 1.007275053 0.0104044379 -0.005902411752 0.4140962938 0.9101544752
+              map odom 100"/>
+
+  <!-- Run wavemap -->
+  <include file="$(find wavemap_3d_ros)/launch/datasets/dataset_base.launch"
+           pass_all_args="true"/>
+</launch>

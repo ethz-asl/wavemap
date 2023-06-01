@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>wavemap_common</name>
+  <version>0.0.0</version>
+  <description>Base library for wavemap.</description>
+
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/victorreijgwart/wavemap</url>
+
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>glog_catkin</depend>
+  <depend>eigen_catkin</depend>
+  <depend>minkindr</depend>
+
+  <test_depend>gtest</test_depend>
+</package>

@@ -33,7 +33,7 @@ runs:
         catkin init
         catkin config ${{ inputs.catkin-config-args }}
         echo "::group::Import from-source dependencies with vcstool"
-        vcs import --recursive --input src/wavemap_2d/wavemap_2d_https.yml src
+        vcs import --recursive --input src/wavemap/wavemap_https.yml src
         echo "::endgroup::"
         echo "::group::Install system dependencies with rosdep"
         rosdep update

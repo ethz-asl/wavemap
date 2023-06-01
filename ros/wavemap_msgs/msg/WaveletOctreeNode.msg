@@ -1,0 +1,2 @@
+float32[8] detail_coefficients
+uint8 allocated_children_bitset

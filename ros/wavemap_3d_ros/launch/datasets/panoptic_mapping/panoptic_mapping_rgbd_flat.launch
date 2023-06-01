@@ -1,0 +1,37 @@
+<launch>
+  <!-- Wavemap params -->
+  <arg name="param_file"
+       default="$(find wavemap_3d_ros)/config/panoptic_mapping/rgbd.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
+
+  <!-- Dataset params -->
+  <arg name="base_path"
+       default="../data/wavemap_experiments/panoptic_mapping/dataset/run1"/>
+  <arg name="play_rate" default="1.0"/>
+  <arg name="wait" default="false"/>
+  <arg name="namespace" default="data"/>
+  <arg name="max_frames" default="1000000000"/>
+  <arg name="global_frame_name" default="odom"/>
+  <arg name="sensor_frame_name" default="depth_camera"/>
+
+  <!-- Play the data -->
+  <node pkg="wavemap_3d_ros" type="panoptic_mapping_flat_data_player.py"
+        name="flat_data_player" output="screen">
+    <param name="data_path" value="$(arg base_path)"/>
+    <param name="play_rate" value="$(arg play_rate)"/>
+    <param name="global_frame_name" value="$(arg global_frame_name)"/>
+    <param name="sensor_frame_name" value="$(arg sensor_frame_name)"/>
+    <param name="wait" value="$(arg wait)"/>
+    <param name="max_frames" value="$(arg max_frames)"/>
+
+    <remap from="~color_image" to="$(arg namespace)/color_image"/>
+    <remap from="~depth_image" to="$(arg namespace)/depth_image"/>
+    <remap from="~id_image" to="$(arg namespace)/segmentation_image"/>
+    <remap from="~labels" to="$(arg namespace)/segmentation_labels"/>
+    <remap from="~pose" to="$(arg namespace)/pose"/>
+  </node>
+
+  <!-- Run wavemap -->
+  <include file="$(find wavemap_3d_ros)/launch/wavemap_server.launch"
+           pass_all_args="true"/>
+</launch>
