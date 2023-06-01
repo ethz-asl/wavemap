@@ -1,9 +1,9 @@
 # Wavemap
-Wavemap is a hierarchical, multi-resolution occupancy mapping framework. It employs Haar wavelet compression and a hierarchical measurement integration scheme, resulting in both high memory and computational efficiency. These efficiency enhancements make the use of demanding uncertainty-aware sensor models tractable, allowing wavemap to achieve high accuracy and exceptional recall rates on challenging obstacles such as thin objects.
+Wavemap is a hierarchical, multi-resolution occupancy mapping framework. By employing Haar wavelet compression and a hierarchical measurement integration scheme, it achieves both high memory and computational efficiency. Among others, these efficiency improvements make the use of demanding uncertainty-aware sensor models tractable and allow wavemap to achieve exceptional recall rates on challenging obstacles such as thin objects.
 
-The implementation is very flexible and supports several data structures, integration schemes, measurement models and projection models out of the box. Inputs can be provided both as point clouds or depth images. Furthermore, any number of inputs - possibly each with different settings and weights - can simultaneously be fused into a single map.
+The framework is very flexible and supports several data structures, integration schemes, measurement models and projection models out of the box. Inputs can be provided both as point clouds or depth images. Furthermore, any number of inputs with potentially different settings and weights can simultaneously be fused into a single map.
 
-We test the code both on Intel and ARM. At the moment, only ROS1 is supported, but we would be interested in adding ROS2 support. Please reach out to us by email or by opening a GitHub issue if you are interested in collaborating.
+We test the code both on Intel and ARM. At the moment, only ROS1 is supported, but we would be interested in adding ROS2 support. Please [reach out to us](https://github.com/ethz-asl/wavemap/issues) if you are interested in collaborating.
 
 ## Paper
 When using wavemap for research, please cite the following paper [[preprint](https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/614632/RSS22_WavemapFinalPreprintCompressed.pdf?sequence=1&isAllowed=y)]:
@@ -24,7 +24,7 @@ When using wavemap for research, please cite the following paper [[preprint](htt
 Volumetric maps are widely used in robotics due to their desirable properties in applications such as path planning, exploration, and manipulation. Constant advances in mapping technologies are needed to keep up with the improvements in sensor technology, generating increasingly vast amounts of precise measurements. Handling this data in a computationally and memory-efficient manner is paramount to representing the environment at the desired scales and resolutions. In this work, we express the desirable properties of a volumetric mapping framework through the lens of multi-resolution analysis. This shows that wavelets are a natural foundation for hierarchical and multi-resolution volumetric mapping. Based on this insight we design an efficient mapping system that uses wavelet decomposition. The efficiency of the system enables the use of uncertainty-aware sensor models, improving the quality of the maps. Experiments on both synthetic and real-world data provide mapping accuracy and runtime performance comparisons with state-of-the-art methods on both RGB-D and 3D LiDAR data. The framework is open-sourced to allow the robotics community at large to explore this approach.
 </details>
 
-Note that the code has significantly been improved since the paper was written. In terms of performance, wavemap now includes multi-threaded measurement integrators and faster, more efficient data structures inspired by [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb). We also invested significant effort in improving the framework's usability by extending the ROS interface and making the code more flexible, robust and simpler.
+Note that the code has significantly been improved since the paper was written. In terms of performance, wavemap now includes multi-threaded measurement integrators and faster, more efficient data structures inspired by [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb).
 
 ## Install
 To use wavemap with ROS, we recommend using ROS Noetic as installed following the [standard instructions](http://wiki.ros.org/noetic/Installation). Other ROS1 distributions should also work, but have not yet been tested.
@@ -91,3 +91,5 @@ The basic requirements for running wavemap are:
 2. a source of dense depth or 3D LiDAR data data.
 
 *More instructions coming soon*
+
+# Contributors
