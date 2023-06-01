@@ -1,6 +1,8 @@
 Welcome to wavemap's documentation!
 ===================================
 
+The docs are coming soon.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

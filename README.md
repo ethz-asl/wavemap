@@ -3,7 +3,7 @@
 
 Wavemap is a hierarchical, multi-resolution occupancy mapping framework. By employing Haar wavelet compression and a hierarchical measurement integration scheme, it achieves both high memory and computational efficiency. Among others, these efficiency improvements make the use of demanding uncertainty-aware sensor models tractable and allow wavemap to achieve exceptional recall rates on challenging obstacles such as thin objects.
 
-The framework is very flexible and supports several data structures, integration schemes, measurement models and projection models out of the box. Inputs can be provided both as point clouds or depth images. Furthermore, any number of inputs with potentially different settings and weights can simultaneously be fused into a single map.
+The framework is very flexible and supports several data structures, integration schemes, measurement models and projection models out of the box. Any number of inputs with potentially different settings and weights can simultaneously be fused into a single map.
 
 We test the code both on Intel and ARM. At the moment, only ROS1 is supported, but we would be interested in adding ROS2 support. Please [reach out to us](https://github.com/ethz-asl/wavemap/issues) if you are interested in collaborating.
 
@@ -90,6 +90,6 @@ catkin build wavemap_3d_ros wavemap_rviz_plugin
 #### Your own dataset
 The basic requirements for running wavemap are:
 1. an odometry source, and
-2. a source of dense depth or 3D LiDAR data data.
+2. a source of dense depth or 3D LiDAR data, as either depth images or point clouds.
 
 *More instructions coming soon*
