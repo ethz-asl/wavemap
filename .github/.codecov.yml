@@ -1,0 +1,9 @@
+codecov:
+  branch: develop
+
+comment:
+  layout: "files"
+  behavior: default
+  require_changes: true
+  require_base: true
+  require_head: true

@@ -1,0 +1,102 @@
+<launch>
+  <!-- Dataset params -->
+  <arg name="use_batch_mode"
+       default="false"
+       doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
+  <arg name="anymal_name"
+       default="cerberus"/>
+
+  <!-- Wavemap params -->
+  <arg name="param_file"
+       default="$(find wavemap_ros)/config/subt_finals/vlp16_bpearl.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
+
+  <!-- Select the rosbag paths -->
+  <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
+  <arg if="$(eval anymal_name == 'cerberus')" name="rosbag_path"
+       value="
+../data/wavemap_experiments/darpa_subt_finals/dataset/finals/cerberus/2021-09-23-16-31-51_anymal-cerberus_mission.bag
+../data/wavemap_experiments/darpa_subt_finals/dataset/finals/cerberus/compslam_post_ros1.bag"/>
+  <arg if="$(eval anymal_name == 'chimera')" name="rosbag_path"
+       value="../data/wavemap_experiments/darpa_subt_finals/dataset/finals/chimera/2021-09-23-16-28-04_anymal-chimera_mission.bag"/>
+
+  <!-- Calibrations -->
+  <group if="$(eval anymal_name == 'cerberus')">
+<!--    <node pkg="tf"-->
+<!--          type="static_transform_publisher"-->
+<!--          name="static_tf_base_to_imu_sensor_frame"-->
+<!--          args="-0.327 -0.004 0.206 0.000 0.000 -0.698 0.716-->
+<!--            base imu_sensor_frame 100"/>-->
+<!--    <node pkg="tf"-->
+<!--          type="static_transform_publisher"-->
+<!--          name="static_tf_imu_link_to_imu_sensor_frame"-->
+<!--          args="-0.011 0.578 0.151 0.007 0.007 1.000 -0.013-->
+<!--            imu_link imu_sensor_frame 100"/>-->
+<!--    <node pkg="tf"-->
+<!--          type="static_transform_publisher"-->
+<!--          name="static_tf_imu_sensor_frame_to_lidar"-->
+<!--          args="-0.005 -0.037 -0.063 0.000 0.000 -0.013 1.000-->
+<!--            imu_sensor_frame lidar 100"/>-->
+    <node pkg="tf"
+          type="static_transform_publisher"
+          name="static_tf_imu_sensor_frame_to_lidar"
+          args="0.004 0.037 0.063 0.000 0.000 0.013 1.000
+            lidar imu_sensor_frame 100"/>
+    <node pkg="tf"
+          type="static_transform_publisher"
+          name="static_tf_imu_sensor_frame_to_bpearl_front"
+          args="0.018 0.850 -0.206 -0.650 0.279 0.262 0.657
+            imu_sensor_frame bpearl_front_beam_origin 100"/>
+    <node pkg="tf"
+          type="static_transform_publisher"
+          name="static_tf_imu_sensor_frame_to_bpearl_rear"
+          args="-0.009 -0.197 -0.206 -0.279 -0.650 0.657 -0.262
+            imu_sensor_frame bpearl_rear_beam_origin 100"/>
+  </group>
+  <group if="$(eval anymal_name == 'chimera')">
+    <!-- TODO(victorr): Add calibrations for chimera -->
+  </group>
+
+  <!-- Republish LiDAR packets as pointcloud msgs and odom msgs as TFs -->
+  <group unless="$(arg use_batch_mode)">
+    <!-- Configure Velodyne VLP16 -->
+    <arg name="calibration"
+         default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
+    <arg name="manager" default="velodyne_nodelet_manager"/>
+    <remap from="/velodyne_packets" to="/lidar/packets"/>
+
+    <!-- Start Velodyne packet to pointcloud converter (incl. undistortion) -->
+    <node pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
+          output="screen"/>
+    <include file="$(find velodyne_pointcloud)/launch/transform_nodelet.launch">
+      <arg name="model" value="VLP16"/>
+      <arg name="calibration" value="$(arg calibration)"/>
+      <arg name="manager" value="$(arg manager)"/>
+      <arg name="fixed_frame" value="odom"/>
+      <arg name="target_frame" value="lidar"/>
+      <arg name="max_range" default="130.0"/>
+      <arg name="min_range" default="0.4"/>
+      <arg name="organize_cloud" value="false"/>
+    </include>
+
+    <!-- Start Robosense packet to pointcloud converter -->
+    <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node"
+          output="screen">
+      <param name="config_path"
+             value="$(find wavemap_ros)/config/subt_finals/sensor_configs/robosense.yaml"/>
+    </node>
+
+    <!-- Publish odometry as TF -->
+    <node pkg="wavemap_ros" type="odom_msg_to_tf.py" name="odom_to_tf"
+          output="screen">
+      <param name="topic" value="/compslam_post_cerberus"/>
+      <param name="topic_type" value="PoseStamped"/>
+      <param name="odom_frame" value="odom"/>
+      <param name="sensor_frame" value="lidar"/>
+    </node>
+  </group>
+
+  <!-- Run wavemap -->
+  <include file="$(find wavemap_ros)/launch/datasets/dataset_base.launch"
+           pass_all_args="true"/>
+</launch>

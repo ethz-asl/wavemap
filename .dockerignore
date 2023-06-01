@@ -53,8 +53,3 @@ CATKIN_IGNORE
 # CLion
 **.idea
 **cmake-build-*
-
-# Docs
-docs/api
-docs/_doxygen
-docs/_build

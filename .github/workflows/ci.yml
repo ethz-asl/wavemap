@@ -1,0 +1,559 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ $default-branch, develop ]
+  pull_request:
+
+# NOTE: We do not store the work files under $HOME ("/github/home/") since that
+#       dir persists between jobs when using self-hosted GitHub Actions runners
+#       (/github/home is a docker volume mapped to the container's host).
+env:
+  REPOSITORY_NAME: wavemap
+  DOCKER_REGISTRY: hub.wavemap.vwire.ch
+  DOCKER_TARGET: workspace-built-deps
+  ROS_HOME: /home/ci/.ros
+  CATKIN_WS_PATH: /home/ci/catkin_ws
+  CCACHE_DIR: /home/ci/ccache
+  PRE_COMMIT_DIR: /home/ci/pre-commit
+
+jobs:
+  workspace-container:
+    name: Setup workspace container
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    outputs:
+      image: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+    env:
+      DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
+      DOCKER_TARGET_ROS_PKG: wavemap_all
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.REPOSITORY_NAME }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Prepare ccache to accelerate the build
+        id: get-date
+        # NOTE: Installing tar is required for actions/cache@v3 to work properly
+        #       on docker:20.10.9-dind.
+        run: |
+          apk add --no-cache tar
+          mkdir -p ccache
+          echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
+
+      - name: Pull in ccache's cache
+        uses: actions/cache@v3
+        with:
+          path: ccache
+          key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-
+
+      - name: Start measuring the build time
+        id: start-time
+        run: |
+          stamp=$(date +%s)
+          echo "stamp=${stamp}" >> $GITHUB_OUTPUT
+
+      - name: Build the ${{ env.DOCKER_TARGET }} image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          target: ${{ env.DOCKER_TARGET }}
+          build-args: |
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
+          load: true
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache,mode=max
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+
+      - name: Determine whether the ccache cache should be updated
+        id: should-writeback-ccache
+        run: |
+          runtime=$(( $(date +%s) - ${{ steps.start-time.outputs.stamp }} ))
+          threshold=300  # seconds
+          echo $runtime
+          answer=false
+          if [ $threshold -le $runtime ]; then
+            answer=true
+          fi
+          echo "answer=${answer}" >> $GITHUB_OUTPUT
+
+      - name: Test the ${{ env.DOCKER_TARGET }} image
+        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+
+      - name: Push the ${{ env.DOCKER_TARGET }} image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          target: ${{ env.DOCKER_TARGET }}
+          build-args: |
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
+          push: true
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+
+      - name: Write back the build's ccache cache
+        if: steps.should-writeback-ccache.outputs.answer == 'true'
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          target: workspace-deps-builder-ccache-extractor
+          build-args: |
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+          outputs: type=local,dest=ccache
+
+  lint:
+    name: Lint
+    runs-on: self-hosted
+    container:
+      # NOTE: Pylint checks if all modules that are marked for import are
+      #       available. At the time of writing, the python scripts in this repo
+      #       only depend on modules that are present on noetic-ros-base-focal
+      #       out of the box. If scripts are added later that depend on custom
+      #       package (e.g. installed through rosdep or pulled in through
+      #       vcstool), it'd make sense to run pre-commit in a full workspace
+      #       container (such as ${{ needs.workspace-container.outputs.image }})
+      #       at the cost of a longer loading time on the CI actions runner.
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: Install pre-commit's dependencies
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends git python3-pip clang-format-11 cppcheck libxml2-utils wget
+          pip3 install pre-commit cpplint
+          wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
+          chmod +x /bin/hadolint
+
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        # NOTE: This has to be done after installing pre-commit, s.t. the
+        #       pre-commit hooks are automatically initialized.
+
+      - name: Get python version for pre-commit cache
+        run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Setup pre-commit cache sharing
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.PRE_COMMIT_DIR }}
+          key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run the pre-commit hooks
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
+          source /opt/ros/noetic/setup.bash
+          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} pre-commit run --all-files
+          echo "::remove-matcher owner=problem-matcher-pre-commit::"
+
+  document:
+    name: Update docs
+    needs: [ workspace-container, lint ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    # permissions:
+    #   contents: read
+    #   pages: write
+    #   id-token: write
+    # concurrency:
+    #   group: "pages"
+    #   cancel-in-progress: true
+    # environment:
+    #   name: github-pages
+    #   url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends python3-pip doxygen
+          pip3 install exhale sphinx-rtd-theme
+
+      - name: Build documentation
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: make html
+
+      - name: Archive pages artifact
+        shell: bash
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --directory ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/html/ \
+            -cvf ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar \
+            --exclude=.git \
+            --exclude=.github \
+            .
+
+      - name: Upload pages artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: github-pages
+          path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
+          retention-days: 1
+
+  #   - name: Setup Pages
+  #     uses: actions/configure-pages@v1
+
+  #   - name: Deploy to GitHub Pages
+  #     id: deployment
+  #     uses: actions/deploy-pages@main
+
+  build:
+    name: Build
+    needs: workspace-container
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
+
+      - name: Build all wavemap packages
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_all --no-status --force-color
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  clang-tidy:
+    name: Clang tidy
+    needs: [ workspace-container, build ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
+
+      - name: Install clang-tidy
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends clang-tidy
+
+      - name: Build catkin package and dependencies
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color --cmake-args -DUSE_CLANG_TIDY=ON
+
+      - name: Run clang-tidy for wavemap
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
+
+      - name: Run clang-tidy for wavemap_ros
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap_ros
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap_ros/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"
+
+  test:
+    name: Test
+    needs: [ workspace-container, build ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
+
+      - name: Build regular code
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_all --no-status --force-color --no-deps --catkin-make-args tests
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Run unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          all_tests_passed=1
+          for f in devel/lib/wavemap*/test_*
+            do $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
+          fi
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  coverage:
+    name: Coverage
+    # TODO(victorr): Enable this again once it has been updated to work with the new package structure
+    if: ${{ false }}
+    needs: [ workspace-container, test ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-group: noetic-gcc-debug
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
+
+      - name: Install lcov for coverage report generation
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends lcov
+
+      - name: Switch catkin workspace to debug mode
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          catkin clean -y
+          catkin config --cmake-args -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Rebuild dependencies and build regular code (in debug mode)
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          source /opt/ros/noetic/setup.bash
+          catkin build wavemap_all --no-status --force-color
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color --no-deps --cmake-args -DENABLE_COVERAGE_TESTING=ON --catkin-make-args tests
+
+      - name: Set coverage counters to zero and create report base
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
+        shell: bash
+        run: |
+          lcov --zerocounters --directory .
+          lcov --capture --initial --directory . --output-file wavemap_coverage_base.info
+
+      - name: Run all tests while measuring coverage
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          all_tests_passed=1
+          for f in devel/lib/wavemap*/test_*
+          do
+            $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed! Note that the code is currently compiled"\
+                 "in Debug mode, so some additional errors may be caught compared"\
+                 "to previous test runs in Release mode (e.g. failing DCHECKs)."
+            exit 1
+          fi
+
+      - name: Create the coverage report
+        working-directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
+        shell: bash
+        run: |
+          lcov --capture --directory . --output-file wavemap_coverage_unit_tests.info
+          lcov --add-tracefile wavemap_coverage_base.info --add-tracefile wavemap_coverage_unit_tests.info --output-file wavemap_coverage_total.info
+          lcov --extract wavemap_coverage_total.info '*/wavemap/wavemap*' --output-file wavemap_coverage_filtered_intermediate.info
+          lcov --remove wavemap_coverage_filtered_intermediate.info '*/wavemap/test/*' '*/wavemap/app/*' '*/wavemap/benchmark/*' --output-file wavemap_coverage.info
+          rm wavemap_coverage_base.info wavemap_coverage_unit_tests.info wavemap_coverage_total.info wavemap_coverage_filtered_intermediate.info
+          lcov --list wavemap_coverage.info  # Include report in logs for debugging
+
+      - name: Upload coverage stats to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ${{ env.CATKIN_WS_PATH }}/build/wavemap
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  sanitize:
+    name: Sanitize ${{ matrix.sanitizer.detects }}
+    needs: [ workspace-container, test ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    strategy:
+      matrix:
+        sanitizer:
+          - { name: UBSAN, detects: 'undefined behavior' }
+          - { name: ASAN, detects: 'addressability and leaks' }
+          - { name: TSAN, detects: 'data races and deadlocks' }
+          # NOTE: MSAN is not used for now since it also requires all deps to be
+          #       instrumented (recompiled with clang and the MSan flags, LLVM's
+          #       stdlib instead of GCCs,...). We therefore use Valgrind to
+          #       check for uninitialized memory usage errors instead.
+      fail-fast: false
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
+
+      - name: Build regular code
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color --no-deps --cmake-args -DUSE_${{ matrix.sanitizer.name }}=ON --catkin-make-args tests
+
+      - name: Check unit tests with ${{ matrix.sanitizer.name }}
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        env:
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+          ASAN_OPTIONS: halt_on_error=1:detect_leaks=1:detect_stack_use_after_return=1
+          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc-sanitizers.json"
+          all_tests_passed=1
+          for f in devel/lib/wavemap*/test_*
+            do $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
+          fi
+          echo "::remove-matcher owner=problem-matcher-gcc-ubsan::"
+          echo "::remove-matcher owner=problem-matcher-gcc-asan::"
+          echo "::remove-matcher owner=problem-matcher-gcc-tsan::"
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats
+
+  valgrind:
+    name: Valgrind memcheck
+    needs: [ workspace-container, test ]
+    runs-on: self-hosted
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          cache-group: noetic-gcc-release
+          cache-version: ${{ secrets.CCACHE_CACHE_VERSION }}
+
+      - name: Install Valgrind
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends valgrind
+
+      - name: Build regular code
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color --no-deps --catkin-make-args tests
+
+      - name: Check unit tests with Valgrind memcheck
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/valgrind.json"
+          all_tests_passed=1
+          for f in devel/lib/wavemap*/test_*
+            do valgrind --tool=memcheck --leak-check=full --leak-resolution=high --num-callers=20 --track-origins=yes --show-possibly-lost=no --errors-for-leak-kinds=definite,indirect --error-exitcode=1 --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
+            grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml || true
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
+          fi
+          echo "::remove-matcher owner=problem-matcher-valgrind::"
+
+      - name: Show statistics for ccache
+        uses: ./.github/actions/log-ccache-stats

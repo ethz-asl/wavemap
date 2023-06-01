@@ -1,0 +1,44 @@
+<launch>
+  <!-- General arguments -->
+  <arg name="param_file"
+       default="$(find wavemap_ros)/config/wavemap_server.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
+  <arg name="debug_mode"
+       default="false"
+       doc="Run the mapper in a debugger (gdb)."/>
+  <arg name="show_rviz"
+       default="true"
+       doc="Automatically launch Rviz."/>
+  <arg name="exit_when_done"
+       default="true"
+       doc="Shutdown ROS when wavemap exits."/>
+
+  <!-- Dataset params -->
+  <arg name="rosbag_path"
+       doc="Replay the rosbag at the specified path."/>
+
+  <!-- Process the rosbag with wavemap as fast as possible -->
+  <param name="/use_sim_time" value="true"/>
+  <group>
+    <arg if="$(arg debug_mode)" name="launch_prefix"
+         value="gdb -ex run --args"/>
+    <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
+
+    <node name="wavemap" pkg="wavemap_ros"
+          type="wavemap_rosbag_processor"
+          output="screen"
+          required="$(arg exit_when_done)"
+          launch-prefix="$(arg launch_prefix)">
+      <rosparam file="$(arg param_file)"/>
+      <param name="rosbag_path" value="$(arg rosbag_path)"/>
+    </node>
+  </group>
+
+  <!-- Show Rviz -->
+  <group if="$(arg show_rviz)">
+    <arg name="rviz_file"
+         default="$(find wavemap_ros)/config/wavemap_server.rviz"/>
+    <node pkg="rviz" type="rviz" name="$(anon rviz)" output="screen"
+          args="-d $(arg rviz_file)"/>
+  </group>
+</launch>

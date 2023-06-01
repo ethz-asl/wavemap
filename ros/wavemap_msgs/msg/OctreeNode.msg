@@ -1,0 +1,2 @@
+float32 node_value
+uint8 allocated_children_bitset

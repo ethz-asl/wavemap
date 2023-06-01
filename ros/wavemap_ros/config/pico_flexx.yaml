@@ -1,0 +1,112 @@
+general:
+  world_frame: "odom"
+  publish_performance_stats: false
+
+map:
+  thresholding_period: { seconds: 2.0 }
+  pruning_period: { seconds: 10.0 }
+  visualization_period: { seconds: 2.0 }
+  autosave_period: { seconds: -1.0 }
+  autosave_path: ""
+  data_structure:
+    type: "hashed_wavelet_octree"
+    min_cell_width: { meters: 0.01 }
+    max_height: 14
+
+inputs:
+  - type: "depth_image"
+    topic_name: "/pico_flexx/image_rect"
+    #    reprojected_topic_name: "/wavemap/depth_cam_input"
+    #    depth_scale_factor: 0.001
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    time_delay: { seconds: -0.00727598 }
+    integrators:
+      - integration_method:
+          type: "hashed_wavelet_integrator"
+          min_range: { meters: 0.05 }
+          max_range: { meters: 1.0 }
+          termination_update_error: 0.1
+          termination_height: 0
+        projection_model:
+          type: "pinhole_camera_projector"
+          width: 224
+          height: 172
+          fx: 204.2710723876953
+          fy: 204.2710723876953
+          cx: 109.85344696044922
+          cy: 86.22309112548828
+        measurement_model:
+          type: "continuous_ray"
+          range_sigma: { meters: 0.005 }
+          scaling_free: 0.2
+          scaling_occupied: 0.4
+      - integration_method:
+          type: "hashed_wavelet_integrator"
+          min_range: { meters: 1.0 }
+          max_range: { meters: 2.0 }
+          termination_update_error: 0.1
+          termination_height: 1
+        projection_model:
+          type: "pinhole_camera_projector"
+          width: 224
+          height: 172
+          fx: 204.2710723876953
+          fy: 204.2710723876953
+          cx: 109.85344696044922
+          cy: 86.22309112548828
+        measurement_model:
+          type: "continuous_ray"
+          range_sigma: { meters: 0.01 }
+          scaling_free: 0.2
+          scaling_occupied: 0.4
+      - integration_method:
+          type: "hashed_wavelet_integrator"
+          min_range: { meters: 2.0 }
+          max_range: { meters: 3.0 }
+          termination_update_error: 0.1
+          termination_height: 2
+        projection_model:
+          type: "pinhole_camera_projector"
+          width: 224
+          height: 172
+          fx: 204.2710723876953
+          fy: 204.2710723876953
+          cx: 109.85344696044922
+          cy: 86.22309112548828
+        measurement_model:
+          type: "continuous_ray"
+          range_sigma: { meters: 0.02 }
+          scaling_free: 0.2
+          scaling_occupied: 0.4
+
+  - type: "livox"
+    topic_name: "/livox/lidar"
+    #    reprojected_topic_name: "/wavemap/lidar_input"
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    integrators:
+      - integration_method:
+          type: "hashed_wavelet_integrator"
+          min_range: { meters: 1.0 }
+          max_range: { meters: 8.0 }
+          termination_update_error: 0.1
+          termination_height: 3
+        projection_model:
+          type: "spherical_projector"
+          elevation:
+            num_cells: 64
+            min_angle: { degrees: -7.0 }
+            max_angle: { degrees: 52.0 }
+          azimuth:
+            num_cells: 1024
+            min_angle: { degrees: -180.0 }
+            max_angle: { degrees: 180.0 }
+        measurement_model:
+          type: "continuous_beam"
+          angle_sigma: { degrees: 0.035 }
+          # NOTE: For best results, we recommend setting range_sigma to
+          #       max(min_cell_width / 2, ouster_noise) where ouster_noise = 0.05
+          range_sigma: { meters: 0.05 }
+          scaling_free: 0.2
+          scaling_occupied: 0.4

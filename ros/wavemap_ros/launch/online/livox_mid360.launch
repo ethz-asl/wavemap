@@ -1,0 +1,50 @@
+<launch>
+  <!-- Wavemap params -->
+  <arg name="param_file"
+       default="$(find wavemap_ros)/config/livox_mid360.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
+
+  <!-- Run the Livox driver -->
+  <arg name="bd_list" default="100000000000000"/>
+  <param name="xfer_format" value="1"/>
+  <param name="publish_freq" type="double" value="10.0"/>
+  <param name="multi_topic" value="0"/>
+  <param name="data_src" value="0"/>
+  <param name="output_data_type" value="0"/>
+  <param name="cmdline_str" type="string" value="$(arg bd_list)"/>
+  <param name="user_config_path" type="string"
+         value="$(find wavemap_ros)/config/sensor_configs/MID360_config.json"/>
+  <param name="frame_id" type="string" value="livox_frame"/>
+  <node name="livox_lidar_publisher2" pkg="livox_ros_driver2"
+        type="livox_ros_driver2_node" required="true"
+        output="screen" args="$(arg bd_list)"/>
+
+  <!-- Run odometry -->
+  <rosparam command="load"
+            file="$(find wavemap_ros)/config/other_packages/fast_lio_livox_mid360.yaml"/>
+  <param name="feature_extract_enable" type="bool" value="0"/>
+  <param name="point_filter_num" type="int" value="1"/>
+  <param name="max_iteration" type="int" value="3"/>
+  <param name="filter_size_surf" type="double" value="0.25"/>
+  <param name="filter_size_map" type="double" value="0.25"/>
+  <param name="cube_side_length" type="double" value="500"/>
+  <param name="runtime_pos_log_enable" type="bool" value="0"/>
+  <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping"
+        output="screen"/>
+
+  <!-- Link TF frames -->
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="link_odom_camera_init"
+        args="0.0 0.0 0.0 0.0 0.0 0.0 1.000
+            odom camera_init 100"/>
+  <node pkg="tf"
+        type="static_transform_publisher"
+        name="link_body_livox_frame"
+        args="-0.0110 -0.02329 0.04412 0.0 0.0 0.0 1.000
+            imu_forward_prop livox_frame 100"/>
+
+  <!-- Run wavemap -->
+  <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
+           pass_all_args="true"/>
+</launch>
