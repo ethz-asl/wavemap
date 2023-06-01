@@ -223,9 +223,11 @@ jobs:
           retention-days: 1
 
       - name: Setup Pages
+        if: success() && github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v1
 
       - name: Deploy to GitHub Pages
+        if: success() && github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@main
 
