@@ -105,7 +105,7 @@ repos:
     hooks:
       - name: Lint markdown files with markdownlint
         id: markdownlint
-
+        args: [ --rules="~MD013" ]
   - repo: local
     hooks:
       - name: Check ROS package manifest schema conformance
