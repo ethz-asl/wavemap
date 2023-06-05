@@ -1,7 +1,7 @@
 # Wavemap
 ![wavemap_cover](https://github.com/ethz-asl/wavemap/assets/6238939/a51bef62-01f3-40f5-a302-cabc59b0eed8)
 
-Wavemap is a hierarchical, multi-resolution occupancy mapping framework. By employing Haar wavelet compression and a hierarchical measurement integration scheme, it achieves both high memory and computational efficiency. Among others, these efficiency improvements make the use of demanding uncertainty-aware sensor models tractable and allow wavemap to achieve exceptional recall rates on challenging obstacles such as thin objects.
+Wavemap is a hierarchical, multi-resolution occupancy mapping framework. It achieves both high memory and computational efficiency by combining Haar wavelet compression and a hierarchical measurement integration scheme. These efficiency improvements make demanding uncertainty-aware sensor models tractable, allowing wavemap to attain exceptionally high recall rates on challenging obstacles such as thin objects.
 
 The framework is very flexible and supports several data structures, integration schemes, measurement models and projection models out of the box. Any number of inputs with potentially different settings and weights can simultaneously be fused into a single map.
 
