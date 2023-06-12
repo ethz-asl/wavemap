@@ -27,6 +27,7 @@ cs_add_library(${PROJECT_NAME}
     src/input_handler/input_handler.cc
     src/input_handler/input_handler_factory.cc
     src/input_handler/pointcloud_input_handler.cc
+    src/input_handler/pointcloud_undistorter.cc
     src/wavemap_server.cc
     ${OPTIONAL_SRCS})
 # Link OpenCV explicitly to avoid issues on Jetson

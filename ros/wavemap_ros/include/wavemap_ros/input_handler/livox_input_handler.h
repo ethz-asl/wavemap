@@ -9,6 +9,7 @@
 #include <livox_ros_driver2/CustomMsg.h>
 
 #include "wavemap_ros/input_handler/input_handler.h"
+#include "wavemap_ros/input_handler/pointcloud_undistorter.h"
 
 namespace wavemap {
 class LivoxInputHandler : public InputHandler {
@@ -21,13 +22,12 @@ class LivoxInputHandler : public InputHandler {
 
   InputHandlerType getType() const override { return InputHandlerType::kLivox; }
 
-  void pointcloudCallback(const livox_ros_driver2::CustomMsg& pointcloud_msg) {
-    pointcloud_queue_.emplace(pointcloud_msg);
-  }
+  void pointcloudCallback(const livox_ros_driver2::CustomMsg& pointcloud_msg);
 
  private:
   ros::Subscriber pointcloud_sub_;
-  std::queue<livox_ros_driver2::CustomMsg> pointcloud_queue_;
+  PointcloudUndistorter pointcloud_undistorter_;
+  std::queue<StampedPointcloud> pointcloud_queue_;
   void processQueue() override;
 };
 }  // namespace wavemap

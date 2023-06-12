@@ -222,6 +222,8 @@ jobs:
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
 
+      # TODO(victorr): Move GH Pages deployment to separate job (with deployment
+      #                permissions) that only runs for main branch
       - name: Setup Pages
         if: success() && github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v1
