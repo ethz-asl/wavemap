@@ -52,7 +52,7 @@ DepthImageInputHandler::DepthImageInputHandler(
   image_transport::ImageTransport it(nh);
   depth_image_sub_ = it.subscribe(
       config_.topic_name, config_.topic_queue_length,
-      &DepthImageInputHandler::depthImageCallback, this,
+      &DepthImageInputHandler::callback, this,
       image_transport::TransportHints(config_.image_transport_hints));
 }
 

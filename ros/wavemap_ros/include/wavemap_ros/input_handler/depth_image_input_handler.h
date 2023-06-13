@@ -54,10 +54,10 @@ class DepthImageInputHandler : public InputHandler {
     return InputHandlerType::kDepthImage;
   }
 
-  void depthImageCallback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
-    depthImageCallback(*depth_image_msg);
+  void callback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
+    callback(*depth_image_msg);
   }
-  void depthImageCallback(const sensor_msgs::Image& depth_image_msg) {
+  void callback(const sensor_msgs::Image& depth_image_msg) {
     depth_image_queue_.emplace(depth_image_msg);
   }
 

@@ -5,9 +5,14 @@
 
 namespace wavemap::convert {
 inline ros::Time nanoSecondsToRosTime(uint64_t nsec) {
-  uint64_t kSecToNsec = 1000000000ull;
+  constexpr uint64_t kSecToNsec = 1000000000ull;
   return {static_cast<uint32_t>(nsec / kSecToNsec),
           static_cast<uint32_t>(nsec % kSecToNsec)};
+}
+
+inline uint64_t rosTimeToNanoSeconds(const ros::Time& time) {
+  constexpr uint64_t kSecToNsec = 1000000000ull;
+  return time.sec * kSecToNsec + time.nsec;
 }
 }  // namespace wavemap::convert
 

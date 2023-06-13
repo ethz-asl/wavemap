@@ -30,7 +30,7 @@ class Pointcloud {
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
-  void resize(const unsigned int n_points) { data_.resize(kDim, n_points); }
+  void resize(unsigned n_points) { data_.resize(kDim, n_points); }
   void clear() { data_.resize(kDim, 0); }
 
   typename PointcloudData::ColXpr operator[](Eigen::Index point_index) {

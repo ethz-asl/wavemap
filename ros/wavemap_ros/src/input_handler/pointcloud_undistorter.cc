@@ -4,14 +4,14 @@
 
 namespace wavemap {
 PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
-    StampedPointcloud& stamped_pointcloud,
-    PosedPointcloud<>& undistorted_pointcloud) {
+    GenericStampedPointcloud& stamped_pointcloud,
+    PosedPointcloud<>& undistorted_pointcloud, const std::string& fixed_frame) {
   // Get the time interval
   const uint64_t start_time = stamped_pointcloud.getStartTime();
   const uint64_t end_time = stamped_pointcloud.getEndTime();
 
   // Calculate the step size for the undistortion transform buffer
-  const auto& points = stamped_pointcloud.points;
+  const auto& points = stamped_pointcloud.getPoints();
   constexpr int kNumTimeIntervals = 400;
   constexpr int kNumTimeSteps = kNumTimeIntervals + 1;
   const uint64_t step_size =
@@ -22,14 +22,14 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
 
   // Make sure all transforms are available
   if (!transformer_->isTransformAvailable(
-          stamped_pointcloud.world_frame, stamped_pointcloud.sensor_frame,
-          convert::nanoSecondsToRosTime(buffer_end_time))) {
-    return Result::kEndTimeNotInTfBuffer;
-  }
-  if (!transformer_->isTransformAvailable(
-          stamped_pointcloud.world_frame, stamped_pointcloud.sensor_frame,
+          fixed_frame, stamped_pointcloud.getSensorFrame(),
           convert::nanoSecondsToRosTime(buffer_start_time))) {
     return Result::kStartTimeNotInTfBuffer;
+  }
+  if (!transformer_->isTransformAvailable(
+          fixed_frame, stamped_pointcloud.getSensorFrame(),
+          convert::nanoSecondsToRosTime(buffer_end_time))) {
+    return Result::kEndTimeNotInTfBuffer;
   }
 
   // Buffer the transforms
@@ -39,7 +39,7 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
     auto& timed_pose = timed_poses.emplace_back();
     timed_pose.first = start_time + step_idx * step_size;
     if (!transformer_->lookupTransform(
-            stamped_pointcloud.world_frame, stamped_pointcloud.sensor_frame,
+            fixed_frame, stamped_pointcloud.getSensorFrame(),
             convert::nanoSecondsToRosTime(timed_pose.first),
             timed_pose.second)) {
       ROS_WARN_STREAM("Failed to buffer intermediate pose at time "
@@ -49,39 +49,55 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
     }
   }
 
-  // Motion undistort the points
-  const auto num_rays = static_cast<int>(points.size());
+  // Motion undistort
+  // NOTE: The undistortion is done by transforming the points into a fixed
+  //       (inertial) frame using the sensor's pose at each point's timestamp.
+  const auto num_points = static_cast<int>(points.size());
   Eigen::Matrix<FloatingPoint, 3, Eigen::Dynamic> t_W_points;
-  t_W_points.resize(3, num_rays);
-  int l_idx = 0u;
-  uint64_t prev_time = -1u;
+  t_W_points.resize(3, num_points);
+  uint64_t previous_point_time = -1u;
+  int pose_left_idx = 0u;
   Transformation3D T_WCi;
-  for (int idx = 0u; idx < num_rays; ++idx) {
+  Transformation3D T_WCmedian;
+  for (int idx = 0u; idx < num_points; ++idx) {
     const auto& point = points[idx];
-    const Point3D& Ci_p = point.point;
+    const Point3D& Ci_p = point.position;
 
-    const uint64_t time = stamped_pointcloud.time_base + point.time_offset;
-    if (time != prev_time) {
-      prev_time = time;
-      while (timed_poses[l_idx + 1].first < time && l_idx + 2 < kNumTimeSteps) {
-        ++l_idx;
+    // Get the sensor pose at the current point's time stamp
+    const uint64_t time = stamped_pointcloud.getTimeBase() + point.time_offset;
+    if (time != previous_point_time) {
+      previous_point_time = time;
+      while (timed_poses[pose_left_idx + 1].first < time &&
+             pose_left_idx + 2 < kNumTimeSteps) {
+        ++pose_left_idx;
       }
-      CHECK_LT(l_idx + 1, timed_poses.size());
-      const uint64_t time_l = timed_poses[l_idx].first;
-      const uint64_t time_u = timed_poses[l_idx + 1].first;
-      const Transformation3D& T_WCl = timed_poses[l_idx].second;
-      const Transformation3D& T_WCu = timed_poses[l_idx + 1].second;
-      FloatingPoint a = static_cast<FloatingPoint>((time - time_l)) /
-                        static_cast<FloatingPoint>((time_u - time_l));
+      CHECK_LT(pose_left_idx + 1, timed_poses.size());
+      const uint64_t time_left = timed_poses[pose_left_idx].first;
+      const uint64_t time_right = timed_poses[pose_left_idx + 1].first;
+      const Transformation3D& T_WCleft = timed_poses[pose_left_idx].second;
+      const Transformation3D& T_WCright = timed_poses[pose_left_idx + 1].second;
+      FloatingPoint a = static_cast<FloatingPoint>((time - time_left)) /
+                        static_cast<FloatingPoint>((time_right - time_left));
       CHECK_GE(a, 0.f);
       CHECK_LE(a, 1.f);
-      T_WCi = interpolateComponentwise(T_WCl, T_WCu, a);
+      T_WCi = interpolateComponentwise(T_WCleft, T_WCright, a);
     }
 
+    // Transform the current point into the fixed frame
     t_W_points.col(idx) = T_WCi * Ci_p;
+
+    // Store the sensor's pose at the median timestamp
+    if (idx == num_points / 2) {
+      T_WCmedian = T_WCi;
+    }
   }
-  const Transformation3D T_WCmid = timed_poses[kNumTimeIntervals / 2].second;
-  const PosedPointcloud<> posed_pointcloud(
-      T_WCmid, T_WCmid.inverse().transformVectorized(t_W_points));
+
+  // Transform the undistorted pointcloud back into sensor frame,
+  // as needed by the integrators
+  auto t_C_points = T_WCmedian.inverse().transformVectorized(t_W_points);
+
+  // Return the result
+  undistorted_pointcloud = PosedPointcloud<>(T_WCmedian, std::move(t_C_points));
+  return Result::kSuccess;
 }
 }  // namespace wavemap

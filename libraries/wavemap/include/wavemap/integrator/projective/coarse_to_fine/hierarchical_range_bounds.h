@@ -119,7 +119,7 @@ class HierarchicalRangeBounds {
 
   bool isUnobserved(FloatingPoint value) const { return value < min_range_; }
   FloatingPoint valueOrInit(FloatingPoint value, FloatingPoint init) const {
-    // NOTE: Point clouds often contain points near the sensor, for example
+    // NOTE: Pointclouds often contain points near the sensor, for example
     //       from missing returns being encoded as zeros, wires or cages around
     //       the sensor or more generally points hitting the robot or operator's
     //       body. Filtering out such spurious low values leads to big runtime
