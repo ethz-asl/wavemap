@@ -46,13 +46,13 @@ int main(int argc, char** argv) {
         switch (input_handler->getType().toTypeId()) {
           case wavemap::InputHandlerType::kPointcloud:
             rosbag_processor.addCallback(
-                input_handler->getConfig().topic_name,
+                input_handler->getTopicName(),
                 &wavemap::PointcloudInputHandler::pointcloudCallback,
                 dynamic_cast<wavemap::PointcloudInputHandler*>(input_handler));
             continue;
           case wavemap::InputHandlerType::kDepthImage:
             rosbag_processor.addCallback<const sensor_msgs::Image&>(
-                input_handler->getConfig().topic_name,
+                input_handler->getTopicName(),
                 &wavemap::DepthImageInputHandler::depthImageCallback,
                 dynamic_cast<wavemap::DepthImageInputHandler*>(input_handler));
             continue;
