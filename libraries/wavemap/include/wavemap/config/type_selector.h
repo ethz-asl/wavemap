@@ -49,14 +49,21 @@ struct TypeSelector {
   TypeId toTypeId() const { return id_; }
 
   // Comparison operator for convenience
-  bool operator==(TypeId rhs) { return id_ == rhs; }
+  friend bool operator==(const DerivedTypeSelectorT& lhs,
+                         const DerivedTypeSelectorT& rhs) {
+    return lhs.id_ == rhs.id_;
+  }
 
   // Method to check if the type ID is currently valid
   bool isValid() const { return isValidTypeId(id_); }
 
   // Static methods for convenience
   static TypeName typeIdToStr(TypeId type_id) {
-    return DerivedTypeSelectorT::names[static_cast<TypeId>(type_id)];
+    if (isValidTypeId(type_id)) {
+      return DerivedTypeSelectorT::names[static_cast<TypeId>(type_id)];
+    } else {
+      return "Invalid";
+    }
   }
   static TypeId strToTypeId(const std::string& name);
   static bool isValidTypeId(TypeId type_id) {

@@ -16,6 +16,12 @@ struct GenericStampedPoint {
   GenericStampedPoint(FloatingPoint x, FloatingPoint y, FloatingPoint z,
                       uint64_t time_offset)
       : position(x, y, z), time_offset(time_offset) {}
+
+  std::string toStr() const {
+    return "[" + std::to_string(position[0]) + ", " +
+           std::to_string(position[1]) + ", " + std::to_string(position[2]) +
+           ", " + std::to_string(time_offset) + "]";
+  }
 };
 
 class GenericStampedPointcloud {

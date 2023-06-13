@@ -18,9 +18,9 @@ namespace wavemap {
 struct PointcloudTopicType : public TypeSelector<PointcloudTopicType> {
   using TypeSelector<PointcloudTopicType>::TypeSelector;
 
-  enum Id : TypeId { kPointCloud2, kLivox };
+  enum Id : TypeId { kPointCloud2, kOuster, kLivox };
 
-  static constexpr std::array names = {"PointCloud2", "Livox"};
+  static constexpr std::array names = {"PointCloud2", "ouster", "livox"};
 };
 
 struct PointcloudInputHandlerConfig
@@ -34,7 +34,7 @@ struct PointcloudInputHandlerConfig
 
   std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
   FloatingPoint time_offset = 0.f;
-  bool undistort_motion = true;
+  bool undistort_motion = false;
 
   std::string reprojected_pointcloud_topic_name;  // Leave blank to disable
   std::string projected_range_image_topic_name;   // Leave blank to disable
@@ -79,6 +79,9 @@ class PointcloudInputHandler : public InputHandler {
   ros::Subscriber pointcloud_sub_;
   std::queue<GenericStampedPointcloud> pointcloud_queue_;
   void processQueue() override;
+
+  static bool hasField(const sensor_msgs::PointCloud2& msg,
+                       const std::string& field_name);
 };
 }  // namespace wavemap
 

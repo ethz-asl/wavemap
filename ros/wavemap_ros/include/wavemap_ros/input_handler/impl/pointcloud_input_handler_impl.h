@@ -13,6 +13,13 @@ bool PointcloudInputHandler::registerCallback(PointcloudTopicType type,
           &PointcloudInputHandler::callback));
       // clang-format on
       return true;
+    case PointcloudTopicType::kOuster:
+      // clang-format off
+      registrar(static_cast<void(PointcloudInputHandler::*)(
+                    const sensor_msgs::PointCloud2&)>(
+          &PointcloudInputHandler::callback));
+      // clang-format on
+      return true;
     case PointcloudTopicType::kLivox:
 #ifdef LIVOX_AVAILABLE
       // clang-format off
@@ -26,9 +33,12 @@ bool PointcloudInputHandler::registerCallback(PointcloudTopicType type,
                     "livox_ros_driver2 and rebuild wavemap.";
       return false;
 #endif
+    default:
+      LOG(ERROR) << "Requested callback registration for unknown "
+                    "PointcloudTopicType \""
+                 << type.toStr() << "\"";
+      return false;
   }
-
-  return false;
 }
 }  // namespace wavemap
 

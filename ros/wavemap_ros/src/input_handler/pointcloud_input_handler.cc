@@ -34,8 +34,7 @@ PointcloudInputHandler::PointcloudInputHandler(
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
-                   std::move(occupancy_map), std::move(transformer), nh,
-                   nh_private),
+                   std::move(occupancy_map), transformer, nh, nh_private),
       config_(config.checkValid()),
       pointcloud_undistorter_(transformer) {
   // Subscribe to the pointcloud input
@@ -78,9 +77,41 @@ void PointcloudInputHandler::callback(
                                     : config_.sensor_frame_id;
   GenericStampedPointcloud stamped_pointcloud{
       stamp_nsec, std::move(sensor_frame_id), num_points};
-  for (sensor_msgs::PointCloud2ConstIterator<float> it(pointcloud_msg, "x");
-       it != it.end(); ++it) {
-    stamped_pointcloud.emplace(it[0], it[1], it[2], 0);
+
+  // Load the points with time information if undistortion is enabled
+  bool loaded = false;
+  sensor_msgs::PointCloud2ConstIterator<uint32_t> pos_it(pointcloud_msg, "x");
+  if (config_.undistort_motion) {
+    // NOTE: Livox pointclouds are not handled here but in their own callback.
+    switch (config_.topic_type.toTypeId()) {
+      case PointcloudTopicType::kOuster:
+        if (hasField(pointcloud_msg, "t")) {
+          sensor_msgs::PointCloud2ConstIterator<uint32_t> t_it(pointcloud_msg,
+                                                               "t");
+          for (; pos_it != pos_it.end(); ++pos_it, ++t_it) {
+            stamped_pointcloud.emplace(pos_it[0], pos_it[1], pos_it[2], *t_it);
+          }
+          loaded = true;
+        } else {
+          ROS_WARN_STREAM("Pointcloud topic type is set to \""
+                          << config_.topic_type.toStr()
+                          << "\", but message has no time field \"t\". Will "
+                             "not be undistorted.");
+        }
+        break;
+      default:
+        ROS_WARN_STREAM(
+            "Pointcloud undistortion is enabled, but not yet supported for "
+            "topic type \""
+            << config_.topic_type.toStr() << "\". Will not be undistorted.");
+    }
+  }
+
+  // If undistortion is disabled or loading failed, only load positions
+  if (!loaded) {
+    for (; pos_it != pos_it.end(); ++pos_it) {
+      stamped_pointcloud.emplace(pos_it[0], pos_it[1], pos_it[2], 0);
+    }
   }
 
   // Add it to the integration queue
@@ -238,5 +269,13 @@ void PointcloudInputHandler::processQueue() {
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();
   }
+}
+
+bool PointcloudInputHandler::hasField(const sensor_msgs::PointCloud2& msg,
+                                      const std::string& field_name) {
+  return std::any_of(msg.fields.cbegin(), msg.fields.cend(),
+                     [&](const sensor_msgs::PointField& field) {
+                       return field.name == field_name;
+                     });
 }
 }  // namespace wavemap
