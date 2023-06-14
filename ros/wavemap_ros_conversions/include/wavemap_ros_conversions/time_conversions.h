@@ -9,6 +9,10 @@ inline ros::Time nanoSecondsToRosTime(uint64_t nsec) {
   return {static_cast<uint32_t>(nsec / kSecToNsec),
           static_cast<uint32_t>(nsec % kSecToNsec)};
 }
+inline double nanoSecondsToSeconds(uint64_t nsec) {
+  constexpr double kNsecToSec = 1e-9;
+  return static_cast<double>(nsec) * kNsecToSec;
+}
 
 inline uint64_t rosTimeToNanoSeconds(const ros::Time& time) {
   constexpr uint64_t kSecToNsec = 1000000000ull;

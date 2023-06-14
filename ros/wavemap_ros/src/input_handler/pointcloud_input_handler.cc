@@ -148,6 +148,22 @@ void PointcloudInputHandler::processQueue() {
   while (!pointcloud_queue_.empty()) {
     auto& oldest_msg = pointcloud_queue_.front();
 
+    // Drop messages if they're older than max_wait_for_pose
+    if (config_.max_wait_for_pose <
+        convert::nanoSecondsToSeconds(pointcloud_queue_.back().getEndTime() -
+                                      oldest_msg.getStartTime())) {
+      ROS_WARN_STREAM(
+          "Max waiting time of "
+          << config_.max_wait_for_pose
+          << "s exceeded for pointcloud with frame \""
+          << oldest_msg.getSensorFrame() << "\" and time interval ["
+          << oldest_msg.getStartTime() << ", " << oldest_msg.getEndTime()
+          << "] vs newest cloud end time "
+          << pointcloud_queue_.back().getEndTime() << ". Dropping cloud.");
+      pointcloud_queue_.pop();
+      continue;
+    }
+
     // Undistort the pointcloud if appropriate
     PosedPointcloud<> posed_pointcloud;
     if (config_.undistort_motion) {
@@ -155,27 +171,12 @@ void PointcloudInputHandler::processQueue() {
           pointcloud_undistorter_.undistortPointcloud(
               oldest_msg, posed_pointcloud, world_frame_);
       if (undistortion_result != PointcloudUndistorter::Result::kSuccess) {
-        const auto& newest_msg = pointcloud_queue_.back();
         const uint64_t start_time = oldest_msg.getStartTime();
         const uint64_t end_time = oldest_msg.getEndTime();
         switch (undistortion_result) {
           case PointcloudUndistorter::Result::kEndTimeNotInTfBuffer:
-            if ((convert::nanoSecondsToRosTime(newest_msg.getTimeBase()) -
-                 convert::nanoSecondsToRosTime(end_time))
-                    .toSec() < config_.max_wait_for_pose) {
-              // Try to get this pointcloud's pose again at the next iteration
-              return;
-            } else {
-              ROS_WARN_STREAM("Waited "
-                              << config_.max_wait_for_pose
-                              << "s but still could not look up end pose "
-                                 "for pointcloud with frame \""
-                              << oldest_msg.getSensorFrame()
-                              << "\" in world frame \"" << world_frame_
-                              << "\" spanning time interval [" << start_time
-                              << ", " << end_time << "]. Skipping pointcloud.");
-            }
-            break;
+            // Try to get this pointcloud's pose again at the next iteration
+            return;
           case PointcloudUndistorter::Result::kStartTimeNotInTfBuffer:
             ROS_WARN_STREAM(
                 "Pointcloud end pose is available but start pose at time "
@@ -202,24 +203,8 @@ void PointcloudInputHandler::processQueue() {
       if (!transformer_->lookupTransform(
               world_frame_, oldest_msg.getSensorFrame(),
               convert::nanoSecondsToRosTime(oldest_msg.getTimeBase()), T_W_C)) {
-        const auto newest_msg = pointcloud_queue_.back();
-        if ((convert::nanoSecondsToRosTime(newest_msg.getTimeBase()) -
-             convert::nanoSecondsToRosTime(oldest_msg.getTimeBase()))
-                .toSec() < config_.max_wait_for_pose) {
-          // Try to get this pointcloud's pose again at the next iteration
-          return;
-        } else {
-          ROS_WARN_STREAM("Waited " << config_.max_wait_for_pose
-                                    << "s but still could not look up pose for "
-                                       "pointcloud with frame \""
-                                    << oldest_msg.getSensorFrame()
-                                    << "\" in world frame \"" << world_frame_
-                                    << "\" at timestamp "
-                                    << oldest_msg.getTimeBase()
-                                    << "; skipping pointcloud.");
-          pointcloud_queue_.pop();
-          continue;
-        }
+        // Try to get this pointcloud's pose again at the next iteration
+        return;
       }
 
       // Convert to a posed pointcloud
