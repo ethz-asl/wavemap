@@ -118,6 +118,7 @@ void PointcloudInputHandler::callback(
   pointcloud_queue_.emplace(std::move(stamped_pointcloud));
 }
 
+#ifdef LIVOX_AVAILABLE
 void PointcloudInputHandler::callback(
     const livox_ros_driver2::CustomMsg& pointcloud_msg) {
   // Skip empty clouds
@@ -143,6 +144,7 @@ void PointcloudInputHandler::callback(
   // Add it to the integration queue
   pointcloud_queue_.emplace(std::move(stamped_pointcloud));
 }
+#endif
 
 void PointcloudInputHandler::processQueue() {
   while (!pointcloud_queue_.empty()) {
