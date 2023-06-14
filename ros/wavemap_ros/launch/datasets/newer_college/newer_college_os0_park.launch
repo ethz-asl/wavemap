@@ -12,30 +12,20 @@
   <!-- Select the rosbag paths -->
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
   <arg if="$(arg only_first_rosbag)" name="rosbag_path"
-       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/park/nc-park-undistorted_0.bag"/>
+       value="
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-09-49_0-park.bag"/>
   <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_0.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_1.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_2.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_3.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_4.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_5.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_6.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_7.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_8.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_9.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_10.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_11.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_12.bag
-../data/wavemap_experiments/newer_college/rosbags/park/nc-park-undistorted_13.bag"/>
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-09-49_0-park.bag
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-13-13_1-park.bag
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-16-38_2-park.bag
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-20-07_3-park.bag
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-23-25_4-park.bag
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-26-36_5-park.bag
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-30-06_6-park.bag
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/park/2021-11-30-17-33-19_7-park.bag"/>
 
-  <node pkg="tf"
-        type="static_transform_publisher"
-        name="static_tf_map_to_odom"
-        args="6.155904428 -56.59342125 0.9703247249 0.003845974844 0.003257308965 0.4101220695 0.912016714
-              map odom 100"/>
-
-  <!-- Run wavemap -->
-  <include file="$(find wavemap_ros)/launch/datasets/dataset_base.launch"
-           pass_all_args="true"/>
+  <!-- Launch default Newer College OS0 setup -->
+  <include
+      file="$(find wavemap_ros)/launch/datasets/newer_college/newer_college_os0_base.launch"
+      pass_all_args="true"/>
 </launch>

@@ -12,18 +12,13 @@
   <!-- Select the rosbag paths -->
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
   <arg if="$(arg only_first_rosbag)" name="rosbag_path"
-       value="../data/newer_college/2021-ouster-os0-128-alphasense/collection4/easy/nc-easy-undistorted_0.bag"/>
+       value="
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection4/easy/2021-04-12-11-06-47-easy.bag"/>
   <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
-../data/wavemap_experiments/newer_college/rosbags/mine/nc-easy-undistorted_0.bag
-../data/wavemap_experiments/newer_college/rosbags/mine/nc-easy-undistorted_1.bag"/>
+../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection4/easy/2021-04-12-11-06-47-easy.bag"/>
 
-  <node pkg="tf"
-        type="static_transform_publisher"
-        name="static_tf_map_to_odom"
-        args="13.00089238 -11.50297372 0.01927582447 -0.004446327271 -0.0005743444102 -0.700153626 0.7139781511
-              map odom 100"/>
-
-  <!-- Run wavemap -->
-  <include file="$(find wavemap_ros)/launch/datasets/dataset_base.launch"
-           pass_all_args="true"/>
+  <!-- Launch default Newer College OS0 setup -->
+  <include
+      file="$(find wavemap_ros)/launch/datasets/newer_college/newer_college_os0_base.launch"
+      pass_all_args="true"/>
 </launch>

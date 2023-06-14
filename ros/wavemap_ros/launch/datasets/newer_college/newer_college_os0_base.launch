@@ -1,0 +1,38 @@
+<launch>
+  <!-- General arguments -->
+  <arg name="use_batch_mode"
+       default="false"
+       doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
+
+  <!-- Get odometry using Fast LIO -->
+  <!-- NOTE: When using batch mode, the odometry must be pre-recorded and added as an input rosbag. -->
+  <group unless="$(arg use_batch_mode)">
+    <rosparam command="load"
+              file="$(find wavemap_ros)/config/other_packages/fast_lio_ouster_os0.yaml"/>
+    <param name="feature_extract_enable" type="bool" value="0"/>
+    <param name="point_filter_num" type="int" value="1"/>
+    <param name="max_iteration" type="int" value="3"/>
+    <param name="filter_size_surf" type="double" value="0.25"/>
+    <param name="filter_size_map" type="double" value="0.5"/>
+    <param name="cube_side_length" type="double" value="500"/>
+    <param name="runtime_pos_log_enable" type="bool" value="0"/>
+    <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping"
+          output="screen">
+    </node>
+  </group>
+
+  <!-- Frames and calibrations -->
+  <node pkg="tf" type="static_transform_publisher"
+        name="static_tf_odom_camera_init"
+        args="0 0 0 0 0 0 1 odom camera_init 100"/>
+  <node pkg="tf" type="static_transform_publisher"
+        name="static_tf_fast_lio_imu"
+        args="0 0 0 0 0 0 1 imu_forward_prop os_imu 100"/>
+  <node pkg="tf" type="static_transform_publisher"
+        name="static_tf_os_imu_os_sensor"
+        args="-0.006253, 0.011775, -0.007645 0 0 0 1 os_imu os_sensor 100"/>
+
+  <!-- Run wavemap -->
+  <include file="$(find wavemap_ros)/launch/datasets/dataset_base.launch"
+           pass_all_args="true"/>
+</launch>

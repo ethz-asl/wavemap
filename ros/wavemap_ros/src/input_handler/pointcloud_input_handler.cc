@@ -80,7 +80,7 @@ void PointcloudInputHandler::callback(
 
   // Load the points with time information if undistortion is enabled
   bool loaded = false;
-  sensor_msgs::PointCloud2ConstIterator<uint32_t> pos_it(pointcloud_msg, "x");
+  sensor_msgs::PointCloud2ConstIterator<float> pos_it(pointcloud_msg, "x");
   if (config_.undistort_motion) {
     // NOTE: Livox pointclouds are not handled here but in their own callback.
     switch (config_.topic_type.toTypeId()) {
