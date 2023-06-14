@@ -173,22 +173,12 @@ jobs:
           PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
-  document:
+  build-docs:
     name: Update docs
     needs: [ workspace-container, lint ]
     runs-on: self-hosted
     container:
       image: ${{ needs.workspace-container.outputs.image }}
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: "pages"
-      cancel-in-progress: true
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v3
@@ -222,14 +212,28 @@ jobs:
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
 
-      # TODO(victorr): Move GH Pages deployment to separate job (with deployment
-      #                permissions) that only runs for main branch
+  publish-docs:
+    name: Publish docs
+    if: github.ref == 'refs/heads/main'
+    needs: [ build-docs ]
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Setup Pages
-        if: success() && github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v1
 
       - name: Deploy to GitHub Pages
-        if: success() && github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@main
 
