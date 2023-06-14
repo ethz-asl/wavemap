@@ -1,0 +1,24 @@
+syntax = "proto3";
+package wavemap.proto;
+
+message Index {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+}
+
+message WaveletOctreeNode {
+  repeated float detail_coefficients = 1;
+  uint32 allocated_children_bitset = 2;  // No smaller type available, but will encoded as varint
+}
+
+message WaveletOctree {
+  Index root_node_offset = 1;
+  float min_cell_width = 2;
+  float root_node_scale_coefficient = 3;
+  repeated WaveletOctreeNode nodes = 4;
+}
+
+message Map {
+  repeated WaveletOctree wavelet_octrees = 1;
+}
