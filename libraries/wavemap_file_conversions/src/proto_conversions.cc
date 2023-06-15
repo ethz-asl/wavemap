@@ -4,8 +4,8 @@ namespace wavemap::convert {
 void indexToProto(const Index3D& index, proto::Index* index_proto) {
   CHECK_NOTNULL(index_proto);
   index_proto->set_x(index.x());
-  index_proto->set_x(index.y());
-  index_proto->set_x(index.z());
+  index_proto->set_y(index.y());
+  index_proto->set_z(index.z());
 }
 
 void protoToIndex(const proto::Index& index_proto, Index3D& index) {
@@ -18,19 +18,18 @@ void detailsToProto(
     const HaarCoefficients<FloatingPoint, 3>::Details& coefficients,
     google::protobuf::RepeatedField<float>* coefficients_proto) {
   CHECK_NOTNULL(coefficients_proto);
-  for (int idx = 0;
-       idx < HaarCoefficients<FloatingPoint, 3>::kNumDetailCoefficients;
-       ++idx) {
-    coefficients_proto->Add(coefficients[idx]);
-  }
+  std::for_each(coefficients.begin(), coefficients.end(),
+                [&coefficients_proto](auto coefficient) {
+                  coefficients_proto->Add(coefficient);
+                });
 }
 
 void protoToDetails(
     const google::protobuf::RepeatedField<float>& coefficients_proto,
     HaarCoefficients<FloatingPoint, 3>::Details& coefficients) {
-  for (int idx = 0;
-       idx < HaarCoefficients<FloatingPoint, 3>::kNumDetailCoefficients;
-       ++idx) {
+  constexpr int kNumCoefficients =
+      HaarCoefficients<FloatingPoint, 3>::kNumDetailCoefficients;
+  for (int idx = 0; idx < kNumCoefficients; ++idx) {
     coefficients[idx] = coefficients_proto.Get(idx);
   }
 }
@@ -236,12 +235,11 @@ void protoToMap(const proto::Map& map_proto, HashedWaveletOctree::Ptr& map) {
     stack.emplace(&block.getRootNode());
     for (const auto& node_proto : block_proto.nodes()) {
       CHECK(!stack.empty());
-      WaveletOctree::NodeType* current_node = stack.top();
-      CHECK_NOTNULL(current_node);
+      WaveletOctree::NodeType* current_node = CHECK_NOTNULL(stack.top());
       stack.pop();
 
       protoToDetails(node_proto.detail_coefficients(), current_node->data());
-      const auto allocated_children_bitset =
+      const uint8_t allocated_children_bitset =
           node_proto.allocated_children_bitset();
       for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {

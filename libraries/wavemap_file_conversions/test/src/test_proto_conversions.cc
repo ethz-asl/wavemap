@@ -12,10 +12,45 @@
 #include "wavemap_file_conversions/proto_conversions.h"
 
 namespace wavemap {
+using GeneralProtoConversionsTest = FixtureBase;
+
+TEST_F(GeneralProtoConversionsTest, Index) {
+  const auto indices = GeometryGenerator().getRandomIndexVector<3>(1000, 2000);
+  for (const auto& index : indices) {
+    proto::Index index_proto;
+    convert::indexToProto(index, &index_proto);
+    Index3D index_round_trip;
+    convert::protoToIndex(index_proto, index_round_trip);
+    EXPECT_EQ(index_round_trip[0], index[0]);
+    EXPECT_EQ(index_round_trip[1], index[1]);
+    EXPECT_EQ(index_round_trip[2], index[2]);
+  }
+}
+
+TEST_F(GeneralProtoConversionsTest, Details) {
+  for (int repetition = 0; repetition < 1000; ++repetition) {
+    using Details = HaarCoefficients<FloatingPoint, 3>::Details;
+    using DetailsProto = google::protobuf::RepeatedField<float>;
+    constexpr int kNumDetails =
+        HaarCoefficients<FloatingPoint, 3>::kNumDetailCoefficients;
+    Details coefficients{};
+    std::generate(coefficients.begin(), coefficients.end(),
+                  [this]() { return getRandomFloat(-1e3f, 1e3f); });
+    DetailsProto coefficients_proto;
+    convert::detailsToProto(coefficients, &coefficients_proto);
+    Details coefficients_round_trip;
+    convert::protoToDetails(coefficients_proto, coefficients_round_trip);
+    for (int idx = 0; idx < kNumDetails; ++idx) {
+      EXPECT_EQ(coefficients_round_trip[idx], coefficients[idx])
+          << "For idx " << idx;
+    }
+  }
+}
+
 template <typename VolumetricDataStructureType>
-class ProtoConversionsTest : public FixtureBase,
-                             public GeometryGenerator,
-                             public ConfigGenerator {
+class MapProtoConversionsTest : public FixtureBase,
+                                public GeometryGenerator,
+                                public ConfigGenerator {
  protected:
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
 };
@@ -23,9 +58,9 @@ class ProtoConversionsTest : public FixtureBase,
 using VolumetricDataStructureTypes =
     ::testing::Types<WaveletOctree, HashedWaveletOctree,
                      HashedChunkedWaveletOctree>;
-TYPED_TEST_SUITE(ProtoConversionsTest, VolumetricDataStructureTypes, );
+TYPED_TEST_SUITE(MapProtoConversionsTest, VolumetricDataStructureTypes, );
 
-TYPED_TEST(ProtoConversionsTest, MetadataPreservation) {
+TYPED_TEST(MapProtoConversionsTest, MetadataPreservation) {
   const auto config =
       ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
 
@@ -49,9 +84,8 @@ TYPED_TEST(ProtoConversionsTest, MetadataPreservation) {
   convert::protoToMap(map_proto, map_base_round_trip);
   ASSERT_TRUE(map_base_round_trip);
 
-  // TODO(victorr): Add option to deserialize into hashed chunked wavelet
-  //                octrees, instead of implicitly converting them to regular
-  //                hashed wavelet octrees.
+  // TODO(victorr): Remove this special case once deserializing directly into
+  //                HashedChunkedWaveletOctrees is supported
   if (std::is_same_v<TypeParam, HashedChunkedWaveletOctree>) {
     HashedWaveletOctree::ConstPtr map_round_trip =
         std::dynamic_pointer_cast<HashedWaveletOctree>(map_base_round_trip);
@@ -75,65 +109,59 @@ TYPED_TEST(ProtoConversionsTest, MetadataPreservation) {
   }
 }
 
-TYPED_TEST(ProtoConversionsTest, InsertionAndLeafVisitor) {
+TYPED_TEST(MapProtoConversionsTest, InsertionAndLeafVisitor) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Create a random map
     const auto config =
         ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
-    std::unique_ptr<VolumetricDataStructureBase> map =
-        std::make_unique<TypeParam>(config);
+    TypeParam map_original(config);
     const std::vector<Index3D> random_indices =
         GeometryGenerator::getRandomIndexVector<3>(
             1000u, 2000u, Index3D::Constant(-5000), Index3D::Constant(5000));
     for (const Index3D& index : random_indices) {
       const FloatingPoint update = TestFixture::getRandomUpdate();
-      map->addToCellValue(index, update);
+      map_original.addToCellValue(index, update);
     }
+    map_original.prune();
 
     // Serialize and deserialize
     proto::Map map_proto;
-    ASSERT_TRUE(convert::mapToProto(*map, &map_proto));
-    VolumetricDataStructureBase::Ptr map_round_trip;
-    convert::protoToMap(map_proto, map_round_trip);
-    ASSERT_TRUE(map_round_trip);
+    convert::mapToProto(map_original, &map_proto);
+    VolumetricDataStructureBase::Ptr map_base_round_trip;
+    convert::protoToMap(map_proto, map_base_round_trip);
+    ASSERT_TRUE(map_base_round_trip);
 
     // Check that both maps contain the same leaves
-    using LeafMap =
-        std::unordered_map<NdtreeIndex<3>, FloatingPoint, NdtreeIndexHash<3>>;
-    LeafMap reference_leaves;
-    map->forEachLeaf([&reference_leaves](const OctreeIndex& node_index,
-                                         FloatingPoint value) {
-      reference_leaves[node_index] = value;
-    });
-    LeafMap round_trip_leaves;
-    map->forEachLeaf([&round_trip_leaves](const OctreeIndex& node_index,
-                                          FloatingPoint value) {
-      round_trip_leaves[node_index] = value;
-    });
-    for (const auto& [reference_leaf_index, reference_leaf_value] :
-         reference_leaves) {
-      const bool round_trip_map_has_leaf =
-          round_trip_leaves.count(reference_leaf_index);
-      EXPECT_TRUE(round_trip_map_has_leaf)
-          << "For leaf index " << reference_leaf_index.toString();
-      if (round_trip_map_has_leaf) {
-        EXPECT_NEAR(reference_leaf_value,
-                    round_trip_leaves[reference_leaf_index],
+    map_base_round_trip->forEachLeaf(
+        [&map_original](const OctreeIndex& node_index,
+                        FloatingPoint round_trip_value) {
+          EXPECT_NEAR(round_trip_value, map_original.getCellValue(node_index),
+                      TestFixture::kAcceptableReconstructionError);
+        });
+
+    // TODO(victorr): Remove this special case once deserializing directly
+    //                into HashedChunkedWaveletOctrees is supported
+    if (std::is_same_v<TypeParam, HashedChunkedWaveletOctree>) {
+      HashedWaveletOctree::ConstPtr map_round_trip =
+          std::dynamic_pointer_cast<HashedWaveletOctree>(map_base_round_trip);
+      ASSERT_TRUE(map_round_trip);
+
+      map_original.forEachLeaf([&map_round_trip](const OctreeIndex& node_index,
+                                                 FloatingPoint original_value) {
+        EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
                     TestFixture::kAcceptableReconstructionError);
-      }
-    }
-    for (const auto& [round_trip_leaf_index, round_trip_leaf_value] :
-         round_trip_leaves) {
-      const bool reference_map_has_leaf =
-          reference_leaves.count(round_trip_leaf_index);
-      EXPECT_TRUE(reference_map_has_leaf)
-          << "For leaf index " << round_trip_leaf_index.toString();
-      if (reference_map_has_leaf) {
-        EXPECT_NEAR(round_trip_leaf_value,
-                    round_trip_leaves[round_trip_leaf_index],
+      });
+    } else {
+      typename TypeParam::ConstPtr map_round_trip =
+          std::dynamic_pointer_cast<TypeParam>(map_base_round_trip);
+      ASSERT_TRUE(map_round_trip);
+
+      map_original.forEachLeaf([&map_round_trip](const OctreeIndex& node_index,
+                                                 FloatingPoint original_value) {
+        EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
                     TestFixture::kAcceptableReconstructionError);
-      }
+      });
     }
   }
 }
