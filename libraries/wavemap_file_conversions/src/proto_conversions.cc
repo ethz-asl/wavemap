@@ -1,7 +1,8 @@
-#include "wavemap_file_conversions/map_conversions.h"
+#include "wavemap_file_conversions/proto_conversions.h"
 
 namespace wavemap::convert {
 void indexToProto(const Index3D& index, proto::Index* index_proto) {
+  CHECK_NOTNULL(index_proto);
   index_proto->set_x(index.x());
   index_proto->set_x(index.y());
   index_proto->set_x(index.z());
@@ -16,6 +17,7 @@ void protoToIndex(const proto::Index& index_proto, Index3D& index) {
 void detailsToProto(
     const HaarCoefficients<FloatingPoint, 3>::Details& coefficients,
     google::protobuf::RepeatedField<float>* coefficients_proto) {
+  CHECK_NOTNULL(coefficients_proto);
   for (int idx = 0;
        idx < HaarCoefficients<FloatingPoint, 3>::kNumDetailCoefficients;
        ++idx) {
@@ -33,61 +35,76 @@ void protoToDetails(
   }
 }
 
-void mapToProto(const VolumetricDataStructureBase::ConstPtr& map,
-                proto::Map* map_proto) {
-  if (const auto wavelet_octree =
-          std::dynamic_pointer_cast<const WaveletOctree>(map);
+bool mapToProto(const VolumetricDataStructureBase& map, proto::Map* map_proto) {
+  if (const auto* wavelet_octree = dynamic_cast<const WaveletOctree*>(&map);
       wavelet_octree) {
-    return convert::mapToProto(*wavelet_octree, map_proto);
+    convert::mapToProto(*wavelet_octree, map_proto);
+    return true;
   }
 
-  if (const auto hashed_wavelet_octree =
-          std::dynamic_pointer_cast<const HashedWaveletOctree>(map);
+  if (const auto* hashed_wavelet_octree =
+          dynamic_cast<const HashedWaveletOctree*>(&map);
       hashed_wavelet_octree) {
-    return convert::mapToProto(*hashed_wavelet_octree, map_proto);
+    convert::mapToProto(*hashed_wavelet_octree, map_proto);
+    return true;
   }
 
-  if (const auto hashed_chunked_wavelet_octree =
-          std::dynamic_pointer_cast<const HashedChunkedWaveletOctree>(map);
+  if (const auto* hashed_chunked_wavelet_octree =
+          dynamic_cast<const HashedChunkedWaveletOctree*>(&map);
       hashed_chunked_wavelet_octree) {
-    return convert::mapToProto(*hashed_chunked_wavelet_octree, map_proto);
+    convert::mapToProto(*hashed_chunked_wavelet_octree, map_proto);
+    return true;
   }
 
-  LOG(WARNING) << "Conversion of the requested map type to proto is not yet "
-                  "supported.";
+  LOG(WARNING) << "Could not serialize requested map to proto. "
+                  "Map type not yet supported.";
+  return false;
 }
 
 void protoToMap(const proto::Map& map_proto,
                 VolumetricDataStructureBase::Ptr& map) {
-  if (!map_proto.wavelet_octrees().empty()) {
-    if (map_proto.wavelet_octrees().size() == 1) {
+  switch (map_proto.data_case()) {
+    case proto::Map::kWaveletOctree: {
       auto wavelet_octree = std::dynamic_pointer_cast<WaveletOctree>(map);
       protoToMap(map_proto, wavelet_octree);
       map = wavelet_octree;
       return;
-    } else {
+    }
+    case proto::Map::kHashedWaveletOctree: {
       auto hashed_wavelet_octree =
           std::dynamic_pointer_cast<HashedWaveletOctree>(map);
       protoToMap(map_proto, hashed_wavelet_octree);
       map = hashed_wavelet_octree;
       return;
     }
-  }
+    case proto::Map::DATA_NOT_SET:
+      LOG(WARNING) << "Could not deserialize map proto to a wavemap map. "
+                      "Empty map.";
+      map = nullptr;
+      return;
 
-  LOG(WARNING)
-      << "Conversion of the requested map ROS proto to a wavemap map is "
-         "not yet supported.";
-  map = nullptr;
+    default:
+      LOG(WARNING) << "Could not deserialize map proto to a wavemap map. "
+                      "Unsupported map type.";
+      map = nullptr;
+      return;
+  }
 }
 
 void mapToProto(const WaveletOctree& map, proto::Map* map_proto) {
-  auto* wavelet_octree_proto = map_proto->add_wavelet_octrees();
-  wavelet_octree_proto->set_min_cell_width(map.getMinCellWidth());
+  CHECK_NOTNULL(map_proto);
+  map_proto->set_min_cell_width(map.getMinCellWidth());
+  map_proto->set_min_log_odds(map.getMinLogOdds());
+  map_proto->set_max_log_odds(map.getMaxLogOdds());
+
+  auto* wavelet_octree_proto =
+      CHECK_NOTNULL(map_proto->mutable_wavelet_octree());
+  wavelet_octree_proto->set_tree_height(map.getTreeHeight());
   wavelet_octree_proto->set_root_node_scale_coefficient(map.getRootScale());
 
   for (const auto& node :
        map.getNodeIterator<TraversalOrder::kDepthFirstPreorder>()) {
-    auto* node_proto = wavelet_octree_proto->add_nodes();
+    auto* node_proto = CHECK_NOTNULL(wavelet_octree_proto->add_nodes());
     detailsToProto(node.data(), node_proto->mutable_detail_coefficients());
 
     uint8_t allocated_children_bitset = 0;
@@ -102,16 +119,18 @@ void mapToProto(const WaveletOctree& map, proto::Map* map_proto) {
 }
 
 void protoToMap(const proto::Map& map_proto, WaveletOctree::Ptr& map) {
-  if (map) {
-    map->clear();
-  } else {
-    WaveletOctreeConfig config;
-    config.min_cell_width =
-        map_proto.wavelet_octrees().begin()->min_cell_width();
-    map = std::make_shared<WaveletOctree>(config);
+  if (map_proto.data_case() != proto::Map::kWaveletOctree) {
+    return;
   }
+  const auto& wavelet_octree_proto = map_proto.wavelet_octree();
 
-  const auto& wavelet_octree_proto = *map_proto.wavelet_octrees().begin();
+  WaveletOctreeConfig config;
+  config.min_cell_width = map_proto.min_cell_width();
+  config.min_log_odds = map_proto.min_log_odds();
+  config.max_log_odds = map_proto.max_log_odds();
+  config.tree_height = wavelet_octree_proto.tree_height();
+  map = std::make_shared<WaveletOctree>(config);
+
   map->getRootScale() = wavelet_octree_proto.root_node_scale_coefficient();
 
   std::stack<WaveletOctree::NodeType*> stack;
@@ -137,11 +156,20 @@ void protoToMap(const proto::Map& map_proto, WaveletOctree::Ptr& map) {
 }
 
 void mapToProto(const HashedWaveletOctree& map, proto::Map* map_proto) {
+  CHECK_NOTNULL(map_proto);
+  map_proto->set_min_cell_width(map.getMinCellWidth());
+  map_proto->set_min_log_odds(map.getMinLogOdds());
+  map_proto->set_max_log_odds(map.getMaxLogOdds());
+
+  auto* hashed_wavelet_octree_proto =
+      CHECK_NOTNULL(map_proto->mutable_hashed_wavelet_octree());
+  hashed_wavelet_octree_proto->set_tree_height(map.getTreeHeight());
+
   for (const auto& [block_index, block] : map.getBlocks()) {
-    auto* wavelet_octree_proto = map_proto->add_wavelet_octrees();
-    wavelet_octree_proto->set_min_cell_width(map.getMinCellWidth());
-    indexToProto(block_index, wavelet_octree_proto->mutable_root_node_offset());
-    wavelet_octree_proto->set_root_node_scale_coefficient(block.getRootScale());
+    auto* block_proto =
+        CHECK_NOTNULL(hashed_wavelet_octree_proto->add_blocks());
+    indexToProto(block_index, block_proto->mutable_root_node_offset());
+    block_proto->set_root_node_scale_coefficient(block.getRootScale());
 
     constexpr FloatingPoint kNumericalNoise = 1e-3f;
     const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
@@ -159,7 +187,7 @@ void mapToProto(const HashedWaveletOctree& map, proto::Map* map_proto) {
       const auto& node = stack.top().node;
       stack.pop();
 
-      auto* node_proto = wavelet_octree_proto->add_nodes();
+      auto* node_proto = CHECK_NOTNULL(block_proto->add_nodes());
       detailsToProto(node.data(), node_proto->mutable_detail_coefficients());
 
       uint8_t allocated_children_bitset = 0;
@@ -184,14 +212,19 @@ void mapToProto(const HashedWaveletOctree& map, proto::Map* map_proto) {
 }
 
 void protoToMap(const proto::Map& map_proto, HashedWaveletOctree::Ptr& map) {
-  if (!map) {
-    HashedWaveletOctreeConfig config;
-    config.min_cell_width =
-        map_proto.wavelet_octrees().begin()->min_cell_width();
-    map = std::make_shared<HashedWaveletOctree>(config);
+  if (map_proto.data_case() != proto::Map::kHashedWaveletOctree) {
+    return;
   }
+  const auto& hashed_wavelet_octree_proto = map_proto.hashed_wavelet_octree();
 
-  for (const auto& block_proto : map_proto.wavelet_octrees()) {
+  HashedWaveletOctreeConfig config;
+  config.min_cell_width = map_proto.min_cell_width();
+  config.min_log_odds = map_proto.min_log_odds();
+  config.max_log_odds = map_proto.max_log_odds();
+  config.tree_height = hashed_wavelet_octree_proto.tree_height();
+  map = std::make_shared<HashedWaveletOctree>(config);
+
+  for (const auto& block_proto : hashed_wavelet_octree_proto.blocks()) {
     Index3D block_index;
     protoToIndex(block_proto.root_node_offset(), block_index);
     CHECK(!block_index.hasNaN()) << block_index;
@@ -223,11 +256,20 @@ void protoToMap(const proto::Map& map_proto, HashedWaveletOctree::Ptr& map) {
 }
 
 void mapToProto(const HashedChunkedWaveletOctree& map, proto::Map* map_proto) {
+  CHECK_NOTNULL(map_proto);
+  map_proto->set_min_cell_width(map.getMinCellWidth());
+  map_proto->set_min_log_odds(map.getMinLogOdds());
+  map_proto->set_max_log_odds(map.getMaxLogOdds());
+
+  auto* hashed_wavelet_octree_proto =
+      CHECK_NOTNULL(map_proto->mutable_hashed_wavelet_octree());
+  hashed_wavelet_octree_proto->set_tree_height(map.getTreeHeight());
+
   for (const auto& [block_index, block] : map.getBlocks()) {
-    auto* wavelet_octree_proto = map_proto->add_wavelet_octrees();
-    wavelet_octree_proto->set_min_cell_width(map.getMinCellWidth());
-    indexToProto(block_index, wavelet_octree_proto->mutable_root_node_offset());
-    wavelet_octree_proto->set_root_node_scale_coefficient(block.getRootScale());
+    auto* block_proto =
+        CHECK_NOTNULL(hashed_wavelet_octree_proto->add_blocks());
+    indexToProto(block_index, block_proto->mutable_root_node_offset());
+    block_proto->set_root_node_scale_coefficient(block.getRootScale());
 
     constexpr FloatingPoint kNumericalNoise = 1e-3f;
     const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
@@ -258,7 +300,7 @@ void mapToProto(const HashedChunkedWaveletOctree& map, proto::Map* map_proto) {
           OctreeIndex::computeTreeTraversalDistance(
               morton_code, chunk_top_height, index.height);
 
-      auto* node_proto = wavelet_octree_proto->add_nodes();
+      auto* node_proto = CHECK_NOTNULL(block_proto->add_nodes());
       const auto& node_data = chunk.nodeData(relative_node_index);
       detailsToProto(node_data, node_proto->mutable_detail_coefficients());
 
@@ -297,51 +339,5 @@ void mapToProto(const HashedChunkedWaveletOctree& map, proto::Map* map_proto) {
       node_proto->set_allocated_children_bitset(allocated_children_bitset);
     }
   }
-}
-
-bool serializeMapToFile(const VolumetricDataStructureBase::ConstPtr& map,
-                        const std::string& file_path) {
-  CHECK(!file_path.empty());
-
-  std::ofstream file_stream(file_path, std::ofstream::out);
-  if (!file_stream.is_open()) {
-    LOG(WARNING) << "Could not open file '" << file_path << "' for writing!";
-    return false;
-  }
-
-  // Serialize
-  proto::Map map_proto;
-  mapToProto(map, &map_proto);
-
-  // Append the proto msg to the bytestream
-  if (!writeProtoMsgToStream(map_proto, &file_stream)) {
-    return false;
-  }
-
-  return true;
-}
-
-bool deserializeMapFromFile(const std::string& file_path,
-                            VolumetricDataStructureBase::Ptr& map) {
-  CHECK(!file_path.empty());
-  CHECK_NOTNULL(map);
-
-  std::ifstream file_stream(file_path, std::ifstream::in);
-  if (!file_stream.is_open()) {
-    LOG(WARNING) << "Could not open file '" << file_path << "' for writing!";
-    return false;
-  }
-
-  // Read from bytestream
-  proto::Map map_proto;
-  if (!file_stream.eof()) {
-    if (readProtoMsgFromStream(&file_stream, &map_proto)) {
-      // Deserialize
-      protoToMap(map_proto, map);
-      return true;
-    }
-  }
-
-  return false;
 }
 }  // namespace wavemap::convert

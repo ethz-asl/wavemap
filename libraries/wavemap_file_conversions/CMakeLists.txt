@@ -16,8 +16,18 @@ PROTOBUF_CATKIN_GENERATE_CPP2(${BASE_PATH} PROTO_SRCS PROTO_HDRS ${PROTO_DEFNS})
 # Libraries
 # cmake-lint: disable=C0301
 add_library(${PROJECT_NAME}
-    src/map_conversions.cc src/proto_utils.cc ${PROTO_SRCS})
+    src/proto_conversions.cc
+    src/file_conversions.cc
+    ${PROTO_SRCS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+# Tests
+if (CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(
+      test_${PROJECT_NAME}
+      test/src/test_proto_conversions.cc)
+  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
+endif ()
 
 # Export
 cs_install()

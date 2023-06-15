@@ -65,6 +65,7 @@ class WaveletOctree : public VolumetricDataStructureBase {
   Index3D getMaxIndex() const override;
   Index3D getMinPossibleIndex() const;
   Index3D getMaxPossibleIndex() const;
+  IndexElement getTreeHeight() const { return config_.tree_height; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;

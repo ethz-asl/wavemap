@@ -6,7 +6,6 @@
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_msgs/MapEvaluationSummary.h>
-#include <wavemap_msgs/PerformanceStats.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
