@@ -15,7 +15,7 @@ PROTOBUF_CATKIN_GENERATE_CPP2(${BASE_PATH} PROTO_SRCS PROTO_HDRS ${PROTO_DEFNS})
 
 # Libraries
 # cmake-lint: disable=C0301
-add_library(${PROJECT_NAME}
+cs_add_library(${PROJECT_NAME}
     src/proto_conversions.cc
     src/file_conversions.cc
     ${PROTO_SRCS})

@@ -22,7 +22,9 @@
   <depend>minkindr_conversions</depend>
 
   <depend>wavemap_msgs</depend>
+  <depend>wavemap_file_conversions</depend>
   <depend>wavemap_ros_conversions</depend>
+
   <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>
   <depend>visualization_msgs</depend>
