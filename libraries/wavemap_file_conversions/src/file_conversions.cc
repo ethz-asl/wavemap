@@ -25,7 +25,6 @@ bool mapToFile(const VolumetricDataStructureBase& map,
 bool fileToMap(const std::string& file_path,
                VolumetricDataStructureBase::Ptr& map) {
   CHECK(!file_path.empty());
-  CHECK_NOTNULL(map);
 
   // Open the file for reading
   std::ifstream file_istream(file_path, std::ifstream::in);

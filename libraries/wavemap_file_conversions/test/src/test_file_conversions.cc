@@ -9,23 +9,24 @@
 #include <wavemap/test/geometry_generator.h>
 #include <wavemap/utils/container_print_utils.h>
 
-#include "wavemap_file_conversions/proto_conversions.h"
+#include "wavemap_file_conversions/file_conversions.h"
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
-class ProtoConversionsTest : public FixtureBase,
-                             public GeometryGenerator,
-                             public ConfigGenerator {
+class FileConversionsTest : public FixtureBase,
+                            public GeometryGenerator,
+                            public ConfigGenerator {
  protected:
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
+  static constexpr auto kTemporaryFilePath = "/tmp/tmp.wvmp";
 };
 
 using VolumetricDataStructureTypes =
     ::testing::Types<WaveletOctree, HashedWaveletOctree,
                      HashedChunkedWaveletOctree>;
-TYPED_TEST_SUITE(ProtoConversionsTest, VolumetricDataStructureTypes, );
+TYPED_TEST_SUITE(FileConversionsTest, VolumetricDataStructureTypes, );
 
-TYPED_TEST(ProtoConversionsTest, MetadataPreservation) {
+TYPED_TEST(FileConversionsTest, MetadataPreservation) {
   const auto config =
       ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
 
@@ -43,10 +44,9 @@ TYPED_TEST(ProtoConversionsTest, MetadataPreservation) {
   ASSERT_EQ(map_base->getMaxLogOdds(), config.max_log_odds);
 
   // Serialize and deserialize
-  proto::Map map_proto;
-  ASSERT_TRUE(convert::mapToProto(*map_base, &map_proto));
+  ASSERT_TRUE(convert::mapToFile(*map_base, TestFixture::kTemporaryFilePath));
   VolumetricDataStructureBase::Ptr map_base_round_trip;
-  convert::protoToMap(map_proto, map_base_round_trip);
+  convert::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip);
   ASSERT_TRUE(map_base_round_trip);
 
   // TODO(victorr): Add option to deserialize into hashed chunked wavelet
@@ -75,7 +75,7 @@ TYPED_TEST(ProtoConversionsTest, MetadataPreservation) {
   }
 }
 
-TYPED_TEST(ProtoConversionsTest, InsertionAndLeafVisitor) {
+TYPED_TEST(FileConversionsTest, InsertionAndLeafVisitor) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Create a random map
@@ -92,10 +92,9 @@ TYPED_TEST(ProtoConversionsTest, InsertionAndLeafVisitor) {
     }
 
     // Serialize and deserialize
-    proto::Map map_proto;
-    ASSERT_TRUE(convert::mapToProto(*map, &map_proto));
+    ASSERT_TRUE(convert::mapToFile(*map, TestFixture::kTemporaryFilePath));
     VolumetricDataStructureBase::Ptr map_round_trip;
-    convert::protoToMap(map_proto, map_round_trip);
+    convert::fileToMap(TestFixture::kTemporaryFilePath, map_round_trip);
     ASSERT_TRUE(map_round_trip);
 
     // Check that both maps contain the same leaves
