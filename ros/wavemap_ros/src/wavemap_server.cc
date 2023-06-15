@@ -73,6 +73,7 @@ void WavemapServer::visualizeMap() {
 
 bool WavemapServer::saveMap(const std::string& file_path) const {
   if (occupancy_map_) {
+    occupancy_map_->threshold();
     return convert::mapToFile(*occupancy_map_, file_path);
   } else {
     LOG(ERROR) << "Could not save map because it has not yet been allocated.";

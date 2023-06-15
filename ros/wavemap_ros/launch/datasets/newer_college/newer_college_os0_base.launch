@@ -4,6 +4,11 @@
        default="false"
        doc="Whether to process the rosbag in batch mode or replay the rosbag."/>
 
+  <!-- Wavemap params -->
+  <arg name="param_file"
+       default="$(find wavemap_ros)/config/ouster_os0.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
+
   <!-- Get odometry using Fast LIO -->
   <!-- NOTE: When using batch mode, the odometry must be pre-recorded and added as an input rosbag. -->
   <group unless="$(arg use_batch_mode)">
