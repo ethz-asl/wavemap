@@ -1,38 +1,38 @@
-syntax = "proto3";
+syntax = "proto2";
 package wavemap.proto;
 
 message Index {
-  int32 x = 1;
-  int32 y = 2;
-  int32 z = 3;
+  optional int32 x = 1;
+  optional int32 y = 2;
+  optional int32 z = 3;
 }
 
 message WaveletOctreeNode {
   repeated float detail_coefficients = 1;
-  uint32 allocated_children_bitset = 2;  // No smaller type available, but gets encoded as varint
+  optional uint32 allocated_children_bitset = 2;  // No smaller type available, but gets encoded as varint
 }
 
 message WaveletOctree {
-  int32 tree_height = 1;
-  float root_node_scale_coefficient = 2;
+  optional int32 tree_height = 1;
+  optional float root_node_scale_coefficient = 2;
   repeated WaveletOctreeNode nodes = 3;
 }
 
 message HashedWaveletOctreeBlock {
-  Index root_node_offset = 1;
-  float root_node_scale_coefficient = 2;
+  optional Index root_node_offset = 1;
+  optional float root_node_scale_coefficient = 2;
   repeated WaveletOctreeNode nodes = 3;
 }
 
 message HashedWaveletOctree {
-  int32 tree_height = 1;
+  optional int32 tree_height = 1;
   repeated HashedWaveletOctreeBlock blocks = 2;
 }
 
 message Map {
-  float min_cell_width = 1;
-  float min_log_odds = 2;
-  float max_log_odds = 3;
+  optional float min_cell_width = 1;
+  optional float min_log_odds = 2;
+  optional float max_log_odds = 3;
   oneof data {
     WaveletOctree wavelet_octree = 4;
     HashedWaveletOctree hashed_wavelet_octree = 5;
