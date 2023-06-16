@@ -65,7 +65,7 @@ ARG ROS_HOME
 ENV ROS_HOME=$ROS_HOME
 # hadolint ignore=DL3008
 RUN apt-get update && \
-    apt-get install -q -y --no-install-recommends git python3-catkin-tools ccache libopencv-viz-dev && \
+    apt-get install -q -y --no-install-recommends git python3-catkin-tools ccache libopencv-viz-dev libtool && \
     rosdep update && \
     rosdep install --from-paths src --ignore-src \
       --skip-keys="numpy_eigen catkin_boost_python_buildtool" -q -y && \
