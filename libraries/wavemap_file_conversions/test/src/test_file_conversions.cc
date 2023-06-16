@@ -1,3 +1,4 @@
+#include <google/protobuf/stubs/common.h>
 #include <gtest/gtest.h>
 #include <wavemap/common.h>
 #include <wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree.h>
@@ -16,6 +17,11 @@ template <typename VolumetricDataStructureType>
 class FileConversionsTest : public FixtureBase,
                             public GeometryGenerator,
                             public ConfigGenerator {
+ public:
+  ~FileConversionsTest() override {
+    google::protobuf::ShutdownProtobufLibrary();
+  }
+
  protected:
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
   static constexpr auto kTemporaryFilePath = "/tmp/tmp.wvmp";
