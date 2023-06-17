@@ -26,8 +26,9 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
       test_${PROJECT_NAME}
       test/src/test_proto_conversions.cc
-      test/src/test_file_conversions.cc)
-  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
+      test/src/test_file_conversions.cc
+      test/src/test_main.cc)
+  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest)
 endif ()
 
 # Export

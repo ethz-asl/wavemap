@@ -1,4 +1,3 @@
-#include <google/protobuf/stubs/common.h>
 #include <gtest/gtest.h>
 #include <wavemap/common.h>
 #include <wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree.h>
@@ -13,12 +12,7 @@
 #include "wavemap_file_conversions/proto_conversions.h"
 
 namespace wavemap {
-class GeneralProtoConversionsTest : public FixtureBase {
- public:
-  ~GeneralProtoConversionsTest() override {
-    google::protobuf::ShutdownProtobufLibrary();
-  }
-};
+using GeneralProtoConversionsTest = FixtureBase;
 
 TEST_F(GeneralProtoConversionsTest, Index) {
   const auto indices = GeometryGenerator().getRandomIndexVector<3>(1000, 2000);
@@ -57,11 +51,6 @@ template <typename VolumetricDataStructureType>
 class MapProtoConversionsTest : public FixtureBase,
                                 public GeometryGenerator,
                                 public ConfigGenerator {
- public:
-  ~MapProtoConversionsTest() override {
-    google::protobuf::ShutdownProtobufLibrary();
-  }
-
  protected:
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
 };
