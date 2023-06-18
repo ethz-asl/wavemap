@@ -13,7 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>wavemap</exec_depend>
-  <exec_depend>wavemap_file_conversions</exec_depend>
+  <exec_depend>wavemap_io</exec_depend>
   <exec_depend>wavemap_msgs</exec_depend>
   <exec_depend>wavemap_ros_conversions</exec_depend>
   <exec_depend>wavemap_ros</exec_depend>
