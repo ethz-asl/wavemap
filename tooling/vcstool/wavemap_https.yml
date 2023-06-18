@@ -27,7 +27,3 @@ repositories:
     type: git
     url: https://github.com/ethz-asl/minkindr_ros.git
     version: master
-  protobuf_catkin:
-    type: git
-    url: https://github.com/ethz-asl/protobuf_catkin.git
-    version: master
