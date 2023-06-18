@@ -9,7 +9,7 @@
 #include <wavemap/test/geometry_generator.h>
 #include <wavemap/utils/container_print_utils.h>
 
-#include "wavemap_file_conversions/file_conversions.h"
+#include "wavemap_io/file_conversions.h"
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
@@ -44,9 +44,9 @@ TYPED_TEST(FileConversionsTest, MetadataPreservation) {
   ASSERT_EQ(map_base->getMaxLogOdds(), config.max_log_odds);
 
   // Serialize and deserialize
-  ASSERT_TRUE(convert::mapToFile(*map_base, TestFixture::kTemporaryFilePath));
+  ASSERT_TRUE(io::mapToFile(*map_base, TestFixture::kTemporaryFilePath));
   VolumetricDataStructureBase::Ptr map_base_round_trip;
-  convert::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip);
+  io::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip);
   ASSERT_TRUE(map_base_round_trip);
 
   // TODO(victorr): Add option to deserialize into hashed chunked wavelet
@@ -92,9 +92,9 @@ TYPED_TEST(FileConversionsTest, InsertionAndLeafVisitor) {
     }
 
     // Serialize and deserialize
-    ASSERT_TRUE(convert::mapToFile(*map, TestFixture::kTemporaryFilePath));
+    ASSERT_TRUE(io::mapToFile(*map, TestFixture::kTemporaryFilePath));
     VolumetricDataStructureBase::Ptr map_round_trip;
-    convert::fileToMap(TestFixture::kTemporaryFilePath, map_round_trip);
+    io::fileToMap(TestFixture::kTemporaryFilePath, map_round_trip);
     ASSERT_TRUE(map_round_trip);
 
     // Check that both maps contain the same leaves

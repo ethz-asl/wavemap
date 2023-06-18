@@ -3,7 +3,7 @@
 #include <std_srvs/Empty.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_factory.h>
 #include <wavemap/utils/nameof.h>
-#include <wavemap_file_conversions/file_conversions.h>
+#include <wavemap_io/file_conversions.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_ros_conversions/config_conversions.h>
@@ -73,14 +73,14 @@ void WavemapServer::visualizeMap() {
 bool WavemapServer::saveMap(const std::string& file_path) const {
   if (occupancy_map_) {
     occupancy_map_->threshold();
-    return convert::mapToFile(*occupancy_map_, file_path);
+    return io::mapToFile(*occupancy_map_, file_path);
   } else {
     LOG(ERROR) << "Could not save map because it has not yet been allocated.";
   }
 }
 
 bool WavemapServer::loadMap(const std::string& file_path) {
-  return convert::fileToMap(file_path, occupancy_map_);
+  return io::fileToMap(file_path, occupancy_map_);
 }
 
 InputHandler* WavemapServer::addInput(const param::Map& integrator_params,

@@ -11,7 +11,7 @@ include_directories(${CATKIN_WS_DEVEL_PATH}/include)
 
 # Libraries
 add_subdirectory(libraries/wavemap)
-add_subdirectory(libraries/wavemap_file_conversions)
+add_subdirectory(libraries/wavemap_io)
 
 # ROS interfaces and tooling
 add_subdirectory(ros/wavemap_msgs)

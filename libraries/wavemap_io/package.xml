@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>wavemap_file_conversions</name>
+  <name>wavemap_io</name>
   <version>0.0.0</version>
   <description>(De)serialization of wavemap types to files.</description>
 
@@ -14,7 +14,6 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>wavemap</depend>
-  <depend>protobuf_catkin</depend>
 
   <test_depend>gtest</test_depend>
 </package>
