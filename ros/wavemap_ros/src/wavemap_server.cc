@@ -63,10 +63,11 @@ void WavemapServer::visualizeMap() {
   if (occupancy_map_ && !occupancy_map_->empty()) {
     occupancy_map_->threshold();
 
-    const wavemap_msgs::Map map_msg =
-        convert::mapToRosMsg(occupancy_map_, config_.world_frame,
-                             ros::Time::now(), config_.visualization_period);
-    map_pub_.publish(map_msg);
+    wavemap_msgs::Map map_msg;
+    if (convert::mapToRosMsg(*occupancy_map_, config_.world_frame,
+                             ros::Time::now(), map_msg)) {
+      map_pub_.publish(map_msg);
+    }
   }
 }
 
@@ -77,6 +78,7 @@ bool WavemapServer::saveMap(const std::string& file_path) const {
   } else {
     LOG(ERROR) << "Could not save map because it has not yet been allocated.";
   }
+  return false;
 }
 
 bool WavemapServer::loadMap(const std::string& file_path) {

@@ -48,14 +48,14 @@ struct TypeSelector {
   TypeName toStr() const { return typeIdToStr(id_); }
   TypeId toTypeId() const { return id_; }
 
-  // Comparison operator for convenience
+  // Comparison operators
   friend bool operator==(const DerivedTypeSelectorT& lhs,
                          const DerivedTypeSelectorT& rhs) {
     return lhs.id_ == rhs.id_;
   }
   friend bool operator!=(const DerivedTypeSelectorT& lhs,
                          const DerivedTypeSelectorT& rhs) {
-    return !(lhs.id_ == rhs.id_);
+    return !(lhs == rhs);
   }
 
   // Method to check if the type ID is currently valid

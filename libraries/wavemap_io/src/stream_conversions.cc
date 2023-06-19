@@ -157,6 +157,7 @@ void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
       streamable::WaveletOctreeNode streamable_node;
       std::copy(node.data().begin(), node.data().end(),
                 streamable_node.detail_coefficients.begin());
+
       const auto child_scales =
           HashedWaveletOctreeBlock::Transform::backward({scale, node.data()});
       for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
@@ -165,6 +166,7 @@ void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
         if (child_scale < min_log_odds || max_log_odds < child_scale) {
           continue;
         }
+
         const auto* child = node.getChild(relative_child_idx);
         if (child) {
           stack.emplace(StackElement{child_scale, *child});
@@ -193,13 +195,14 @@ void streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
   config.tree_height = hashed_wavelet_octree_header.tree_height;
   map = std::make_shared<HashedWaveletOctree>(config);
 
-  for (size_t block_idx = 0;
-       block_idx < hashed_wavelet_octree_header.num_blocks; ++block_idx) {
+  for (size_t _ = 0; _ < hashed_wavelet_octree_header.num_blocks; ++_) {
     const auto block_header =
         streamable::HashedWaveletOctreeBlockHeader::read(istream);
-    auto& block = map->getOrAllocateBlock({block_header.root_node_offset.x,
-                                           block_header.root_node_offset.y,
-                                           block_header.root_node_offset.z});
+    const Index3D block_index{block_header.root_node_offset.x,
+                              block_header.root_node_offset.y,
+                              block_header.root_node_offset.z};
+    auto& block = map->getOrAllocateBlock(block_index);
+
     block.getRootScale() = block_header.root_node_scale_coefficient;
 
     std::stack<WaveletOctree::NodeType*> stack;
@@ -311,7 +314,6 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
               (1 << relative_child_idx);
         }
       }
-
       streamable_node.write(ostream);
     }
   }
