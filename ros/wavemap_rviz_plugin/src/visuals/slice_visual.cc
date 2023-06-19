@@ -51,12 +51,6 @@ void SliceVisual::update() {
     return;
   }
 
-  // Adjust the slider ranges to the map's config
-  min_occupancy_threshold_property_.setMin(map->getMinLogOdds());
-  min_occupancy_threshold_property_.setMax(map->getMaxLogOdds());
-  max_occupancy_threshold_property_.setMin(map->getMinLogOdds());
-  max_occupancy_threshold_property_.setMax(map->getMaxLogOdds());
-
   // Constants
   const FloatingPoint min_cell_width = map->getMinCellWidth();
   const FloatingPoint min_occupancy_log_odds =
