@@ -11,7 +11,6 @@
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap_msgs/Map.h>
 
-#include "wavemap_rviz_plugin/visuals/mesh_visual.h"
 #include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
 #include "wavemap_rviz_plugin/visuals/multi_resolution_slice_visual.h"
 #endif
@@ -43,7 +42,6 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   void updateMultiResolutionGridVisibility();
   void updateMultiResolutionSliceVisibility();
   void updateMultiResolutionSliceHeight();
-  void updateMeshVisibility();
 
  private:
   // Function to handle an incoming ROS message
@@ -59,7 +57,6 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   //       removed from the scene when destructed.
   std::unique_ptr<MultiResolutionGridVisual> multi_resolution_grid_visual_;
   std::unique_ptr<MultiResolutionSliceVisual> multi_resolution_slice_visual_;
-  std::unique_ptr<MeshVisual> mesh_visual_;
 
   // User-editable property variables
   std::unique_ptr<rviz::FloatProperty> min_occupancy_threshold_property_;
@@ -68,7 +65,6 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
       multi_resolution_grid_visibility_property_;
   std::unique_ptr<rviz::BoolProperty>
       multi_resolution_slice_visibility_property_;
-  std::unique_ptr<rviz::BoolProperty> mesh_visibility_property_;
   std::unique_ptr<rviz::FloatProperty> multi_resolution_slice_height_property_;
   std::unique_ptr<rviz::FloatProperty> opacity_property_;
 };
