@@ -1,39 +1,63 @@
-#include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
+#include "wavemap_rviz_plugin/visuals/grid_visual.h"
 
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
-MultiResolutionGridVisual::MultiResolutionGridVisual(
-    Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node) {
-  scene_manager_ = scene_manager;
+GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
+                       Ogre::SceneNode* parent_node,
+                       rviz::Property* submenu_root_property,
+                       const std::shared_ptr<std::shared_mutex> map_mutex,
+                       const VolumetricDataStructureBase::ConstPtr map)
+    : map_mutex_(map_mutex),
+      map_(map),
+      scene_manager_(scene_manager),
+      frame_node_(parent_node->createChildSceneNode()),
+      visibility_property_(
+          "Show", true,
+          "Whether to show the octree as a multi-resolution grid.",
+          submenu_root_property, SLOT(updateVisibility()), this),
+      min_occupancy_threshold_property_(
+          "Min log odds", 1e-6, "Ranges from -Inf to Inf.",
+          submenu_root_property, SLOT(update()), this),
+      max_occupancy_threshold_property_(
+          "Max log odds", 1e6, "Ranges from -Inf to Inf.",
+          submenu_root_property, SLOT(update()), this),
+      opacity_property_("Alpha", 1.0, "Opacity of the displayed visuals.",
+                        submenu_root_property, SLOT(updateOpacity()), this) {}
 
-  // Ogre::SceneNodes form a tree, with each node storing the
-  // transform (position and orientation) of itself relative to its
-  // parent. Ogre does the math of combining those transforms when it
-  // is time to render.
-  // Here we create a node to store the pose of the WavemapOctree's header frame
-  // relative to the RViz fixed frame.
-  frame_node_ = parent_node->createChildSceneNode();
-}
-
-MultiResolutionGridVisual::~MultiResolutionGridVisual() {
+GridVisual::~GridVisual() {
   // Destroy the frame node
   scene_manager_->destroySceneNode(frame_node_);
 }
 
-void MultiResolutionGridVisual::loadMap(const VolumetricDataStructureBase& map,
-                                        FloatingPoint min_occupancy_log_odds,
-                                        FloatingPoint max_occupancy_log_odds,
-                                        FloatingPoint alpha) {
+void GridVisual::update() {
+  // Get a shared-access lock to the map,
+  // to ensure it doesn't get written to while we read it
+  std::shared_lock lock(*map_mutex_);
+  if (!map_) {
+    return;
+  }
+
+  // Adjust the slider ranges to the map's config
+  min_occupancy_threshold_property_.setMin(map_->getMinLogOdds());
+  min_occupancy_threshold_property_.setMax(map_->getMaxLogOdds());
+  max_occupancy_threshold_property_.setMin(map_->getMinLogOdds());
+  max_occupancy_threshold_property_.setMax(map_->getMaxLogOdds());
+
   // Constants
-  const FloatingPoint min_cell_width = map.getMinCellWidth();
-  const int max_height = 14;
+  const FloatingPoint min_cell_width = map_->getMinCellWidth();
+  const FloatingPoint min_occupancy_log_odds =
+      min_occupancy_threshold_property_.getFloat();
+  const FloatingPoint max_occupancy_log_odds =
+      max_occupancy_threshold_property_.getFloat();
+  const FloatingPoint alpha = opacity_property_.getFloat();
+  const int max_height = 14;  // todo
 
   // Add a colored square for each leaf
   const NdtreeIndexElement num_levels = max_height + 1;
   std::vector<std::vector<rviz::PointCloud::Point>> cells_per_level(num_levels);
-  map.forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
-                                        FloatingPoint cell_log_odds) {
+  map_->forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
+                                          FloatingPoint cell_log_odds) {
     // Skip cells that don't meet the occupancy threshold
     if (cell_log_odds < min_occupancy_log_odds ||
         max_occupancy_log_odds < cell_log_odds) {
@@ -88,18 +112,29 @@ void MultiResolutionGridVisual::loadMap(const VolumetricDataStructureBase& map,
 }
 
 // Position and orientation are passed through to the SceneNode
-void MultiResolutionGridVisual::setFramePosition(
-    const Ogre::Vector3& position) {
+void GridVisual::setFramePosition(const Ogre::Vector3& position) {
   frame_node_->setPosition(position);
 }
 
-void MultiResolutionGridVisual::setFrameOrientation(
-    const Ogre::Quaternion& orientation) {
+void GridVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
   frame_node_->setOrientation(orientation);
 }
 
-Ogre::ColourValue MultiResolutionGridVisual::logOddsToColor(
-    FloatingPoint log_odds) {
+void GridVisual::updateOpacity() {
+  for (auto& grid_level : grid_levels_) {
+    grid_level->setAlpha(opacity_property_.getFloat());
+  }
+}
+
+void GridVisual::updateVisibility() {
+  if (visibility_property_.getBool()) {
+    update();
+  } else {
+    reset();
+  }
+}
+
+Ogre::ColourValue GridVisual::logOddsToColor(FloatingPoint log_odds) {
   Ogre::ColourValue color;
   color.a = 1.f;
 
@@ -115,8 +150,7 @@ Ogre::ColourValue MultiResolutionGridVisual::logOddsToColor(
 // NOTE: This coloring code is based on octomap_mapping, see:
 //       https://github.com/OctoMap/octomap_mapping/blob/kinetic-devel/
 //       octomap_server/src/OctomapServer.cpp#L1234
-Ogre::ColourValue MultiResolutionGridVisual::positionToColor(
-    const Point3D& center_point) {
+Ogre::ColourValue GridVisual::positionToColor(const Point3D& center_point) {
   Ogre::ColourValue color;
   color.a = 1.0;
 

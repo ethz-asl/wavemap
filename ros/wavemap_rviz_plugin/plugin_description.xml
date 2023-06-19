@@ -5,6 +5,6 @@
     <description>
       Displays maps published in wavemap's native format.
     </description>
-    <message_type>wavemap_msgs/Octree</message_type>
+    <message_type>wavemap_msgs/Map</message_type>
   </class>
 </library>
