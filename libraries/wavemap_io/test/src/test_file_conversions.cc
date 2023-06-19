@@ -81,58 +81,52 @@ TYPED_TEST(FileConversionsTest, InsertionAndLeafVisitor) {
     // Create a random map
     const auto config =
         ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
-    std::unique_ptr<VolumetricDataStructureBase> map =
-        std::make_unique<TypeParam>(config);
+    TypeParam map_original(config);
     const std::vector<Index3D> random_indices =
         GeometryGenerator::getRandomIndexVector<3>(
             1000u, 2000u, Index3D::Constant(-5000), Index3D::Constant(5000));
     for (const Index3D& index : random_indices) {
       const FloatingPoint update = TestFixture::getRandomUpdate();
-      map->addToCellValue(index, update);
+      map_original.addToCellValue(index, update);
     }
+    map_original.prune();
 
     // Serialize and deserialize
-    ASSERT_TRUE(io::mapToFile(*map, TestFixture::kTemporaryFilePath));
-    VolumetricDataStructureBase::Ptr map_round_trip;
-    io::fileToMap(TestFixture::kTemporaryFilePath, map_round_trip);
-    ASSERT_TRUE(map_round_trip);
+    ASSERT_TRUE(io::mapToFile(map_original, TestFixture::kTemporaryFilePath));
+    VolumetricDataStructureBase::Ptr map_base_round_trip;
+    io::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip);
+    ASSERT_TRUE(map_base_round_trip);
 
     // Check that both maps contain the same leaves
-    using LeafMap =
-        std::unordered_map<NdtreeIndex<3>, FloatingPoint, NdtreeIndexHash<3>>;
-    LeafMap reference_leaves;
-    map->forEachLeaf([&reference_leaves](const OctreeIndex& node_index,
-                                         FloatingPoint value) {
-      reference_leaves[node_index] = value;
-    });
-    LeafMap round_trip_leaves;
-    map->forEachLeaf([&round_trip_leaves](const OctreeIndex& node_index,
-                                          FloatingPoint value) {
-      round_trip_leaves[node_index] = value;
-    });
-    for (const auto& [reference_leaf_index, reference_leaf_value] :
-         reference_leaves) {
-      const bool round_trip_map_has_leaf =
-          round_trip_leaves.count(reference_leaf_index);
-      EXPECT_TRUE(round_trip_map_has_leaf)
-          << "For leaf index " << reference_leaf_index.toString();
-      if (round_trip_map_has_leaf) {
-        EXPECT_NEAR(reference_leaf_value,
-                    round_trip_leaves[reference_leaf_index],
+    map_base_round_trip->forEachLeaf(
+        [&map_original](const OctreeIndex& node_index,
+                        FloatingPoint round_trip_value) {
+          EXPECT_NEAR(round_trip_value, map_original.getCellValue(node_index),
+                      TestFixture::kAcceptableReconstructionError);
+        });
+
+    // TODO(victorr): Remove this special case once deserializing directly
+    //                into HashedChunkedWaveletOctrees is supported
+    if (std::is_same_v<TypeParam, HashedChunkedWaveletOctree>) {
+      HashedWaveletOctree::ConstPtr map_round_trip =
+          std::dynamic_pointer_cast<HashedWaveletOctree>(map_base_round_trip);
+      ASSERT_TRUE(map_round_trip);
+
+      map_original.forEachLeaf([&map_round_trip](const OctreeIndex& node_index,
+                                                 FloatingPoint original_value) {
+        EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
                     TestFixture::kAcceptableReconstructionError);
-      }
-    }
-    for (const auto& [round_trip_leaf_index, round_trip_leaf_value] :
-         round_trip_leaves) {
-      const bool reference_map_has_leaf =
-          reference_leaves.count(round_trip_leaf_index);
-      EXPECT_TRUE(reference_map_has_leaf)
-          << "For leaf index " << round_trip_leaf_index.toString();
-      if (reference_map_has_leaf) {
-        EXPECT_NEAR(round_trip_leaf_value,
-                    round_trip_leaves[round_trip_leaf_index],
+      });
+    } else {
+      typename TypeParam::ConstPtr map_round_trip =
+          std::dynamic_pointer_cast<TypeParam>(map_base_round_trip);
+      ASSERT_TRUE(map_round_trip);
+
+      map_original.forEachLeaf([&map_round_trip](const OctreeIndex& node_index,
+                                                 FloatingPoint original_value) {
+        EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
                     TestFixture::kAcceptableReconstructionError);
-      }
+      });
     }
   }
 }

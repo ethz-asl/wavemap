@@ -278,6 +278,7 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
                 streamable_node.detail_coefficients.begin());
 
       if (!chunk.nodeHasAtLeastOneChild(relative_node_index)) {
+        streamable_node.write(ostream);
         continue;
       }
 
