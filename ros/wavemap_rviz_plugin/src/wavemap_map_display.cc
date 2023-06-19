@@ -16,19 +16,19 @@ namespace wavemap::rviz_plugin {
 // does important stuff setting up the message filter.
 void WavemapMapDisplay::onInitialize() {
   MFDClass::onInitialize();
-  grid_visual_ =
-      std::make_unique<GridVisual>(context_->getSceneManager(), scene_node_,
-                                   &grid_visual_properties_, map_mutex_, map_);
+  grid_visual_ = std::make_unique<GridVisual>(
+      context_->getSceneManager(), scene_node_, &grid_visual_properties_,
+      map_mutex_, map_ptr_);
   slice_visual_ = std::make_unique<SliceVisual>(
       context_->getSceneManager(), scene_node_, &slice_visual_properties_,
-      map_mutex_, map_);
+      map_mutex_, map_ptr_);
 }
 
 // Clear the visuals by deleting their objects.
 void WavemapMapDisplay::reset() {
   MFDClass::reset();
-  //  grid_visual_.reset();
-  //  slice_visual_.reset();
+  grid_visual_->clear();
+  slice_visual_->clear();
 }
 
 // This is our callback to handle an incoming message
@@ -40,6 +40,12 @@ void WavemapMapDisplay::processMessage(
     return;
   }
   updateMapFromRosMsg(*map_msg);
+
+  // Check that the visuals are initialized before continuing
+  if (!grid_visual_ || !slice_visual_) {
+    ROS_WARN("Visuals not initialized yet, skipping message.");
+    return;
+  }
 
   // Here we call the rviz::FrameManager to get the transform from the
   // fixed frame to the frame in the header of this WavemapOctree message. If
@@ -53,24 +59,27 @@ void WavemapMapDisplay::processMessage(
              map_msg->header.frame_id.c_str(), qPrintable(fixed_frame_));
     return;
   }
-  //  grid_visual_.setFramePosition(position);
-  //  grid_visual_.setFrameOrientation(orientation);
-  //  slice_visual_.setFramePosition(position);
-  //  slice_visual_.setFrameOrientation(orientation);
+
+  grid_visual_->setFramePosition(position);
+  grid_visual_->setFrameOrientation(orientation);
+  slice_visual_->setFramePosition(position);
+  slice_visual_->setFrameOrientation(orientation);
 
   // Update the multi-resolution grid and slice visual's contents if they exist
-  if (std::shared_lock lock(*map_mutex_); !map_) {
+  if (std::shared_lock lock(*map_mutex_); !map_ptr_) {
     return;
   }
 
-  //  // Update the visualizations
-  //  grid_visual_.update();
-  //  slice_visual_.update();
+  // Update the visualizations
+  grid_visual_->update();
+  slice_visual_->update();
 }
 
 void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
   std::unique_lock lock(*map_mutex_);
-  convert::rosMsgToMap(map_msg, map_);
+  if (!convert::rosMsgToMap(map_msg, *map_ptr_)) {
+    ROS_WARN("Failed to parse map message.");
+  }
 }
 }  // namespace wavemap::rviz_plugin
 

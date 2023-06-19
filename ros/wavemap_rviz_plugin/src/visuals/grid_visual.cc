@@ -1,29 +1,32 @@
 #include "wavemap_rviz_plugin/visuals/grid_visual.h"
 
+#include <ros/console.h>
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
-GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
-                       Ogre::SceneNode* parent_node,
-                       rviz::Property* submenu_root_property,
-                       const std::shared_ptr<std::shared_mutex> map_mutex,
-                       const VolumetricDataStructureBase::ConstPtr map)
+GridVisual::GridVisual(
+    Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
+    rviz::Property* submenu_root_property,
+    const std::shared_ptr<std::shared_mutex> map_mutex,
+    const std::shared_ptr<VolumetricDataStructureBase::Ptr> map)
     : map_mutex_(map_mutex),
-      map_(map),
-      scene_manager_(scene_manager),
-      frame_node_(parent_node->createChildSceneNode()),
+      map_ptr_(map),
+      scene_manager_(CHECK_NOTNULL(scene_manager)),
+      frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
           "Show", true,
           "Whether to show the octree as a multi-resolution grid.",
-          submenu_root_property, SLOT(updateVisibility()), this),
+          CHECK_NOTNULL(submenu_root_property), SLOT(generalUpdateCallback()),
+          this),
       min_occupancy_threshold_property_(
-          "Min log odds", 1e-6, "Ranges from -Inf to Inf.",
-          submenu_root_property, SLOT(update()), this),
+          "Min log odds", 1e-3, "Ranges from -Inf to Inf.",
+          submenu_root_property, SLOT(generalUpdateCallback()), this),
       max_occupancy_threshold_property_(
           "Max log odds", 1e6, "Ranges from -Inf to Inf.",
-          submenu_root_property, SLOT(update()), this),
+          submenu_root_property, SLOT(generalUpdateCallback()), this),
       opacity_property_("Alpha", 1.0, "Opacity of the displayed visuals.",
-                        submenu_root_property, SLOT(updateOpacity()), this) {}
+                        submenu_root_property, SLOT(opacityUpdateCallback()),
+                        this) {}
 
 GridVisual::~GridVisual() {
   // Destroy the frame node
@@ -31,21 +34,28 @@ GridVisual::~GridVisual() {
 }
 
 void GridVisual::update() {
+  if (!visibility_property_.getBool()) {
+    clear();
+    return;
+  }
+
   // Get a shared-access lock to the map,
   // to ensure it doesn't get written to while we read it
   std::shared_lock lock(*map_mutex_);
-  if (!map_) {
+  const VolumetricDataStructureBase::ConstPtr map = *map_ptr_;
+  if (!map) {
+    ROS_INFO("Map is empty. Nothing to draw.");
     return;
   }
 
   // Adjust the slider ranges to the map's config
-  min_occupancy_threshold_property_.setMin(map_->getMinLogOdds());
-  min_occupancy_threshold_property_.setMax(map_->getMaxLogOdds());
-  max_occupancy_threshold_property_.setMin(map_->getMinLogOdds());
-  max_occupancy_threshold_property_.setMax(map_->getMaxLogOdds());
+  min_occupancy_threshold_property_.setMin(map->getMinLogOdds());
+  min_occupancy_threshold_property_.setMax(map->getMaxLogOdds());
+  max_occupancy_threshold_property_.setMin(map->getMinLogOdds());
+  max_occupancy_threshold_property_.setMax(map->getMaxLogOdds());
 
   // Constants
-  const FloatingPoint min_cell_width = map_->getMinCellWidth();
+  const FloatingPoint min_cell_width = map->getMinCellWidth();
   const FloatingPoint min_occupancy_log_odds =
       min_occupancy_threshold_property_.getFloat();
   const FloatingPoint max_occupancy_log_odds =
@@ -56,8 +66,8 @@ void GridVisual::update() {
   // Add a colored square for each leaf
   const NdtreeIndexElement num_levels = max_height + 1;
   std::vector<std::vector<rviz::PointCloud::Point>> cells_per_level(num_levels);
-  map_->forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
-                                          FloatingPoint cell_log_odds) {
+  map->forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
+                                         FloatingPoint cell_log_odds) {
     // Skip cells that don't meet the occupancy threshold
     if (cell_log_odds < min_occupancy_log_odds ||
         max_occupancy_log_odds < cell_log_odds) {
@@ -120,17 +130,9 @@ void GridVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
   frame_node_->setOrientation(orientation);
 }
 
-void GridVisual::updateOpacity() {
+void GridVisual::opacityUpdateCallback() {
   for (auto& grid_level : grid_levels_) {
     grid_level->setAlpha(opacity_property_.getFloat());
-  }
-}
-
-void GridVisual::updateVisibility() {
-  if (visibility_property_.getBool()) {
-    update();
-  } else {
-    reset();
   }
 }
 

@@ -29,12 +29,13 @@ class GridVisual : public QObject {
   GridVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
              rviz::Property* submenu_root_property,
              const std::shared_ptr<std::shared_mutex> map_mutex,
-             const VolumetricDataStructureBase::ConstPtr map);
+             const std::shared_ptr<VolumetricDataStructureBase::Ptr> map);
 
-  // Destructor. Removes the visual elements from the scene
+  // Destructor. Removes the visual elements from the scene.
   virtual ~GridVisual();
 
-  void reset() { grid_levels_.clear(); }
+  void update();
+  void clear() { grid_levels_.clear(); }
 
   // Set the pose of the coordinate frame the message refers to
   void setFramePosition(const Ogre::Vector3& position);
@@ -43,16 +44,15 @@ class GridVisual : public QObject {
  private Q_SLOTS:  // NOLINT
   // These Qt slots get connected to signals indicating changes in the
   // user-editable properties
-  void update();
-  void updateOpacity();
-  void updateVisibility();
+  void generalUpdateCallback() { update(); }
+  void opacityUpdateCallback();
 
  private:
   enum class ColorBy { kProbability, kPosition } kColorBy = ColorBy::kPosition;
 
   // Read only shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<std::shared_mutex> map_mutex_;
-  const VolumetricDataStructureBase::ConstPtr map_;
+  const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_;
 
   // The object implementing the grid visuals
   std::vector<std::unique_ptr<rviz::PointCloud>> grid_levels_;
