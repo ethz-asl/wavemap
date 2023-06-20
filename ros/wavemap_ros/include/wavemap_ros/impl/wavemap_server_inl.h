@@ -61,12 +61,24 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
       [&queue = block_publishing_queue_](const auto& published_block) {
         queue.erase(published_block);
       });
+
+  // Handle publishing of the remaining blocks
   if (!block_publishing_queue_.empty()) {
     ROS_INFO_STREAM("Could not publish all blocks at once. Published "
                     << blocks_to_publish.size() << " out of "
                     << config_.max_num_blocks_per_msg
                     << ". Remaining in queue: "
                     << block_publishing_queue_.size());
+
+    // If the map is being published at a fixed rate, wait for the next cycle
+    if (0.f < config_.publication_period) {
+      return;
+    }
+
+    // Otherwise finish publishing it now
+    if (republish_whole_map && config_.publication_period < 0.f) do {
+        publishHashedMap(hashed_map, false);
+      } while (!block_publishing_queue_.empty());
   }
 }
 }  // namespace wavemap

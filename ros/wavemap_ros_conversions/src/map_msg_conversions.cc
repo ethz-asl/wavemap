@@ -200,7 +200,12 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
     const Index3D block_index{block_msg.root_node_offset[0],
                               block_msg.root_node_offset[1],
                               block_msg.root_node_offset[2]};
+
+    const bool block_existed = map->hasBlock(block_index);
     auto& block = map->getOrAllocateBlock(block_index);
+    if (block_existed) {
+      block.clear();
+    }
 
     block.getRootScale() = block_msg.root_node_scale_coefficient;
 

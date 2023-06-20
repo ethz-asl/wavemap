@@ -17,6 +17,12 @@ void HashedWaveletOctreeBlock::prune() {
   }
 }
 
+void HashedWaveletOctreeBlock::clear() {
+  root_scale_coefficient_ = Coefficients::Scale{};
+  ndtree_.clear();
+  last_updated_stamp_ = Clock::now();
+}
+
 void HashedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
                                             FloatingPoint new_value) {
   setNeedsPruning();
