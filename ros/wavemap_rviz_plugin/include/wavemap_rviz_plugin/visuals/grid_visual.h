@@ -3,6 +3,7 @@
 
 #ifndef Q_MOC_RUN
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include <OGRE/OgreQuaternion.h>
@@ -16,6 +17,8 @@
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/property.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
+#include <wavemap/indexing/index_hashes.h>
+
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -35,7 +38,7 @@ class GridVisual : public QObject {
   virtual ~GridVisual();
 
   void update();
-  void clear() { grid_levels_.clear(); }
+  void clear() { block_grids_.clear(); }
 
   // Set the pose of the coordinate frame the message refers to
   void setFramePosition(const Ogre::Vector3& position);
@@ -55,7 +58,10 @@ class GridVisual : public QObject {
   const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_;
 
   // The object implementing the grid visuals
-  std::vector<std::unique_ptr<rviz::PointCloud>> grid_levels_;
+  using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
+  TimePoint last_update_time_{};
+  using MultiResGrid = std::vector<std::unique_ptr<rviz::PointCloud>>;
+  std::unordered_map<Index3D, MultiResGrid, Index3DHash> block_grids_;
 
   // The SceneManager, kept here only so the destructor can ask it to
   // destroy the `frame_node_`.
@@ -76,6 +82,19 @@ class GridVisual : public QObject {
   rviz::FloatProperty min_occupancy_threshold_property_;
   rviz::FloatProperty max_occupancy_threshold_property_;
   rviz::FloatProperty opacity_property_;
+
+  using PointcloudList = std::vector<std::vector<rviz::PointCloud::Point>>;
+  void getLeafCentersAndColors(FloatingPoint min_occupancy_log_odds,
+                               FloatingPoint max_occupancy_log_odds,
+                               FloatingPoint min_cell_width,
+                               const OctreeIndex& cell_index,
+                               FloatingPoint cell_log_odds,
+                               PointcloudList& cells_per_level);
+
+  void drawMultiResGrid(const Index3D& block_index,
+                        FloatingPoint min_cell_width, FloatingPoint alpha,
+                        PointcloudList& cells_per_level,
+                        MultiResGrid& multi_res_grid);
 };
 }  // namespace wavemap::rviz_plugin
 

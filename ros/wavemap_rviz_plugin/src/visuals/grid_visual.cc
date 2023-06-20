@@ -1,6 +1,7 @@
 #include "wavemap_rviz_plugin/visuals/grid_visual.h"
 
 #include <ros/console.h>
+#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
@@ -50,69 +51,48 @@ void GridVisual::update() {
 
   // Constants
   const FloatingPoint min_cell_width = map->getMinCellWidth();
-  const FloatingPoint min_occupancy_log_odds =
+  const FloatingPoint min_log_odds =
       min_occupancy_threshold_property_.getFloat();
-  const FloatingPoint max_occupancy_log_odds =
+  const FloatingPoint max_log_odds =
       max_occupancy_threshold_property_.getFloat();
   const FloatingPoint alpha = opacity_property_.getFloat();
   const int max_height = 14;  // todo
-
-  // Add a colored square for each leaf
   const NdtreeIndexElement num_levels = max_height + 1;
-  std::vector<std::vector<rviz::PointCloud::Point>> cells_per_level(num_levels);
-  map->forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
-                                         FloatingPoint cell_log_odds) {
-    // Skip cells that don't meet the occupancy threshold
-    if (cell_log_odds < min_occupancy_log_odds ||
-        max_occupancy_log_odds < cell_log_odds) {
-      return;
+
+  const TimePoint start_time = std::chrono::steady_clock::now();
+
+  if (const auto* hashed_map =
+          dynamic_cast<const HashedWaveletOctree*>(map.get());
+      hashed_map) {
+    for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
+      // Skip blocks that haven't changed
+      if (block.getLastUpdatedStamp() < last_update_time_) {
+        continue;
+      }
+
+      PointcloudList cells_per_level(num_levels);
+      block.forEachLeaf(
+          block_idx, [&](const auto& cell_index, auto cell_log_odds) {
+            getLeafCentersAndColors(min_log_odds, max_log_odds, min_cell_width,
+                                    cell_index, cell_log_odds, cells_per_level);
+          });
+
+      drawMultiResGrid(block_idx, min_cell_width, alpha, cells_per_level,
+                       block_grids_[block_idx]);
     }
+  } else {
+    PointcloudList cells_per_level(num_levels);
+    map->forEachLeaf([&](const auto& cell_index, auto cell_log_odds) {
+      getLeafCentersAndColors(min_log_odds, max_log_odds, min_cell_width,
+                              cell_index, cell_log_odds, cells_per_level);
+    });
 
-    // Determine the cell's position
-    CHECK_GE(cell_index.height, 0);
-    CHECK_LE(cell_index.height, max_height);
-    const Point3D cell_center =
-        convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
-
-    // Create the cube at the right scale
-    auto& point = cells_per_level[cell_index.height].emplace_back();
-    point.position.x = cell_center[0];
-    point.position.y = cell_center[1];
-    point.position.z = cell_center[2];
-
-    // Set the cube's color
-    switch (kColorBy) {
-      case ColorBy::kProbability:
-        point.color = logOddsToColor(cell_log_odds);
-        break;
-      case ColorBy::kPosition:
-      default:
-        point.color = positionToColor(cell_center);
-        break;
-    }
-  });
-
-  // Add a grid layer for each scale level
-  for (int height = 0; height <= max_height; ++height) {
-    // Allocate the pointcloud representing this grid level if needed
-    if (static_cast<int>(grid_levels_.size()) <= height) {
-      const Ogre::String name = "multi_res_grid_" + std::to_string(height);
-      const FloatingPoint cell_width =
-          convert::heightToCellWidth(min_cell_width, height);
-      auto& grid_level =
-          grid_levels_.emplace_back(std::make_unique<rviz::PointCloud>());
-      grid_level->setName(name);
-      grid_level->setRenderMode(rviz::PointCloud::RM_BOXES);
-      grid_level->setDimensions(cell_width, cell_width, cell_width);
-      grid_level->setAlpha(alpha, false);
-      frame_node_->attachObject(grid_level.get());
-    }
-    // Update the points
-    auto& grid_level = grid_levels_[height];
-    grid_level->clear();
-    auto& cells_at_level = cells_per_level[height];
-    grid_level->addPoints(&cells_at_level.front(), cells_at_level.size());
+    const Index3D root_idx = Index3D::Zero();
+    drawMultiResGrid(root_idx, min_cell_width, alpha, cells_per_level,
+                     block_grids_[root_idx]);
   }
+
+  last_update_time_ = start_time;
 }
 
 // Position and orientation are passed through to the SceneNode
@@ -125,8 +105,10 @@ void GridVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
 }
 
 void GridVisual::opacityUpdateCallback() {
-  for (auto& grid_level : grid_levels_) {
-    grid_level->setAlpha(opacity_property_.getFloat());
+  for (auto& [block_idx, block_grid] : block_grids_) {
+    for (auto& grid_level : block_grid) {
+      grid_level->setAlpha(opacity_property_.getFloat());
+    }
   }
 }
 
@@ -208,5 +190,72 @@ Ogre::ColourValue GridVisual::positionToColor(const Point3D& center_point) {
   }
 
   return color;
+}
+
+void GridVisual::getLeafCentersAndColors(FloatingPoint min_occupancy_log_odds,
+                                         FloatingPoint max_occupancy_log_odds,
+                                         FloatingPoint min_cell_width,
+                                         const OctreeIndex& cell_index,
+                                         FloatingPoint cell_log_odds,
+                                         PointcloudList& cells_per_level) {
+  // Skip cells that don't meet the occupancy threshold
+  if (cell_log_odds < min_occupancy_log_odds ||
+      max_occupancy_log_odds < cell_log_odds) {
+    return;
+  }
+
+  // Determine the cell's position
+  CHECK_GE(cell_index.height, 0);
+  CHECK_LT(cell_index.height, cells_per_level.size());
+  const Point3D cell_center =
+      convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
+
+  // Create the cube at the right scale
+  auto& point = cells_per_level[cell_index.height].emplace_back();
+  point.position.x = cell_center[0];
+  point.position.y = cell_center[1];
+  point.position.z = cell_center[2];
+
+  // Set the cube's color
+  switch (kColorBy) {
+    case ColorBy::kProbability:
+      point.color = logOddsToColor(cell_log_odds);
+      break;
+    case ColorBy::kPosition:
+    default:
+      point.color = positionToColor(cell_center);
+      break;
+  }
+}
+
+void GridVisual::drawMultiResGrid(const Index3D& block_index,
+                                  FloatingPoint min_cell_width,
+                                  FloatingPoint alpha,
+                                  PointcloudList& cells_per_level,
+                                  MultiResGrid& multi_res_grid) {
+  // Add a grid layer for each scale level
+  const std::string prefix =
+      "grid_" + std::to_string(Index3DHash()(block_index)) + "_";
+  for (int height = 0; height < static_cast<int>(cells_per_level.size());
+       ++height) {
+    // Allocate the pointcloud representing this grid level if needed
+    if (static_cast<int>(multi_res_grid.size()) <= height) {
+      const Ogre::String name = prefix + std::to_string(height);
+      const FloatingPoint cell_width =
+          convert::heightToCellWidth(min_cell_width, height);
+      auto& grid_level =
+          multi_res_grid.emplace_back(std::make_unique<rviz::PointCloud>());
+      grid_level->setName(name);
+      grid_level->setRenderMode(rviz::PointCloud::RM_BOXES);
+      grid_level->setDimensions(cell_width, cell_width, cell_width);
+      grid_level->setAlpha(alpha, false);
+      frame_node_->attachObject(grid_level.get());
+    }
+    // Update the points
+    auto& grid_level = multi_res_grid[height];
+    grid_level->clear();
+    auto& cells_at_level = cells_per_level[height];
+    grid_level->addPoints(&cells_at_level.front(), cells_at_level.size());
+  }
 }
 }  // namespace wavemap::rviz_plugin

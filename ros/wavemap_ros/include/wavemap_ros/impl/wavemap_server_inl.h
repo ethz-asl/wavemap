@@ -76,9 +76,11 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
     }
 
     // Otherwise finish publishing it now
-    if (republish_whole_map && config_.publication_period < 0.f) do {
+    if (republish_whole_map && config_.publication_period < 0.f) {
+      do {
         publishHashedMap(hashed_map, false);
       } while (!block_publishing_queue_.empty());
+    }
   }
 }
 }  // namespace wavemap
