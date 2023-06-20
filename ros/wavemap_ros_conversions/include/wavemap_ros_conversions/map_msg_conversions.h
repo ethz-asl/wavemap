@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <stack>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include <ros/time.h>
@@ -25,12 +26,16 @@ void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
                  WaveletOctree::Ptr& map);
 
 void mapToRosMsg(const HashedWaveletOctree& map,
-                 wavemap_msgs::HashedWaveletOctree& msg);
+                 wavemap_msgs::HashedWaveletOctree& msg,
+                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
+                     include_blocks = std::nullopt);
 void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
                  HashedWaveletOctree::Ptr& map);
 
 void mapToRosMsg(const HashedChunkedWaveletOctree& map,
-                 wavemap_msgs::HashedWaveletOctree& msg);
+                 wavemap_msgs::HashedWaveletOctree& msg,
+                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
+                     include_blocks = std::nullopt);
 }  // namespace wavemap::convert
 
 #endif  // WAVEMAP_ROS_CONVERSIONS_MAP_MSG_CONVERSIONS_H_

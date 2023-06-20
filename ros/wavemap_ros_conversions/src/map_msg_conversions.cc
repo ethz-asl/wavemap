@@ -96,10 +96,7 @@ void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
   config.max_log_odds = msg.max_log_odds;
   config.tree_height = msg.tree_height;
   // Check if the map already exists and has compatible settings
-  if (map && map->getConfig() == config) {
-    // If so, clear and reuse it
-    map->clear();
-  } else {
+  if (!map || map->getConfig() != config) {
     // Otherwise create a new one
     map = std::make_shared<WaveletOctree>(config);
   }
@@ -127,7 +124,9 @@ void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
 }
 
 void mapToRosMsg(const HashedWaveletOctree& map,
-                 wavemap_msgs::HashedWaveletOctree& msg) {
+                 wavemap_msgs::HashedWaveletOctree& msg,
+                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
+                     include_blocks) {
   struct StackElement {
     const FloatingPoint scale;
     const HashedWaveletOctreeBlock::NodeType& node;
@@ -143,10 +142,9 @@ void mapToRosMsg(const HashedWaveletOctree& map,
   msg.tree_height = map.getTreeHeight();
 
   for (const auto& [block_index, block] : map.getBlocks()) {
-    //    if (0.f < ignore_blocks_older_than &&
-    //        ignore_blocks_older_than < block.getTimeSinceLastUpdated()) {
-    //      continue;
-    //    }
+    if (include_blocks.has_value() && !include_blocks->count(block_index)) {
+      continue;
+    }
 
     auto& block_msg = msg.blocks.emplace_back();
     block_msg.root_node_offset = {block_index.x(), block_index.y(),
@@ -193,10 +191,7 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
   config.max_log_odds = msg.max_log_odds;
   config.tree_height = msg.tree_height;
   // Check if the map already exists and has compatible settings
-  if (map && map->getConfig() == config) {
-    // If so, clear and reuse it
-    map->clear();
-  } else {
+  if (!map || map->getConfig() != config) {
     // Otherwise create a new one
     map = std::make_shared<HashedWaveletOctree>(config);
   }
@@ -231,7 +226,9 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
 }
 
 void mapToRosMsg(const HashedChunkedWaveletOctree& map,
-                 wavemap_msgs::HashedWaveletOctree& msg) {
+                 wavemap_msgs::HashedWaveletOctree& msg,
+                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
+                     include_blocks) {
   struct StackElement {
     const OctreeIndex node_index;
     const HashedChunkedWaveletOctreeBlock::NodeChunkType& chunk;
@@ -250,10 +247,9 @@ void mapToRosMsg(const HashedChunkedWaveletOctree& map,
   msg.tree_height = map.getTreeHeight();
 
   for (const auto& [block_index, block] : map.getBlocks()) {
-    //    if (0.f < ignore_blocks_older_than &&
-    //        ignore_blocks_older_than < block.getTimeSinceLastUpdated()) {
-    //      continue;
-    //    }
+    if (include_blocks.has_value() && !include_blocks->count(block_index)) {
+      continue;
+    }
 
     auto& block_msg = msg.blocks.emplace_back();
     block_msg.root_node_offset = {block_index.x(), block_index.y(),

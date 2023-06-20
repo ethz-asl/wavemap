@@ -16,12 +16,14 @@ DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
                       (world_frame)
                       (thresholding_period, SiUnit::kSeconds)
                       (pruning_period, SiUnit::kSeconds)
-                      (visualization_period, SiUnit::kSeconds));
+                      (publication_period, SiUnit::kSeconds)
+                      (max_num_blocks_per_msg));
 
 bool WavemapServerConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(world_frame, std::string(""), verbose);
+  all_valid &= IS_PARAM_GT(max_num_blocks_per_msg, 0, verbose);
 
   return all_valid;
 }
@@ -59,14 +61,24 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   advertiseServices(nh_private);
 }
 
-void WavemapServer::visualizeMap() {
+void WavemapServer::publishMap(bool republish_whole_map) {
   if (occupancy_map_ && !occupancy_map_->empty()) {
-    occupancy_map_->threshold();
-
-    wavemap_msgs::Map map_msg;
-    if (convert::mapToRosMsg(*occupancy_map_, config_.world_frame,
-                             ros::Time::now(), map_msg)) {
-      map_pub_.publish(map_msg);
+    if (auto* hashed_wavelet_octree =
+            dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
+        hashed_wavelet_octree) {
+      publishHashedMap(hashed_wavelet_octree, republish_whole_map);
+    } else if (auto* hashed_chunked_wavelet_octree =
+                   dynamic_cast<HashedChunkedWaveletOctree*>(
+                       occupancy_map_.get());
+               hashed_chunked_wavelet_octree) {
+      publishHashedMap(hashed_chunked_wavelet_octree, republish_whole_map);
+    } else {
+      occupancy_map_->threshold();
+      wavemap_msgs::Map map_msg;
+      if (convert::mapToRosMsg(*occupancy_map_, map_msg.header.frame_id,
+                               map_msg.header.stamp, map_msg)) {
+        map_pub_.publish(map_msg);
+      }
     }
   }
 }
@@ -114,12 +126,12 @@ void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
         [this](const auto& /*event*/) { occupancy_map_->prune(); });
   }
 
-  if (0.f < config_.visualization_period) {
-    ROS_INFO_STREAM("Registering map visualization timer with period "
-                    << config_.visualization_period << "s");
-    map_visualization_timer_ =
-        nh.createTimer(ros::Duration(config_.visualization_period),
-                       [this](const auto& /*event*/) { visualizeMap(); });
+  if (0.f < config_.publication_period) {
+    ROS_INFO_STREAM("Registering map publishing timer with period "
+                    << config_.publication_period << "s");
+    map_publication_timer_ =
+        nh.createTimer(ros::Duration(config_.publication_period),
+                       [this](const auto& /*event*/) { publishMap(); });
   }
 }
 
@@ -130,12 +142,13 @@ void WavemapServer::advertiseTopics(ros::NodeHandle& nh_private) {
 }
 
 void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
-  visualize_map_srv_ = nh_private.advertiseService<std_srvs::Empty::Request,
-                                                   std_srvs::Empty::Response>(
-      "visualize_map", [this](auto& /*request*/, auto& /*response*/) {
-        visualizeMap();
-        return true;
-      });
+  republish_whole_map_srv_ =
+      nh_private.advertiseService<std_srvs::Empty::Request,
+                                  std_srvs::Empty::Response>(
+          "republish_whole_map", [this](auto& /*request*/, auto& /*response*/) {
+            publishMap(true);
+            return true;
+          });
 
   save_map_srv_ = nh_private.advertiseService<wavemap_msgs::FilePath::Request,
                                               wavemap_msgs::FilePath::Response>(

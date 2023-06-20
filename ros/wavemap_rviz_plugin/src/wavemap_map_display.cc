@@ -2,6 +2,7 @@
 
 #include <OGRE/OgreSceneNode.h>
 #include <rviz/visualization_manager.h>
+#include <std_srvs/Empty.h>
 #include <tf/transform_listener.h>
 #include <wavemap/indexing/ndtree_index.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
@@ -22,6 +23,9 @@ void WavemapMapDisplay::onInitialize() {
   slice_visual_ = std::make_unique<SliceVisual>(
       context_->getSceneManager(), scene_node_, &slice_visual_properties_,
       map_mutex_, map_ptr_);
+  request_whole_map_client_ =
+      ros::NodeHandle("wavemap_rviz_plugin")
+          .serviceClient<std_srvs::Empty>("/wavemap/republish_whole_map");
 }
 
 // Clear the visuals by deleting their objects.
@@ -79,6 +83,18 @@ void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
   std::unique_lock lock(*map_mutex_);
   if (!convert::rosMsgToMap(map_msg, *map_ptr_)) {
     ROS_WARN("Failed to parse map message.");
+  }
+}
+
+void WavemapMapDisplay::requestWholeMap() {
+  if (request_whole_map_property_.getBool()) {
+    std_srvs::Empty msg{};
+    if (request_whole_map_client_.call(msg)) {
+      request_whole_map_property_.setBool(false);
+    } else {
+      ROS_WARN_STREAM("Failed to call "
+                      << request_whole_map_client_.getService() << ".");
+    }
   }
 }
 }  // namespace wavemap::rviz_plugin

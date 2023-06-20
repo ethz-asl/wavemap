@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
   }
 
   wavemap_server.getMap()->pruneDistant();
-  wavemap_server.visualizeMap();
+  wavemap_server.publishMap();
 
   if (nh_private.param("keep_alive", false)) {
     ros::spin();

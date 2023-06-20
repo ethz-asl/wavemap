@@ -33,6 +33,11 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   // A helper to clear this display back to the initial state.
   void reset() override;
 
+ private Q_SLOTS:  // NOLINT
+  // These Qt slots get connected to signals indicating changes in the
+  // user-editable properties
+  void requestWholeMap();
+
  private:
   // Function to handle an incoming ROS message
   void processMessage(const wavemap_msgs::Map::ConstPtr& map_msg) override;
@@ -50,6 +55,14 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   rviz::Property slice_visual_properties_{
       "Show slice", QVariant(), "Properties for the slice visualization.",
       this};
+  rviz::BoolProperty request_whole_map_property_{
+      "Request whole map", false,
+      "Send a request to the wavemap_server to republish the whole map, "
+      "instead of only increments.",
+      this, SLOT(requestWholeMap())};
+
+  // Service client to call wavemap's request_whole_map service
+  ros::ServiceClient request_whole_map_client_;
 
   // Storage for the visuals
   // NOTE: Visuals are enabled when they are allocated, and automatically
