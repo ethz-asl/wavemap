@@ -23,14 +23,23 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
   last_map_pub_time_ = start_time;
 
   // Sort the blocks in the queue by their modification time
-  std::map<TimePoint, Index3D> changed_blocks_sorted;
-  for (const auto& block_idx : block_publishing_queue_) {
-    const TimePoint& last_modified_time =
-        hashed_map->getBlock(block_idx).getLastUpdatedStamp();
-    changed_blocks_sorted[last_modified_time] = block_idx;
+  std::map<TimePoint, Index3D, std::greater<>> changed_blocks_sorted;
+  for (auto block_it = block_publishing_queue_.cbegin();
+       block_it != block_publishing_queue_.cend();) {
+    const Index3D block_idx = *block_it;
+    if (hashed_map->hasBlock(block_idx)) {
+      const TimePoint& last_modified_time =
+          hashed_map->getBlock(block_idx).getLastUpdatedStamp();
+      changed_blocks_sorted[last_modified_time] = block_idx;
+      ++block_it;
+    } else {
+      LOG(WARNING) << "Removing block " << block_idx.transpose()
+                   << " no longer exists.";
+      block_publishing_queue_.erase(block_it++);
+    }
   }
 
-  // Mark the "max_num_blocks" oldest blocks for publication in the
+  // Mark the "max_num_blocks" newest blocks for publication in the
   // current cycle
   std::unordered_set<Index3D, Index3DHash> blocks_to_publish;
   for (const auto& [_, block_idx] : changed_blocks_sorted) {
@@ -64,7 +73,7 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
 
   // Handle publishing of the remaining blocks
   if (!block_publishing_queue_.empty()) {
-    ROS_INFO_STREAM("Could not publish all blocks at once. Published "
+    ROS_WARN_STREAM("Could not publish all blocks at once. Published "
                     << blocks_to_publish.size() << " out of "
                     << config_.max_num_blocks_per_msg
                     << ". Remaining in queue: "
