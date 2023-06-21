@@ -28,7 +28,7 @@ class SliceVisual : public QObject {
   // scene, in an unconfigured state.
   SliceVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
               rviz::Property* submenu_root_property,
-              const std::shared_ptr<std::shared_mutex> map_mutex,
+              const std::shared_ptr<std::mutex> map_mutex,
               const std::shared_ptr<VolumetricDataStructureBase::Ptr> map);
 
   // Destructor. Removes the visual elements from the scene.
@@ -49,7 +49,7 @@ class SliceVisual : public QObject {
 
  private:
   // Read only shared pointer to the map, owned by WavemapMapDisplay
-  const std::shared_ptr<std::shared_mutex> map_mutex_;
+  const std::shared_ptr<std::mutex> map_mutex_;
   const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_;
 
   // The object implementing the grid visuals

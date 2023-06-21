@@ -70,17 +70,17 @@ void WavemapMapDisplay::processMessage(
   slice_visual_->setFrameOrientation(orientation);
 
   // Update the multi-resolution grid and slice visual's contents if they exist
-  if (std::shared_lock lock(*map_mutex_); !map_ptr_) {
+  if (std::scoped_lock lock(*map_mutex_); !map_ptr_) {
     return;
   }
 
   // Update the visualizations
-  grid_visual_->update();
+  grid_visual_->updateMap();
   slice_visual_->update();
 }
 
 void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
-  std::unique_lock lock(*map_mutex_);
+  std::scoped_lock lock(*map_mutex_);
   if (!convert::rosMsgToMap(map_msg, *map_ptr_)) {
     ROS_WARN("Failed to parse map message.");
   }

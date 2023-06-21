@@ -7,7 +7,7 @@ namespace wavemap::rviz_plugin {
 SliceVisual::SliceVisual(
     Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
     rviz::Property* submenu_root_property,
-    const std::shared_ptr<std::shared_mutex> map_mutex,
+    const std::shared_ptr<std::mutex> map_mutex,
     const std::shared_ptr<VolumetricDataStructureBase::Ptr> map)
     : map_mutex_(map_mutex),
       map_ptr_(map),
@@ -44,7 +44,7 @@ void SliceVisual::update() {
 
   // Get a shared-access lock to the map,
   // to ensure it doesn't get written to while we read it
-  std::shared_lock lock(*map_mutex_);
+  std::scoped_lock lock(*map_mutex_);
   const VolumetricDataStructureBase::ConstPtr map = *map_ptr_;
   if (!map) {
     ROS_INFO("Map is empty. Nothing to draw.");

@@ -43,8 +43,7 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   void processMessage(const wavemap_msgs::Map::ConstPtr& map_msg) override;
 
   // Storage and message parsers for the map
-  const std::shared_ptr<std::shared_mutex> map_mutex_ =
-      std::make_shared<std::shared_mutex>();
+  const std::shared_ptr<std::mutex> map_mutex_ = std::make_shared<std::mutex>();
   const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_ =
       std::make_shared<VolumetricDataStructureBase::Ptr>();
   void updateMapFromRosMsg(const wavemap_msgs::Map& map_msg);
