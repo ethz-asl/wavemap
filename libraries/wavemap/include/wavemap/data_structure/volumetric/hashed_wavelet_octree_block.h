@@ -40,7 +40,8 @@ class HashedWaveletOctreeBlock {
   void forEachLeaf(
       const BlockIndex& block_index,
       typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
-          visitor_fn) const;
+          visitor_fn,
+      IndexElement termination_height = 0) const;
 
   Coefficients::Scale& getRootScale() { return root_scale_coefficient_; }
   const Coefficients::Scale& getRootScale() const {

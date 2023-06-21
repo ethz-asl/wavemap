@@ -36,6 +36,7 @@ class HashedBlocks : public VolumetricDataStructureBase {
 
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
+  IndexElement getTreeHeight() const override { return 0; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;

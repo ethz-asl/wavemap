@@ -13,14 +13,14 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
                                      bool republish_whole_map) {
   // Add all blocks that changed since the last publication time to the
   // queue. Since the queue is stored as a set, there are no duplicates.
-  const TimePoint current_time = std::chrono::steady_clock::now();
+  const TimePoint start_time = std::chrono::steady_clock::now();
   for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
     if (republish_whole_map ||
         last_map_pub_time_ < block.getLastUpdatedStamp()) {
       block_publishing_queue_.insert(block_idx);
     }
   }
-  last_map_pub_time_ = current_time;
+  last_map_pub_time_ = start_time;
 
   // Sort the blocks in the queue by their modification time
   std::map<TimePoint, Index3D> changed_blocks_sorted;

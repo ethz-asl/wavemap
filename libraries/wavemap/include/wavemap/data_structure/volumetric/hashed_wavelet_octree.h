@@ -69,7 +69,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
 
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
-  IndexElement getTreeHeight() const { return config_.tree_height; }
+  IndexElement getTreeHeight() const override { return config_.tree_height; }
   Index3D getBlockSize() const {
     return Index3D::Constant(cells_per_block_side_);
   }
