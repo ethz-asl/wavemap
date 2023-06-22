@@ -7,6 +7,7 @@
 #include "wavemap/config/config_base.h"
 #include "wavemap/data_structure/ndtree/ndtree.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
+#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/indexing/ndtree_index.h"
@@ -53,7 +54,10 @@ class WaveletOctree : public VolumetricDataStructureBase {
   explicit WaveletOctree(const WaveletOctreeConfig& config)
       : VolumetricDataStructureBase(config), config_(config.checkValid()) {}
 
-  bool empty() const override { return ndtree_.empty(); }
+  bool empty() const override {
+    return ndtree_.empty() &&
+           !OccupancyState::isObserved(root_scale_coefficient_);
+  }
   size_t size() const override { return ndtree_.size(); }
   void threshold() override;
   void prune() override;
