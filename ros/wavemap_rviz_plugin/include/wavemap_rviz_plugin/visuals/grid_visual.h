@@ -85,7 +85,6 @@ class GridVisual : public QObject {
   Ogre::Vector3 last_lod_update_position_{};
   void updateLOD(Ogre::Camera* cam);
 
-  static constexpr int kMaxDrawsPerCycle = 50;
   void processBlockUpdateQueue();
 
   using PointcloudList = std::vector<std::vector<rviz::PointCloud::Point>>;

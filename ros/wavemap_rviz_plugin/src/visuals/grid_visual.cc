@@ -226,7 +226,7 @@ void GridVisual::processBlockUpdateQueue() {
 
     // Redraw blocks, starting with the oldest and
     // stopping after kMaxDrawsPerCycle
-    int num_draws = 0;
+    const auto start_time = std::chrono::steady_clock::now();
     for (const auto& [_, block_idx] : changed_blocks_sorted) {
       const auto& block = hashed_map->getBlock(block_idx);
       const IndexElement tree_height = map->getTreeHeight();
@@ -244,7 +244,9 @@ void GridVisual::processBlockUpdateQueue() {
       drawMultiResGrid(tree_height, min_cell_width, block_idx, alpha,
                        cells_per_level, block_grids_[block_idx]);
       block_update_queue_.erase(block_idx);
-      if (kMaxDrawsPerCycle <= ++num_draws) {
+
+      const auto current_time = std::chrono::steady_clock::now();
+      if (std::chrono::milliseconds(30) < current_time - start_time) {
         break;
       }
     }
