@@ -131,27 +131,26 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
     return;
   }
 
-  const auto W_cam_position = cam->getRealPosition();
+  const IndexElement tree_height = map->getTreeHeight();
+  const Point3D cam_position = {cam->getDerivedPosition().x,
+                                cam->getDerivedPosition().y,
+                                cam->getDerivedPosition().z};
 
   if (const auto* hashed_map =
           dynamic_cast<const HashedWaveletOctree*>(map.get());
       hashed_map) {
     for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-      const IndexElement tree_height = map->getTreeHeight();
-      const OctreeIndex block_node_idx =
-          convert::indexAndHeightToNodeIndex(block_idx, tree_height);
-      const Point3D block_center = convert::nodeIndexToCenterPoint(
-          block_node_idx, map->getMinCellWidth());
-
-      const auto W_block_center = frame_node_->convertLocalToWorldPosition(
-          {block_center.x(), block_center.y(), block_center.z()});
+      const OctreeIndex block_node_idx{tree_height, block_idx};
+      const AABB block_aabb =
+          convert::nodeIndexToAABB(block_node_idx, map->getMinCellWidth());
       const FloatingPoint distance_to_cam =
-          W_cam_position.distance(W_block_center);
+          block_aabb.minDistanceTo(cam_position);
 
       constexpr FloatingPoint kFactor = 0.002f;
       const auto term_height_recommended = std::clamp(
-          static_cast<IndexElement>(std::floor(std::log2(
-              kFactor * distance_to_cam / hashed_map->getMinCellWidth()))),
+          static_cast<IndexElement>(
+              std::floor(std::log2(1.f + kFactor * distance_to_cam /
+                                             hashed_map->getMinCellWidth()))),
           0, tree_height - 1);
 
       if (block_update_queue_.count(block_idx)) {
