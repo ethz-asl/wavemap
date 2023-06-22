@@ -96,9 +96,9 @@ void GridVisual::updateMap(bool redraw_all) {
         // Add all blocks that changed since the last publication time to the
         // queue. Since the queue is stored as a set, there are no duplicates.
         if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
+          force_lod_update_ = true;
           constexpr IndexElement kDefaultTermHeight = 0;
           block_update_queue_[block_idx] = kDefaultTermHeight;
-          force_lod_update_ = true;
         }
       }
     } else {
@@ -145,15 +145,20 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
           convert::nodeIndexToAABB(block_node_idx, map->getMinCellWidth());
       const FloatingPoint distance_to_cam =
           block_aabb.minDistanceTo(cam_position);
-      const auto term_height_recommended =
-          std::min(static_cast<IndexElement>(
-                       std::round(std::log2(1.f + distance_to_cam / 25.f))),
-                   tree_height - 1);
-      const IndexElement term_height_current =
-          tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
+      constexpr FloatingPoint kFactor = 0.002f;
+      const auto term_height_recommended = std::clamp(
+          static_cast<IndexElement>(std::round(std::log2(
+              kFactor * distance_to_cam / hashed_map->getMinCellWidth()))),
+          0, tree_height - 1);
 
-      if (term_height_current != term_height_recommended) {
+      if (block_update_queue_.count(block_idx)) {
         block_update_queue_[block_idx] = term_height_recommended;
+      } else if (block_grids_.count(block_idx)) {
+        const IndexElement term_height_current =
+            tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
+        if (term_height_current != term_height_recommended) {
+          block_update_queue_[block_idx] = term_height_recommended;
+        }
       }
     }
   }
