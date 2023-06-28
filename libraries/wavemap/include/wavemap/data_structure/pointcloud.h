@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_POINTCLOUD_H_
 #define WAVEMAP_DATA_STRUCTURE_POINTCLOUD_H_
 
+#include <limits>
 #include <utility>
 
 #include "wavemap/common.h"

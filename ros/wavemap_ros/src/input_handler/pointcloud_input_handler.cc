@@ -38,7 +38,8 @@ PointcloudInputHandler::PointcloudInputHandler(
                    std::move(occupancy_map), transformer, nh, nh_private),
       config_(config.checkValid()),
       pointcloud_undistorter_(
-          transformer, config_.num_undistortion_interpolation_intervals) {
+          transformer,
+          config_.num_undistortion_interpolation_intervals_per_cloud) {
   // Subscribe to the pointcloud input
   registerCallback(config_.topic_type, [&](auto callback_ptr) {
     pointcloud_sub_ = nh.subscribe(
