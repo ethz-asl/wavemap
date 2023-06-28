@@ -14,6 +14,7 @@ DECLARE_CONFIG_MEMBERS(PointcloudInputHandlerConfig,
                       (sensor_frame_id)
                       (time_offset, SiUnit::kSeconds)
                       (undistort_motion)
+                      (num_undistortion_interpolation_intervals_per_cloud)
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 
@@ -36,7 +37,8 @@ PointcloudInputHandler::PointcloudInputHandler(
     : InputHandler(config, params, std::move(world_frame),
                    std::move(occupancy_map), transformer, nh, nh_private),
       config_(config.checkValid()),
-      pointcloud_undistorter_(transformer) {
+      pointcloud_undistorter_(
+          transformer, config_.num_undistortion_interpolation_intervals) {
   // Subscribe to the pointcloud input
   registerCallback(config_.topic_type, [&](auto callback_ptr) {
     pointcloud_sub_ = nh.subscribe(
