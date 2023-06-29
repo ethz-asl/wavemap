@@ -1,7 +1,7 @@
 # Wavemap
 ![wavemap_cover](https://github.com/ethz-asl/wavemap/assets/6238939/a51bef62-01f3-40f5-a302-cabc59b0eed8)
 
-Wavemap is a hierarchical, multi-resolution occupancy mapping framework. It achieves both high memory and computational efficiency by combining Haar wavelet compression and a hierarchical measurement integration scheme. These efficiency improvements make demanding uncertainty-aware sensor models tractable, allowing wavemap to attain exceptionally high recall rates on challenging obstacles such as thin objects.
+Wavemap is a hierarchical, multi-resolution occupancy mapping framework. It achieves state-of-the-art memory and computational efficiency by combining Haar wavelet compression and a hierarchical measurement integration scheme. These efficiency improvements make demanding uncertainty-aware sensor models tractable, allowing wavemap to attain exceptionally high recall rates on challenging obstacles such as thin objects.
 
 The framework is very flexible and supports several data structures, integration schemes, measurement models and projection models out of the box. Any number of inputs with potentially different settings and weights can simultaneously be fused into a single map.
 
@@ -26,7 +26,7 @@ When using wavemap for research, please cite the following paper [[preprint](htt
 Volumetric maps are widely used in robotics due to their desirable properties in applications such as path planning, exploration, and manipulation. Constant advances in mapping technologies are needed to keep up with the improvements in sensor technology, generating increasingly vast amounts of precise measurements. Handling this data in a computationally and memory-efficient manner is paramount to representing the environment at the desired scales and resolutions. In this work, we express the desirable properties of a volumetric mapping framework through the lens of multi-resolution analysis. This shows that wavelets are a natural foundation for hierarchical and multi-resolution volumetric mapping. Based on this insight we design an efficient mapping system that uses wavelet decomposition. The efficiency of the system enables the use of uncertainty-aware sensor models, improving the quality of the maps. Experiments on both synthetic and real-world data provide mapping accuracy and runtime performance comparisons with state-of-the-art methods on both RGB-D and 3D LiDAR data. The framework is open-sourced to allow the robotics community at large to explore this approach.
 </details>
 
-Note that the code has significantly been improved since the paper was written. In terms of performance, wavemap now includes multi-threaded measurement integrators and faster, more efficient data structures inspired by [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb).
+Note that the code has significantly been improved since the paper was written. In terms of performance, wavemap now includes multi-threaded measurement integrators and faster, more memory efficient data structures inspired by [OpenVDB](https://github.com/AcademySoftwareFoundation/openvdb).
 
 ## Install
 To use wavemap with ROS, we recommend using ROS Noetic as installed following the [standard instructions](http://wiki.ros.org/noetic/Installation). Other ROS1 distributions should also work, but have not yet been tested.
@@ -52,8 +52,8 @@ Clone the code for wavemap and its catkin dependencies
 ```shell script
 # With SSH keys
 cd ~/catkin_ws/src
-git clone git@github.com:ethz-asl/voxgraph.git
-vcs import --recursive --input wavemap/tooling/vcstool/wavemap_ssh.yml .
+git clone git@github.com:ethz-asl/wavemap.git
+vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_ssh.yml
 ```
 
 <details>
@@ -62,8 +62,8 @@ vcs import --recursive --input wavemap/tooling/vcstool/wavemap_ssh.yml .
 
 ```shell
 cd ~/catkin_ws/src
-git clone https://github.com/ethz-asl/voxgraph.git
-vcs import --recursive --input wavemap/tooling/vcstool/wavemap_https.yml .
+git clone https://github.com/ethz-asl/wavemap.git
+vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_https.yml
 ```
 
 </details>
@@ -73,23 +73,26 @@ Then install the remaining system dependencies using
 ```shell script
 cd ~/catkin_ws/src
 rosdep update
-rosdep install --ignore-src --skip-keys="numpy_eigen catkin_boost_python_buildtool" -y
+rosdep install --from-paths . --skip-keys="numpy_eigen catkin_boost_python_buildtool" --ignore-src -y
 ```
 
 Build wavemap's ROS interface and the Rviz plugin used to visualize its maps with
 
 ```shell script
 cd ~/catkin_ws/
-catkin build wavemap_3d_ros wavemap_rviz_plugin
+catkin build wavemap_all
 ```
 
 ## Run
-#### Demo
+### Newer College dataset
 *Instructions coming soon.*
 
-#### Your own dataset
+### Panoptic Mapping dataset
+*Instructions coming soon.*
+
+### Your own data
 The basic requirements for running wavemap are:
 1. an odometry source, and
 2. a source of dense depth or 3D LiDAR data, as either depth images or point clouds.
 
-*More instructions coming soon*
+*Instructions coming soon.*
