@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ $default-branch, develop ]
+    branches: [ main ]
   pull_request:
 
 # NOTE: We do not store the work files under $HOME ("/github/home/") since that
