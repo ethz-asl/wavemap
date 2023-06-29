@@ -1,0 +1,188 @@
+name: Continuous Deployment
+
+on:
+  workflow_run:
+    workflows: [ Continuous Integration ]
+    types: [ completed ]
+    branches: [ main ]
+
+# NOTE: We do not store the work files under $HOME ("/github/home/") since that
+#       dir persists between jobs when using self-hosted GitHub Actions runners
+#       (/github/home is a docker volume mapped to the container's host).
+env:
+  REPOSITORY_NAME: wavemap
+  DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
+  DOCKER_TARGET_ROS_PKG: wavemap_all
+  DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
+  DOCKER_RELEASE_REGISTRY: ghcr.io
+  DOCKER_RELEASE_TARGET: workspace-built-full
+  ROS_HOME: /home/ci/.ros
+  CATKIN_WS_PATH: /home/ci/catkin_ws
+  CCACHE_DIR: /home/ci/ccache
+
+jobs:
+  setup:
+    name: Setup
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    outputs:
+      docker_cache_image_name: type=registry,ref=${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+      local_release_image_name: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_RELEASE_TARGET }}-${{ github.sha }}
+    steps:
+      - name: Empty
+        run: echo
+
+  publish-image:
+    name: Publish Docker image
+    if: github.ref == 'refs/heads/main'
+    needs: [ setup ]
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CACHE_IMAGE_NAME: ${{ needs.setup.outputs.docker_cache_image_name }}
+      LOCAL_IMAGE_NAME: ${{ needs.setup.outputs.local_release_image_name }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.REPOSITORY_NAME }}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.DOCKER_RELEASE_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Prepare ccache to accelerate the build
+        id: get-date
+        # NOTE: Installing tar is required for actions/cache@v3 to work properly
+        #       on docker:20.10.9-dind.
+        run: |
+          apk add --no-cache tar
+          mkdir -p ccache
+          echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
+
+      - name: Pull in ccache's cache
+        uses: actions/cache@v3
+        with:
+          path: ccache
+          key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-
+            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-
+
+      - name: Start measuring the build time
+        id: start-time
+        run: |
+          stamp=$(date +%s)
+          echo "stamp=${stamp}" >> $GITHUB_OUTPUT
+
+      - name: Build the ${{ env.DOCKER_RELEASE_TARGET }} image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          target: ${{ env.DOCKER_RELEASE_TARGET }}
+          build-args: |
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
+          load: true
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
+          tags: ${{ env.LOCAL_IMAGE_NAME }}
+
+      - name: Determine whether the ccache cache should be updated
+        id: should-writeback-ccache
+        run: |
+          runtime=$(( $(date +%s) - ${{ steps.start-time.outputs.stamp }} ))
+          threshold=300  # seconds
+          echo $runtime
+          answer=false
+          if [ $threshold -le $runtime ]; then
+            answer=true
+          fi
+          echo "answer=${answer}" >> $GITHUB_OUTPUT
+
+      - name: Test the ${{ env.DOCKER_RELEASE_TARGET }} image
+        run: docker run --rm ${{ env.LOCAL_IMAGE_NAME }}
+
+      - name: Extract metadata for published image
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ github.repository }}
+
+      - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          target: ${{ env.DOCKER_RELEASE_TARGET }}
+          build-args: |
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
+          push: true
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Write back the build's ccache cache
+        if: steps.should-writeback-ccache.outputs.answer == 'true'
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          target: workspace-deps-builder-ccache-extractor
+          build-args: |
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          tags: ${{ env.LOCAL_IMAGE_NAME }}
+          outputs: type=local,dest=ccache
+
+  publish-docs:
+    name: Publish docs
+    if: github.ref == 'refs/heads/main'
+    needs: [ setup ]
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v1
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@main
