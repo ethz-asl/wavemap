@@ -23,8 +23,11 @@ class PointcloudUndistorter {
     kSuccess
   };
 
-  explicit PointcloudUndistorter(std::shared_ptr<TfTransformer> transformer)
-      : transformer_(std::move(transformer)) {}
+  explicit PointcloudUndistorter(std::shared_ptr<TfTransformer> transformer,
+                                 int num_interpolation_intervals_per_cloud)
+      : transformer_(std::move(transformer)),
+        num_interpolation_intervals_per_cloud_(
+            num_interpolation_intervals_per_cloud) {}
 
   Result undistortPointcloud(GenericStampedPointcloud& stamped_pointcloud,
                              PosedPointcloud<>& undistorted_pointcloud,
@@ -32,6 +35,7 @@ class PointcloudUndistorter {
 
  private:
   std::shared_ptr<TfTransformer> transformer_;
+  const int num_interpolation_intervals_per_cloud_;
 };
 }  // namespace wavemap
 
