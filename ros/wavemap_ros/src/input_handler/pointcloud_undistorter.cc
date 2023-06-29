@@ -12,11 +12,10 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
 
   // Calculate the step size for the undistortion transform buffer
   const auto& points = stamped_pointcloud.getPoints();
-  constexpr int kNumTimeIntervals = 400;
-  constexpr int kNumTimeSteps = kNumTimeIntervals + 1;
+  const int num_time_steps = num_interpolation_intervals_per_cloud_ + 1;
   const uint64_t step_size =
       (points.back().time_offset - points.front().time_offset) /
-      (kNumTimeIntervals - 1);
+      (num_interpolation_intervals_per_cloud_ - 1);
   const uint64_t buffer_start_time = start_time - step_size;
   const uint64_t buffer_end_time = end_time + step_size;
 
@@ -34,8 +33,8 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
 
   // Buffer the transforms
   std::vector<std::pair<uint64_t, Transformation3D>> timed_poses;
-  timed_poses.reserve(kNumTimeSteps);
-  for (unsigned int step_idx = 0u; step_idx < kNumTimeSteps; ++step_idx) {
+  timed_poses.reserve(num_time_steps);
+  for (int step_idx = 0; step_idx < num_time_steps; ++step_idx) {
     auto& timed_pose = timed_poses.emplace_back();
     timed_pose.first = start_time + step_idx * step_size;
     if (!transformer_->lookupTransform(
@@ -54,7 +53,7 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
   //       (inertial) frame using the sensor's pose at each point's timestamp.
   const auto num_points = static_cast<int>(points.size());
   Eigen::Matrix<FloatingPoint, 3, Eigen::Dynamic> t_W_points;
-  t_W_points.resize(3, num_points);
+  t_W_points.setZero(3, num_points);
   uint64_t previous_point_time = -1u;
   int pose_left_idx = 0u;
   Transformation3D T_WCi;
@@ -68,7 +67,7 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
     if (time != previous_point_time) {
       previous_point_time = time;
       while (timed_poses[pose_left_idx + 1].first < time &&
-             pose_left_idx + 2 < kNumTimeSteps) {
+             pose_left_idx + 2 < num_time_steps) {
         ++pose_left_idx;
       }
       CHECK_LT(pose_left_idx + 1, timed_poses.size());
@@ -78,8 +77,8 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
       const Transformation3D& T_WCright = timed_poses[pose_left_idx + 1].second;
       FloatingPoint a = static_cast<FloatingPoint>((time - time_left)) /
                         static_cast<FloatingPoint>((time_right - time_left));
-      CHECK_GE(a, 0.f);
-      CHECK_LE(a, 1.f);
+      DCHECK_GE(a, 0.f);
+      DCHECK_LE(a, 1.f);
       T_WCi = interpolateComponentwise(T_WCleft, T_WCright, a);
     }
 

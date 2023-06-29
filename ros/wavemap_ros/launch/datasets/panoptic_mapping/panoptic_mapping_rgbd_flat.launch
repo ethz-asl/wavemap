@@ -5,9 +5,12 @@
        doc="Name of the file from which to read wavemap's server params."/>
 
   <!-- Dataset params -->
-  <arg name="use_batch_mode" default="true"/>
+  <arg name="use_batch_mode" default="false"
+       doc="Whether to replay the experiment using panoptic mapping's data player, or process it in batch mode.
+            If you would like to use batch_mode, please replay the data once, record it into a rosbag
+            and update the rosbag_path at the bottom of this launch file."/>
   <arg name="base_path"
-       default="../data/wavemap_experiments/panoptic_mapping/dataset/run1"/>
+       default="../data/panoptic_mapping/flat_dataset/run1"/>
   <arg name="play_rate" default="1.0"/>
   <arg name="wait" default="false"/>
   <arg name="namespace" default="data"/>
@@ -39,7 +42,7 @@
   <group if="$(arg use_batch_mode)">
     <!-- Directly ingest the preprocessed rosbag -->
     <arg name="rosbag_path"
-         value="../data/wavemap_experiments/panoptic_mapping/rosbags/flat/run1.bag"/>
+         value="$(arg base_path)/run1.bag"/>
     <!-- Run wavemap -->
     <include file="$(find wavemap_ros)/launch/datasets/dataset_base.launch"
              pass_all_args="true"/>

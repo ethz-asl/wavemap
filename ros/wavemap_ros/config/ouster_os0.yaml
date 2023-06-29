@@ -15,7 +15,7 @@ inputs:
       topic_type: "ouster"
       undistort_motion: true
       topic_queue_length: 10
-      max_wait_for_pose: { seconds: 0.3 }
+      max_wait_for_pose: { seconds: 1.0 }
       # reprojected_pointcloud_topic_name: "/wavemap/reprojected_pointcloud"
       # projected_range_image_topic_name: "/wavemap/projected_range_image"
     integrators:
