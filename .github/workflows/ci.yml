@@ -151,6 +151,7 @@ jobs:
 
   lint:
     name: Lint
+    needs: [ common-variables ]
     runs-on: self-hosted
     container:
       # NOTE: Pylint checks if all modules that are marked for import are
@@ -561,31 +562,6 @@ jobs:
       - name: Show statistics for ccache
         uses: ./.github/actions/log-ccache-stats
 
-  publish-docs:
-    name: Publish docs
-    if: github.ref == 'refs/heads/main'
-    needs: [ build-docs ]
-    runs-on: self-hosted
-    container:
-      image: docker:20.10.9-dind
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: "pages"
-      cancel-in-progress: true
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Setup Pages
-        uses: actions/configure-pages@v1
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@main
-
   publish-image:
     name: Publish Docker image
     if: github.ref == 'refs/heads/main'
@@ -713,3 +689,28 @@ jobs:
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}
           outputs: type=local,dest=ccache
+
+  publish-docs:
+    name: Publish docs
+    if: github.ref == 'refs/heads/main'
+    needs: [ common-variables, publish-image ]
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v1
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@main
