@@ -100,10 +100,20 @@ roslaunch wavemap_ros newer_college_os0_cloister.launch rosbag_dir:=<path_to_dow
 ```
 
 For additional options, please refer to the launch file's documented arguments
-[here](https://github.com/ethz-asl/wavemap/blob/main/ros/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch).
+[here](ros/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch). To experiment with wavemap's configuration, modify [this config file](ros/wavemap_ros/config/ouster_os0.yaml).
 
 ### Panoptic mapping dataset
-*Instructions coming soon.*
+The Panoptic Mapping flat dataset is available [here](https://projects.asl.ethz.ch/datasets/doku.php?id=panoptic_mapping). You can automatically download it using
+```shell script
+export FLAT_DATA_DIR="/home/$USER/data/panoptic_mapping" # Set to path of your preference
+bash <(curl -s curl -s https://raw.githubusercontent.com/ethz-asl/panoptic_mapping/3926396d92f6e3255748ced61f5519c9b102570f/panoptic_mapping_utils/scripts/download_flat_dataset.sh)
+```
+
+To process it with wavemap, run
+```shell script
+roslaunch wavemap_ros panoptic_mapping_rgbd_flat.launch base_path:="${FLAT_DATA_DIR}"/flat_dataset/run1
+```
+To experiment with different wavemap settings, modify [this config file](ros/wavemap_ros/config/panoptic_mapping_rgbd.yaml).
 
 ### Your own data
 The basic requirements for running wavemap are:
