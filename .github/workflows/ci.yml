@@ -16,23 +16,38 @@ env:
   DOCKER_CI_TARGET: workspace-built-deps
   DOCKER_RELEASE_REGISTRY: ghcr.io
   DOCKER_RELEASE_TARGET: workspace-built-full
-  DOCKER_RELEASE_IMAGE_NAME: ${{ env.REPOSITORY_NAME }}
-  DOCKER_CACHE_IMAGE_NAME: type=registry,ref=${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
 jobs:
-  workspace-container:
-    name: Setup workspace container
+  common-variables:
+    name: Define common variables
+    # NOTE: This job is used to pass complex common variables around between jobs,
+    #       as a work-around for ENV variables in GitHub Actions not being composable.
     runs-on: self-hosted
     container:
       image: docker:20.10.9-dind
     outputs:
-      image: ${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_CI_TARGET }}-${{ github.sha }}
+      docker_cache_image_name: type=registry,ref=${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+      local_ci_image_name: ${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_CI_TARGET }}-${{ github.sha }}
+      local_release_image_name: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_RELEASE_TARGET }}-${{ github.sha }}
+    steps:
+      - name: Empty step
+        run: echo
+
+  workspace-container:
+    name: Setup workspace container
+    needs: [ common-variables ]
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    outputs:
+      image: ${{ needs.common-variables.outputs.local_ci_image_name }}
     env:
-      LOCAL_IMAGE_NAME: ${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_CI_TARGET }}-${{ github.sha }}
+      CACHE_IMAGE_NAME: ${{ needs.common-variables.outputs.docker_cache_image_name }}
+      LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_ci_image_name }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v3
@@ -80,8 +95,8 @@ jobs:
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           load: true
-          cache-from: ${{ env.DOCKER_CACHE_IMAGE_NAME }}
-          cache-to: ${{ env.DOCKER_CACHE_IMAGE_NAME }},mode=max
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
           tags: ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Determine whether the ccache cache should be updated
@@ -113,7 +128,7 @@ jobs:
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
-          cache-from: ${{ env.DOCKER_CACHE_IMAGE_NAME }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Write back the build's ccache cache
@@ -130,7 +145,7 @@ jobs:
             ROS_HOME=${{ env.ROS_HOME }}
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
-          cache-from: ${{ env.DOCKER_CACHE_IMAGE_NAME }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}
           outputs: type=local,dest=ccache
 
@@ -572,9 +587,9 @@ jobs:
         uses: actions/deploy-pages@main
 
   publish-image:
-    name: Publish Docker image to ${{ env.DOCKER_RELEASE_REGISTRY }}
+    name: Publish Docker image
     if: github.ref == 'refs/heads/main'
-    needs: [ build-docs, valgrind, sanitize ]
+    needs: [ common-variables, build-docs, valgrind, sanitize ]
     runs-on: self-hosted
     container:
       image: docker:20.10.9-dind
@@ -582,7 +597,8 @@ jobs:
       contents: read
       packages: write
     env:
-      LOCAL_IMAGE_NAME: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_RELEASE_TARGET }}-${{ github.sha }}
+      CACHE_IMAGE_NAME: ${{ needs.common-variables.outputs.docker_cache_image_name }}
+      LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_release_image_name }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v3
@@ -637,8 +653,8 @@ jobs:
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           load: true
-          cache-from: ${{ env.DOCKER_CACHE_IMAGE_NAME }}
-          cache-to: ${{ env.DOCKER_CACHE_IMAGE_NAME }},mode=max
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
           tags: ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Determine whether the ccache cache should be updated
@@ -660,7 +676,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+          images: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ github.repository }}
 
       - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image
         uses: docker/build-push-action@v3
@@ -676,7 +692,7 @@ jobs:
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
-          cache-from: ${{ env.DOCKER_CACHE_IMAGE_NAME }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -694,6 +710,6 @@ jobs:
             ROS_HOME=${{ env.ROS_HOME }}
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
-          cache-from: ${{ env.DOCKER_CACHE_IMAGE_NAME }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}
           outputs: type=local,dest=ccache
