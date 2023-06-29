@@ -9,14 +9,17 @@
        default="false"
        doc="If true, replay only the first the rosbag in the dataset. If false, replay everything."/>
 
-  <!-- Select the rosbag paths -->
+  <!-- Rosbag paths -->
   <!-- NOTE: Relative paths will be resolved w.r.t. ROS_HOME (default ~/.ros) -->
-  <arg if="$(arg only_first_rosbag)" name="rosbag_path"
-       value="
-../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/cloister/2021-12-02-10-15-59_0-cloister.bag"/>
-  <arg unless="$(arg only_first_rosbag)" name="rosbag_path" value="
-../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/cloister/2021-12-02-10-15-59_0-cloister.bag
-../data/wavemap_experiments/newer_college/dataset/2021-ouster-os0-128-alphasense/collection2/cloister/2021-12-02-10-19-05_1-cloister.bag"/>
+  <arg name="rosbag_dir" default="../data/newer_college/2021-ouster-os0-128-alphasense/collection2/cloister"
+       doc="Path to the directory containing the rosbags."/>
+  <arg name="odom_rosbag" default="$(arg rosbag_dir)/nc_cloister_fast_lio_odom.bag"
+       doc="Path to the rosbag containing odometry, to resolve the LiDAR poses and undistort the pointclouds.
+            Leave blank to run FastLIO2 odometry."/>
+  <arg name="first_rosbag" default="$(arg rosbag_dir)/2021-12-02-10-15-59_0-cloister.bag"
+       doc="Path to the first rosbag of the dataset. If only_first_rosbag:=true, only this bag will be processed."/>
+  <arg name="remaining_rosbags" default="$(arg rosbag_dir)/2021-12-02-10-19-05_1-cloister.bag"
+       doc="Path to all remaining rosbags."/>
 
   <!-- Launch default Newer College OS0 setup -->
   <include
