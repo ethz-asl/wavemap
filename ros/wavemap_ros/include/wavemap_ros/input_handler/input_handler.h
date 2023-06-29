@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <image_transport/image_transport.h>
@@ -19,27 +20,35 @@ namespace wavemap {
 struct InputHandlerType : public TypeSelector<InputHandlerType> {
   using TypeSelector<InputHandlerType>::TypeSelector;
 
-  enum Id : TypeId { kPointcloud, kDepthImage, kLivox };
+  enum Id : TypeId { kPointcloud, kDepthImage };
 
-  static constexpr std::array names = {"pointcloud", "depth_image", "livox"};
+  static constexpr std::array names = {"pointcloud", "depth_image"};
 };
 
-struct InputHandlerConfig : public ConfigBase<InputHandlerConfig, 10> {
+struct InputHandlerConfig : public ConfigBase<InputHandlerConfig, 5> {
   std::string topic_name = "scan";
   int topic_queue_length = 10;
 
   FloatingPoint processing_retry_period = 0.05f;
-  FloatingPoint max_wait_for_pose = 1.f;
-
-  std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
-  std::string image_transport_hints = "raw";
-  FloatingPoint depth_scale_factor = 1.f;
-  FloatingPoint time_delay = 0.f;
 
   std::string reprojected_pointcloud_topic_name;  // Leave blank to disable
   std::string projected_range_image_topic_name;   // Leave blank to disable
 
   static MemberMap memberMap;
+
+  // Constructors
+  InputHandlerConfig() = default;
+  InputHandlerConfig(std::string topic_name, int topic_queue_length,
+                     FloatingPoint processing_retry_period,
+                     std::string reprojected_pointcloud_topic_name,
+                     std::string projected_range_image_topic_name)
+      : topic_name(std::move(topic_name)),
+        topic_queue_length(topic_queue_length),
+        processing_retry_period(processing_retry_period),
+        reprojected_pointcloud_topic_name(
+            std::move(reprojected_pointcloud_topic_name)),
+        projected_range_image_topic_name(
+            std::move(projected_range_image_topic_name)) {}
 
   bool isValid(bool verbose) const override;
 };
@@ -54,7 +63,8 @@ class InputHandler {
   virtual ~InputHandler() = default;
 
   virtual InputHandlerType getType() const = 0;
-  const InputHandlerConfig& getConfig() const { return config_; }
+
+  const std::string& getTopicName() { return config_.topic_name; }
 
   bool shouldPublishReprojectedPointcloud() const {
     return !config_.reprojected_pointcloud_topic_name.empty() &&

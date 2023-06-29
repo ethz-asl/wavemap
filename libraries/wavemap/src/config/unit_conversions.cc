@@ -60,7 +60,7 @@ FloatingPoint toUnit(const Value& param, SiUnit unit,
   if (param.holds<Map>()) {
     const auto& sub_map = param.get<Map>();
     const auto value_with_unit = toSiUnit(sub_map);
-    if (value_with_unit.unit.toTypeId() == unit.toTypeId()) {
+    if (value_with_unit.unit == unit) {
       return value_with_unit.value;
     } else {
       LOG(ERROR) << "Expected unit of type " << unit.toStr() << ", but got "
@@ -77,7 +77,7 @@ FloatingPoint toUnit(const Map& map, const Name& key, SiUnit unit,
   if (map::keyHoldsValue<Map>(map, key)) {
     const auto& sub_map = map::keyGetValue<Map>(map, key);
     const auto value_with_unit = toSiUnit(sub_map);
-    if (value_with_unit.unit.toTypeId() == unit.toTypeId()) {
+    if (value_with_unit.unit == unit) {
       return value_with_unit.value;
     } else {
       LOG(ERROR) << "Expected unit of type " << unit.toStr() << ", but got "

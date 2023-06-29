@@ -47,7 +47,7 @@
 
   <!-- Run odometry -->
   <rosparam command="load"
-            file="$(find wavemap_ros)/config/other_packages/fast_lio_livox_mid360.yaml"/>
+            file="$(find wavemap_ros)/config/other_packages/fast_lio/livox_mid360.yaml"/>
   <param name="feature_extract_enable" type="bool" value="0"/>
   <param name="point_filter_num" type="int" value="1"/>
   <param name="max_iteration" type="int" value="3"/>

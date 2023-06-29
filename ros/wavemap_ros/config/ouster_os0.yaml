@@ -1,17 +1,19 @@
 map:
   general:
-    world_frame: "map"
+    world_frame: "odom"
     thresholding_period: { seconds: 2.0 }
     pruning_period: { seconds: 10.0 }
     visualization_period: { seconds: 2.0 }
   data_structure:
     type: "hashed_chunked_wavelet_octree"
-    min_cell_width: { meters: 0.05 }
+    min_cell_width: { meters: 0.1 }
 
 inputs:
   - type: "pointcloud"
     general:
-      topic_name: "/os_cloud_node/points_corrected"
+      topic_name: "/os_cloud_node/points"
+      topic_type: "ouster"
+      undistort_motion: true
       topic_queue_length: 10
       max_wait_for_pose: { seconds: 1.0 }
       # reprojected_pointcloud_topic_name: "/wavemap/reprojected_pointcloud"

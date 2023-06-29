@@ -1,7 +1,6 @@
 #include "wavemap_ros/input_handler/input_handler_factory.h"
 
 #include "wavemap_ros/input_handler/depth_image_input_handler.h"
-#include "wavemap_ros/input_handler/livox_input_handler.h"
 #include "wavemap_ros/input_handler/pointcloud_input_handler.h"
 
 namespace wavemap {
@@ -47,29 +46,23 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
                   "(dictionary) of parameters.";
     return nullptr;
   }
-  const auto input_handler_config = InputHandlerConfig::from(
-      param::map::keyGetValue<param::Map>(params, "general"));
 
   // Create the input handler
   switch (input_handler_type.toTypeId()) {
-    case InputHandlerType::kPointcloud:
+    case InputHandlerType::kPointcloud: {
+      const auto input_handler_config = PointcloudInputHandlerConfig::from(
+          param::map::keyGetValue<param::Map>(params, "general"));
       return std::make_unique<PointcloudInputHandler>(
           input_handler_config, params, std::move(world_frame),
           std::move(occupancy_map), std::move(transformer), nh, nh_private);
-    case InputHandlerType::kDepthImage:
+    }
+    case InputHandlerType::kDepthImage: {
+      const auto input_handler_config = DepthImageInputHandlerConfig::from(
+          param::map::keyGetValue<param::Map>(params, "general"));
       return std::make_unique<DepthImageInputHandler>(
           input_handler_config, params, std::move(world_frame),
           std::move(occupancy_map), std::move(transformer), nh, nh_private);
-    case InputHandlerType::kLivox:
-#ifdef LIVOX_AVAILABLE
-      return std::make_unique<LivoxInputHandler>(
-          input_handler_config, params, std::move(world_frame),
-          std::move(occupancy_map), std::move(transformer), nh, nh_private);
-#else
-      LOG(ERROR) << "Livox support is currently not available. Please install "
-                    "livox_ros_driver2 and rebuild wavemap.";
-      return nullptr;
-#endif
+    }
   }
   return nullptr;
 }

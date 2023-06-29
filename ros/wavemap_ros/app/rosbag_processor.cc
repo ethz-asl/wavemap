@@ -8,6 +8,7 @@
 #include "wavemap_ros/input_handler/pointcloud_input_handler.h"
 #include "wavemap_ros/wavemap_server.h"
 
+using namespace wavemap;  // NOLINT
 int main(int argc, char** argv) {
   ros::init(argc, argv, "wavemap_rosbag_processor");
 
@@ -20,7 +21,7 @@ int main(int argc, char** argv) {
   // Setup the wavemap server node
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  wavemap::WavemapServer wavemap_server(nh, nh_private);
+  WavemapServer wavemap_server(nh, nh_private);
 
   // Read the required ROS params
   std::string rosbag_paths_str;
@@ -28,33 +29,38 @@ int main(int argc, char** argv) {
   std::string input_pointcloud_republishing_topic;
 
   // Create the rosbag processor and load the rosbags
-  wavemap::RosbagProcessor rosbag_processor;
+  RosbagProcessor rosbag_processor;
   std::istringstream rosbag_paths_ss(rosbag_paths_str);
   if (!rosbag_processor.addRosbags(rosbag_paths_ss)) {
     return -1;
   }
 
   // Setup input handlers
-  const wavemap::param::Array integrator_params_array =
-      wavemap::param::convert::toParamArray(nh_private, "inputs");
+  const param::Array integrator_params_array =
+      param::convert::toParamArray(nh_private, "inputs");
   for (const auto& integrator_params : integrator_params_array) {
-    if (integrator_params.holds<wavemap::param::Map>()) {
-      const auto param_map = integrator_params.get<wavemap::param::Map>();
-      wavemap::InputHandler* input_handler =
+    if (integrator_params.holds<param::Map>()) {
+      const auto param_map = integrator_params.get<param::Map>();
+      InputHandler* input_handler =
           wavemap_server.addInput(param_map, nh, nh_private);
       if (input_handler) {
         switch (input_handler->getType().toTypeId()) {
-          case wavemap::InputHandlerType::kPointcloud:
-            rosbag_processor.addCallback(
-                input_handler->getConfig().topic_name,
-                &wavemap::PointcloudInputHandler::pointcloudCallback,
-                dynamic_cast<wavemap::PointcloudInputHandler*>(input_handler));
+          case InputHandlerType::kPointcloud: {
+            auto pointcloud_handler =
+                dynamic_cast<PointcloudInputHandler*>(input_handler);
+            PointcloudInputHandler::registerCallback(
+                pointcloud_handler->getTopicType(), [&](auto callback_ptr) {
+                  rosbag_processor.addCallback(input_handler->getTopicName(),
+                                               callback_ptr,
+                                               pointcloud_handler);
+                });
+          }
             continue;
-          case wavemap::InputHandlerType::kDepthImage:
+          case InputHandlerType::kDepthImage:
             rosbag_processor.addCallback<const sensor_msgs::Image&>(
-                input_handler->getConfig().topic_name,
-                &wavemap::DepthImageInputHandler::depthImageCallback,
-                dynamic_cast<wavemap::DepthImageInputHandler*>(input_handler));
+                input_handler->getTopicName(),
+                &DepthImageInputHandler::callback,
+                dynamic_cast<DepthImageInputHandler*>(input_handler));
             continue;
         }
       }

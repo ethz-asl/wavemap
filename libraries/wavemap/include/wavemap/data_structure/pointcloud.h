@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_POINTCLOUD_H_
 #define WAVEMAP_DATA_STRUCTURE_POINTCLOUD_H_
 
+#include <limits>
 #include <utility>
 
 #include "wavemap/common.h"
@@ -30,7 +31,10 @@ class Pointcloud {
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.cols(); }
-  void resize(const unsigned int n_points) { data_.resize(kDim, n_points); }
+  void resize(size_t n_points) {
+    CHECK_LT(n_points, std::numeric_limits<Eigen::Index>::max());
+    data_.resize(kDim, n_points);
+  }
   void clear() { data_.resize(kDim, 0); }
 
   typename PointcloudData::ColXpr operator[](Eigen::Index point_index) {

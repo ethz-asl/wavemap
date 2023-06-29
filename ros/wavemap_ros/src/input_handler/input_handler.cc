@@ -13,11 +13,6 @@ DECLARE_CONFIG_MEMBERS(InputHandlerConfig,
                       (topic_name)
                       (topic_queue_length)
                       (processing_retry_period, SiUnit::kSeconds)
-                      (max_wait_for_pose, SiUnit::kSeconds)
-                      (sensor_frame_id)
-                      (image_transport_hints)
-                      (depth_scale_factor)
-                      (time_delay, SiUnit::kSeconds)
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 
@@ -27,7 +22,6 @@ bool InputHandlerConfig::isValid(bool verbose) const {
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
   all_valid &= IS_PARAM_GT(topic_queue_length, 0, verbose);
   all_valid &= IS_PARAM_GT(processing_retry_period, 0.f, verbose);
-  all_valid &= IS_PARAM_GE(max_wait_for_pose, 0.f, verbose);
 
   return all_valid;
 }

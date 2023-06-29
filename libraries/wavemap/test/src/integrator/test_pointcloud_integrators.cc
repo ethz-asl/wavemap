@@ -172,7 +172,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
       continue;
     }
 
-    // Generate a random point cloud and save its end points in a hashed set
+    // Generate a random pointcloud and save its end points in a hashed set
     const PosedPointcloud<> random_pointcloud =
         getRandomPointcloud(projection_model, min_distance, kMaxDistance);
     std::unordered_set<Index3D, IndexHash<3>> ray_end_points;
@@ -182,7 +182,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
       ray_end_points.emplace(index);
     }
 
-    // Set up the occupancy map, integrator and integrate the point cloud
+    // Set up the occupancy map, integrator and integrate the pointcloud
     VolumetricDataStructureBase::Ptr occupancy_map =
         std::make_shared<HashedBlocks>(data_structure_config);
     IntegratorBase::Ptr pointcloud_integrator =
@@ -191,10 +191,10 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
     pointcloud_integrator->integratePointcloud(random_pointcloud);
 
     // Check the map
-    // NOTE: This test may generate false positives if the point cloud contains
+    // NOTE: This test may generate false positives if the pointcloud contains
     //       overlapping rays which erase each other's endpoints. This is most
     //       likely to happen when the map resolution is low w.r.t. the spacing
-    //       between the point cloud's beams.
+    //       between the pointcloud's beams.
     for (const Index3D& index :
          Grid(occupancy_map->getMinIndex(), occupancy_map->getMaxIndex())) {
       const bool cell_occupied_in_map =
@@ -202,7 +202,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
       const bool cell_contains_ray_end_point = ray_end_points.count(index);
       EXPECT_EQ(cell_occupied_in_map, cell_contains_ray_end_point)
           << "for index " << EigenFormat::oneLine(index) << ", min cell width "
-          << data_structure_config.min_cell_width << " and point cloud size "
+          << data_structure_config.min_cell_width << " and pointcloud size "
           << random_pointcloud.getPointsLocal().size();
     }
   }

@@ -6,14 +6,38 @@
 #include <wavemap/utils/eigen_format.h>
 
 namespace wavemap {
+DECLARE_CONFIG_MEMBERS(DepthImageInputHandlerConfig,
+                      (topic_name)
+                      (topic_queue_length)
+                      (processing_retry_period, SiUnit::kSeconds)
+                      (max_wait_for_pose, SiUnit::kSeconds)
+                      (sensor_frame_id)
+                      (image_transport_hints)
+                      (depth_scale_factor)
+                      (time_offset, SiUnit::kSeconds)
+                      (reprojected_pointcloud_topic_name)
+                      (projected_range_image_topic_name));
+
+bool DepthImageInputHandlerConfig::isValid(bool verbose) const {
+  bool all_valid = true;
+
+  all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
+  all_valid &= IS_PARAM_GT(topic_queue_length, 0, verbose);
+  all_valid &= IS_PARAM_GT(processing_retry_period, 0.f, verbose);
+  all_valid &= IS_PARAM_GE(max_wait_for_pose, 0.f, verbose);
+
+  return all_valid;
+}
+
 DepthImageInputHandler::DepthImageInputHandler(
-    const InputHandlerConfig& config, const param::Map& params,
+    const DepthImageInputHandlerConfig& config, const param::Map& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
                    std::move(occupancy_map), std::move(transformer), nh,
-                   nh_private) {
+                   nh_private),
+      config_(config.checkValid()) {
   // Get pointers to the underlying scanwise integrators
   for (const auto& integrator : integrators_) {
     auto scanwise_integrator =
@@ -28,7 +52,7 @@ DepthImageInputHandler::DepthImageInputHandler(
   image_transport::ImageTransport it(nh);
   depth_image_sub_ = it.subscribe(
       config_.topic_name, config_.topic_queue_length,
-      &DepthImageInputHandler::depthImageCallback, this,
+      &DepthImageInputHandler::callback, this,
       image_transport::TransportHints(config_.image_transport_hints));
 }
 
@@ -42,7 +66,7 @@ void DepthImageInputHandler::processQueue() {
     // Get the sensor pose in world frame
     Transformation3D T_W_C;
     const ros::Time stamp =
-        oldest_msg.header.stamp + ros::Duration(config_.time_delay);
+        oldest_msg.header.stamp + ros::Duration(config_.time_offset);
     if (!transformer_->lookupTransform(world_frame_, sensor_frame_id, stamp,
                                        T_W_C)) {
       const auto newest_msg = depth_image_queue_.back();
