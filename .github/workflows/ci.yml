@@ -188,7 +188,7 @@ jobs:
         run: |
           echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
           source /opt/ros/noetic/setup.bash
-          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} pre-commit run --all-files
+          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} SKIP=no-commit-to-branch pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
   build-docs:
