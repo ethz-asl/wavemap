@@ -3,10 +3,11 @@ map:
     world_frame: "odom"
     thresholding_period: { seconds: 2.0 }
     pruning_period: { seconds: 10.0 }
-    visualization_period: { seconds: 2.0 }
+    publication_period: { seconds: 2.0 }
   data_structure:
     type: "hashed_chunked_wavelet_octree"
     min_cell_width: { meters: 0.01 }
+    tree_height: 9
 
 inputs:
   - type: "depth_image"
@@ -14,7 +15,7 @@ inputs:
       topic_name: "/pico_monstar/image_rect"
       topic_queue_length: 1
       max_wait_for_pose: { seconds: 1.0 }
-      time_delay: { seconds: 0.00201747 }
+      time_offset: { seconds: 0.00201747 }
       # depth_scale_factor: 0.001
       # reprojected_pointcloud_topic_name: "/wavemap/depth_cam_input"
     integrators:
@@ -57,9 +58,10 @@ inputs:
           scaling_free: 0.4
           scaling_occupied: 0.8
 
-  - type: "livox"
+  - type: "pointcloud"
     general:
       topic_name: "/livox/lidar"
+      topic_type: "livox"
       topic_queue_length: 1
       max_wait_for_pose: { seconds: 1.0 }
       # reprojected_pointcloud_topic_name: "/wavemap/lidar_input"

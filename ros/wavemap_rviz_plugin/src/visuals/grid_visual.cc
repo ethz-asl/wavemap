@@ -96,9 +96,9 @@ void GridVisual::updateMap(bool redraw_all) {
         // Add all blocks that changed since the last publication time to the
         // queue. Since the queue is stored as a set, there are no duplicates.
         if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
+          force_lod_update_ = true;
           constexpr IndexElement kDefaultTermHeight = 0;
           block_update_queue_[block_idx] = kDefaultTermHeight;
-          force_lod_update_ = true;
         }
       }
     } else {
@@ -131,29 +131,36 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
     return;
   }
 
-  const Point3D cam_position = {cam->getPosition().x, cam->getPosition().y,
-                                cam->getPosition().z};
+  const IndexElement tree_height = map->getTreeHeight();
+  const Point3D cam_position = {cam->getDerivedPosition().x,
+                                cam->getDerivedPosition().y,
+                                cam->getDerivedPosition().z};
 
   if (const auto* hashed_map =
           dynamic_cast<const HashedWaveletOctree*>(map.get());
       hashed_map) {
     for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-      const IndexElement tree_height = map->getTreeHeight();
-      const OctreeIndex block_node_idx =
-          convert::indexAndHeightToNodeIndex(block_idx, tree_height);
+      const OctreeIndex block_node_idx{tree_height, block_idx};
       const AABB block_aabb =
           convert::nodeIndexToAABB(block_node_idx, map->getMinCellWidth());
       const FloatingPoint distance_to_cam =
           block_aabb.minDistanceTo(cam_position);
-      const auto term_height_recommended =
-          std::min(static_cast<IndexElement>(
-                       std::round(std::log2(1.f + distance_to_cam / 25.f))),
-                   tree_height - 1);
-      const IndexElement term_height_current =
-          tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
 
-      if (term_height_current != term_height_recommended) {
+      constexpr FloatingPoint kFactor = 0.002f;
+      const auto term_height_recommended = std::clamp(
+          static_cast<IndexElement>(
+              std::floor(std::log2(1.f + kFactor * distance_to_cam /
+                                             hashed_map->getMinCellWidth()))),
+          0, tree_height - 1);
+
+      if (block_update_queue_.count(block_idx)) {
         block_update_queue_[block_idx] = term_height_recommended;
+      } else if (block_grids_.count(block_idx)) {
+        const IndexElement term_height_current =
+            tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
+        if (term_height_current != term_height_recommended) {
+          block_update_queue_[block_idx] = term_height_recommended;
+        }
       }
     }
   }
@@ -218,7 +225,7 @@ void GridVisual::processBlockUpdateQueue() {
 
     // Redraw blocks, starting with the oldest and
     // stopping after kMaxDrawsPerCycle
-    int num_draws = 0;
+    const auto start_time = std::chrono::steady_clock::now();
     for (const auto& [_, block_idx] : changed_blocks_sorted) {
       const auto& block = hashed_map->getBlock(block_idx);
       const IndexElement tree_height = map->getTreeHeight();
@@ -236,7 +243,9 @@ void GridVisual::processBlockUpdateQueue() {
       drawMultiResGrid(tree_height, min_cell_width, block_idx, alpha,
                        cells_per_level, block_grids_[block_idx]);
       block_update_queue_.erase(block_idx);
-      if (kMaxDrawsPerCycle <= ++num_draws) {
+
+      const auto current_time = std::chrono::steady_clock::now();
+      if (std::chrono::milliseconds(30) < current_time - start_time) {
         break;
       }
     }

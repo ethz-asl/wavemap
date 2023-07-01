@@ -51,7 +51,7 @@
 
   <!-- Run odometry -->
   <rosparam command="load"
-            file="$(find wavemap_ros)/config/other_packages/fast_lio_livox_mid360.yaml"/>
+            file="$(find wavemap_ros)/config/other_packages/fast_lio/livox_mid360.yaml"/>
   <param name="feature_extract_enable" type="bool" value="0"/>
   <param name="point_filter_num" type="int" value="1"/>
   <param name="max_iteration" type="int" value="10"/>
@@ -83,6 +83,6 @@
   <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
            pass_all_args="true"/>
 
-<!--  <node pkg="rosbag" type="record" name="rosbag_record" output="screen"-->
-<!--        args="/wavemap/depth_cam_input /laserMapping/imu_forward_prop -O /home/victor/catkin_ws/lidar_align_pico_monstar"/>-->
+  <node if="false" pkg="rosbag" type="record" name="rosbag_record" output="screen"
+        args="/livox/lidar /livox/imu /pico_monstar/image_rect -o /home/victor/catkin_ws/livox_monstar"/>
 </launch>

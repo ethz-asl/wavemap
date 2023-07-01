@@ -7,6 +7,7 @@
 #include "wavemap/data_structure/chunked_ndtree/chunked_ndtree.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
+#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 
 namespace wavemap {
@@ -30,7 +31,10 @@ class HashedChunkedWaveletOctreeBlock {
         min_log_odds_(min_log_odds),
         max_log_odds_(max_log_odds) {}
 
-  bool empty() const { return chunked_ndtree_.empty(); }
+  bool empty() const {
+    return chunked_ndtree_.empty() &&
+           !OccupancyState::isObserved(root_scale_coefficient_);
+  }
   size_t size() const { return chunked_ndtree_.size(); }
   void threshold();
   void prune();

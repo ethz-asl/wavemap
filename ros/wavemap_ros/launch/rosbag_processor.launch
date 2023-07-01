@@ -31,6 +31,7 @@
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>
       <param name="rosbag_path" value="$(arg rosbag_path)"/>
+      <param name="keep_alive" value="$(arg show_rviz)"/>
     </node>
   </group>
 
