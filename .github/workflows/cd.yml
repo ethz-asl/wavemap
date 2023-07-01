@@ -180,9 +180,29 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download docs built in last CI workflow
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          name: github-pages
+
+      - name: Print debug info
+        shell: bash
+        run: |
+          pwd
+          ls -lh
+
+      - name: Upload docs
+        uses: actions/upload-artifact@main
+        with:
+          name: github-pages
+          path: artifact.tar
+          retention-days: 1
+
       - name: Setup Pages
         uses: actions/configure-pages@v1
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy uploaded docs to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@main
