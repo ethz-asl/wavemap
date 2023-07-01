@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_ROS_IMPL_WAVEMAP_SERVER_INL_H_
 #define WAVEMAP_ROS_IMPL_WAVEMAP_SERVER_INL_H_
 
+#include <functional>
 #include <map>
 #include <unordered_set>
 
