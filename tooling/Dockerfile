@@ -125,7 +125,8 @@ FROM system-deps-installer AS workspace-underlay
 # hadolint ignore=SC2086
 RUN sed --in-place \
       's|^source .*|source "'$CATKIN_WS_PATH'/devel/setup.bash"|' \
-      /ros_entrypoint.sh
+      /ros_entrypoint.sh && \
+    echo "source '$CATKIN_WS_PATH'/devel/setup.bash" >> ~/.bashrc
 
 # Load the workspace sources
 COPY --from=cacher $CATKIN_WS_PATH/src src
