@@ -21,8 +21,9 @@ repos:
       - name: Check YAML file syntax parseability
         id: check-yaml
         args: [ --allow-multiple-documents ]
-      - name: Block commits to master
+      - name: Block commits to main branch
         id: no-commit-to-branch
+        args: ['--branch', 'main']
       - name: Check that no large files were added (>500kB)
         id: check-added-large-files
         args: [ "--maxkb=500" ]

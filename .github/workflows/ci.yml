@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ $default-branch, develop ]
+    branches: [ main ]
   pull_request:
 
 # NOTE: We do not store the work files under $HOME ("/github/home/") since that
@@ -10,24 +10,41 @@ on:
 #       (/github/home is a docker volume mapped to the container's host).
 env:
   REPOSITORY_NAME: wavemap
-  DOCKER_REGISTRY: hub.wavemap.vwire.ch
-  DOCKER_TARGET: workspace-built-deps
+  DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
+  DOCKER_TARGET_ROS_PKG: wavemap_all
+  DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
+  DOCKER_CI_TARGET: workspace-built-deps
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
 jobs:
-  workspace-container:
-    name: Setup workspace container
+  common-variables:
+    name: Define common variables
+    # NOTE: This job is used to pass complex common variables around between jobs,
+    #       as a work-around for ENV variables in GitHub Actions not being composable.
     runs-on: self-hosted
     container:
       image: docker:20.10.9-dind
     outputs:
-      image: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+      docker_cache_image_name: type=registry,ref=${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
+      local_ci_image_name: ${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_CI_TARGET }}-${{ github.sha }}
+    steps:
+      - name: Empty
+        run: echo
+
+  workspace-container:
+    name: Build CI workspace container
+    needs: [ common-variables ]
+    runs-on: self-hosted
+    container:
+      image: docker:20.10.9-dind
+    outputs:
+      image: ${{ needs.common-variables.outputs.local_ci_image_name }}
     env:
-      DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
-      DOCKER_TARGET_ROS_PKG: wavemap_all
+      CACHE_IMAGE_NAME: ${{ needs.common-variables.outputs.docker_cache_image_name }}
+      LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_ci_image_name }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v3
@@ -61,12 +78,12 @@ jobs:
           stamp=$(date +%s)
           echo "stamp=${stamp}" >> $GITHUB_OUTPUT
 
-      - name: Build the ${{ env.DOCKER_TARGET }} image
+      - name: Build the ${{ env.DOCKER_CI_TARGET }} image
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
-          target: ${{ env.DOCKER_TARGET }}
+          target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
@@ -75,9 +92,9 @@ jobs:
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           load: true
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache,mode=max
-          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
+          tags: ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Determine whether the ccache cache should be updated
         id: should-writeback-ccache
@@ -91,15 +108,15 @@ jobs:
           fi
           echo "answer=${answer}" >> $GITHUB_OUTPUT
 
-      - name: Test the ${{ env.DOCKER_TARGET }} image
-        run: docker run --rm ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+      - name: Test the ${{ env.DOCKER_CI_TARGET }} image
+        run: docker run --rm ${{ env.LOCAL_IMAGE_NAME }}
 
-      - name: Push the ${{ env.DOCKER_TARGET }} image
+      - name: Push the ${{ env.DOCKER_CI_TARGET }} image
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
-          target: ${{ env.DOCKER_TARGET }}
+          target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
@@ -108,8 +125,8 @@ jobs:
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
-          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          tags: ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Write back the build's ccache cache
         if: steps.should-writeback-ccache.outputs.answer == 'true'
@@ -125,12 +142,13 @@ jobs:
             ROS_HOME=${{ env.ROS_HOME }}
             REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
-          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
-          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_TARGET }}-${{ github.sha }}
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          tags: ${{ env.LOCAL_IMAGE_NAME }}
           outputs: type=local,dest=ccache
 
   lint:
     name: Lint
+    needs: [ common-variables ]
     runs-on: self-hosted
     container:
       # NOTE: Pylint checks if all modules that are marked for import are
@@ -170,7 +188,7 @@ jobs:
         run: |
           echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
           source /opt/ros/noetic/setup.bash
-          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} pre-commit run --all-files
+          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} SKIP=no-commit-to-branch pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
   build-docs:
@@ -211,31 +229,6 @@ jobs:
           name: github-pages
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
-
-  publish-docs:
-    name: Publish docs
-    if: github.ref == 'refs/heads/main'
-    needs: [ build-docs ]
-    runs-on: self-hosted
-    container:
-      image: docker:20.10.9-dind
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: "pages"
-      cancel-in-progress: true
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Setup Pages
-        uses: actions/configure-pages@v1
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@main
 
   build:
     name: Build
