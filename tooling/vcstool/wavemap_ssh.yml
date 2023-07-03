@@ -7,6 +7,10 @@ repositories:
     type: git
     url: git@github.com:ethz-asl/eigen_catkin.git
     version: master
+  eigen_checks:
+    type: git
+    url: git@github.com:ethz-asl/eigen_checks.git
+    version: master
   gflags_catkin:
     type: git
     url: git@github.com:ethz-asl/gflags_catkin.git
