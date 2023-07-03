@@ -19,7 +19,7 @@
   <depend>rosbag</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
-  <depend>minkindr_conversions</depend>
+  <depend>tf2_ros</depend>
 
   <depend>wavemap_msgs</depend>
   <depend>wavemap_ros_conversions</depend>

@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <minkindr_conversions/kindr_msg.h>
+#include "wavemap_ros_conversions/geometry_msg_conversions.h"
 
 namespace wavemap {
 bool TfTransformer::isTransformAvailable(
@@ -66,7 +66,7 @@ bool TfTransformer::lookupTransformImpl(const std::string& to_frame_id,
   }
   geometry_msgs::TransformStamped transform_msg =
       tf_buffer_.lookupTransform(to_frame_id, from_frame_id, frame_timestamp);
-  tf::transformMsgToKindr(transform_msg.transform, &transform);
+  convert::rosMsgToTransformation3D(transform_msg.transform, transform);
   return true;
 }
 }  // namespace wavemap
