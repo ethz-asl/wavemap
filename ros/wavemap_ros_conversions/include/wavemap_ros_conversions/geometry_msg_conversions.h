@@ -14,7 +14,7 @@ inline void rosMsgToRotation3D(const geometry_msgs::Quaternion& msg,
                                Rotation3D& rotation) {
   Eigen::Quaterniond rotation_double;
   tf::quaternionMsgToEigen(msg, rotation_double);
-  rotation = Rotation3D{rotation.cast<FloatingPoint>()};
+  rotation = Rotation3D{rotation_double.cast<FloatingPoint>()};
 }
 
 inline void rosMsgToTransformation3D(const geometry_msgs::Transform& msg,
