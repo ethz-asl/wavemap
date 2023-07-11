@@ -26,7 +26,7 @@ install_if_missing() {
 install_if_missing "pip3" "sudo apt-get install python3-pip" "source $HOME/.profile"
 install_if_missing "pre-commit" "pip3 install pre-commit"
 
-# Install system packages we use in our pre-commit config
+# Install system packages we use in our pre-commit hooks
 install_if_missing "clang-format-11" "sudo apt-get install clang-format-11"
 install_if_missing "cpplint" "pip3 install cpplint"
 install_if_missing "cppcheck" "sudo apt-get install cppcheck"
