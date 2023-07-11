@@ -6,6 +6,7 @@
 import os
 import csv
 
+from copy import deepcopy
 import rospy
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
@@ -15,7 +16,6 @@ import cv2
 from PIL import Image as PilImage
 import numpy as np
 import tf
-from copy import deepcopy
 
 from std_srvs.srv import Empty, EmptyResponse
 
@@ -36,9 +36,13 @@ class FlatDataPlayer():
 
         # ROS
         self.color_pub = rospy.Publisher("~color_image", Image, queue_size=100)
-        self.color_info_pub = rospy.Publisher("~color_image/camera_info", CameraInfo, queue_size=100)
+        self.color_info_pub = rospy.Publisher("~color_image/camera_info",
+                                              CameraInfo,
+                                              queue_size=100)
         self.depth_pub = rospy.Publisher("~depth_image", Image, queue_size=100)
-        self.depth_info_pub = rospy.Publisher("~depth_image/camera_info", CameraInfo, queue_size=100)
+        self.depth_info_pub = rospy.Publisher("~depth_image/camera_info",
+                                              CameraInfo,
+                                              queue_size=100)
         self.id_pub = rospy.Publisher("~id_image", Image, queue_size=100)
         self.pose_pub = rospy.Publisher("~pose", PoseStamped, queue_size=100)
         self.tf_broadcaster = tf.TransformBroadcaster()
@@ -63,10 +67,10 @@ class FlatDataPlayer():
         self.camera_info_msg = CameraInfo()
         self.camera_info_msg.width = 640
         self.camera_info_msg.height = 480
-        self.camera_info_msg.K[0] = 320 # fx
-        self.camera_info_msg.K[4] = 320 # fy
-        self.camera_info_msg.K[2] = 320 # cx
-        self.camera_info_msg.K[5] = 240 # cy
+        self.camera_info_msg.K[0] = 320  # fx
+        self.camera_info_msg.K[4] = 320  # fy
+        self.camera_info_msg.K[2] = 320  # cx
+        self.camera_info_msg.K[5] = 240  # cy
 
         self.ids = [x for _, x in sorted(zip(self.times, self.ids))]
         self.times = sorted(self.times)
