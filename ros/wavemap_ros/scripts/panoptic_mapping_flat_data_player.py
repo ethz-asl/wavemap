@@ -6,8 +6,10 @@
 import os
 import csv
 
+from copy import deepcopy
 import rospy
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import CameraInfo
 from geometry_msgs.msg import PoseStamped
 from cv_bridge import CvBridge
 import cv2
@@ -34,7 +36,13 @@ class FlatDataPlayer():
 
         # ROS
         self.color_pub = rospy.Publisher("~color_image", Image, queue_size=100)
+        self.color_info_pub = rospy.Publisher("~color_image/camera_info",
+                                              CameraInfo,
+                                              queue_size=100)
         self.depth_pub = rospy.Publisher("~depth_image", Image, queue_size=100)
+        self.depth_info_pub = rospy.Publisher("~depth_image/camera_info",
+                                              CameraInfo,
+                                              queue_size=100)
         self.id_pub = rospy.Publisher("~id_image", Image, queue_size=100)
         self.pose_pub = rospy.Publisher("~pose", PoseStamped, queue_size=100)
         self.tf_broadcaster = tf.TransformBroadcaster()
@@ -54,6 +62,15 @@ class FlatDataPlayer():
                     continue
                 self.ids.append(str(row[0]))
                 self.times.append(float(row[1]) / 1e9)
+
+        # Populate the camera_info messages, written out in intrinsics.txt
+        self.camera_info_msg = CameraInfo()
+        self.camera_info_msg.width = 640
+        self.camera_info_msg.height = 480
+        self.camera_info_msg.K[0] = 320  # fx
+        self.camera_info_msg.K[4] = 320  # fy
+        self.camera_info_msg.K[2] = 320  # cx
+        self.camera_info_msg.K[5] = 240  # cy
 
         self.ids = [x for _, x in sorted(zip(self.times, self.ids))]
         self.times = sorted(self.times)
@@ -122,6 +139,13 @@ class FlatDataPlayer():
         img_msg.header.stamp = now
         img_msg.header.frame_id = self.sensor_frame_name
         self.depth_pub.publish(img_msg)
+
+        # Publish the camera info messages
+        cam_info_msg = CameraInfo()
+        cam_info_msg = deepcopy(self.camera_info_msg)
+        cam_info_msg.header = img_msg.header
+        self.depth_info_pub.publish(cam_info_msg)
+        self.color_info_pub.publish(cam_info_msg)
 
         # Load and publish transform.
         if os.path.isfile(pose_file):
