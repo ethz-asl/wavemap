@@ -13,14 +13,24 @@
 #include <rviz/ogre_helpers/point_cloud.h>
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/color_property.h>
+#include <rviz/properties/enum_property.h>
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/property.h>
+#include <wavemap/config/type_selector.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
 #endif
 
 namespace wavemap::rviz_plugin {
+struct ColorMode : public TypeSelector<ColorMode> {
+  using TypeSelector<ColorMode>::TypeSelector;
+
+  enum Id : TypeId { kHeight, kProbability, kConstant };
+
+  static constexpr std::array names = {"Height", "Probability", "Constant"};
+};
+
 // Each instance of MultiResolutionGridVisual represents the visualization of a
 // map's leaves as cubes whose sizes match their height in the tree.
 class GridVisual : public QObject {
@@ -51,9 +61,10 @@ class GridVisual : public QObject {
   void thresholdUpdateCallback() { updateMap(true); }
   void visibilityUpdateCallback();
   void opacityUpdateCallback();
+  void colorModeUpdateCallback();
 
  private:
-  enum class ColorBy { kProbability, kPosition } kColorBy = ColorBy::kPosition;
+  ColorMode color_mode_ = ColorMode::kHeight;
 
   // Read only shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<std::mutex> map_mutex_;
@@ -72,6 +83,7 @@ class GridVisual : public QObject {
   rviz::FloatProperty min_occupancy_threshold_property_;
   rviz::FloatProperty max_occupancy_threshold_property_;
   rviz::FloatProperty opacity_property_;
+  rviz::EnumProperty color_mode_property_;
 
   // The object implementing the grid visuals
   using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;

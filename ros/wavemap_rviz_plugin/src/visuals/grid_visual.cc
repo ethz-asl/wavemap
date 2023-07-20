@@ -27,7 +27,18 @@ GridVisual::GridVisual(
           submenu_root_property, SLOT(thresholdUpdateCallback()), this),
       opacity_property_("Alpha", 1.0, "Opacity of the displayed visuals.",
                         submenu_root_property, SLOT(opacityUpdateCallback()),
-                        this) {
+                        this),
+      color_mode_property_(
+          "Color mode", "", "Mode determining the grid cell colors.",
+          submenu_root_property, SLOT(colorModeUpdateCallback()), this) {
+  // Initialize the color property menu
+  color_mode_property_.clearOptions();
+  for (const auto& name : ColorMode::names) {
+    color_mode_property_.addOption(name);
+  }
+  color_mode_property_.setStringStd(color_mode_.toStr());
+
+  // Initialize the camera tracker
   const std::string kDefaultRvizCamPrefix = "ViewControllerCamera";
   bool success = false;
   for (const auto& [cam_name, cam] : scene_manager_->getCameras()) {
@@ -191,6 +202,14 @@ void GridVisual::opacityUpdateCallback() {
   }
 }
 
+void GridVisual::colorModeUpdateCallback() {
+  const ColorMode old_color_mode = color_mode_;
+  color_mode_ = ColorMode(color_mode_property_.getStdString());
+  if (color_mode_ != old_color_mode) {
+    updateMap(true);
+  }
+}
+
 void GridVisual::processBlockUpdateQueue() {
   if (!visibility_property_.getBool()) {
     return;
@@ -279,11 +298,17 @@ void GridVisual::getLeafCentersAndColors(int tree_height,
   point.position.z = cell_center[2];
 
   // Set the cube's color
-  switch (kColorBy) {
-    case ColorBy::kProbability:
+  switch (color_mode_.toTypeId()) {
+    case ColorMode::kConstant:
+      point.color.a = 1.f;
+      point.color.r = 0.f;
+      point.color.g = 0.f;
+      point.color.b = 0.f;
+      break;
+    case ColorMode::kProbability:
       point.color = logOddsToColor(cell_log_odds);
       break;
-    case ColorBy::kPosition:
+    case ColorMode::kHeight:
     default:
       point.color = positionToColor(cell_center);
       break;
