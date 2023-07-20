@@ -20,6 +20,14 @@ bool TfTransformer::waitForTransform(const std::string& to_frame_id,
                               sanitizeFrameId(from_frame_id), frame_timestamp);
 }
 
+bool TfTransformer::lookupLatestTransform(const std::string& to_frame_id,
+                                          const std::string& from_frame_id,
+                                          Transformation3D& transform) {
+  ros::Time latest{};
+  return lookupTransformImpl(sanitizeFrameId(to_frame_id),
+                             sanitizeFrameId(from_frame_id), latest, transform);
+}
+
 bool TfTransformer::lookupTransform(const std::string& to_frame_id,
                                     const std::string& from_frame_id,
                                     const ros::Time& frame_timestamp,

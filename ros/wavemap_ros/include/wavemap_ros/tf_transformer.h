@@ -30,6 +30,9 @@ class TfTransformer {
                        const std::string& from_frame_id,
                        const ros::Time& frame_timestamp,
                        Transformation3D& transform);
+  bool lookupLatestTransform(const std::string& to_frame_id,
+                             const std::string& from_frame_id,
+                             Transformation3D& transform);
 
   // Strip leading slashes if needed to avoid TF errors
   static std::string sanitizeFrameId(const std::string& string);
