@@ -59,6 +59,7 @@ class GridVisual : public QObject {
   // These Qt slots get connected to signals indicating changes in the
   // user-editable properties
   void thresholdUpdateCallback() { updateMap(true); }
+  void terminationHeightUpdateCallback() { force_lod_update_ = true; }
   void visibilityUpdateCallback();
   void opacityUpdateCallback();
   void colorModeUpdateCallback();
@@ -82,6 +83,7 @@ class GridVisual : public QObject {
   rviz::BoolProperty visibility_property_;
   rviz::FloatProperty min_occupancy_threshold_property_;
   rviz::FloatProperty max_occupancy_threshold_property_;
+  rviz::IntProperty termination_height_property_;
   rviz::FloatProperty opacity_property_;
   rviz::EnumProperty color_mode_property_;
   rviz::Property frame_rate_properties_;

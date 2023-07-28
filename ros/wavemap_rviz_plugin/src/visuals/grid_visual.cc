@@ -25,6 +25,12 @@ GridVisual::GridVisual(
       max_occupancy_threshold_property_(
           "Max log odds", 1e6, "Ranges from -Inf to Inf.",
           submenu_root_property, SLOT(thresholdUpdateCallback()), this),
+      termination_height_property_(
+          "Termination height", 0,
+          "Controls the resolution at which the map is drawn. Set to 0 to draw "
+          "at the maximum available resolution; to 1 to stop at 1/2 of that, "
+          "to 2 to stop at 1/4, etc.",
+          submenu_root_property, SLOT(terminationHeightUpdateCallback()), this),
       opacity_property_("Alpha", 1.0, "Opacity of the displayed visuals.",
                         submenu_root_property, SLOT(opacityUpdateCallback()),
                         this),
@@ -47,6 +53,7 @@ GridVisual::GridVisual(
   for (const auto& name : ColorMode::names) {
     color_mode_property_.addOption(name);
   }
+  termination_height_property_.setMin(0);
   color_mode_property_.setStringStd(color_mode_.toStr());
   num_queued_blocks_indicator_.setReadOnly(true);
   max_ms_per_frame_property_.setMin(0);
@@ -111,18 +118,20 @@ void GridVisual::updateMap(bool redraw_all) {
         max_occupancy_threshold_property_.getFloat();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
+    termination_height_property_.setMax(tree_height);
+
     const TimePoint start_time = std::chrono::steady_clock::now();
 
     if (const auto* hashed_map =
             dynamic_cast<const HashedWaveletOctree*>(map.get());
         hashed_map) {
+      const auto min_termination_height = termination_height_property_.getInt();
       for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
         // Add all blocks that changed since the last publication time to the
         // queue. Since the queue is stored as a set, there are no duplicates.
         if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
           force_lod_update_ = true;
-          constexpr IndexElement kDefaultTermHeight = 0;
-          block_update_queue_[block_idx] = kDefaultTermHeight;
+          block_update_queue_[block_idx] = min_termination_height;
         }
       }
     } else {
@@ -163,6 +172,7 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
   if (const auto* hashed_map =
           dynamic_cast<const HashedWaveletOctree*>(map.get());
       hashed_map) {
+    const auto min_termination_height = termination_height_property_.getInt();
     for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
       const OctreeIndex block_node_idx{tree_height, block_idx};
       const AABB block_aabb =
@@ -175,14 +185,15 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
           static_cast<IndexElement>(
               std::floor(std::log2(1.f + kFactor * distance_to_cam /
                                              hashed_map->getMinCellWidth()))),
-          0, tree_height - 1);
+          min_termination_height, tree_height - 1);
 
       if (block_update_queue_.count(block_idx)) {
         block_update_queue_[block_idx] = term_height_recommended;
       } else if (block_grids_.count(block_idx)) {
         const IndexElement term_height_current =
             tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
-        if (term_height_current < term_height_recommended - 1 ||
+        if (term_height_current < min_termination_height ||
+            term_height_current < term_height_recommended - 1 ||
             term_height_recommended < term_height_current) {
           block_update_queue_[block_idx] = term_height_recommended;
         }
