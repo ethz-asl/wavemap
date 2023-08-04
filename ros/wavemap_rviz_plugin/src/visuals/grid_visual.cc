@@ -116,7 +116,7 @@ void GridVisual::updateMap(bool redraw_all) {
         max_occupancy_threshold_property_.getFloat();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
-    termination_height_property_.setMax(tree_height);
+    termination_height_property_.setMax(tree_height - 1);
 
     const TimePoint start_time = std::chrono::steady_clock::now();
 
