@@ -53,8 +53,9 @@ class SliceVisual : public QObject {
   const std::shared_ptr<std::mutex> map_mutex_;
   const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_;
 
-  // The object implementing the grid visuals
+  // The objects implementing the grid visuals
   std::vector<std::unique_ptr<GridLayer>> grid_levels_;
+  Ogre::MaterialPtr slice_cell_material_;
 
   // The SceneManager, kept here only so the destructor can ask it to
   // destroy the `frame_node_`.

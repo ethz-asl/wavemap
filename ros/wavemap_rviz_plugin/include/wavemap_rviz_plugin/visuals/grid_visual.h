@@ -93,12 +93,13 @@ class GridVisual : public QObject {
   rviz::IntProperty num_queued_blocks_indicator_;
   rviz::IntProperty max_ms_per_frame_property_;
 
-  // The object implementing the grid visuals
+  // The objects implementing the grid visuals
   using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
   TimePoint last_update_time_{};
   std::unordered_map<Index3D, IndexElement, Index3DHash> block_update_queue_;
   using MultiResGrid = std::vector<std::unique_ptr<GridLayer>>;
   std::unordered_map<Index3D, MultiResGrid, Index3DHash> block_grids_;
+  Ogre::MaterialPtr grid_cell_material_;
 
   bool force_lod_update_ = true;
   float lod_update_distance_threshold_{0.1f};

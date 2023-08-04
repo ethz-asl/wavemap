@@ -23,7 +23,7 @@ using GridLayerRenderableVector = std::vector<GridLayerRenderablePtr>;
 
 class GridLayer : public Ogre::MovableObject {
  public:
-  GridLayer();
+  explicit GridLayer(const Ogre::MaterialPtr& cell_material);
   ~GridLayer() override { clear(); }
 
   void clear();
@@ -79,7 +79,7 @@ class GridLayer : public Ogre::MovableObject {
   float height_ = 0.1f;
   float depth_ = 0.1f;
 
-  Ogre::MaterialPtr box_material_;
+  Ogre::MaterialPtr cell_material_;
   float alpha_ = 1.f;
 
   GridLayerRenderableVector renderables_;

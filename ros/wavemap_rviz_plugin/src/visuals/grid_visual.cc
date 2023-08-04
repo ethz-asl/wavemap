@@ -76,6 +76,16 @@ GridVisual::GridVisual(
               }));
         }
       }));
+
+  // Initialize the grid cell material
+  static int instance_count = 0;
+  ++instance_count;
+  grid_cell_material_ =
+      Ogre::MaterialManager::getSingleton().getByName("rviz/PointCloudBox");
+  grid_cell_material_ =
+      Ogre::MaterialPtr(grid_cell_material_)
+          ->clone("WavemapGridMaterial_" + std::to_string(instance_count));
+  grid_cell_material_->load();
 }
 
 GridVisual::~GridVisual() {
@@ -351,8 +361,8 @@ void GridVisual::drawMultiResGrid(IndexElement tree_height,
       const IndexElement height = tree_height - static_cast<int>(depth);
       const FloatingPoint cell_width =
           convert::heightToCellWidth(min_cell_width, height);
-      auto& grid_level =
-          multi_res_grid.emplace_back(std::make_unique<GridLayer>());
+      auto& grid_level = multi_res_grid.emplace_back(
+          std::make_unique<GridLayer>(grid_cell_material_));
       grid_level->setName(name);
       grid_level->setCellDimensions(cell_width, cell_width, cell_width);
       grid_level->setAlpha(alpha, false);

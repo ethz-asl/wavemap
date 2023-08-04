@@ -29,7 +29,17 @@ SliceVisual::SliceVisual(
           submenu_root_property, SLOT(generalUpdateCallback()), this),
       opacity_property_("Alpha", 1.0, "Opacity of the displayed visuals.",
                         submenu_root_property, SLOT(opacityUpdateCallback()),
-                        this) {}
+                        this) {
+  // Initialize the slice cell material
+  static int instance_count = 0;
+  ++instance_count;
+  slice_cell_material_ =
+      Ogre::MaterialManager::getSingleton().getByName("rviz/PointCloudBox");
+  slice_cell_material_ =
+      Ogre::MaterialPtr(slice_cell_material_)
+          ->clone("WavemapSliceMaterial_" + std::to_string(instance_count));
+  slice_cell_material_->load();
+}
 
 SliceVisual::~SliceVisual() {
   // Destroy the frame node
@@ -115,8 +125,8 @@ void SliceVisual::update() {
       const Ogre::String name = "multi_res_slice_" + std::to_string(height);
       const FloatingPoint cell_width =
           convert::heightToCellWidth(min_cell_width, height);
-      auto& grid_level =
-          grid_levels_.emplace_back(std::make_unique<GridLayer>());
+      auto& grid_level = grid_levels_.emplace_back(
+          std::make_unique<GridLayer>(slice_cell_material_));
       grid_level->setName(name);
       grid_level->setCellDimensions(cell_width, cell_width, 0.0);
       grid_level->setAlpha(alpha, false);
