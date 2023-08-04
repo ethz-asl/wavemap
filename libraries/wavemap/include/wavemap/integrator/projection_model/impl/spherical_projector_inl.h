@@ -47,8 +47,9 @@ SphericalProjector::imageOffsetsToErrorNorms(
 inline Vector2D SphericalProjector::cartesianToImage(
     const Point3D& C_point) const {
   const FloatingPoint elevation_angle =
-      std::atan2(C_point.z(), C_point.head<2>().norm());
-  const FloatingPoint azimuth_angle = std::atan2(C_point.y(), C_point.x());
+      approximate::atan2()(C_point.z(), C_point.head<2>().norm());
+  const FloatingPoint azimuth_angle =
+      approximate::atan2()(C_point.y(), C_point.x());
   return {elevation_angle, azimuth_angle};
 }
 
