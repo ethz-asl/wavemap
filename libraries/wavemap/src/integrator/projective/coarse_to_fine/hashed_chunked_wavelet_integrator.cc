@@ -2,21 +2,30 @@
 
 #include <stack>
 
+#include <tracy/Tracy.hpp>
+
 namespace wavemap {
 void HashedChunkedWaveletIntegrator::updateMap() {
+  ZoneScoped;
   // Update the range image intersector
-  range_image_intersector_ = std::make_shared<RangeImageIntersector>(
-      posed_range_image_, projection_model_, *measurement_model_,
-      config_.min_range, config_.max_range);
+  {
+    ZoneScopedN("updateRangeImageIntersector");
+    range_image_intersector_ = std::make_shared<RangeImageIntersector>(
+        posed_range_image_, projection_model_, *measurement_model_,
+        config_.min_range, config_.max_range);
+  }
 
   // Find all the indices of blocks that need updating
   BlockList blocks_to_update;
-  const auto [fov_min_idx, fov_max_idx] =
-      getFovMinMaxIndices(posed_range_image_->getOrigin());
-  for (const auto& block_index :
-       Grid(fov_min_idx.position, fov_max_idx.position)) {
-    recursiveTester(OctreeIndex{fov_min_idx.height, block_index},
-                    blocks_to_update);
+  {
+    ZoneScopedN("selectBlocksToUpdate");
+    const auto [fov_min_idx, fov_max_idx] =
+        getFovMinMaxIndices(posed_range_image_->getOrigin());
+    for (const auto& block_index :
+         Grid(fov_min_idx.position, fov_max_idx.position)) {
+      recursiveTester(OctreeIndex{fov_min_idx.height, block_index},
+                      blocks_to_update);
+    }
   }
 
   // Make sure the to-be-updated blocks are allocated
@@ -57,6 +66,7 @@ HashedChunkedWaveletIntegrator::getFovMinMaxIndices(
 
 void HashedChunkedWaveletIntegrator::updateBlock(
     HashedChunkedWaveletOctree::Block& block, const OctreeIndex& block_index) {
+  ZoneScoped;
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 

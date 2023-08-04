@@ -1,7 +1,10 @@
 #include "wavemap/data_structure/volumetric/hashed_wavelet_octree_block.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace wavemap {
 void HashedWaveletOctreeBlock::threshold() {
+  ZoneScoped;
   if (getNeedsThresholding()) {
     root_scale_coefficient_ -=
         recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
@@ -10,6 +13,7 @@ void HashedWaveletOctreeBlock::threshold() {
 }
 
 void HashedWaveletOctreeBlock::prune() {
+  ZoneScoped;
   if (getNeedsPruning()) {
     threshold();
     recursivePrune(ndtree_.getRootNode());
@@ -18,6 +22,7 @@ void HashedWaveletOctreeBlock::prune() {
 }
 
 void HashedWaveletOctreeBlock::clear() {
+  ZoneScoped;
   root_scale_coefficient_ = Coefficients::Scale{};
   ndtree_.clear();
   last_updated_stamp_ = Clock::now();
@@ -104,6 +109,7 @@ void HashedWaveletOctreeBlock::forEachLeaf(
     const BlockIndex& block_index,
     VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn,
     IndexElement termination_height) const {
+  ZoneScoped;
   if (empty()) {
     return;
   }

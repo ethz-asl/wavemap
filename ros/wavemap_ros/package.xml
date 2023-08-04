@@ -21,6 +21,7 @@
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
   <depend>tf2_ros</depend>
+  <depend>tracy_catkin</depend>
 
   <depend>wavemap_msgs</depend>
   <depend>std_srvs</depend>

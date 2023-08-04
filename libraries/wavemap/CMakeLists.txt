@@ -3,7 +3,8 @@ project(wavemap)
 
 # Dependencies
 find_package(catkin
-    REQUIRED COMPONENTS glog_catkin eigen_catkin minkindr)
+    REQUIRED COMPONENTS glog_catkin eigen_catkin tracy_catkin minkindr)
+
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
 endif ()
@@ -22,6 +23,7 @@ catkin_package(
     CATKIN_DEPENDS
     glog_catkin
     eigen_catkin
+    tracy_catkin
     minkindr
     CFG_EXTRAS
     wavemap-extras.cmake)

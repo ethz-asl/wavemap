@@ -3,10 +3,10 @@ map:
     world_frame: "odom"
     thresholding_period: { seconds: 2.0 }
     pruning_period: { seconds: 10.0 }
-    publication_period: { seconds: -2.0 }
+    publication_period: { seconds: 2.0 }
   data_structure:
     type: "hashed_chunked_wavelet_octree"
-    min_cell_width: { meters: 0.1 }
+    min_cell_width: { meters: 0.05 }
 
 inputs:
   - type: "pointcloud"

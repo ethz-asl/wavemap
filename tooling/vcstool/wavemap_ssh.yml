@@ -19,6 +19,10 @@ repositories:
     type: git
     url: git@github.com:ethz-asl/glog_catkin.git
     version: master
+  tracy_catkin:
+    type: git
+    url: git@github.com:ethz-asl/tracy_catkin.git
+    version: master
   minkindr:
     type: git
     url: git@github.com:ethz-asl/minkindr.git

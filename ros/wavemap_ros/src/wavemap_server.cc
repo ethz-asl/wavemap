@@ -1,6 +1,7 @@
 #include "wavemap_ros/wavemap_server.h"
 
 #include <std_srvs/Empty.h>
+#include <tracy/Tracy.hpp>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_factory.h>
 #include <wavemap/utils/nameof.h>
 #include <wavemap_io/file_conversions.h>
@@ -62,6 +63,7 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 }
 
 void WavemapServer::publishMap(bool republish_whole_map) {
+  ZoneScoped;
   if (occupancy_map_ && !occupancy_map_->empty()) {
     if (auto* hashed_wavelet_octree =
             dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());

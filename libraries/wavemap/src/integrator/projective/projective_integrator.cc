@@ -1,5 +1,7 @@
 #include "wavemap/integrator/projective/projective_integrator.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(ProjectiveIntegratorConfig,
                       (min_range, SiUnit::kMeters)
@@ -21,6 +23,7 @@ bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
 
 void ProjectiveIntegrator::integratePointcloud(
     const PosedPointcloud<Point<3>>& pointcloud) {
+  ZoneScoped;
   if (!isPointcloudValid(pointcloud)) {
     return;
   }
@@ -30,12 +33,14 @@ void ProjectiveIntegrator::integratePointcloud(
 
 void ProjectiveIntegrator::integrateRangeImage(
     const PosedImage<>& range_image) {
+  ZoneScoped;
   importRangeImage(range_image);
   updateMap();
 }
 
 void ProjectiveIntegrator::importPointcloud(
     const PosedPointcloud<>& pointcloud) {
+  ZoneScoped;
   // Reset the posed range image and the beam offset image
   posed_range_image_->resetToInitialValue();
   posed_range_image_->setPose(pointcloud.getPose());
@@ -74,6 +79,7 @@ void ProjectiveIntegrator::importPointcloud(
 
 void ProjectiveIntegrator::importRangeImage(
     const PosedImage<>& range_image_input) {
+  ZoneScoped;
   *posed_range_image_ = range_image_input;
   beam_offset_image_->resetToInitialValue();
 }

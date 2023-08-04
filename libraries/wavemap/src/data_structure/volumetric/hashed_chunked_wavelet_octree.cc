@@ -2,6 +2,8 @@
 
 #include <unordered_set>
 
+#include <tracy/Tracy.hpp>
+
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(HashedChunkedWaveletOctreeConfig,
                       (min_cell_width, SiUnit::kMeters)
@@ -22,12 +24,14 @@ bool HashedChunkedWaveletOctreeConfig::isValid(bool verbose) const {
 }
 
 void HashedChunkedWaveletOctree::threshold() {
+  ZoneScoped;
   for (auto& [block_index, block] : blocks_) {
     block.threshold();
   }
 }
 
 void HashedChunkedWaveletOctree::prune() {
+  ZoneScoped;
   std::unordered_set<BlockIndex, IndexHash<kDim>> blocks_to_remove;
   for (auto& [block_index, block] : blocks_) {
     block.prune();
@@ -41,6 +45,7 @@ void HashedChunkedWaveletOctree::prune() {
 }
 
 void HashedChunkedWaveletOctree::pruneDistant() {
+  ZoneScoped;
   std::unordered_set<BlockIndex, IndexHash<kDim>> blocks_to_remove;
   for (auto& [block_index, block] : blocks_) {
     if (config_.only_prune_blocks_if_unused_for <
@@ -57,6 +62,7 @@ void HashedChunkedWaveletOctree::pruneDistant() {
 }
 
 size_t HashedChunkedWaveletOctree::getMemoryUsage() const {
+  ZoneScoped;
   // TODO(victorr): Also include the memory usage of the unordered map itself
   size_t memory_usage = 0u;
   for (const auto& [block_index, block] : blocks_) {

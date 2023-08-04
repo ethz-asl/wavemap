@@ -2,6 +2,7 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
+#include <tracy/Tracy.hpp>
 #include <wavemap/iterator/grid_iterator.h>
 #include <wavemap/utils/eigen_format.h>
 
@@ -57,6 +58,7 @@ DepthImageInputHandler::DepthImageInputHandler(
 }
 
 void DepthImageInputHandler::processQueue() {
+  ZoneScoped;
   while (!depth_image_queue_.empty()) {
     const sensor_msgs::Image& oldest_msg = depth_image_queue_.front();
     const std::string sensor_frame_id = config_.sensor_frame_id.empty()
@@ -130,6 +132,7 @@ void DepthImageInputHandler::processQueue() {
         }
       }
     }
+    FrameMarkNamed("DepthImage");
 
     // Remove the depth image from the queue
     depth_image_queue_.pop();
@@ -138,6 +141,7 @@ void DepthImageInputHandler::processQueue() {
 
 PosedPointcloud<> DepthImageInputHandler::reproject(
     const PosedImage<>& posed_range_image) {
+  ZoneScoped;
   auto projective_integrator =
       std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
   if (!projective_integrator) {
