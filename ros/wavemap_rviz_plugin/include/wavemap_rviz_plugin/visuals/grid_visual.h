@@ -84,6 +84,9 @@ class GridVisual : public QObject {
   rviz::FloatProperty max_occupancy_threshold_property_;
   rviz::FloatProperty opacity_property_;
   rviz::EnumProperty color_mode_property_;
+  rviz::Property frame_rate_properties_;
+  rviz::IntProperty num_queued_blocks_indicator_;
+  rviz::IntProperty max_ms_per_frame_property_;
 
   // The object implementing the grid visuals
   using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;

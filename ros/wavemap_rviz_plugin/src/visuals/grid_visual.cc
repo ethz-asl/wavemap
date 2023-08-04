@@ -30,13 +30,26 @@ GridVisual::GridVisual(
                         this),
       color_mode_property_(
           "Color mode", "", "Mode determining the grid cell colors.",
-          submenu_root_property, SLOT(colorModeUpdateCallback()), this) {
+          submenu_root_property, SLOT(colorModeUpdateCallback()), this),
+      frame_rate_properties_("Frame rate", QVariant(),
+                             "Properties to control the frame rate.",
+                             submenu_root_property),
+      num_queued_blocks_indicator_("Queued updates", 0,
+                                   "Number of blocks in the update queue.",
+                                   &frame_rate_properties_),
+      max_ms_per_frame_property_(
+          "Max update time", 20,
+          "Limit update time per frame in milliseconds, to maintain "
+          "a reasonable frame rate when maps are large.",
+          &frame_rate_properties_) {
   // Initialize the color property menu
   color_mode_property_.clearOptions();
   for (const auto& name : ColorMode::names) {
     color_mode_property_.addOption(name);
   }
   color_mode_property_.setStringStd(color_mode_.toStr());
+  num_queued_blocks_indicator_.setReadOnly(true);
+  max_ms_per_frame_property_.setMin(0);
 
   // Initialize the camera tracker
   const std::string kDefaultRvizCamPrefix = "ViewControllerCamera";
@@ -169,7 +182,8 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
       } else if (block_grids_.count(block_idx)) {
         const IndexElement term_height_current =
             tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
-        if (term_height_current != term_height_recommended) {
+        if (term_height_current < term_height_recommended - 1 ||
+            term_height_recommended < term_height_current) {
           block_update_queue_[block_idx] = term_height_recommended;
         }
       }
@@ -245,6 +259,9 @@ void GridVisual::processBlockUpdateQueue() {
     // Redraw blocks, starting with the oldest and
     // stopping after kMaxDrawsPerCycle
     const auto start_time = std::chrono::steady_clock::now();
+    const auto max_time_per_frame =
+        std::chrono::milliseconds(max_ms_per_frame_property_.getInt());
+    const auto max_end_time = start_time + max_time_per_frame;
     for (const auto& [_, block_idx] : changed_blocks_sorted) {
       const auto& block = hashed_map->getBlock(block_idx);
       const IndexElement tree_height = map->getTreeHeight();
@@ -264,11 +281,14 @@ void GridVisual::processBlockUpdateQueue() {
       block_update_queue_.erase(block_idx);
 
       const auto current_time = std::chrono::steady_clock::now();
-      if (std::chrono::milliseconds(30) < current_time - start_time) {
+      if (max_end_time < current_time) {
         break;
       }
     }
   }
+
+  num_queued_blocks_indicator_.setInt(
+      static_cast<int>(block_update_queue_.size()));
 }
 
 void GridVisual::getLeafCentersAndColors(int tree_height,
