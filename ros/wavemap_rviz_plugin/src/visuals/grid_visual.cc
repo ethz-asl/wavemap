@@ -115,8 +115,9 @@ void GridVisual::updateMap(bool redraw_all) {
         hashed_map) {
       const auto min_termination_height = termination_height_property_.getInt();
       for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-        // Add all blocks that changed since the last publication time to the
-        // queue. Since the queue is stored as a set, there are no duplicates.
+        // Add all blocks that changed since the last publication time to
+        // the queue. Since the queue is stored as a set, there are no
+        // duplicates.
         if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
           force_lod_update_ = true;
           block_update_queue_[block_idx] = min_termination_height;
@@ -124,7 +125,7 @@ void GridVisual::updateMap(bool redraw_all) {
       }
     } else {
       const IndexElement num_levels = tree_height + 1;
-      PointcloudList cells_per_level(num_levels);
+      GridLayerList cells_per_level(num_levels);
       map->forEachLeaf([&](const auto& cell_index, auto cell_log_odds) {
         getLeafCentersAndColors(tree_height, min_cell_width, min_log_odds,
                                 max_log_odds, cell_index, cell_log_odds,
@@ -266,7 +267,7 @@ void GridVisual::processBlockUpdateQueue() {
       const IndexElement tree_height = map->getTreeHeight();
       const IndexElement term_height = block_update_queue_[block_idx];
       const int num_levels = tree_height + 1 - term_height;
-      PointcloudList cells_per_level(num_levels);
+      GridLayerList cells_per_level(num_levels);
       block.forEachLeaf(
           block_idx,
           [&](const auto& cell_index, auto cell_log_odds) {
@@ -296,7 +297,7 @@ void GridVisual::getLeafCentersAndColors(int tree_height,
                                          FloatingPoint max_occupancy_log_odds,
                                          const OctreeIndex& cell_index,
                                          FloatingPoint cell_log_odds,
-                                         PointcloudList& cells_per_level) {
+                                         GridLayerList& cells_per_level) {
   // Skip cells that don't meet the occupancy threshold
   if (cell_log_odds < min_occupancy_log_odds ||
       max_occupancy_log_odds < cell_log_odds) {
@@ -312,9 +313,9 @@ void GridVisual::getLeafCentersAndColors(int tree_height,
 
   // Create the cube at the right scale
   auto& point = cells_per_level[depth].emplace_back();
-  point.position.x = cell_center[0];
-  point.position.y = cell_center[1];
-  point.position.z = cell_center[2];
+  point.center.x = cell_center[0];
+  point.center.y = cell_center[1];
+  point.center.z = cell_center[2];
 
   // Set the cube's color
   switch (color_mode_.toTypeId()) {
@@ -338,7 +339,7 @@ void GridVisual::drawMultiResGrid(IndexElement tree_height,
                                   FloatingPoint min_cell_width,
                                   const Index3D& block_index,
                                   FloatingPoint alpha,
-                                  PointcloudList& cells_per_level,
+                                  GridLayerList& cells_per_level,
                                   MultiResGrid& multi_res_grid) {
   // Add a grid layer for each scale level
   const std::string prefix =
@@ -351,10 +352,9 @@ void GridVisual::drawMultiResGrid(IndexElement tree_height,
       const FloatingPoint cell_width =
           convert::heightToCellWidth(min_cell_width, height);
       auto& grid_level =
-          multi_res_grid.emplace_back(std::make_unique<rviz::PointCloud>());
+          multi_res_grid.emplace_back(std::make_unique<GridLayer>());
       grid_level->setName(name);
-      grid_level->setRenderMode(rviz::PointCloud::RM_BOXES);
-      grid_level->setDimensions(cell_width, cell_width, cell_width);
+      grid_level->setCellDimensions(cell_width, cell_width, cell_width);
       grid_level->setAlpha(alpha, false);
       frame_node_->attachObject(grid_level.get());
     }
@@ -362,7 +362,7 @@ void GridVisual::drawMultiResGrid(IndexElement tree_height,
     auto& grid_level = multi_res_grid[depth];
     grid_level->clear();
     auto& cells_at_level = cells_per_level[depth];
-    grid_level->addPoints(&cells_at_level.front(), cells_at_level.size());
+    grid_level->addCells(&cells_at_level.front(), cells_at_level.size());
   }
   // Deallocate levels that are no longer needed
   for (size_t depth = multi_res_grid.size() - 1;

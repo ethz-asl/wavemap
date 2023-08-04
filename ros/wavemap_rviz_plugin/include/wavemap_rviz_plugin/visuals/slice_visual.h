@@ -9,13 +9,14 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreVector3.h>
-#include <rviz/ogre_helpers/point_cloud.h>
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/property.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
+
+#include "wavemap_rviz_plugin/visuals/grid_layer.h"
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -53,7 +54,7 @@ class SliceVisual : public QObject {
   const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_;
 
   // The object implementing the grid visuals
-  std::vector<std::unique_ptr<rviz::PointCloud>> grid_levels_;
+  std::vector<std::unique_ptr<GridLayer>> grid_levels_;
 
   // The SceneManager, kept here only so the destructor can ask it to
   // destroy the `frame_node_`.

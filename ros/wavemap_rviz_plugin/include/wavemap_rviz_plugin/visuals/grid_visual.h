@@ -10,7 +10,6 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreVector3.h>
-#include <rviz/ogre_helpers/point_cloud.h>
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/enum_property.h>
@@ -21,6 +20,8 @@
 #include <wavemap/config/type_selector.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
+
+#include "wavemap_rviz_plugin/visuals/grid_layer.h"
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -96,7 +97,7 @@ class GridVisual : public QObject {
   using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
   TimePoint last_update_time_{};
   std::unordered_map<Index3D, IndexElement, Index3DHash> block_update_queue_;
-  using MultiResGrid = std::vector<std::unique_ptr<rviz::PointCloud>>;
+  using MultiResGrid = std::vector<std::unique_ptr<GridLayer>>;
   std::unordered_map<Index3D, MultiResGrid, Index3DHash> block_grids_;
 
   bool force_lod_update_ = true;
@@ -106,16 +107,16 @@ class GridVisual : public QObject {
 
   void processBlockUpdateQueue();
 
-  using PointcloudList = std::vector<std::vector<rviz::PointCloud::Point>>;
+  using GridLayerList = std::vector<std::vector<GridLayer::Cell>>;
   void getLeafCentersAndColors(int tree_height, FloatingPoint min_cell_width,
                                FloatingPoint min_occupancy_log_odds,
                                FloatingPoint max_occupancy_log_odds,
                                const OctreeIndex& cell_index,
                                FloatingPoint cell_log_odds,
-                               PointcloudList& cells_per_level);
+                               GridLayerList& cells_per_level);
   void drawMultiResGrid(IndexElement tree_height, FloatingPoint min_cell_width,
                         const Index3D& block_index, FloatingPoint alpha,
-                        PointcloudList& cells_per_level,
+                        GridLayerList& cells_per_level,
                         MultiResGrid& multi_res_grid);
 
   // Map a voxel's log-odds value to a color (grey value)

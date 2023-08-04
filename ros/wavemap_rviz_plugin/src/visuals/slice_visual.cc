@@ -72,7 +72,7 @@ void SliceVisual::update() {
                 });
 
   // Add a colored square for each leaf
-  std::vector<std::vector<rviz::PointCloud::Point>> cells_per_level(num_levels);
+  std::vector<std::vector<GridLayer::Cell>> cells_per_level(num_levels);
   map->forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
                                          FloatingPoint cell_log_odds) {
     // Skip cells that don't intersect the slice
@@ -93,19 +93,19 @@ void SliceVisual::update() {
         convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
 
     // Create the cube at the right scale
-    auto& point = cells_per_level[cell_index.height].emplace_back();
-    point.position.x = cell_center[0];
-    point.position.y = cell_center[1];
-    point.position.z = slice_height;
+    auto& cell = cells_per_level[cell_index.height].emplace_back();
+    cell.center.x = cell_center[0];
+    cell.center.y = cell_center[1];
+    cell.center.z = slice_height;
 
     // Set the cube's color
     const FloatingPoint cell_odds = std::exp(cell_log_odds);
     const FloatingPoint cell_prob = cell_odds / (1.f + cell_odds);
     const FloatingPoint cell_free_prob = 1.f - cell_prob;
-    point.color.a = 1.f;
-    point.color.r = cell_free_prob;
-    point.color.g = cell_free_prob;
-    point.color.b = cell_free_prob;
+    cell.color.a = 1.f;
+    cell.color.r = cell_free_prob;
+    cell.color.g = cell_free_prob;
+    cell.color.b = cell_free_prob;
   });
 
   // Add a grid layer for each scale level
@@ -116,10 +116,9 @@ void SliceVisual::update() {
       const FloatingPoint cell_width =
           convert::heightToCellWidth(min_cell_width, height);
       auto& grid_level =
-          grid_levels_.emplace_back(std::make_unique<rviz::PointCloud>());
+          grid_levels_.emplace_back(std::make_unique<GridLayer>());
       grid_level->setName(name);
-      grid_level->setRenderMode(rviz::PointCloud::RM_BOXES);
-      grid_level->setDimensions(cell_width, cell_width, 0.0);
+      grid_level->setCellDimensions(cell_width, cell_width, 0.0);
       grid_level->setAlpha(alpha, false);
       frame_node_->attachObject(grid_level.get());
     }
@@ -127,7 +126,7 @@ void SliceVisual::update() {
     auto& grid_level = grid_levels_[height];
     grid_level->clear();
     auto& cells_at_level = cells_per_level[height];
-    grid_level->addPoints(&cells_at_level.front(), cells_at_level.size());
+    grid_level->addCells(&cells_at_level.front(), cells_at_level.size());
   }
 }
 

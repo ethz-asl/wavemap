@@ -54,6 +54,7 @@ add_definitions(-DQT_NO_KEYWORDS)
 add_library(${PROJECT_NAME}
     src/visuals/grid_visual.cc
     src/visuals/slice_visual.cc
+    src/visuals/grid_layer.cpp
     src/wavemap_map_display.cc
     ${QT_MOC})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
