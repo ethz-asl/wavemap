@@ -1,13 +1,14 @@
 #include "wavemap_rviz_plugin/visuals/grid_visual.h"
 
 #include <ros/console.h>
+#include <rviz/render_panel.h>
 #include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
 GridVisual::GridVisual(
-    Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
-    rviz::Property* submenu_root_property,
+    Ogre::SceneManager* scene_manager, rviz::ViewManager* view_manager,
+    Ogre::SceneNode* parent_node, rviz::Property* submenu_root_property,
     const std::shared_ptr<std::mutex> map_mutex,
     const std::shared_ptr<VolumetricDataStructureBase::Ptr> map)
     : map_mutex_(map_mutex),
@@ -59,35 +60,22 @@ GridVisual::GridVisual(
   max_ms_per_frame_property_.setMin(0);
 
   // Initialize the camera tracker
-  const std::string kDefaultRvizCamPrefix = "ViewControllerCamera";
-  bool success = false;
-  for (const auto& [cam_name, cam] : scene_manager_->getCameras()) {
-    if (cam_name.find(kDefaultRvizCamPrefix) != std::string::npos) {
-      cam->getViewport()->addListener(
-          new ViewportCamChangedListener([this](Ogre::Viewport* viewport) {
-            if (Ogre::Camera* new_cam = viewport->getCamera(); new_cam) {
-              new_cam->addListener(
-                  new CamPrerenderListener([this](Ogre::Camera* active_cam) {
-                    if (force_lod_update_ ||
-                        lod_update_distance_threshold_ <
-                            active_cam->getPosition().distance(
-                                last_lod_update_position_)) {
-                      updateLOD(active_cam);
-                      last_lod_update_position_ = active_cam->getPosition();
-                      force_lod_update_ = false;
-                    }
-                    processBlockUpdateQueue();
-                  }));
-            }
-          }));
-      success = true;
-      break;
-    }
-  }
-  ROS_WARN_STREAM_COND(!success,
-                       "Could not register wavemap_rviz_plugin LOD callback. "
-                       "Found no camera whose name contains "
-                           << kDefaultRvizCamPrefix);
+  view_manager->getRenderPanel()->getViewport()->addListener(
+      new ViewportCamChangedListener([this](Ogre::Viewport* viewport) {
+        if (Ogre::Camera* new_cam = viewport->getCamera(); new_cam) {
+          new_cam->addListener(
+              new CamPrerenderListener([this](Ogre::Camera* active_cam) {
+                if (force_lod_update_ || lod_update_distance_threshold_ <
+                                             active_cam->getPosition().distance(
+                                                 last_lod_update_position_)) {
+                  updateLOD(active_cam);
+                  last_lod_update_position_ = active_cam->getPosition();
+                  force_lod_update_ = false;
+                }
+                processBlockUpdateQueue();
+              }));
+        }
+      }));
 }
 
 GridVisual::~GridVisual() {

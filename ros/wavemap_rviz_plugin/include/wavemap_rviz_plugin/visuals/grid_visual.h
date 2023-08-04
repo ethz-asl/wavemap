@@ -17,6 +17,7 @@
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/property.h>
+#include <rviz/view_manager.h>
 #include <wavemap/config/type_selector.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
@@ -38,7 +39,8 @@ class GridVisual : public QObject {
  public:  // NOLINT
   // Constructor. Creates the visual elements and puts them into the
   // scene, in an unconfigured state.
-  GridVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
+  GridVisual(Ogre::SceneManager* scene_manager, rviz::ViewManager* view_manager,
+             Ogre::SceneNode* parent_node,
              rviz::Property* submenu_root_property,
              const std::shared_ptr<std::mutex> map_mutex,
              const std::shared_ptr<VolumetricDataStructureBase::Ptr> map);
