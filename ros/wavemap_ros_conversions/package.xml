@@ -15,6 +15,7 @@
 
   <depend>roscpp</depend>
   <depend>wavemap</depend>
+  <depend>tracy_catkin</depend>
   <depend>wavemap_msgs</depend>
   <depend>eigen_conversions</depend>
 </package>

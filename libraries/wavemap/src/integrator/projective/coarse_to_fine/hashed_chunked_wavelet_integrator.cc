@@ -30,13 +30,13 @@ void HashedChunkedWaveletIntegrator::updateMap() {
 
   // Make sure the to-be-updated blocks are allocated
   for (const auto& block_index : blocks_to_update) {
-    occupancy_map_->getOrAllocateBlock(block_index.position);
+    occupancy_map_->getOrAllocateBlock(block_index);
   }
 
   // Update it with the threadpool
   for (const auto& block_index : blocks_to_update) {
     thread_pool_.add_task([this, block_index]() {
-      auto& block = occupancy_map_->getBlock(block_index.position);
+      auto& block = occupancy_map_->getBlock(block_index);
       updateBlock(block, block_index);
     });
   }
@@ -65,7 +65,8 @@ HashedChunkedWaveletIntegrator::getFovMinMaxIndices(
 }
 
 void HashedChunkedWaveletIntegrator::updateBlock(
-    HashedChunkedWaveletOctree::Block& block, const OctreeIndex& block_index) {
+    HashedChunkedWaveletOctree::Block& block,
+    const HashedChunkedWaveletOctree::BlockIndex& block_index) {
   ZoneScoped;
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
@@ -80,7 +81,7 @@ void HashedChunkedWaveletIntegrator::updateBlock(
   };
   std::stack<StackElement, std::vector<StackElement>> stack;
   stack.emplace(StackElement{
-      block.getRootChunk(), block_index, 0,
+      block.getRootChunk(), OctreeIndex{tree_height_, block_index}, 0,
       HashedChunkedWaveletOctreeBlock::Transform::backward(
           {block.getRootScale(), block.getRootChunk().nodeData(0u)}),
       block.getRootChunk().nodeHasAtLeastOneChild(0u)});

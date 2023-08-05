@@ -19,14 +19,14 @@ inline void HashedChunkedWaveletIntegrator::recursiveTester(  // NOLINT
   if (node_index.height == tree_height_) {
     // Get the block
     if (update_type == UpdateType::kPossiblyOccupied) {
-      update_job_list.emplace_back(node_index);
+      update_job_list.emplace_back(node_index.position);
       return;
     }
     if (occupancy_map_->hasBlock(node_index.position)) {
       const auto& block = occupancy_map_->getBlock(node_index.position);
       if (min_log_odds_shrunk_ <= block.getRootScale()) {
         // Add the block to the job list
-        update_job_list.emplace_back(node_index);
+        update_job_list.emplace_back(node_index.position);
       }
     }
     return;
