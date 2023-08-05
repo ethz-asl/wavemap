@@ -118,7 +118,31 @@ void HashedChunkedWaveletIntegrator::updateBlock(
       }
     }
 
-    // Evaluate stack element's active child
+    // If we're at the leaf level, directly compute the update for all children
+    if (stack.top().parent_node_index.height ==
+        config_.termination_height + 1) {
+      DCHECK_EQ(stack.top().next_child_idx, 0);
+      for (NdtreeIndexRelativeChild relative_child_idx = 0;
+           relative_child_idx < OctreeIndex::kNumChildren;
+           ++relative_child_idx) {
+        const OctreeIndex node_index =
+            stack.top().parent_node_index.computeChildIndex(relative_child_idx);
+        FloatingPoint& node_value =
+            stack.top().child_scale_coefficients[relative_child_idx];
+        const Point3D W_node_center =
+            convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
+        const Point3D C_node_center =
+            posed_range_image_->getPoseInverse() * W_node_center;
+        const FloatingPoint sample = computeUpdate(C_node_center);
+        node_value = std::clamp(sample + node_value, min_log_odds_padded_,
+                                max_log_odds_padded_);
+      }
+      stack.top().next_child_idx = OctreeIndex::kNumChildren;
+      continue;
+    }
+
+    // Otherwise, handle the stack element's children one by one
+    // Get the active child
     const NdtreeIndexRelativeChild current_child_idx =
         stack.top().next_child_idx;
     ++stack.top().next_child_idx;
@@ -131,20 +155,7 @@ void HashedChunkedWaveletIntegrator::updateBlock(
         stack.top().child_scale_coefficients[current_child_idx];
     DCHECK_GE(node_index.height, 0);
 
-    // If we're at the leaf level, directly update the node
-    if (node_index.height == config_.termination_height) {
-      const Point3D W_node_center =
-          convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
-      const Point3D C_node_center =
-          posed_range_image_->getPoseInverse() * W_node_center;
-      const FloatingPoint sample = computeUpdate(C_node_center);
-      node_value = std::clamp(sample + node_value, min_log_odds_padded_,
-                              max_log_odds_padded_);
-      continue;
-    }
-
-    // Otherwise, test whether the current node is fully occupied;
-    // free or unknown; or fully unknown
+    // Test whether it is fully occupied; free or unknown; or fully unknown
     const AABB<Point3D> W_cell_aabb =
         convert::nodeIndexToAABB(node_index, min_cell_width_);
     const UpdateType update_type =
