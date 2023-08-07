@@ -24,7 +24,7 @@ struct PointcloudTopicType : public TypeSelector<PointcloudTopicType> {
 };
 
 struct PointcloudInputHandlerConfig
-    : public ConfigBase<PointcloudInputHandlerConfig, 10, PointcloudTopicType> {
+    : public ConfigBase<PointcloudInputHandlerConfig, 11, PointcloudTopicType> {
   std::string topic_name = "scan";
   PointcloudTopicType topic_type = PointcloudTopicType::kPointCloud2;
   int topic_queue_length = 10;
@@ -35,6 +35,7 @@ struct PointcloudInputHandlerConfig
   std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
   FloatingPoint time_offset = 0.f;
   bool undistort_motion = false;
+  int num_undistortion_interpolation_intervals_per_cloud = 100;
 
   std::string reprojected_pointcloud_topic_name;  // Leave blank to disable
   std::string projected_range_image_topic_name;   // Leave blank to disable

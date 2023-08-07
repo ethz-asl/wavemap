@@ -23,7 +23,3 @@ repositories:
     type: git
     url: git@github.com:ethz-asl/minkindr.git
     version: master
-  minkindr_ros:
-    type: git
-    url: git@github.com:ethz-asl/minkindr_ros.git
-    version: master
