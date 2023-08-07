@@ -77,6 +77,7 @@ bool WavemapServer::saveMap(const std::string& file_path) const {
   } else {
     LOG(ERROR) << "Could not save map because it has not yet been allocated.";
   }
+  return false;
 }
 
 bool WavemapServer::loadMap(const std::string& file_path) {
