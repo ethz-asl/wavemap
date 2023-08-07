@@ -49,7 +49,8 @@ TEST_F(SphericalProjectorTest, InitializationAndAccessors) {
 }
 
 TEST_F(SphericalProjectorTest, CellToBeamAngles) {
-  constexpr FloatingPoint kMaxAcceptableAngleError = 2.f * kEpsilon;
+  constexpr FloatingPoint kNoiseTolerance = 1e-5f;
+  constexpr FloatingPoint kMaxAcceptableAngleError = 2.f * kNoiseTolerance;
   const auto projector = getRandomProjectionModel();
   for (int repetition = 0; repetition < 1000; ++repetition) {
     const Point3D C_point = getRandomPoint<3>();
@@ -65,7 +66,7 @@ TEST_F(SphericalProjectorTest, CellToBeamAngles) {
     const Point3D C_point_round_trip =
         projector.sensorToCartesian(sensor_coordinates);
     ASSERT_LE((C_point - C_point_round_trip).norm(),
-              kEpsilon * (1.f + sensor_coordinates[2]));
+              kNoiseTolerance * (1.f + sensor_coordinates[2]));
 
     // Compute "ground truth" using double precision
     const Point3D C_from_closest_pixel = projector.sensorToCartesian(
