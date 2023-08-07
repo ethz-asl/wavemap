@@ -22,7 +22,7 @@ repositories:
   tracy_catkin:
     type: git
     url: https://github.com/ethz-asl/tracy_catkin.git
-    version: master
+    version: main
   minkindr:
     type: git
     url: https://github.com/ethz-asl/minkindr.git
