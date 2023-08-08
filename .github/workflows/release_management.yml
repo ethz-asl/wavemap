@@ -60,11 +60,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: refs/pull/${{ github.event.issue.number }}/head
+          fetch-depth: 0  # To everything, instead of only the last commit
       - name: Bring branch up to date with main
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@github.com"
-          git fetch
           git merge origin/main
       - name: Bump catkin package version numbers
         shell: bash
