@@ -61,7 +61,7 @@ jobs:
         with:
           fetch-depth: 0  # To everything, instead of only the last commit
       - name: Checkout PR branch
-        run: hub pr checkout ${{ github.event.issue.number }}
+        run: gh pr checkout ${{ github.event.issue.number }}
         env:
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Bring branch up to date with main
