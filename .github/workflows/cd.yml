@@ -212,26 +212,26 @@ jobs:
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
 
-      - name: Attach docs to GitHub release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const fs = require('fs');
-            const tag = context.ref.replace("refs/tags/", "");
-            // Get release for this tag
-            const release = await github.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag
-            });
-            // Upload the release asset
-            await github.repos.uploadReleaseAsset({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: release.data.id,
-              name: "docs.tar",
-              data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar")
-            });
+  #  - name: Attach docs to GitHub release
+  #    uses: actions/github-script@v6
+  #    with:
+  #      script: |
+  #        const fs = require('fs');
+  #        const tag = context.ref.replace("refs/tags/", "");
+  #        // Get release for this tag
+  #        const release = await github.repos.getReleaseByTag({
+  #          owner: context.repo.owner,
+  #          repo: context.repo.repo,
+  #          tag
+  #        });
+  #        // Upload the release asset
+  #        await github.repos.uploadReleaseAsset({
+  #          owner: context.repo.owner,
+  #          repo: context.repo.repo,
+  #          release_id: release.data.id,
+  #          name: "docs.tar",
+  #          data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar")
+  #        });
 
   publish-docs:
     name: Publish docs
