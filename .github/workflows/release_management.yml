@@ -34,17 +34,6 @@ jobs:
             exit
           fi
           echo command="" >> $GITHUB_OUTPUT
-      - name: React to the comment to show it's being processed
-        if: ${{ steps.extract-command.outputs.command }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            octokit.rest.reactions.createForIssueComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: ${{ github.event.comment.id }},
-              content: 'rocket',
-            });
 
   prepare-release:
     name: Prepare release
@@ -54,6 +43,16 @@ jobs:
     container:
       image: ros:noetic-ros-base-focal
     steps:
+      - name: React to the comment to show it's being processed
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: ${{ github.event.comment.id }},
+              content: 'rocket',
+            });
       - name: Install dependencies
         shell: bash
         run: apt-get update && apt-get install -q -y --no-install-recommends git python3-catkin-tools
@@ -74,6 +73,16 @@ jobs:
           version_local=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)
           git commit -m "Prepare release ${version_local}"
           git push
+      - name: Post release note preview as PR comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Preview of release notes will be added here.'
+            })
 
   ready-for-release:
     name: Check version is incremental
@@ -98,7 +107,7 @@ jobs:
 
   tag-release:
     name: Tag pushes to main
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the current branch
