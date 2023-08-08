@@ -1,0 +1,132 @@
+name: Release Management
+
+on:
+  issue_comment:
+    types: [ created ]
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  prepare-release-command:
+    name: Process /prepare-release cmds
+    if: ${{ github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+    outputs:
+      command: ${{ steps.extract-command.outputs.command }}
+    steps:
+      - name: Match /prepare-release [major|minor|patch|xx.xx.xx] commands
+        id: extract-command
+        shell: bash
+        env:
+          COMMENT: ${{ github.event.comment.body }}
+        run: |
+          echo Processing comment "$COMMENT"
+          version=$(echo $COMMENT | sed -nE "s/^ *\/prepare-release +([0-9]+.[0-9]+.[0-9]+) *$/\1/p")
+          if [ -n "${version}" ]; then
+            echo command=--version ${version} >> $GITHUB_OUTPUT
+            exit
+          fi
+          bump=$(echo $COMMENT | sed -nE "s/^ *\/prepare-release +(major|minor|patch) *$/\1/p")
+          if [ -n "${bump}" ]; then
+            echo command=--bump ${bump} >> $GITHUB_OUTPUT
+            exit
+          fi
+          echo command="" >> $GITHUB_OUTPUT
+
+  prepare-release:
+    name: Prepare release
+    needs: [ prepare-release-command ]
+    if: ${{ needs.prepare-release-command.outputs.command }}
+    runs-on: self-hosted
+    container:
+      image: ros:noetic-ros-base-focal
+    steps:
+      - name: React to the comment to show it's being processed
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: ${{ github.event.comment.id }},
+              content: 'rocket',
+            });
+      - name: Install dependencies
+        shell: bash
+        run: |
+          type -p curl >/dev/null || (apt-get update && apt-get install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update
+          apt-get install -q -y --no-install-recommends git python3-catkin-tools gh
+      - name: Fetch the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # To everything, instead of only the last commit
+          token: ${{ secrets.PAT }}
+      - name: Checkout PR branch
+        run: gh pr checkout ${{ github.event.issue.number }}
+        env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bring branch up to date with main
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
+          git merge origin/main
+      - name: Bump catkin package version numbers
+        shell: bash
+        run: python3 tooling/wavemap_utils/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare-release-command.outputs.command }}
+      - name: Push to GitHub
+        run: git push
+      - name: Post release note preview as PR comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Preview of release notes will be added here.'
+            })
+
+  ready-for-release:
+    name: Check version is incremental
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the current branch
+        uses: actions/checkout@v3
+      - name: Compare local and main version numbers
+        shell: bash
+        run: |
+          version_main=$(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/main/libraries/wavemap/package.xml | sed -nE "s/.*<version>(.*)<\/version>.*/\1/p")
+          version_local=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)
+
+          if dpkg --compare-versions $version_main "lt" $version_local; then
+            echo "Local version ($version_local) is ahead of origin main ($version_main)"
+            exit 0
+          else
+            echo "Local version ($version_local) lags origin main ($version_main)"
+            exit 1
+          fi
+
+  tag-release:
+    name: Tag pushes to main
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the current branch
+        uses: actions/checkout@v3
+      - name: Detect version
+        id: detect-version
+        shell: bash
+        run: echo "version=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)" >> $GITHUB_OUTPUT
+      - name: Push tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
+          git tag v${{ steps.detect-version.outputs.version }}
+          git push origin v${{ steps.detect-version.outputs.version }}

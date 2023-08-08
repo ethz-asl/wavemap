@@ -1,9 +1,8 @@
 name: Continuous Integration
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 # NOTE: We do not store the work files under $HOME ("/github/home/") since that
 #       dir persists between jobs when using self-hosted GitHub Actions runners
@@ -54,12 +53,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Prepare ccache to accelerate the build
-        id: get-date
+      - name: Install dependencies
         # NOTE: Installing tar is required for actions/cache@v3 to work properly
         #       on docker:20.10.9-dind.
+        run: apk add --no-cache tar git
+
+      - name: Prepare ccache to accelerate the build
+        id: get-date
         run: |
-          apk add --no-cache tar
           mkdir -p ccache
           echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
 
@@ -192,7 +193,7 @@ jobs:
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
   build-docs:
-    name: Update docs
+    name: Build docs
     needs: [ workspace-container, lint ]
     runs-on: self-hosted
     container:
