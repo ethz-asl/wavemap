@@ -56,11 +56,14 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: apt-get update && apt-get install -q -y --no-install-recommends git python3-catkin-tools
-      - name: Checkout pull request
+      - name: Fetch the repository
         uses: actions/checkout@v3
         with:
-          ref: refs/pull/${{ github.event.issue.number }}/head
           fetch-depth: 0  # To everything, instead of only the last commit
+      - name: Checkout PR branch
+        run: hub pr checkout ${{ github.event.issue.number }}
+        env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Bring branch up to date with main
         run: |
           git config user.name "GitHub Actions"
