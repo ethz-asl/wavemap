@@ -10,7 +10,7 @@ on:
 
 jobs:
   prepare-release-command:
-    name: Prepare release commands
+    name: Process /prepare-release cmds
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     outputs:
@@ -85,7 +85,7 @@ jobs:
             })
 
   ready-for-release:
-    name: Check if the version exceeds origin main
+    name: Check version is incremental
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
@@ -106,7 +106,7 @@ jobs:
           fi
 
   tag-release:
-    name: Tag releases when merged to main
+    name: Tag pushes to main
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
