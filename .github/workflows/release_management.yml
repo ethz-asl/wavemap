@@ -61,18 +61,16 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.issue.number }}/head
       - name: Bring branch up to date with main
-        run: git merge origin/main
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
+          git fetch
+          git merge origin/main
       - name: Bump catkin package version numbers
         shell: bash
         run: python3 tooling/wavemap_utils/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare-release-command.outputs.command }}
       - name: Push to GitHub
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@github.com"
-          git add -A
-          version_local=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)
-          git commit -m "Prepare release ${version_local}"
-          git push
+        run: git push
       - name: Post release note preview as PR comment
         uses: actions/github-script@v6
         with:
@@ -107,7 +105,7 @@ jobs:
 
   tag-release:
     name: Tag pushes to main
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the current branch
