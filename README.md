@@ -106,7 +106,7 @@ For additional options, please refer to the launch file's documented arguments
 The Panoptic Mapping flat dataset is available [here](https://projects.asl.ethz.ch/datasets/doku.php?id=panoptic_mapping). You can automatically download it using
 ```shell script
 export FLAT_DATA_DIR="/home/$USER/data/panoptic_mapping" # Set to path of your preference
-bash <(curl -s curl -s https://raw.githubusercontent.com/ethz-asl/panoptic_mapping/3926396d92f6e3255748ced61f5519c9b102570f/panoptic_mapping_utils/scripts/download_flat_dataset.sh)
+bash <(curl -s https://raw.githubusercontent.com/ethz-asl/panoptic_mapping/3926396d92f6e3255748ced61f5519c9b102570f/panoptic_mapping_utils/scripts/download_flat_dataset.sh)
 ```
 
 To process it with wavemap, run
