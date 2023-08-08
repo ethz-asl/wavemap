@@ -1,9 +1,8 @@
 name: Continuous Integration
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 # NOTE: We do not store the work files under $HOME ("/github/home/") since that
 #       dir persists between jobs when using self-hosted GitHub Actions runners
@@ -192,7 +191,7 @@ jobs:
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
   build-docs:
-    name: Update docs
+    name: Build docs
     needs: [ workspace-container, lint ]
     runs-on: self-hosted
     container:

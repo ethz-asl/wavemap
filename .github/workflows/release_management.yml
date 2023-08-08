@@ -5,17 +5,19 @@ on:
     types: [ created ]
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
-  prepare_release_command:
+  prepare-release-command:
     name: Prepare release commands
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     outputs:
-      command: ${{ steps.extract_command.outputs.command }}
+      command: ${{ steps.extract-command.outputs.command }}
     steps:
       - name: Match /prepare-release [major|minor|patch|xx.xx.xx] commands
-        id: extract_command
+        id: extract-command
         shell: bash
         env:
           COMMENT: ${{ github.event.comment.body }}
@@ -33,10 +35,10 @@ jobs:
           fi
           echo command="" >> $GITHUB_OUTPUT
 
-  prepare_release:
+  prepare-release:
     name: Prepare release
-    needs: [ prepare_release_command ]
-    if: ${{ needs.prepare_release_command.outputs.command }}
+    needs: [ prepare-release-command ]
+    if: ${{ needs.prepare-release-command.outputs.command }}
     runs-on: self-hosted
     container:
       image: ros:noetic-ros-base-focal
@@ -62,7 +64,7 @@ jobs:
         run: git merge origin/main
       - name: Bump catkin package version numbers
         shell: bash
-        run: python3 tooling/wavemap_utils/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare_release_command.outputs.command }}
+        run: python3 tooling/wavemap_utils/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare-release-command.outputs.command }}
       - name: Push to GitHub
         run: |
           git config user.name github-actions
@@ -82,7 +84,7 @@ jobs:
               body: 'Preview of release notes will be added here.'
             })
 
-  ready_for_release:
+  ready-for-release:
     name: Check if the version exceeds origin main
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
@@ -102,3 +104,17 @@ jobs:
             echo "Local version ($version_local) lags origin main ($version_main)"
             exit 1
           fi
+
+  tag-release:
+    name: Tag releases when merged to main
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the current branch
+        uses: actions/checkout@v3
+      - name: Detect version
+        id: detect-version
+        shell: bash
+        run: echo "version=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)" >> $GITHUB_OUTPUT
+      - name: Push tag
+        run: git push origin v${{ steps.detect-version.outputs.version }}
