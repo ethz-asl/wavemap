@@ -67,8 +67,8 @@ jobs:
         run: python3 tooling/wavemap_utils/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare-release-command.outputs.command }}
       - name: Push to GitHub
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
           git add -A
           version_local=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)
           git commit -m "Prepare release ${version_local}"
@@ -117,4 +117,8 @@ jobs:
         shell: bash
         run: echo "version=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)" >> $GITHUB_OUTPUT
       - name: Push tag
-        run: git push origin v${{ steps.detect-version.outputs.version }}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
+          git tag v${{ steps.detect-version.outputs.version }}
+          git push origin v${{ steps.detect-version.outputs.version }}
