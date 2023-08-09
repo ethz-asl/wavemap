@@ -27,7 +27,7 @@ jobs:
       image: docker:20.10.9-dind
     outputs:
       docker_cache_image_name: type=registry,ref=${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
-      local_release_image_name: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_RELEASE_TARGET }}-${{ github.sha }}
+      local_ci_image_name: ${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_RELEASE_TARGET }}-${{ github.sha }}
     steps:
       - name: Empty
         run: echo
@@ -54,10 +54,10 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image: ${{ needs.common-variables.outputs.local_release_image_name }}
+      image: ${{ needs.common-variables.outputs.local_ci_image_name }}
     env:
       CACHE_IMAGE_NAME: ${{ needs.common-variables.outputs.docker_cache_image_name }}
-      LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_release_image_name }}
+      LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_ci_image_name }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v3
@@ -152,7 +152,9 @@ jobs:
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ env.LOCAL_IMAGE_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Write back the build's ccache cache
