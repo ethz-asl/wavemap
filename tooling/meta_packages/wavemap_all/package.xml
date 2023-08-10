@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap_all</name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <description>Metapackage that builds all wavemap packages.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
@@ -13,6 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>wavemap</exec_depend>
+  <exec_depend>wavemap_io</exec_depend>
   <exec_depend>wavemap_msgs</exec_depend>
   <exec_depend>wavemap_ros_conversions</exec_depend>
   <exec_depend>wavemap_ros</exec_depend>

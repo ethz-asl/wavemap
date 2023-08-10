@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap_ros</name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <description>ROS interface for wavemap.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
@@ -14,6 +14,7 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>wavemap</depend>
+  <depend>wavemap_io</depend>
 
   <depend>roscpp</depend>
   <depend>rosbag</depend>
@@ -22,8 +23,9 @@
   <depend>tf2_ros</depend>
 
   <depend>wavemap_msgs</depend>
-  <depend>wavemap_ros_conversions</depend>
   <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>
   <depend>visualization_msgs</depend>
+
+  <depend>wavemap_ros_conversions</depend>
 </package>

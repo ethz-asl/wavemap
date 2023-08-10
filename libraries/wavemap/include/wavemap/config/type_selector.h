@@ -53,6 +53,10 @@ struct TypeSelector {
                          const DerivedTypeSelectorT& rhs) {
     return lhs.id_ == rhs.id_;
   }
+  friend bool operator!=(const DerivedTypeSelectorT& lhs,
+                         const DerivedTypeSelectorT& rhs) {
+    return !(lhs.id_ == rhs.id_);
+  }
 
   // Method to check if the type ID is currently valid
   bool isValid() const { return isValidTypeId(id_); }
