@@ -16,12 +16,13 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import datetime
 import sphinx_rtd_theme
 
 # -- Project information -----------------------------------------------------
 
 project = 'wavemap'
-copyright = '2022, Victor Reijgwart'  # pylint: disable=redefined-builtin
+copyright = f'2022-{datetime.date.today().year}, Victor Reijgwart'  # pylint: disable=redefined-builtin
 author = 'Victor Reijgwart'
 
 # The short X.Y version
@@ -201,3 +202,19 @@ primary_domain = 'cpp'
 
 # Tell sphinx what the pygments highlight language should be.
 highlight_language = 'cpp'
+
+# Display a Edit on GitHub links
+html_context = {
+    "display_github": True,  # Integrate GitHub
+    "github_user": "ethz-asl",  # Username
+    "github_repo": "wavemap",  # Repo name
+    "github_version": "main",  # Version
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+}
+
+# Provide a short syntax to link to files in the repository
+extensions.append("sphinx.ext.extlinks")
+extlinks = {
+    'repo_file':
+    ('https://github.com/ethz-asl/wavemap/tree/main/%s', 'source file %s')
+}

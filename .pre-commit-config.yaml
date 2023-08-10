@@ -23,7 +23,7 @@ repos:
         args: [ --allow-multiple-documents ]
       - name: Block commits to main branch
         id: no-commit-to-branch
-        args: ['--branch', 'main']
+        args: [ '--branch', 'main' ]
       - name: Check that no large files were added (>500kB)
         id: check-added-large-files
         args: [ "--maxkb=500" ]
@@ -107,6 +107,14 @@ repos:
       - name: Lint markdown files with markdownlint
         id: markdownlint
         args: [ --rules="~MD013" ]
+
+  - repo: https://github.com/rstcheck/rstcheck
+    rev: v6.1.2
+    hooks:
+      - name: Check syntax of reStructuredText
+        id: rstcheck
+        additional_dependencies: [ sphinx ]
+
   - repo: local
     hooks:
       - name: Check ROS package manifest schema conformance
