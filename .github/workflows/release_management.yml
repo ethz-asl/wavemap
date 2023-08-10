@@ -8,6 +8,10 @@ on:
   push:
     branches: [ main ]
 
+env:
+  GITHUB_ACTIONS_BOT_NAME: "github-actions[bot]"
+  GITHUB_ACTIONS_BOT_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+
 jobs:
   prepare-release-command:
     name: Process /prepare-release cmds
@@ -73,8 +77,8 @@ jobs:
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Bring branch up to date with main
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@github.com"
+          git config user.name ${GITHUB_ACTIONS_BOT_NAME}
+          git config user.email ${GITHUB_ACTIONS_BOT_EMAIL}
           git merge origin/main
       - name: Bump catkin package version numbers
         shell: bash
@@ -121,14 +125,23 @@ jobs:
       - name: Checkout the current branch
         uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           token: ${{ secrets.PAT }}
       - name: Detect version
         id: detect-version
         shell: bash
         run: echo "version=$(sed -nE "s/.*<version>(.*)<\/version>.*/\1/p" libraries/wavemap/package.xml)" >> $GITHUB_OUTPUT
       - name: Push tag
+        env:
+          TAG: v${{ steps.detect-version.outputs.version }}
+        shell: bash
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@github.com"
-          git tag v${{ steps.detect-version.outputs.version }}
-          git push origin v${{ steps.detect-version.outputs.version }}
+          if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
+            echo "Tag ${TAG} already exists. Doing nothing."
+          else
+            echo "Creating and pushing tag ${TAG}."
+            git config user.name ${GITHUB_ACTIONS_BOT_NAME}
+            git config user.email ${GITHUB_ACTIONS_BOT_EMAIL}
+            git tag -a -m "Release ${TAG}" ${TAG}
+            git push origin ${TAG}
+          fi
