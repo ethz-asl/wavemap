@@ -18,6 +18,7 @@
 
 import datetime
 import sphinx_rtd_theme
+import lxml.etree
 
 # -- Project information -----------------------------------------------------
 
@@ -26,9 +27,11 @@ copyright = f'2022-{datetime.date.today().year}, Victor Reijgwart'  # pylint: di
 author = 'Victor Reijgwart'
 
 # The short X.Y version
-version = ''
+root = lxml.etree.parse('../libraries/wavemap/package.xml')
+textelem = root.find('version')
+version = textelem.text
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = textelem.text
 
 # -- General configuration ---------------------------------------------------
 
@@ -172,29 +175,22 @@ breathe_default_project = "project"
 
 # Setup the exhale extension
 exhale_args = {
-    "verboseBuild":
-    False,
+    "verboseBuild": False,
     # These arguments are required
-    "containmentFolder":
-    "./api",
-    "rootFileName":
-    "library_root.rst",
-    "doxygenStripFromPath":
-    "..",
+    "containmentFolder": "./api",
+    "rootFileName": "library_root.rst",
+    # Must be the same as STRIP_FROM_PATH in the Doxyfile
+    "doxygenStripFromPath": "..",
     # Heavily encouraged optional argument (see docs)
-    "rootFileTitle":
-    "Library API",
+    "rootFileTitle": "Library API",
     # Suggested optional arguments
-    "createTreeView":
-    True,
+    "createTreeView": True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
-    "exhaleExecutesDoxygen":
-    True,
-    "exhaleUseDoxyfile":
-    True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleUseDoxyfile": True,
     "pageLevelConfigMeta":
-    ":github_url: https://github.com/victorreijgwart/" + project
+    ":github_url: https://github.com/ethz-asl/" + project
 }
 
 # Tell sphinx what the primary language being documented is.
