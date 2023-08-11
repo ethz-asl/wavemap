@@ -2,8 +2,8 @@
 Changelog for package wavemap_all
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2023-08-11)
+------------------
 * Move package to improve repo structure
 * Contributors: Victor Reijgwart
 
