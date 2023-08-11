@@ -22,7 +22,7 @@ env:
 jobs:
   common-variables:
     name: Define common variables
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     outputs:
@@ -47,7 +47,7 @@ jobs:
   publish-image:
     name: Publish Docker image
     needs: [ common-variables ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     permissions:
@@ -178,7 +178,7 @@ jobs:
   build-docs:
     name: Build docs
     needs: [ publish-image ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.publish-image.outputs.image }}
     steps:
@@ -238,7 +238,7 @@ jobs:
   publish-docs:
     name: Publish docs
     needs: [ build-docs ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     permissions:
