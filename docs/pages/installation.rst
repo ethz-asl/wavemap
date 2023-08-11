@@ -1,6 +1,7 @@
 Installation
 ############
 .. highlight:: bash
+.. rstcheck: ignore-roles=repo_file
 
 If you would like to quickly try out wavemap or if you're not already using Ubuntu Noetic and ROS1, we recommend running wavemap in Docker.
 For active wavemap development, it is probably easiest to install wavemap directly on your system.
@@ -8,13 +9,17 @@ For active wavemap development, it is probably easiest to install wavemap direct
 
 Docker
 ******
-To build the Docker image, simply run::
+If you have not yet installed Docker on your computer, please follow `these instructions <https://docs.docker.com/engine/install/>`_. We also recommend executing the `post-installation steps for Linux <https://docs.docker.com/engine/install/linux-postinstall/>`_, to make Docker available without ``sudo`` priviliges.
 
-    docker build --tag=wavemap - < tooling/docker/incremental.Dockerfile
+To build wavemap's Docker image, simply run::
 
-This will create a local image on your machine based on the latest version of wavemap. You can give the local image a different name by modifying the ``--tag=wavemap`` argument. The ``-`` that follows tells Docker that this job does not need a build context and ``< ...`` feeds in the relevant Dockerfile. By default, the image will be built using the latest wavemap release. To specify a specific release, such as v1.0.0, add the ``--build-arg="VERSION=v1.0.0"`` argument.
+    docker build --tag=wavemap - <<< $(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/docker/incremental.Dockerfile)
 
+This will create a local image on your machine containing the latest version of wavemap. You can give the local image a different name by modifying the ``--tag=wavemap`` argument. By default, the image will be built using the latest wavemap release. To specify a specific release, such as v1.0.0, add the ``--build-arg="VERSION=v1.0.0"`` argument.
 
+There are many ways to work with Docker containers, with different pros and cons depending on the application.
+
+One documented example of how to run wavemap containers with GUI (e.g. Rviz) support is provided in this :repo_file:`run_in_docker.sh <tooling/packages/wavemap_utils/scripts/run_in_docker.sh>` script. This example should suffice to run all the :doc:`demos`.
 
 System install with ROS
 ***********************
