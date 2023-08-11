@@ -8,7 +8,12 @@ For active wavemap development, it is probably easiest to install wavemap direct
 
 Docker
 ******
-*Coming soon.*
+To build the Docker image, simply run::
+
+    docker build --tag=wavemap - < tooling/docker/incremental.Dockerfile
+
+This will create a local image on your machine based on the latest version of wavemap. You can give the local image a different name by modifying the ``--tag=wavemap`` argument. The ``-`` that follows tells Docker that this job does not need a build context and ``< ...`` feeds in the relevant Dockerfile. By default, the image will be built using the latest wavemap release. To specify a specific release, such as v1.0.0, add the ``--build-arg="VERSION=v1.0.0"`` argument.
+
 
 
 System install with ROS

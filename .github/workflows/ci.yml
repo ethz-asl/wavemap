@@ -83,7 +83,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -116,7 +116,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -134,7 +134,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: workspace-deps-builder-ccache-extractor
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
