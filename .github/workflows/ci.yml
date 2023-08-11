@@ -23,7 +23,7 @@ jobs:
     name: Define common variables
     # NOTE: This job is used to pass complex common variables around between jobs,
     #       as a work-around for ENV variables in GitHub Actions not being composable.
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     outputs:
@@ -36,7 +36,7 @@ jobs:
   workspace-container:
     name: Build CI workspace container
     needs: [ common-variables ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     outputs:
@@ -150,7 +150,7 @@ jobs:
   lint:
     name: Lint
     needs: [ common-variables ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       # NOTE: Pylint checks if all modules that are marked for import are
       #       available. At the time of writing, the python scripts in this repo
@@ -195,7 +195,7 @@ jobs:
   build-docs:
     name: Build docs
     needs: [ workspace-container, lint ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -234,7 +234,7 @@ jobs:
   build:
     name: Build
     needs: workspace-container
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -264,7 +264,7 @@ jobs:
   clang-tidy:
     name: Clang tidy
     needs: [ workspace-container, build ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -307,7 +307,7 @@ jobs:
   test:
     name: Test
     needs: [ workspace-container, build ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -357,7 +357,7 @@ jobs:
     # TODO(victorr): Enable this again once it has been updated to work with the new package structure
     if: ${{ false }}
     needs: [ workspace-container, test ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -446,7 +446,7 @@ jobs:
   sanitize:
     name: Sanitize ${{ matrix.sanitizer.detects }}
     needs: [ workspace-container, test ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     strategy:
@@ -510,7 +510,7 @@ jobs:
   valgrind:
     name: Valgrind memcheck
     needs: [ workspace-container, test ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
