@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.1.0 (2023-08-09)
 ------------------
 * Enable file saving in ROS server
