@@ -214,3 +214,11 @@ extlinks = {
     'repo_file':
     ('https://github.com/ethz-asl/wavemap/tree/main/%s', 'source file %s')
 }
+
+# Configure the link checker (invoked with `make linkcheck`)
+linkcheck_allowed_redirects = {
+    # All HTTP redirections from the source URI to the canonical URI will be treated as "working".
+    'https://github.com/ethz-asl/wavemap/tree/.*':
+    'https://github.com/ethz-asl/wavemap/blob.*',
+    'https://github.com/ethz-asl/wavemap/assets/.*': 'https://.*'
+}
