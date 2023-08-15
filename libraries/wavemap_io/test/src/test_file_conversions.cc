@@ -46,7 +46,8 @@ TYPED_TEST(FileConversionsTest, MetadataPreservation) {
   // Serialize and deserialize
   ASSERT_TRUE(io::mapToFile(*map_base, TestFixture::kTemporaryFilePath));
   VolumetricDataStructureBase::Ptr map_base_round_trip;
-  io::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip);
+  ASSERT_TRUE(
+      io::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip));
   ASSERT_TRUE(map_base_round_trip);
 
   // TODO(victorr): Add option to deserialize into hashed chunked wavelet
@@ -94,7 +95,8 @@ TYPED_TEST(FileConversionsTest, InsertionAndLeafVisitor) {
     // Serialize and deserialize
     ASSERT_TRUE(io::mapToFile(map_original, TestFixture::kTemporaryFilePath));
     VolumetricDataStructureBase::Ptr map_base_round_trip;
-    io::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip);
+    ASSERT_TRUE(
+        io::fileToMap(TestFixture::kTemporaryFilePath, map_base_round_trip));
     ASSERT_TRUE(map_base_round_trip);
 
     // Check that both maps contain the same leaves

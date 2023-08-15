@@ -1,10 +1,9 @@
 name: Continuous Deployment
 
 on:
-  workflow_run:
-    workflows: [ Continuous Integration ]
-    types: [ completed ]
-    branches: [ main ]
+  push:
+    tags:
+      - "v*.*.*"
 
 # NOTE: We do not store the work files under $HOME ("/github/home/") since that
 #       dir persists between jobs when using self-hosted GitHub Actions runners
@@ -15,38 +14,50 @@ env:
   DOCKER_TARGET_ROS_PKG: wavemap_all
   DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_RELEASE_REGISTRY: ghcr.io
-  DOCKER_RELEASE_TARGET: workspace-built-full
+  DOCKER_RELEASE_TARGET: workspace-built-deps
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
 
 jobs:
-  setup:
-    name: Setup
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: self-hosted
+  common-variables:
+    name: Define common variables
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     outputs:
       docker_cache_image_name: type=registry,ref=${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:buildcache
-      local_release_image_name: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_RELEASE_TARGET }}-${{ github.sha }}
+      local_ci_image_name: ${{ env.DOCKER_CI_REGISTRY }}/${{ env.REPOSITORY_NAME }}:${{ env.DOCKER_RELEASE_TARGET }}-${{ github.sha }}
     steps:
       - name: Empty
         run: echo
 
+  draft-release:
+    name: Draft Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+
   publish-image:
     name: Publish Docker image
-    if: github.ref == 'refs/heads/main'
-    needs: [ setup ]
-    runs-on: self-hosted
+    needs: [ common-variables ]
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     permissions:
       contents: read
       packages: write
+    outputs:
+      image: ${{ needs.common-variables.outputs.local_ci_image_name }}
     env:
-      CACHE_IMAGE_NAME: ${{ needs.setup.outputs.docker_cache_image_name }}
-      LOCAL_IMAGE_NAME: ${{ needs.setup.outputs.local_release_image_name }}
+      CACHE_IMAGE_NAME: ${{ needs.common-variables.outputs.docker_cache_image_name }}
+      LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_ci_image_name }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v3
@@ -91,7 +102,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -130,7 +141,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -141,7 +152,9 @@ jobs:
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ env.LOCAL_IMAGE_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Write back the build's ccache cache
@@ -149,7 +162,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: workspace-deps-builder-ccache-extractor
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -162,11 +175,70 @@ jobs:
           tags: ${{ env.LOCAL_IMAGE_NAME }}
           outputs: type=local,dest=ccache
 
+  build-docs:
+    name: Build docs
+    needs: [ publish-image ]
+    runs-on: [ self-hosted, vwire ]
+    container:
+      image: ${{ needs.publish-image.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
+        run: |
+          apt-get update
+          apt-get install -q -y --no-install-recommends python3-pip doxygen
+          pip3 install exhale sphinx-rtd-theme
+
+      - name: Build documentation
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: make html
+
+      - name: Archive pages artifact
+        shell: bash
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --directory ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/html/ \
+            -cvf ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar \
+            --exclude=.git \
+            --exclude=.github \
+            .
+
+      - name: Upload pages artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: github-pages
+          path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
+          retention-days: 1
+
+      - name: Attach docs to GitHub release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const tag = context.ref.replace("refs/tags/", "");
+            // Get release for this tag
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag
+            });
+            // Upload the release asset
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.data.id,
+              name: "docs.tar",
+              data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar")
+            });
+
   publish-docs:
     name: Publish docs
-    if: github.ref == 'refs/heads/main'
-    needs: [ setup ]
-    runs-on: self-hosted
+    needs: [ build-docs ]
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     permissions:
@@ -180,20 +252,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download docs built in last CI workflow
-        id: download-artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          run_id: ${{ github.event.workflow_run.id }}
-          name: github-pages
-
-      - name: Upload docs
-        uses: actions/upload-artifact@main
-        with:
-          name: github-pages
-          path: artifact.tar
-          retention-days: 1
-
       - name: Setup Pages
         uses: actions/configure-pages@v1
 

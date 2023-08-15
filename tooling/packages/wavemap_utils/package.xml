@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>catkin_setup</name>
-    <version>0.0.0</version>
-    <description>Dummy package to make it easy to setup the workspace and generate the setup.[sh|bash|zsh] scripts in CI.</description>
+    <name>wavemap_utils</name>
+    <version>1.2.0</version>
+    <description>Small package containing scripts to simplify common wavemap development tasks.</description>
 
     <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
     <license>BSD</license>

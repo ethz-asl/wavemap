@@ -16,7 +16,13 @@ bool mapToFile(const VolumetricDataStructureBase& map,
   }
 
   // Serialize to bytestream
-  return mapToStream(map, file_ostream);
+  if (!mapToStream(map, file_ostream)) {
+    return false;
+  }
+
+  // Close the file and communicate whether writing succeeded
+  file_ostream.close();
+  return static_cast<bool>(file_ostream);
 }
 
 bool fileToMap(const std::string& file_path,
