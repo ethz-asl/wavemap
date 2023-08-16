@@ -41,8 +41,6 @@ jobs:
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
-        with:
-          draft: true
 
   publish-image:
     name: Publish Docker image
