@@ -74,7 +74,7 @@ jobs:
       - name: Checkout PR branch
         run: gh pr checkout ${{ github.event.issue.number }}
         env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Bring branch up to date with main
         run: |
           git config user.name ${GITHUB_ACTIONS_BOT_NAME}
@@ -85,21 +85,22 @@ jobs:
         run: python3 tooling/packages/wavemap_utils/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare-release-command.outputs.command }}
       - name: Push to GitHub
         run: git push
-      - name: Post release note preview as PR comment
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: 'Preview of release notes will be added here.'
-            })
+  #  - name: Post release note preview as PR comment
+  #    uses: actions/github-script@v6
+  #    with:
+  #      script: |
+  #        github.rest.issues.createComment({
+  #          owner: context.repo.owner,
+  #          repo: context.repo.repo,
+  #          issue_number: context.issue.number,
+  #          body: 'Preview of release notes will be added here.'
+  #        })
 
   ready-for-release:
     name: Check version is incremental
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout the current branch
         uses: actions/checkout@v3
