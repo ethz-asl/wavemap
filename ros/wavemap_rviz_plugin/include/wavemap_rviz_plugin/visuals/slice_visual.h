@@ -33,7 +33,7 @@ class SliceVisual : public QObject {
               const std::shared_ptr<MapAndMutex> map_and_mutex);
 
   // Destructor. Removes the visual elements from the scene.
-  virtual ~SliceVisual();
+  ~SliceVisual() override;
 
   void update();
   void clear() { grid_levels_.clear(); }

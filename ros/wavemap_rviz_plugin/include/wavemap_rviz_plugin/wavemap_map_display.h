@@ -49,9 +49,10 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
 
   // Submenus for each visual's properties
   rviz::Property grid_visual_properties_{
-      "Show grid", QVariant(), "Properties for the grid visualization.", this};
+      "Render grid", QVariant(), "Properties for the grid visualization.",
+      this};
   rviz::Property slice_visual_properties_{
-      "Show slice", QVariant(), "Properties for the slice visualization.",
+      "Render slice", QVariant(), "Properties for the slice visualization.",
       this};
   rviz::BoolProperty request_whole_map_property_{
       "Request whole map", false,

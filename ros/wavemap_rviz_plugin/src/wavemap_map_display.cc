@@ -72,8 +72,6 @@ void WavemapMapDisplay::processMessage(
   if (std::scoped_lock lock(map_and_mutex_->mutex); !map_and_mutex_->map) {
     return;
   }
-
-  // Update the visualizations
   grid_visual_->updateMap();
   slice_visual_->update();
 }

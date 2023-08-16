@@ -15,7 +15,7 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
-          "Show", true,
+          "Enable", true,
           "Whether to show the octree as a multi-resolution grid.",
           CHECK_NOTNULL(submenu_root_property),
           SLOT(visibilityUpdateCallback()), this),
@@ -77,6 +77,10 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
       }));
 
   // Initialize the grid cell material
+  // NOTE: Certain properties, such as alpha transparency, are set on a
+  //       per-material basis. We therefore need to create one unique material
+  //       for each grid visual to keep them from overwriting each other's
+  //       settings.
   static int instance_count = 0;
   ++instance_count;
   grid_cell_material_ =
@@ -370,8 +374,8 @@ void GridVisual::drawMultiResGrid(IndexElement tree_height,
     // Update the points
     auto& grid_level = multi_res_grid[depth];
     grid_level->clear();
-    auto& cells_at_level = cells_per_level[depth];
-    grid_level->addCells(&cells_at_level.front(), cells_at_level.size());
+    const auto& cells_at_level = cells_per_level[depth];
+    grid_level->setCells(cells_at_level);
   }
   // Deallocate levels that are no longer needed
   for (size_t depth = multi_res_grid.size() - 1;

@@ -48,7 +48,7 @@ class GridVisual : public QObject {
              const std::shared_ptr<MapAndMutex> map_and_mutex);
 
   // Destructor. Removes the visual elements from the scene.
-  virtual ~GridVisual();
+  ~GridVisual() override;
 
   void updateMap(bool redraw_all = false);
 
@@ -107,7 +107,7 @@ class GridVisual : public QObject {
 
   void processBlockUpdateQueue();
 
-  using GridLayerList = std::vector<std::vector<GridLayer::Cell>>;
+  using GridLayerList = std::vector<std::vector<GridCell>>;
   void getLeafCentersAndColors(int tree_height, FloatingPoint min_cell_width,
                                FloatingPoint min_occupancy_log_odds,
                                FloatingPoint max_occupancy_log_odds,
