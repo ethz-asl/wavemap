@@ -15,9 +15,7 @@ inline bool HashedChunkedWaveletOctreeBlock::empty() const {
 
 inline FloatingPoint HashedChunkedWaveletOctreeBlock::getTimeSinceLastUpdated()
     const {
-  return (std::chrono::duration<FloatingPoint>(Clock::now() -
-                                               last_updated_stamp_))
-      .count();
+  return to_seconds<FloatingPoint>(Time::now() - last_updated_stamp_);
 }
 
 inline FloatingPoint HashedChunkedWaveletOctreeBlock::getCellValue(

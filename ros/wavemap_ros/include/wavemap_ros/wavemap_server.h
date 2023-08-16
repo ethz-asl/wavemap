@@ -12,11 +12,12 @@
 #include <wavemap/config/config_base.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
+#include <wavemap/integrator/integrator_base.h>
+#include <wavemap/utils/stopwatch.h>
+#include <wavemap/utils/time.h>
 
-#include "wavemap/integrator/integrator_base.h"
 #include "wavemap_ros/input_handler/input_handler.h"
 #include "wavemap_ros/tf_transformer.h"
-#include "wavemap_ros/utils/timer.h"
 
 namespace wavemap {
 struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 5> {
@@ -69,8 +70,7 @@ class WavemapServer {
 
   ros::Publisher map_pub_;
 
-  using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
-  TimePoint last_map_pub_time_;
+  Timestamp last_map_pub_time_;
   std::unordered_set<Index3D, Index3DHash> block_publishing_queue_;
   template <typename HashedMapT>
   void publishHashedMap(HashedMapT* hashed_map,

@@ -14,9 +14,7 @@ inline bool HashedWaveletOctreeBlock::empty() const {
 }
 
 inline FloatingPoint HashedWaveletOctreeBlock::getTimeSinceLastUpdated() const {
-  return (std::chrono::duration<FloatingPoint>(Clock::now() -
-                                               last_updated_stamp_))
-      .count();
+  return to_seconds<FloatingPoint>(Time::now() - last_updated_stamp_);
 }
 
 inline FloatingPoint HashedWaveletOctreeBlock::getCellValue(

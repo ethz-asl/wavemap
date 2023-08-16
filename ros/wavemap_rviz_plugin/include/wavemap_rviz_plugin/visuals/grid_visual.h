@@ -20,6 +20,7 @@
 #include <wavemap/config/type_selector.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
+#include <wavemap/utils/time.h>
 
 #include "wavemap_rviz_plugin/visuals/grid_layer.h"
 #endif
@@ -94,8 +95,7 @@ class GridVisual : public QObject {
   rviz::IntProperty max_ms_per_frame_property_;
 
   // The objects implementing the grid visuals
-  using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
-  TimePoint last_update_time_{};
+  Timestamp last_update_time_{};
   std::unordered_map<Index3D, IndexElement, Index3DHash> block_update_queue_;
   using MultiResGrid = std::vector<std::unique_ptr<GridLayer>>;
   std::unordered_map<Index3D, MultiResGrid, Index3DHash> block_grids_;

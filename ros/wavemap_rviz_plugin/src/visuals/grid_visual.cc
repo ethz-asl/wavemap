@@ -118,7 +118,7 @@ void GridVisual::updateMap(bool redraw_all) {
 
     termination_height_property_.setMax(tree_height - 1);
 
-    const TimePoint start_time = std::chrono::steady_clock::now();
+    const Timestamp start_time = Time::now();
 
     if (const auto* hashed_map =
             dynamic_cast<const HashedWaveletOctree*>(map.get());
@@ -259,16 +259,16 @@ void GridVisual::processBlockUpdateQueue() {
     const FloatingPoint alpha = opacity_property_.getFloat();
 
     // Sort the blocks in the queue by their modification time
-    std::map<TimePoint, Index3D> changed_blocks_sorted;
+    std::map<Timestamp, Index3D> changed_blocks_sorted;
     for (const auto& [block_idx, term_height] : block_update_queue_) {
-      const TimePoint& last_modified_time =
+      const Timestamp& last_modified_time =
           hashed_map->getBlock(block_idx).getLastUpdatedStamp();
       changed_blocks_sorted[last_modified_time] = block_idx;
     }
 
     // Redraw blocks, starting with the oldest and
     // stopping after kMaxDrawsPerCycle
-    const auto start_time = std::chrono::steady_clock::now();
+    const auto start_time = Time::now();
     const auto max_time_per_frame =
         std::chrono::milliseconds(max_ms_per_frame_property_.getInt());
     const auto max_end_time = start_time + max_time_per_frame;
@@ -290,7 +290,7 @@ void GridVisual::processBlockUpdateQueue() {
                        cells_per_level, block_grids_[block_idx]);
       block_update_queue_.erase(block_idx);
 
-      const auto current_time = std::chrono::steady_clock::now();
+      const auto current_time = Time::now();
       if (max_end_time < current_time) {
         break;
       }
