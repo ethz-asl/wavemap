@@ -2,7 +2,7 @@ map:
   general:
     world_frame: "odom"
     pruning_period: { seconds: 10.0 }
-    visualization_period: { seconds: 2.0 }
+    publication_period: { seconds: 2.0 }
   data_structure:
     type: "hashed_chunked_wavelet_octree"
     min_cell_width: { meters: 0.02 }

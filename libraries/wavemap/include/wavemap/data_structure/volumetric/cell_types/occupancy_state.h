@@ -22,7 +22,7 @@ class OccupancyState {
   bool isOccupied() const { return observed_ && occupied_; }
 
   static bool isObserved(FloatingPoint cell_value) {
-    return 1e-3 < std::abs(cell_value);
+    return 1e-3f < std::abs(cell_value);
   }
   static OccupancyState fromValue(FloatingPoint cell_value) {
     if (!isObserved(cell_value)) {

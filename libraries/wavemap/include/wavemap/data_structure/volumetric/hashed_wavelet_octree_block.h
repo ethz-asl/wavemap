@@ -7,7 +7,6 @@
 #include "wavemap/data_structure/ndtree/ndtree.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 
 namespace wavemap {
@@ -28,10 +27,7 @@ class HashedWaveletOctreeBlock {
         min_log_odds_(min_log_odds),
         max_log_odds_(max_log_odds) {}
 
-  bool empty() const {
-    return ndtree_.empty() &&
-           !OccupancyState::isObserved(root_scale_coefficient_);
-  }
+  bool empty() const;
   size_t size() const { return ndtree_.size(); }
   void threshold();
   void prune();
