@@ -18,7 +18,7 @@ add_compile_options(-Wno-pedantic -Wno-register)
 catkin_package(CATKIN_DEPENDS wavemap wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include SYSTEM ${catkin_INCLUDE_DIRS})
 
 # This setting causes Qt's "MOC" generation to happen automatically
 set(CMAKE_AUTOMOC ON)

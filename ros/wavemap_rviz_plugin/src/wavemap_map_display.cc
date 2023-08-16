@@ -19,10 +19,9 @@ void WavemapMapDisplay::onInitialize() {
   MFDClass::onInitialize();
   grid_visual_ = std::make_unique<GridVisual>(
       scene_manager_, context_->getViewManager(), scene_node_,
-      &grid_visual_properties_, map_mutex_, map_ptr_);
-  slice_visual_ = std::make_unique<SliceVisual>(scene_manager_, scene_node_,
-                                                &slice_visual_properties_,
-                                                map_mutex_, map_ptr_);
+      &grid_visual_properties_, map_and_mutex_);
+  slice_visual_ = std::make_unique<SliceVisual>(
+      scene_manager_, scene_node_, &slice_visual_properties_, map_and_mutex_);
   request_whole_map_client_ =
       ros::NodeHandle("wavemap_rviz_plugin")
           .serviceClient<std_srvs::Empty>("/wavemap/republish_whole_map");
@@ -70,7 +69,7 @@ void WavemapMapDisplay::processMessage(
   slice_visual_->setFrameOrientation(orientation);
 
   // Update the multi-resolution grid and slice visual's contents if they exist
-  if (std::scoped_lock lock(*map_mutex_); !map_ptr_) {
+  if (std::scoped_lock lock(map_and_mutex_->mutex); !map_and_mutex_->map) {
     return;
   }
 
@@ -80,8 +79,8 @@ void WavemapMapDisplay::processMessage(
 }
 
 void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
-  std::scoped_lock lock(*map_mutex_);
-  if (!convert::rosMsgToMap(map_msg, *map_ptr_)) {
+  std::scoped_lock lock(map_and_mutex_->mutex);
+  if (!convert::rosMsgToMap(map_msg, map_and_mutex_->map)) {
     ROS_WARN("Failed to parse map message.");
   }
 }

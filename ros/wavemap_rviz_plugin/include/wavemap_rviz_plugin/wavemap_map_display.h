@@ -6,9 +6,9 @@
 
 #include <rviz/message_filter_display.h>
 #include <rviz/properties/property.h>
-#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap_msgs/Map.h>
 
+#include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/visuals/grid_visual.h"
 #include "wavemap_rviz_plugin/visuals/slice_visual.h"
 #endif
@@ -43,9 +43,8 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   void processMessage(const wavemap_msgs::Map::ConstPtr& map_msg) override;
 
   // Storage and message parsers for the map
-  const std::shared_ptr<std::mutex> map_mutex_ = std::make_shared<std::mutex>();
-  const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_ =
-      std::make_shared<VolumetricDataStructureBase::Ptr>();
+  const std::shared_ptr<MapAndMutex> map_and_mutex_ =
+      std::make_shared<MapAndMutex>();
   void updateMapFromRosMsg(const wavemap_msgs::Map& map_msg);
 
   // Submenus for each visual's properties

@@ -4,13 +4,11 @@
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
-SliceVisual::SliceVisual(
-    Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
-    rviz::Property* submenu_root_property,
-    const std::shared_ptr<std::mutex> map_mutex,
-    const std::shared_ptr<VolumetricDataStructureBase::Ptr> map)
-    : map_mutex_(map_mutex),
-      map_ptr_(map),
+SliceVisual::SliceVisual(Ogre::SceneManager* scene_manager,
+                         Ogre::SceneNode* parent_node,
+                         rviz::Property* submenu_root_property,
+                         const std::shared_ptr<MapAndMutex> map_and_mutex)
+    : map_and_mutex_(map_and_mutex),
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
@@ -54,8 +52,8 @@ void SliceVisual::update() {
 
   // Get a shared-access lock to the map,
   // to ensure it doesn't get written to while we read it
-  std::scoped_lock lock(*map_mutex_);
-  const VolumetricDataStructureBase::ConstPtr map = *map_ptr_;
+  std::scoped_lock lock(map_and_mutex_->mutex);
+  const VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
     ROS_INFO("Map is empty. Nothing to draw.");
     return;
@@ -69,7 +67,7 @@ void SliceVisual::update() {
       max_occupancy_threshold_property_.getFloat();
   const FloatingPoint slice_height = slice_height_property_.getFloat();
   const FloatingPoint alpha = opacity_property_.getFloat();
-  const int max_height = 14;  // todo
+  const int max_height = map->getTreeHeight();
 
   // Cache the intersecting node z-indices in function of node height
   const NdtreeIndexElement num_levels = max_height + 1;

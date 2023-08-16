@@ -22,6 +22,7 @@
 #include <wavemap/indexing/index_hashes.h>
 #include <wavemap/utils/time.h>
 
+#include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/visuals/grid_layer.h"
 #endif
 
@@ -44,8 +45,7 @@ class GridVisual : public QObject {
   GridVisual(Ogre::SceneManager* scene_manager, rviz::ViewManager* view_manager,
              Ogre::SceneNode* parent_node,
              rviz::Property* submenu_root_property,
-             const std::shared_ptr<std::mutex> map_mutex,
-             const std::shared_ptr<VolumetricDataStructureBase::Ptr> map);
+             const std::shared_ptr<MapAndMutex> map_and_mutex);
 
   // Destructor. Removes the visual elements from the scene.
   virtual ~GridVisual();
@@ -72,8 +72,7 @@ class GridVisual : public QObject {
   ColorMode color_mode_ = ColorMode::kHeight;
 
   // Read only shared pointer to the map, owned by WavemapMapDisplay
-  const std::shared_ptr<std::mutex> map_mutex_;
-  const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_;
+  const std::shared_ptr<MapAndMutex> map_and_mutex_;
 
   // The SceneManager, kept here only so the destructor can ask it to
   // destroy the `frame_node_`.

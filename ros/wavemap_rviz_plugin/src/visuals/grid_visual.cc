@@ -6,13 +6,12 @@
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
-GridVisual::GridVisual(
-    Ogre::SceneManager* scene_manager, rviz::ViewManager* view_manager,
-    Ogre::SceneNode* parent_node, rviz::Property* submenu_root_property,
-    const std::shared_ptr<std::mutex> map_mutex,
-    const std::shared_ptr<VolumetricDataStructureBase::Ptr> map)
-    : map_mutex_(map_mutex),
-      map_ptr_(map),
+GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
+                       rviz::ViewManager* view_manager,
+                       Ogre::SceneNode* parent_node,
+                       rviz::Property* submenu_root_property,
+                       const std::shared_ptr<MapAndMutex> map_and_mutex)
+    : map_and_mutex_(map_and_mutex),
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
@@ -101,8 +100,8 @@ void GridVisual::updateMap(bool redraw_all) {
   // Get a shared-access lock to the map,
   // to ensure it doesn't get written to while we read it
   {
-    std::scoped_lock lock(*map_mutex_);
-    VolumetricDataStructureBase::ConstPtr map = *map_ptr_;
+    std::scoped_lock lock(map_and_mutex_->mutex);
+    VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
     if (!map) {
       return;
     }
@@ -157,8 +156,8 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
 
   // Get a shared-access lock to the map,
   // to ensure it doesn't get written to while we read it
-  std::scoped_lock lock(*map_mutex_);
-  VolumetricDataStructureBase::ConstPtr map = *map_ptr_;
+  std::scoped_lock lock(map_and_mutex_->mutex);
+  VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
     return;
   }
@@ -241,8 +240,8 @@ void GridVisual::processBlockUpdateQueue() {
 
   // Get a shared-access lock to the map,
   // to ensure it doesn't get written to while we read it
-  std::scoped_lock lock(*map_mutex_);
-  VolumetricDataStructureBase::ConstPtr map = *map_ptr_;
+  std::scoped_lock lock(map_and_mutex_->mutex);
+  VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
     return;
   }
