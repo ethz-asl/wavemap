@@ -32,9 +32,9 @@ namespace wavemap::rviz_plugin {
 struct ColorMode : public TypeSelector<ColorMode> {
   using TypeSelector<ColorMode>::TypeSelector;
 
-  enum Id : TypeId { kHeight, kProbability, kConstant };
+  enum Id : TypeId { kHeight, kProbability, kFlat };
 
-  static constexpr std::array names = {"Height", "Probability", "Constant"};
+  static constexpr std::array names = {"Height", "Probability", "Flat"};
 };
 
 // Each instance of MultiResolutionGridVisual represents the visualization of a
@@ -68,9 +68,11 @@ class GridVisual : public QObject {
   void visibilityUpdateCallback();
   void opacityUpdateCallback();
   void colorModeUpdateCallback();
+  void flatColorUpdateCallback();
 
  private:
   ColorMode grid_color_mode_ = ColorMode::kHeight;
+  Ogre::ColourValue grid_flat_color_ = Ogre::ColourValue::Blue;
 
   // Shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<MapAndMutex> map_and_mutex_;
@@ -90,6 +92,7 @@ class GridVisual : public QObject {
   rviz::IntProperty termination_height_property_;
   rviz::FloatProperty opacity_property_;
   rviz::EnumProperty color_mode_property_;
+  rviz::ColorProperty flat_color_property_;
   rviz::Property frame_rate_properties_;
   rviz::IntProperty num_queued_blocks_indicator_;
   rviz::IntProperty max_ms_per_frame_property_;
