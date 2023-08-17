@@ -59,11 +59,11 @@ class VolumetricOctree : public VolumetricDataStructureBase {
 
   typename OctreeIndex::ChildArray getFirstChildIndices() const;
 
-  IndexElement getTreeHeight() const { return config_.tree_height; }
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
   Index3D getMinPossibleIndex() const;
   Index3D getMaxPossibleIndex() const;
+  IndexElement getTreeHeight() const override { return config_.tree_height; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;

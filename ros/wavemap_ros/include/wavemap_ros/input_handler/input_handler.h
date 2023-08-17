@@ -12,9 +12,9 @@
 #include <wavemap/data_structure/pointcloud.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/integrator/integrator_base.h>
+#include <wavemap/utils/stopwatch.h>
 
 #include "wavemap_ros/tf_transformer.h"
-#include "wavemap_ros/utils/timer.h"
 
 namespace wavemap {
 struct InputHandlerType : public TypeSelector<InputHandlerType> {
@@ -80,7 +80,7 @@ class InputHandler {
   const std::string world_frame_;
 
   std::vector<IntegratorBase::Ptr> integrators_;
-  Timer integration_timer_;
+  Stopwatch integration_timer_;
 
   std::shared_ptr<TfTransformer> transformer_;
 

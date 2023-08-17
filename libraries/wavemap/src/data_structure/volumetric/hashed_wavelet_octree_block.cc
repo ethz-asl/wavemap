@@ -17,6 +17,12 @@ void HashedWaveletOctreeBlock::prune() {
   }
 }
 
+void HashedWaveletOctreeBlock::clear() {
+  root_scale_coefficient_ = Coefficients::Scale{};
+  ndtree_.clear();
+  last_updated_stamp_ = Time::now();
+}
+
 void HashedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
                                             FloatingPoint new_value) {
   setNeedsPruning();
@@ -96,7 +102,8 @@ void HashedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
 
 void HashedWaveletOctreeBlock::forEachLeaf(
     const BlockIndex& block_index,
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
+    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn,
+    IndexElement termination_height) const {
   if (empty()) {
     return;
   }
@@ -123,7 +130,8 @@ void HashedWaveletOctreeBlock::forEachLeaf(
           node_index.computeChildIndex(child_idx);
       const FloatingPoint child_scale_coefficient =
           child_scale_coefficients[child_idx];
-      if (node.hasChild(child_idx)) {
+      if (node.hasChild(child_idx) &&
+          termination_height < child_node_index.height) {
         const NodeType& child_node = *node.getChild(child_idx);
         stack.emplace(StackElement{child_node_index, child_node,
                                    child_scale_coefficient});

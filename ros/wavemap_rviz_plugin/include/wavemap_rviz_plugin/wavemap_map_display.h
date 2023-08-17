@@ -5,15 +5,12 @@
 #include <memory>
 
 #include <rviz/message_filter_display.h>
-#include <rviz/properties/color_property.h>
-#include <rviz/properties/float_property.h>
-#include <rviz/properties/int_property.h>
-#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
+#include <rviz/properties/property.h>
 #include <wavemap_msgs/Map.h>
 
-#include "wavemap_rviz_plugin/visuals/mesh_visual.h"
-#include "wavemap_rviz_plugin/visuals/multi_resolution_grid_visual.h"
-#include "wavemap_rviz_plugin/visuals/multi_resolution_slice_visual.h"
+#include "wavemap_rviz_plugin/common.h"
+#include "wavemap_rviz_plugin/visuals/grid_visual.h"
+#include "wavemap_rviz_plugin/visuals/slice_visual.h"
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -27,7 +24,7 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
  public:  // NOLINT
   // Constructor. pluginlib::ClassLoader creates instances by calling
   // the default constructor, so make sure you have one.
-  WavemapMapDisplay();
+  WavemapMapDisplay() = default;
   ~WavemapMapDisplay() override = default;
 
  protected:
@@ -39,38 +36,38 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
  private Q_SLOTS:  // NOLINT
   // These Qt slots get connected to signals indicating changes in the
   // user-editable properties
-  void updateOccupancyThresholdsOrOpacity();
-  void updateMultiResolutionGridVisibility();
-  void updateMultiResolutionSliceVisibility();
-  void updateMultiResolutionSliceHeight();
-  void updateMeshVisibility();
+  void requestWholeMap();
 
  private:
   // Function to handle an incoming ROS message
   void processMessage(const wavemap_msgs::Map::ConstPtr& map_msg) override;
 
   // Storage and message parsers for the map
-  std::mutex map_mutex_;
-  std::shared_ptr<VolumetricDataStructureBase> map_;
+  const std::shared_ptr<MapAndMutex> map_and_mutex_ =
+      std::make_shared<MapAndMutex>();
   void updateMapFromRosMsg(const wavemap_msgs::Map& map_msg);
+
+  // Submenus for each visual's properties
+  rviz::Property grid_visual_properties_{
+      "Render grid", QVariant(), "Properties for the grid visualization.",
+      this};
+  rviz::Property slice_visual_properties_{
+      "Render slice", QVariant(), "Properties for the slice visualization.",
+      this};
+  rviz::BoolProperty request_whole_map_property_{
+      "Request whole map", false,
+      "Send a request to the wavemap_server to republish the whole map, "
+      "instead of only increments.",
+      this, SLOT(requestWholeMap())};
+
+  // Service client to call wavemap's request_whole_map service
+  ros::ServiceClient request_whole_map_client_;
 
   // Storage for the visuals
   // NOTE: Visuals are enabled when they are allocated, and automatically
   //       removed from the scene when destructed.
-  std::unique_ptr<MultiResolutionGridVisual> multi_resolution_grid_visual_;
-  std::unique_ptr<MultiResolutionSliceVisual> multi_resolution_slice_visual_;
-  std::unique_ptr<MeshVisual> mesh_visual_;
-
-  // User-editable property variables
-  std::unique_ptr<rviz::FloatProperty> min_occupancy_threshold_property_;
-  std::unique_ptr<rviz::FloatProperty> max_occupancy_threshold_property_;
-  std::unique_ptr<rviz::BoolProperty>
-      multi_resolution_grid_visibility_property_;
-  std::unique_ptr<rviz::BoolProperty>
-      multi_resolution_slice_visibility_property_;
-  std::unique_ptr<rviz::BoolProperty> mesh_visibility_property_;
-  std::unique_ptr<rviz::FloatProperty> multi_resolution_slice_height_property_;
-  std::unique_ptr<rviz::FloatProperty> opacity_property_;
+  std::unique_ptr<GridVisual> grid_visual_;
+  std::unique_ptr<SliceVisual> slice_visual_;
 };
 }  // namespace wavemap::rviz_plugin
 

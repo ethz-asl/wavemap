@@ -74,6 +74,7 @@ class VolumetricDataStructureBase {
   FloatingPoint getMinLogOdds() const { return config_.min_log_odds; }
   FloatingPoint getMaxLogOdds() const { return config_.max_log_odds; }
   virtual size_t getMemoryUsage() const = 0;
+  virtual IndexElement getTreeHeight() const = 0;
 
   virtual Index3D getMinIndex() const = 0;
   virtual Index3D getMaxIndex() const = 0;

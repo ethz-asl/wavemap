@@ -53,7 +53,7 @@ class WaveletOctree : public VolumetricDataStructureBase {
   explicit WaveletOctree(const WaveletOctreeConfig& config)
       : VolumetricDataStructureBase(config), config_(config.checkValid()) {}
 
-  bool empty() const override { return ndtree_.empty(); }
+  bool empty() const override;
   size_t size() const override { return ndtree_.size(); }
   void threshold() override;
   void prune() override;
@@ -65,7 +65,8 @@ class WaveletOctree : public VolumetricDataStructureBase {
   Index3D getMaxIndex() const override;
   Index3D getMinPossibleIndex() const;
   Index3D getMaxPossibleIndex() const;
-  IndexElement getTreeHeight() const { return config_.tree_height; }
+  IndexElement getTreeHeight() const override { return config_.tree_height; }
+  const WaveletOctreeConfig& getConfig() { return config_; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;

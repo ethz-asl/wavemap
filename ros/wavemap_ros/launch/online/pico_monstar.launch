@@ -82,7 +82,4 @@
   <!-- Run wavemap -->
   <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
            pass_all_args="true"/>
-
-<!--  <node pkg="rosbag" type="record" name="rosbag_record" output="screen"-->
-<!--        args="/wavemap/depth_cam_input /laserMapping/imu_forward_prop -O /home/victor/catkin_ws/lidar_align_pico_monstar"/>-->
 </launch>

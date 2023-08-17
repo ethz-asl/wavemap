@@ -2,6 +2,9 @@
 Changelog for package wavemap_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2023-08-17)
+------------------
+
 1.2.0 (2023-08-11)
 ------------------
 * Add instructions on how to use Docker containers

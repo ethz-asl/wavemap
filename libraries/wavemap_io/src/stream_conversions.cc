@@ -234,9 +234,11 @@ bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
     // Deserialize the block header, containing its position and scale coeff.
     const auto block_header =
         streamable::HashedWaveletOctreeBlockHeader::read(istream);
-    auto& block = map->getOrAllocateBlock({block_header.root_node_offset.x,
-                                           block_header.root_node_offset.y,
-                                           block_header.root_node_offset.z});
+    const Index3D block_index{block_header.root_node_offset.x,
+                              block_header.root_node_offset.y,
+                              block_header.root_node_offset.z};
+    auto& block = map->getOrAllocateBlock(block_index);
+
     block.getRootScale() = block_header.root_node_scale_coefficient;
 
     // Deserialize the block's remaining data into octree nodes
@@ -373,7 +375,6 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
               (1 << relative_child_idx);
         }
       }
-
       streamable_node.write(ostream);
     }
   }

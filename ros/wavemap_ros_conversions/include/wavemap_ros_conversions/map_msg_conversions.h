@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <stack>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include <ros/time.h>
@@ -14,38 +15,27 @@
 #include <wavemap_msgs/Map.h>
 
 namespace wavemap::convert {
-wavemap_msgs::Map mapToRosMsg(const VolumetricDataStructureBase::ConstPtr& map,
-                              const std::string& frame_id,
-                              const ros::Time& stamp,
-                              FloatingPoint ignore_blocks_older_than = -1.f);
-
-wavemap_msgs::Map mapToRosMsg(const VolumetricOctree& map,
-                              const std::string& frame_id,
-                              const ros::Time& stamp);
-
-wavemap_msgs::Map mapToRosMsg(const WaveletOctree& map,
-                              const std::string& frame_id,
-                              const ros::Time& stamp);
-
-wavemap_msgs::Map mapToRosMsg(const HashedWaveletOctree& map,
-                              const std::string& frame_id,
-                              const ros::Time& stamp,
-                              FloatingPoint ignore_blocks_older_than = -1.f);
-
-wavemap_msgs::Map mapToRosMsg(const HashedChunkedWaveletOctree& map,
-                              const std::string& frame_id,
-                              const ros::Time& stamp,
-                              FloatingPoint ignore_blocks_older_than = -1.f);
-
-void rosMsgToMap(const wavemap_msgs::Map& map_msg,
+bool mapToRosMsg(const VolumetricDataStructureBase& map,
+                 const std::string& frame_id, const ros::Time& stamp,
+                 wavemap_msgs::Map& msg);
+bool rosMsgToMap(const wavemap_msgs::Map& msg,
                  VolumetricDataStructureBase::Ptr& map);
 
-void rosMsgToMap(const wavemap_msgs::Map& map_msg, VolumetricOctree::Ptr& map);
+void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg);
+void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
+                 WaveletOctree::Ptr& map);
 
-void rosMsgToMap(const wavemap_msgs::Map& map_msg, WaveletOctree::Ptr& map);
-
-void rosMsgToMap(const wavemap_msgs::Map& map_msg,
+void mapToRosMsg(const HashedWaveletOctree& map,
+                 wavemap_msgs::HashedWaveletOctree& msg,
+                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
+                     include_blocks = std::nullopt);
+void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
                  HashedWaveletOctree::Ptr& map);
+
+void mapToRosMsg(const HashedChunkedWaveletOctree& map,
+                 wavemap_msgs::HashedWaveletOctree& msg,
+                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
+                     include_blocks = std::nullopt);
 }  // namespace wavemap::convert
 
 #endif  // WAVEMAP_ROS_CONVERSIONS_MAP_MSG_CONVERSIONS_H_

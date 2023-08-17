@@ -1,11 +1,20 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_IMPL_HASHED_WAVELET_OCTREE_BLOCK_INL_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_IMPL_HASHED_WAVELET_OCTREE_BLOCK_INL_H_
 
+#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
+
 namespace wavemap {
+inline bool HashedWaveletOctreeBlock::empty() const {
+  // Check if all cells in the block are equal to zero
+  // NOTE: Aside from checking whether the block contains no detail
+  //       coefficients, we also need to check whether its scale coefficient
+  //       (average value over the whole block) is zero.
+  return ndtree_.empty() &&
+         !OccupancyState::isObserved(root_scale_coefficient_);
+}
+
 inline FloatingPoint HashedWaveletOctreeBlock::getTimeSinceLastUpdated() const {
-  return (std::chrono::duration<FloatingPoint>(Clock::now() -
-                                               last_updated_stamp_))
-      .count();
+  return to_seconds<FloatingPoint>(Time::now() - last_updated_stamp_);
 }
 
 inline FloatingPoint HashedWaveletOctreeBlock::getCellValue(

@@ -1,7 +1,22 @@
 <launch>
-  <!-- General arguments -->
+  <!-- Dataset params -->
+  <arg name="only_first_rosbag"
+       default="false"
+       doc="If true, replay only the first the rosbag in the dataset. If false, replay everything."/>
+  <arg name="odom_rosbag" default=""
+       doc="Path to the rosbag containing odometry, to resolve the LiDAR poses and undistort the pointclouds.
+            Leave blank to run FastLIO2 odometry."/>
+  <arg name="first_rosbag" default=""
+       doc="Path to the first rosbag of the dataset. If only_first_rosbag:=true, only this bag will be processed."/>
+  <arg name="remaining_rosbags" default=""
+       doc="Path to all remaining rosbags."/>
+
+  <!-- Wavemap params -->
+  <arg name="param_file"
+       default="$(find wavemap_ros)/config/ouster_os0.yaml"
+       doc="Name of the file from which to read wavemap's server params."/>
   <arg name="use_batch_mode"
-       default="$(eval arg('odom_rosbag') is not '')"
+       default="$(eval arg('odom_rosbag') != '')"
        doc="Whether to process the rosbag in batch mode or replay the rosbag.
             Note that batch mode can only be used if a rosbag with pre-processed odometry is available."/>
 
@@ -20,7 +35,7 @@
 
   <!-- Odometry -->
   <!-- Run FastLIO2 unless a rosbag with pre-recorded odometry is available -->
-  <group if="$(eval arg('odom_rosbag') is '')">
+  <group if="$(eval arg('odom_rosbag') == '')">
     <rosparam command="load"
               file="$(find wavemap_ros)/config/other_packages/fast_lio/ouster_os0.yaml"/>
     <param name="feature_extract_enable" type="bool" value="0"/>

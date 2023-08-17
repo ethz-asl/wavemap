@@ -18,20 +18,23 @@ add_compile_options(-Wno-pedantic -Wno-register)
 catkin_package(CATKIN_DEPENDS wavemap wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include SYSTEM ${catkin_INCLUDE_DIRS})
 
 # This setting causes Qt's "MOC" generation to happen automatically
 set(CMAKE_AUTOMOC ON)
 
 # This plugin includes Qt widgets, so we must include Qt.
 # We'll use the version that rviz used so they are compatible.
+set(HEADERS_TO_MOC
+    include/wavemap_rviz_plugin/wavemap_map_display.h
+    include/wavemap_rviz_plugin/visuals/grid_visual.h
+    include/wavemap_rviz_plugin/visuals/slice_visual.h)
 if (rviz_QT_VERSION VERSION_LESS "5")
   message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
   find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
   # Pull in all required include dirs, define QT_LIBRARIES, etc.
   include(${QT_USE_FILE})
   # Generate QT's MOC files for our project's headers
-  set(HEADERS_TO_MOC include/wavemap_rviz_plugin/wavemap_map_display.h)
   qt4_wrap_cpp(QT_MOC ${HEADERS_TO_MOC})
 else ()
   message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
@@ -40,7 +43,6 @@ else ()
   # all required dependencies
   set(QT_LIBRARIES Qt5::Widgets)
   # Generate QT's MOC files for our project's headers
-  set(HEADERS_TO_MOC include/wavemap_rviz_plugin/wavemap_map_display.h)
   QT5_WRAP_CPP(QT_MOC ${HEADERS_TO_MOC})
 endif ()
 
@@ -50,10 +52,11 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 # Libraries
 add_library(${PROJECT_NAME}
-    src/visuals/mesh_visual.cc
-    src/visuals/multi_resolution_grid_visual.cc
-    src/visuals/multi_resolution_slice_visual.cc
-    src/marching_cubes.cc
+    src/utils/color_conversions.cc
+    src/utils/listeners.cc
+    src/visuals/grid_visual.cc
+    src/visuals/slice_visual.cc
+    src/visuals/grid_layer.cpp
     src/wavemap_map_display.cc
     ${QT_MOC})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})

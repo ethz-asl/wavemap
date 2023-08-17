@@ -16,11 +16,11 @@ struct ConfigBase {
   //       But similar syntax can still be used by manually defining
   //       constructors in the derived class.
 
+  // Force the derived config classes to specify an array describing their
+  // members for introspection purposes.
+  // NOTE: This static assert has to be placed in a method that's guaranteed
+  //       to be evaluated by the compiler, making the dtor is a good option.
   virtual ~ConfigBase() {
-    // Force the derived config classes to specify an array describing their
-    // members for introspection purposes.
-    // NOTE: This static assert has to be placed in a method that's guaranteed
-    //       to be evaluated by the compiler, making the dtor is a good option.
     static_assert(0 < num_members,
                   "Derived config type must specify how many members it has by "
                   "setting ConfigBase's num_members template parameter.");
@@ -35,7 +35,7 @@ struct ConfigBase {
                   "variables.");
   }
 
-  // TODO(victorr): Clean this up
+  // Setup the introspective member metadata map
   using MemberTypes = param::PrimitiveValueTypes::Append<CustomMemberTypes...>;
   using MemberPointer =
       inject_type_list_as_member_ptrs_t<std::variant, ConfigDerivedT,
@@ -48,13 +48,31 @@ struct ConfigBase {
   static constexpr size_t kNumMembers = num_members;
   using MemberMap = const std::array<MemberMetadata, num_members>;
 
+  // Helper methods to check if the config is valid
   virtual bool isValid(bool verbose) const = 0;
   const ConfigDerivedT& checkValid() const {
     CHECK(isValid(true));
     return *static_cast<const ConfigDerivedT*>(this);
   }
 
+  // Load config from param map
   static ConfigDerivedT from(const param::Map& params);
+
+  // Comparison operators
+  friend bool operator==(const ConfigDerivedT& lhs, const ConfigDerivedT& rhs) {
+    auto is_equal = [&lhs, &rhs](auto&& member_ptr) -> bool {
+      return lhs.*member_ptr == rhs.*member_ptr;
+    };
+    for (const auto& member_metadata : ConfigDerivedT::memberMap) {
+      if (!std::visit(is_equal, member_metadata.ptr)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  friend bool operator!=(const ConfigDerivedT& lhs, const ConfigDerivedT& rhs) {
+    return !(lhs == rhs);
+  }
 
  private:
   // Force structs that use ConfigBase (by deriving from it) to pass the right

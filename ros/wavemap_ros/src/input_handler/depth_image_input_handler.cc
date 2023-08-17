@@ -111,9 +111,9 @@ void DepthImageInputHandler::processQueue() {
     }
     integration_timer_.stop();
     ROS_INFO_STREAM("Integrated new depth image in "
-                    << integration_timer_.getLastEpisodeWallTime()
+                    << integration_timer_.getLastEpisodeDuration()
                     << "s. Total integration time: "
-                    << integration_timer_.getTotalWallTime() << "s.");
+                    << integration_timer_.getTotalDuration() << "s.");
 
     // Publish debugging visualizations
     if (shouldPublishReprojectedPointcloud()) {

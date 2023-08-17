@@ -5,7 +5,7 @@ general:
 map:
   thresholding_period: { seconds: 2.0 }
   pruning_period: { seconds: 10.0 }
-  visualization_period: { seconds: 2.0 }
+  publication_period: { seconds: 2.0 }
   autosave_period: { seconds: -1.0 }
   autosave_path: ""
   data_structure:
@@ -20,7 +20,7 @@ inputs:
     depth_scale_factor: 0.001
     topic_queue_length: 1
     max_wait_for_pose: { seconds: 1.0 }
-    time_delay: { seconds: -0.025 }
+    time_offset: { seconds: -0.025 }
     integrators:
       - integration_method:
           type: "hashed_wavelet_integrator"

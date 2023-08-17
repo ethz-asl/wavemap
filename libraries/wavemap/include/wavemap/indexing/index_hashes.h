@@ -17,6 +17,8 @@ struct IndexHash {
                                  index.data(), 0u);
   }
 };
+using Index2DHash = IndexHash<2>;
+using Index3DHash = IndexHash<3>;
 
 template <int dim>
 struct NdtreeIndexHash {
@@ -30,6 +32,9 @@ struct NdtreeIndexHash {
            coefficients.back() * index.height;
   }
 };
+using BinaryTreeIndexHash = NdtreeIndexHash<1>;
+using QuadtreeIndexHash = NdtreeIndexHash<2>;
+using OctreeIndexHash = NdtreeIndexHash<3>;
 }  // namespace wavemap
 
 #endif  // WAVEMAP_INDEXING_INDEX_HASHES_H_

@@ -73,11 +73,12 @@ class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
 
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
-  IndexElement getTreeHeight() const { return config_.tree_height; }
+  IndexElement getTreeHeight() const override { return config_.tree_height; }
   IndexElement getChunkHeight() const { return Block::kChunkHeight; }
   Index3D getBlockSize() const {
     return Index3D::Constant(cells_per_block_side_);
   }
+  const HashedChunkedWaveletOctreeConfig& getConfig() { return config_; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;

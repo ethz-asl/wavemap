@@ -2,6 +2,9 @@
 Changelog for package wavemap_all
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2023-08-17)
+------------------
+
 1.2.0 (2023-08-11)
 ------------------
 * Move package to improve repo structure
