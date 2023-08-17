@@ -2,8 +2,8 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2023-08-17)
+------------------
 * Standardize time definitions
 * Add option to limit maximum resolution in forEachLeaf visitor
 * Also consider the root_scale_coefficient in block.empty() checks

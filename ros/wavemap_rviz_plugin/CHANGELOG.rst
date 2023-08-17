@@ -2,8 +2,8 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.0 (2023-08-17)
+------------------
 New features:
 
 * Major refactoring of Rviz plugin architecture and UI
