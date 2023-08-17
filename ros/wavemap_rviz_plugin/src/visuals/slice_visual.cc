@@ -7,8 +7,8 @@ namespace wavemap::rviz_plugin {
 SliceVisual::SliceVisual(Ogre::SceneManager* scene_manager,
                          Ogre::SceneNode* parent_node,
                          rviz::Property* submenu_root_property,
-                         const std::shared_ptr<MapAndMutex> map_and_mutex)
-    : map_and_mutex_(map_and_mutex),
+                         std::shared_ptr<MapAndMutex> map_and_mutex)
+    : map_and_mutex_(std::move(map_and_mutex)),
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
@@ -54,8 +54,7 @@ void SliceVisual::update() {
     return;
   }
 
-  // Get a shared-access lock to the map,
-  // to ensure it doesn't get written to while we read it
+  // Lock the map mutex, to ensure it doesn't get written to while we read it
   std::scoped_lock lock(map_and_mutex_->mutex);
   const VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {

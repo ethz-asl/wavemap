@@ -10,8 +10,8 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
                        rviz::ViewManager* view_manager,
                        Ogre::SceneNode* parent_node,
                        rviz::Property* submenu_root_property,
-                       const std::shared_ptr<MapAndMutex> map_and_mutex)
-    : map_and_mutex_(map_and_mutex),
+                       std::shared_ptr<MapAndMutex> map_and_mutex)
+    : map_and_mutex_(std::move(map_and_mutex)),
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
@@ -48,33 +48,22 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
           "Limit update time per frame in milliseconds, to maintain "
           "a reasonable frame rate when maps are large.",
           &frame_rate_properties_) {
-  // Initialize the color property menu
+  // Initialize the property menu
   color_mode_property_.clearOptions();
   for (const auto& name : ColorMode::names) {
     color_mode_property_.addOption(name);
   }
   termination_height_property_.setMin(0);
-  color_mode_property_.setStringStd(color_mode_.toStr());
+  color_mode_property_.setStringStd(grid_color_mode_.toStr());
   num_queued_blocks_indicator_.setReadOnly(true);
   max_ms_per_frame_property_.setMin(0);
 
-  // Initialize the camera tracker
-  view_manager->getRenderPanel()->getViewport()->addListener(
-      new ViewportCamChangedListener([this](Ogre::Viewport* viewport) {
-        if (Ogre::Camera* new_cam = viewport->getCamera(); new_cam) {
-          new_cam->addListener(
-              new CamPrerenderListener([this](Ogre::Camera* active_cam) {
-                if (force_lod_update_ || lod_update_distance_threshold_ <
-                                             active_cam->getPosition().distance(
-                                                 last_lod_update_position_)) {
-                  updateLOD(active_cam);
-                  last_lod_update_position_ = active_cam->getPosition();
-                  force_lod_update_ = false;
-                }
-                processBlockUpdateQueue();
-              }));
-        }
-      }));
+  // Initialize the camera tracker used to update the LOD levels for each block
+  prerender_listener_ = std::make_unique<ViewportPrerenderListener>(
+      view_manager->getRenderPanel()->getViewport(),
+      [this](Ogre::Camera* active_camera) {
+        prerenderCallback(active_camera);
+      });
 
   // Initialize the grid cell material
   // NOTE: Certain properties, such as alpha transparency, are set on a
@@ -101,8 +90,7 @@ void GridVisual::updateMap(bool redraw_all) {
     return;
   }
 
-  // Get a shared-access lock to the map,
-  // to ensure it doesn't get written to while we read it
+  // Lock the map mutex, to ensure it doesn't get written to while we read it
   {
     std::scoped_lock lock(map_and_mutex_->mutex);
     VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
@@ -119,10 +107,14 @@ void GridVisual::updateMap(bool redraw_all) {
         max_occupancy_threshold_property_.getFloat();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
-    termination_height_property_.setMax(tree_height - 1);
+    // Limit the max selectable termination height to the height of the tree
+    termination_height_property_.setMax(tree_height);
 
+    // Start tracking time, s.t. we can later check how long we've been working
+    // on the current cycle's updates
     const Timestamp start_time = Time::now();
 
+    // If the map is of hash-map type, process it using the block update queue.
     if (const auto* hashed_map =
             dynamic_cast<const HashedWaveletOctree*>(map.get());
         hashed_map) {
@@ -132,11 +124,13 @@ void GridVisual::updateMap(bool redraw_all) {
         // the queue. Since the queue is stored as a set, there are no
         // duplicates.
         if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
-          force_lod_update_ = true;
           block_update_queue_[block_idx] = min_termination_height;
+          // Force the LODs to be updated, s.t. the new blocks directly get
+          // drawn at the right max resolution
+          force_lod_update_ = true;
         }
       }
-    } else {
+    } else {  // Otherwise, draw the whole octree at once (legacy support)
       const IndexElement num_levels = tree_height + 1;
       GridLayerList cells_per_level(num_levels);
       map->forEachLeaf([&](const auto& cell_index, auto cell_log_odds) {
@@ -145,10 +139,12 @@ void GridVisual::updateMap(bool redraw_all) {
                                 cells_per_level);
       });
       const Index3D root_idx = Index3D::Zero();
-      drawMultiResGrid(tree_height, min_cell_width, root_idx, alpha,
-                       cells_per_level, block_grids_[root_idx]);
+      drawMultiResolutionGrid(tree_height, min_cell_width, root_idx, alpha,
+                              cells_per_level, block_grids_[root_idx]);
     }
 
+    // Store the last update time,
+    // used to check for blocks that changed since the last update
     last_update_time_ = start_time;
   }
 }
@@ -158,8 +154,7 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
     return;
   }
 
-  // Get a shared-access lock to the map,
-  // to ensure it doesn't get written to while we read it
+  // Lock to the map mutex, to ensure it doesn't get written to while we read it
   std::scoped_lock lock(map_and_mutex_->mutex);
   VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
@@ -167,31 +162,34 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
   }
 
   const IndexElement tree_height = map->getTreeHeight();
-  const Point3D cam_position = {cam->getDerivedPosition().x,
-                                cam->getDerivedPosition().y,
-                                cam->getDerivedPosition().z};
+  const Point3D camera_position = {cam->getDerivedPosition().x,
+                                   cam->getDerivedPosition().y,
+                                   cam->getDerivedPosition().z};
 
+  // Cast the map to its derived hashed map type
+  // NOTE: If the cast fails, we don't need to do anything as non-hashed maps
+  //       are drawn without LODs or the block update queue.
   if (const auto* hashed_map =
           dynamic_cast<const HashedWaveletOctree*>(map.get());
       hashed_map) {
     const auto min_termination_height = termination_height_property_.getInt();
     for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
+      // Compute the recommended LOD level height
       const OctreeIndex block_node_idx{tree_height, block_idx};
       const AABB block_aabb =
           convert::nodeIndexToAABB(block_node_idx, map->getMinCellWidth());
       const FloatingPoint distance_to_cam =
-          block_aabb.minDistanceTo(cam_position);
-
-      constexpr FloatingPoint kFactor = 0.002f;
-      const auto term_height_recommended = std::clamp(
-          static_cast<IndexElement>(
-              std::floor(std::log2(1.f + kFactor * distance_to_cam /
-                                             hashed_map->getMinCellWidth()))),
+          block_aabb.minDistanceTo(camera_position);
+      const auto term_height_recommended = computeRecommendedBlockLodHeight(
+          distance_to_cam, hashed_map->getMinCellWidth(),
           min_termination_height, tree_height - 1);
 
+      // If the block is already queued to be updated, set the recommended level
       if (block_update_queue_.count(block_idx)) {
         block_update_queue_[block_idx] = term_height_recommended;
       } else if (block_grids_.count(block_idx)) {
+        // Otherwise, only add the block to the update queue if the recommended
+        // level is higher than what's currently drawn or significantly lower
         const IndexElement term_height_current =
             tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
         if (term_height_current < min_termination_height ||
@@ -202,6 +200,17 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
       }
     }
   }
+}
+
+NdtreeIndexElement GridVisual::computeRecommendedBlockLodHeight(
+    FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
+    NdtreeIndexElement min_height, NdtreeIndexElement max_height) {
+  // Compute the recommended level based on the size of the cells projected into
+  // the image plane
+  constexpr FloatingPoint kFactor = 0.002f;
+  return std::clamp(static_cast<IndexElement>(std::floor(std::log2(
+                        1.f + kFactor * distance_to_cam / min_cell_width))),
+                    min_height, max_height);
 }
 
 // Position and orientation are passed through to the SceneNode
@@ -230,10 +239,91 @@ void GridVisual::opacityUpdateCallback() {
 }
 
 void GridVisual::colorModeUpdateCallback() {
-  const ColorMode old_color_mode = color_mode_;
-  color_mode_ = ColorMode(color_mode_property_.getStdString());
-  if (color_mode_ != old_color_mode) {
+  const ColorMode old_color_mode = grid_color_mode_;
+  grid_color_mode_ = ColorMode(color_mode_property_.getStdString());
+  if (grid_color_mode_ != old_color_mode) {
     updateMap(true);
+  }
+}
+
+void GridVisual::getLeafCentersAndColors(int tree_height,
+                                         FloatingPoint min_cell_width,
+                                         FloatingPoint min_occupancy_log_odds,
+                                         FloatingPoint max_occupancy_log_odds,
+                                         const OctreeIndex& cell_index,
+                                         FloatingPoint cell_log_odds,
+                                         GridLayerList& cells_per_level) {
+  // Skip cells that don't meet the occupancy threshold
+  if (cell_log_odds < min_occupancy_log_odds ||
+      max_occupancy_log_odds < cell_log_odds) {
+    return;
+  }
+
+  // Determine the cell's position
+  const IndexElement depth = tree_height - cell_index.height;
+  CHECK_GE(depth, 0);
+  CHECK_LT(depth, cells_per_level.size());
+  const Point3D cell_center =
+      convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
+
+  // Create the cube at the right scale
+  auto& point = cells_per_level[depth].emplace_back();
+  point.center.x = cell_center[0];
+  point.center.y = cell_center[1];
+  point.center.z = cell_center[2];
+
+  // Set the cube's color
+  switch (grid_color_mode_.toTypeId()) {
+    case ColorMode::kConstant:
+      point.color.a = 1.f;
+      point.color.r = 0.f;
+      point.color.g = 0.f;
+      point.color.b = 0.f;
+      break;
+    case ColorMode::kProbability:
+      point.color = logOddsToColor(cell_log_odds);
+      break;
+    case ColorMode::kHeight:
+    default:
+      point.color = positionToColor(cell_center);
+      break;
+  }
+}
+
+void GridVisual::drawMultiResolutionGrid(IndexElement tree_height,
+                                         FloatingPoint min_cell_width,
+                                         const Index3D& block_index,
+                                         FloatingPoint alpha,
+                                         GridLayerList& cells_per_level,
+                                         MultiResGrid& multi_res_grid) {
+  // Add a grid layer for each scale level
+  const std::string prefix =
+      "grid_" + std::to_string(Index3DHash()(block_index)) + "_";
+  for (size_t depth = 0; depth < cells_per_level.size(); ++depth) {
+    // Allocate the pointcloud representing this grid level if needed
+    if (multi_res_grid.size() <= depth) {
+      const Ogre::String name = prefix + std::to_string(depth);
+      const IndexElement height = tree_height - static_cast<int>(depth);
+      const FloatingPoint cell_width =
+          convert::heightToCellWidth(min_cell_width, height);
+      auto& grid_level = multi_res_grid.emplace_back(
+          std::make_unique<GridLayer>(grid_cell_material_));
+      grid_level->setName(name);
+      grid_level->setCellDimensions(cell_width, cell_width, cell_width);
+      grid_level->setAlpha(alpha, false);
+      frame_node_->attachObject(grid_level.get());
+    }
+    // Update the cells
+    auto& grid_level = multi_res_grid[depth];
+    grid_level->clear();
+    const auto& cells_at_level = cells_per_level[depth];
+    grid_level->setCells(cells_at_level);
+  }
+  // Deallocate levels that are no longer needed
+  for (size_t depth = multi_res_grid.size() - 1;
+       cells_per_level.size() <= depth; --depth) {
+    frame_node_->detachObject(multi_res_grid[depth].get());
+    multi_res_grid.pop_back();
   }
 }
 
@@ -289,8 +379,8 @@ void GridVisual::processBlockUpdateQueue() {
                                     cells_per_level);
           },
           term_height);
-      drawMultiResGrid(tree_height, min_cell_width, block_idx, alpha,
-                       cells_per_level, block_grids_[block_idx]);
+      drawMultiResolutionGrid(tree_height, min_cell_width, block_idx, alpha,
+                              cells_per_level, block_grids_[block_idx]);
       block_update_queue_.erase(block_idx);
 
       const auto current_time = Time::now();
@@ -304,164 +394,19 @@ void GridVisual::processBlockUpdateQueue() {
       static_cast<int>(block_update_queue_.size()));
 }
 
-void GridVisual::getLeafCentersAndColors(int tree_height,
-                                         FloatingPoint min_cell_width,
-                                         FloatingPoint min_occupancy_log_odds,
-                                         FloatingPoint max_occupancy_log_odds,
-                                         const OctreeIndex& cell_index,
-                                         FloatingPoint cell_log_odds,
-                                         GridLayerList& cells_per_level) {
-  // Skip cells that don't meet the occupancy threshold
-  if (cell_log_odds < min_occupancy_log_odds ||
-      max_occupancy_log_odds < cell_log_odds) {
-    return;
+void GridVisual::prerenderCallback(Ogre::Camera* active_camera) {
+  // Recompute the desired LOD level for each block in the map if
+  // the camera moved significantly or an update was requested explicitly
+  const bool camera_moved =
+      lod_update_distance_threshold_ < active_camera->getPosition().distance(
+                                           camera_position_at_last_lod_update_);
+  if (force_lod_update_ || camera_moved) {
+    updateLOD(active_camera);
+    camera_position_at_last_lod_update_ = active_camera->getPosition();
+    force_lod_update_ = false;
   }
 
-  // Determine the cell's position
-  const IndexElement depth = tree_height - cell_index.height;
-  CHECK_GE(depth, 0);
-  CHECK_LT(depth, cells_per_level.size());
-  const Point3D cell_center =
-      convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
-
-  // Create the cube at the right scale
-  auto& point = cells_per_level[depth].emplace_back();
-  point.center.x = cell_center[0];
-  point.center.y = cell_center[1];
-  point.center.z = cell_center[2];
-
-  // Set the cube's color
-  switch (color_mode_.toTypeId()) {
-    case ColorMode::kConstant:
-      point.color.a = 1.f;
-      point.color.r = 0.f;
-      point.color.g = 0.f;
-      point.color.b = 0.f;
-      break;
-    case ColorMode::kProbability:
-      point.color = logOddsToColor(cell_log_odds);
-      break;
-    case ColorMode::kHeight:
-    default:
-      point.color = positionToColor(cell_center);
-      break;
-  }
-}
-
-void GridVisual::drawMultiResGrid(IndexElement tree_height,
-                                  FloatingPoint min_cell_width,
-                                  const Index3D& block_index,
-                                  FloatingPoint alpha,
-                                  GridLayerList& cells_per_level,
-                                  MultiResGrid& multi_res_grid) {
-  // Add a grid layer for each scale level
-  const std::string prefix =
-      "grid_" + std::to_string(Index3DHash()(block_index)) + "_";
-  for (size_t depth = 0; depth < cells_per_level.size(); ++depth) {
-    // Allocate the pointcloud representing this grid level if needed
-    if (multi_res_grid.size() <= depth) {
-      const Ogre::String name = prefix + std::to_string(depth);
-      const IndexElement height = tree_height - static_cast<int>(depth);
-      const FloatingPoint cell_width =
-          convert::heightToCellWidth(min_cell_width, height);
-      auto& grid_level = multi_res_grid.emplace_back(
-          std::make_unique<GridLayer>(grid_cell_material_));
-      grid_level->setName(name);
-      grid_level->setCellDimensions(cell_width, cell_width, cell_width);
-      grid_level->setAlpha(alpha, false);
-      frame_node_->attachObject(grid_level.get());
-    }
-    // Update the points
-    auto& grid_level = multi_res_grid[depth];
-    grid_level->clear();
-    const auto& cells_at_level = cells_per_level[depth];
-    grid_level->setCells(cells_at_level);
-  }
-  // Deallocate levels that are no longer needed
-  for (size_t depth = multi_res_grid.size() - 1;
-       cells_per_level.size() <= depth; --depth) {
-    frame_node_->detachObject(multi_res_grid[depth].get());
-    multi_res_grid.pop_back();
-  }
-}
-
-Ogre::ColourValue GridVisual::logOddsToColor(FloatingPoint log_odds) {
-  Ogre::ColourValue color;
-  color.a = 1.f;
-
-  const FloatingPoint cell_odds = std::exp(log_odds);
-  const FloatingPoint cell_prob = cell_odds / (1.f + cell_odds);
-  const FloatingPoint cell_free_prob = 1.f - cell_prob;
-  color.r = cell_free_prob;
-  color.g = cell_free_prob;
-  color.b = cell_free_prob;
-  return color;
-}
-
-// NOTE: This coloring code is based on octomap_mapping, see:
-//       https://github.com/OctoMap/octomap_mapping/blob/kinetic-devel/
-//       octomap_server/src/OctomapServer.cpp#L1234
-Ogre::ColourValue GridVisual::positionToColor(const Point3D& center_point) {
-  Ogre::ColourValue color;
-  color.a = 1.0;
-
-  // Blend over HSV-values (more colors)
-  constexpr FloatingPoint kScaling = 0.2f;
-  constexpr FloatingPoint kOffset = -2.f;
-  FloatingPoint h = kScaling * center_point.z() + kOffset;
-  h -= std::floor(h);
-  h *= 6;
-  const FloatingPoint s = 1.f;
-  const FloatingPoint v = 1.f;
-
-  const int band_idx = std::floor(h);
-  FloatingPoint f = h - static_cast<FloatingPoint>(band_idx);
-  // Flip f if the band index is even
-  if (!(band_idx & 1)) {
-    f = 1.f - f;
-  }
-  const FloatingPoint m = v * (1.f - s);
-  const FloatingPoint n = v * (1.f - s * f);
-
-  switch (band_idx) {
-    case 6:
-    case 0:
-      color.r = v;
-      color.g = n;
-      color.b = m;
-      break;
-    case 1:
-      color.r = n;
-      color.g = v;
-      color.b = m;
-      break;
-    case 2:
-      color.r = m;
-      color.g = v;
-      color.b = n;
-      break;
-    case 3:
-      color.r = m;
-      color.g = n;
-      color.b = v;
-      break;
-    case 4:
-      color.r = n;
-      color.g = m;
-      color.b = v;
-      break;
-    case 5:
-      color.r = v;
-      color.g = m;
-      color.b = n;
-      break;
-    default:
-      color.r = 1;
-      color.g = 0.5;
-      color.b = 0.5;
-      break;
-  }
-
-  return color;
+  // Process (parts of) the block update queue at each prerender frame
+  processBlockUpdateQueue();
 }
 }  // namespace wavemap::rviz_plugin

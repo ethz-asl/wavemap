@@ -30,7 +30,7 @@ class SliceVisual : public QObject {
   // scene, in an unconfigured state.
   SliceVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
               rviz::Property* submenu_root_property,
-              const std::shared_ptr<MapAndMutex> map_and_mutex);
+              std::shared_ptr<MapAndMutex> map_and_mutex);
 
   // Destructor. Removes the visual elements from the scene.
   ~SliceVisual() override;
@@ -49,7 +49,7 @@ class SliceVisual : public QObject {
   void opacityUpdateCallback();
 
  private:
-  // Read only shared pointer to the map, owned by WavemapMapDisplay
+  // Shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<MapAndMutex> map_and_mutex_;
 
   // The objects implementing the grid visuals

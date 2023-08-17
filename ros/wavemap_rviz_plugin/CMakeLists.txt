@@ -52,6 +52,8 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 # Libraries
 add_library(${PROJECT_NAME}
+    src/utils/color_conversions.cc
+    src/utils/listeners.cc
     src/visuals/grid_visual.cc
     src/visuals/slice_visual.cc
     src/visuals/grid_layer.cpp

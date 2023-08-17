@@ -67,19 +67,25 @@ class WavemapServer {
   void subscribeToTopics(ros::NodeHandle& nh);
 
   void advertiseTopics(ros::NodeHandle& nh_private);
-
   ros::Publisher map_pub_;
-
-  Timestamp last_map_pub_time_;
-  std::unordered_set<Index3D, Index3DHash> block_publishing_queue_;
-  template <typename HashedMapT>
-  void publishHashedMap(HashedMapT* hashed_map,
-                        bool republish_whole_map = false);
 
   void advertiseServices(ros::NodeHandle& nh_private);
   ros::ServiceServer republish_whole_map_srv_;
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
+
+  // Map block publishing queue
+  // NOTE: For hashed map types, such as HashedWaveletOctree and
+  //       HashedChunkedWaveletOctree, we support incremental map transmissions.
+  //       This is useful when the maps need to be transmitted over unreliable
+  //       networks, where smaller packets tend to perform better in terms of
+  //       packet loss, or when the map is so large that transmitting it as a
+  //       single message would exceed the maximum ROS message size (1GB).
+  template <typename HashedMapT>
+  void publishHashedMap(HashedMapT* hashed_map,
+                        bool republish_whole_map = false);
+  Timestamp last_map_pub_time_;
+  std::unordered_set<Index3D, Index3DHash> block_publishing_queue_;
 };
 }  // namespace wavemap
 

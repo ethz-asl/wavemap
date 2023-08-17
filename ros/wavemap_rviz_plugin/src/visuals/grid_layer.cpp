@@ -81,10 +81,6 @@ void GridLayer::setCellDimensions(float width, float height, float depth) {
   }
 }
 
-void setAlphaBlending(const Ogre::MaterialPtr& mat) {}
-
-void setReplace(const Ogre::MaterialPtr& mat) {}
-
 void GridLayer::setAlpha(float alpha, bool per_cell_alpha) {
   alpha_ = alpha;
 
