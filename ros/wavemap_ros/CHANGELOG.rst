@@ -2,6 +2,15 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update map <-> ROS msg conversion methods to be consistent with map <-> byte stream conversions
+* Incremental map transmission
+  Only publish changed map blocks and add option to control the max message size. This improves transmission stability over unreliable networks and resolves the issue of roscpp dropping messages >1GB.
+* Standardize time definitions
+* General code cleanup
+* Contributors: Victor Reijgwart
+
 1.2.0 (2023-08-11)
 ------------------
 
