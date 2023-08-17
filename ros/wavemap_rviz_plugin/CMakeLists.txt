@@ -18,7 +18,7 @@ add_compile_options(-Wno-pedantic -Wno-register)
 catkin_package(CATKIN_DEPENDS wavemap wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include SYSTEM ${catkin_INCLUDE_DIRS})
 
 # This setting causes Qt's "MOC" generation to happen automatically
 set(CMAKE_AUTOMOC ON)
@@ -52,6 +52,8 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 # Libraries
 add_library(${PROJECT_NAME}
+    src/utils/color_conversions.cc
+    src/utils/listeners.cc
     src/visuals/grid_visual.cc
     src/visuals/slice_visual.cc
     src/visuals/grid_layer.cpp

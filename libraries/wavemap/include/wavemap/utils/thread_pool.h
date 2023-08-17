@@ -87,7 +87,7 @@ std::future<std::result_of_t<Callable(Args...)>> ThreadPool::add_task(
       std::bind(std::forward<Callable>(callable), std::forward<Args>(args)...));
 
   {
-    auto lock = std::unique_lock<std::mutex>(tasks_mutex_);
+    auto lock = std::scoped_lock<std::mutex>(tasks_mutex_);
     if (terminate_) {
       LOG(FATAL) << "Adding tasks to an already stopped pool.";
     }

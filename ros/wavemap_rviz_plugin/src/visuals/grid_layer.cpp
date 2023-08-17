@@ -3,24 +3,19 @@
 #include <sstream>
 
 #include <OgreCamera.h>
-#include <OgreManualObject.h>
 #include <OgreMaterialManager.h>
-#include <OgreQuaternion.h>
-#include <OgreSharedPtr.h>
+#include <OgreRoot.h>
 #include <OgreTechnique.h>
 #include <OgreTexture.h>
+#include <glog/logging.h>
 #include <qglobal.h>
-#include <ros/assert.h>
 #include <rviz/ogre_helpers/compatibility.h>
 #include <rviz/ogre_helpers/custom_parameter_indices.h>
-#include <rviz/ogre_helpers/ogre_vector.h>
-
-#define VERTEX_BUFFER_CAPACITY (36 * 1024 * 10)
 
 namespace wavemap {
-static constexpr float g_point_vertices[3] = {0.0f, 0.0f, 0.0f};
+static constexpr float kPointVertices[3] = {0.0f, 0.0f, 0.0f};
 
-static constexpr float g_box_vertices[6 * 6 * 3] = {
+static constexpr float kBoxVertices[6 * 6 * 3] = {
     // clang-format off
     // front
     -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
@@ -42,7 +37,7 @@ static constexpr float g_box_vertices[6 * 6 * 3] = {
     -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
 };  // clang-format on
 
-const Ogre::String GridLayer::sm_Type = "GridLayer";
+const Ogre::String GridLayer::movable_type_name_ = "GridLayer";
 
 GridLayer::GridLayer(const Ogre::MaterialPtr& cell_material)
     : cell_material_(cell_material) {
@@ -50,21 +45,18 @@ GridLayer::GridLayer(const Ogre::MaterialPtr& cell_material)
   setAlpha(alpha_);
 
   // Detect geometry shader support
+  current_mode_supports_geometry_shader_ = false;
   if (Ogre::Technique* best = cell_material_->getBestTechnique(); best) {
     if (cell_material_->getBestTechnique()->getName() == "gp") {
       current_mode_supports_geometry_shader_ = true;
-    } else {
-      current_mode_supports_geometry_shader_ = false;
     }
   } else {
-    ROS_ERROR("No techniques available for material [%s]",
-              cell_material_->getName().c_str());
-    current_mode_supports_geometry_shader_ = false;
+    LOG(ERROR) << "No techniques available for material [%s]",
+        cell_material_->getName().c_str();
   }
 }
 
 void GridLayer::clear() {
-  cell_count_ = 0;
   bounding_box_.setNull();
   bounding_radius_ = 0.0f;
 
@@ -78,20 +70,6 @@ void GridLayer::clear() {
   renderables_.clear();
 }
 
-void GridLayer::regenerateAll() {
-  if (cell_count_ == 0) {
-    return;
-  }
-
-  CellVector cells;
-  cells.swap(cells_);
-  uint32_t count = cell_count_;
-
-  clear();
-
-  addCells(&cells.front(), count);
-}
-
 void GridLayer::setCellDimensions(float width, float height, float depth) {
   width_ = width;
   height_ = height;
@@ -103,27 +81,22 @@ void GridLayer::setCellDimensions(float width, float height, float depth) {
   }
 }
 
-void setAlphaBlending(const Ogre::MaterialPtr& mat) {
-  if (mat->getBestTechnique()) {
-    mat->getBestTechnique()->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
-    mat->getBestTechnique()->setDepthWriteEnabled(false);
-  }
-}
-
-void setReplace(const Ogre::MaterialPtr& mat) {
-  if (mat->getBestTechnique()) {
-    mat->getBestTechnique()->setSceneBlending(Ogre::SBT_REPLACE);
-    mat->getBestTechnique()->setDepthWriteEnabled(true);
-  }
-}
-
 void GridLayer::setAlpha(float alpha, bool per_cell_alpha) {
   alpha_ = alpha;
 
   if (alpha < 0.9998 || per_cell_alpha) {
-    setAlphaBlending(cell_material_);
+    // Render in alpha blending mode
+    if (cell_material_->getBestTechnique()) {
+      cell_material_->getBestTechnique()->setSceneBlending(
+          Ogre::SBT_TRANSPARENT_ALPHA);
+      cell_material_->getBestTechnique()->setDepthWriteEnabled(false);
+    }
   } else {
-    setReplace(cell_material_);
+    // Render in replace mode
+    if (cell_material_->getBestTechnique()) {
+      cell_material_->getBestTechnique()->setSceneBlending(Ogre::SBT_REPLACE);
+      cell_material_->getBestTechnique()->setDepthWriteEnabled(true);
+    }
   }
 
   const Ogre::Vector4 alpha4(alpha_, alpha_, alpha_, alpha_);
@@ -132,25 +105,11 @@ void GridLayer::setAlpha(float alpha, bool per_cell_alpha) {
   }
 }
 
-void GridLayer::addCells(Cell* cells, uint32_t num_cells) {
-  if (num_cells == 0) {
+void GridLayer::setCells(const std::vector<GridCell>& cells) {
+  if (cells.empty()) {
     return;
   }
   Ogre::Root* root = Ogre::Root::getSingletonPtr();
-
-  if (cells_.size() < cell_count_ + num_cells) {
-    cells_.resize(cell_count_ + num_cells);
-  }
-
-  Cell* begin = &cells_.front() + cell_count_;
-#if defined(__GNUC__) && (__GNUC__ >= 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wclass-memaccess"
-#endif
-  memcpy(begin, cells, sizeof(Cell) * num_cells);
-#if defined(__GNUC__) && (__GNUC__ >= 8)
-#pragma GCC diagnostic pop
-#endif
 
   uint32_t vpp = getVerticesPerCell();
   Ogre::RenderOperation::OperationType op_type;
@@ -162,9 +121,9 @@ void GridLayer::addCells(Cell* cells, uint32_t num_cells) {
 
   const float* vertices = nullptr;
   if (current_mode_supports_geometry_shader_) {
-    vertices = g_point_vertices;
+    vertices = kPointVertices;
   } else {
-    vertices = g_box_vertices;
+    vertices = kBoxVertices;
   }
 
   GridLayerRenderablePtr renderable;
@@ -179,26 +138,28 @@ void GridLayer::addCells(Cell* cells, uint32_t num_cells) {
   bounding_radius_ = 0.0f;
   uint32_t vertex_size = 0;
   uint32_t buffer_size = 0;
-  for (uint32_t current_cell = 0; current_cell < num_cells; ++current_cell) {
+  for (size_t current_cell = 0; current_cell < cells.size(); ++current_cell) {
     // if we didn't create a renderable yet,
     // or we've reached the vertex limit for the current renderable,
     // create a new one.
     while (!renderable || current_vertex_count >= buffer_size) {
       if (renderable) {
-        ROS_ASSERT(current_vertex_count == buffer_size);
+        CHECK_EQ(current_vertex_count, buffer_size);
 
         op->vertexData->vertexCount =
             renderable->getBuffer()->getNumVertices() -
             op->vertexData->vertexStart;
-        ROS_ASSERT(op->vertexData->vertexCount + op->vertexData->vertexStart <=
-                   renderable->getBuffer()->getNumVertices());
+        CHECK_LE(op->vertexData->vertexCount + op->vertexData->vertexStart,
+                 renderable->getBuffer()->getNumVertices());
         vbuf->unlock();
         renderable->setBoundingBox(aabb);
         bounding_box_.merge(aabb);
       }
 
-      buffer_size = std::min<int>(VERTEX_BUFFER_CAPACITY,
-                                  (num_cells - current_cell) * vpp);
+      CHECK_LT(current_cell, cells.size());
+      constexpr size_t kVectorBufferCapacity = 36 * 1024 * 10;
+      buffer_size =
+          std::min(kVectorBufferCapacity, (cells.size() - current_cell) * vpp);
 
       renderable = createRenderable(buffer_size);
       vbuf = renderable->getBuffer();
@@ -214,7 +175,7 @@ void GridLayer::addCells(Cell* cells, uint32_t num_cells) {
       aabb.setNull();
     }
 
-    const Cell& p = cells[current_cell];
+    const GridCell& p = cells[current_cell];
 
     uint32_t color;
     root->convertColourValue(p.color, &color);
@@ -238,9 +199,9 @@ void GridLayer::addCells(Cell* cells, uint32_t num_cells) {
       }
       std::memcpy(fptr++, &color, sizeof(float));
 
-      ROS_ASSERT((uint8_t*)fptr <=
-                 (uint8_t*)vdata +
-                     renderable->getBuffer()->getNumVertices() * vertex_size);
+      CHECK_LE((uint8_t*)fptr,
+               (uint8_t*)vdata +
+                   renderable->getBuffer()->getNumVertices() * vertex_size);
       Q_UNUSED(vertex_size);
     }
   }
@@ -249,59 +210,10 @@ void GridLayer::addCells(Cell* cells, uint32_t num_cells) {
       current_vertex_count - op->vertexData->vertexStart;
   renderable->setBoundingBox(aabb);
   bounding_box_.merge(aabb);
-  ROS_ASSERT(op->vertexData->vertexCount + op->vertexData->vertexStart <=
-             renderable->getBuffer()->getNumVertices());
+  CHECK_LE(op->vertexData->vertexCount + op->vertexData->vertexStart,
+           renderable->getBuffer()->getNumVertices());
 
   vbuf->unlock();
-
-  cell_count_ += num_cells;
-
-  shrinkRenderables();
-
-  if (getParentSceneNode()) {
-    getParentSceneNode()->needUpdate();
-  }
-}
-
-void GridLayer::popCells(uint32_t num_cells) {
-  uint32_t vpp = getVerticesPerCell();
-
-  ROS_ASSERT(num_cells <= cell_count_);
-  cells_.erase(cells_.begin(), cells_.begin() + num_cells);
-
-  cell_count_ -= num_cells;
-
-  // Now clear out popped cells
-  uint32_t popped_count = 0;
-  while (popped_count < num_cells * vpp) {
-    GridLayerRenderablePtr renderable = renderables_.front();
-    Ogre::RenderOperation* op = renderable->getRenderOperation();
-
-    uint32_t popped =
-        std::min(static_cast<size_t>(num_cells * vpp - popped_count),
-                 op->vertexData->vertexCount);
-    op->vertexData->vertexStart += popped;
-    op->vertexData->vertexCount -= popped;
-
-    popped_count += popped;
-
-    if (op->vertexData->vertexCount == 0) {
-      renderables_.erase(renderables_.begin(), renderables_.begin() + 1);
-
-      op->vertexData->vertexStart = 0;
-      renderables_.push_back(renderable);
-    }
-  }
-  ROS_ASSERT(popped_count == num_cells * vpp);
-
-  // reset bounds
-  bounding_box_.setNull();
-  bounding_radius_ = 0.0f;
-  for (uint32_t i = 0; i < cell_count_; ++i) {
-    Cell& p = cells_[i];
-    bounding_box_.merge(p.center);
-    bounding_radius_ = std::max(bounding_radius_, p.center.squaredLength());
-  }
 
   shrinkRenderables();
 
@@ -312,8 +224,8 @@ void GridLayer::popCells(uint32_t num_cells) {
 
 void GridLayer::shrinkRenderables() {
   while (!renderables_.empty()) {
-    GridLayerRenderablePtr renderable = renderables_.back();
-    Ogre::RenderOperation* op = renderable->getRenderOperation();
+    GridLayerRenderable& renderable = *renderables_.back();
+    Ogre::RenderOperation* op = renderable.getRenderOperation();
     if (op->vertexData->vertexCount == 0) {
       renderables_.pop_back();
     } else {
@@ -336,9 +248,9 @@ uint32_t GridLayer::getVerticesPerCell() const {
   }
 }
 
-GridLayerRenderablePtr GridLayer::createRenderable(int num_cells) {
-  GridLayerRenderablePtr renderable(new GridLayerRenderable(
-      this, num_cells, !current_mode_supports_geometry_shader_));
+GridLayerRenderablePtr GridLayer::createRenderable(size_t num_cells) {
+  GridLayerRenderablePtr renderable = std::make_shared<GridLayerRenderable>(
+      this, num_cells, !current_mode_supports_geometry_shader_);
   rviz::setMaterial(*renderable, cell_material_);
   const Ogre::Vector4 size(width_, height_, depth_, 0.0f);
   const Ogre::Vector4 alpha(alpha_, 0.0f, 0.0f, 0.0f);
@@ -351,12 +263,12 @@ GridLayerRenderablePtr GridLayer::createRenderable(int num_cells) {
   if (getParentSceneNode()) {
     getParentSceneNode()->attachObject(renderable.get());
   }
-  renderables_.push_back(renderable);
+  renderables_.emplace_back(renderable);
 
   return renderable;
 }
 
-GridLayerRenderable::GridLayerRenderable(GridLayer* parent, int num_cells,
+GridLayerRenderable::GridLayerRenderable(GridLayer* parent, size_t num_cells,
                                          bool use_tex_coords)
     : parent_(parent) {
   // Initialize render operation

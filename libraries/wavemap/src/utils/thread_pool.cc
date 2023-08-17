@@ -11,7 +11,7 @@ ThreadPool::ThreadPool(size_t thread_count)
 
 ThreadPool::~ThreadPool() {
   {
-    auto lock = std::unique_lock<std::mutex>(tasks_mutex_);
+    auto lock = std::scoped_lock<std::mutex>(tasks_mutex_);
     terminate_ = true;
   }
   worker_condition_.notify_all();

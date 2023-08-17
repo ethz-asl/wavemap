@@ -9,6 +9,15 @@
 #include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
 
 namespace wavemap {
+inline bool WaveletOctree::empty() const {
+  // Check if all cells in the map are equal to zero
+  // NOTE: Aside from checking whether the map contains no detail
+  //       coefficients, we also need to check whether its scale coefficient
+  //       (average value over the whole map) is zero.
+  return ndtree_.empty() &&
+         !OccupancyState::isObserved(root_scale_coefficient_);
+}
+
 inline void WaveletOctree::clear() {
   ndtree_.clear();
   root_scale_coefficient_ = {};

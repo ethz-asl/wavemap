@@ -4,17 +4,15 @@
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
-SliceVisual::SliceVisual(
-    Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
-    rviz::Property* submenu_root_property,
-    const std::shared_ptr<std::mutex> map_mutex,
-    const std::shared_ptr<VolumetricDataStructureBase::Ptr> map)
-    : map_mutex_(map_mutex),
-      map_ptr_(map),
+SliceVisual::SliceVisual(Ogre::SceneManager* scene_manager,
+                         Ogre::SceneNode* parent_node,
+                         rviz::Property* submenu_root_property,
+                         std::shared_ptr<MapAndMutex> map_and_mutex)
+    : map_and_mutex_(std::move(map_and_mutex)),
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
-          "Show", false,
+          "Enable", false,
           "Whether to show the octree as a multi-resolution grid.",
           CHECK_NOTNULL(submenu_root_property), SLOT(generalUpdateCallback()),
           this),
@@ -31,6 +29,10 @@ SliceVisual::SliceVisual(
                         submenu_root_property, SLOT(opacityUpdateCallback()),
                         this) {
   // Initialize the slice cell material
+  // NOTE: Certain properties, such as alpha transparency, are set on a
+  //       per-material basis. We therefore need to create one unique material
+  //       for each slice visual to keep them from overwriting each other's
+  //       settings.
   static int instance_count = 0;
   ++instance_count;
   slice_cell_material_ =
@@ -52,10 +54,9 @@ void SliceVisual::update() {
     return;
   }
 
-  // Get a shared-access lock to the map,
-  // to ensure it doesn't get written to while we read it
-  std::scoped_lock lock(*map_mutex_);
-  const VolumetricDataStructureBase::ConstPtr map = *map_ptr_;
+  // Lock the map mutex, to ensure it doesn't get written to while we read it
+  std::scoped_lock lock(map_and_mutex_->mutex);
+  const VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
     ROS_INFO("Map is empty. Nothing to draw.");
     return;
@@ -69,7 +70,7 @@ void SliceVisual::update() {
       max_occupancy_threshold_property_.getFloat();
   const FloatingPoint slice_height = slice_height_property_.getFloat();
   const FloatingPoint alpha = opacity_property_.getFloat();
-  const int max_height = 14;  // todo
+  const int max_height = map->getTreeHeight();
 
   // Cache the intersecting node z-indices in function of node height
   const NdtreeIndexElement num_levels = max_height + 1;
@@ -82,7 +83,7 @@ void SliceVisual::update() {
                 });
 
   // Add a colored square for each leaf
-  std::vector<std::vector<GridLayer::Cell>> cells_per_level(num_levels);
+  std::vector<std::vector<GridCell>> cells_per_level(num_levels);
   map->forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
                                          FloatingPoint cell_log_odds) {
     // Skip cells that don't intersect the slice
@@ -135,8 +136,8 @@ void SliceVisual::update() {
     // Update the points
     auto& grid_level = grid_levels_[height];
     grid_level->clear();
-    auto& cells_at_level = cells_per_level[height];
-    grid_level->addCells(&cells_at_level.front(), cells_at_level.size());
+    const auto& cells_at_level = cells_per_level[height];
+    grid_level->setCells(cells_at_level);
   }
 }
 

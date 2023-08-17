@@ -1,9 +1,8 @@
 name: Continuous Integration
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 # NOTE: We do not store the work files under $HOME ("/github/home/") since that
 #       dir persists between jobs when using self-hosted GitHub Actions runners
@@ -24,7 +23,7 @@ jobs:
     name: Define common variables
     # NOTE: This job is used to pass complex common variables around between jobs,
     #       as a work-around for ENV variables in GitHub Actions not being composable.
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     outputs:
@@ -37,7 +36,7 @@ jobs:
   workspace-container:
     name: Build CI workspace container
     needs: [ common-variables ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: docker:20.10.9-dind
     outputs:
@@ -54,12 +53,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Prepare ccache to accelerate the build
-        id: get-date
+      - name: Install dependencies
         # NOTE: Installing tar is required for actions/cache@v3 to work properly
         #       on docker:20.10.9-dind.
+        run: apk add --no-cache tar git
+
+      - name: Prepare ccache to accelerate the build
+        id: get-date
         run: |
-          apk add --no-cache tar
           mkdir -p ccache
           echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
 
@@ -82,7 +83,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -115,7 +116,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -133,7 +134,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
           target: workspace-deps-builder-ccache-extractor
           build-args: |
             FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
@@ -149,7 +150,7 @@ jobs:
   lint:
     name: Lint
     needs: [ common-variables ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       # NOTE: Pylint checks if all modules that are marked for import are
       #       available. At the time of writing, the python scripts in this repo
@@ -192,9 +193,9 @@ jobs:
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
 
   build-docs:
-    name: Update docs
+    name: Build docs
     needs: [ workspace-container, lint ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -233,7 +234,7 @@ jobs:
   build:
     name: Build
     needs: workspace-container
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -263,7 +264,7 @@ jobs:
   clang-tidy:
     name: Clang tidy
     needs: [ workspace-container, build ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -306,7 +307,7 @@ jobs:
   test:
     name: Test
     needs: [ workspace-container, build ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -356,7 +357,7 @@ jobs:
     # TODO(victorr): Enable this again once it has been updated to work with the new package structure
     if: ${{ false }}
     needs: [ workspace-container, test ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
@@ -445,7 +446,7 @@ jobs:
   sanitize:
     name: Sanitize ${{ matrix.sanitizer.detects }}
     needs: [ workspace-container, test ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     strategy:
@@ -509,7 +510,7 @@ jobs:
   valgrind:
     name: Valgrind memcheck
     needs: [ workspace-container, test ]
-    runs-on: self-hosted
+    runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:

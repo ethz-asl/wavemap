@@ -16,6 +16,7 @@
 #include <rviz/properties/property.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 
+#include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/visuals/grid_layer.h"
 #endif
 
@@ -29,11 +30,10 @@ class SliceVisual : public QObject {
   // scene, in an unconfigured state.
   SliceVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node,
               rviz::Property* submenu_root_property,
-              const std::shared_ptr<std::mutex> map_mutex,
-              const std::shared_ptr<VolumetricDataStructureBase::Ptr> map);
+              std::shared_ptr<MapAndMutex> map_and_mutex);
 
   // Destructor. Removes the visual elements from the scene.
-  virtual ~SliceVisual();
+  ~SliceVisual() override;
 
   void update();
   void clear() { grid_levels_.clear(); }
@@ -49,9 +49,8 @@ class SliceVisual : public QObject {
   void opacityUpdateCallback();
 
  private:
-  // Read only shared pointer to the map, owned by WavemapMapDisplay
-  const std::shared_ptr<std::mutex> map_mutex_;
-  const std::shared_ptr<VolumetricDataStructureBase::Ptr> map_ptr_;
+  // Shared pointer to the map, owned by WavemapMapDisplay
+  const std::shared_ptr<MapAndMutex> map_and_mutex_;
 
   // The objects implementing the grid visuals
   std::vector<std::unique_ptr<GridLayer>> grid_levels_;

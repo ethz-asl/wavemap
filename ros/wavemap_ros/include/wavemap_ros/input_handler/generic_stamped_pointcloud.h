@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "wavemap/common.h"
+#include <wavemap/common.h>
 
 namespace wavemap {
 struct GenericStampedPoint {

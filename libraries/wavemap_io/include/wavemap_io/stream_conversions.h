@@ -17,10 +17,10 @@ bool mapToStream(const VolumetricDataStructureBase& map, std::ostream& ostream);
 bool streamToMap(std::istream& istream, VolumetricDataStructureBase::Ptr& map);
 
 void mapToStream(const WaveletOctree& map, std::ostream& ostream);
-void streamToMap(std::istream& istream, WaveletOctree::Ptr& map);
+bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map);
 
 void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream);
-void streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map);
+bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map);
 
 void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream);
 }  // namespace wavemap::io

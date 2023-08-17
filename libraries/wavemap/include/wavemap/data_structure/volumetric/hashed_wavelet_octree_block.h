@@ -1,21 +1,17 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_BLOCK_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_HASHED_WAVELET_OCTREE_BLOCK_H_
 
-#include <chrono>
-
 #include "wavemap/common.h"
 #include "wavemap/data_structure/ndtree/ndtree.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
+#include "wavemap/utils/time.h"
 
 namespace wavemap {
 class HashedWaveletOctreeBlock {
  public:
   static constexpr int kDim = 3;
-  using Clock = std::chrono::steady_clock;
-  using Time = std::chrono::time_point<Clock>;
   using BlockIndex = Index3D;
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
@@ -28,10 +24,7 @@ class HashedWaveletOctreeBlock {
         min_log_odds_(min_log_odds),
         max_log_odds_(max_log_odds) {}
 
-  bool empty() const {
-    return ndtree_.empty() &&
-           !OccupancyState::isObserved(root_scale_coefficient_);
-  }
+  bool empty() const;
   size_t size() const { return ndtree_.size(); }
   void threshold();
   void prune();
@@ -58,10 +51,10 @@ class HashedWaveletOctreeBlock {
   bool getNeedsPruning() const { return needs_pruning_; }
   void setNeedsThresholding(bool value = true) { needs_thresholding_ = value; }
   bool getNeedsThresholding() const { return needs_thresholding_; }
-  void setLastUpdatedStamp(Time stamp = Clock::now()) {
+  void setLastUpdatedStamp(Timestamp stamp = Time::now()) {
     last_updated_stamp_ = stamp;
   }
-  Time getLastUpdatedStamp() const { return last_updated_stamp_; }
+  Timestamp getLastUpdatedStamp() const { return last_updated_stamp_; }
   FloatingPoint getTimeSinceLastUpdated() const;
 
   template <TraversalOrder traversal_order>
@@ -85,7 +78,7 @@ class HashedWaveletOctreeBlock {
 
   bool needs_thresholding_ = false;
   bool needs_pruning_ = false;
-  Time last_updated_stamp_ = Clock::now();
+  Timestamp last_updated_stamp_ = Time::now();
 
   Coefficients::Scale recursiveThreshold(NodeType& node,
                                          Coefficients::Scale scale_coefficient);

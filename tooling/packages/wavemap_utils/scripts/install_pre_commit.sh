@@ -34,7 +34,7 @@ install_if_missing "hadolint" \
   "sudo apt-get install wget" \
   "sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64" \
   "sudo chmod +x /bin/hadolint"
-install_if_missing "xmllint" "libxml2-utils"
+install_if_missing "xmllint" "sudo apt-get install libxml2-utils"
 
 # Enable pre-commit for wavemap
 pushd "$(dirname "$0")" >>/dev/null || exit 1 # Enter wavemap's home directory

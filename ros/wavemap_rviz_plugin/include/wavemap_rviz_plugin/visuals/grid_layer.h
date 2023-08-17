@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_LAYER_H_
 #define WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_LAYER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -9,17 +10,22 @@
 #include <OgreHardwareBufferManager.h>
 #include <OgreMaterial.h>
 #include <OgreMovableObject.h>
-#include <OgreRoot.h>
-#include <OgreSharedPtr.h>
 #include <OgreSimpleRenderable.h>
 #include <OgreString.h>
-#include <boost/shared_ptr.hpp>
-#include <rviz/ogre_helpers/ogre_vector.h>
 
 namespace wavemap {
 class GridLayerRenderable;
-using GridLayerRenderablePtr = boost::shared_ptr<GridLayerRenderable>;
+using GridLayerRenderablePtr = std::shared_ptr<GridLayerRenderable>;
 using GridLayerRenderableVector = std::vector<GridLayerRenderablePtr>;
+
+struct GridCell {
+  Ogre::Vector3 center;
+  Ogre::ColourValue color;
+
+  inline void setColor(float r, float g, float b, float a = 1.0) {
+    color = Ogre::ColourValue(r, g, b, a);
+  }
+};
 
 class GridLayer : public Ogre::MovableObject {
  public:
@@ -27,24 +33,14 @@ class GridLayer : public Ogre::MovableObject {
   ~GridLayer() override { clear(); }
 
   void clear();
-
-  struct Cell {
-    Ogre::Vector3 center;
-    Ogre::ColourValue color;
-
-    inline void setColor(float r, float g, float b, float a = 1.0) {
-      color = Ogre::ColourValue(r, g, b, a);
-    }
-  };
-
-  void addCells(Cell* cells, uint32_t num_cells);
-  void popCells(uint32_t num_cells);
+  void setCells(const std::vector<GridCell>& cells);
 
   void setCellDimensions(float width, float height, float depth);
-
   void setAlpha(float alpha, bool per_cell_alpha = false);
 
-  const Ogre::String& getMovableType() const override { return sm_Type; }
+  const Ogre::String& getMovableType() const override {
+    return movable_type_name_;
+  }
   const Ogre::AxisAlignedBox& getBoundingBox() const override {
     return bounding_box_;
   }
@@ -64,16 +60,11 @@ class GridLayer : public Ogre::MovableObject {
 
  private:
   uint32_t getVerticesPerCell() const;
-  GridLayerRenderablePtr createRenderable(int num_cells);
-  void regenerateAll();
+  GridLayerRenderablePtr createRenderable(size_t num_cells);
   void shrinkRenderables();
 
   Ogre::AxisAlignedBox bounding_box_;
   float bounding_radius_ = 0.f;
-
-  using CellVector = std::vector<Cell>;
-  CellVector cells_;
-  uint32_t cell_count_ = 0;
 
   float width_ = 0.1f;
   float height_ = 0.1f;
@@ -86,12 +77,12 @@ class GridLayer : public Ogre::MovableObject {
 
   bool current_mode_supports_geometry_shader_ = false;
 
-  static const Ogre::String sm_Type;
+  static const Ogre::String movable_type_name_;
 };
 
 class GridLayerRenderable : public Ogre::SimpleRenderable {
  public:
-  GridLayerRenderable(GridLayer* parent, int num_cells, bool use_tex_coords);
+  GridLayerRenderable(GridLayer* parent, size_t num_cells, bool use_tex_coords);
   ~GridLayerRenderable() override;
 
   using Ogre::SimpleRenderable::getRenderOperation;
