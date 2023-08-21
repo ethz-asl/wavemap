@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Wavemap config",
+  "description": "Schema to provide code completion and validation for wavemap configuration files.",
+  "type": "object",
+  "properties": {
+    "map": {
+      "description": "The properties of the server's map instance.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "general": {
+          "description": "General properties of the map.",
+          "$ref": "wavemap_server.json"
+        },
+        "data_structure": {
+          "description": "Data structure used to store the map.",
+          "$ref": "data_structure.json"
+        }
+      }
+    },
+    "inputs": {
+      "description": "A list of measurement inputs.",
+      "type": "array",
+      "items": {
+        "$ref": "measurement_input/measurement_input.json"
+      }
+    }
+  },
+  "required": [
+    "map",
+    "inputs"
+  ]
+}

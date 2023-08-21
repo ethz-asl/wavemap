@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "general",
+    "integrators"
+  ],
+  "properties": {
+    "type": {
+      "const": "depth_image"
+    },
+    "general": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topic_name"
+      ],
+      "properties": {
+        "topic_name": {
+          "type": "string"
+        },
+        "topic_queue_length": {
+          "type": "integer"
+        },
+        "processing_retry_period": {
+          "$ref": "../value_with_unit/convertible_to_seconds.json"
+        },
+        "max_wait_for_pose": {
+          "$ref": "../value_with_unit/convertible_to_seconds.json"
+        },
+        "sensor_frame_id": {
+          "type": "string"
+        },
+        "image_transport_hints": {
+          "type": "string"
+        },
+        "depth_scale_factor": {
+          "type": "number"
+        },
+        "time_offset": {
+          "$ref": "../value_with_unit/convertible_to_seconds.json"
+        },
+        "reprojected_pointcloud_topic_name": {
+          "type": "string"
+        },
+        "projected_range_image_topic_name": {
+          "type": "string"
+        }
+      }
+    },
+    "integrators": {
+      "type": "array",
+      "items": {
+        "$ref": "measurement_integrator/measurement_integrator.json"
+      }
+    }
+  }
+}

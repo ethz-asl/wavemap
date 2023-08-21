@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "$defs": {
+    "beam_selector_type": {
+      "type": "string",
+      "enum": [
+        "nearest_neighbor",
+        "all_neighbors"
+      ]
+    },
+    "constant_ray": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "constant_ray"
+        },
+        "log_odds_occupied": {
+          "type": "number"
+        },
+        "log_odds_free": {
+          "type": "number"
+        }
+      }
+    },
+    "continuous_ray": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "continuous_ray"
+        },
+        "range_sigma": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "scaling_free": {
+          "type": "number"
+        },
+        "scaling_occupied": {
+          "type": "number"
+        },
+        "beam_selector_type": {
+          "$ref": "#/$defs/beam_selector_type"
+        }
+      }
+    },
+    "continuous_beam": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "continuous_beam"
+        },
+        "angle_sigma": {
+          "$ref": "../../value_with_unit/convertible_to_radians.json"
+        },
+        "range_sigma": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "scaling_free": {
+          "type": "number"
+        },
+        "scaling_occupied": {
+          "type": "number"
+        },
+        "beam_selector_type": {
+          "$ref": "#/$defs/beam_selector_type"
+        }
+      }
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "constant_ray",
+        "continuous_ray",
+        "continuous_beam"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/constant_ray"
+    },
+    {
+      "$ref": "#/$defs/continuous_ray"
+    },
+    {
+      "$ref": "#/$defs/continuous_beam"
+    }
+  ]
+}

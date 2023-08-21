@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "integration_method",
+    "projection_model",
+    "measurement_model"
+  ],
+  "properties": {
+    "integration_method": {
+      "$ref": "integration_method.json"
+    },
+    "projection_model": {
+      "$ref": "projection_model.json"
+    },
+    "measurement_model": {
+      "$ref": "measurement_model.json"
+    }
+  }
+}

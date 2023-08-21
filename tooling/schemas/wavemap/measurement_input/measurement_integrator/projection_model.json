@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "$defs": {
+    "circular_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_angle": {
+          "$ref": "../../value_with_unit/convertible_to_radians.json"
+        },
+        "max_angle": {
+          "$ref": "../../value_with_unit/convertible_to_radians.json"
+        },
+        "num_cells": {
+          "type": "integer"
+        }
+      }
+    },
+    "spherical_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "spherical_projector"
+        },
+        "elevation": {
+          "$ref": "#/$defs/circular_projector"
+        },
+        "azimuth": {
+          "$ref": "#/$defs/circular_projector"
+        }
+      }
+    },
+    "ouster_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ouster_projector"
+        },
+        "elevation": {
+          "$ref": "#/$defs/circular_projector"
+        },
+        "azimuth": {
+          "$ref": "#/$defs/circular_projector"
+        },
+        "lidar_origin_to_beam_origin": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "lidar_origin_to_sensor_origin_z_offset": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        }
+      }
+    },
+    "pinhole_camera_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "pinhole_camera_projector"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "fx": {
+          "type": "number"
+        },
+        "fy": {
+          "type": "number"
+        },
+        "cx": {
+          "type": "number"
+        },
+        "cy": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "spherical_projector",
+        "ouster_projector",
+        "pinhole_camera_projector"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/spherical_projector"
+    },
+    {
+      "$ref": "#/$defs/ouster_projector"
+    },
+    {
+      "$ref": "#/$defs/pinhole_camera_projector"
+    }
+  ]
+}

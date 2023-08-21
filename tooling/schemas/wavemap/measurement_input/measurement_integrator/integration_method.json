@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "$defs": {
+    "ray_tracing_integrator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ray_tracing_integrator"
+        },
+        "min_range": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "max_range": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        }
+      }
+    },
+    "projective_integrator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "fixed_resolution_integrator",
+            "coarse_to_fine_integrator",
+            "wavelet_integrator",
+            "hashed_wavelet_integrator",
+            "hashed_chunked_wavelet_integrator"
+          ]
+        },
+        "min_range": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "max_range": {
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "termination_height": {
+          "type": "integer"
+        },
+        "termination_update_error": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "ray_tracing_integrator",
+        "fixed_resolution_integrator",
+        "coarse_to_fine_integrator",
+        "wavelet_integrator",
+        "hashed_wavelet_integrator",
+        "hashed_chunked_wavelet_integrator"
+      ]
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "oneOf": [
+    {
+      "$ref": "#/$defs/ray_tracing_integrator"
+    },
+    {
+      "$ref": "#/$defs/projective_integrator"
+    }
+  ]
+}

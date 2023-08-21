@@ -93,13 +93,20 @@ repos:
         id: hadolint
         args: [ --config=tooling/git_hook_configs/.hadolint.yaml ]
 
-  - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.10.1
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.24.1
     hooks:
       - name: Check GitHub workflow file schema conformance
         id: check-github-workflows
       - name: Check GitHub action files schema conformance
         id: check-github-actions
+      - name: Check wavemap's custom schema definitions
+        id: check-metaschema
+        files: ^tooling/schemas/wavemap/.*\.(json)$
+      - name: Check wavemap config files
+        id: check-jsonschema
+        files: \.(yaml)$
+        args: [ --schemafile=tooling/schemas/wavemap/conditional_custom_schema.json ]
 
   - repo: https://github.com/markdownlint/markdownlint
     rev: v0.11.0
@@ -123,25 +130,25 @@ repos:
         language: system
         types: [ file ]
         files: (package.xml)$
-        args: [ --schema, tooling/xml_schemas/package_format2.xsd ]
+        args: [ --schema, tooling/schemas/xml/package_format2.xsd ]
       - name: Check ROS launch file schema conformance
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(launch)$
-        args: [ --schema, tooling/xml_schemas/roslaunch.xsd ]
+        args: [ --schema, tooling/schemas/xml/roslaunch.xsd ]
       - name: Check (ROS) URDF file schema conformance
         id: xmllint
         entry: xmllint --noout
         language: system
         types: [ file ]
         files: \.(urdf)$
-        args: [ --schema, tooling/xml_schemas/package_format2.xsd ]
+        args: [ --schema, tooling/schemas/xml/package_format2.xsd ]
     # - name: Check (ROS) SDF file schema conformance
     #   id: xmllint
     #   entry: xmllint --noout
     #   language: system
     #   types: [ file ]
     #   files: \.(sdf|model|world)$
-    #   args: [ --schema, tooling/xml_schemas/sdf.xsd ]
+    #   args: [ --schema, tooling/schemas/xml/sdf.xsd ]
