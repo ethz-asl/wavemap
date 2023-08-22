@@ -2,8 +2,8 @@
 Changelog for package wavemap_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.1 (2023-08-22)
+------------------
 * Release the code under the BSD-3 license
 
 1.3.0 (2023-08-17)
