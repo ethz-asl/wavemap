@@ -105,8 +105,8 @@ repos:
         files: ^tooling/schemas/wavemap/.*\.(json)$
       - name: Check wavemap config files
         id: check-jsonschema
-        files: \.(yaml)$
-        args: [ --schemafile=tooling/schemas/wavemap/conditional_custom_schema.json ]
+        files: ^(|.*\/)wavemap(|_\w+)\.yaml$
+        args: [ --schemafile=tooling/schemas/wavemap/wavemap_config.json ]
 
   - repo: https://github.com/markdownlint/markdownlint
     rev: v0.11.0

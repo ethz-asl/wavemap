@@ -1,5 +1,3 @@
-$schema: wavemap
-
 map:
   general:
     world_frame: "odom"
