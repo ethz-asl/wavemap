@@ -2,6 +2,10 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Release the code under the BSD-3 license
+
 1.3.0 (2023-08-17)
 ------------------
 * Update map <-> ROS msg conversion methods to be consistent with map <-> byte stream conversions
