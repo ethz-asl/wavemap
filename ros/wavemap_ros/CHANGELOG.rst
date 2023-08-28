@@ -2,8 +2,8 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.2 (2023-08-28)
+------------------
 * Fix empty header of wavemap msgs
 * Contributors: Alexander Stumpf
 
