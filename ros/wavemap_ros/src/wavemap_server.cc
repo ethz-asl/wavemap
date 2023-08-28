@@ -75,8 +75,8 @@ void WavemapServer::publishMap(bool republish_whole_map) {
     } else {
       occupancy_map_->threshold();
       wavemap_msgs::Map map_msg;
-      if (convert::mapToRosMsg(*occupancy_map_, map_msg.header.frame_id,
-                               map_msg.header.stamp, map_msg)) {
+      if (convert::mapToRosMsg(*occupancy_map_, config_.world_frame,
+                               ros::Time::now(), map_msg)) {
         map_pub_.publish(map_msg);
       }
     }

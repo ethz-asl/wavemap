@@ -2,6 +2,15 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.2 (2023-08-28)
+------------------
+* Fix empty header of wavemap msgs
+* Contributors: Alexander Stumpf
+
+1.3.1 (2023-08-22)
+------------------
+* Release the code under the BSD-3 license
+
 1.3.0 (2023-08-17)
 ------------------
 * Update map <-> ROS msg conversion methods to be consistent with map <-> byte stream conversions
