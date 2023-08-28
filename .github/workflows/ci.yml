@@ -454,7 +454,9 @@ jobs:
         sanitizer:
           - { name: UBSAN, detects: 'undefined behavior' }
           - { name: ASAN, detects: 'addressability and leaks' }
-          - { name: TSAN, detects: 'data races and deadlocks' }
+          # - { name: TSAN, detects: 'data races and deadlocks' }
+          # NOTE: TSAN is disabled until the following bug is resolved:
+          #       https://bugs.launchpad.net/ubuntu/+source/gcc-10/+bug/2029910.
           # NOTE: MSAN is not used for now since it also requires all deps to be
           #       instrumented (recompiled with clang and the MSan flags, LLVM's
           #       stdlib instead of GCCs,...). We therefore use Valgrind to
