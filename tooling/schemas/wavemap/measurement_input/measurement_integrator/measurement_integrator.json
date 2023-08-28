@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Properties of a single measurement integrator.",
   "type": "object",
   "additionalProperties": false,
   "required": [

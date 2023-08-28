@@ -10,11 +10,9 @@
       "additionalProperties": false,
       "properties": {
         "general": {
-          "description": "General properties of the map.",
           "$ref": "wavemap_server.json"
         },
         "data_structure": {
-          "description": "Data structure used to store the map.",
           "$ref": "data_structure.json"
         }
       }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Properties of wavemap's data structure.",
+  "description": "Properties of the data structure used to store the map.",
   "type": "object",
   "$defs": {
     "hashed_blocks": {
@@ -11,12 +11,15 @@
           "const": "hashed_blocks"
         },
         "min_cell_width": {
+          "description": "Maximum resolution of the map, set as the width of the smallest cell that it can represent.",
           "$ref": "value_with_unit/convertible_to_meters.json"
         },
         "min_log_odds": {
+          "description": "Lower threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "max_log_odds": {
+          "description": "Upper threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         }
       }
@@ -29,15 +32,19 @@
           "const": "octree"
         },
         "min_cell_width": {
+          "description": "Maximum resolution of the map, set as the width of the smallest cell that it can represent.",
           "$ref": "value_with_unit/convertible_to_meters.json"
         },
         "min_log_odds": {
+          "description": "Lower threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "max_log_odds": {
+          "description": "Upper threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "tree_height": {
+          "description": "Height of the octree used to store the map.",
           "type": "integer"
         }
       }
@@ -50,15 +57,19 @@
           "const": "wavelet_octree"
         },
         "min_cell_width": {
+          "description": "Maximum resolution of the map, set as the width of the smallest cell that it can represent.",
           "$ref": "value_with_unit/convertible_to_meters.json"
         },
         "min_log_odds": {
+          "description": "Lower threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "max_log_odds": {
+          "description": "Upper threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "tree_height": {
+          "description": "Height of the octree used to store the map.",
           "type": "integer"
         }
       }
@@ -71,19 +82,24 @@
           "const": "hashed_wavelet_octree"
         },
         "min_cell_width": {
+          "description": "Maximum resolution of the map, set as the width of the smallest cell that it can represent.",
           "$ref": "value_with_unit/convertible_to_meters.json"
         },
         "min_log_odds": {
+          "description": "Lower threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "max_log_odds": {
+          "description": "Upper threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "tree_height": {
+          "description": "Height of the octree in each hashed block.",
           "type": "integer"
         },
         "only_prune_blocks_if_unused_for": {
-          "type": "number"
+          "description": "When pruning the map, only prune blocks that have not been updated for the specified amount of time. This is useful to avoid pruning blocks that are still being updated, where pruning results in wasteful deallocation-reallocations cycles.",
+          "$ref": "value_with_unit/convertible_to_seconds.json"
         }
       }
     },
@@ -95,19 +111,24 @@
           "const": "hashed_chunked_wavelet_octree"
         },
         "min_cell_width": {
+          "description": "Maximum resolution of the map, set as the width of the smallest cell that it can represent.",
           "$ref": "value_with_unit/convertible_to_meters.json"
         },
         "min_log_odds": {
+          "description": "Lower threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "max_log_odds": {
+          "description": "Upper threshold for the occupancy values stored in the map, in log-odds.",
           "type": "number"
         },
         "tree_height": {
+          "description": "Height of the octree in each hashed block.",
           "type": "integer"
         },
         "only_prune_blocks_if_unused_for": {
-          "type": "number"
+          "description": "When pruning the map, only prune blocks that have not been updated for the specified amount of time. This is useful to avoid pruning blocks that are still being updated, where pruning results in wasteful deallocation-reallocations cycles.",
+          "$ref": "value_with_unit/convertible_to_seconds.json"
         }
       }
     }
@@ -117,6 +138,7 @@
   ],
   "properties": {
     "type": {
+      "description": "Type of the data structure that should be used.",
       "type": "string",
       "enum": [
         "hashed_blocks",
