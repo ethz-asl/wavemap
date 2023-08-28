@@ -5,7 +5,7 @@ map:
     pruning_period: { seconds: 10.0 }
     publication_period: { seconds: 3.0 }
   data_structure:
-    type: hashed_wavelet_octree
+    type: hashed_chunked_wavelet_octree
     min_cell_width: { meters: 0.1 }
 
 inputs:
@@ -18,7 +18,7 @@ inputs:
       max_wait_for_pose: { seconds: 1.0 }
     integrators:
       - integration_method:
-          type: hashed_wavelet_integrator
+          type: hashed_chunked_wavelet_integrator
           min_range: { meters: 0.5 }
           max_range: { meters: 12.0 }
           termination_update_error: 0.1
