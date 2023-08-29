@@ -449,13 +449,12 @@ jobs:
     runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
-    if: ${{ matrix.enabled }}
     strategy:
       matrix:
         sanitizer:
-          - { name: UBSAN, detects: 'undefined behavior', enabled: true }
-          - { name: ASAN, detects: 'addressability and leaks', enabled: true }
-          - { name: TSAN, detects: 'data races and deadlocks', enabled: false }
+          - { name: UBSAN, detects: 'undefined behavior' }
+          - { name: ASAN, detects: 'addressability and leaks' }
+          # - { name: TSAN, detects: 'data races and deadlocks' }
           # NOTE: TSAN is disabled until the following bug is resolved:
           #       https://bugs.launchpad.net/ubuntu/+source/gcc-10/+bug/2029910.
           # NOTE: MSAN is not used for now since it also requires all deps to be
