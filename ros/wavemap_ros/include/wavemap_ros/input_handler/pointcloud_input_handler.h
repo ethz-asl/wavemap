@@ -23,22 +23,50 @@ struct PointcloudTopicType : public TypeSelector<PointcloudTopicType> {
   static constexpr std::array names = {"PointCloud2", "ouster", "livox"};
 };
 
+/**
+ * Config struct for the pointcloud input handler.
+ */
 struct PointcloudInputHandlerConfig
     : public ConfigBase<PointcloudInputHandlerConfig, 11, PointcloudTopicType> {
+  //! Name of the ROS topic to subscribe to.
   std::string topic_name = "scan";
+  //! Message type of the ROS topic to subscribe to.
   PointcloudTopicType topic_type = PointcloudTopicType::kPointCloud2;
+  //! Queue length to use when subscribing to the ROS topic.
   int topic_queue_length = 10;
 
+  //! Time period used to control the rate at which to retry getting the sensor
+  //! pose when ROS TF lookups fail.
   FloatingPoint processing_retry_period = 0.05f;
+  //! Maximum amount of time to wait for the sensor pose to become available
+  // when ROS TF lookups fail.
   FloatingPoint max_wait_for_pose = 1.f;
 
-  std::string sensor_frame_id;  // Leave blank to use frame_id from msg header
+  //! The frame_id to use to look up the sensor pose using ROS TFs.
+  //! Note that setting this is optional, when left blank the header.frame_id of
+  //! the measurement's msg is used.
+  std::string sensor_frame_id;
+  //! Time offset to apply to the header.stamp of the measurement's msg when
+  //! looking up its pose using ROS TFs. Can be used when the time offset is
+  //! known (e.g. through calibration) but not corrected by the sensor's driver.
   FloatingPoint time_offset = 0.f;
+  //! Whether to undistort each pointcloud based on the sensor's motion while it
+  //! was captured. We strongly recommend turning this on, unless the robot's
+  //! odometry is very jerky or the sensor's driver already performs motion
+  //! undistortion.
   bool undistort_motion = false;
+  //! Number of intermediate poses to sample from ROS TFs when performing motion
+  //! undistortion.
   int num_undistortion_interpolation_intervals_per_cloud = 100;
 
-  std::string reprojected_pointcloud_topic_name;  // Leave blank to disable
-  std::string projected_range_image_topic_name;   // Leave blank to disable
+  //! Name of the topic on which to republish the motion-undistorted
+  //! pointclouds. Useful to share the undistorted pointclouds with other ROS
+  //! nodes and for debugging. Disabled if not set.
+  std::string reprojected_pointcloud_topic_name;
+  //! Name of the topic on which to republish the range image computed from the
+  //! pointclouds. Useful for debugging, to see how well the projection model
+  //! matches the LiDAR. Disabled if not set.
+  std::string projected_range_image_topic_name;
 
   static MemberMap memberMap;
 

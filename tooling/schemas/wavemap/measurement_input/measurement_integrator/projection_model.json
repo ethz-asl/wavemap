@@ -16,7 +16,7 @@
           "$ref": "../../value_with_unit/convertible_to_radians.json"
         },
         "num_cells": {
-          "description": "Resolution of the image along this axis, set as the number of cells along this axis.",
+          "description": "Resolution of the image along this axis, set as the number of cells along the axis.",
           "type": "integer"
         }
       }

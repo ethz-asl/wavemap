@@ -9,6 +9,9 @@
 #include "wavemap/iterator/ray_iterator.h"
 
 namespace wavemap {
+/**
+ * Config struct for the ray-tracing integrator.
+ */
 struct RayTracingIntegratorConfig : ConfigBase<RayTracingIntegratorConfig, 2> {
   FloatingPoint min_range = 0.5f;
   FloatingPoint max_range = 20.f;

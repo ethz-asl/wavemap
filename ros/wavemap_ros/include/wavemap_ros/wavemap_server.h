@@ -20,12 +20,25 @@
 #include "wavemap_ros/tf_transformer.h"
 
 namespace wavemap {
+/**
+ * Config struct for wavemap's ROS server.
+ */
 struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 5> {
+  //! Name of the coordinate frame in which to store the map.
+  //! Will be used as the frame_id for ROS TF lookups.
   std::string world_frame = "odom";
+  //! Time period controlling how often the map is thresholded.
+  //! To disable thresholding, set it to a negative number [not recommended].
   FloatingPoint thresholding_period = 1.f;
+  //! Time period controlling how often the map is pruned.
+  //! To disable pruning, set it to a negative number.
   FloatingPoint pruning_period = 10.f;
+  //! Time period controlling how often the map is published.
+  //! To disable map publishing, set it to a negative number.
   FloatingPoint publication_period = 10.f;
-
+  //! Maximum number of blocks to transmit per wavemap map message.
+  //! Used to control the maximum message size. Only works in combination with
+  //! hash-based map data structures.
   int max_num_blocks_per_msg = 1000;
 
   static MemberMap memberMap;

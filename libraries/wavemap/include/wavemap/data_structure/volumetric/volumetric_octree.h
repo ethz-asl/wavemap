@@ -11,6 +11,9 @@
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
+/**
+ * Config struct for the octree volumetric data structure.
+ */
 struct VolumetricOctreeConfig : ConfigBase<VolumetricOctreeConfig, 4> {
   FloatingPoint min_cell_width = 0.1f;
 

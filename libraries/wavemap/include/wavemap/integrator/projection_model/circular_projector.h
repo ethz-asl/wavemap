@@ -5,9 +5,16 @@
 #include "wavemap/config/config_base.h"
 
 namespace wavemap {
+/**
+ * Config struct for the circular projection model.
+ */
 struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig, 3> {
+  //! Minimum angle along this axis.
   FloatingPoint min_angle = 0.f;
+  //! Maximum angle along this axis.
   FloatingPoint max_angle = 0.f;
+  //! Resolution of the image along this axis,
+  //! set as the number of cells along the axis.
   IndexElement num_cells = 0;
 
   static MemberMap memberMap;

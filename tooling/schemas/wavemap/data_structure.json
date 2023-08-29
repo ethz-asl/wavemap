@@ -98,7 +98,7 @@
           "type": "integer"
         },
         "only_prune_blocks_if_unused_for": {
-          "description": "When pruning the map, only prune blocks that have not been updated for the specified amount of time. This is useful to avoid pruning blocks that are still being updated, where pruning results in wasteful deallocation-reallocations cycles.",
+          "description": "Only prune blocks if they have not been updated for at least this amount of time. Useful to avoid pruning blocks that are still being updated, whose nodes would most likely directly be reallocated if pruned.",
           "$ref": "value_with_unit/convertible_to_seconds.json"
         }
       }
@@ -127,7 +127,7 @@
           "type": "integer"
         },
         "only_prune_blocks_if_unused_for": {
-          "description": "When pruning the map, only prune blocks that have not been updated for the specified amount of time. This is useful to avoid pruning blocks that are still being updated, where pruning results in wasteful deallocation-reallocations cycles.",
+          "description": "Only prune blocks if they have not been updated for at least this amount of time. Useful to avoid pruning blocks that are still being updated, whose nodes would most likely directly be reallocated if pruned.",
           "$ref": "value_with_unit/convertible_to_seconds.json"
         }
       }

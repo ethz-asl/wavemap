@@ -6,6 +6,9 @@
 #include "wavemap/indexing/index_conversions.h"
 
 namespace wavemap {
+/**
+ * Config struct for the constant ray measurement model.
+ */
 struct ConstantRayConfig : ConfigBase<ConstantRayConfig, 2> {
   FloatingPoint log_odds_occupied = 0.85f;
   FloatingPoint log_odds_free = -0.4f;

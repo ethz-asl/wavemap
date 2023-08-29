@@ -48,7 +48,7 @@
           "minimum": 0
         },
         "sensor_frame_id": {
-          "description": "The frame_id to use to look up the sensor pose using ROS TFs. Setting this is optional. By default, the header.frame_id of the measurement's msg is used.",
+          "description": "The frame_id to use to look up the sensor pose using ROS TFs. Note that setting this is optional, by default the header.frame_id of the measurement's msg is used.",
           "type": "string"
         },
         "time_offset": {
