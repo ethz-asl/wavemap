@@ -32,23 +32,53 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
   switch (data_structure_type.toTypeId()) {
     case VolumetricDataStructureType::kHashedBlocks: {
       const auto config = VolumetricDataStructureConfig::from(params);
-      return std::make_shared<HashedBlocks>(config);
+      if (config.has_value()) {
+        return std::make_shared<HashedBlocks>(config.value());
+      } else {
+        LOG(ERROR) << "Hashed blocks volumetric data structure config could "
+                      "not be loaded.";
+        return nullptr;
+      }
     }
     case VolumetricDataStructureType::kOctree: {
       const auto config = VolumetricOctreeConfig::from(params);
-      return std::make_shared<VolumetricOctree>(config);
+      if (config.has_value()) {
+        return std::make_shared<VolumetricOctree>(config.value());
+      } else {
+        LOG(ERROR)
+            << "Octree volumetric data structure config could not be loaded.";
+        return nullptr;
+      }
     }
     case VolumetricDataStructureType::kWaveletOctree: {
       const auto config = WaveletOctreeConfig::from(params);
-      return std::make_shared<WaveletOctree>(config);
+      if (config.has_value()) {
+        return std::make_shared<WaveletOctree>(config.value());
+      } else {
+        LOG(ERROR) << "Wavelet octree volumetric data structure config could "
+                      "not be loaded.";
+        return nullptr;
+      }
     }
     case VolumetricDataStructureType::kHashedWaveletOctree: {
       const auto config = HashedWaveletOctreeConfig::from(params);
-      return std::make_shared<HashedWaveletOctree>(config);
+      if (config.has_value()) {
+        return std::make_shared<HashedWaveletOctree>(config.value());
+      } else {
+        LOG(ERROR) << "Hashed wavelet octree volumetric data structure config "
+                      "could not be loaded.";
+        return nullptr;
+      }
     }
     case VolumetricDataStructureType::kHashedChunkedWaveletOctree: {
       const auto config = HashedChunkedWaveletOctreeConfig::from(params);
-      return std::make_shared<HashedChunkedWaveletOctree>(config);
+      if (config.has_value()) {
+        return std::make_shared<HashedChunkedWaveletOctree>(config.value());
+      } else {
+        LOG(ERROR) << "Hashed chunked wavelet octree volumetric data structure "
+                      "config could not be loaded.";
+        return nullptr;
+      }
     }
     default:
       LOG(ERROR) << "Attempted to create data structure with unknown type ID: "

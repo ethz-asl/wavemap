@@ -44,16 +44,28 @@ MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
     case MeasurementModelType::kContinuousRay: {
       const auto continuous_ray_config =
           ContinuousRayConfig::from(measurement_model_params);
-      return std::make_shared<ContinuousRay>(continuous_ray_config,
-                                             std::move(projection_model),
-                                             std::move(range_image));
+      if (continuous_ray_config.has_value()) {
+        return std::make_shared<ContinuousRay>(continuous_ray_config.value(),
+                                               std::move(projection_model),
+                                               std::move(range_image));
+      } else {
+        LOG(ERROR)
+            << "Continuous ray measurement model config could not be loaded.";
+        return nullptr;
+      }
     }
     case MeasurementModelType::kContinuousBeam: {
       const auto continuous_beam_config =
           ContinuousBeamConfig::from(measurement_model_params);
-      return std::make_shared<ContinuousBeam>(
-          continuous_beam_config, std::move(projection_model),
-          std::move(range_image), std::move(beam_offset_image));
+      if (continuous_beam_config.has_value()) {
+        return std::make_shared<ContinuousBeam>(
+            continuous_beam_config.value(), std::move(projection_model),
+            std::move(range_image), std::move(beam_offset_image));
+      } else {
+        LOG(ERROR)
+            << "Continuous beam measurement model config could not be loaded.";
+        return nullptr;
+      }
     }
   }
 

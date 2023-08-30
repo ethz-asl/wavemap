@@ -69,10 +69,22 @@ void loadParam(const param::Name& param_name, const param::Value& param_value,
   ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<ConfigValueT>()) {
     config_value = ConfigValueT{param_value.get<ConfigValueT>()};
-  } else {
-    LOG(WARNING) << "Type of param " << param_name
-                 << " does not match type of corresponding config value.";
+    return;
+  } else if constexpr (std::is_same_v<ConfigValueT, FloatingPoint>) {
+    if (param_value.holds<int>()) {
+      // If the param_value and config_value's types do not match exactly, we
+      // still allow automatic conversions from ints to floats
+      // NOTE: This is avoids pesky, potentially confusing errors when setting
+      //       whole numbers and forgetting the decimal point (e.g. 1 vs 1.0).
+      config_value =
+          ConfigValueT{static_cast<FloatingPoint>(param_value.get<int>())};
+      return;
+    }
   }
+
+  LOG(WARNING) << "Type of param " << param_name
+               << " does not match the type of its corresponding config value. "
+                  "Will not be set.";
 }
 
 // Loader for types that define a "from" method, such as configs derived from
@@ -83,12 +95,17 @@ template <typename ConfigDerivedT, typename MemberPtrT,
                    bool()) = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
                ConfigDerivedT& config, MemberPtrT config_member_ptr) {
-  ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<param::Map>()) {
-    config_value = ConfigValueT::from(param_value.get<param::Map>());
+    const auto config_value = ConfigValueT::from(param_value.get<param::Map>());
+    if (config_value.has_value()) {
+      config.*config_member_ptr = config_value.value();
+    } else {
+      LOG(WARNING) << "Param " << param_name << " could not be loaded.";
+    }
   } else {
     LOG(WARNING) << "Type of param " << param_name
-                 << " does not match type of corresponding config value.";
+                 << " does not match type of corresponding config value. Will "
+                    "not be set.";
   }
 }
 
@@ -99,19 +116,24 @@ template <typename ConfigDerivedT, typename MemberPtrT,
                    bool()) = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
                ConfigDerivedT& config, MemberPtrT config_member_ptr) {
-  ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<std::string>()) {
-    config_value = ConfigValueT::strToTypeId(param_value.get<std::string>());
+    const auto config_value = ConfigValueT(param_value.get<std::string>());
+    if (config_value.isValid()) {
+      config.*config_member_ptr = config_value;
+    } else {
+      LOG(WARNING) << "Param " << param_name << " could not be loaded.";
+    }
   } else {
     LOG(WARNING) << "Type of param " << param_name
-                 << " does not match type of corresponding config value.";
+                 << " does not match type of corresponding config value. Will "
+                    "not be set.";
   }
 }
 }  // namespace detail
 
 template <typename ConfigDerivedT, size_t num_members,
           typename... CustomMemberTypes>
-ConfigDerivedT
+std::optional<ConfigDerivedT>
 ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
     const param::Map& params) {
   ConfigDerivedT config;

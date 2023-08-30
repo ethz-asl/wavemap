@@ -57,7 +57,7 @@ struct ConfigBase {
   }
 
   // Load config from param map
-  static ConfigDerivedT from(const param::Map& params);
+  static std::optional<ConfigDerivedT> from(const param::Map& params);
 
   // Comparison operators
   friend bool operator==(const ConfigDerivedT& lhs, const ConfigDerivedT& rhs) {

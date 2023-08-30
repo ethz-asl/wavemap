@@ -37,7 +37,7 @@ struct ValueWithUnit {
   operator const T&() const { return value; }
 
   // Method to load from configs
-  static ValueWithUnit from(const param::Map& params);
+  static std::optional<ValueWithUnit> from(const param::Map& params);
 };
 
 /**

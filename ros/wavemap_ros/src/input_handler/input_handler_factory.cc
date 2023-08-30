@@ -52,16 +52,26 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
     case InputHandlerType::kPointcloud: {
       const auto input_handler_config = PointcloudInputHandlerConfig::from(
           param::map::keyGetValue<param::Map>(params, "general"));
-      return std::make_unique<PointcloudInputHandler>(
-          input_handler_config, params, std::move(world_frame),
-          std::move(occupancy_map), std::move(transformer), nh, nh_private);
+      if (input_handler_config.has_value()) {
+        return std::make_unique<PointcloudInputHandler>(
+            input_handler_config.value(), params, std::move(world_frame),
+            std::move(occupancy_map), std::move(transformer), nh, nh_private);
+      } else {
+        LOG(ERROR) << "Pointcloud input handler config could not be loaded.";
+        return nullptr;
+      }
     }
     case InputHandlerType::kDepthImage: {
       const auto input_handler_config = DepthImageInputHandlerConfig::from(
           param::map::keyGetValue<param::Map>(params, "general"));
-      return std::make_unique<DepthImageInputHandler>(
-          input_handler_config, params, std::move(world_frame),
-          std::move(occupancy_map), std::move(transformer), nh, nh_private);
+      if (input_handler_config.has_value()) {
+        return std::make_unique<DepthImageInputHandler>(
+            input_handler_config.value(), params, std::move(world_frame),
+            std::move(occupancy_map), std::move(transformer), nh, nh_private);
+      } else {
+        LOG(ERROR) << "Depth image input handler config could not be loaded.";
+        return nullptr;
+      }
     }
   }
   return nullptr;

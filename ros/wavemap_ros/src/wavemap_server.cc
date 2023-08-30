@@ -28,10 +28,13 @@ bool WavemapServerConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
+// NOTE: If WavemapServerConfig::from(...) fails, accessing its value will throw
+//       an exception and end the program.
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
     : WavemapServer(nh, nh_private,
-                    WavemapServerConfig::from(param::convert::toParamMap(
-                        nh_private, "map/general"))) {}
+                    WavemapServerConfig::from(
+                        param::convert::toParamMap(nh_private, "map/general"))
+                        .value()) {}
 
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                              const WavemapServerConfig& config)

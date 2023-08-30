@@ -38,17 +38,35 @@ ProjectorBase::Ptr wavemap::ProjectorFactory::create(
     case ProjectorType::kSphericalProjector: {
       const auto spherical_projector_config =
           SphericalProjectorConfig::from(projection_model_params);
-      return std::make_shared<SphericalProjector>(spherical_projector_config);
+      if (spherical_projector_config.has_value()) {
+        return std::make_shared<SphericalProjector>(
+            spherical_projector_config.value());
+      } else {
+        LOG(ERROR) << "Spherical projector config could not be loaded.";
+        return nullptr;
+      }
     }
     case ProjectorType::kOusterProjector: {
       const auto ouster_projector_config =
           OusterProjectorConfig::from(projection_model_params);
-      return std::make_shared<OusterProjector>(ouster_projector_config);
+      if (ouster_projector_config.has_value()) {
+        return std::make_shared<OusterProjector>(
+            ouster_projector_config.value());
+      } else {
+        LOG(ERROR) << "Ouster projector config could not be loaded.";
+        return nullptr;
+      }
     }
     case ProjectorType::kPinholeCameraProjector: {
       const auto pinhole_projector_config =
           PinholeCameraProjectorConfig::from(projection_model_params);
-      return std::make_shared<PinholeCameraProjector>(pinhole_projector_config);
+      if (pinhole_projector_config.has_value()) {
+        return std::make_shared<PinholeCameraProjector>(
+            pinhole_projector_config.value());
+      } else {
+        LOG(ERROR) << "Pinhole projector config could not be loaded.";
+        return nullptr;
+      }
     }
   }
 
