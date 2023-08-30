@@ -2,6 +2,17 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Document how to configure wavemap
+* Update all configs to recommended settings
+* Improve config parameter unit management
+* Make warnings/errors that can occur when loading configs more descriptive
+* Silence cmake warning when no livox ros driver is found
+* Define schema for wavemap configs (enables code completion + validation in IDEs)
+* Configure .pre-commit to automatically lint wavemap configs using above schema
+* Contributors: Alexander Stumpf, Victor Reijgwart
+
 1.3.2 (2023-08-28)
 ------------------
 * Fix empty header of wavemap msgs

@@ -2,6 +2,13 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Document how to configure wavemap
+* Improve config parameter unit management
+* Make warnings/errors that can occur when loading configs more descriptive
+* Contributors: Victor Reijgwart
+
 1.3.2 (2023-08-28)
 ------------------
 

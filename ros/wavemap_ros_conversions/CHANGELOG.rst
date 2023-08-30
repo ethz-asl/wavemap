@@ -2,6 +2,11 @@
 Changelog for package wavemap_ros_conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make warnings/errors that can occur when loading configs more descriptive
+* Contributors: Victor Reijgwart
+
 1.3.2 (2023-08-28)
 ------------------
 
