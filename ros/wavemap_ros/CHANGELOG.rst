@@ -2,8 +2,8 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.4.0 (2023-08-30)
+------------------
 * Document how to configure wavemap
 * Update all configs to recommended settings
 * Improve config parameter unit management

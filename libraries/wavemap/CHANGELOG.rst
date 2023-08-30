@@ -2,8 +2,8 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.4.0 (2023-08-30)
+------------------
 * Document how to configure wavemap
 * Improve config parameter unit management
 * Make warnings/errors that can occur when loading configs more descriptive
