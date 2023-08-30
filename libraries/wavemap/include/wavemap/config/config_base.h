@@ -3,7 +3,7 @@
 
 #include "wavemap/config/param.h"
 #include "wavemap/config/param_checks.h"
-#include "wavemap/config/unit_conversions.h"
+#include "wavemap/config/value_with_unit.h"
 #include "wavemap/utils/type_utils.h"
 
 namespace wavemap {
@@ -36,14 +36,15 @@ struct ConfigBase {
   }
 
   // Setup the introspective member metadata map
-  using MemberTypes = param::PrimitiveValueTypes::Append<CustomMemberTypes...>;
+  using MemberTypes = param::PrimitiveValueTypes::Append<
+      Meters<FloatingPoint>, Radians<FloatingPoint>, Pixels<FloatingPoint>,
+      Seconds<FloatingPoint>>::Append<CustomMemberTypes...>;
   using MemberPointer =
       inject_type_list_as_member_ptrs_t<std::variant, ConfigDerivedT,
                                         MemberTypes>;
   struct MemberMetadata {
     param::Name name;
     MemberPointer ptr;
-    std::optional<SiUnit> unit = std::nullopt;
   };
   static constexpr size_t kNumMembers = num_members;
   using MemberMap = const std::array<MemberMetadata, num_members>;

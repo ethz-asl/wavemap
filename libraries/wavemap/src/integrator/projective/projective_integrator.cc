@@ -2,8 +2,8 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(ProjectiveIntegratorConfig,
-                      (min_range, SiUnit::kMeters)
-                      (max_range, SiUnit::kMeters)
+                      (min_range)
+                      (max_range)
                       (termination_height)
                       (termination_update_error));
 

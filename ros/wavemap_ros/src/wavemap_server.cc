@@ -14,9 +14,9 @@
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
                       (world_frame)
-                      (thresholding_period, SiUnit::kSeconds)
-                      (pruning_period, SiUnit::kSeconds)
-                      (publication_period, SiUnit::kSeconds)
+                      (thresholding_period)
+                      (pruning_period)
+                      (publication_period)
                       (max_num_blocks_per_msg));
 
 bool WavemapServerConfig::isValid(bool verbose) const {

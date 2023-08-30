@@ -15,7 +15,7 @@ namespace wavemap {
  * Config struct for the octree volumetric data structure.
  */
 struct VolumetricOctreeConfig : ConfigBase<VolumetricOctreeConfig, 4> {
-  FloatingPoint min_cell_width = 0.1f;
+  Meters<FloatingPoint> min_cell_width = 0.1f;
 
   FloatingPoint min_log_odds = -2.f;
   FloatingPoint max_log_odds = 4.f;

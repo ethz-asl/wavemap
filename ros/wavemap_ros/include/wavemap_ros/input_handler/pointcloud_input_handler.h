@@ -37,10 +37,10 @@ struct PointcloudInputHandlerConfig
 
   //! Time period used to control the rate at which to retry getting the sensor
   //! pose when ROS TF lookups fail.
-  FloatingPoint processing_retry_period = 0.05f;
+  Seconds<FloatingPoint> processing_retry_period = 0.05f;
   //! Maximum amount of time to wait for the sensor pose to become available
   // when ROS TF lookups fail.
-  FloatingPoint max_wait_for_pose = 1.f;
+  Seconds<FloatingPoint> max_wait_for_pose = 1.f;
 
   //! The frame_id to use to look up the sensor pose using ROS TFs.
   //! Note that setting this is optional, when left blank the header.frame_id of
@@ -49,7 +49,7 @@ struct PointcloudInputHandlerConfig
   //! Time offset to apply to the header.stamp of the measurement's msg when
   //! looking up its pose using ROS TFs. Can be used when the time offset is
   //! known (e.g. through calibration) but not corrected by the sensor's driver.
-  FloatingPoint time_offset = 0.f;
+  Seconds<FloatingPoint> time_offset = 0.f;
   //! Whether to undistort each pointcloud based on the sensor's motion while it
   //! was captured. We strongly recommend turning this on, unless the robot's
   //! odometry is very jerky or the sensor's driver already performs motion

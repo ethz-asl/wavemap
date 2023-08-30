@@ -12,7 +12,7 @@ namespace wavemap {
 DECLARE_CONFIG_MEMBERS(InputHandlerConfig,
                       (topic_name)
                       (topic_queue_length)
-                      (processing_retry_period, SiUnit::kSeconds)
+                      (processing_retry_period)
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 

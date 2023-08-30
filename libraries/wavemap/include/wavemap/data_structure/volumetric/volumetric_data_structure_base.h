@@ -34,7 +34,7 @@ struct VolumetricDataStructureConfig
     : ConfigBase<VolumetricDataStructureConfig, 3> {
   //! Maximum resolution of the map, set as the width of the smallest cell that
   //! it can represent.
-  FloatingPoint min_cell_width = 0.1f;
+  Meters<FloatingPoint> min_cell_width = 0.1f;
 
   //! Lower threshold for the occupancy values stored in the map, in log-odds.
   FloatingPoint min_log_odds = -2.f;

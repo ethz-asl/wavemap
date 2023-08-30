@@ -29,13 +29,13 @@ struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 5> {
   std::string world_frame = "odom";
   //! Time period controlling how often the map is thresholded.
   //! To disable thresholding, set it to a negative number [not recommended].
-  FloatingPoint thresholding_period = 1.f;
+  Seconds<FloatingPoint> thresholding_period = 1.f;
   //! Time period controlling how often the map is pruned.
   //! To disable pruning, set it to a negative number.
-  FloatingPoint pruning_period = 10.f;
+  Seconds<FloatingPoint> pruning_period = 10.f;
   //! Time period controlling how often the map is published.
   //! To disable map publishing, set it to a negative number.
-  FloatingPoint publication_period = 10.f;
+  Seconds<FloatingPoint> publication_period = 10.f;
   //! Maximum number of blocks to transmit per wavemap map message.
   //! Used to control the maximum message size. Only works in combination with
   //! hash-based map data structures.

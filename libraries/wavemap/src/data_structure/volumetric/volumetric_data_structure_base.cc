@@ -4,7 +4,7 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(VolumetricDataStructureConfig,
-                      (min_cell_width, SiUnit::kMeters)
+                      (min_cell_width)
                       (min_log_odds)
                       (max_log_odds));
 

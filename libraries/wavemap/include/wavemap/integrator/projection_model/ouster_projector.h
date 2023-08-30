@@ -22,11 +22,11 @@ struct OusterProjectorConfig
   //! Offset between the Ouster LiDAR frame's origin and the laser beam's start
   //! point (radial direction). For illustrations and additional information,
   //! please see the Ouster sensor's manual.
-  FloatingPoint lidar_origin_to_beam_origin = 0.02767f;
+  Meters<FloatingPoint> lidar_origin_to_beam_origin = 0.02767f;
   //! Offset between the Ouster sensor and LiDAR frame's origins (z-direction).
   //! For illustrations and additional information, please see the Ouster
   //! sensor's manual.
-  FloatingPoint lidar_origin_to_sensor_origin_z_offset = 0.03618f;
+  Meters<FloatingPoint> lidar_origin_to_sensor_origin_z_offset = 0.03618f;
 
   static MemberMap memberMap;
 

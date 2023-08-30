@@ -18,11 +18,11 @@ namespace wavemap {
 struct ProjectiveIntegratorConfig : ConfigBase<ProjectiveIntegratorConfig, 4> {
   //! Minimum range measurements should have to be considered.
   //! Measurements below this threshold are ignored.
-  FloatingPoint min_range = 0.5f;
+  Meters<FloatingPoint> min_range = 0.5f;
   //! Maximum range up to which to update the map.
   //! Measurements that exceed this range are used as free-space beams,
   //! up to the maximum range.
-  FloatingPoint max_range = 20.f;
+  Meters<FloatingPoint> max_range = 20.f;
 
   //! Maximum resolution to use for this integrator, set as the height at which
   //! to terminate the coarse-to-fine measurement updates. Defaults to 0 (max

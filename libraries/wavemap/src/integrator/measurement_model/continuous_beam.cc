@@ -2,8 +2,8 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(ContinuousBeamConfig,
-                      (angle_sigma, SiUnit::kRadians)
-                      (range_sigma, SiUnit::kMeters)
+                      (angle_sigma)
+                      (range_sigma)
                       (scaling_free)
                       (scaling_occupied)
                       (beam_selector_type));

@@ -29,7 +29,7 @@ struct InputHandlerConfig : public ConfigBase<InputHandlerConfig, 5> {
   std::string topic_name = "scan";
   int topic_queue_length = 10;
 
-  FloatingPoint processing_retry_period = 0.05f;
+  Seconds<FloatingPoint> processing_retry_period = 0.05f;
 
   std::string reprojected_pointcloud_topic_name;  // Leave blank to disable
   std::string projected_range_image_topic_name;   // Leave blank to disable

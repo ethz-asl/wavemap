@@ -19,9 +19,9 @@ namespace wavemap {
 struct ContinuousBeamConfig
     : ConfigBase<ContinuousBeamConfig, 5, BeamSelectorType> {
   //! Uncertainty along the angle axis.
-  FloatingPoint angle_sigma = 0.f;
+  Radians<FloatingPoint> angle_sigma = 0.f;
   //! Uncertainty along the range axis.
-  FloatingPoint range_sigma = 0.f;
+  Meters<FloatingPoint> range_sigma = 0.f;
   //! Scale factor to apply to the continuous Bayesian occupancy model for cells
   //! that are observed as free. This can, for example, be used to give a higher
   //! weight to occupied updates than free updates.

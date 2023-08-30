@@ -60,16 +60,12 @@ namespace wavemap {
 
 namespace detail {
 // Loader for PrimitiveValueTypes
-// NOTE: We exclude FloatingPoints since these are specialized separately.
-template <
-    typename ConfigDerivedT, typename MemberPtrT,
-    typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
-    std::enable_if_t<param::PrimitiveValueTypes::contains_t<ConfigValueT> &&
-                         !std::is_same_v<ConfigValueT, FloatingPoint>,
-                     bool> = true>
+template <typename ConfigDerivedT, typename MemberPtrT,
+          typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
+          std::enable_if_t<param::PrimitiveValueTypes::contains_t<ConfigValueT>,
+                           bool> = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config, MemberPtrT config_member_ptr,
-               const std::optional<SiUnit>& /*config_member_unit*/) {
+               ConfigDerivedT& config, MemberPtrT config_member_ptr) {
   ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<ConfigValueT>()) {
     config_value = ConfigValueT{param_value.get<ConfigValueT>()};
@@ -79,37 +75,14 @@ void loadParam(const param::Name& param_name, const param::Value& param_value,
   }
 }
 
-// Loader for floating point types, which support unit conversions
-template <typename ConfigDerivedT>
-void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config,
-               FloatingPoint ConfigDerivedT::*config_member_ptr,
-               const std::optional<SiUnit>& config_member_unit) {
-  FloatingPoint& config_value = config.*config_member_ptr;
-  if (config_member_unit.has_value()) {
-    // TODO(victorr): Extend toUnit to auto-convert ints to floats
-    config_value = param::convert::toUnit(
-        param_value, config_member_unit.value(), config_value);
-  } else {
-    if (param_value.holds<FloatingPoint>()) {
-      config_value = param_value.get<FloatingPoint>();
-    } else if (param_value.holds<int>()) {
-      config_value = static_cast<FloatingPoint>(param_value.get<int>());
-    } else {
-      LOG(WARNING) << "Type of param " << param_name
-                   << " does not match type of corresponding config value.";
-    }
-  }
-}
-
-// Loader for types that define a "from" method, such as configs
+// Loader for types that define a "from" method, such as configs derived from
+// ConfigBase and values derived from ValueWithUnits
 template <typename ConfigDerivedT, typename MemberPtrT,
           typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
           decltype(ConfigValueT::from(std::declval<param::Map>()),
                    bool()) = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config, MemberPtrT config_member_ptr,
-               const std::optional<SiUnit>& /*config_member_unit*/) {
+               ConfigDerivedT& config, MemberPtrT config_member_ptr) {
   ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<param::Map>()) {
     config_value = ConfigValueT::from(param_value.get<param::Map>());
@@ -125,8 +98,7 @@ template <typename ConfigDerivedT, typename MemberPtrT,
           decltype(ConfigValueT::strToTypeId(std::declval<std::string>()),
                    bool()) = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config, MemberPtrT config_member_ptr,
-               const std::optional<SiUnit>& /*config_member_unit*/) {
+               ConfigDerivedT& config, MemberPtrT config_member_ptr) {
   ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<std::string>()) {
     config_value = ConfigValueT::strToTypeId(param_value.get<std::string>());
@@ -165,9 +137,8 @@ ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
 
     // If so, load it
     if (member_it != member_map.end()) {
-      const auto& unit = member_it->unit;
       auto param_loader = [&](auto&& ptr) {
-        detail::loadParam(param_name, param_value, config, ptr, unit);
+        detail::loadParam(param_name, param_value, config, ptr);
       };
       std::visit(param_loader, member_it->ptr);
       continue;

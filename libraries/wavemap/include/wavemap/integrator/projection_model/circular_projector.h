@@ -10,9 +10,9 @@ namespace wavemap {
  */
 struct CircularProjectorConfig : ConfigBase<CircularProjectorConfig, 3> {
   //! Minimum angle along this axis.
-  FloatingPoint min_angle = 0.f;
+  Radians<FloatingPoint> min_angle = 0.f;
   //! Maximum angle along this axis.
-  FloatingPoint max_angle = 0.f;
+  Radians<FloatingPoint> max_angle = 0.f;
   //! Resolution of the image along this axis,
   //! set as the number of cells along the axis.
   IndexElement num_cells = 0;
