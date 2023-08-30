@@ -18,6 +18,8 @@ You might have noticed two peculiarities in wavemap's configs.
 The first is that subsections often feature a **type** tag. This tag determines the type of the object that should be created for the corresponding element. For example, setting ``data_structure/type: hashed_chunked_wavelet_octree`` tells wavemap to create a *HashedChunkedWaveletOctree* data structure to store the map.
 The second is that **units** are specified explicitly. This eliminates misunderstandings and enables automatic conversions from derived units, such as ``{ millimeters: 27.67 }`` or ``{ degrees: 180.0 }``, to SI base units, such as ``{ meters: 0.02767 }`` or ``{ radians: 3.14159 }``. Note that wavemap's code internally always operates in SI base units.
 
+Note that the wavemap ROS server prints warnings for all unrecognized params at startup. This can be helpful for debugging and to quickly find typos in config param names.
+
 To get started quickly, we recommend skimming through these :repo_file:`example configs <ros/wavemap_ros/config>`.
 For reference, an overview of all available config options is provided below.
 
@@ -127,6 +129,8 @@ They support the following settings:
     :project: wavemap
     :members:
 
+.. _configuration_projection_models:
+
 Projection models
 -----------------
 These settings control the projection model that is used to convert cartesian coordinates to/from sensor coordinates.
@@ -135,6 +139,8 @@ They are nested in the top level config under ``inputs[i]/integrators[j]/project
 Spherical projection model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selected by setting ``inputs[i]/integrators[j]/projection_model/type: 'spherical_projector'``.
+
+This projection model is appropriate for most LiDARs, including Velodynes. It also works with dome LiDARs such as the Robosense RS-Bpearl.
 
 The remaining settings available under ``inputs[i]/integrators[j]/projection_model`` are:
 
@@ -146,6 +152,8 @@ Ouster LiDAR projection model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selected by setting ``inputs[i]/integrators[j]/projection_model/type: 'ouster_projector'``.
 
+This projection model improves the reconstruction accuracy for Ouster based LiDARs including the OS0 and OS1, by taking their staggered beam pattern into account.
+
 The remaining settings available under ``inputs[i]/integrators[j]/projection_model`` are:
 
 .. doxygenstruct:: wavemap::OusterProjectorConfig
@@ -156,11 +164,15 @@ Pinhole camera projection model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selected by setting ``inputs[i]/integrators[j]/projection_model/type: 'pinhole_camera_projector'``.
 
+This projection model is appropriate for most depth cameras.
+
 The remaining settings available under ``inputs[i]/integrators[j]/projection_model`` are:
 
 .. doxygenstruct:: wavemap::PinholeCameraProjectorConfig
     :project: wavemap
     :members:
+
+.. _configuration_measurement_models:
 
 Measurement models
 ------------------
@@ -171,6 +183,8 @@ Continuous ray measurement model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selected by setting ``inputs[i]/integrators[j]/measurement_model/type: 'continuous_ray'``.
 
+This measurement model accounts for uncertainty along each measured ray, but does not include angular uncertainty. It is appropriate for high density sensors with a limited range, such as most depth cameras. Considering angular uncertainty usually does not significantly improve reconstruction accuracy when the rays densely cover the entire observed volume, in which case the computational overhead is unnecessary.
+
 The remaining settings available under ``inputs[i]/integrators[j]/measurement_model`` are:
 
 .. doxygenstruct:: wavemap::ContinuousRayConfig
@@ -180,6 +194,8 @@ The remaining settings available under ``inputs[i]/integrators[j]/measurement_mo
 Continuous beam measurement model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Selected by setting ``inputs[i]/integrators[j]/measurement_model/type: 'continuous_beam'``.
+
+This measurement model extends the continuous ray model, by including angular uncertainty. For LiDAR sensors, whose ray density is low at long range, it significantly improves the reconstruction quality and recall on thin objects.
 
 The remaining settings available under ``inputs[i]/integrators[j]/measurement_model`` are:
 

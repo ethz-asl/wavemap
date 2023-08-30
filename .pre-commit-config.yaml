@@ -121,6 +121,7 @@ repos:
       - name: Check syntax of reStructuredText
         id: rstcheck
         additional_dependencies: [ sphinx ]
+        args: [ --report-level=warning ]
 
   - repo: local
     hooks:
