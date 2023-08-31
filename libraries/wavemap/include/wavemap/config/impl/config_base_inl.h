@@ -84,7 +84,8 @@ void loadParam(const param::Name& param_name, const param::Value& param_value,
 
   LOG(WARNING) << "Type of param " << param_name
                << " does not match the type of its corresponding config value. "
-                  "Will not be set.";
+                  "Keeping default value \""
+               << config_value << "\".";
 }
 
 // Loader for types that define a "from" method, such as configs derived from
@@ -96,10 +97,20 @@ template <typename ConfigDerivedT, typename MemberPtrT,
                    bool()) = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
                ConfigDerivedT& config, MemberPtrT config_member_ptr) {
-  if (const auto config_value = ConfigValueT::from(param_value); config_value) {
-    config.*config_member_ptr = config_value.value();
+  ConfigValueT& config_value = config.*config_member_ptr;
+  if (const auto read_value = ConfigValueT::from(param_value); read_value) {
+    config_value = read_value.value();
   } else {
-    LOG(WARNING) << "Param " << param_name << " could not be loaded.";
+    // Report the error, and print the fallback (default) value that will be
+    // used instead if possible
+    if constexpr (has_to_str_member_fn_v<ConfigValueT>) {
+      LOG(WARNING) << "Param " << param_name
+                   << " could not be loaded. Keeping default value: "
+                   << config_value.toStr() << ".";
+    } else {
+      LOG(WARNING) << "Param " << param_name
+                   << " could not be loaded. Keeping default value.";
+    }
   }
 }
 }  // namespace detail

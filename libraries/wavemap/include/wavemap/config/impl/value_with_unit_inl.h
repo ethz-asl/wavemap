@@ -1,7 +1,14 @@
 #ifndef WAVEMAP_CONFIG_IMPL_VALUE_WITH_UNIT_INL_H_
 #define WAVEMAP_CONFIG_IMPL_VALUE_WITH_UNIT_INL_H_
 
+#include <string>
+
 namespace wavemap {
+template <SiUnit::Id unit, typename T>
+std::string ValueWithUnit<unit, T>::toStr() const {
+  return std::to_string(value) + " [" + SiUnit::typeIdToStr(unit) + "]";
+}
+
 template <SiUnit::Id unit, typename T>
 std::optional<ValueWithUnit<unit, T>> ValueWithUnit<unit, T>::from(
     const param::Value& params) {

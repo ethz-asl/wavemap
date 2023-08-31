@@ -64,6 +64,16 @@ struct inject_type_list_as_member_ptrs<T, C, TypeList<Args...>> {
 template <template <class... Args> class T, class C, class... Args>
 using inject_type_list_as_member_ptrs_t =
     typename inject_type_list_as_member_ptrs<T, C, Args...>::type;
+
+template <typename T, typename = void>
+struct has_to_str_member_fn : std::false_type {};
+
+template <typename T>
+struct has_to_str_member_fn<T, std::void_t<decltype(std::declval<T>().toStr())>>
+    : std::true_type {};
+
+template <typename T>
+constexpr bool has_to_str_member_fn_v = has_to_str_member_fn<T>::value;
 }  // namespace wavemap
 
 #endif  // WAVEMAP_UTILS_TYPE_UTILS_H_

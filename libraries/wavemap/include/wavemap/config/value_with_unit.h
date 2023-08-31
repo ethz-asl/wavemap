@@ -38,6 +38,9 @@ struct ValueWithUnit {
 
   // Method to load from configs
   static std::optional<ValueWithUnit> from(const param::Value& params);
+
+  // Method to facilitate printing
+  std::string toStr() const;
 };
 
 /**

@@ -53,8 +53,9 @@ std::optional<DerivedNamedTypeSetT> TypeSelector<DerivedNamedTypeSetT>::from(
   DerivedNamedTypeSetT type_id(type_name);
   if (!type_id.isValid()) {
     LOG(WARNING)
-        << "Type name param (\"" << param::kTypeSelectorKey << ": " << type_name
-        << "\") does not match a known type name. Supported type names are ["
+        << "Value of type name param \"" << param::kTypeSelectorKey << "\": \""
+        << type_name
+        << "\" does not match a known type name. Supported type names are ["
         << std::accumulate(std::next(DerivedNamedTypeSetT::names.cbegin()),
                            DerivedNamedTypeSetT::names.cend(),
                            std::string(DerivedNamedTypeSetT::names[0]),
