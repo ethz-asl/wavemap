@@ -1,6 +1,6 @@
 # Description
 
-Thank you for opening a PR. Please summarize the change in 1 or 2 sentences.
+Thank you for opening a PR. Please summarize the changes in 1 or 2 sentences.
 
 ## Type of change
 
@@ -12,7 +12,7 @@ Delete options that are not relevant.
 
 ## Detailed summary
 
-Please include relevant motivation, context and a link to related issues (if appropriate). List any dependencies that are required for this change.
+Please describe the motivation, context and a link to related issues (if appropriate). List any dependencies that are required for this change.
 
 Feel free to summarize the changes as a list of bullet points.
 
@@ -24,7 +24,7 @@ If possible, verify that the changes produce the desired results by extending th
 
 If manual tests were performed to verify these changes, please describe them here and provide instructions to reproduce them. Please also list any relevant details for your test configuration below.
 
-If the changes are performance related, this is a good place to list the metrics that were used and improvements that are achieved.
+If the changes are performance related, this is a good place to list the metrics that were used and the improvements that have been achieved.
 
 **System information (please complete if relevant):**
 - CPU: [e.g. Intel i9-9900K]
