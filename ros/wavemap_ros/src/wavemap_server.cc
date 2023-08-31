@@ -33,7 +33,7 @@ bool WavemapServerConfig::isValid(bool verbose) const {
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
     : WavemapServer(nh, nh_private,
                     WavemapServerConfig::from(
-                        param::convert::toParamMap(nh_private, "map/general"))
+                        param::convert::toParamValue(nh_private, "map/general"))
                         .value()) {}
 
 WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
@@ -41,8 +41,8 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
     : config_(config.checkValid()),
       transformer_(std::make_shared<TfTransformer>()) {
   // Setup data structure
-  const param::Map data_structure_params =
-      param::convert::toParamMap(nh_private, "map/data_structure");
+  const auto data_structure_params =
+      param::convert::toParamValue(nh_private, "map/data_structure");
   occupancy_map_ = VolumetricDataStructureFactory::create(
       data_structure_params, VolumetricDataStructureType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
@@ -51,10 +51,7 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   const param::Array integrator_params_array =
       param::convert::toParamArray(nh_private, "inputs");
   for (const auto& integrator_params : integrator_params_array) {
-    if (integrator_params.holds<param::Map>()) {
-      const auto param_map = integrator_params.get<param::Map>();
-      addInput(param_map, nh, nh_private);
-    }
+    addInput(integrator_params, nh, nh_private);
   }
 
   // Connect to ROS
@@ -100,7 +97,7 @@ bool WavemapServer::loadMap(const std::string& file_path) {
   return io::fileToMap(file_path, occupancy_map_);
 }
 
-InputHandler* WavemapServer::addInput(const param::Map& integrator_params,
+InputHandler* WavemapServer::addInput(const param::Value& integrator_params,
                                       const ros::NodeHandle& nh,
                                       ros::NodeHandle nh_private) {
   auto input_handler =

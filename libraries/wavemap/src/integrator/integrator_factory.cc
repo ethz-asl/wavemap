@@ -12,45 +12,33 @@
 
 namespace wavemap {
 IntegratorBase::Ptr IntegratorFactory::create(
-    const param::Map& params, VolumetricDataStructureBase::Ptr occupancy_map,
+    const param::Value& params, VolumetricDataStructureBase::Ptr occupancy_map,
     std::optional<IntegratorType> default_integrator_type) {
-  std::string error_msg;
-
-  if (param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
-    const auto& integrator_params =
-        param::map::keyGetValue<param::Map>(params, "integration_method");
-    auto type = IntegratorType::fromParamMap(integrator_params, error_msg);
-    if (type.isValid()) {
-      return create(type, params, std::move(occupancy_map));
-    }
+  if (const auto type = IntegratorType::from(params, "integration_method");
+      type) {
+    return create(type.value(), params, std::move(occupancy_map));
   }
 
   if (default_integrator_type.has_value()) {
-    LOG(WARNING) << error_msg << " Default type \""
-                 << default_integrator_type.value().toStr()
+    LOG(WARNING) << "Default type \"" << default_integrator_type.value().toStr()
                  << "\" will be created instead.";
     return create(default_integrator_type.value(), params,
                   std::move(occupancy_map));
   }
 
-  LOG(ERROR) << error_msg << " No default was set. Returning nullptr.";
+  LOG(ERROR) << "No default was set. Returning nullptr.";
   return nullptr;
 }
 
 IntegratorBase::Ptr IntegratorFactory::create(
-    IntegratorType integrator_type, const param::Map& params,
+    IntegratorType integrator_type, const param::Value& params,
     VolumetricDataStructureBase::Ptr occupancy_map) {
   // If we're using a ray tracing based integrator, we can build it directly
   if (integrator_type == IntegratorType::kRayTracingIntegrator) {
-    if (!param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
-      LOG(ERROR) << "Integrator config did not specify the integration method. "
-                    "Returning nullptr.";
-      return nullptr;
-    }
-    const auto integrator_config = RayTracingIntegratorConfig::from(
-        param::map::keyGetValue<param::Map>(params, "integration_method"));
-    if (integrator_config.has_value()) {
-      return std::make_shared<RayTracingIntegrator>(integrator_config.value(),
+    if (const auto config =
+            RayTracingIntegratorConfig::from(params, "integration_method");
+        config) {
+      return std::make_shared<RayTracingIntegrator>(config.value(),
                                                     std::move(occupancy_map));
     } else {
       LOG(ERROR) << "Ray tracing integrator config could not be loaded.";
@@ -59,13 +47,8 @@ IntegratorBase::Ptr IntegratorFactory::create(
   }
 
   // Load the projective integrator config
-  if (!param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
-    LOG(ERROR) << "Integrator config did not specify the integration method. "
-                  "Returning nullptr.";
-    return nullptr;
-  }
-  const auto integrator_config = ProjectiveIntegratorConfig::from(
-      param::map::keyGetValue<param::Map>(params, "integration_method"));
+  const auto integrator_config =
+      ProjectiveIntegratorConfig::from(params, "integration_method");
   if (!integrator_config.has_value()) {
     LOG(ERROR) << "Integrator config could not be loaded.";
     return nullptr;

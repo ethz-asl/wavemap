@@ -30,7 +30,7 @@ bool DepthImageInputHandlerConfig::isValid(bool verbose) const {
 }
 
 DepthImageInputHandler::DepthImageInputHandler(
-    const DepthImageInputHandlerConfig& config, const param::Map& params,
+    const DepthImageInputHandlerConfig& config, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private)

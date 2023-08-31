@@ -23,6 +23,17 @@ param::Array toParamArray(const ros::NodeHandle& nh, const std::string& ns) {
   return {};
 }
 
+param::Value toParamValue(const ros::NodeHandle& nh, const std::string& ns) {
+  XmlRpc::XmlRpcValue xml_rpc_value;
+  if (nh.getParam(ns, xml_rpc_value)) {
+    return toParamValue(xml_rpc_value);
+  }
+
+  LOG(WARNING) << "Could not load ROS params under namespace "
+               << nh.resolveName(ns);
+  return param::Value{param::Map{}};  // Return an empty map
+}
+
 param::Map toParamMap(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeStruct) {

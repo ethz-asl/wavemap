@@ -83,7 +83,7 @@ struct PointcloudInputHandlerConfig
 class PointcloudInputHandler : public InputHandler {
  public:
   PointcloudInputHandler(const PointcloudInputHandlerConfig& config,
-                         const param::Map& params, std::string world_frame,
+                         const param::Value& params, std::string world_frame,
                          VolumetricDataStructureBase::Ptr occupancy_map,
                          std::shared_ptr<TfTransformer> transformer,
                          ros::NodeHandle nh, ros::NodeHandle nh_private);

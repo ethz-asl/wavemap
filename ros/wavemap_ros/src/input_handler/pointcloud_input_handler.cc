@@ -30,7 +30,7 @@ bool PointcloudInputHandlerConfig::isValid(bool verbose) const {
 }
 
 PointcloudInputHandler::PointcloudInputHandler(
-    const PointcloudInputHandlerConfig& config, const param::Map& params,
+    const PointcloudInputHandlerConfig& config, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private)

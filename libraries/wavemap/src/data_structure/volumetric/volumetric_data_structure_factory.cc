@@ -8,31 +8,30 @@
 
 namespace wavemap {
 VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
-    const param::Map& params,
+    const param::Value& params,
     std::optional<VolumetricDataStructureType> default_data_structure_type) {
-  std::string error_msg;
-  auto type = VolumetricDataStructureType::fromParamMap(params, error_msg);
-  if (type.isValid()) {
-    return create(type, params);
+  if (const auto type = VolumetricDataStructureType::from(params); type) {
+    return create(type.value(), params);
   }
 
   if (default_data_structure_type.has_value()) {
-    type = default_data_structure_type.value();
-    LOG(WARNING) << error_msg << " Default type \"" << type.toStr()
+    LOG(WARNING) << "Default type \""
+                 << default_data_structure_type.value().toStr()
                  << "\" will be created instead.";
     return create(default_data_structure_type.value(), params);
   }
 
-  LOG(ERROR) << error_msg << "No default was set. Returning nullptr.";
+  LOG(ERROR) << "No default was set. Returning nullptr.";
   return nullptr;
 }
 
 VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
-    VolumetricDataStructureType data_structure_type, const param::Map& params) {
+    VolumetricDataStructureType data_structure_type,
+    const param::Value& params) {
   switch (data_structure_type.toTypeId()) {
     case VolumetricDataStructureType::kHashedBlocks: {
-      const auto config = VolumetricDataStructureConfig::from(params);
-      if (config.has_value()) {
+      if (const auto config = VolumetricDataStructureConfig::from(params);
+          config) {
         return std::make_shared<HashedBlocks>(config.value());
       } else {
         LOG(ERROR) << "Hashed blocks volumetric data structure config could "
@@ -41,8 +40,7 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
       }
     }
     case VolumetricDataStructureType::kOctree: {
-      const auto config = VolumetricOctreeConfig::from(params);
-      if (config.has_value()) {
+      if (const auto config = VolumetricOctreeConfig::from(params); config) {
         return std::make_shared<VolumetricOctree>(config.value());
       } else {
         LOG(ERROR)
@@ -51,8 +49,7 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
       }
     }
     case VolumetricDataStructureType::kWaveletOctree: {
-      const auto config = WaveletOctreeConfig::from(params);
-      if (config.has_value()) {
+      if (const auto config = WaveletOctreeConfig::from(params); config) {
         return std::make_shared<WaveletOctree>(config.value());
       } else {
         LOG(ERROR) << "Wavelet octree volumetric data structure config could "
@@ -61,8 +58,7 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
       }
     }
     case VolumetricDataStructureType::kHashedWaveletOctree: {
-      const auto config = HashedWaveletOctreeConfig::from(params);
-      if (config.has_value()) {
+      if (const auto config = HashedWaveletOctreeConfig::from(params); config) {
         return std::make_shared<HashedWaveletOctree>(config.value());
       } else {
         LOG(ERROR) << "Hashed wavelet octree volumetric data structure config "
@@ -71,8 +67,8 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
       }
     }
     case VolumetricDataStructureType::kHashedChunkedWaveletOctree: {
-      const auto config = HashedChunkedWaveletOctreeConfig::from(params);
-      if (config.has_value()) {
+      if (const auto config = HashedChunkedWaveletOctreeConfig::from(params);
+          config) {
         return std::make_shared<HashedChunkedWaveletOctree>(config.value());
       } else {
         LOG(ERROR) << "Hashed chunked wavelet octree volumetric data structure "

@@ -56,7 +56,7 @@ class WavemapServer {
   bool saveMap(const std::string& file_path) const;
   bool loadMap(const std::string& file_path);
 
-  InputHandler* addInput(const param::Map& integrator_params,
+  InputHandler* addInput(const param::Value& integrator_params,
                          const ros::NodeHandle& nh, ros::NodeHandle nh_private);
 
   VolumetricDataStructureBase::Ptr getMap() { return occupancy_map_; }

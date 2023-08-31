@@ -10,11 +10,12 @@ namespace wavemap {
 class IntegratorFactory {
  public:
   static IntegratorBase::Ptr create(
-      const param::Map& params, VolumetricDataStructureBase::Ptr occupancy_map,
+      const param::Value& params,
+      VolumetricDataStructureBase::Ptr occupancy_map,
       std::optional<IntegratorType> default_integrator_type = std::nullopt);
 
   static IntegratorBase::Ptr create(
-      IntegratorType integrator_type, const param::Map& params,
+      IntegratorType integrator_type, const param::Value& params,
       VolumetricDataStructureBase::Ptr occupancy_map);
 };
 }  // namespace wavemap

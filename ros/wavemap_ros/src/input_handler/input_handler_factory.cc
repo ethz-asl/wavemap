@@ -5,21 +5,18 @@
 
 namespace wavemap {
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
-    const param::Map& params, std::string world_frame,
+    const param::Value& params, std::string world_frame,
     VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private,
     std::optional<InputHandlerType> default_input_handler_type) {
-  std::string error_msg;
-
-  auto type = InputHandlerType::fromParamMap(params, error_msg);
-  if (type.isValid()) {
-    return create(type, params, world_frame, occupancy_map,
+  if (const auto type = InputHandlerType::from(params); type) {
+    return create(type.value(), params, world_frame, occupancy_map,
                   std::move(transformer), nh, nh_private);
   }
 
   if (default_input_handler_type.has_value()) {
-    LOG(WARNING) << error_msg << " Default type \""
+    LOG(WARNING) << "Default type \""
                  << default_input_handler_type.value().toStr()
                  << "\" will be created instead.";
     return create(default_input_handler_type.value(), params,
@@ -27,34 +24,23 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
                   std::move(transformer), nh, nh_private);
   }
 
-  LOG(ERROR) << error_msg << "No default was set. Returning nullptr.";
+  LOG(ERROR) << "No default was set. Returning nullptr.";
   return nullptr;
 }
 
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
-    InputHandlerType input_handler_type, const param::Map& params,
+    InputHandlerType input_handler_type, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private) {
-  // Load the input handler config
-  if (!param::map::hasKey(params, "general")) {
-    LOG(ERROR) << "Integrator params must have section named \"general\".";
-    return nullptr;
-  }
-  if (!param::map::keyHoldsValue<param::Map>(params, "general")) {
-    LOG(ERROR) << "Integrator param key \"general\" must contain a map "
-                  "(dictionary) of parameters.";
-    return nullptr;
-  }
-
   // Create the input handler
   switch (input_handler_type.toTypeId()) {
     case InputHandlerType::kPointcloud: {
-      const auto input_handler_config = PointcloudInputHandlerConfig::from(
-          param::map::keyGetValue<param::Map>(params, "general"));
-      if (input_handler_config.has_value()) {
+      if (const auto config =
+              PointcloudInputHandlerConfig::from(params, "general");
+          config) {
         return std::make_unique<PointcloudInputHandler>(
-            input_handler_config.value(), params, std::move(world_frame),
+            config.value(), params, std::move(world_frame),
             std::move(occupancy_map), std::move(transformer), nh, nh_private);
       } else {
         LOG(ERROR) << "Pointcloud input handler config could not be loaded.";
@@ -62,11 +48,11 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
       }
     }
     case InputHandlerType::kDepthImage: {
-      const auto input_handler_config = DepthImageInputHandlerConfig::from(
-          param::map::keyGetValue<param::Map>(params, "general"));
-      if (input_handler_config.has_value()) {
+      if (const auto config =
+              DepthImageInputHandlerConfig::from(params, "general");
+          config) {
         return std::make_unique<DepthImageInputHandler>(
-            input_handler_config.value(), params, std::move(world_frame),
+            config.value(), params, std::move(world_frame),
             std::move(occupancy_map), std::move(transformer), nh, nh_private);
       } else {
         LOG(ERROR) << "Depth image input handler config could not be loaded.";

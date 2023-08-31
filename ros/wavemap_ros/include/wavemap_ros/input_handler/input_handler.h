@@ -55,7 +55,7 @@ struct InputHandlerConfig : public ConfigBase<InputHandlerConfig, 5> {
 
 class InputHandler {
  public:
-  InputHandler(const InputHandlerConfig& config, const param::Map& params,
+  InputHandler(const InputHandlerConfig& config, const param::Value& params,
                std::string world_frame,
                VolumetricDataStructureBase::Ptr occupancy_map,
                std::shared_ptr<TfTransformer> transformer,

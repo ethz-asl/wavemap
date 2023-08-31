@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_CONFIG_CONFIG_BASE_H_
 #define WAVEMAP_CONFIG_CONFIG_BASE_H_
 
+#include <string>
+
 #include "wavemap/config/param.h"
 #include "wavemap/config/param_checks.h"
 #include "wavemap/config/value_with_unit.h"
@@ -57,7 +59,9 @@ struct ConfigBase {
   }
 
   // Load config from param map
-  static std::optional<ConfigDerivedT> from(const param::Map& params);
+  static std::optional<ConfigDerivedT> from(const param::Value& params);
+  static std::optional<ConfigDerivedT> from(const param::Value& params,
+                                            const std::string& subconfig_name);
 
   // Comparison operators
   friend bool operator==(const ConfigDerivedT& lhs, const ConfigDerivedT& rhs) {
