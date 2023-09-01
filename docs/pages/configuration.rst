@@ -10,7 +10,7 @@ Wavemap's configuration system is designed to be flexible and expressive. Let's 
     :language: YAML
     :caption: :repo_file:`Example config to use wavemap with an Ouster OS0-128 LiDAR<ros/wavemap_ros/config/wavemap_ouster_os0.yaml>`
 
-The map's general settings, such as the coordinate frame in which it's represented and the rate at which its published, are configured under ``map/general``.
+The map's general settings, such as the coordinate frame in which it's represented and the rate at which it's published, are configured under ``map/general``.
 The data structure used to store the volumetric map is configured under ``map/data_structure``.
 Finally, a list of inputs can be specified.
 
