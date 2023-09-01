@@ -75,9 +75,10 @@ struct TypeSelector {
            static_cast<size_t>(type_id) < DerivedTypeSelectorT::names.size();
   }
 
-  // Convenience method to read the type from a param map
-  static DerivedTypeSelectorT fromParamMap(const param::Map& params,
-                                           std::string& error_msg);
+  // Convenience method to read the type from params
+  static std::optional<DerivedTypeSelectorT> from(const param::Value& params);
+  static std::optional<DerivedTypeSelectorT> from(
+      const param::Value& params, const std::string& subconfig_name);
 
  private:
   TypeId id_ = kInvalidTypeId;

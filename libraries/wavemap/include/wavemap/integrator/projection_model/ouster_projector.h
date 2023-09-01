@@ -10,12 +10,23 @@
 #include "wavemap/utils/approximate_trigonometry.h"
 
 namespace wavemap {
+/**
+ * Config struct for the ouster LiDAR projection model.
+ */
 struct OusterProjectorConfig
     : ConfigBase<OusterProjectorConfig, 4, CircularProjectorConfig> {
+  //! Properties of the projection model along the elevation axis.
   CircularProjectorConfig elevation;
+  //! Properties of the projection model along the azimuth axis.
   CircularProjectorConfig azimuth;
-  FloatingPoint lidar_origin_to_beam_origin = 0.02767f;
-  FloatingPoint lidar_origin_to_sensor_origin_z_offset = 0.03618f;
+  //! Offset between the Ouster LiDAR frame's origin and the laser beam's start
+  //! point (radial direction). For illustrations and additional information,
+  //! please see the Ouster sensor's manual.
+  Meters<FloatingPoint> lidar_origin_to_beam_origin = 0.02767f;
+  //! Offset between the Ouster sensor and LiDAR frame's origins (z-direction).
+  //! For illustrations and additional information, please see the Ouster
+  //! sensor's manual.
+  Meters<FloatingPoint> lidar_origin_to_sensor_origin_z_offset = 0.03618f;
 
   static MemberMap memberMap;
 

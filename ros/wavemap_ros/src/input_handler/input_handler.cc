@@ -12,7 +12,7 @@ namespace wavemap {
 DECLARE_CONFIG_MEMBERS(InputHandlerConfig,
                       (topic_name)
                       (topic_queue_length)
-                      (processing_retry_period, SiUnit::kSeconds)
+                      (processing_retry_period)
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 
@@ -27,7 +27,7 @@ bool InputHandlerConfig::isValid(bool verbose) const {
 }
 
 InputHandler::InputHandler(const InputHandlerConfig& config,
-                           const param::Map& params, std::string world_frame,
+                           const param::Value& params, std::string world_frame,
                            VolumetricDataStructureBase::Ptr occupancy_map,
                            std::shared_ptr<TfTransformer> transformer,
                            const ros::NodeHandle& nh,
@@ -36,14 +36,22 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
       world_frame_(std::move(world_frame)),
       transformer_(std::move(transformer)) {
   // Create the integrators
-  CHECK(param::map::keyHoldsValue<param::Array>(params, "integrators"));
-  const auto integrators =
-      param::map::keyGetValue<param::Array>(params, "integrators");
-  for (const auto& integrator_params : integrators) {
-    CHECK(integrator_params.holds<param::Map>());
-    auto integrator = IntegratorFactory::create(
-        integrator_params.get<param::Map>(), occupancy_map,
-        IntegratorType::kRayTracingIntegrator);
+  const auto integrators_param = params.getChild("integrators");
+  if (!integrators_param) {
+    LOG(WARNING) << "Could not find key named \"integrators\" in input handler "
+                    "params. Input handler will be disabled.";
+    return;
+  }
+  const auto integrators_array = integrators_param->get<param::Array>();
+  if (!integrators_array) {
+    LOG(WARNING) << "Key named \"integrators\" in input handler params is not "
+                    "of type Array (list). Input handler will be disabled.";
+    return;
+  }
+  for (const auto& integrator_params : integrators_array.value()) {
+    auto integrator =
+        IntegratorFactory::create(integrator_params, occupancy_map,
+                                  IntegratorType::kRayTracingIntegrator);
     CHECK_NOTNULL(integrator);
     integrators_.emplace_back(std::move(integrator));
   }

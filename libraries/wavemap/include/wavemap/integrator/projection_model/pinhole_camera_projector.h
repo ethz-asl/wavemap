@@ -7,13 +7,26 @@
 #include "wavemap/integrator/projection_model/projector_base.h"
 
 namespace wavemap {
+/**
+ * Config struct for the pinhole camera projection model.
+ */
 struct PinholeCameraProjectorConfig
     : ConfigBase<PinholeCameraProjectorConfig, 6> {
+  //! The image's width in pixels.
   IndexElement width = 0;
+  //! The image's height in pixels.
   IndexElement height = 0;
+  //! Fx according to ROS' CameraInfo convention:
+  //! http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.
   FloatingPoint fx = 0.f;
+  //! Fy according to ROS' CameraInfo convention:
+  //! http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.
   FloatingPoint fy = 0.f;
+  //! Cx according to ROS' CameraInfo convention:
+  //! http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.
   FloatingPoint cx = 0.f;
+  //! Cy according to ROS' CameraInfo convention:
+  //! http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.
   FloatingPoint cy = 0.f;
 
   static MemberMap memberMap;

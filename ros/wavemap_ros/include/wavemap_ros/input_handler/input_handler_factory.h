@@ -10,7 +10,7 @@ namespace wavemap {
 class InputHandlerFactory {
  public:
   static std::unique_ptr<InputHandler> create(
-      const param::Map& params, std::string world_frame,
+      const param::Value& params, std::string world_frame,
       VolumetricDataStructureBase::Ptr occupancy_map,
       std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
       ros::NodeHandle nh_private,
@@ -18,7 +18,7 @@ class InputHandlerFactory {
           std::nullopt);
 
   static std::unique_ptr<InputHandler> create(
-      InputHandlerType input_handler_type, const param::Map& params,
+      InputHandlerType input_handler_type, const param::Value& params,
       std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
       std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
       ros::NodeHandle nh_private);

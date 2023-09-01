@@ -3,16 +3,35 @@
 namespace wavemap::param::convert {
 param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;
-  nh.getParam(ns, xml_rpc_value);
+  if (nh.getParam(ns, xml_rpc_value)) {
+    return toParamMap(xml_rpc_value);
+  }
 
-  return toParamMap(xml_rpc_value);
+  LOG(WARNING) << "Could not load ROS params under namespace "
+               << nh.resolveName(ns);
+  return {};
 }
 
 param::Array toParamArray(const ros::NodeHandle& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;
-  nh.getParam(ns, xml_rpc_value);
+  if (nh.getParam(ns, xml_rpc_value)) {
+    return toParamArray(xml_rpc_value);
+  }
 
-  return toParamArray(xml_rpc_value);
+  LOG(WARNING) << "Could not load ROS params under namespace "
+               << nh.resolveName(ns);
+  return {};
+}
+
+param::Value toParamValue(const ros::NodeHandle& nh, const std::string& ns) {
+  XmlRpc::XmlRpcValue xml_rpc_value;
+  if (nh.getParam(ns, xml_rpc_value)) {
+    return toParamValue(xml_rpc_value);
+  }
+
+  LOG(WARNING) << "Could not load ROS params under namespace "
+               << nh.resolveName(ns);
+  return param::Value{param::Map{}};  // Return an empty map
 }
 
 param::Map toParamMap(  // NOLINT

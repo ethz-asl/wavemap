@@ -2,7 +2,7 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(ContinuousRayConfig,
-                      (range_sigma, SiUnit::kMeters)
+                      (range_sigma)
                       (scaling_free)
                       (scaling_occupied)
                       (beam_selector_type));

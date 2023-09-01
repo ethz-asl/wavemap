@@ -115,7 +115,8 @@ inline RayTracingIntegratorConfig getRandomConfig<RayTracingIntegratorConfig>(
     RandomNumberGenerator& rng) {
   RayTracingIntegratorConfig config;
   config.min_range = rng.getRandomRealNumber(0.2f, 3.f);
-  config.max_range = rng.getRandomRealNumber(config.min_range, 20.f);
+  config.max_range = rng.getRandomRealNumber(
+      static_cast<FloatingPoint>(config.min_range), 20.f);
   return config;
 }
 
@@ -124,7 +125,8 @@ inline ProjectiveIntegratorConfig getRandomConfig<ProjectiveIntegratorConfig>(
     RandomNumberGenerator& rng) {
   ProjectiveIntegratorConfig config;
   config.min_range = rng.getRandomRealNumber(0.2f, 3.f);
-  config.max_range = rng.getRandomRealNumber(config.min_range, 20.f);
+  config.max_range = rng.getRandomRealNumber(
+      static_cast<FloatingPoint>(config.min_range), 20.f);
   return config;
 }
 }  // namespace detail

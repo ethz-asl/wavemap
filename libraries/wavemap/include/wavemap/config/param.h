@@ -29,13 +29,28 @@ class ValueT {
     return std::holds_alternative<ValueT>(data_);
   }
 
-  // Read the value assuming it is of type T. Throws if this is not the case.
-  // NOTE: First check if the current value is actually of type T using
-  //       holds<T>().
+  // Try to read the value using type T. Returns an empty optional if it fails.
   template <typename T>
-  T get() const {
-    CHECK(holds<T>());
-    return std::get<T>(data_);
+  std::optional<T> get() const {
+    if (holds<T>()) {
+      return std::get<T>(data_);
+    } else {
+      return std::nullopt;
+    }
+  }
+
+  // Methods to work with nested configs
+  inline bool hasChild(const Name& key) const {
+    if (const auto map = get<Map>(); map) {
+      return map.value().count(key);
+    }
+    return false;
+  }
+  std::optional<ValueT> getChild(const Name& key) const {
+    if (const auto map = get<Map>(); map) {
+      return map.value().at(key);
+    }
+    return std::nullopt;
   }
 
  private:
@@ -46,29 +61,6 @@ using PrimitiveValueTypes = TypeList<bool, int, FloatingPoint, std::string>;
 using Value = inject_type_list_t<ValueT, PrimitiveValueTypes>;
 using Array = Value::Array;
 using Map = Value::Map;
-
-namespace map {
-inline bool hasKey(const Map& map, const Name& key) { return map.count(key); }
-
-template <typename T>
-bool keyHoldsValue(const Map& map, const Name& key) {
-  return map.count(key) && map.at(key).template holds<T>();
-}
-
-template <typename T>
-T keyGetValue(const Map& map, const Name& key) {
-  return map.at(key).template get<T>();
-}
-
-template <typename T>
-T keyGetValue(const Map& map, const Name& key, T default_value) {
-  if (keyHoldsValue<T>(map, key)) {
-    return map.at(key).template get<T>();
-  } else {
-    return default_value;
-  }
-}
-}  // namespace map
 }  // namespace wavemap::param
 
 #endif  // WAVEMAP_CONFIG_PARAM_H_

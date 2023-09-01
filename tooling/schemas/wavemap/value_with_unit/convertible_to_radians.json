@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "minProperties": 1,
+  "maxProperties": 1,
+  "properties": {
+    "radians": {
+      "type": "number"
+    },
+    "rad": {
+      "type": "number"
+    },
+    "degrees": {
+      "type": "number"
+    },
+    "deg": {
+      "type": "number"
+    }
+  }
+}

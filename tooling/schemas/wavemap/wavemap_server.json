@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "General properties of the map.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "world_frame": {
+      "description": "Name of the coordinate frame in which to store the map. Will be used as the frame_id for ROS TF lookups.",
+      "examples": [
+        "world",
+        "odom"
+      ],
+      "type": "string"
+    },
+    "thresholding_period": {
+      "description": "Time period controlling how often the map is thresholded. To disable thresholding, set it to a negative number [not recommended].",
+      "$ref": "value_with_unit/convertible_to_seconds.json"
+    },
+    "pruning_period": {
+      "description": "Time period controlling how often the map is pruned. To disable pruning, set it to a negative number.",
+      "$ref": "value_with_unit/convertible_to_seconds.json"
+    },
+    "publication_period": {
+      "description": "Time period controlling how often the map is published. To disable map publishing, set it to a negative number.",
+      "$ref": "value_with_unit/convertible_to_seconds.json"
+    },
+    "max_num_blocks_per_msg": {
+      "description": "Maximum number of blocks to transmit per wavemap map message. Used to control the maximum message size. Only works in combination with hash-based map data structures.",
+      "type": "integer",
+      "exclusiveMinimum": 0
+    }
+  }
+}

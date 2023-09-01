@@ -9,12 +9,12 @@ namespace wavemap {
 DECLARE_CONFIG_MEMBERS(DepthImageInputHandlerConfig,
                       (topic_name)
                       (topic_queue_length)
-                      (processing_retry_period, SiUnit::kSeconds)
-                      (max_wait_for_pose, SiUnit::kSeconds)
+                      (processing_retry_period)
+                      (max_wait_for_pose)
                       (sensor_frame_id)
                       (image_transport_hints)
                       (depth_scale_factor)
-                      (time_offset, SiUnit::kSeconds)
+                      (time_offset)
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 
@@ -30,7 +30,7 @@ bool DepthImageInputHandlerConfig::isValid(bool verbose) const {
 }
 
 DepthImageInputHandler::DepthImageInputHandler(
-    const DepthImageInputHandlerConfig& config, const param::Map& params,
+    const DepthImageInputHandlerConfig& config, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private)

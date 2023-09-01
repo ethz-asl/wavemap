@@ -1,0 +1,46 @@
+map:
+  general:
+    world_frame: "odom"
+    thresholding_period: { seconds: 2.0 }
+    pruning_period: { seconds: 10.0 }
+    publication_period: { seconds: 2.0 }
+  data_structure:
+    type: hashed_chunked_wavelet_octree
+    min_cell_width: { meters: 0.1 }
+
+inputs:
+  - type: pointcloud
+    general:
+      topic_name: "/os_cloud_node/points"
+      topic_type: ouster
+      undistort_motion: true
+      topic_queue_length: 10
+      max_wait_for_pose: { seconds: 1.0 }
+      # reprojected_pointcloud_topic_name: "/wavemap/reprojected_pointcloud"
+      # projected_range_image_topic_name: "/wavemap/projected_range_image"
+    integrators:
+      - integration_method:
+          type: hashed_chunked_wavelet_integrator
+          min_range: { meters: 1.0 }
+          max_range: { meters: 15.0 }
+          termination_update_error: 0.1
+        projection_model:
+          type: ouster_projector
+          lidar_origin_to_beam_origin: { millimeters: 27.67 }
+          lidar_origin_to_sensor_origin_z_offset: { millimeters: 36.18 }
+          elevation:
+            num_cells: 128
+            min_angle: { degrees: -45.73 }
+            max_angle: { degrees: 46.27 }
+          azimuth:
+            num_cells: 1024
+            min_angle: { degrees: -180.0 }
+            max_angle: { degrees: 180.0 }
+        measurement_model:
+          type: continuous_beam
+          angle_sigma: { degrees: 0.035 }
+          # NOTE: For best results, we recommend setting range_sigma to
+          #       max(min_cell_width / 2, ouster_noise) where ouster_noise = 0.05
+          range_sigma: { meters: 0.05 }
+          scaling_free: 0.2
+          scaling_occupied: 0.4

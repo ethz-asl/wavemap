@@ -1,7 +1,7 @@
 <launch>
   <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_ros)/config/pico_monstar.yaml"
+       default="$(find wavemap_ros)/config/wavemap_pico_monstar.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
 
   <!-- Run the pico monstar driver -->

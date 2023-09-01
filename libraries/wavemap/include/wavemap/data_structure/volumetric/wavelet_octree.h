@@ -12,12 +12,20 @@
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
+/**
+ * Config struct for the wavelet octree volumetric data structure.
+ */
 struct WaveletOctreeConfig : ConfigBase<WaveletOctreeConfig, 4> {
-  FloatingPoint min_cell_width = 0.1f;
+  //! Maximum resolution of the map, set as the width of the smallest cell that
+  //! it can represent.
+  Meters<FloatingPoint> min_cell_width = 0.1f;
 
+  //! Lower threshold for the occupancy values stored in the map, in log-odds.
   FloatingPoint min_log_odds = -2.f;
+  //! Upper threshold for the occupancy values stored in the map, in log-odds.
   FloatingPoint max_log_odds = 4.f;
 
+  //! Height of the octree used to store the map.
   IndexElement tree_height = 14;
 
   static MemberMap memberMap;

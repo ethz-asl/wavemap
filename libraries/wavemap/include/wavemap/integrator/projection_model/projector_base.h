@@ -6,7 +6,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/config/type_selector.h"
-#include "wavemap/config/unit_conversions.h"
+#include "wavemap/config/value_with_unit.h"
 #include "wavemap/data_structure/aabb.h"
 
 namespace wavemap {

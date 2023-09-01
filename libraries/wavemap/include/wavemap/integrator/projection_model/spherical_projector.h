@@ -10,9 +10,14 @@
 #include "wavemap/utils/approximate_trigonometry.h"
 
 namespace wavemap {
+/**
+ * Config struct for the spherical projection model.
+ */
 struct SphericalProjectorConfig
     : ConfigBase<SphericalProjectorConfig, 2, CircularProjectorConfig> {
+  //! Properties of the projection model along the elevation axis.
   CircularProjectorConfig elevation;
+  //! Properties of the projection model along the azimuth axis.
   CircularProjectorConfig azimuth;
 
   static MemberMap memberMap;
