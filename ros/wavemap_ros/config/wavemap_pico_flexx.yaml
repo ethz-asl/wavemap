@@ -7,7 +7,7 @@ map:
   data_structure:
     type: hashed_chunked_wavelet_octree
     min_cell_width: { meters: 0.01 }
-    tree_height: 14
+    tree_height: 9
 
 inputs:
   - type: depth_image
