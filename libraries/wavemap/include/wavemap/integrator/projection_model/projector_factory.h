@@ -7,11 +7,11 @@ namespace wavemap {
 class ProjectorFactory {
  public:
   static ProjectorBase::Ptr create(
-      const param::Map& params,
+      const param::Value& params,
       std::optional<ProjectorType> default_projector_type = std::nullopt);
 
   static ProjectorBase::Ptr create(ProjectorType projector_type,
-                                   const param::Map& params);
+                                   const param::Value& params);
 };
 }  // namespace wavemap
 

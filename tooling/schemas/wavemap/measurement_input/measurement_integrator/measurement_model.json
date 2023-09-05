@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Inverse measurement model used to convert measurements into corresponding map updates.",
+  "type": "object",
+  "$defs": {
+    "beam_selector_type": {
+      "description": "Which neighboring beams to consider when computing a cell's measurement update.",
+      "type": "string",
+      "enum": [
+        "nearest_neighbor",
+        "all_neighbors"
+      ]
+    },
+    "constant_ray": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "constant_ray"
+        },
+        "log_odds_occupied": {
+          "description": "Update to apply to cell that are observed as occupied, in log-odds.",
+          "type": "number"
+        },
+        "log_odds_free": {
+          "description": "Update to apply to cells that are observed as free, in log-odds.",
+          "type": "number"
+        }
+      }
+    },
+    "continuous_ray": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "continuous_ray"
+        },
+        "range_sigma": {
+          "description": "Uncertainty along the range axis.",
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "scaling_free": {
+          "description": "Scale factor to apply to the continuous Bayesian occupancy model for cells that are observed as free. This can, for example, be used to give a higher weight to occupied updates than free updates.",
+          "type": "number"
+        },
+        "scaling_occupied": {
+          "description": "Scale factor to apply to the continuous Bayesian occupancy model for cells that are observed as occupied. This can, for example, be used to give a higher weight to occupied updates than free updates.",
+          "type": "number"
+        },
+        "beam_selector_type": {
+          "$ref": "#/$defs/beam_selector_type"
+        }
+      }
+    },
+    "continuous_beam": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "continuous_beam"
+        },
+        "angle_sigma": {
+          "description": "Uncertainty along the angle axis.",
+          "$ref": "../../value_with_unit/convertible_to_radians.json"
+        },
+        "range_sigma": {
+          "description": "Uncertainty along the range axis.",
+          "$ref": "../../value_with_unit/convertible_to_meters.json"
+        },
+        "scaling_free": {
+          "description": "Scale factor to apply to the continuous Bayesian occupancy model for cells that are observed as free. This can, for example, be used to give a higher weight to occupied updates than free updates.",
+          "type": "number"
+        },
+        "scaling_occupied": {
+          "description": "Scale factor to apply to the continuous Bayesian occupancy model for cells that are observed as occupied. This can, for example, be used to give a higher weight to occupied updates than free updates.",
+          "type": "number"
+        },
+        "beam_selector_type": {
+          "$ref": "#/$defs/beam_selector_type"
+        }
+      }
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "description": "Type of the measurement model that should be used.",
+      "type": "string",
+      "enum": [
+        "constant_ray",
+        "continuous_ray",
+        "continuous_beam"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/constant_ray"
+    },
+    {
+      "$ref": "#/$defs/continuous_ray"
+    },
+    {
+      "$ref": "#/$defs/continuous_beam"
+    }
+  ]
+}

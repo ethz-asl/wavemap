@@ -95,8 +95,8 @@ AABB<Vector3D> OusterProjector::cartesianToSensorAABB(
 DECLARE_CONFIG_MEMBERS(OusterProjectorConfig,
                     (elevation)
                     (azimuth)
-                    (lidar_origin_to_beam_origin, SiUnit::kMeters)
-                    (lidar_origin_to_sensor_origin_z_offset, SiUnit::kMeters));
+                    (lidar_origin_to_beam_origin)
+                    (lidar_origin_to_sensor_origin_z_offset));
 
 bool OusterProjectorConfig::isValid(bool verbose) const {
   return elevation.isValid(verbose) && azimuth.isValid(verbose);

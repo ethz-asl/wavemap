@@ -39,30 +39,25 @@ int main(int argc, char** argv) {
   const param::Array integrator_params_array =
       param::convert::toParamArray(nh_private, "inputs");
   for (const auto& integrator_params : integrator_params_array) {
-    if (integrator_params.holds<param::Map>()) {
-      const auto param_map = integrator_params.get<param::Map>();
-      InputHandler* input_handler =
-          wavemap_server.addInput(param_map, nh, nh_private);
-      if (input_handler) {
-        switch (input_handler->getType().toTypeId()) {
-          case InputHandlerType::kPointcloud: {
-            auto pointcloud_handler =
-                dynamic_cast<PointcloudInputHandler*>(input_handler);
-            PointcloudInputHandler::registerCallback(
-                pointcloud_handler->getTopicType(), [&](auto callback_ptr) {
-                  rosbag_processor.addCallback(input_handler->getTopicName(),
-                                               callback_ptr,
-                                               pointcloud_handler);
-                });
-          }
-            continue;
-          case InputHandlerType::kDepthImage:
-            rosbag_processor.addCallback<const sensor_msgs::Image&>(
-                input_handler->getTopicName(),
-                &DepthImageInputHandler::callback,
-                dynamic_cast<DepthImageInputHandler*>(input_handler));
-            continue;
+    InputHandler* input_handler =
+        wavemap_server.addInput(integrator_params, nh, nh_private);
+    if (input_handler) {
+      switch (input_handler->getType().toTypeId()) {
+        case InputHandlerType::kPointcloud: {
+          auto pointcloud_handler =
+              dynamic_cast<PointcloudInputHandler*>(input_handler);
+          PointcloudInputHandler::registerCallback(
+              pointcloud_handler->getTopicType(), [&](auto callback_ptr) {
+                rosbag_processor.addCallback(input_handler->getTopicName(),
+                                             callback_ptr, pointcloud_handler);
+              });
         }
+          continue;
+        case InputHandlerType::kDepthImage:
+          rosbag_processor.addCallback<const sensor_msgs::Image&>(
+              input_handler->getTopicName(), &DepthImageInputHandler::callback,
+              dynamic_cast<DepthImageInputHandler*>(input_handler));
+          continue;
       }
     }
   }

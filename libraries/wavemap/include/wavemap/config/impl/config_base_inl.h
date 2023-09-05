@@ -60,92 +60,77 @@ namespace wavemap {
 
 namespace detail {
 // Loader for PrimitiveValueTypes
-// NOTE: We exclude FloatingPoints since these are specialized separately.
-template <
-    typename ConfigDerivedT, typename MemberPtrT,
-    typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
-    std::enable_if_t<param::PrimitiveValueTypes::contains_t<ConfigValueT> &&
-                         !std::is_same_v<ConfigValueT, FloatingPoint>,
-                     bool> = true>
+template <typename ConfigDerivedT, typename MemberPtrT,
+          typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
+          std::enable_if_t<param::PrimitiveValueTypes::contains_t<ConfigValueT>,
+                           bool> = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config, MemberPtrT config_member_ptr,
-               const std::optional<SiUnit>& /*config_member_unit*/) {
+               ConfigDerivedT& config, MemberPtrT config_member_ptr) {
   ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<ConfigValueT>()) {
-    config_value = ConfigValueT{param_value.get<ConfigValueT>()};
-  } else {
-    LOG(WARNING) << "Type of param " << param_name
-                 << " does not match type of corresponding config value.";
-  }
-}
-
-// Loader for floating point types, which support unit conversions
-template <typename ConfigDerivedT>
-void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config,
-               FloatingPoint ConfigDerivedT::*config_member_ptr,
-               const std::optional<SiUnit>& config_member_unit) {
-  FloatingPoint& config_value = config.*config_member_ptr;
-  if (config_member_unit.has_value()) {
-    // TODO(victorr): Extend toUnit to auto-convert ints to floats
-    config_value = param::convert::toUnit(
-        param_value, config_member_unit.value(), config_value);
-  } else {
-    if (param_value.holds<FloatingPoint>()) {
-      config_value = param_value.get<FloatingPoint>();
-    } else if (param_value.holds<int>()) {
-      config_value = static_cast<FloatingPoint>(param_value.get<int>());
-    } else {
-      LOG(WARNING) << "Type of param " << param_name
-                   << " does not match type of corresponding config value.";
+    config_value = ConfigValueT{param_value.get<ConfigValueT>().value()};
+    return;
+  } else if constexpr (std::is_same_v<ConfigValueT, FloatingPoint>) {
+    if (const auto param_int = param_value.get<int>(); param_int) {
+      // If the param_value and config_value's types do not match exactly, we
+      // still allow automatic conversions from ints to floats
+      // NOTE: This is avoids pesky, potentially confusing errors when setting
+      //       whole numbers and forgetting the decimal point (e.g. 1 vs 1.0).
+      config_value =
+          ConfigValueT{static_cast<FloatingPoint>(param_int.value())};
+      return;
     }
   }
+
+  LOG(WARNING) << "Type of param " << param_name
+               << " does not match the type of its corresponding config value. "
+                  "Keeping default value \""
+               << config_value << "\".";
 }
 
-// Loader for types that define a "from" method, such as configs
+// Loader for types that define a "from" method, such as configs derived from
+// ConfigBase, type IDs derived from TypeSelector, and config values derived
+// from ValueWithUnits
 template <typename ConfigDerivedT, typename MemberPtrT,
           typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
-          decltype(ConfigValueT::from(std::declval<param::Map>()),
+          decltype(ConfigValueT::from(std::declval<param::Value>()),
                    bool()) = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config, MemberPtrT config_member_ptr,
-               const std::optional<SiUnit>& /*config_member_unit*/) {
+               ConfigDerivedT& config, MemberPtrT config_member_ptr) {
   ConfigValueT& config_value = config.*config_member_ptr;
-  if (param_value.holds<param::Map>()) {
-    config_value = ConfigValueT::from(param_value.get<param::Map>());
+  if (const auto read_value = ConfigValueT::from(param_value); read_value) {
+    config_value = read_value.value();
   } else {
-    LOG(WARNING) << "Type of param " << param_name
-                 << " does not match type of corresponding config value.";
-  }
-}
-
-// Loader for TypeSelector types
-template <typename ConfigDerivedT, typename MemberPtrT,
-          typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
-          decltype(ConfigValueT::strToTypeId(std::declval<std::string>()),
-                   bool()) = true>
-void loadParam(const param::Name& param_name, const param::Value& param_value,
-               ConfigDerivedT& config, MemberPtrT config_member_ptr,
-               const std::optional<SiUnit>& /*config_member_unit*/) {
-  ConfigValueT& config_value = config.*config_member_ptr;
-  if (param_value.holds<std::string>()) {
-    config_value = ConfigValueT::strToTypeId(param_value.get<std::string>());
-  } else {
-    LOG(WARNING) << "Type of param " << param_name
-                 << " does not match type of corresponding config value.";
+    // Report the error, and print the fallback (default) value that will be
+    // used instead if possible
+    if constexpr (has_to_str_member_fn_v<ConfigValueT>) {
+      LOG(WARNING) << "Param " << param_name
+                   << " could not be loaded. Keeping default value: "
+                   << config_value.toStr() << ".";
+    } else {
+      LOG(WARNING) << "Param " << param_name
+                   << " could not be loaded. Keeping default value.";
+    }
   }
 }
 }  // namespace detail
 
 template <typename ConfigDerivedT, size_t num_members,
           typename... CustomMemberTypes>
-ConfigDerivedT
+std::optional<ConfigDerivedT>
 ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
-    const param::Map& params) {
+    const param::Value& params) {
+  const auto param_map = params.get<param::Map>();
+  if (!param_map) {
+    LOG(WARNING) << "Tried to load config from a param that is not of type Map "
+                    "(dictionary). Will be ignored.";
+    return std::nullopt;
+  }
+
   ConfigDerivedT config;
   const auto& member_map = ConfigDerivedT::memberMap;
 
-  for (const auto& param_kv : params) {
+  for (const auto& param_kv : param_map.value()) {
     const auto& param_name = param_kv.first;
     const auto& param_value = param_kv.second;
 
@@ -165,9 +150,8 @@ ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
 
     // If so, load it
     if (member_it != member_map.end()) {
-      const auto& unit = member_it->unit;
       auto param_loader = [&](auto&& ptr) {
-        detail::loadParam(param_name, param_value, config, ptr, unit);
+        detail::loadParam(param_name, param_value, config, ptr);
       };
       std::visit(param_loader, member_it->ptr);
       continue;
@@ -178,6 +162,21 @@ ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
   }
 
   return config;
+}
+
+template <typename ConfigDerivedT, size_t num_members,
+          typename... CustomMemberTypes>
+std::optional<ConfigDerivedT>
+ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
+    const param::Value& params, const std::string& subconfig_name) {
+  if (const auto subconfig_params = params.getChild(subconfig_name);
+      subconfig_params) {
+    return from(subconfig_params.value());
+  }
+
+  LOG(WARNING) << "Tried to load subconfig named " << subconfig_name
+               << ", but params contained no such key. Ignoring request.";
+  return std::nullopt;
 }
 }  // namespace wavemap
 

@@ -36,7 +36,11 @@ To experiment with different wavemap settings, modify :repo_file:`this config fi
 Your own data
 *************
 The only requirements for running wavemap are:
-1. an odometry source, and
-2. a source of depth camera or 3D LiDAR data, as either depth images or point clouds.
 
-*Additional instructions coming soon.*
+1. a source of depth measurements,
+2. sensor pose (estimates) for each measurement.
+
+We usually use depth measurements from depth cameras or 3D LiDARs, but any source would work as long as a sufficiently good :ref:`projection <configuration_projection_models>` and :ref:`measurement <configuration_measurement_models>` model is available. Wavemap's ROS interface natively supports depth image and pointcloud inputs, and automatically queries the sensor poses from the TF tree.
+
+To help you get started quickly, we provide various example :repo_file:`config <ros/wavemap_ros/config>` and ROS :repo_file:`launch <ros/wavemap_ros/launch>` files.
+For a brief introduction on how to edit wavemap configs and an overview of all the available settings, see the :doc:`configuration page <configuration>`.

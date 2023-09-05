@@ -12,11 +12,27 @@
 #include "wavemap/integrator/projection_model/projector_base.h"
 
 namespace wavemap {
+/**
+ * Config struct for projective integrators.
+ */
 struct ProjectiveIntegratorConfig : ConfigBase<ProjectiveIntegratorConfig, 4> {
-  FloatingPoint min_range = 0.5f;
-  FloatingPoint max_range = 20.f;
+  //! Minimum range measurements should have to be considered.
+  //! Measurements below this threshold are ignored.
+  Meters<FloatingPoint> min_range = 0.5f;
+  //! Maximum range up to which to update the map.
+  //! Measurements that exceed this range are used as free-space beams,
+  //! up to the maximum range.
+  Meters<FloatingPoint> max_range = 20.f;
 
+  //! Maximum resolution to use for this integrator, set as the height at which
+  //! to terminate the coarse-to-fine measurement updates. Defaults to 0 (max
+  //! res). Can be set to 1 for 1/2 of the max resolution, to 2 for 1/4 of the
+  //! max resolution, etc.This can be used to fuse multiple inputs with
+  //! different maximum resolutions into a single map.
   NdtreeIndexElement termination_height = 0;
+  //! The update error threshold at which the coarse-to-fine measurement
+  //! integrator is allowed to terminate, in log-odds. For more information,
+  //! please refer to: https://www.roboticsproceedings.org/rss19/p065.pdf.
   FloatingPoint termination_update_error = 0.1f;
 
   static MemberMap memberMap;

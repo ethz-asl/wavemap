@@ -10,10 +10,10 @@ DECLARE_CONFIG_MEMBERS(PointcloudInputHandlerConfig,
                       (topic_name)
                       (topic_type)
                       (topic_queue_length)
-                      (processing_retry_period, SiUnit::kSeconds)
-                      (max_wait_for_pose, SiUnit::kSeconds)
+                      (processing_retry_period)
+                      (max_wait_for_pose)
                       (sensor_frame_id)
-                      (time_offset, SiUnit::kSeconds)
+                      (time_offset)
                       (undistort_motion)
                       (num_undistortion_interpolation_intervals_per_cloud)
                       (reprojected_pointcloud_topic_name)
@@ -31,7 +31,7 @@ bool PointcloudInputHandlerConfig::isValid(bool verbose) const {
 }
 
 PointcloudInputHandler::PointcloudInputHandler(
-    const PointcloudInputHandlerConfig& config, const param::Map& params,
+    const PointcloudInputHandlerConfig& config, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
     ros::NodeHandle nh_private)

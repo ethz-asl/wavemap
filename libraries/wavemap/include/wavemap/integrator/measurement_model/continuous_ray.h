@@ -10,10 +10,20 @@
 #include "wavemap/integrator/projective/update_type.h"
 
 namespace wavemap {
+/**
+ * Config struct for the continuous ray measurement model.
+ */
 struct ContinuousRayConfig
     : ConfigBase<ContinuousRayConfig, 4, BeamSelectorType> {
-  FloatingPoint range_sigma = 0.f;
+  //! Uncertainty along the range axis.
+  Meters<FloatingPoint> range_sigma = 0.f;
+  //! Scale factor to apply to the continuous Bayesian occupancy model for cells
+  //! that are observed as free. This can, for example, be used to give a higher
+  //! weight to occupied updates than free updates.
   FloatingPoint scaling_free = 0.5f;
+  //! Scale factor to apply to the continuous Bayesian occupancy model for cells
+  //! that are observed as occupied. This can, for example, be used to give a
+  //! higher weight to occupied updates than free updates.
   FloatingPoint scaling_occupied = 0.5f;
 
   BeamSelectorType beam_selector_type = BeamSelectorType::kNearestNeighbor;

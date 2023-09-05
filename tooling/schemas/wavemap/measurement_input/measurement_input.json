@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Properties of a single measurement input.",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "description": "Type of the measurement input handler that should be used.",
+      "type": "string",
+      "enum": [
+        "pointcloud",
+        "depth_image"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "pointcloud_input.json"
+    },
+    {
+      "$ref": "depth_image_input.json"
+    }
+  ]
+}

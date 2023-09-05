@@ -12,59 +12,55 @@
 
 namespace wavemap {
 IntegratorBase::Ptr IntegratorFactory::create(
-    const param::Map& params, VolumetricDataStructureBase::Ptr occupancy_map,
+    const param::Value& params, VolumetricDataStructureBase::Ptr occupancy_map,
     std::optional<IntegratorType> default_integrator_type) {
-  std::string error_msg;
-
-  if (param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
-    const auto& integrator_params =
-        param::map::keyGetValue<param::Map>(params, "integration_method");
-    auto type = IntegratorType::fromParamMap(integrator_params, error_msg);
-    if (type.isValid()) {
-      return create(type, params, std::move(occupancy_map));
-    }
+  if (const auto type = IntegratorType::from(params, "integration_method");
+      type) {
+    return create(type.value(), params, std::move(occupancy_map));
   }
 
   if (default_integrator_type.has_value()) {
-    LOG(WARNING) << error_msg << " Default type \""
-                 << default_integrator_type.value().toStr()
+    LOG(WARNING) << "Default type \"" << default_integrator_type.value().toStr()
                  << "\" will be created instead.";
     return create(default_integrator_type.value(), params,
                   std::move(occupancy_map));
   }
 
-  LOG(ERROR) << error_msg << " No default was set. Returning nullptr.";
+  LOG(ERROR) << "No default was set. Returning nullptr.";
   return nullptr;
 }
 
 IntegratorBase::Ptr IntegratorFactory::create(
-    IntegratorType integrator_type, const param::Map& params,
+    IntegratorType integrator_type, const param::Value& params,
     VolumetricDataStructureBase::Ptr occupancy_map) {
   // If we're using a ray tracing based integrator, we can build it directly
   if (integrator_type == IntegratorType::kRayTracingIntegrator) {
-    if (!param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
-      LOG(ERROR) << "Integrator config did not specify the integration method. "
-                    "Returning nullptr.";
+    if (const auto config =
+            RayTracingIntegratorConfig::from(params, "integration_method");
+        config) {
+      return std::make_shared<RayTracingIntegrator>(config.value(),
+                                                    std::move(occupancy_map));
+    } else {
+      LOG(ERROR) << "Ray tracing integrator config could not be loaded.";
       return nullptr;
     }
-    const auto integrator_config = RayTracingIntegratorConfig::from(
-        param::map::keyGetValue<param::Map>(params, "integration_method"));
-    return std::make_shared<RayTracingIntegrator>(integrator_config,
-                                                  std::move(occupancy_map));
   }
 
   // Load the projective integrator config
-  if (!param::map::keyHoldsValue<param::Map>(params, "integration_method")) {
-    LOG(ERROR) << "Integrator config did not specify the integration method. "
-                  "Returning nullptr.";
+  const auto integrator_config =
+      ProjectiveIntegratorConfig::from(params, "integration_method");
+  if (!integrator_config.has_value()) {
+    LOG(ERROR) << "Integrator config could not be loaded.";
     return nullptr;
   }
-  const auto integrator_config = ProjectiveIntegratorConfig::from(
-      param::map::keyGetValue<param::Map>(params, "integration_method"));
 
   // Create the projection model
   std::shared_ptr<ProjectorBase> projection_model =
       ProjectorFactory::create(params);
+  if (!projection_model) {
+    LOG(ERROR) << "Projection model could not be created.";
+    return nullptr;
+  }
 
   // Create the range and beam-offset images
   // NOTE: These are shared by the integrator and measurement model
@@ -77,12 +73,16 @@ IntegratorBase::Ptr IntegratorFactory::create(
   std::shared_ptr<MeasurementModelBase> measurement_model =
       MeasurementModelFactory::create(params, projection_model,
                                       posed_range_image, beam_offset_image);
+  if (!measurement_model) {
+    LOG(ERROR) << "Measurement model could not be created.";
+    return nullptr;
+  }
 
   // Assemble the projective integrator
   switch (integrator_type.toTypeId()) {
     case IntegratorType::kFixedResolutionIntegrator: {
       return std::make_shared<FixedResolutionIntegrator>(
-          integrator_config, projection_model, posed_range_image,
+          integrator_config.value(), projection_model, posed_range_image,
           beam_offset_image, measurement_model, std::move(occupancy_map));
     }
     case IntegratorType::kCoarseToFineIntegrator: {
@@ -90,7 +90,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
           std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map);
       if (octree_map) {
         return std::make_shared<CoarseToFineIntegrator>(
-            integrator_config, projection_model, posed_range_image,
+            integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model, std::move(octree_map));
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
@@ -106,7 +106,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
           std::dynamic_pointer_cast<WaveletOctree>(occupancy_map);
       if (wavelet_map) {
         return std::make_shared<WaveletIntegrator>(
-            integrator_config, projection_model, posed_range_image,
+            integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model, std::move(wavelet_map));
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
@@ -122,7 +122,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
           std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map);
       if (hashed_wavelet_map) {
         return std::make_shared<HashedWaveletIntegrator>(
-            integrator_config, projection_model, posed_range_image,
+            integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model,
             std::move(hashed_wavelet_map));
       } else {
@@ -139,7 +139,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
           std::dynamic_pointer_cast<HashedChunkedWaveletOctree>(occupancy_map);
       if (hashed_chunked_wavelet_map) {
         return std::make_shared<HashedChunkedWaveletIntegrator>(
-            integrator_config, projection_model, posed_range_image,
+            integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model,
             std::move(hashed_chunked_wavelet_map));
       } else {

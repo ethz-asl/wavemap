@@ -9,13 +9,13 @@ namespace wavemap {
 class VolumetricDataStructureFactory {
  public:
   static VolumetricDataStructureBase::Ptr create(
-      const param::Map& params,
+      const param::Value& params,
       std::optional<VolumetricDataStructureType> default_data_structure_type =
           std::nullopt);
 
   static VolumetricDataStructureBase::Ptr create(
       VolumetricDataStructureType data_structure_type,
-      const param::Map& params);
+      const param::Value& params);
 };
 }  // namespace wavemap
 

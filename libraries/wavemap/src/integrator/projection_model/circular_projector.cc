@@ -2,8 +2,8 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(CircularProjectorConfig,
-                      (min_angle, SiUnit::kRadians)
-                      (max_angle, SiUnit::kRadians)
+                      (min_angle)
+                      (max_angle)
                       (num_cells));
 
 bool CircularProjectorConfig::isValid(bool verbose) const {

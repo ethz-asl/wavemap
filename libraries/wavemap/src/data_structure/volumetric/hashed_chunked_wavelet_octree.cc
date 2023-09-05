@@ -6,11 +6,11 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(HashedChunkedWaveletOctreeConfig,
-                      (min_cell_width, SiUnit::kMeters)
+                      (min_cell_width)
                       (min_log_odds)
                       (max_log_odds)
                       (tree_height)
-                      (only_prune_blocks_if_unused_for, SiUnit::kSeconds));
+                      (only_prune_blocks_if_unused_for));
 
 bool HashedChunkedWaveletOctreeConfig::isValid(bool verbose) const {
   bool is_valid = true;

@@ -13,7 +13,7 @@
 
   <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_ros)/config/ouster_os0.yaml"
+       default="$(find wavemap_ros)/config/wavemap_ouster_os0.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
   <arg name="use_batch_mode"
        default="$(eval arg('odom_rosbag') != '')"

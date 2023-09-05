@@ -8,7 +8,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 find_package(OpenCV REQUIRED)
 
 # Optional dependencies
-find_package(livox_ros_driver2)
+find_package(livox_ros_driver2 QUIET)
 if (livox_ros_driver2_FOUND)
   include_directories(${livox_ros_driver2_INCLUDE_DIRS})
   add_compile_definitions(LIVOX_AVAILABLE)

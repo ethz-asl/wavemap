@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Properties of a single depth image input.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "general",
+    "integrators"
+  ],
+  "properties": {
+    "type": {
+      "const": "depth_image"
+    },
+    "general": {
+      "description": "General properties of the measurement input.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topic_name"
+      ],
+      "properties": {
+        "topic_name": {
+          "description": "Name of the ROS topic to subscribe to.",
+          "type": "string"
+        },
+        "topic_queue_length": {
+          "description": "Queue length to use when subscribing to the ROS topic.",
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "processing_retry_period": {
+          "description": "Time period used to control the rate at which to retry getting the sensor pose when ROS TF lookups fail.",
+          "$ref": "../value_with_unit/convertible_to_seconds.json",
+          "exclusiveMinimum": 0
+        },
+        "max_wait_for_pose": {
+          "description": "Maximum amount of time to wait for the sensor pose to become available when ROS TF lookups fail.",
+          "$ref": "../value_with_unit/convertible_to_seconds.json",
+          "minimum": 0
+        },
+        "sensor_frame_id": {
+          "description": "The frame_id to use to look up the sensor pose using ROS TFs. Note that setting this is optional, by default the header.frame_id of the measurement's msg is used.",
+          "type": "string"
+        },
+        "image_transport_hints": {
+          "description": "Custom image_transport::TransportHints to use when subscribing to the depth image topic. Defaults to 'raw'. For more info, see http://wiki.ros.org/image_transport.",
+          "type": "string"
+        },
+        "depth_scale_factor": {
+          "description": "Scale factor used to convert the depth image's values to meters.",
+          "type": "number"
+        },
+        "time_offset": {
+          "description": "Time offset to apply to the header.stamp of the measurement's msg when looking up its pose using ROS TFs. Can be used when the time offset is known (e.g. through calibration) but not corrected by the sensor's driver.",
+          "$ref": "../value_with_unit/convertible_to_seconds.json"
+        },
+        "reprojected_pointcloud_topic_name": {
+          "description": "Name of the topic on which to republish the depth images as pointclouds. Useful to share the pointclouds with other ROS nodes and for debugging.",
+          "type": "string"
+        },
+        "projected_range_image_topic_name": {
+          "description": "Name of the topic on which to republish the range image computed from the pointclouds. Useful for debugging.",
+          "type": "string"
+        }
+      }
+    },
+    "integrators": {
+      "description": "List of integrators to call whenever a new measurement arrives.",
+      "type": "array",
+      "items": {
+        "$ref": "measurement_integrator/measurement_integrator.json"
+      }
+    }
+  }
+}

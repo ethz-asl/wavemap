@@ -1,7 +1,7 @@
 <launch>
   <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_ros)/config/pico_flexx.yaml"
+       default="$(find wavemap_ros)/config/wavemap_pico_flexx.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
 
   <!-- Run the pico flexx driver -->

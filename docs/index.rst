@@ -1,5 +1,5 @@
-Wavemap
-#######
+Wavemap documentation
+#####################
 
 .. image:: https://github.com/ethz-asl/wavemap/assets/6238939/0df66963-3871-4fae-8567-523518c43494
   :alt: 3D reconstruction of Newer College's Cloister

@@ -25,15 +25,15 @@ namespace wavemap {
 #define IS_PARAM_GE(value, threshold, verbose) \
   is_param<std::greater_equal<>>(value, threshold, verbose, NAMEOF(value), ">=")
 
-template <typename ComparisonOp, typename T>
-bool is_param(T value, T threshold) {
+template <typename ComparisonOp, typename A, typename B>
+bool is_param(A value, B threshold) {
   return ComparisonOp{}(value, threshold);
 }
 
-template <typename ComparisonOp, typename T>
-bool is_param(T value, T threshold, bool verbose, const std::string& value_name,
+template <typename ComparisonOp, typename A, typename B>
+bool is_param(A value, B threshold, bool verbose, const std::string& value_name,
               const std::string& comparison_op_name) {
-  if (is_param<ComparisonOp, T>(value, threshold)) {
+  if (is_param<ComparisonOp, A, B>(value, threshold)) {
     return true;
   } else {
     LOG_IF(WARNING, verbose) << "Param \"" << value_name << "\" is not "

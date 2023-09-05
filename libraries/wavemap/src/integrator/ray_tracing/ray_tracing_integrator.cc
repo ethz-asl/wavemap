@@ -2,8 +2,8 @@
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(RayTracingIntegratorConfig,
-                      (min_range, SiUnit::kMeters)
-                      (max_range, SiUnit::kMeters));
+                      (min_range)
+                      (max_range));
 
 bool RayTracingIntegratorConfig::isValid(bool verbose) const {
   bool is_valid = true;

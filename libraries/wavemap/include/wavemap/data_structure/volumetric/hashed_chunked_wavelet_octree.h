@@ -12,18 +12,30 @@
 #include "wavemap/utils/int_math.h"
 
 namespace wavemap {
+/**
+ * Config struct for the hashed chunked wavelet octree volumetric data
+ * structure.
+ */
 struct HashedChunkedWaveletOctreeConfig
     : ConfigBase<HashedChunkedWaveletOctreeConfig, 5> {
   static constexpr IndexElement kMaxSupportedTreeHeight =
       HashedChunkedWaveletOctreeBlock::kMaxSupportedTreeHeight;
 
-  FloatingPoint min_cell_width = 0.1f;
+  //! Maximum resolution of the map, set as the width of the smallest cell that
+  //! it can represent.
+  Meters<FloatingPoint> min_cell_width = 0.1f;
 
+  //! Lower threshold for the occupancy values stored in the map, in log-odds.
   FloatingPoint min_log_odds = -2.f;
+  //! Upper threshold for the occupancy values stored in the map, in log-odds.
   FloatingPoint max_log_odds = 4.f;
 
+  //! Height of the octree in each hashed block.
   IndexElement tree_height = 6;
-  FloatingPoint only_prune_blocks_if_unused_for = 5.f;
+  //! Only prune blocks if they have not been updated for at least this amount
+  //! of time. Useful to avoid pruning blocks that are still being updated,
+  //! whose nodes would most likely directly be reallocated if pruned.
+  Seconds<FloatingPoint> only_prune_blocks_if_unused_for = 5.f;
 
   static MemberMap memberMap;
 

@@ -27,11 +27,18 @@ struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
       "hashed_chunked_wavelet_octree"};
 };
 
+/**
+ * Base config struct for volumetric data structures.
+ */
 struct VolumetricDataStructureConfig
     : ConfigBase<VolumetricDataStructureConfig, 3> {
-  FloatingPoint min_cell_width = 0.1f;
+  //! Maximum resolution of the map, set as the width of the smallest cell that
+  //! it can represent.
+  Meters<FloatingPoint> min_cell_width = 0.1f;
 
+  //! Lower threshold for the occupancy values stored in the map, in log-odds.
   FloatingPoint min_log_odds = -2.f;
+  //! Upper threshold for the occupancy values stored in the map, in log-odds.
   FloatingPoint max_log_odds = 4.f;
 
   static MemberMap memberMap;
