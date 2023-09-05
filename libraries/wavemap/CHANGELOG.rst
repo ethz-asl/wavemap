@@ -2,6 +2,18 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Annotate code for profiling with Tracy Profiler
+* Switch to custom atan2 in LiDAR projection models
+
+  * Speeds up measurement integrators by up to 40%
+  * No compromise in accuracy (slightly improves AUC, accuracy and recall)
+
+* Minor general optimizations
+* Add option to enable DCHECKs even when not compiling in debug mode
+* Contributors: Victor Reijgwart
+
 1.4.0 (2023-08-30)
 ------------------
 * Document how to configure wavemap

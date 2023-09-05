@@ -2,6 +2,11 @@
 Changelog for package wavemap_io
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Improve error messages when reading/writing a file fails
+* Contributors: Victor Reijgwart
+
 1.4.0 (2023-08-30)
 ------------------
 
