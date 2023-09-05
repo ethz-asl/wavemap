@@ -85,7 +85,7 @@ void WavemapServer::publishMap(bool republish_whole_map) {
   }
 }
 
-bool WavemapServer::saveMap(const std::string& file_path) const {
+bool WavemapServer::saveMap(const std::filesystem::path& file_path) const {
   if (occupancy_map_) {
     occupancy_map_->threshold();
     return io::mapToFile(*occupancy_map_, file_path);
@@ -95,7 +95,7 @@ bool WavemapServer::saveMap(const std::string& file_path) const {
   return false;
 }
 
-bool WavemapServer::loadMap(const std::string& file_path) {
+bool WavemapServer::loadMap(const std::filesystem::path& file_path) {
   return io::fileToMap(file_path, occupancy_map_);
 }
 
