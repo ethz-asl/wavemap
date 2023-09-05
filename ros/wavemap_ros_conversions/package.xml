@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap_ros_conversions</name>
-  <version>1.4.0</version>
+  <version>1.5.0</version>
   <description>Conversions between wavemap and ROS types.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>

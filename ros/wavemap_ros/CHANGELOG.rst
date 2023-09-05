@@ -2,8 +2,8 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2023-09-05)
+------------------
 * Annotate code for profiling with Tracy Profiler
 * Improve error messages when reading/writing a file fails
 * Contributors: Victor Reijgwart

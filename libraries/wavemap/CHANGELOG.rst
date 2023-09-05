@@ -2,8 +2,8 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2023-09-05)
+------------------
 * Annotate code for profiling with Tracy Profiler
 * Switch to custom atan2 in LiDAR projection models
 
