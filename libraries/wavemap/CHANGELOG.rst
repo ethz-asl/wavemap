@@ -7,7 +7,7 @@ Changelog for package wavemap
 * Annotate code for profiling with Tracy Profiler
 * Switch to custom atan2 in LiDAR projection models
 
-  * Speeds up measurement integrators by up to 40%
+  * Speeds up wavemap by roughly 20% when using LiDAR inputs
   * No compromise in accuracy (slightly improves AUC, accuracy and recall)
 
 * Minor general optimizations
