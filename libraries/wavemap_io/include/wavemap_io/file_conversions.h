@@ -1,7 +1,7 @@
 #ifndef WAVEMAP_IO_FILE_CONVERSIONS_H_
 #define WAVEMAP_IO_FILE_CONVERSIONS_H_
 
-#include <string>
+#include <filesystem>
 
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 
@@ -9,8 +9,8 @@
 
 namespace wavemap::io {
 bool mapToFile(const VolumetricDataStructureBase& map,
-               const std::string& file_path);
-bool fileToMap(const std::string& file_path,
+               const std::filesystem::path& file_path);
+bool fileToMap(const std::filesystem::path& file_path,
                VolumetricDataStructureBase::Ptr& map);
 }  // namespace wavemap::io
 

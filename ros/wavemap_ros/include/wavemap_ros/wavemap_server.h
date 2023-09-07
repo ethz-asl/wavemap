@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_ROS_WAVEMAP_SERVER_H_
 #define WAVEMAP_ROS_WAVEMAP_SERVER_H_
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -53,8 +54,8 @@ class WavemapServer {
                 const WavemapServerConfig& config);
 
   void publishMap(bool republish_whole_map = false);
-  bool saveMap(const std::string& file_path) const;
-  bool loadMap(const std::string& file_path);
+  bool saveMap(const std::filesystem::path& file_path) const;
+  bool loadMap(const std::filesystem::path& file_path);
 
   InputHandler* addInput(const param::Value& integrator_params,
                          const ros::NodeHandle& nh, ros::NodeHandle nh_private);

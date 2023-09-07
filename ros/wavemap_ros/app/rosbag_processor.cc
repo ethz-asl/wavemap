@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  wavemap_server.getMap()->pruneDistant();
+  wavemap_server.getMap()->prune();
   wavemap_server.publishMap();
 
   if (nh_private.param("keep_alive", false)) {

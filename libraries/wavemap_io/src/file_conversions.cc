@@ -4,14 +4,19 @@
 
 namespace wavemap::io {
 bool mapToFile(const VolumetricDataStructureBase& map,
-               const std::string& file_path) {
-  CHECK(!file_path.empty());
+               const std::filesystem::path& file_path) {
+  if (file_path.empty()) {
+    LOG(WARNING)
+        << "Could open file for writing. Specified file path is empty.";
+    return false;
+  }
 
   // Open the file for writing
   std::ofstream file_ostream(file_path,
                              std::ofstream::out | std::ofstream::binary);
   if (!file_ostream.is_open()) {
-    LOG(WARNING) << "Could not open file '" << file_path << "' for writing.";
+    LOG(WARNING) << "Could not open file " << file_path
+                 << " for writing. Error: " << strerror(errno);
     return false;
   }
 
@@ -25,22 +30,26 @@ bool mapToFile(const VolumetricDataStructureBase& map,
   return static_cast<bool>(file_ostream);
 }
 
-bool fileToMap(const std::string& file_path,
+bool fileToMap(const std::filesystem::path& file_path,
                VolumetricDataStructureBase::Ptr& map) {
-  CHECK(!file_path.empty());
+  if (file_path.empty()) {
+    LOG(WARNING)
+        << "Could not open file for reading. Specified file path is empty.";
+    return false;
+  }
 
   // Open the file for reading
   std::ifstream file_istream(file_path,
                              std::ifstream::in | std::ifstream::binary);
   if (!file_istream.is_open()) {
-    LOG(WARNING) << "Could not open file '" << file_path << "' for reading.";
+    LOG(WARNING) << "Could not open file " << file_path
+                 << " for reading. Error: " << strerror(errno);
     return false;
   }
 
   // Deserialize from bytestream
   if (!streamToMap(file_istream, map)) {
-    LOG(WARNING) << "Failed to parse map proto from file '" << file_path
-                 << "'.";
+    LOG(WARNING) << "Failed to parse map from file " << file_path << ".";
     return false;
   }
 

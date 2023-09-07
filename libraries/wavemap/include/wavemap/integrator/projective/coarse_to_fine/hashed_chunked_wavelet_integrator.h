@@ -27,14 +27,14 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
         occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
 
  private:
-  using BlockList = std::vector<OctreeIndex>;
+  using BlockList = std::vector<HashedChunkedWaveletOctree::BlockIndex>;
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
   ThreadPool thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
   // Cache/pre-computed commonly used values
-  static constexpr FloatingPoint kNoiseThreshold = 1e-4f;
+  static constexpr FloatingPoint kNoiseThreshold = 1e-3f;
   static constexpr auto kUnitCubeHalfDiagonal =
       constants<FloatingPoint>::kSqrt3 / 2.f;
   const FloatingPoint min_cell_width_ = occupancy_map_->getMinCellWidth();
@@ -54,7 +54,7 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
 
   void updateMap() override;
   void updateBlock(HashedChunkedWaveletOctree::Block& block,
-                   const OctreeIndex& block_index);
+                   const HashedChunkedWaveletOctree::BlockIndex& block_index);
 };
 }  // namespace wavemap
 

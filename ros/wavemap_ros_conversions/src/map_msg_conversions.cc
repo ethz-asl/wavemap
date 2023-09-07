@@ -1,5 +1,7 @@
 #include "wavemap_ros_conversions/map_msg_conversions.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace wavemap::convert {
 bool mapToRosMsg(const VolumetricDataStructureBase& map,
                  const std::string& frame_id, const ros::Time& stamp,
@@ -36,6 +38,7 @@ bool mapToRosMsg(const VolumetricDataStructureBase& map,
 
 bool rosMsgToMap(const wavemap_msgs::Map& msg,
                  VolumetricDataStructureBase::Ptr& map) {
+  ZoneScoped;
   // Check validity
   if ((msg.wavelet_octree.size() == 1) !=
       (msg.hashed_wavelet_octree.size() != 1)) {
@@ -68,6 +71,7 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
 }
 
 void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {
+  ZoneScoped;
   msg.min_cell_width = map.getMinCellWidth();
   msg.min_log_odds = map.getMinLogOdds();
   msg.max_log_odds = map.getMaxLogOdds();
@@ -90,6 +94,7 @@ void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {
 
 void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
                  WaveletOctree::Ptr& map) {
+  ZoneScoped;
   WaveletOctreeConfig config;
   config.min_cell_width = msg.min_cell_width;
   config.min_log_odds = msg.min_log_odds;
@@ -127,6 +132,7 @@ void mapToRosMsg(const HashedWaveletOctree& map,
                  wavemap_msgs::HashedWaveletOctree& msg,
                  const std::optional<std::unordered_set<Index3D, Index3DHash>>&
                      include_blocks) {
+  ZoneScoped;
   struct StackElement {
     const FloatingPoint scale;
     const HashedWaveletOctreeBlock::NodeType& node;
@@ -185,6 +191,7 @@ void mapToRosMsg(const HashedWaveletOctree& map,
 
 void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
                  HashedWaveletOctree::Ptr& map) {
+  ZoneScoped;
   HashedWaveletOctreeConfig config;
   config.min_cell_width = msg.min_cell_width;
   config.min_log_odds = msg.min_log_odds;
@@ -234,6 +241,7 @@ void mapToRosMsg(const HashedChunkedWaveletOctree& map,
                  wavemap_msgs::HashedWaveletOctree& msg,
                  const std::optional<std::unordered_set<Index3D, Index3DHash>>&
                      include_blocks) {
+  ZoneScoped;
   struct StackElement {
     const OctreeIndex node_index;
     const HashedChunkedWaveletOctreeBlock::NodeChunkType& chunk;

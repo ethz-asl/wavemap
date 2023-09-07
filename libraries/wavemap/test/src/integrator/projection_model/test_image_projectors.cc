@@ -176,7 +176,9 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
         projector.sensorToCartesian(sensor_coordinates);
     const FloatingPoint range = C_point.norm();
 
-    EXPECT_LE((C_point_roundtrip - C_point).norm(), kEpsilon * (1.f + range))
+    constexpr FloatingPoint kNoiseTolerance = 1e-5f;
+    EXPECT_LE((C_point_roundtrip - C_point).norm(),
+              kNoiseTolerance * (1.f + range))
         << "Original point was " << EigenFormat::oneLine(C_point)
         << " with norm " << range << ", but after round trip it became "
         << EigenFormat::oneLine(C_point_roundtrip)

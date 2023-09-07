@@ -51,8 +51,8 @@ class ThreadPool {
    * \return std::future containing the result of the computation
    */
   template <typename Callable, typename... Args>
-  std::future<typename std::result_of<Callable(Args...)>::type> add_task(
-      Callable&& callable, Args&&... args);
+  std::future<std::result_of_t<Callable(Args...)>> add_task(Callable&& callable,
+                                                            Args&&... args);
 
  private:
   /**
@@ -79,9 +79,9 @@ class ThreadPool {
 };
 
 template <typename Callable, typename... Args>
-std::future<typename std::result_of<Callable(Args...)>::type>
-ThreadPool::add_task(Callable&& callable, Args&&... args) {
-  using ReturnType = typename std::result_of<Callable(Args...)>::type;
+std::future<std::result_of_t<Callable(Args...)>> ThreadPool::add_task(
+    Callable&& callable, Args&&... args) {
+  using ReturnType = std::result_of_t<Callable(Args...)>;
 
   auto task = std::make_shared<std::packaged_task<ReturnType()>>(
       std::bind(std::forward<Callable>(callable), std::forward<Args>(args)...));
