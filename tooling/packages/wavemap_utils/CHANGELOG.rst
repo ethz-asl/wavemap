@@ -2,6 +2,11 @@
 Changelog for package wavemap_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Show documentation preview without using Python HTTP server
+* Contributors: Victor Reijgwart
+
 1.5.0 (2023-09-05)
 ------------------
 
