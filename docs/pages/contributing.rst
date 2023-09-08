@@ -7,7 +7,7 @@ Thank you for investing time in contributing to wavemap!
 
 Bug reports & Feature requests
 ******************************
-We welcome bug reports, feature requests and general questions. Please submit them through `GitHub Issues <https://github.com/ethz-asl/wavemap/issues>`_ and use the corresponding `bug report <https://github.com/ethz-asl/wavemap/issues/new?template=bug_report.md>`_, `feature request <https://github.com/ethz-asl/wavemap/issues/new?template=feature_request.md>`_ and `question <https://github.com/ethz-asl/wavemap/issues/new?template=question.md>`_ templates.
+We welcome bug reports, feature requests, and general questions. Please submit them through `GitHub Issues <https://github.com/ethz-asl/wavemap/issues>`_ and use the corresponding `bug report <https://github.com/ethz-asl/wavemap/issues/new?template=bug_report.md>`_, `feature request <https://github.com/ethz-asl/wavemap/issues/new?template=feature_request.md>`_, and `question <https://github.com/ethz-asl/wavemap/issues/new?template=question.md>`_ templates.
 
 In addition to requests for new functionality, do not hesitate to open feature requests for:
 
@@ -16,9 +16,9 @@ In addition to requests for new functionality, do not hesitate to open feature r
 
 Pull requests
 *************
-We encourage `pull requests <https://github.com/ethz-asl/wavemap/pulls>`_, especially for fixes and improvements to the documentation, code and ROS launch and config files. Also feel free to share launch and config files for new sensor setups and applications.
+We encourage `pull requests <https://github.com/ethz-asl/wavemap/pulls>`_, especially for fixes and improvements to the documentation, code, and ROS launch and config files. Also feel free to share launch and config files for new sensor setups and applications.
 
-In case you would like to contribute a new feature, please open a corresponding `feature request <https://github.com/ethz-asl/wavemap/issues/new?template=feature_request.md>`_ before you get started and mention that you are willing to help with its development. This way we can synchronize and avoid duplicated efforts.
+If you would like to contribute a new feature, please open a corresponding `feature request <https://github.com/ethz-asl/wavemap/issues/new?template=feature_request.md>`_ before you start and mention that you are willing to help with its development. This way, we can synchronize and avoid duplicated efforts.
 
 Development
 ***********
@@ -27,7 +27,7 @@ Coding standards
 ================
 This project follows the `Google Style Guide <https://google.github.io/styleguide/cppguide.html>`_ for C++.
 
-To maintain code quality, we use the `pre-commit <https://pre-commit.com/>`_ framework to automatically format, lint and perform basic code checks. You can install pre-commit together with the dependencies required to run all of wavemap's checks with::
+To maintain code quality, we use the `pre-commit <https://pre-commit.com/>`_ framework to automatically format, lint, and perform basic code checks. You can install pre-commit together with the dependencies required to run all of wavemap's checks with::
 
     rosrun wavemap_utils install_pre_commit.sh
 
@@ -60,7 +60,7 @@ Browse to https://ethz-asl.github.io/wavemap.
 
 Specific release
 ----------------
-Find the release in question under `GitHub Releases <https://github.com/ethz-asl/wavemap/releases>`_. Under `Assets`, at the bottom of the release's description, click and download `docs.tar`. Then unpack the archive into an empty folder and double click index.html to open it in a browser.
+Find the release in question under `GitHub Releases <https://github.com/ethz-asl/wavemap/releases>`_. Under `Assets`, at the bottom of the release's description, click and download `docs.tar`. Then unpack the archive into an empty folder and double-click index.html to open it in a browser.
 
 Locally
 -------
@@ -68,4 +68,4 @@ In a terminal, run::
 
     rosrun wavemap_utils preview_docs.sh
 
-This will build a preview of the documentation based on your local wavemap version and changes, and open the result in a web browser.
+This will build a preview of the documentation based on your local wavemap version and changes and open the result in a web browser.

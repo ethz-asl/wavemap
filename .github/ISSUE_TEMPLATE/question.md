@@ -11,16 +11,16 @@ assignees: victorreijgwart
 A clear and concise description of your question.
 
 **Existing resources**
-Before submitting this question, please check if it has not already been answered in a previous [GitHub Issue](https://github.com/ethz-asl/wavemap/issues?q=is%3Aissue).
+Before submitting this question, please check if it has been answered in a previous [GitHub Issue](https://github.com/ethz-asl/wavemap/issues?q=is%3Aissue).
 
 If the question is about the theory behind wavemap, it might already be addressed in our [RSS paper](https://www.roboticsproceedings.org/rss19/p065.pdf).
 
 If you would like to reproduce the results from our [RSS paper](https://www.roboticsproceedings.org/rss19/p065.pdf), please refer to the [Demo](https://ethz-asl.github.io/wavemap/pages/demos.html) documentation page.
 
-If you need help to configure wavemap on a custom dataset, the [Configuration](https://ethz-asl.github.io/wavemap/pages/configuration.html) documentation page might be helpful.
+If you need help configuring wavemap on a custom dataset, the [Configuration](https://ethz-asl.github.io/wavemap/pages/configuration.html) documentation page might be helpful.
 
 **Images**
-In case it helps to explain your question, please include screenshots, plots or sketches.
+If it helps to explain your question, please include screenshots, plots or sketches.
 
 **Runtime information:**
 Please fill out these questions in case a specific dataset or sensor setup is relevant to your question.
