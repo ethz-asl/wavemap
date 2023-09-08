@@ -20,11 +20,8 @@ We encourage `pull requests <https://github.com/ethz-asl/wavemap/pulls>`_, espec
 
 If you would like to contribute a new feature, please open a corresponding `feature request <https://github.com/ethz-asl/wavemap/issues/new?template=feature_request.md>`_ before you start and mention that you are willing to help with its development. This way, we can synchronize and avoid duplicated efforts.
 
-Development
-***********
-
 Coding standards
-================
+****************
 This project follows the `Google Style Guide <https://google.github.io/styleguide/cppguide.html>`_ for C++.
 
 To maintain code quality, we use the `pre-commit <https://pre-commit.com/>`_ framework to automatically format, lint, and perform basic code checks. You can install pre-commit together with the dependencies required to run all of wavemap's checks with::
@@ -41,7 +38,7 @@ In case you really need to commit some changes that are not accepted by pre-comm
     git commit --no-verify -m "Your commit message"
 
 Testing
-=======
+*******
 Wavemap's codebase includes a broad suite of tests. These are run in our Continuous Integration pipeline for active merge requests, `see here <https://github.com/ethz-asl/wavemap/actions/workflows/ci.yml>`_. You can also run the tests locally with::
 
     rosrun wavemap_utils build_and_test_all.sh
@@ -49,21 +46,21 @@ Wavemap's codebase includes a broad suite of tests. These are run in our Continu
 The tests are located in the `test` subfolders of each package and implemented using the `GoogleTest <http://google.github.io/googletest/>`_ framework.
 
 Documentation
-=============
+*************
 The documentation consists of pages for specific topics, located in the :repo_file:`docs/pages <docs/pages>` directory, and inline Doxygen annotations for the C++ source code.
 
 To read the documentation for a specific wavemap version:
 
 Latest release
---------------
+==============
 Browse to https://ethz-asl.github.io/wavemap.
 
 Specific release
-----------------
+================
 Find the release in question under `GitHub Releases <https://github.com/ethz-asl/wavemap/releases>`_. Under `Assets`, at the bottom of the release's description, click and download `docs.tar`. Then unpack the archive into an empty folder and double-click index.html to open it in a browser.
 
-Locally
--------
+Local version
+=============
 In a terminal, run::
 
     rosrun wavemap_utils preview_docs.sh
