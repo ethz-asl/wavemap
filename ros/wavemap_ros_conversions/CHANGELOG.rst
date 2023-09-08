@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros_conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.1 (2023-09-08)
+------------------
+
 1.5.0 (2023-09-05)
 ------------------
 * Annotate code for profiling with Tracy Profiler

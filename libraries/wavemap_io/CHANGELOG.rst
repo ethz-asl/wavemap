@@ -2,6 +2,9 @@
 Changelog for package wavemap_io
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.1 (2023-09-08)
+------------------
+
 1.5.0 (2023-09-05)
 ------------------
 * Improve error messages when reading/writing a file fails
