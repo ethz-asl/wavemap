@@ -111,6 +111,17 @@ InputHandler* WavemapServer::addInput(const param::Value& integrator_params,
   return nullptr;
 }
 
+void WavemapServer::setMapUpdatedCallback(
+    std::function<void(const VolumetricDataStructureBase&)> callback) {
+  for (auto& input_handler : input_handlers_) {
+    input_handler->setMapUpdateCallback([&map = occupancy_map_, callback]() {
+      if (map) {
+        callback(*map);
+      }
+    });
+  }
+}
+
 void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
   if (0.f < config_.thresholding_period) {
     ROS_INFO_STREAM("Registering map thresholding timer with period "

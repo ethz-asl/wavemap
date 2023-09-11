@@ -65,14 +65,19 @@ class WavemapServer {
     return occupancy_map_;
   }
 
+  void setMapUpdatedCallback(
+      std::function<void(const VolumetricDataStructureBase&)> callback);
+
  private:
   const WavemapServerConfig config_;
 
   VolumetricDataStructureBase::Ptr occupancy_map_;
 
+  // Transform and depth inputs
   std::shared_ptr<TfTransformer> transformer_;
   std::vector<std::unique_ptr<InputHandler>> input_handlers_;
 
+  // ROS interfaces
   void subscribeToTimers(const ros::NodeHandle& nh);
   ros::Timer map_pruning_timer_;
   ros::Timer map_thresholding_timer_;
