@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
                                                true);
 
   VolumetricDataStructureBase::Ptr occupancy_map;
-  io::fileToMap("/home/victor/data/wavemaps/leo.wvmp", occupancy_map);
+  io::fileToMap("/home/victor/data/wavemaps/leoc6.wvmp", occupancy_map);
   wavemap_msgs::Map occupancy_map_msg;
   convert::mapToRosMsg(*occupancy_map, "odom", ros::Time::now(),
                        occupancy_map_msg);

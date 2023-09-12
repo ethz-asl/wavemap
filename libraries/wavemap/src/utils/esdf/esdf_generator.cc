@@ -31,6 +31,20 @@ std::array<FloatingPoint, 26> generateNeighborDistanceOffsets(
   return distance_offsets;
 }
 
+static bool isObservedAndFree(FloatingPoint occupancy_threshold,
+                              FloatingPoint occupancy_value) {
+  const bool is_observed = 1e-4f < std::abs(occupancy_value);
+  const bool is_free = occupancy_value < occupancy_threshold;
+  return is_observed && is_free;
+}
+
+static bool isObservedAndOccupied(FloatingPoint occupancy_threshold,
+                                  FloatingPoint occupancy_value) {
+  const bool is_observed = 1e-4f < std::abs(occupancy_value);
+  const bool is_occupied = occupancy_threshold < occupancy_value;
+  return is_observed && is_occupied;
+}
+
 HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
                           FloatingPoint occupancy_threshold,
                           FloatingPoint max_distance) {
@@ -48,48 +62,46 @@ HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
   {
     ZoneScopedN("seedEsdf");
     LOG(INFO) << "Inserting occupied voxels into ESDF (Seeding)";
-    occupancy_layer.forEachLeaf(
-        [&occupancy_layer, &esdf_layer, &open, min_cell_width, max_distance,
-         occupancy_threshold](const OctreeIndex& node_index,
-                              FloatingPoint node_occupancy) {
-          if (occupancy_threshold < node_occupancy) {
-            const Index3D min_corner =
-                convert::nodeIndexToMinCornerIndex(node_index);
-            const Index3D max_corner =
-                convert::nodeIndexToMaxCornerIndex(node_index);
-            const Index3D ones = Index3D::Ones();
-            for (const Index3D& index :
-                 Grid<3>(min_corner - ones, max_corner + ones)) {
-              const Index3D nearest_inner_index =
-                  index.cwiseMax(min_corner).cwiseMin(max_corner);
-              const bool voxel_is_inside = (index == nearest_inner_index);
-              if (voxel_is_inside) {
-                esdf_layer.setCellValue(index, 0.f);
-              } else {
-                FloatingPoint& esdf_value =
-                    *CHECK_NOTNULL(esdf_layer.accessCellData(index, true));
-                if (max_distance - kTolerance < esdf_value) {
-                  const FloatingPoint occupancy_value =
-                      occupancy_layer.getCellValue(index);
-                  const bool is_unobserved = std::abs(occupancy_value) < 1e-4f;
-                  const bool is_occupied =
-                      occupancy_threshold < occupancy_value;
-                  if (is_unobserved || is_occupied) {
-                    continue;
-                  }
-                }
-
-                const FloatingPoint distance_to_surface =
-                    0.5f * min_cell_width *
-                    (index - nearest_inner_index).cast<FloatingPoint>().norm();
-                if (distance_to_surface + kTolerance < esdf_value) {
-                  open.push(index, distance_to_surface);
-                }
-                esdf_value = std::min(esdf_value, distance_to_surface);
+    occupancy_layer.forEachLeaf([&occupancy_layer, &esdf_layer, &open,
+                                 min_cell_width, max_distance,
+                                 occupancy_threshold](
+                                    const OctreeIndex& node_index,
+                                    FloatingPoint node_occupancy) {
+      if (isObservedAndOccupied(occupancy_threshold, node_occupancy)) {
+        const Index3D min_corner =
+            convert::nodeIndexToMinCornerIndex(node_index);
+        const Index3D max_corner =
+            convert::nodeIndexToMaxCornerIndex(node_index);
+        const Index3D ones = Index3D::Ones();
+        for (const Index3D& index :
+             Grid<3>(min_corner - ones, max_corner + ones)) {
+          const Index3D nearest_inner_index =
+              index.cwiseMax(min_corner).cwiseMin(max_corner);
+          const bool voxel_is_inside = (index == nearest_inner_index);
+          if (voxel_is_inside) {
+            esdf_layer.setCellValue(index, 0.f);
+          } else {
+            FloatingPoint& esdf_value =
+                *CHECK_NOTNULL(esdf_layer.accessCellData(index, true));
+            if (max_distance - kTolerance < esdf_value) {
+              const FloatingPoint occupancy_value =
+                  occupancy_layer.getCellValue(index);
+              if (!isObservedAndFree(occupancy_threshold, occupancy_value)) {
+                continue;
               }
             }
+
+            const FloatingPoint distance_to_surface =
+                0.5f * min_cell_width *
+                (index - nearest_inner_index).cast<FloatingPoint>().norm();
+            if (distance_to_surface + kTolerance < esdf_value) {
+              open.push(index, distance_to_surface);
+            }
+            esdf_value = std::min(esdf_value, distance_to_surface);
           }
-        });
+        }
+      }
+    });
   }
 
   const std::array neighbor_index_offsets = generateNeighborIndexOffsets();
@@ -124,11 +136,7 @@ HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
         if (max_distance - kTolerance < neighbor_esdf) {
           const FloatingPoint neighbor_occupancy =
               occupancy_layer.getCellValue(neighbor_index);
-          const bool neighbor_is_unobserved =
-              std::abs(neighbor_occupancy) < 1e-4f;
-          const bool neighbor_is_occupied =
-              occupancy_threshold < neighbor_occupancy;
-          if (neighbor_is_unobserved || neighbor_is_occupied) {
+          if (!isObservedAndFree(occupancy_threshold, neighbor_occupancy)) {
             continue;
           }
         }
