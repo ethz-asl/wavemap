@@ -35,6 +35,8 @@ class BucketQueue {
     num_elements_ = 0;
   }
 
+  size_t size() const { return num_elements_; }
+
   void push(const T& key, double value) {
     CHECK_NE(num_buckets_, 0);
     if (value > max_val_) {

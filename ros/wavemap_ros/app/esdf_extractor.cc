@@ -40,14 +40,18 @@ int main(int argc, char** argv) {
   if (const auto hashed_map =
           std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map);
       hashed_map) {
-    const auto esdf = generateEsdf(*hashed_map);
+    const auto esdf = generateEsdf(*hashed_map, 0.f, 2.f);
 
     wavemap_msgs::Map msg;
     convert::mapToRosMsg(esdf, "odom", ros::Time::now(), msg);
     esdf_pub.publish(msg);
 
     RandomNumberGenerator rng;
-    for (int sample_idx = 0; sample_idx < 100; ++sample_idx) {
+    for (int sample_idx = 0; sample_idx < 1000; ++sample_idx) {
+      if (!ros::ok()) {
+        break;
+      }
+
       constexpr FloatingPoint kRobotRadius = 1.f;
       Point3D collision_free_position = Point3D::Constant(kNaN);
       while (true) {

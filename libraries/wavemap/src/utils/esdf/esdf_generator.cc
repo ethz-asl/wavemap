@@ -36,6 +36,7 @@ HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
                           FloatingPoint max_distance) {
   ZoneScoped;
   const FloatingPoint min_cell_width = occupancy_layer.getMinCellWidth();
+  const FloatingPoint min_diff_to_enqueue = min_cell_width / 2.f;
 
   VolumetricDataStructureConfig config{min_cell_width, 0.f, max_distance};
   HashedBlocks esdf_layer(config, max_distance);
@@ -48,9 +49,10 @@ HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
     ZoneScopedN("seedEsdf");
     LOG(INFO) << "Inserting occupied voxels into ESDF (Seeding)";
     occupancy_layer.forEachLeaf(
-        [&esdf_layer, &open, min_cell_width, occupancy_threshold](
-            const OctreeIndex& node_index, FloatingPoint occupancy) {
-          if (occupancy_threshold < occupancy) {
+        [&occupancy_layer, &esdf_layer, &open, min_cell_width,
+         min_diff_to_enqueue, occupancy_threshold](
+            const OctreeIndex& node_index, FloatingPoint node_occupancy) {
+          if (occupancy_threshold < node_occupancy) {
             const Index3D min_corner =
                 convert::nodeIndexToMinCornerIndex(node_index);
             const Index3D max_corner =
@@ -63,17 +65,24 @@ HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
               const bool voxel_is_inside = (index == nearest_inner_index);
               if (voxel_is_inside) {
                 esdf_layer.setCellValue(index, 0.f);
-                open.push(index, 0.f);
               } else {
+                const FloatingPoint occupancy_value =
+                    occupancy_layer.getCellValue(index);
+                const bool is_unobserved = std::abs(occupancy_value) < 1e-4f;
+                const bool is_occupied = occupancy_threshold <= occupancy_value;
+                if (is_unobserved || is_occupied) {
+                  continue;
+                }
+
                 const FloatingPoint distance_to_surface =
                     0.5f * min_cell_width *
                     (index - nearest_inner_index).cast<FloatingPoint>().norm();
-                FloatingPoint& esdf = *esdf_layer.accessCellData(index, true);
-
-                if (distance_to_surface < esdf) {
-                  esdf = distance_to_surface;
+                FloatingPoint& esdf_value =
+                    *CHECK_NOTNULL(esdf_layer.accessCellData(index, true));
+                if (distance_to_surface + min_diff_to_enqueue < esdf_value) {
                   open.push(index, distance_to_surface);
                 }
+                esdf_value = std::min(esdf_value, distance_to_surface);
               }
             }
           }
@@ -89,15 +98,22 @@ HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
     ZoneScopedN("propagateEsdf");
     LOG(INFO) << "Propagating ESDF into free space (Fast Marching)";
     while (!open.empty()) {
+      TracyPlot("QueueLength", static_cast<int64_t>(open.size()));
       const Index3D index = open.front();
       open.pop();
 
       const FloatingPoint esdf_value = esdf_layer.getCellValue(index);
+      TracyPlot("EsdfValue", esdf_value);
+      if (max_distance <= esdf_value) {
+        continue;
+      }
 
       for (size_t neighbor_idx = 0;
            neighbor_idx < neighbor_index_offsets.size(); ++neighbor_idx) {
         const Index3D& neighbor_index =
             index + neighbor_index_offsets[neighbor_idx];
+        const FloatingPoint neighbor_distance =
+            esdf_value + neighbor_distance_offsets[neighbor_idx];
 
         const FloatingPoint neighbor_occupancy =
             occupancy_layer.getCellValue(neighbor_index);
@@ -109,15 +125,12 @@ HashedBlocks generateEsdf(const HashedWaveletOctree& occupancy_layer,
           continue;
         }
 
-        const FloatingPoint neighbor_distance =
-            esdf_value + neighbor_distance_offsets[neighbor_idx];
         FloatingPoint& neighbor_esdf =
-            *esdf_layer.accessCellData(neighbor_index, true);
-
-        if (neighbor_distance < neighbor_esdf) {
-          neighbor_esdf = neighbor_distance;
+            *CHECK_NOTNULL(esdf_layer.accessCellData(neighbor_index, true));
+        if (neighbor_distance + min_diff_to_enqueue < neighbor_esdf) {
           open.push(neighbor_index, neighbor_distance);
         }
+        neighbor_esdf = std::min(neighbor_esdf, neighbor_distance);
       }
     }
   }
