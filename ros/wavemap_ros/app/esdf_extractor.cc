@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
                                                true);
 
   VolumetricDataStructureBase::Ptr occupancy_map;
-  io::fileToMap("/home/victor/data/wavemaps/j_to_balcony.wvmp", occupancy_map);
+  io::fileToMap("/home/victor/data/wavemaps/leo.wvmp", occupancy_map);
   wavemap_msgs::Map occupancy_map_msg;
   convert::mapToRosMsg(*occupancy_map, "odom", ros::Time::now(),
                        occupancy_map_msg);
@@ -40,7 +40,10 @@ int main(int argc, char** argv) {
   if (const auto hashed_map =
           std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map);
       hashed_map) {
-    const auto esdf = generateEsdf(*hashed_map, 0.f, 2.f);
+    constexpr FloatingPoint kOccupancyThreshold = 0.f;
+    constexpr FloatingPoint kMaxDistance = 2.f;
+    const auto esdf =
+        generateEsdf(*hashed_map, kOccupancyThreshold, kMaxDistance);
 
     wavemap_msgs::Map msg;
     convert::mapToRosMsg(esdf, "odom", ros::Time::now(), msg);
