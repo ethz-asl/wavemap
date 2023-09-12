@@ -19,8 +19,20 @@ class HashedBlocks : public VolumetricDataStructureBase {
   using Config = VolumetricDataStructureConfig;
   static constexpr bool kRequiresExplicitThresholding = false;
 
-  // Use the base class' constructor
-  using VolumetricDataStructureBase::VolumetricDataStructureBase;
+  static constexpr IndexElement kCellsPerSideLog2 = 4;
+  static constexpr IndexElement kCellsPerSide =
+      int_math::exp2(kCellsPerSideLog2);
+  static constexpr IndexElement kCellsPerBlock =
+      int_math::exp2(kDim * kCellsPerSideLog2);
+
+  using Block = std::array<FloatingPoint, kCellsPerBlock>;
+  using BlockIndex = Index3D;
+  using CellIndex = Index3D;
+
+  explicit HashedBlocks(const VolumetricDataStructureConfig& config,
+                        FloatingPoint default_value = 0.f)
+      : VolumetricDataStructureBase(config.checkValid()),
+        default_value_(default_value) {}
 
   bool empty() const override { return blocks_.empty(); }
   size_t size() const override { return kCellsPerBlock * blocks_.size(); }
@@ -37,31 +49,37 @@ class HashedBlocks : public VolumetricDataStructureBase {
   Index3D getMinIndex() const override;
   Index3D getMaxIndex() const override;
   IndexElement getTreeHeight() const override { return 0; }
+  const VolumetricDataStructureConfig& getConfig() { return config_; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
   void addToCellValue(const Index3D& index, FloatingPoint update) override;
+
+  bool hasBlock(const Index3D& block_index) const {
+    return blocks_.count(block_index);
+  }
+  Block& getOrAllocateBlock(const Index3D& block_index);
+  Block& getBlock(const Index3D& block_index) {
+    return blocks_.at(block_index);
+  }
+  const Block& getBlock(const Index3D& block_index) const {
+    return blocks_.at(block_index);
+  }
+  auto& getBlocks() { return blocks_; }
+  const auto& getBlocks() const { return blocks_; }
+
+  FloatingPoint* accessCellData(const Index3D& index,
+                                bool auto_allocate = false);
+  const FloatingPoint* accessCellData(const Index3D& index) const;
 
   void forEachLeaf(
       typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
           visitor_fn) const override;
 
  private:
-  static constexpr IndexElement kCellsPerSideLog2 = 4;
-  static constexpr IndexElement kCellsPerSide =
-      int_math::exp2(kCellsPerSideLog2);
-  static constexpr IndexElement kCellsPerBlock =
-      int_math::exp2(kDim * kCellsPerSideLog2);
-
-  using Block = std::array<FloatingPoint, kCellsPerBlock>;
-  using BlockIndex = Index3D;
-  using CellIndex = Index3D;
+  const FloatingPoint default_value_;
 
   std::unordered_map<BlockIndex, Block, IndexHash<3>> blocks_;
-
-  FloatingPoint* accessCellData(const Index3D& index,
-                                bool auto_allocate = false);
-  const FloatingPoint* accessCellData(const Index3D& index) const;
 
   static BlockIndex computeBlockIndexFromIndex(const Index3D& index);
   static CellIndex computeCellIndexFromBlockIndexAndIndex(

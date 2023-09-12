@@ -55,11 +55,11 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
           &frame_rate_properties_) {
   // Initialize the property menu
   color_mode_property_.clearOptions();
-  for (const auto& name : ColorMode::names) {
+  for (const auto& name : GridColorMode::names) {
     color_mode_property_.addOption(name);
   }
   color_mode_property_.setStringStd(grid_color_mode_.toStr());
-  flat_color_property_.setHidden(grid_color_mode_ != ColorMode::kFlat);
+  flat_color_property_.setHidden(grid_color_mode_ != GridColorMode::kFlat);
   termination_height_property_.setMin(0);
   num_queued_blocks_indicator_.setReadOnly(true);
   max_ms_per_frame_property_.setMin(0);
@@ -246,11 +246,11 @@ void GridVisual::opacityUpdateCallback() {
 
 void GridVisual::colorModeUpdateCallback() {
   // Update the cached color mode value
-  const ColorMode old_color_mode = grid_color_mode_;
-  grid_color_mode_ = ColorMode(color_mode_property_.getStdString());
+  const GridColorMode old_color_mode = grid_color_mode_;
+  grid_color_mode_ = GridColorMode(color_mode_property_.getStdString());
 
   // Show/hide the flat color picker depending on the chosen mode
-  flat_color_property_.setHidden(grid_color_mode_ != ColorMode::kFlat);
+  flat_color_property_.setHidden(grid_color_mode_ != GridColorMode::kFlat);
 
   // Update the map if the color mode changed
   if (grid_color_mode_ != old_color_mode) {
@@ -297,13 +297,13 @@ void GridVisual::getLeafCentersAndColors(int tree_height,
 
   // Set the cube's color
   switch (grid_color_mode_.toTypeId()) {
-    case ColorMode::kFlat:
+    case GridColorMode::kFlat:
       point.color = grid_flat_color_;
       break;
-    case ColorMode::kProbability:
+    case GridColorMode::kProbability:
       point.color = logOddsToColor(cell_log_odds);
       break;
-    case ColorMode::kHeight:
+    case GridColorMode::kHeight:
     default:
       point.color = positionToColor(cell_center);
       break;

@@ -37,6 +37,9 @@ target_link_libraries(wavemap_server_node ${PROJECT_NAME})
 cs_add_executable(wavemap_rosbag_processor app/rosbag_processor.cc)
 target_link_libraries(wavemap_rosbag_processor ${PROJECT_NAME})
 
+cs_add_executable(esdf_extractor app/esdf_extractor.cc)
+target_link_libraries(esdf_extractor ${PROJECT_NAME})
+
 # Export
 cs_install()
 cs_export()

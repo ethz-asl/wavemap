@@ -8,6 +8,7 @@
 #include <utility>
 
 #include <ros/time.h>
+#include <wavemap/data_structure/volumetric/hashed_blocks.h>
 #include <wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree.h>
 #include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/data_structure/volumetric/volumetric_octree.h>
@@ -20,6 +21,9 @@ bool mapToRosMsg(const VolumetricDataStructureBase& map,
                  wavemap_msgs::Map& msg);
 bool rosMsgToMap(const wavemap_msgs::Map& msg,
                  VolumetricDataStructureBase::Ptr& map);
+
+void mapToRosMsg(const HashedBlocks& map, wavemap_msgs::HashedBlocks& msg);
+void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg, HashedBlocks::Ptr& map);
 
 void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg);
 void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,

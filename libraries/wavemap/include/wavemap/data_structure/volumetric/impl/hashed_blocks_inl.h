@@ -40,20 +40,25 @@ inline void HashedBlocks::addToCellValue(const Index3D& index,
   }
 }
 
+inline HashedBlocks::Block& HashedBlocks::getOrAllocateBlock(
+    const Index3D& block_index) {
+  if (!hasBlock(block_index)) {
+    auto it = blocks_.try_emplace(block_index).first;
+    it->second.fill(default_value_);
+  }
+  return blocks_.at(block_index);
+}
+
 inline FloatingPoint* HashedBlocks::accessCellData(const Index3D& index,
                                                    bool auto_allocate) {
   BlockIndex block_index = computeBlockIndexFromIndex(index);
-  auto it = blocks_.find(block_index);
-  if (it == blocks_.end()) {
-    if (auto_allocate) {
-      it = blocks_.emplace(block_index, Block{}).first;
-    } else {
-      return nullptr;
-    }
+  if (!auto_allocate && !hasBlock(block_index)) {
+    return nullptr;
   }
+  Block& block = getOrAllocateBlock(block_index);
   CellIndex cell_index =
       computeCellIndexFromBlockIndexAndIndex(block_index, index);
-  return &it->second[convert::indexToLinearIndex<kCellsPerSide>(cell_index)];
+  return &block[convert::indexToLinearIndex<kCellsPerSide>(cell_index)];
 }
 
 inline const FloatingPoint* HashedBlocks::accessCellData(

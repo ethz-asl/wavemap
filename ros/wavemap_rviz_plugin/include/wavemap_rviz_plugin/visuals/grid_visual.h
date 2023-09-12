@@ -29,8 +29,8 @@
 #endif
 
 namespace wavemap::rviz_plugin {
-struct ColorMode : public TypeSelector<ColorMode> {
-  using TypeSelector<ColorMode>::TypeSelector;
+struct GridColorMode : public TypeSelector<GridColorMode> {
+  using TypeSelector<GridColorMode>::TypeSelector;
 
   enum Id : TypeId { kHeight, kProbability, kFlat };
 
@@ -71,7 +71,7 @@ class GridVisual : public QObject {
   void flatColorUpdateCallback();
 
  private:
-  ColorMode grid_color_mode_ = ColorMode::kHeight;
+  GridColorMode grid_color_mode_ = GridColorMode::kHeight;
   Ogre::ColourValue grid_flat_color_ = Ogre::ColourValue::Blue;
 
   // Shared pointer to the map, owned by WavemapMapDisplay

@@ -3,6 +3,8 @@
 #include <ros/console.h>
 #include <wavemap/indexing/index_conversions.h>
 
+#include "wavemap_rviz_plugin/utils/color_conversions.h"
+
 namespace wavemap::rviz_plugin {
 SliceVisual::SliceVisual(Ogre::SceneManager* scene_manager,
                          Ogre::SceneNode* parent_node,
@@ -27,7 +29,17 @@ SliceVisual::SliceVisual(Ogre::SceneManager* scene_manager,
           submenu_root_property, SLOT(generalUpdateCallback()), this),
       opacity_property_("Alpha", 1.0, "Opacity of the displayed visuals.",
                         submenu_root_property, SLOT(opacityUpdateCallback()),
-                        this) {
+                        this),
+      color_mode_property_(
+          "Color mode", "", "Mode determining the grid cell colors.",
+          submenu_root_property, SLOT(colorModeUpdateCallback()), this) {
+  // Initialize the property menu
+  color_mode_property_.clearOptions();
+  for (const auto& name : SliceColorMode::names) {
+    color_mode_property_.addOption(name);
+  }
+  color_mode_property_.setStringStd(slice_color_mode_.toStr());
+
   // Initialize the slice cell material
   // NOTE: Certain properties, such as alpha transparency, are set on a
   //       per-material basis. We therefore need to create one unique material
@@ -110,13 +122,22 @@ void SliceVisual::update() {
     cell.center.z = slice_height;
 
     // Set the cube's color
-    const FloatingPoint cell_odds = std::exp(cell_log_odds);
-    const FloatingPoint cell_prob = cell_odds / (1.f + cell_odds);
-    const FloatingPoint cell_free_prob = 1.f - cell_prob;
-    cell.color.a = 1.f;
-    cell.color.r = cell_free_prob;
-    cell.color.g = cell_free_prob;
-    cell.color.b = cell_free_prob;
+    switch (slice_color_mode_.toTypeId()) {
+      case SliceColorMode::kRaw: {
+        const FloatingPoint rescaled_odds =
+            (cell_log_odds - min_occupancy_log_odds) /
+            (max_occupancy_log_odds - min_occupancy_log_odds);
+        cell.color.a = 1.f;
+        cell.color.r = rescaled_odds;
+        cell.color.g = rescaled_odds;
+        cell.color.b = rescaled_odds;
+        break;
+      }
+      case SliceColorMode::kProbability:
+      default:
+        cell.color = logOddsToColor(cell_log_odds);
+        break;
+    }
   });
 
   // Add a grid layer for each scale level
@@ -153,6 +174,17 @@ void SliceVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
 void SliceVisual::opacityUpdateCallback() {
   for (auto& grid_level : grid_levels_) {
     grid_level->setAlpha(opacity_property_.getFloat());
+  }
+}
+
+void SliceVisual::colorModeUpdateCallback() {
+  // Update the cached color mode value
+  const SliceColorMode old_color_mode = slice_color_mode_;
+  slice_color_mode_ = SliceColorMode(color_mode_property_.getStdString());
+
+  // Update the map if the color mode changed
+  if (slice_color_mode_ != old_color_mode) {
+    update();
   }
 }
 }  // namespace wavemap::rviz_plugin

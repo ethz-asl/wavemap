@@ -151,7 +151,7 @@ void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
 void WavemapServer::subscribeToTopics(ros::NodeHandle& /*nh*/) {}
 
 void WavemapServer::advertiseTopics(ros::NodeHandle& nh_private) {
-  map_pub_ = nh_private.advertise<wavemap_msgs::Map>("map", 10, true);
+  map_pub_ = nh_private.advertise<wavemap_msgs::Map>("map", 10);
 }
 
 void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {

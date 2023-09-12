@@ -11,6 +11,7 @@
 #include <OGRE/OgreVector3.h>
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/color_property.h>
+#include <rviz/properties/enum_property.h>
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/property.h>
@@ -21,6 +22,14 @@
 #endif
 
 namespace wavemap::rviz_plugin {
+struct SliceColorMode : public TypeSelector<SliceColorMode> {
+  using TypeSelector<SliceColorMode>::TypeSelector;
+
+  enum Id : TypeId { kProbability, kRaw };
+
+  static constexpr std::array names = {"Probability", "Raw"};
+};
+
 // Each instance of MultiResolutionGridVisual represents the visualization of a
 // map's leaves as squares whose sizes match their height in the tree.
 class SliceVisual : public QObject {
@@ -47,8 +56,11 @@ class SliceVisual : public QObject {
   // user-editable properties
   void generalUpdateCallback() { update(); }
   void opacityUpdateCallback();
+  void colorModeUpdateCallback();
 
  private:
+  SliceColorMode slice_color_mode_ = SliceColorMode::kProbability;
+
   // Shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<MapAndMutex> map_and_mutex_;
 
@@ -70,6 +82,7 @@ class SliceVisual : public QObject {
   rviz::FloatProperty max_occupancy_threshold_property_;
   rviz::FloatProperty slice_height_property_;
   rviz::FloatProperty opacity_property_;
+  rviz::EnumProperty color_mode_property_;
 };
 }  // namespace wavemap::rviz_plugin
 

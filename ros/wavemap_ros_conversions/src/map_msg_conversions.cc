@@ -11,6 +11,11 @@ bool mapToRosMsg(const VolumetricDataStructureBase& map,
   msg.header.frame_id = frame_id;
 
   // Write the map data
+  if (const auto* hashed_blocks = dynamic_cast<const HashedBlocks*>(&map);
+      hashed_blocks) {
+    convert::mapToRosMsg(*hashed_blocks, msg.hashed_blocks.emplace_back());
+    return true;
+  }
   if (const auto* wavelet_octree = dynamic_cast<const WaveletOctree*>(&map);
       wavelet_octree) {
     convert::mapToRosMsg(*wavelet_octree, msg.wavelet_octree.emplace_back());
@@ -40,16 +45,40 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
                  VolumetricDataStructureBase::Ptr& map) {
   ZoneScoped;
   // Check validity
-  if ((msg.wavelet_octree.size() == 1) !=
-      (msg.hashed_wavelet_octree.size() != 1)) {
-    LOG(WARNING)
-        << "Maps must be serialized either as wavelet octrees or hashed "
-           "wavelet octrees. Encountered message contains both. Ignoring.";
+  bool is_valid = true;
+  std::string error_msg =
+      "Maps must be serialized as either one hashed block data structure, "
+      "wavelet octree, or hashed wavelet octree. ";
+  if (1 < msg.hashed_blocks.size()) {
+    error_msg += "Message contains multiple hashed block data structures. ";
+    is_valid = false;
+  }
+  if (1 < msg.wavelet_octree.size()) {
+    error_msg += "Message contains multiple wavelet octrees. ";
+    is_valid = false;
+  }
+  if (1 < msg.hashed_wavelet_octree.size()) {
+    error_msg += "Message contains multiple hashed wavelet octrees. ";
+    is_valid = false;
+  }
+  if (msg.hashed_blocks.empty() && msg.wavelet_octree.empty() &&
+      msg.hashed_wavelet_octree.empty()) {
+    error_msg += "Message contains neither. ";
+    is_valid = false;
+  }
+  if (!is_valid) {
+    LOG(WARNING) << error_msg + "Ignoring.";
     map = nullptr;
     return false;
   }
 
   // Read the data
+  if (!msg.hashed_blocks.empty()) {
+    auto hashed_blocks = std::dynamic_pointer_cast<HashedBlocks>(map);
+    rosMsgToMap(msg.hashed_blocks.front(), hashed_blocks);
+    map = hashed_blocks;
+    return true;
+  }
   if (!msg.wavelet_octree.empty()) {
     auto wavelet_octree = std::dynamic_pointer_cast<WaveletOctree>(map);
     rosMsgToMap(msg.wavelet_octree.front(), wavelet_octree);
@@ -68,6 +97,54 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
                   "not yet supported.";
   map = nullptr;
   return false;
+}
+
+void mapToRosMsg(const HashedBlocks& map, wavemap_msgs::HashedBlocks& msg) {
+  ZoneScoped;
+  msg.min_cell_width = map.getMinCellWidth();
+  msg.min_log_odds = map.getMinLogOdds();
+  msg.max_log_odds = map.getMaxLogOdds();
+
+  for (const auto& [block_index, block] : map.getBlocks()) {
+    auto& block_msg = msg.blocks.emplace_back();
+    block_msg.block_offset = {block_index.x(), block_index.y(),
+                              block_index.z()};
+    block_msg.values.reserve(HashedBlocks::kCellsPerBlock);
+    for (FloatingPoint value : block) {
+      block_msg.values.emplace_back(value);
+    }
+  }
+}
+
+void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg,
+                 HashedBlocks::Ptr& map) {
+  ZoneScoped;
+  VolumetricDataStructureConfig config;
+  config.min_cell_width = msg.min_cell_width;
+  config.min_log_odds = msg.min_log_odds;
+  config.max_log_odds = msg.max_log_odds;
+  // Check if the map already exists and has compatible settings
+  if (!map || map->getConfig() != config) {
+    // Otherwise create a new one
+    map = std::make_shared<HashedBlocks>(config);
+  }
+
+  for (const auto& block_msg : msg.blocks) {
+    const Index3D block_index{block_msg.block_offset[0],
+                              block_msg.block_offset[1],
+                              block_msg.block_offset[2]};
+
+    const bool block_existed = map->hasBlock(block_index);
+    auto& block = map->getOrAllocateBlock(block_index);
+    if (block_existed) {
+      block = HashedBlocks::Block{};
+    }
+
+    for (LinearIndex linear_index = 0; linear_index < block_msg.values.size();
+         ++linear_index) {
+      block[linear_index] = block_msg.values[linear_index];
+    }
+  }
 }
 
 void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {
