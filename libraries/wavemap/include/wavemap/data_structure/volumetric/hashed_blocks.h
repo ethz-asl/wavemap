@@ -76,16 +76,16 @@ class HashedBlocks : public VolumetricDataStructureBase {
       typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
           visitor_fn) const override;
 
- private:
-  const FloatingPoint default_value_;
-
-  std::unordered_map<BlockIndex, Block, IndexHash<3>> blocks_;
-
   static BlockIndex computeBlockIndexFromIndex(const Index3D& index);
   static CellIndex computeCellIndexFromBlockIndexAndIndex(
       const BlockIndex& block_index, const Index3D& index);
   static Index3D computeIndexFromBlockIndexAndCellIndex(
       const BlockIndex& block_index, const CellIndex& cell_index);
+
+ private:
+  const FloatingPoint default_value_;
+
+  std::unordered_map<BlockIndex, Block, IndexHash<3>> blocks_;
 };
 }  // namespace wavemap
 
