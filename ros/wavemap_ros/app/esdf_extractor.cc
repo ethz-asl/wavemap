@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 
 #include <glog/logging.h>
@@ -33,6 +34,8 @@ int main(int argc, char** argv) {
                                                true);
 
   // Load the occupancy map
+  const std::filesystem::path map_file_path =
+      "/home/victor/data/wavemaps/leoc6.wvmp";
   VolumetricDataStructureBase::Ptr occupancy_map;
   io::fileToMap("/home/victor/data/wavemaps/leoc6.wvmp", occupancy_map);
   CHECK_NOTNULL(occupancy_map);
@@ -48,15 +51,42 @@ int main(int argc, char** argv) {
   if (const auto hashed_map =
           std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map);
       hashed_map) {
-    // Generate the ESDF
-    constexpr FloatingPoint kOccupancyThreshold = 0.f;
-    constexpr FloatingPoint kMaxDistance = 2.f;
-    const auto esdf =
-        generateEsdf(*hashed_map, kOccupancyThreshold, kMaxDistance);
+    HashedBlocks::Ptr esdf;
+    const std::filesystem::path esdf_file_path =
+        std::filesystem::path(map_file_path).replace_extension("dwvmp");
+    if (std::filesystem::exists(esdf_file_path)) {
+      // Load the ESDF
+      LOG(INFO) << "Loading ESDF from path: " << esdf_file_path;
+      VolumetricDataStructureBase::Ptr esdf_tmp;
+      if (!io::fileToMap(esdf_file_path, esdf_tmp)) {
+        LOG(ERROR) << "Could not load ESDF";
+        return EXIT_FAILURE;
+      }
+      esdf = std::dynamic_pointer_cast<HashedBlocks>(esdf_tmp);
+      if (!esdf) {
+        LOG(ERROR) << "Loaded ESDF is not of type hashed blocks";
+        return EXIT_FAILURE;
+      }
+    } else {
+      // Generate the ESDF
+      LOG(INFO) << "Generating ESDF";
+      constexpr FloatingPoint kOccupancyThreshold = 0.f;
+      constexpr FloatingPoint kMaxDistance = 2.f;
+      esdf = std::make_shared<HashedBlocks>(
+          generateEsdf(*hashed_map, kOccupancyThreshold, kMaxDistance));
+
+      // Save the ESDF
+      LOG(INFO) << "Saving ESDF to path: " << esdf_file_path;
+      if (!io::mapToFile(*esdf, esdf_file_path)) {
+        LOG(ERROR) << "Could not save ESDF";
+        return EXIT_FAILURE;
+      }
+    }
 
     // Publish the ESDF
+    LOG(INFO) << "Publishing ESDF";
     wavemap_msgs::Map msg;
-    convert::mapToRosMsg(esdf, "odom", ros::Time::now(), msg);
+    convert::mapToRosMsg(*esdf, "odom", ros::Time::now(), msg);
     esdf_pub.publish(msg);
 
     // Sample collision free positions
@@ -69,7 +99,7 @@ int main(int argc, char** argv) {
       // Sample a collision free position
       constexpr FloatingPoint kRobotRadius = 1.f;
       const auto collision_free_position =
-          getCollisionFreePosition(*occupancy_map, esdf, kRobotRadius);
+          getCollisionFreePosition(*occupancy_map, *esdf, kRobotRadius);
       if (!collision_free_position) {
         LOG(ERROR) << "Getting collision free position failed. Stopping.";
         break;
