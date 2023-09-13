@@ -28,8 +28,8 @@ std::optional<Point3D> getCollisionFreePosition(
 
     const FloatingPoint occupancy_value =
         occupancy_map.getCellValue(global_index);
-    const bool is_unobserved = std::abs(occupancy_value) < 1e-3f;
-    if (is_unobserved) {
+    const bool is_free = occupancy_value < -1e-3f;
+    if (!is_free) {
       continue;
     }
 
