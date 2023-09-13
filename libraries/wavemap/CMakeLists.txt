@@ -66,6 +66,7 @@ add_library(${PROJECT_NAME}
     src/integrator/ray_tracing/ray_tracing_integrator.cc
     src/integrator/integrator_base.cc
     src/integrator/integrator_factory.cc
+    src/utils/esdf/collision_utils.cc
     src/utils/esdf/esdf_generator.cc
     src/utils/eigen_format.cc
     src/utils/stopwatch.cc

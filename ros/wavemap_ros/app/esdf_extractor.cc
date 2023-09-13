@@ -6,6 +6,7 @@
 #include <wavemap/common.h>
 #include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
+#include <wavemap/utils/esdf/collision_utils.h>
 #include <wavemap/utils/esdf/esdf_generator.h>
 #include <wavemap/utils/random_number_generator.h>
 #include <wavemap_io/file_conversions.h>
@@ -13,54 +14,6 @@
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
 using namespace wavemap;  // NOLINT
-std::optional<Point3D> getCollisionFreePosition(
-    const VolumetricDataStructureBase& occupancy_map, const HashedBlocks& esdf,
-    FloatingPoint robot_radius) {
-  RandomNumberGenerator rng;
-
-  constexpr size_t kMaxAttempts = 1000;
-  for (size_t attempt_idx = 0; attempt_idx < kMaxAttempts; ++attempt_idx) {
-    const size_t nth_block =
-        rng.getRandomInteger(0ul, esdf.getBlocks().size() - 1ul);
-    auto it = esdf.getBlocks().begin();
-    std::advance(it, nth_block);
-    if (it == esdf.getBlocks().end()) {
-      continue;
-    }
-
-    const LinearIndex linear_cell_index =
-        rng.getRandomInteger(0, HashedBlocks::kCellsPerBlock - 1);
-
-    const Index3D& block_index = it->first;
-    const Index3D cell_index =
-        convert::linearIndexToIndex<HashedBlocks::kCellsPerSide, 3>(
-            linear_cell_index);
-    const Index3D global_index =
-        esdf.computeIndexFromBlockIndexAndCellIndex(block_index, cell_index);
-
-    const FloatingPoint occupancy_value =
-        occupancy_map.getCellValue(global_index);
-    const bool is_unobserved = std::abs(occupancy_value) < 1e-3f;
-    if (is_unobserved) {
-      continue;
-    }
-
-    const auto& block = it->second;
-    const FloatingPoint esdf_value = block[linear_cell_index];
-    if (esdf_value < robot_radius) {
-      continue;
-    }
-
-    Point3D collision_free_position =
-        convert::indexToCenterPoint(global_index, esdf.getMinCellWidth());
-    return collision_free_position;
-  }
-
-  LOG(WARNING) << "Could not find collision free position. Giving up after "
-               << kMaxAttempts << " attempts.";
-  return std::nullopt;
-}
-
 int main(int argc, char** argv) {
   // Initialize GLOG
   google::InitGoogleLogging(argv[0]);
@@ -125,9 +78,9 @@ int main(int argc, char** argv) {
       // Publish the position
       visualization_msgs::Marker marker;
       marker.pose.orientation.w = 1.0;
-      marker.pose.position.x = collision_free_position.x();
-      marker.pose.position.y = collision_free_position.y();
-      marker.pose.position.z = collision_free_position.z();
+      marker.pose.position.x = collision_free_position->x();
+      marker.pose.position.y = collision_free_position->y();
+      marker.pose.position.z = collision_free_position->z();
       marker.id = 100;
       marker.ns = "collision_free_pos_" + std::to_string(sample_idx);
       marker.header.frame_id = "odom";
