@@ -2,6 +2,9 @@
 Changelog for package wavemap_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.2 (2023-09-19)
+------------------
+
 1.5.1 (2023-09-08)
 ------------------
 * Show documentation preview without using Python HTTP server
