@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros_conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.5.1 (2023-09-08)
 ------------------
 

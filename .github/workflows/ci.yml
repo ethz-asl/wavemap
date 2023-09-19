@@ -263,7 +263,7 @@ jobs:
 
   install:
     name: Catkin install
-    needs: workspace-container
+    needs: [ workspace-container, build ]
     runs-on: [ self-hosted, vwire ]
     container:
       image: ${{ needs.workspace-container.outputs.image }}
