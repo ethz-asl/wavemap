@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.5.2 (2023-09-19)
 ------------------
 * Add missing install rules for wavemap
