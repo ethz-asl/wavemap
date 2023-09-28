@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap</name>
-  <version>1.5.2</version>
+  <version>1.5.3</version>
   <description>Base library for wavemap.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>

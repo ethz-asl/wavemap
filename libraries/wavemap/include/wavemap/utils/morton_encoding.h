@@ -8,10 +8,16 @@
 namespace wavemap::morton {
 template <int dim>
 constexpr int kMaxTreeHeight = 8 * sizeof(MortonIndex) / dim;
+
 template <int dim>
 constexpr IndexElement kMaxSingleCoordinate =
     (dim < 3) ? std::numeric_limits<IndexElement>::max()
               : (1ul << kMaxTreeHeight<dim>)-1ul;
+
+template <int dim>
+constexpr MortonIndex kMaxMortonIndex =
+    (dim < 3) ? std::numeric_limits<MortonIndex>::max()
+              : (1ul << (dim * kMaxTreeHeight<dim>)) - 1ul;
 
 template <int dim>
 struct MortonByteLut {
@@ -41,14 +47,38 @@ struct MortonByteLut {
   static constexpr std::array<uint_fast8_t, 256> decode{generate_decoder()};
 };
 
-template <int dim>
+/**
+ * Method to convert regular n-dimensional indices into Morton indices.
+ * @tparam dim Dimension of the index.
+ * @tparam check_sign Whether to check that each index coefficient is positive.
+ *         Note that negative signs are not preserved when encoding and decoding
+ *         Morton indices. The check can be enabled to throw an error in cases
+ *         where round trip conversions would not yield an identical index.
+ *         Since we often only perform one way conversions and use the Morton
+ *         indices as relative offsets, the check is disabled by default.
+ *         Note that since the check is a DCHECK, it only triggers when the code
+ *         is built with the DCHECK_ALWAYS_ON flag enabled or in debug mode.
+ */
+template <int dim, bool check_sign = false>
 MortonIndex encode(const Index<dim>& index) {
+  // Check if the index coordinates are within the supported range
+  // NOTE: This check is only performed in debug mode, or if DCHECK_ALWAYS_ON is
+  //       set. Otherwise, the loop is empty and optimized out.
+  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+    if constexpr (check_sign) {
+      DCHECK_GE(index[dim_idx], 0);
+    } else {
+      DCHECK_GT(index[dim_idx], -kMaxSingleCoordinate<dim>);
+    }
+    DCHECK_LE(index[dim_idx], kMaxSingleCoordinate<dim>);
+  }
+
+  // Perform the morton encoding, using bitwise expansion if supported by the
+  // target CPU architecture and LUTs otherwise
   uint64_t morton = 0u;
 #ifdef BIT_EXPAND_AVAILABLE
   constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
   for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    DCHECK_GE(index[dim_idx], 0);
-    DCHECK_LE(index[dim_idx], kMaxSingleCoordinate<dim>);
     morton |= bit_manip::expand<uint64_t>(index[dim_idx], pattern << dim_idx);
   }
 #else
@@ -67,6 +97,9 @@ MortonIndex encode(const Index<dim>& index) {
   return morton;
 }
 
+// Decode a single coordinate from a Morton index using LUTs
+// NOTE: This method is only used if bitwise compression is not supported by the
+//       target CPU architecture.
 template <int dim>
 IndexElement decode_coordinate(MortonIndex morton, int coordinate_idx) {
   constexpr MortonIndex kByteMask = (1 << 8) - 1;
@@ -86,6 +119,11 @@ IndexElement decode_coordinate(MortonIndex morton, int coordinate_idx) {
 
 template <int dim>
 Index<dim> decode(MortonIndex morton) {
+  // Check if the Morton index is within the supported range
+  DCHECK_LE(morton, kMaxMortonIndex<dim>);
+
+  // Perform the morton decoding, using bitwise compression if supported by the
+  // target CPU architecture and LUTs otherwise
   Index<dim> index;
 #ifdef BIT_COMPRESS_AVAILABLE
   constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
