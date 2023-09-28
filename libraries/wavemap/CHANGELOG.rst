@@ -2,8 +2,8 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.3 (2023-09-28)
+------------------
 * Address failing DCHECKs for Morton conversions of negative indices
 * Contributors: Victor Reijgwart
 
