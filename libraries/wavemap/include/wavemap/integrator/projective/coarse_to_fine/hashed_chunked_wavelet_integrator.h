@@ -20,17 +20,19 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
       PosedImage<>::Ptr posed_range_image,
       Image<Vector2D>::Ptr beam_offset_image,
       MeasurementModelBase::ConstPtr measurement_model,
-      HashedChunkedWaveletOctree::Ptr occupancy_map)
+      HashedChunkedWaveletOctree::Ptr occupancy_map,
+      std::shared_ptr<ThreadPool> thread_pool)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
             std::move(beam_offset_image), std::move(measurement_model)),
-        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
+        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))),
+        thread_pool_(std::move(thread_pool)) {}
 
  private:
   using BlockList = std::vector<HashedChunkedWaveletOctree::BlockIndex>;
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
-  ThreadPool thread_pool_;
+  std::shared_ptr<ThreadPool> thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
   // Cache/pre-computed commonly used values

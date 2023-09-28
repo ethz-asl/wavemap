@@ -31,6 +31,7 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
                            const param::Value& params, std::string world_frame,
                            VolumetricDataStructureBase::Ptr occupancy_map,
                            std::shared_ptr<TfTransformer> transformer,
+                           std::shared_ptr<ThreadPool> thread_pool,
                            const ros::NodeHandle& nh,
                            ros::NodeHandle nh_private)
     : config_(config.checkValid()),
@@ -51,7 +52,7 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
   }
   for (const auto& integrator_params : integrators_array.value()) {
     auto integrator =
-        IntegratorFactory::create(integrator_params, occupancy_map,
+        IntegratorFactory::create(integrator_params, occupancy_map, thread_pool,
                                   IntegratorType::kRayTracingIntegrator);
     CHECK_NOTNULL(integrator);
     integrators_.emplace_back(std::move(integrator));

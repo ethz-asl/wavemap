@@ -33,10 +33,12 @@ bool PointcloudInputHandlerConfig::isValid(bool verbose) const {
 PointcloudInputHandler::PointcloudInputHandler(
     const PointcloudInputHandlerConfig& config, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    std::shared_ptr<TfTransformer> transformer,
+    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
-                   std::move(occupancy_map), transformer, nh, nh_private),
+                   std::move(occupancy_map), transformer,
+                   std::move(thread_pool), nh, nh_private),
       config_(config.checkValid()),
       pointcloud_undistorter_(
           transformer,

@@ -18,13 +18,15 @@ DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
                       (thresholding_period)
                       (pruning_period)
                       (publication_period)
-                      (max_num_blocks_per_msg));
+                      (max_num_blocks_per_msg)
+                      (num_threads));
 
 bool WavemapServerConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(world_frame, std::string(""), verbose);
   all_valid &= IS_PARAM_GT(max_num_blocks_per_msg, 0, verbose);
+  all_valid &= IS_PARAM_GT(num_threads, 0, verbose);
 
   return all_valid;
 }
@@ -47,6 +49,8 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   occupancy_map_ = VolumetricDataStructureFactory::create(
       data_structure_params, VolumetricDataStructureType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
+  thread_pool_ = std::make_shared<ThreadPool>(config_.num_threads);
+  CHECK_NOTNULL(thread_pool_);
 
   // Setup input handlers
   const param::Array integrator_params_array =
@@ -102,9 +106,9 @@ bool WavemapServer::loadMap(const std::filesystem::path& file_path) {
 InputHandler* WavemapServer::addInput(const param::Value& integrator_params,
                                       const ros::NodeHandle& nh,
                                       ros::NodeHandle nh_private) {
-  auto input_handler =
-      InputHandlerFactory::create(integrator_params, config_.world_frame,
-                                  occupancy_map_, transformer_, nh, nh_private);
+  auto input_handler = InputHandlerFactory::create(
+      integrator_params, config_.world_frame, occupancy_map_, transformer_,
+      thread_pool_, nh, nh_private);
   if (input_handler) {
     return input_handlers_.emplace_back(std::move(input_handler)).get();
   }

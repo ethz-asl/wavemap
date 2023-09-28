@@ -13,6 +13,7 @@
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/integrator/integrator_base.h>
 #include <wavemap/utils/stopwatch.h>
+#include <wavemap/utils/thread_pool.h>
 
 #include "wavemap_ros/tf_transformer.h"
 
@@ -59,6 +60,7 @@ class InputHandler {
                std::string world_frame,
                VolumetricDataStructureBase::Ptr occupancy_map,
                std::shared_ptr<TfTransformer> transformer,
+               std::shared_ptr<ThreadPool> thread_pool,
                const ros::NodeHandle& nh, ros::NodeHandle nh_private);
   virtual ~InputHandler() = default;
 

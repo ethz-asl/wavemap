@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_ROS_WAVEMAP_SERVER_H_
 #define WAVEMAP_ROS_WAVEMAP_SERVER_H_
 
+#include <algorithm>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -15,6 +16,7 @@
 #include <wavemap/indexing/index_hashes.h>
 #include <wavemap/integrator/integrator_base.h>
 #include <wavemap/utils/stopwatch.h>
+#include <wavemap/utils/thread_pool.h>
 #include <wavemap/utils/time.h>
 
 #include "wavemap_ros/input_handler/input_handler.h"
@@ -24,7 +26,7 @@ namespace wavemap {
 /**
  * Config struct for wavemap's ROS server.
  */
-struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 5> {
+struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 6> {
   //! Name of the coordinate frame in which to store the map.
   //! Will be used as the frame_id for ROS TF lookups.
   std::string world_frame = "odom";
@@ -41,6 +43,10 @@ struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 5> {
   //! Used to control the maximum message size. Only works in combination with
   //! hash-based map data structures.
   int max_num_blocks_per_msg = 1000;
+  //! Maximum number of threads to use.
+  //! Defaults to the number of threads supported by the CPU.
+  int num_threads =
+      std::max(1, static_cast<int>(std::thread::hardware_concurrency()));
 
   static MemberMap memberMap;
 
@@ -71,6 +77,7 @@ class WavemapServer {
   VolumetricDataStructureBase::Ptr occupancy_map_;
 
   std::shared_ptr<TfTransformer> transformer_;
+  std::shared_ptr<ThreadPool> thread_pool_;
   std::vector<std::unique_ptr<InputHandler>> input_handlers_;
 
   void subscribeToTimers(const ros::NodeHandle& nh);

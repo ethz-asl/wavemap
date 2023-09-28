@@ -35,12 +35,12 @@ void HashedChunkedWaveletIntegrator::updateMap() {
 
   // Update it with the threadpool
   for (const auto& block_index : blocks_to_update) {
-    thread_pool_.add_task([this, block_index]() {
+    thread_pool_->add_task([this, block_index]() {
       auto& block = occupancy_map_->getBlock(block_index);
       updateBlock(block, block_index);
     });
   }
-  thread_pool_.wait_all();
+  thread_pool_->wait_all();
 }
 
 std::pair<OctreeIndex, OctreeIndex>
