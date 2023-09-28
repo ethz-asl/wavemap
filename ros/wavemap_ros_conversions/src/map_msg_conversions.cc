@@ -128,16 +128,11 @@ void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
   }
 }
 
-void mapToRosMsg(const HashedWaveletOctree& map,
-                 wavemap_msgs::HashedWaveletOctree& msg,
-                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
-                     include_blocks) {
+void mapToRosMsg(
+    const HashedWaveletOctree& map, wavemap_msgs::HashedWaveletOctree& msg,
+    std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks,
+    std::shared_ptr<ThreadPool> thread_pool) {
   ZoneScoped;
-  struct StackElement {
-    const FloatingPoint scale;
-    const HashedWaveletOctreeBlock::NodeType& node;
-  };
-
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
   const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
@@ -147,43 +142,86 @@ void mapToRosMsg(const HashedWaveletOctree& map,
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
 
-  for (const auto& [block_index, block] : map.getBlocks()) {
-    if (include_blocks.has_value() && !include_blocks->count(block_index)) {
-      continue;
+  // If blocks to include were specified, check that they exist
+  // and remove the ones that don't
+  if (include_blocks) {
+    for (auto include_block_it = include_blocks->begin();
+         include_block_it != include_blocks->end();) {
+      if (map.hasBlock(*include_block_it)) {
+        ++include_block_it;
+      } else {
+        include_block_it = include_blocks->erase(include_block_it);
+      }
     }
+  } else {  // Otherwise, include all blocks
+    include_blocks.emplace();
+    for (const auto& [block_index, block] : map.getBlocks()) {
+      include_blocks->emplace(block_index);
+    }
+  }
 
-    auto& block_msg = msg.blocks.emplace_back();
-    block_msg.root_node_offset = {block_index.x(), block_index.y(),
-                                  block_index.z()};
-    block_msg.root_node_scale_coefficient = block.getRootScale();
+  // Serialize the specified blocks
+  int block_idx = 0;
+  msg.blocks.resize(include_blocks->size());
+  for (const auto& block_index : include_blocks.value()) {
+    const auto& block = map.getBlock(block_index);
+    auto& block_msg = msg.blocks[block_idx++];
+    // If a thread pool was provided, use it
+    if (thread_pool) {
+      thread_pool->add_task([&]() {
+        blockToRosMsg(block_index, block, min_log_odds, max_log_odds,
+                      block_msg);
+      });
+    } else {  // Otherwise, use the current thread
+      blockToRosMsg(block_index, block, min_log_odds, max_log_odds, block_msg);
+    }
+  }
 
-    std::stack<StackElement> stack;
-    stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
+  // If a thread pool was used, wait for all jobs to finish
+  if (thread_pool) {
+    thread_pool->wait_all();
+  }
+}
 
-    while (!stack.empty()) {
-      const FloatingPoint scale = stack.top().scale;
-      const auto& node = stack.top().node;
-      stack.pop();
+void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
+                   const HashedWaveletOctree::Block& block,
+                   FloatingPoint min_log_odds, FloatingPoint max_log_odds,
+                   wavemap_msgs::HashedWaveletOctreeBlock& msg) {
+  ZoneScoped;
+  struct StackElement {
+    const FloatingPoint scale;
+    const HashedWaveletOctreeBlock::NodeType& node;
+  };
 
-      auto& node_msg = block_msg.nodes.emplace_back();
-      std::copy(node.data().cbegin(), node.data().cend(),
-                node_msg.detail_coefficients.begin());
-      node_msg.allocated_children_bitset = 0;
+  msg.root_node_offset = {block_index.x(), block_index.y(), block_index.z()};
+  msg.root_node_scale_coefficient = block.getRootScale();
 
-      const auto child_scales =
-          HashedWaveletOctreeBlock::Transform::backward({scale, node.data()});
-      for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
-           0 <= relative_child_idx; --relative_child_idx) {
-        const auto child_scale = child_scales[relative_child_idx];
-        if (child_scale < min_log_odds || max_log_odds < child_scale) {
-          continue;
-        }
+  std::stack<StackElement> stack;
+  stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
 
-        const auto* child = node.getChild(relative_child_idx);
-        if (child) {
-          stack.emplace(StackElement{child_scale, *child});
-          node_msg.allocated_children_bitset += (1 << relative_child_idx);
-        }
+  while (!stack.empty()) {
+    const FloatingPoint scale = stack.top().scale;
+    const auto& node = stack.top().node;
+    stack.pop();
+
+    auto& node_msg = msg.nodes.emplace_back();
+    std::copy(node.data().cbegin(), node.data().cend(),
+              node_msg.detail_coefficients.begin());
+    node_msg.allocated_children_bitset = 0;
+
+    const auto child_scales =
+        HashedWaveletOctreeBlock::Transform::backward({scale, node.data()});
+    for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
+         0 <= relative_child_idx; --relative_child_idx) {
+      const auto child_scale = child_scales[relative_child_idx];
+      if (child_scale < min_log_odds || max_log_odds < child_scale) {
+        continue;
+      }
+
+      const auto* child = node.getChild(relative_child_idx);
+      if (child) {
+        stack.emplace(StackElement{child_scale, *child});
+        node_msg.allocated_children_bitset += (1 << relative_child_idx);
       }
     }
   }
@@ -237,10 +275,69 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
   }
 }
 
-void mapToRosMsg(const HashedChunkedWaveletOctree& map,
-                 wavemap_msgs::HashedWaveletOctree& msg,
-                 const std::optional<std::unordered_set<Index3D, Index3DHash>>&
-                     include_blocks) {
+void mapToRosMsg(
+    const HashedChunkedWaveletOctree& map,
+    wavemap_msgs::HashedWaveletOctree& msg,
+    std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks,
+    std::shared_ptr<ThreadPool> thread_pool) {
+  ZoneScoped;
+  constexpr FloatingPoint kNumericalNoise = 1e-3f;
+  const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
+  const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
+  const auto tree_height = map.getTreeHeight();
+
+  msg.min_cell_width = map.getMinCellWidth();
+  msg.min_log_odds = map.getMinLogOdds();
+  msg.max_log_odds = map.getMaxLogOdds();
+  msg.tree_height = map.getTreeHeight();
+
+  // If blocks to include were specified, check that they exist
+  // and remove the ones that don't
+  if (include_blocks) {
+    for (auto include_block_it = include_blocks->begin();
+         include_block_it != include_blocks->end();) {
+      if (map.hasBlock(*include_block_it)) {
+        ++include_block_it;
+      } else {
+        include_block_it = include_blocks->erase(include_block_it);
+      }
+    }
+  } else {  // Otherwise, include all blocks
+    include_blocks.emplace();
+    for (const auto& [block_index, block] : map.getBlocks()) {
+      include_blocks->emplace(block_index);
+    }
+  }
+
+  // Serialize the specified blocks
+  int block_idx = 0;
+  msg.blocks.resize(include_blocks->size());
+  for (const auto& block_index : include_blocks.value()) {
+    const auto& block = map.getBlock(block_index);
+    auto& block_msg = msg.blocks[block_idx++];
+    // If a thread pool was provided, use it
+    if (thread_pool) {
+      thread_pool->add_task([&]() {
+        blockToRosMsg(block_index, block, min_log_odds, max_log_odds,
+                      tree_height, block_msg);
+      });
+    } else {  // Otherwise, use the current thread
+      blockToRosMsg(block_index, block, min_log_odds, max_log_odds, tree_height,
+                    block_msg);
+    }
+  }
+
+  // If a thread pool was used, wait for all jobs to finish
+  if (thread_pool) {
+    thread_pool->wait_all();
+  }
+}
+
+void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
+                   const HashedChunkedWaveletOctree::Block& block,
+                   FloatingPoint min_log_odds, FloatingPoint max_log_odds,
+                   IndexElement tree_height,
+                   wavemap_msgs::HashedWaveletOctreeBlock& msg) {
   ZoneScoped;
   struct StackElement {
     const OctreeIndex node_index;
@@ -248,80 +345,63 @@ void mapToRosMsg(const HashedChunkedWaveletOctree& map,
     const FloatingPoint scale_coefficient;
   };
 
-  constexpr FloatingPoint kNumericalNoise = 1e-3f;
-  const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
-  const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
-  const auto tree_height = map.getTreeHeight();
-  const auto chunk_height = map.getChunkHeight();
+  constexpr IndexElement chunk_height =
+      HashedChunkedWaveletOctreeBlock::kChunkHeight;
 
-  msg.min_cell_width = map.getMinCellWidth();
-  msg.min_log_odds = map.getMinLogOdds();
-  msg.max_log_odds = map.getMaxLogOdds();
-  msg.tree_height = map.getTreeHeight();
+  msg.root_node_offset = {block_index.x(), block_index.y(), block_index.z()};
+  msg.root_node_scale_coefficient = block.getRootScale();
 
-  for (const auto& [block_index, block] : map.getBlocks()) {
-    if (include_blocks.has_value() && !include_blocks->count(block_index)) {
+  std::stack<StackElement> stack;
+  stack.emplace(StackElement{
+      {tree_height, block_index}, block.getRootChunk(), block.getRootScale()});
+  while (!stack.empty()) {
+    const OctreeIndex index = stack.top().node_index;
+    const FloatingPoint scale = stack.top().scale_coefficient;
+    const auto& chunk = stack.top().chunk;
+    stack.pop();
+
+    const MortonIndex morton_code = convert::nodeIndexToMorton(index);
+    const int chunk_top_height =
+        chunk_height * int_math::div_round_up(index.height, chunk_height);
+    const LinearIndex relative_node_index =
+        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
+                                                  index.height);
+
+    auto& node_msg = msg.nodes.emplace_back();
+    const auto& node_data = chunk.nodeData(relative_node_index);
+    std::copy(node_data.cbegin(), node_data.cend(),
+              node_msg.detail_coefficients.begin());
+    node_msg.allocated_children_bitset = 0;
+
+    if (!chunk.nodeHasAtLeastOneChild(relative_node_index)) {
       continue;
     }
 
-    auto& block_msg = msg.blocks.emplace_back();
-    block_msg.root_node_offset = {block_index.x(), block_index.y(),
-                                  block_index.z()};
-    block_msg.root_node_scale_coefficient = block.getRootScale();
-
-    std::stack<StackElement> stack;
-    stack.emplace(StackElement{{tree_height, block_index},
-                               block.getRootChunk(),
-                               block.getRootScale()});
-    while (!stack.empty()) {
-      const OctreeIndex index = stack.top().node_index;
-      const FloatingPoint scale = stack.top().scale_coefficient;
-      const auto& chunk = stack.top().chunk;
-      stack.pop();
-
-      const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-      const int chunk_top_height =
-          chunk_height * int_math::div_round_up(index.height, chunk_height);
-      const LinearIndex relative_node_index =
-          OctreeIndex::computeTreeTraversalDistance(
-              morton_code, chunk_top_height, index.height);
-
-      auto& node_msg = block_msg.nodes.emplace_back();
-      const auto& node_data = chunk.nodeData(relative_node_index);
-      std::copy(node_data.cbegin(), node_data.cend(),
-                node_msg.detail_coefficients.begin());
-      node_msg.allocated_children_bitset = 0;
-
-      if (!chunk.nodeHasAtLeastOneChild(relative_node_index)) {
+    const auto child_scales =
+        HashedWaveletOctreeBlock::Transform::backward({scale, node_data});
+    for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
+         0 <= relative_child_idx; --relative_child_idx) {
+      const FloatingPoint child_scale = child_scales[relative_child_idx];
+      if (child_scale < min_log_odds || max_log_odds < child_scale) {
         continue;
       }
 
-      const auto child_scales =
-          HashedWaveletOctreeBlock::Transform::backward({scale, node_data});
-      for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
-           0 <= relative_child_idx; --relative_child_idx) {
-        const FloatingPoint child_scale = child_scales[relative_child_idx];
-        if (child_scale < min_log_odds || max_log_odds < child_scale) {
-          continue;
-        }
-
-        const OctreeIndex child_index =
-            index.computeChildIndex(relative_child_idx);
-        if (child_index.height % chunk_height == 0) {
-          const MortonIndex child_morton =
-              convert::nodeIndexToMorton(child_index);
-          const LinearIndex linear_child_index =
-              OctreeIndex::computeLevelTraversalDistance(
-                  child_morton, chunk_top_height, child_index.height);
-          if (chunk.hasChild(linear_child_index)) {
-            const auto& child_chunk = *chunk.getChild(linear_child_index);
-            stack.emplace(StackElement{child_index, child_chunk, child_scale});
-            node_msg.allocated_children_bitset += (1 << relative_child_idx);
-          }
-        } else {
-          stack.emplace(StackElement{child_index, chunk, child_scale});
+      const OctreeIndex child_index =
+          index.computeChildIndex(relative_child_idx);
+      if (child_index.height % chunk_height == 0) {
+        const MortonIndex child_morton =
+            convert::nodeIndexToMorton(child_index);
+        const LinearIndex linear_child_index =
+            OctreeIndex::computeLevelTraversalDistance(
+                child_morton, chunk_top_height, child_index.height);
+        if (chunk.hasChild(linear_child_index)) {
+          const auto& child_chunk = *chunk.getChild(linear_child_index);
+          stack.emplace(StackElement{child_index, child_chunk, child_scale});
           node_msg.allocated_children_bitset += (1 << relative_child_idx);
         }
+      } else {
+        stack.emplace(StackElement{child_index, chunk, child_scale});
+        node_msg.allocated_children_bitset += (1 << relative_child_idx);
       }
     }
   }

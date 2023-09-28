@@ -66,7 +66,7 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
   map_msg.header.stamp = ros::Time::now();
   convert::mapToRosMsg(*hashed_map,
                        map_msg.hashed_wavelet_octree.emplace_back(),
-                       blocks_to_publish);
+                       blocks_to_publish, thread_pool_);
   {
     ZoneScopedN("publishMapRosMsg");
     map_pub_.publish(map_msg);
