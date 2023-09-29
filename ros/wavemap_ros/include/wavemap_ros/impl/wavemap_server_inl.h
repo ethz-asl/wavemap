@@ -2,8 +2,9 @@
 #define WAVEMAP_ROS_IMPL_WAVEMAP_SERVER_INL_H_
 
 #include <functional>
-#include <map>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include <tracy/Tracy.hpp>
 #include <wavemap_msgs/Map.h>
@@ -26,31 +27,38 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
 
   // Make sure that all the blocks in the queue still exist and
   // sort them by their modification time
-  std::map<Timestamp, Index3D, std::greater<>> changed_blocks_sorted;
+  std::vector<std::pair<Timestamp, Index3D>> changed_blocks_stamped;
   for (auto block_it = block_publishing_queue_.cbegin();
        block_it != block_publishing_queue_.cend();) {
     const Index3D block_idx = *block_it;
     if (hashed_map->hasBlock(block_idx)) {
       const Timestamp& last_modified_time =
           hashed_map->getBlock(block_idx).getLastUpdatedStamp();
-      changed_blocks_sorted[last_modified_time] = block_idx;
+      changed_blocks_stamped.emplace_back(last_modified_time, block_idx);
       ++block_it;
     } else {
       block_it = block_publishing_queue_.erase(block_it);
     }
   }
 
-  // Select the blocks to publish in the current cycle
+  // If the number of changed blocks exceeds 'max_num_blocks_per_msg',
+  // select the 'max_num_blocks_per_msg' oldest blocks and drop the rest
+  if (static_cast<size_t>(config_.max_num_blocks_per_msg) <=
+      changed_blocks_stamped.size()) {
+    auto nth = changed_blocks_stamped.begin() + config_.max_num_blocks_per_msg;
+    std::nth_element(
+        changed_blocks_stamped.begin(), nth, changed_blocks_stamped.end(),
+        [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+    changed_blocks_stamped.resize(config_.max_num_blocks_per_msg);
+  }
+
+  // Prepare the blocks to publish in the current cycle
   // NOTE: We take the config_.max_num_blocks_per_msg most recently modified
   //       blocks.
   std::unordered_set<Index3D, Index3DHash> blocks_to_publish;
-  for (const auto& [_, block_idx] : changed_blocks_sorted) {
+  for (const auto& [_, block_idx] : changed_blocks_stamped) {
     hashed_map->getBlock(block_idx).threshold();
     blocks_to_publish.insert(block_idx);
-    if (static_cast<size_t>(config_.max_num_blocks_per_msg) <=
-        blocks_to_publish.size()) {
-      break;
-    }
   }
 
   // If there are no blocks to publish, we're done
