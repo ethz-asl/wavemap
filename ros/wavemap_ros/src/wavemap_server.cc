@@ -57,6 +57,10 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   occupancy_map_ = VolumetricDataStructureFactory::create(
       data_structure_params, VolumetricDataStructureType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
+
+  // Setup thread pool
+  ROS_INFO_STREAM("Creating thread pool with " << config_.num_threads
+                                               << " threads.");
   thread_pool_ = std::make_shared<ThreadPool>(config_.num_threads);
   CHECK_NOTNULL(thread_pool_);
 
@@ -102,7 +106,7 @@ bool WavemapServer::saveMap(const std::filesystem::path& file_path) const {
     occupancy_map_->threshold();
     return io::mapToFile(*occupancy_map_, file_path);
   } else {
-    LOG(ERROR) << "Could not save map because it has not yet been allocated.";
+    ROS_ERROR("Could not save map because it has not yet been allocated.");
   }
   return false;
 }

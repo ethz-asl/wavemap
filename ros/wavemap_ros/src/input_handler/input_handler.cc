@@ -40,14 +40,16 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
   // Create the integrators
   const auto integrators_param = params.getChild("integrators");
   if (!integrators_param) {
-    LOG(WARNING) << "Could not find key named \"integrators\" in input handler "
-                    "params. Input handler will be disabled.";
+    ROS_WARN(
+        "Could not find key named \"integrators\" in input handler "
+        "params. Input handler will be disabled.");
     return;
   }
   const auto integrators_array = integrators_param->get<param::Array>();
   if (!integrators_array) {
-    LOG(WARNING) << "Key named \"integrators\" in input handler params is not "
-                    "of type Array (list). Input handler will be disabled.";
+    ROS_WARN(
+        "Key named \"integrators\" in input handler params is not "
+        "of type Array (list). Input handler will be disabled.");
     return;
   }
   for (const auto& integrator_params : integrators_array.value()) {

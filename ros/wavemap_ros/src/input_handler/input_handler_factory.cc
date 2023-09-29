@@ -18,16 +18,16 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
   }
 
   if (default_input_handler_type.has_value()) {
-    LOG(WARNING) << "Default type \""
-                 << default_input_handler_type.value().toStr()
-                 << "\" will be created instead.";
+    ROS_WARN_STREAM("Default type \""
+                    << default_input_handler_type.value().toStr()
+                    << "\" will be created instead.");
     return create(default_input_handler_type.value(), params,
                   std::move(world_frame), std::move(occupancy_map),
                   std::move(transformer), std::move(thread_pool), nh,
                   nh_private);
   }
 
-  LOG(ERROR) << "No default was set. Returning nullptr.";
+  ROS_ERROR("No default was set. Returning nullptr.");
   return nullptr;
 }
 
@@ -48,7 +48,7 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
             std::move(occupancy_map), std::move(transformer),
             std::move(thread_pool), nh, nh_private);
       } else {
-        LOG(ERROR) << "Pointcloud input handler config could not be loaded.";
+        ROS_ERROR("Pointcloud input handler config could not be loaded.");
         return nullptr;
       }
     }
@@ -61,7 +61,7 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
             std::move(occupancy_map), std::move(transformer),
             std::move(thread_pool), nh, nh_private);
       } else {
-        LOG(ERROR) << "Depth image input handler config could not be loaded.";
+        ROS_ERROR("Depth image input handler config could not be loaded.");
         return nullptr;
       }
     }

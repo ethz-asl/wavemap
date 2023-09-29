@@ -29,14 +29,15 @@ bool PointcloudInputHandler::registerCallback(PointcloudTopicType type,
       // clang-format on
       return true;
 #else
-      LOG(ERROR) << "Livox support is currently not available. Please install "
-                    "livox_ros_driver2 and rebuild wavemap.";
+      ROS_ERROR(
+          "Livox support is currently not available. Please install "
+          "livox_ros_driver2 and rebuild wavemap.");
       return false;
 #endif
     default:
-      LOG(ERROR) << "Requested callback registration for unknown "
-                    "PointcloudTopicType \""
-                 << type.toStr() << "\"";
+      ROS_ERROR_STREAM(
+          "Requested callback registration for unknown PointcloudTopicType \""
+          << type.toStr() << "\"");
       return false;
   }
 }

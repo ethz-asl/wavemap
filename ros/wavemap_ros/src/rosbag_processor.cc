@@ -13,7 +13,7 @@ RosbagProcessor::~RosbagProcessor() {
 void RosbagProcessor::addRosbag(const std::string& rosbag_path) {
   opened_rosbags_.emplace_back(rosbag_path);
   bag_view_.addQuery(opened_rosbags_.back());
-  LOG(INFO) << "Loaded rosbag " << rosbag_path;
+  ROS_INFO_STREAM("Loaded rosbag " << rosbag_path);
 }
 
 bool RosbagProcessor::addRosbags(std::istringstream& rosbag_paths) {

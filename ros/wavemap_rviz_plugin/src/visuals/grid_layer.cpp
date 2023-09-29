@@ -9,6 +9,7 @@
 #include <OgreTexture.h>
 #include <glog/logging.h>
 #include <qglobal.h>
+#include <ros/console.h>
 #include <rviz/ogre_helpers/compatibility.h>
 #include <rviz/ogre_helpers/custom_parameter_indices.h>
 
@@ -51,8 +52,8 @@ GridLayer::GridLayer(const Ogre::MaterialPtr& cell_material)
       current_mode_supports_geometry_shader_ = true;
     }
   } else {
-    LOG(ERROR) << "No techniques available for material [%s]",
-        cell_material_->getName().c_str();
+    ROS_ERROR_STREAM("No techniques available for material "
+                     << cell_material_->getName());
   }
 }
 

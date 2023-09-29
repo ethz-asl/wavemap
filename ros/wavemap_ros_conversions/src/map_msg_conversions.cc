@@ -1,5 +1,6 @@
 #include "wavemap_ros_conversions/map_msg_conversions.h"
 
+#include <ros/console.h>
 #include <tracy/Tracy.hpp>
 
 namespace wavemap::convert {
@@ -31,8 +32,9 @@ bool mapToRosMsg(const VolumetricDataStructureBase& map,
     return true;
   }
 
-  LOG(WARNING) << "Could not serialize requested map to ROS msg. "
-                  "Map type not yet supported.";
+  ROS_WARN(
+      "Could not serialize requested map to ROS msg. "
+      "Map type not yet supported.");
   return false;
 }
 
@@ -42,9 +44,9 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
   // Check validity
   if ((msg.wavelet_octree.size() == 1) !=
       (msg.hashed_wavelet_octree.size() != 1)) {
-    LOG(WARNING)
-        << "Maps must be serialized either as wavelet octrees or hashed "
-           "wavelet octrees. Encountered message contains both. Ignoring.";
+    ROS_WARN(
+        "Maps must be serialized either as wavelet octrees or hashed "
+        "wavelet octrees. Encountered message contains both. Ignoring.");
     map = nullptr;
     return false;
   }
@@ -64,8 +66,9 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
     return true;
   }
 
-  LOG(WARNING) << "Conversion of the requested map ROS msg to a wavemap map is "
-                  "not yet supported.";
+  ROS_WARN(
+      "Conversion of the requested map ROS msg to a wavemap map is "
+      "not yet supported.");
   map = nullptr;
   return false;
 }
