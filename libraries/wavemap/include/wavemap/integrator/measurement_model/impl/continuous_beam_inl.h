@@ -69,12 +69,11 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
         const Index2D& image_index = image_indices[neighbor_idx];
         const Vector2D& cell_offset = cell_offsets[neighbor_idx];
         // Get the measured distance and cell to beam offset
-        if (!range_image_->isIndexWithinBounds(image_index)) {
-          continue;
+        if (range_image_->isIndexWithinBounds(image_index)) {
+          measured_distances[neighbor_idx] = range_image_->at(image_index);
+          cell_to_beam_offsets[neighbor_idx] =
+              beam_offset_image_->at(image_index) - cell_offset;
         }
-        measured_distances[neighbor_idx] = range_image_->at(image_index);
-        cell_to_beam_offsets[neighbor_idx] =
-            beam_offset_image_->at(image_index) - cell_offset;
       }
 
       // Compute the image error norms
