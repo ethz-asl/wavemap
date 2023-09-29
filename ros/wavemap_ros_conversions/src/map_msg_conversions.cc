@@ -142,6 +142,14 @@ void mapToRosMsg(
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
 
+  msg.allocated_block_indices.reserve(map.getBlocks().size());
+  for (const auto& [block_index, _] : map.getBlocks()) {
+    auto& block_index_msg = msg.allocated_block_indices.emplace_back();
+    block_index_msg.x = block_index.x();
+    block_index_msg.y = block_index.y();
+    block_index_msg.z = block_index.z();
+  }
+
   // If blocks to include were specified, check that they exist
   // and remove the ones that don't
   if (include_blocks) {
@@ -193,7 +201,9 @@ void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
     const HashedWaveletOctreeBlock::NodeType& node;
   };
 
-  msg.root_node_offset = {block_index.x(), block_index.y(), block_index.z()};
+  msg.root_node_offset.x = block_index.x();
+  msg.root_node_offset.y = block_index.y();
+  msg.root_node_offset.z = block_index.z();
   msg.root_node_scale_coefficient = block.getRootScale();
 
   std::stack<StackElement> stack;
@@ -239,12 +249,27 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
   if (!map || map->getConfig() != config) {
     // Otherwise create a new one
     map = std::make_shared<HashedWaveletOctree>(config);
+  } else {
+    // Load allocated block list into a hash table for quick membership lookups
+    std::unordered_set<Index3D, Index3DHash> allocated_blocks;
+    for (const auto& block_index : msg.allocated_block_indices) {
+      allocated_blocks.emplace(block_index.x, block_index.y, block_index.z);
+    }
+    // Remove local blocks that should no longer exist according to the map msg
+    for (auto it = map->getBlocks().begin(); it != map->getBlocks().end();) {
+      const auto block_index = it->first;
+      if (!allocated_blocks.count(block_index)) {
+        it = map->getBlocks().erase(it);
+      } else {
+        ++it;
+      }
+    }
   }
 
   for (const auto& block_msg : msg.blocks) {
-    const Index3D block_index{block_msg.root_node_offset[0],
-                              block_msg.root_node_offset[1],
-                              block_msg.root_node_offset[2]};
+    const Index3D block_index{block_msg.root_node_offset.x,
+                              block_msg.root_node_offset.y,
+                              block_msg.root_node_offset.z};
 
     const bool block_existed = map->hasBlock(block_index);
     auto& block = map->getOrAllocateBlock(block_index);
@@ -290,6 +315,14 @@ void mapToRosMsg(
   msg.min_log_odds = map.getMinLogOdds();
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
+
+  msg.allocated_block_indices.reserve(map.getBlocks().size());
+  for (const auto& [block_index, _] : map.getBlocks()) {
+    auto& block_index_msg = msg.allocated_block_indices.emplace_back();
+    block_index_msg.x = block_index.x();
+    block_index_msg.y = block_index.y();
+    block_index_msg.z = block_index.z();
+  }
 
   // If blocks to include were specified, check that they exist
   // and remove the ones that don't
@@ -348,7 +381,9 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
   constexpr IndexElement chunk_height =
       HashedChunkedWaveletOctreeBlock::kChunkHeight;
 
-  msg.root_node_offset = {block_index.x(), block_index.y(), block_index.z()};
+  msg.root_node_offset.x = block_index.x();
+  msg.root_node_offset.y = block_index.y();
+  msg.root_node_offset.z = block_index.z();
   msg.root_node_scale_coefficient = block.getRootScale();
 
   std::stack<StackElement> stack;

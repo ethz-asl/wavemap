@@ -36,9 +36,7 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
       changed_blocks_sorted[last_modified_time] = block_idx;
       ++block_it;
     } else {
-      LOG(WARNING) << "Removing block " << block_idx.transpose()
-                   << " as it no longer exists.";
-      block_publishing_queue_.erase(block_it++);
+      block_it = block_publishing_queue_.erase(block_it);
     }
   }
 

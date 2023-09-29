@@ -124,11 +124,34 @@ void GridVisual::updateMap(bool redraw_all) {
     if (const auto* hashed_map =
             dynamic_cast<const HashedWaveletOctree*>(map.get());
         hashed_map) {
+      // Remove blocks that no longer exist in the map
+      {
+        // From the visuals (blocks that were already drawn)
+        for (auto it = block_grids_.begin(); it != block_grids_.end();) {
+          const auto block_idx = it->first;
+          if (!hashed_map->getBlocks().count(block_idx)) {
+            it = block_grids_.erase(it);
+          } else {
+            ++it;
+          }
+        }
+        // From the queue (blocks that were about to be drawn)
+        for (auto it = block_update_queue_.begin();
+             it != block_update_queue_.end();) {
+          const auto block_idx = it->first;
+          if (!hashed_map->getBlocks().count(block_idx)) {
+            it = block_update_queue_.erase(it);
+          } else {
+            ++it;
+          }
+        }
+      }
+
+      // Add all blocks that changed since the last publication time
+      // to the drawing queue
       const auto min_termination_height = termination_height_property_.getInt();
       for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-        // Add all blocks that changed since the last publication time to
-        // the queue. Since the queue is stored as a set, there are no
-        // duplicates.
+        // NOTE: Since the queue is stored as a set, there are no duplicates.
         if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
           block_update_queue_[block_idx] = min_termination_height;
           // Force the LODs to be updated, s.t. the new blocks directly get
