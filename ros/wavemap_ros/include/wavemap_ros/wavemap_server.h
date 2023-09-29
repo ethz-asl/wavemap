@@ -18,6 +18,7 @@
 #include <wavemap/utils/stopwatch.h>
 #include <wavemap/utils/thread_pool.h>
 #include <wavemap/utils/time.h>
+#include <wavemap_ros/logging_level.h>
 
 #include "wavemap_ros/input_handler/input_handler.h"
 #include "wavemap_ros/tf_transformer.h"
@@ -26,7 +27,7 @@ namespace wavemap {
 /**
  * Config struct for wavemap's ROS server.
  */
-struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 6> {
+struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 7, LoggingLevel> {
   //! Name of the coordinate frame in which to store the map.
   //! Will be used as the frame_id for ROS TF lookups.
   std::string world_frame = "odom";
@@ -47,6 +48,8 @@ struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 6> {
   //! Defaults to the number of threads supported by the CPU.
   int num_threads =
       std::max(1, static_cast<int>(std::thread::hardware_concurrency()));
+  //! Minimum severity level for ROS logging messages to be logged.
+  LoggingLevel logging_level = LoggingLevel::kInfo;
 
   static MemberMap memberMap;
 

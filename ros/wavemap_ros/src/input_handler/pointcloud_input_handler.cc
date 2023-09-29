@@ -229,19 +229,19 @@ void PointcloudInputHandler::processQueue() {
     }
 
     // Integrate the pointcloud
-    ROS_INFO_STREAM("Inserting pointcloud with "
-                    << posed_pointcloud.size()
-                    << " points. Remaining pointclouds in queue: "
-                    << pointcloud_queue_.size() - 1 << ".");
+    ROS_DEBUG_STREAM("Inserting pointcloud with "
+                     << posed_pointcloud.size()
+                     << " points. Remaining pointclouds in queue: "
+                     << pointcloud_queue_.size() - 1 << ".");
     integration_timer_.start();
     for (const auto& integrator : integrators_) {
       integrator->integratePointcloud(posed_pointcloud);
     }
     integration_timer_.stop();
-    ROS_INFO_STREAM("Integrated new pointcloud in "
-                    << integration_timer_.getLastEpisodeDuration()
-                    << "s. Total integration time: "
-                    << integration_timer_.getTotalDuration() << "s.");
+    ROS_DEBUG_STREAM("Integrated new pointcloud in "
+                     << integration_timer_.getLastEpisodeDuration()
+                     << "s. Total integration time: "
+                     << integration_timer_.getTotalDuration() << "s.");
 
     // Publish debugging visualizations
     if (shouldPublishReprojectedPointcloud()) {

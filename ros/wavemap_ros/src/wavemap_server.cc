@@ -19,7 +19,8 @@ DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
                       (pruning_period)
                       (publication_period)
                       (max_num_blocks_per_msg)
-                      (num_threads));
+                      (num_threads)
+                      (logging_level));
 
 bool WavemapServerConfig::isValid(bool verbose) const {
   bool all_valid = true;
@@ -43,6 +44,13 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                              const WavemapServerConfig& config)
     : config_(config.checkValid()),
       transformer_(std::make_shared<TfTransformer>()) {
+  // Set the ROS logging level
+  if (ros::console::set_logger_level(
+          ROSCONSOLE_DEFAULT_NAME,
+          LoggingLevel::ros_levels[config_.logging_level.toTypeId()])) {
+    ros::console::notifyLoggerLevelsChanged();
+  }
+
   // Setup data structure
   const auto data_structure_params =
       param::convert::toParamValue(nh_private, "map/data_structure");

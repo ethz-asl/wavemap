@@ -104,19 +104,19 @@ void DepthImageInputHandler::processQueue() {
     posed_range_image.setPose(T_W_C);
 
     // Integrate the depth image
-    ROS_INFO_STREAM("Inserting depth image with "
-                    << EigenFormat::oneLine(posed_range_image.getDimensions())
-                    << " points. Remaining pointclouds in queue: "
-                    << depth_image_queue_.size() - 1 << ".");
+    ROS_DEBUG_STREAM("Inserting depth image with "
+                     << EigenFormat::oneLine(posed_range_image.getDimensions())
+                     << " points. Remaining pointclouds in queue: "
+                     << depth_image_queue_.size() - 1 << ".");
     integration_timer_.start();
     for (const auto& integrator : scanwise_integrators_) {
       integrator->integrateRangeImage(posed_range_image);
     }
     integration_timer_.stop();
-    ROS_INFO_STREAM("Integrated new depth image in "
-                    << integration_timer_.getLastEpisodeDuration()
-                    << "s. Total integration time: "
-                    << integration_timer_.getTotalDuration() << "s.");
+    ROS_DEBUG_STREAM("Integrated new depth image in "
+                     << integration_timer_.getLastEpisodeDuration()
+                     << "s. Total integration time: "
+                     << integration_timer_.getTotalDuration() << "s.");
 
     // Publish debugging visualizations
     if (shouldPublishReprojectedPointcloud()) {
