@@ -14,13 +14,13 @@ class IntegratorFactory {
   static IntegratorBase::Ptr create(
       const param::Value& params,
       VolumetricDataStructureBase::Ptr occupancy_map,
-      std::shared_ptr<ThreadPool> thread_pool,
+      std::shared_ptr<ThreadPool> thread_pool = nullptr,
       std::optional<IntegratorType> default_integrator_type = std::nullopt);
 
   static IntegratorBase::Ptr create(
       IntegratorType integrator_type, const param::Value& params,
       VolumetricDataStructureBase::Ptr occupancy_map,
-      std::shared_ptr<ThreadPool> thread_pool);
+      std::shared_ptr<ThreadPool> thread_pool = nullptr);
 };
 }  // namespace wavemap
 

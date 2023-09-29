@@ -20,12 +20,13 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
                           Image<Vector2D>::Ptr beam_offset_image,
                           MeasurementModelBase::ConstPtr measurement_model,
                           HashedWaveletOctree::Ptr occupancy_map,
-                          std::shared_ptr<ThreadPool> thread_pool)
+                          std::shared_ptr<ThreadPool> thread_pool = nullptr)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
             std::move(beam_offset_image), std::move(measurement_model)),
         occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))),
-        thread_pool_(std::move(thread_pool)) {}
+        thread_pool_(thread_pool ? std::move(thread_pool)
+                                 : std::make_shared<ThreadPool>()) {}
 
  private:
   const HashedWaveletOctree::Ptr occupancy_map_;
