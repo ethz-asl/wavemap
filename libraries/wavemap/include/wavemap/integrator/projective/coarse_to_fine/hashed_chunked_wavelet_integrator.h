@@ -62,7 +62,8 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
       HashedChunkedWaveletOctreeBlock::NodeChunkType& parent_chunk,
       const OctreeIndex& parent_node_index, LinearIndex parent_in_chunk_index,
       FloatingPoint& parent_value,
-      HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child);
+      HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child,
+      bool& block_needs_thresholding);
   void updateLeavesBatch(
       const OctreeIndex& parent_index, FloatingPoint& parent_value,
       HashedChunkedWaveletOctreeBlock::NodeChunkType::DataType& parent_details);

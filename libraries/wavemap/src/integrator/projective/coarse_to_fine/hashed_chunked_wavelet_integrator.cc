@@ -68,21 +68,22 @@ void HashedChunkedWaveletIntegrator::updateBlock(
     HashedChunkedWaveletOctree::Block& block,
     const HashedChunkedWaveletOctree::BlockIndex& block_index) {
   ZoneScoped;
-  block.setNeedsThresholding();
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
   const OctreeIndex root_node_index{tree_height_, block_index};
   updateNodeRecursive(block.getRootChunk(), root_node_index, 0u,
                       block.getRootScale(),
-                      block.getRootChunk().nodeHasAtLeastOneChild(0u));
+                      block.getRootChunk().nodeHasAtLeastOneChild(0u),
+                      block.getNeedsThresholding());
 }
 
 void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
     HashedChunkedWaveletOctreeBlock::NodeChunkType& parent_chunk,
     const OctreeIndex& parent_node_index, LinearIndex parent_in_chunk_index,
     FloatingPoint& parent_value,
-    HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child) {
+    HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child,
+    bool& block_needs_thresholding) {
   auto& parent_details = parent_chunk.nodeData(parent_in_chunk_index);
   auto child_values = HashedChunkedWaveletOctreeBlock::Transform::backward(
       {parent_value, parent_details});
@@ -132,6 +133,7 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
         config_.termination_update_error) {
       const FloatingPoint sample = computeUpdate(C_child_center);
       child_value += sample;
+      block_needs_thresholding = true;
       continue;
     }
 
@@ -171,7 +173,7 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
       DCHECK_GE(child_height, 0);
       updateNodeRecursive(*chunk_containing_child, child_index,
                           child_node_in_chunk_index, child_value,
-                          child_has_children);
+                          child_has_children, block_needs_thresholding);
     }
 
     if (child_has_children || data_utils::is_nonzero(child_details)) {
