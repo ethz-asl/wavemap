@@ -33,24 +33,25 @@ inline Point3D OusterProjector::sensorToCartesian(
 }
 
 inline FloatingPoint OusterProjector::imageOffsetToErrorNorm(
-    const Vector2D& linearization_point, Vector2D offset) const {
+    const Vector2D& linearization_point, const Vector2D& offset) const {
   // Scale the azimuth offset by the cosine of the elevation angle to account
   // for the change in density along the azimuth axis in function of elevation
   const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
-  offset[1] *= cos_elevation_angle;
-  return offset.norm();
+  return std::sqrt(offset[0] * offset[0] +
+                   (cos_elevation_angle * cos_elevation_angle) *
+                       (offset[1] * offset[1]));
 }
 
 inline std::array<FloatingPoint, 4> OusterProjector::imageOffsetsToErrorNorms(
     const Vector2D& linearization_point,
-    ProjectorBase::CellToBeamOffsetArray offsets) const {
+    const ProjectorBase::CellToBeamOffsetArray& offsets) const {
   const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
-  for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
-    offsets[offset_idx][1] *= cos_elevation_angle;
-  }
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
-    error_norms[offset_idx] = offsets[offset_idx].norm();
+    error_norms[offset_idx] =
+        std::sqrt((offsets[offset_idx][0] * offsets[offset_idx][0]) +
+                  (cos_elevation_angle * cos_elevation_angle) *
+                      (offsets[offset_idx][1] * offsets[offset_idx][1]));
   }
   return error_norms;
 }

@@ -73,11 +73,11 @@ class ProjectorBase {
   //       angle between the two rays whose offset is given. For camera models,
   //       it corresponds to the reprojection error in pixels.
   virtual FloatingPoint imageOffsetToErrorNorm(
-      const Vector2D& linearization_point, Vector2D offset) const = 0;
+      const Vector2D& linearization_point, const Vector2D& offset) const = 0;
   using CellToBeamOffsetArray = std::array<Vector2D, 4>;
   virtual std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
       const Vector2D& linearization_point,
-      CellToBeamOffsetArray offsets) const = 0;
+      const CellToBeamOffsetArray& offsets) const = 0;
 
   // Convenience functions combining multiple of the above methods
   Index2D cartesianToNearestIndex(const Point3D& C_point) const {
