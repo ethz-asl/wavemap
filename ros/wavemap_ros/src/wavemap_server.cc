@@ -129,7 +129,7 @@ void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
                     << config_.pruning_period << "s");
     map_pruning_timer_ = nh.createTimer(
         ros::Duration(config_.pruning_period),
-        [this](const auto& /*event*/) { occupancy_map_->pruneDistant(); });
+        [this](const auto& /*event*/) { occupancy_map_->pruneSmart(); });
   }
 
   if (0.f < config_.publication_period) {

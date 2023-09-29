@@ -73,7 +73,7 @@ class HashedWaveletOctree : public VolumetricDataStructureBase {
   size_t size() const override;
   void threshold() override;
   void prune() override;
-  void pruneDistant() override;
+  void pruneSmart() override;
   void clear() override { blocks_.clear(); }
 
   size_t getMemoryUsage() const override;
