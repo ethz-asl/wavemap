@@ -1,12 +1,21 @@
 #include "wavemap/utils/thread_pool.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace wavemap {
 ThreadPool::ThreadPool(size_t thread_count)
     : task_count_(0), terminate_(false) {
   // Create the worker threads
+  static int pool_id = 0;
   for (size_t i = 0; i < thread_count; ++i) {
-    workers_.emplace_back([this] { worker_loop(); });
+    const std::string thread_name =
+        "pool_" + std::to_string(pool_id) + "_worker_" + std::to_string(i);
+    workers_.emplace_back([this, thread_name] {
+      tracy::SetThreadName(thread_name.c_str());
+      worker_loop();
+    });
   }
+  ++pool_id;
 }
 
 ThreadPool::~ThreadPool() {
