@@ -32,9 +32,10 @@ inline std::pair<Index2D, Vector2D> ProjectorBase::imageToNearestIndexAndOffset(
     const Vector2D& image_coordinates) const {
   const Vector2D index = imageToIndexReal(image_coordinates);
   const Vector2D index_rounded = index.array().round();
-  const Vector2D image_coordinate_offset =
+  Vector2D image_coordinate_offset =
       (index - index_rounded).cwiseProduct(index_to_image_scale_factor_);
-  return {index_rounded.cast<IndexElement>(), image_coordinate_offset};
+  return {index_rounded.cast<IndexElement>(),
+          std::move(image_coordinate_offset)};
 }
 
 inline std::array<Index2D, 4> ProjectorBase::imageToNearestIndices(
@@ -68,11 +69,13 @@ ProjectorBase::imageToNearestIndicesAndOffsets(
         neighbox_idx & 0b01 ? index_upper[0] : index_lower[0],
         neighbox_idx & 0b10 ? index_upper[1] : index_lower[1]};
     indices[neighbox_idx] = index_rounded.cast<IndexElement>();
-    offsets[neighbox_idx] =
-        (index - index_rounded).cwiseProduct(index_to_image_scale_factor_);
+    offsets[neighbox_idx][0] =
+        index_to_image_scale_factor_[0] * (index[0] - index_rounded[0]);
+    offsets[neighbox_idx][1] =
+        index_to_image_scale_factor_[1] * (index[1] - index_rounded[1]);
   }
 
-  return {indices, offsets};
+  return {std::move(indices), std::move(offsets)};
 }
 
 inline Vector2D ProjectorBase::indexToImage(const Index2D& index) const {

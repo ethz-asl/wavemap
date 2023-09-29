@@ -5,12 +5,13 @@
 namespace wavemap {
 OusterProjector::OusterProjector(const OusterProjector::Config& config)
     : ProjectorBase(
+          {config.elevation.num_cells, config.azimuth.num_cells},
           Vector2D(config.elevation.max_angle - config.elevation.min_angle,
                    config.azimuth.max_angle - config.azimuth.min_angle)
               .cwiseQuotient(Index2D(config.elevation.num_cells - 1,
                                      config.azimuth.num_cells - 1)
                                  .cast<FloatingPoint>()),
-          Vector2D(config.elevation.min_angle, config.azimuth.min_angle)),
+          {config.elevation.min_angle, config.azimuth.min_angle}),
       config_(config.checkValid()) {}
 
 Eigen::Matrix<bool, 3, 1> OusterProjector::sensorAxisIsPeriodic() const {

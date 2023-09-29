@@ -51,8 +51,6 @@ class OusterProjector : public ProjectorBase {
 
   explicit OusterProjector(const Config& config);
 
-  IndexElement getNumRows() const final { return config_.elevation.num_cells; }
-  IndexElement getNumColumns() const final { return config_.azimuth.num_cells; }
   Vector2D getMinImageCoordinates() const final {
     return {config_.elevation.min_angle, config_.azimuth.min_angle};
   }

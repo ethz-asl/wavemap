@@ -28,14 +28,16 @@ class ProjectorBase {
   using Ptr = std::shared_ptr<ProjectorBase>;
   using ConstPtr = std::shared_ptr<const ProjectorBase>;
 
-  ProjectorBase(Vector2D index_to_image_scale_factor, Vector2D image_offset)
-      : index_to_image_scale_factor_(std::move(index_to_image_scale_factor)),
+  ProjectorBase(Index2D dimensions, Vector2D index_to_image_scale_factor,
+                Vector2D image_offset)
+      : dimensions_(std::move(dimensions)),
+        index_to_image_scale_factor_(std::move(index_to_image_scale_factor)),
         image_offset_(std::move(image_offset)) {}
   virtual ~ProjectorBase() = default;
 
-  virtual IndexElement getNumRows() const = 0;
-  virtual IndexElement getNumColumns() const = 0;
-  Index2D getDimensions() const { return {getNumRows(), getNumColumns()}; }
+  IndexElement getNumRows() const { return dimensions_.x(); }
+  IndexElement getNumColumns() const { return dimensions_.y(); }
+  Index2D getDimensions() const { return dimensions_; }
   virtual Vector2D getMinImageCoordinates() const = 0;
   virtual Vector2D getMaxImageCoordinates() const = 0;
   virtual Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const = 0;
@@ -90,6 +92,7 @@ class ProjectorBase {
       const Point3D& t_W_C) const = 0;
 
  protected:
+  const Index2D dimensions_;
   const Vector2D index_to_image_scale_factor_;
   const Vector2D image_to_index_scale_factor_ =
       Vector2D::Ones().cwiseQuotient(index_to_image_scale_factor_);

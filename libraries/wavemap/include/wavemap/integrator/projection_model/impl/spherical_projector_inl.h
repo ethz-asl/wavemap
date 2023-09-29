@@ -35,11 +35,13 @@ SphericalProjector::imageOffsetsToErrorNorms(
     const Vector2D& linearization_point,
     const ProjectorBase::CellToBeamOffsetArray& offsets) const {
   const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
+  const FloatingPoint cos_elevation_angle_sq =
+      cos_elevation_angle * cos_elevation_angle;
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
     error_norms[offset_idx] =
         std::sqrt((offsets[offset_idx][0] * offsets[offset_idx][0]) +
-                  (cos_elevation_angle * cos_elevation_angle) *
+                  cos_elevation_angle_sq *
                       (offsets[offset_idx][1] * offsets[offset_idx][1]));
   }
   return error_norms;

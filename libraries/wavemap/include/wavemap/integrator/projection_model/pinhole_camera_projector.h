@@ -46,11 +46,10 @@ class PinholeCameraProjector : public ProjectorBase {
   using Config = PinholeCameraProjectorConfig;
 
   explicit PinholeCameraProjector(const Config& config)
-      : ProjectorBase(Vector2D::Ones(), Vector2D::Zero()),
+      : ProjectorBase({config.width, config.height}, Vector2D::Ones(),
+                      Vector2D::Zero()),
         config_(config.checkValid()) {}
 
-  IndexElement getNumRows() const final { return config_.width; }
-  IndexElement getNumColumns() const final { return config_.height; }
   Vector2D getMinImageCoordinates() const final {
     return indexToImage(Index2D::Zero());
   }
