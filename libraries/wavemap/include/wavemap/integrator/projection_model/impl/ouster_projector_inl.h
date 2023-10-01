@@ -10,10 +10,10 @@ inline SensorCoordinates OusterProjector::cartesianToSensor(
   const Point2D B_point{
       C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
       C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
-  const FloatingPoint elevation_angle =
-      approximate::atan2()(B_point.y(), B_point.x());
   const FloatingPoint azimuth_angle =
-      approximate::atan2()(C_point.y(), C_point.x());
+      approximate::atan2()(C_point[1], C_point[0]);
+  const FloatingPoint elevation_angle =
+      approximate::atan2()(B_point[1], B_point[0]);
   const FloatingPoint range = B_point.norm();
   return {{elevation_angle, azimuth_angle}, range};
 }
@@ -63,13 +63,13 @@ inline ImageCoordinates OusterProjector::cartesianToImage(
   // Project the beam's endpoint into the 2D plane B whose origin lies at the
   // beam's start point, X-axis is parallel to the projection of the beam onto
   // frame C's XY-plane and Y-axis is parallel to frame C's Z-axis
-  const Vector2D B_point{
+  const std::array<FloatingPoint, 2> B_point{
       C_point.head<2>().norm() - config_.lidar_origin_to_beam_origin,
       C_point.z() - config_.lidar_origin_to_sensor_origin_z_offset};
-  const FloatingPoint elevation_angle =
-      approximate::atan2()(B_point.y(), B_point.x());
   const FloatingPoint azimuth_angle =
-      approximate::atan2()(C_point.y(), C_point.x());
+      approximate::atan2()(C_point[1], C_point[0]);
+  const FloatingPoint elevation_angle =
+      approximate::atan2()(B_point[1], B_point[0]);
   return {elevation_angle, azimuth_angle};
 }
 

@@ -32,24 +32,27 @@ inline FloatingPoint ContinuousBeam::computeWorstCaseApproximationError(
 
 inline FloatingPoint ContinuousBeam::computeUpdate(
     const SensorCoordinates& sensor_coordinates) const {
+  const auto& range_image = *range_image_;
+  const auto& beam_offset_image = *beam_offset_image_;
+  const auto& projection_model = *projection_model_;
   const FloatingPoint cell_to_sensor_distance = sensor_coordinates.normal;
 
   switch (config_.beam_selector_type.toTypeId()) {
     case BeamSelectorType::kNearestNeighbor: {
       // Get the measured distance and cell to beam offset
       const auto [image_index, cell_offset] =
-          projection_model_->imageToNearestIndexAndOffset(
+          projection_model.imageToNearestIndexAndOffset(
               sensor_coordinates.image);
-      if (!range_image_->isIndexWithinBounds(image_index)) {
+      if (!range_image.isIndexWithinBounds(image_index)) {
         return 0.f;
       }
-      const FloatingPoint measured_distance = range_image_->at(image_index);
+      const FloatingPoint measured_distance = range_image.at(image_index);
       const Vector2D cell_to_beam_offset =
-          beam_offset_image_->at(image_index) - cell_offset;
+          beam_offset_image.at(image_index) - cell_offset;
 
       // Compute the image error norm
       const FloatingPoint cell_to_beam_image_error_norm_squared =
-          projection_model_->imageOffsetToErrorSquaredNorm(
+          projection_model.imageOffsetToErrorSquaredNorm(
               sensor_coordinates.image, cell_to_beam_offset);
 
       // Compute the update
@@ -63,22 +66,23 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
       std::array<FloatingPoint, 4> measured_distances{};
       ProjectorBase::CellToBeamOffsetArray cell_to_beam_offsets{};
       const auto [image_indices, cell_offsets] =
-          projection_model_->imageToNearestIndicesAndOffsets(
+          projection_model.imageToNearestIndicesAndOffsets(
               sensor_coordinates.image);
       for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
         const Index2D& image_index = image_indices[neighbor_idx];
         const Vector2D& cell_offset = cell_offsets[neighbor_idx];
         // Get the measured distance and cell to beam offset
-        if (range_image_->isIndexWithinBounds(image_index)) {
-          measured_distances[neighbor_idx] = range_image_->at(image_index);
+        if (range_image.isIndexWithinBounds(image_index)) {
+          measured_distances[neighbor_idx] = range_image.at(image_index);
           cell_to_beam_offsets[neighbor_idx] =
-              beam_offset_image_->at(image_index) - cell_offset;
+              beam_offset_image.at(image_index);
+          cell_to_beam_offsets[neighbor_idx] -= cell_offset;
         }
       }
 
       // Compute the image error norms
       const auto cell_to_beam_image_error_norms_sq =
-          projection_model_->imageOffsetsToErrorSquaredNorms(
+          projection_model.imageOffsetsToErrorSquaredNorms(
               sensor_coordinates.image, cell_to_beam_offsets);
 
       // Compute the update

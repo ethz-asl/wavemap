@@ -51,13 +51,13 @@ class Image {
         .all();
   }
 
-  PixelT& at(Index2D index) {
+  PixelT& at(const Index2D& index) {
     DCHECK((0 <= index.array()).all());
     DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());
     return data_(index.x(), index.y());
   }
-  const PixelT& at(Index2D index) const {
+  const PixelT& at(const Index2D& index) const {
     DCHECK((0 <= index.array()).all());
     DCHECK_LT(index.x(), data_.rows());
     DCHECK_LT(index.y(), data_.cols());

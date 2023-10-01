@@ -68,10 +68,10 @@ AABB<Vector3D> OusterProjector::cartesianToSensorAABB(
     FloatingPoint& max_coordinate = sensor_coordinate_aabb.max[axis];
     for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
          ++corner_idx) {
-      min_coordinate =
-          std::min(min_coordinate, corner_sensor_coordinates[corner_idx][axis]);
-      max_coordinate =
-          std::max(max_coordinate, corner_sensor_coordinates[corner_idx][axis]);
+      const FloatingPoint coordinate =
+          corner_sensor_coordinates[corner_idx][axis];
+      min_coordinate = std::min(min_coordinate, coordinate);
+      max_coordinate = std::max(max_coordinate, coordinate);
     }
 
     const bool angle_interval_wraps_around =
