@@ -4,39 +4,34 @@
 #include <algorithm>
 
 namespace wavemap {
-inline Vector3D PinholeCameraProjector::cartesianToSensor(
+inline SensorCoordinates PinholeCameraProjector::cartesianToSensor(
     const Point3D& C_point) const {
   const FloatingPoint w_clamped = std::max(C_point.z(), kEpsilon);
   const FloatingPoint uw = config_.fx * C_point.x() / w_clamped + config_.cx;
   const FloatingPoint vw = config_.fy * C_point.y() / w_clamped + config_.cy;
-  return {uw, vw, C_point.z()};
+  return {{uw, vw}, C_point.z()};
 }
 
 inline Point3D PinholeCameraProjector::sensorToCartesian(
-    const Vector3D& coordinates) const {
-  const FloatingPoint u_scaled = coordinates[0];
-  const FloatingPoint v_scaled = coordinates[1];
-  const FloatingPoint w = coordinates[2];
+    const SensorCoordinates& coordinates) const {
+  const FloatingPoint u_scaled = coordinates.image[0];
+  const FloatingPoint v_scaled = coordinates.image[1];
+  const FloatingPoint w = coordinates.normal;
   Point3D C_point = w * fxfy_inv_ *
                     Point3D{config_.fy * u_scaled - cxfy_,
                             config_.fx * v_scaled - cyfx_, fxfy_};
   return C_point;
 }
 
-inline Point3D PinholeCameraProjector::sensorToCartesian(
-    const Vector2D& image_coordinates, FloatingPoint depth) const {
-  return sensorToCartesian(
-      {image_coordinates.x(), image_coordinates.y(), depth});
-}
-
 inline FloatingPoint PinholeCameraProjector::imageOffsetToErrorNorm(
-    const Vector2D&, const Vector2D& offset) const {
+    const ImageCoordinates& /*linearization_point*/,
+    const Vector2D& offset) const {
   return offset.norm();
 }
 
 inline std::array<FloatingPoint, 4>
 PinholeCameraProjector::imageOffsetsToErrorNorms(
-    const Vector2D&,
+    const ImageCoordinates& /*linearization_point*/,
     const ProjectorBase::CellToBeamOffsetArray& offsets) const {
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {

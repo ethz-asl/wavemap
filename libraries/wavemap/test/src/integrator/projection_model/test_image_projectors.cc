@@ -156,9 +156,9 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
     // Get a random point in Cartesian space and ensure it's in the FoV
     const Point3D C_point =
         GeometryGenerator::getRandomPoint<3>(min_range, max_range);
-    const Vector3D sensor_coordinates = projector.cartesianToSensor(C_point);
-    const Vector2D image_coordinates = sensor_coordinates.head<2>();
-    const FloatingPoint range_or_depth = sensor_coordinates[2];
+    const auto sensor_coordinates = projector.cartesianToSensor(C_point);
+    const Vector2D image_coordinates = sensor_coordinates.image;
+    const FloatingPoint range_or_depth = sensor_coordinates.normal;
     if (range_or_depth < 1e-1f) {
       --repetition;
       continue;
@@ -183,7 +183,8 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
         << " with norm " << range << ", but after round trip it became "
         << EigenFormat::oneLine(C_point_roundtrip)
         << ". Intermediate sensor coordinates were "
-        << EigenFormat::oneLine(sensor_coordinates) << ".";
+        << EigenFormat::oneLine(sensor_coordinates.image) << ", "
+        << sensor_coordinates.normal << ".";
   }
 
   // Test sensor -> Cartesian -> sensor round trips
@@ -192,7 +193,8 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
     const Index2D image_index = GeometryGenerator::getRandomIndex<2>(
         Index2D::Zero(), projector.getDimensions());
     const Vector2D image_coordinates = projector.indexToImage(image_index);
-    const Point3D C_point = projector.sensorToCartesian(image_coordinates, 1.f);
+    const Point3D C_point =
+        projector.sensorToCartesian({image_coordinates, 1.f});
     const Index2D image_index_roundtrip =
         projector.cartesianToNearestIndex(C_point);
 
@@ -252,11 +254,11 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
            ++corner_idx) {
         const Point3D C_t_C_corner =
             test.T_W_C.inverse() * test.W_aabb.corner_point(corner_idx);
-        const Vector3D corner_sensor_coordinates =
+        const auto corner_sensor_coordinates =
             projector.cartesianToSensor(C_t_C_corner);
-        corners_x[corner_idx] = corner_sensor_coordinates.x();
-        corners_y[corner_idx] = corner_sensor_coordinates.y();
-        corners_z[corner_idx] = corner_sensor_coordinates.z();
+        corners_x[corner_idx] = corner_sensor_coordinates.image.x();
+        corners_y[corner_idx] = corner_sensor_coordinates.image.y();
+        corners_z[corner_idx] = corner_sensor_coordinates.normal;
       }
       // Find the min/max corner coordinates
       for (auto [axis, coordinates] :

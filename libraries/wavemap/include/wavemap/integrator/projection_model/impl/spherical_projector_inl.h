@@ -1,19 +1,21 @@
 #ifndef WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMPL_SPHERICAL_PROJECTOR_INL_H_
 #define WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMPL_SPHERICAL_PROJECTOR_INL_H_
 
+#include <utility>
+
 namespace wavemap {
-inline Vector3D SphericalProjector::cartesianToSensor(
+inline SensorCoordinates SphericalProjector::cartesianToSensor(
     const Point3D& C_point) const {
-  const Vector2D image_coordinates = cartesianToImage(C_point);
+  ImageCoordinates image_coordinates = cartesianToImage(C_point);
   const FloatingPoint range = C_point.norm();
-  return {image_coordinates.x(), image_coordinates.y(), range};
+  return {std::move(image_coordinates), range};
 }
 
 inline Point3D SphericalProjector::sensorToCartesian(
-    const Vector3D& coordinates) const {
-  const FloatingPoint elevation_angle = coordinates[0];
-  const FloatingPoint azimuth_angle = coordinates[1];
-  const FloatingPoint range = coordinates[2];
+    const SensorCoordinates& coordinates) const {
+  const FloatingPoint elevation_angle = coordinates.image[0];
+  const FloatingPoint azimuth_angle = coordinates.image[1];
+  const FloatingPoint range = coordinates.normal;
   const Vector3D bearing{std::cos(elevation_angle) * std::cos(azimuth_angle),
                          std::cos(elevation_angle) * std::sin(azimuth_angle),
                          std::sin(elevation_angle)};
@@ -21,7 +23,7 @@ inline Point3D SphericalProjector::sensorToCartesian(
 }
 
 inline FloatingPoint SphericalProjector::imageOffsetToErrorNorm(
-    const Vector2D& linearization_point, const Vector2D& offset) const {
+    const ImageCoordinates& linearization_point, const Vector2D& offset) const {
   // Scale the azimuth offset by the cosine of the elevation angle to account
   // for the change in density along the azimuth axis in function of elevation
   const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
@@ -32,7 +34,7 @@ inline FloatingPoint SphericalProjector::imageOffsetToErrorNorm(
 
 inline std::array<FloatingPoint, 4>
 SphericalProjector::imageOffsetsToErrorNorms(
-    const Vector2D& linearization_point,
+    const ImageCoordinates& linearization_point,
     const ProjectorBase::CellToBeamOffsetArray& offsets) const {
   const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
   const FloatingPoint cos_elevation_angle_sq =
@@ -47,7 +49,7 @@ SphericalProjector::imageOffsetsToErrorNorms(
   return error_norms;
 }
 
-inline Vector2D SphericalProjector::cartesianToImage(
+inline ImageCoordinates SphericalProjector::cartesianToImage(
     const Point3D& C_point) const {
   const FloatingPoint elevation_angle =
       approximate::atan2()(C_point.z(), C_point.head<2>().norm());
@@ -59,15 +61,6 @@ inline Vector2D SphericalProjector::cartesianToImage(
 inline FloatingPoint SphericalProjector::cartesianToSensorZ(
     const Point3D& C_point) const {
   return C_point.norm();
-}
-
-inline Vector2D SphericalProjector::cartesianToImageApprox(
-    const Point3D& C_point) const {
-  const FloatingPoint elevation_angle =
-      approximate::atan2()(C_point.z(), C_point.head<2>().norm());
-  const FloatingPoint azimuth_angle =
-      approximate::atan2()(C_point.y(), C_point.x());
-  return {elevation_angle, azimuth_angle};
 }
 }  // namespace wavemap
 

@@ -51,12 +51,6 @@ class OusterProjector : public ProjectorBase {
 
   explicit OusterProjector(const Config& config);
 
-  Vector2D getMinImageCoordinates() const final {
-    return {config_.elevation.min_angle, config_.azimuth.min_angle};
-  }
-  Vector2D getMaxImageCoordinates() const final {
-    return {config_.elevation.max_angle, config_.azimuth.max_angle};
-  }
   Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final;
   Eigen::Matrix<bool, 3, 1> sensorAxisCouldBePeriodic() const final {
     return {true, true, false};
@@ -64,21 +58,17 @@ class OusterProjector : public ProjectorBase {
   SiUnit getImageCoordinatesUnit() const final { return SiUnit::kRadians; }
 
   // Coordinate transforms between Cartesian and sensor space
-  Vector3D cartesianToSensor(const Point3D& C_point) const final;
-  Point3D sensorToCartesian(const Vector3D& coordinates) const final;
-  Point3D sensorToCartesian(const Vector2D& image_coordinates,
-                            FloatingPoint range) const final {
-    return sensorToCartesian(
-        {image_coordinates.x(), image_coordinates.y(), range});
-  }
-  FloatingPoint imageOffsetToErrorNorm(const Vector2D& linearization_point,
-                                       const Vector2D& offset) const final;
+  SensorCoordinates cartesianToSensor(const Point3D& C_point) const final;
+  Point3D sensorToCartesian(const SensorCoordinates& coordinates) const final;
+  FloatingPoint imageOffsetToErrorNorm(
+      const ImageCoordinates& linearization_point,
+      const Vector2D& offset) const final;
   std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
-      const Vector2D& linearization_point,
+      const ImageCoordinates& linearization_point,
       const CellToBeamOffsetArray& offsets) const final;
 
   // Projection from Cartesian space onto the sensor's image surface
-  Vector2D cartesianToImage(const Point3D& C_point) const final;
+  ImageCoordinates cartesianToImage(const Point3D& C_point) const final;
   FloatingPoint cartesianToSensorZ(const Point3D& C_point) const final;
 
   // NOTE: When the AABB is right behind the sensor, the angle range will wrap
@@ -90,8 +80,6 @@ class OusterProjector : public ProjectorBase {
 
  private:
   const OusterProjectorConfig config_;
-
-  Vector2D cartesianToImageApprox(const Point3D& C_point) const;
 };
 }  // namespace wavemap
 

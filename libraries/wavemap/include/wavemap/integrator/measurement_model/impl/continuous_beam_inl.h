@@ -31,15 +31,15 @@ inline FloatingPoint ContinuousBeam::computeWorstCaseApproximationError(
 }
 
 inline FloatingPoint ContinuousBeam::computeUpdate(
-    const Vector3D& sensor_coordinates) const {
-  const FloatingPoint cell_to_sensor_distance = sensor_coordinates.z();
+    const SensorCoordinates& sensor_coordinates) const {
+  const FloatingPoint cell_to_sensor_distance = sensor_coordinates.normal;
 
   switch (config_.beam_selector_type.toTypeId()) {
     case BeamSelectorType::kNearestNeighbor: {
       // Get the measured distance and cell to beam offset
       const auto [image_index, cell_offset] =
           projection_model_->imageToNearestIndexAndOffset(
-              sensor_coordinates.head<2>());
+              sensor_coordinates.image);
       if (!range_image_->isIndexWithinBounds(image_index)) {
         return 0.f;
       }
@@ -49,8 +49,8 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
 
       // Compute the image error norm
       const FloatingPoint cell_to_beam_image_error_norm =
-          projection_model_->imageOffsetToErrorNorm(
-              sensor_coordinates.head<2>(), cell_to_beam_offset);
+          projection_model_->imageOffsetToErrorNorm(sensor_coordinates.image,
+                                                    cell_to_beam_offset);
 
       // Compute the update
       return computeBeamUpdate(cell_to_sensor_distance,
@@ -64,7 +64,7 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
       ProjectorBase::CellToBeamOffsetArray cell_to_beam_offsets{};
       const auto [image_indices, cell_offsets] =
           projection_model_->imageToNearestIndicesAndOffsets(
-              sensor_coordinates.head<2>());
+              sensor_coordinates.image);
       for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
         const Index2D& image_index = image_indices[neighbor_idx];
         const Vector2D& cell_offset = cell_offsets[neighbor_idx];
@@ -78,8 +78,8 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
 
       // Compute the image error norms
       const auto cell_to_beam_image_error_norms =
-          projection_model_->imageOffsetsToErrorNorms(
-              sensor_coordinates.head<2>(), cell_to_beam_offsets);
+          projection_model_->imageOffsetsToErrorNorms(sensor_coordinates.image,
+                                                      cell_to_beam_offsets);
 
       // Compute the update
       FloatingPoint update = 0.f;

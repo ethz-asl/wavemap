@@ -75,7 +75,7 @@ class ContinuousBeam : public MeasurementModelBase {
       FloatingPoint cell_bounding_radius) const override;
 
   FloatingPoint computeUpdate(
-      const Vector3D& sensor_coordinates) const override;
+      const SensorCoordinates& sensor_coordinates) const override;
 
  private:
   const ContinuousBeamConfig config_;

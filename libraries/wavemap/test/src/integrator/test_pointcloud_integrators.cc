@@ -48,7 +48,7 @@ class PointcloudIntegratorTest : public FixtureBase,
           pointcloud_index / projection_model.getNumRows()};
       pointcloud[pointcloud_index] =
           range * projection_model.sensorToCartesian(
-                      projection_model.indexToImage(image_index), 1.f);
+                      {projection_model.indexToImage(image_index), 1.f});
     }
 
     return PosedPointcloud<>(getRandomTransformation<3>(), pointcloud);

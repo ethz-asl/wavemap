@@ -5,7 +5,7 @@
 
 namespace wavemap {
 inline Index2D ProjectorBase::imageToNearestIndex(
-    const Vector2D& image_coordinates) const {
+    const ImageCoordinates& image_coordinates) const {
   return imageToIndexReal(image_coordinates)
       .array()
       .round()
@@ -13,7 +13,7 @@ inline Index2D ProjectorBase::imageToNearestIndex(
 }
 
 inline Index2D ProjectorBase::imageToFloorIndex(
-    const Vector2D& image_coordinates) const {
+    const ImageCoordinates& image_coordinates) const {
   return imageToIndexReal(image_coordinates)
       .array()
       .floor()
@@ -21,7 +21,7 @@ inline Index2D ProjectorBase::imageToFloorIndex(
 }
 
 inline Index2D ProjectorBase::imageToCeilIndex(
-    const Vector2D& image_coordinates) const {
+    const ImageCoordinates& image_coordinates) const {
   return imageToIndexReal(image_coordinates)
       .array()
       .ceil()
@@ -29,7 +29,7 @@ inline Index2D ProjectorBase::imageToCeilIndex(
 }
 
 inline std::pair<Index2D, Vector2D> ProjectorBase::imageToNearestIndexAndOffset(
-    const Vector2D& image_coordinates) const {
+    const ImageCoordinates& image_coordinates) const {
   const Vector2D index = imageToIndexReal(image_coordinates);
   const Vector2D index_rounded = index.array().round();
   Vector2D image_coordinate_offset =
@@ -39,7 +39,7 @@ inline std::pair<Index2D, Vector2D> ProjectorBase::imageToNearestIndexAndOffset(
 }
 
 inline std::array<Index2D, 4> ProjectorBase::imageToNearestIndices(
-    const Vector2D& image_coordinates) const {
+    const ImageCoordinates& image_coordinates) const {
   const Vector2D index = imageToIndexReal(image_coordinates);
   const Vector2D index_lower = index.array().floor();
   const Vector2D index_upper = index.array().ceil();
@@ -57,7 +57,7 @@ inline std::array<Index2D, 4> ProjectorBase::imageToNearestIndices(
 
 inline std::pair<std::array<Index2D, 4>, std::array<Vector2D, 4>>
 ProjectorBase::imageToNearestIndicesAndOffsets(
-    const Vector2D& image_coordinates) const {
+    const ImageCoordinates& image_coordinates) const {
   const Vector2D index = imageToIndexReal(image_coordinates);
   const Vector2D index_lower = index.array().floor();
   const Vector2D index_upper = index.array().ceil();
@@ -78,14 +78,15 @@ ProjectorBase::imageToNearestIndicesAndOffsets(
   return {std::move(indices), std::move(offsets)};
 }
 
-inline Vector2D ProjectorBase::indexToImage(const Index2D& index) const {
+inline ImageCoordinates ProjectorBase::indexToImage(
+    const Index2D& index) const {
   return index.cast<FloatingPoint>().cwiseProduct(
              index_to_image_scale_factor_) +
          image_offset_;
 }
 
 inline Vector2D ProjectorBase::imageToIndexReal(
-    const Vector2D& image_coordinates) const {
+    const ImageCoordinates& image_coordinates) const {
   return (image_coordinates - image_offset_)
       .cwiseProduct(image_to_index_scale_factor_);
 }

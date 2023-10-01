@@ -21,11 +21,11 @@ void FixedResolutionIntegrator::importPointcloud(
     }
 
     // Add the point to the range image
-    const Vector3D sensor_coordinates =
+    const auto sensor_coordinates =
         projection_model_->cartesianToSensor(C_point);
     const auto [range_image_index, beam_to_pixel_offset] =
         projection_model_->imageToNearestIndexAndOffset(
-            sensor_coordinates.head<2>());
+            sensor_coordinates.image);
     if (!posed_range_image_->isIndexWithinBounds(range_image_index)) {
       // Prevent out-of-bounds access
       continue;
@@ -33,7 +33,7 @@ void FixedResolutionIntegrator::importPointcloud(
 
     // Add the point to the range image
     // If multiple points hit the same image pixel, keep the closest point
-    const FloatingPoint range = sensor_coordinates[2];
+    const FloatingPoint range = sensor_coordinates.normal;
     const FloatingPoint old_range_value =
         posed_range_image_->at(range_image_index);
     if (old_range_value < config_.min_range || range < old_range_value) {

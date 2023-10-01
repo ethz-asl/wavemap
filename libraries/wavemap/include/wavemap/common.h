@@ -69,6 +69,12 @@ inline constexpr int dim_v<Rotation2D> = 2;
 template <>
 inline constexpr int dim_v<Rotation3D> = 3;
 
+using ImageCoordinates = Vector2D;
+struct SensorCoordinates {
+  ImageCoordinates image;
+  FloatingPoint normal;
+};
+
 constexpr auto kEpsilon = constants<FloatingPoint>::kEpsilon;
 constexpr auto kNaN = std::numeric_limits<FloatingPoint>::quiet_NaN();
 

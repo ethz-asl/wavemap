@@ -11,7 +11,9 @@ OusterProjector::OusterProjector(const OusterProjector::Config& config)
               .cwiseQuotient(Index2D(config.elevation.num_cells - 1,
                                      config.azimuth.num_cells - 1)
                                  .cast<FloatingPoint>()),
-          {config.elevation.min_angle, config.azimuth.min_angle}),
+          {config.elevation.min_angle, config.azimuth.min_angle},
+          {config.elevation.min_angle, config.azimuth.min_angle},
+          {config.elevation.max_angle, config.azimuth.max_angle}),
       config_(config.checkValid()) {}
 
 Eigen::Matrix<bool, 3, 1> OusterProjector::sensorAxisIsPeriodic() const {
@@ -58,7 +60,7 @@ AABB<Vector3D> OusterProjector::cartesianToSensorAABB(
   for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
        ++corner_idx) {
     corner_sensor_coordinates[corner_idx] =
-        cartesianToImageApprox(C_aabb_corners[corner_idx]);
+        cartesianToImage(C_aabb_corners[corner_idx]);
   }
 
   for (const int axis : {0, 1}) {

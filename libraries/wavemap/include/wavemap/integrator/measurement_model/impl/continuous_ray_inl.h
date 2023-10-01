@@ -25,17 +25,17 @@ inline FloatingPoint ContinuousRay::computeWorstCaseApproximationError(
 }
 
 inline FloatingPoint ContinuousRay::computeUpdate(
-    const Vector3D& sensor_coordinates) const {
+    const SensorCoordinates& sensor_coordinates) const {
   switch (config_.beam_selector_type.toTypeId()) {
     case BeamSelectorType::kNearestNeighbor: {
       const auto image_index =
-          projection_model_->imageToNearestIndex(sensor_coordinates.head<2>());
+          projection_model_->imageToNearestIndex(sensor_coordinates.image);
       return computeBeamUpdate(sensor_coordinates, image_index);
     }
     case BeamSelectorType::kAllNeighbors: {
       FloatingPoint update = 0.f;
-      const auto image_indices = projection_model_->imageToNearestIndices(
-          sensor_coordinates.head<2>());
+      const auto image_indices =
+          projection_model_->imageToNearestIndices(sensor_coordinates.image);
       for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
         const Index2D& image_index = image_indices[neighbor_idx];
         update += computeBeamUpdate(sensor_coordinates, image_index);
@@ -48,21 +48,22 @@ inline FloatingPoint ContinuousRay::computeUpdate(
 }
 
 inline FloatingPoint ContinuousRay::computeBeamUpdate(
-    const Vector3D& sensor_coordinates, const Index2D& image_index) const {
+    const SensorCoordinates& sensor_coordinates,
+    const Index2D& image_index) const {
   if (!range_image_->isIndexWithinBounds(image_index)) {
     return 0.f;
   }
 
   const FloatingPoint measured_distance = range_image_->at(image_index);
 
-  if (range_threshold_back_ < sensor_coordinates.z() - measured_distance) {
+  if (range_threshold_back_ < sensor_coordinates.normal - measured_distance) {
     return 0.f;
   }
 
-  if (sensor_coordinates.z() < measured_distance - range_threshold_front_) {
+  if (sensor_coordinates.normal < measured_distance - range_threshold_front_) {
     return computeFreeSpaceBeamUpdate();
   } else {
-    return computeFullBeamUpdate(sensor_coordinates.z(), measured_distance);
+    return computeFullBeamUpdate(sensor_coordinates.normal, measured_distance);
   }
 }
 
