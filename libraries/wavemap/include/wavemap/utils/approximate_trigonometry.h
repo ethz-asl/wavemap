@@ -69,7 +69,9 @@ struct atan2
     FloatingPoint res = internal::atan_fma_approximation(atan_input);
 
     // If swapped, adjust atan output
-    res = swap ? std::copysign(kHalfPi, atan_input) - res : res;
+    if (swap) {
+      res = std::copysign(kHalfPi, atan_input) - res;
+    }
     // Adjust the result depending on the input quadrant
     if (x < 0.0f) {
       res = std::copysign(kPi, y) + res;
