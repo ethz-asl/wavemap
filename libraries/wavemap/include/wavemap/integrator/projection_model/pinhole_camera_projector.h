@@ -58,10 +58,10 @@ class PinholeCameraProjector : public ProjectorBase {
   // Coordinate transforms between Cartesian and sensor space
   SensorCoordinates cartesianToSensor(const Point3D& C_point) const final;
   Point3D sensorToCartesian(const SensorCoordinates& coordinates) const final;
-  FloatingPoint imageOffsetToErrorNorm(
+  FloatingPoint imageOffsetToErrorSquaredNorm(
       const ImageCoordinates& /*linearization_point*/,
       const Vector2D& offset) const final;
-  std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
+  std::array<FloatingPoint, 4> imageOffsetsToErrorSquaredNorms(
       const ImageCoordinates& /*linearization_point*/,
       const CellToBeamOffsetArray& offsets) const final;
 

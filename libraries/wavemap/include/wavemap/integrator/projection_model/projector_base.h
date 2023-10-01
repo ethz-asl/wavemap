@@ -86,11 +86,17 @@ class ProjectorBase {
   // NOTE: For spherical models, this error norm corresponds to the relative
   //       angle between the two rays whose offset is given. For camera models,
   //       it corresponds to the reprojection error in pixels.
-  virtual FloatingPoint imageOffsetToErrorNorm(
+  FloatingPoint imageOffsetToErrorNorm(
+      const ImageCoordinates& linearization_point,
+      const Vector2D& offset) const;
+  virtual FloatingPoint imageOffsetToErrorSquaredNorm(
       const ImageCoordinates& linearization_point,
       const Vector2D& offset) const = 0;
   using CellToBeamOffsetArray = std::array<Vector2D, 4>;
-  virtual std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
+  std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
+      const ImageCoordinates& linearization_point,
+      const CellToBeamOffsetArray& offsets) const;
+  virtual std::array<FloatingPoint, 4> imageOffsetsToErrorSquaredNorms(
       const ImageCoordinates& linearization_point,
       const CellToBeamOffsetArray& offsets) const = 0;
 

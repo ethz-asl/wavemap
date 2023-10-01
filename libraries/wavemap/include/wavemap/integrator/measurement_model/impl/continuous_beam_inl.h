@@ -48,13 +48,13 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
           beam_offset_image_->at(image_index) - cell_offset;
 
       // Compute the image error norm
-      const FloatingPoint cell_to_beam_image_error_norm =
-          projection_model_->imageOffsetToErrorNorm(sensor_coordinates.image,
-                                                    cell_to_beam_offset);
+      const FloatingPoint cell_to_beam_image_error_norm_squared =
+          projection_model_->imageOffsetToErrorSquaredNorm(
+              sensor_coordinates.image, cell_to_beam_offset);
 
       // Compute the update
       return computeBeamUpdate(cell_to_sensor_distance,
-                               cell_to_beam_image_error_norm,
+                               cell_to_beam_image_error_norm_squared,
                                measured_distance);
     }
 
@@ -77,16 +77,16 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
       }
 
       // Compute the image error norms
-      const auto cell_to_beam_image_error_norms =
-          projection_model_->imageOffsetsToErrorNorms(sensor_coordinates.image,
-                                                      cell_to_beam_offsets);
+      const auto cell_to_beam_image_error_norms_sq =
+          projection_model_->imageOffsetsToErrorSquaredNorms(
+              sensor_coordinates.image, cell_to_beam_offsets);
 
       // Compute the update
       FloatingPoint update = 0.f;
       for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
         update +=
             computeBeamUpdate(cell_to_sensor_distance,
-                              cell_to_beam_image_error_norms[neighbor_idx],
+                              cell_to_beam_image_error_norms_sq[neighbor_idx],
                               measured_distances[neighbor_idx]);
       }
       return update;
@@ -99,10 +99,10 @@ inline FloatingPoint ContinuousBeam::computeUpdate(
 
 inline FloatingPoint ContinuousBeam::computeBeamUpdate(
     FloatingPoint cell_to_sensor_distance,
-    FloatingPoint cell_to_beam_image_error_norm,
+    FloatingPoint cell_to_beam_image_error_norm_squared,
     FloatingPoint measured_distance) const {
   const bool fully_in_unknown_space =
-      angle_threshold_ < cell_to_beam_image_error_norm ||
+      angle_threshold_squared < cell_to_beam_image_error_norm_squared ||
       measured_distance + range_threshold_back_ < cell_to_sensor_distance;
   if (fully_in_unknown_space) {
     return 0.f;
@@ -120,7 +120,8 @@ inline FloatingPoint ContinuousBeam::computeBeamUpdate(
         0.5f * ApproximateGaussianDistribution::cumulative(f - 3.f) - 0.5f;
   }
 
-  const FloatingPoint g = cell_to_beam_image_error_norm / config_.angle_sigma;
+  const FloatingPoint g =
+      std::sqrt(cell_to_beam_image_error_norm_squared) / config_.angle_sigma;
   const FloatingPoint angle_contrib =
       ApproximateGaussianDistribution::cumulative(g + 3.f) -
       ApproximateGaussianDistribution::cumulative(g - 3.f);

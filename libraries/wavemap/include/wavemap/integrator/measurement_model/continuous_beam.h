@@ -85,6 +85,8 @@ class ContinuousBeam : public MeasurementModelBase {
   const Image<Vector2D>::ConstPtr beam_offset_image_;
 
   const FloatingPoint angle_threshold_ = 6.f * config_.angle_sigma;
+  const FloatingPoint angle_threshold_squared =
+      angle_threshold_ * angle_threshold_;
   const FloatingPoint range_threshold_front = 3.f * config_.range_sigma;
   const FloatingPoint range_threshold_back_ = 6.f * config_.range_sigma;
   // NOTE: The angle and upper range thresholds have a width of 6 sigmas because
@@ -93,9 +95,10 @@ class ContinuousBeam : public MeasurementModelBase {
   //       sigma.
 
   // Compute the measurement update for a single beam
-  FloatingPoint computeBeamUpdate(FloatingPoint cell_to_sensor_distance,
-                                  FloatingPoint cell_to_beam_image_error_norm,
-                                  FloatingPoint measured_distance) const;
+  FloatingPoint computeBeamUpdate(
+      FloatingPoint cell_to_sensor_distance,
+      FloatingPoint cell_to_beam_image_error_norm_squared,
+      FloatingPoint measured_distance) const;
 };
 }  // namespace wavemap
 

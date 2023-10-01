@@ -23,21 +23,20 @@ inline Point3D PinholeCameraProjector::sensorToCartesian(
   return C_point;
 }
 
-inline FloatingPoint PinholeCameraProjector::imageOffsetToErrorNorm(
+inline FloatingPoint PinholeCameraProjector::imageOffsetToErrorSquaredNorm(
     const ImageCoordinates& /*linearization_point*/,
     const Vector2D& offset) const {
-  return offset.norm();
+  return offset.squaredNorm();
 }
 
 inline std::array<FloatingPoint, 4>
-PinholeCameraProjector::imageOffsetsToErrorNorms(
+PinholeCameraProjector::imageOffsetsToErrorSquaredNorms(
     const ImageCoordinates& /*linearization_point*/,
-    const ProjectorBase::CellToBeamOffsetArray& offsets) const {
+    const CellToBeamOffsetArray& offsets) const {
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
-    error_norms[offset_idx] =
-        std::sqrt(offsets[offset_idx][0] * offsets[offset_idx][0] +
-                  offsets[offset_idx][1] * offsets[offset_idx][1]);
+    error_norms[offset_idx] = offsets[offset_idx][0] * offsets[offset_idx][0] +
+                              offsets[offset_idx][1] * offsets[offset_idx][1];
   }
   return error_norms;
 }

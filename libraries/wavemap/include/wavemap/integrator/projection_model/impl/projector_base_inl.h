@@ -85,6 +85,22 @@ inline ImageCoordinates ProjectorBase::indexToImage(
          image_offset_;
 }
 
+inline FloatingPoint ProjectorBase::imageOffsetToErrorNorm(
+    const ImageCoordinates& linearization_point, const Vector2D& offset) const {
+  return std::sqrt(imageOffsetToErrorSquaredNorm(linearization_point, offset));
+}
+
+inline std::array<FloatingPoint, 4> ProjectorBase::imageOffsetsToErrorNorms(
+    const ImageCoordinates& linearization_point,
+    const ProjectorBase::CellToBeamOffsetArray& offsets) const {
+  auto error_norms =
+      imageOffsetsToErrorSquaredNorms(linearization_point, offsets);
+  for (auto& error_norm : error_norms) {
+    error_norm = std::sqrt(error_norm);
+  }
+  return error_norms;
+}
+
 inline Vector2D ProjectorBase::imageToIndexReal(
     const ImageCoordinates& image_coordinates) const {
   return (image_coordinates - image_offset_)
