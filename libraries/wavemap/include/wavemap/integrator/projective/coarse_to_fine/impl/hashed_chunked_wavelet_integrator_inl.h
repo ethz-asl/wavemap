@@ -40,20 +40,41 @@ inline void HashedChunkedWaveletIntegrator::recursiveTester(  // NOLINT
 inline void HashedChunkedWaveletIntegrator::updateLeavesBatch(
     const OctreeIndex& parent_index, FloatingPoint& parent_value,
     HaarCoefficients<FloatingPoint, 3>::Details& parent_details) {
+  // Decompress
   auto child_values = HashedChunkedWaveletOctreeBlock::Transform::backward(
       {parent_value, parent_details});
-  for (NdtreeIndexRelativeChild relative_child_idx = 0;
-       relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
-    const auto child_index = parent_index.computeChildIndex(relative_child_idx);
-    FloatingPoint& child_value = child_values[relative_child_idx];
-    const Point3D W_child_center =
+
+  // Get child center points in world frame W
+  Eigen::Matrix<FloatingPoint, 3, OctreeIndex::kNumChildren> child_centers;
+  for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    const auto child_index = parent_index.computeChildIndex(child_idx);
+    child_centers.col(child_idx) =
         convert::nodeIndexToCenterPoint(child_index, min_cell_width_);
-    const Point3D C_child_center =
-        posed_range_image_->getPoseInverse() * W_child_center;
-    const FloatingPoint sample = computeUpdate(C_child_center);
-    child_value = std::clamp(sample + child_value, min_log_odds_padded_,
-                             max_log_odds_padded_);
   }
+
+  // Transform into sensor frame C
+  const auto& T_C_W = posed_range_image_->getPoseInverse();
+  for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    child_centers.col(child_idx) = T_C_W * child_centers.col(child_idx);
+  }
+
+  // Compute updated values
+  for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    const FloatingPoint sample = computeUpdate(child_centers.col(child_idx));
+    FloatingPoint& child_value = child_values[child_idx];
+    child_value = sample + child_value;
+  }
+
+  // Threshold
+  for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    FloatingPoint& child_value = child_values[child_idx];
+    child_value = (child_value < min_log_odds_padded_) ? min_log_odds_padded_
+                                                       : child_value;
+    child_value = (max_log_odds_padded_ < child_value) ? max_log_odds_padded_
+                                                       : child_value;
+  }
+
+  // Compress
   const auto [new_value, new_details] =
       HashedChunkedWaveletOctreeBlock::Transform::forward(child_values);
   parent_details = new_details;
