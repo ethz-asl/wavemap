@@ -111,11 +111,6 @@ class ProjectorBase {
       const Transformation3D::RotationMatrix& R_C_W,
       const Point3D& t_W_C) const = 0;
 
-  Vector2D imageToIndexReal(const ImageCoordinates& image_coordinates) const;
-  const Vector2D& getIndexToImageScaleFactor() const {
-    return index_to_image_scale_factor_;
-  }
-
  protected:
   const Index2D dimensions_;
   const Vector2D index_to_image_scale_factor_;
@@ -125,6 +120,13 @@ class ProjectorBase {
 
   const ImageCoordinates min_image_coordinates_;
   const ImageCoordinates max_image_coordinates_;
+
+  Vector2D imageToIndexReal(const ImageCoordinates& image_coordinates) const;
+
+  // Give test 'imageToNearestIndicesAndOffsets' of gtest test suite
+  // 'Image2DProjectorTypedTest' access to private methods and members
+  template <typename T>
+  friend class Image2DProjectorTypedTest_imageToNearestIndicesAndOffsets_Test;
 };
 }  // namespace wavemap
 

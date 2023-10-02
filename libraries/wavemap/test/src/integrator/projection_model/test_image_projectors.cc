@@ -408,7 +408,7 @@ TYPED_TEST(Image2DProjectorTypedTest, imageToNearestIndicesAndOffsets) {
           neighbox_idx & 0b10 ? index_upper[1] : index_lower[1]};
       const Index2D index_expected = index_rounded.cast<IndexElement>();
       const Vector2D offset_expected =
-          projector.getIndexToImageScaleFactor().cwiseProduct(index_rounded -
+          projector.index_to_image_scale_factor_.cwiseProduct(index_rounded -
                                                               index_real);
 
       EXPECT_EQ(indices(0, neighbox_idx), index_expected[0]);
