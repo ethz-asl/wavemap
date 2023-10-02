@@ -383,6 +383,47 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
   }
 }
 
+TYPED_TEST(Image2DProjectorTypedTest, imageToNearestIndicesAndOffsets) {
+  constexpr int kNumRandomProjectorConfigs = 10;
+  for (int config_idx = 0; config_idx < kNumRandomProjectorConfigs;
+       ++config_idx) {
+    // Create a projector with random params
+    typename TypeParam::Config projector_config;
+    Image2DProjectorTest::getRandomProjectorConfig(projector_config);
+    const TypeParam projector(projector_config);
+
+    // Test single and batched computation equivalence
+    const Vector2D image_coordinates = Vector2D::Random();
+    const auto indices = projector.imageToNearestIndices(image_coordinates);
+    const auto indices_and_offsets =
+        projector.imageToNearestIndicesAndOffsets(image_coordinates);
+
+    const Vector2D index_real = projector.imageToIndexReal(image_coordinates);
+    const Vector2D index_lower = index_real.array().floor();
+    const Vector2D index_upper = index_real.array().ceil();
+
+    for (int neighbox_idx = 0; neighbox_idx < 4; ++neighbox_idx) {
+      const Vector2D index_rounded{
+          neighbox_idx & 0b01 ? index_upper[0] : index_lower[0],
+          neighbox_idx & 0b10 ? index_upper[1] : index_lower[1]};
+      const Index2D index_expected = index_rounded.cast<IndexElement>();
+      const Vector2D offset_expected =
+          projector.getIndexToImageScaleFactor().cwiseProduct(index_rounded -
+                                                              index_real);
+
+      EXPECT_EQ(indices(0, neighbox_idx), index_expected[0]);
+      EXPECT_EQ(indices(1, neighbox_idx), index_expected[1]);
+
+      EXPECT_EQ(indices_and_offsets.first(0, neighbox_idx), index_expected[0]);
+      EXPECT_EQ(indices_and_offsets.first(1, neighbox_idx), index_expected[1]);
+      EXPECT_NEAR(indices_and_offsets.second(0, neighbox_idx),
+                  offset_expected[0], kEpsilon);
+      EXPECT_NEAR(indices_and_offsets.second(1, neighbox_idx),
+                  offset_expected[1], kEpsilon);
+    }
+  }
+}
+
 TYPED_TEST(Image2DProjectorTypedTest, ImageOffsetErrorNorms) {
   constexpr int kNumRandomProjectorConfigs = 10;
   for (int config_idx = 0; config_idx < kNumRandomProjectorConfigs;

@@ -37,7 +37,7 @@ inline FloatingPoint ContinuousRay::computeUpdate(
       const auto image_indices =
           projection_model_->imageToNearestIndices(sensor_coordinates.image);
       for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
-        const Index2D& image_index = image_indices[neighbor_idx];
+        const Index2D& image_index = image_indices.col(neighbor_idx);
         update += computeBeamUpdate(sensor_coordinates, image_index);
       }
       return update;

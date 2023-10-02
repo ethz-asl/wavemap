@@ -70,13 +70,14 @@ class ProjectorBase {
   Index2D imageToNearestIndex(const ImageCoordinates& image_coordinates) const;
   Index2D imageToFloorIndex(const ImageCoordinates& image_coordinates) const;
   Index2D imageToCeilIndex(const ImageCoordinates& image_coordinates) const;
-  std::array<Index2D, 4> imageToNearestIndices(
+  using NearestIndexArray = Eigen::Matrix<IndexElement, 2, 4>;
+  NearestIndexArray imageToNearestIndices(
       const ImageCoordinates& image_coordinates) const;
 
   std::pair<Index2D, Vector2D> imageToNearestIndexAndOffset(
       const ImageCoordinates& image_coordinates) const;
   using CellToBeamOffsetArray = Eigen::Matrix<FloatingPoint, 2, 4>;
-  std::pair<Eigen::Matrix<IndexElement, 2, 4>, CellToBeamOffsetArray>
+  std::pair<NearestIndexArray, CellToBeamOffsetArray>
   imageToNearestIndicesAndOffsets(
       const ImageCoordinates& image_coordinates) const;
 
@@ -110,6 +111,11 @@ class ProjectorBase {
       const Transformation3D::RotationMatrix& R_C_W,
       const Point3D& t_W_C) const = 0;
 
+  Vector2D imageToIndexReal(const ImageCoordinates& image_coordinates) const;
+  const Vector2D& getIndexToImageScaleFactor() const {
+    return index_to_image_scale_factor_;
+  }
+
  protected:
   const Index2D dimensions_;
   const Vector2D index_to_image_scale_factor_;
@@ -119,8 +125,6 @@ class ProjectorBase {
 
   const ImageCoordinates min_image_coordinates_;
   const ImageCoordinates max_image_coordinates_;
-
-  Vector2D imageToIndexReal(const ImageCoordinates& image_coordinates) const;
 };
 }  // namespace wavemap
 
