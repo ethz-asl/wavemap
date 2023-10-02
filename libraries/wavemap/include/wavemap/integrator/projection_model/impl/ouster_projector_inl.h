@@ -51,9 +51,9 @@ OusterProjector::imageOffsetsToErrorSquaredNorms(
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
     error_norms[offset_idx] =
-        (offsets[offset_idx][0] * offsets[offset_idx][0]) +
+        (offsets(0, offset_idx) * offsets(0, offset_idx)) +
         cos_elevation_angle_sq *
-            (offsets[offset_idx][1] * offsets[offset_idx][1]);
+            (offsets(1, offset_idx) * offsets(1, offset_idx));
   }
   return error_norms;
 }

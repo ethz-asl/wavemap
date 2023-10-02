@@ -394,14 +394,13 @@ TYPED_TEST(Image2DProjectorTypedTest, ImageOffsetErrorNorms) {
 
     // Test single and batched computation equivalence
     const Vector2D linearization_point = Vector2D::Random();
-    ProjectorBase::CellToBeamOffsetArray offsets{};
-    std::generate(offsets.begin(), offsets.end(),
-                  []() { return Vector2D::Random(); });
+    const ProjectorBase::CellToBeamOffsetArray offsets =
+        ProjectorBase::CellToBeamOffsetArray::Random();
     const auto error_norms =
         projector.imageOffsetsToErrorNorms(linearization_point, offsets);
     for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
       const FloatingPoint error_norm = projector.imageOffsetToErrorNorm(
-          linearization_point, offsets[offset_idx]);
+          linearization_point, offsets.col(offset_idx));
       EXPECT_NEAR(error_norms[offset_idx], error_norm, kEpsilon);
     }
   }

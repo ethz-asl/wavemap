@@ -55,27 +55,29 @@ inline std::array<Index2D, 4> ProjectorBase::imageToNearestIndices(
   return indices;
 }
 
-inline std::pair<std::array<Index2D, 4>, std::array<Vector2D, 4>>
+inline std::pair<Eigen::Matrix<IndexElement, 2, 4>,
+                 Eigen::Matrix<FloatingPoint, 2, 4>>
 ProjectorBase::imageToNearestIndicesAndOffsets(
     const ImageCoordinates& image_coordinates) const {
+  std::pair<Eigen::Matrix<IndexElement, 2, 4>,
+            Eigen::Matrix<FloatingPoint, 2, 4>>
+      result;
+  auto& indices = result.first;
+  auto& offsets = result.second;
+
   const Vector2D index = imageToIndexReal(image_coordinates);
-  const Vector2D index_lower = index.array().floor();
-  const Vector2D index_upper = index.array().ceil();
+  offsets.col(0) = index.array().floor();
+  offsets.col(3) = index.array().ceil();
+  offsets(0, 1) = offsets(0, 0);
+  offsets(1, 1) = offsets(1, 3);
+  offsets(0, 2) = offsets(0, 3);
+  offsets(1, 2) = offsets(1, 0);
 
-  std::array<Index2D, 4> indices{};
-  std::array<Vector2D, 4> offsets{};
-  for (int neighbox_idx = 0; neighbox_idx < 4; ++neighbox_idx) {
-    const Vector2D index_rounded{
-        neighbox_idx & 0b01 ? index_upper[0] : index_lower[0],
-        neighbox_idx & 0b10 ? index_upper[1] : index_lower[1]};
-    indices[neighbox_idx] = index_rounded.cast<IndexElement>();
-    offsets[neighbox_idx][0] =
-        index_to_image_scale_factor_[0] * (index[0] - index_rounded[0]);
-    offsets[neighbox_idx][1] =
-        index_to_image_scale_factor_[1] * (index[1] - index_rounded[1]);
-  }
+  indices = offsets.cast<IndexElement>();
+  offsets =
+      index_to_image_scale_factor_.asDiagonal() * (offsets.colwise() - index);
 
-  return {std::move(indices), std::move(offsets)};
+  return result;
 }
 
 inline ImageCoordinates ProjectorBase::indexToImage(

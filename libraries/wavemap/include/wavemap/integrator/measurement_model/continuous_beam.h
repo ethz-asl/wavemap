@@ -59,7 +59,10 @@ class ContinuousBeam : public MeasurementModelBase {
       : config_(config.checkValid()),
         projection_model_(std::move(projection_model)),
         range_image_(std::move(range_image)),
-        beam_offset_image_(std::move(beam_offset_image)) {}
+        beam_offset_image_(std::move(beam_offset_image)) {
+    CHECK_EQ(range_image_->getDimensions(),
+             beam_offset_image_->getDimensions());
+  }
 
   const ContinuousBeamConfig& getConfig() const { return config_; }
   FloatingPoint getPaddingAngle() const override { return angle_threshold_; }

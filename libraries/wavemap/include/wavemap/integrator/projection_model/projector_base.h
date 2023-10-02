@@ -75,7 +75,8 @@ class ProjectorBase {
 
   std::pair<Index2D, Vector2D> imageToNearestIndexAndOffset(
       const ImageCoordinates& image_coordinates) const;
-  std::pair<std::array<Index2D, 4>, std::array<Vector2D, 4>>
+  using CellToBeamOffsetArray = Eigen::Matrix<FloatingPoint, 2, 4>;
+  std::pair<Eigen::Matrix<IndexElement, 2, 4>, CellToBeamOffsetArray>
   imageToNearestIndicesAndOffsets(
       const ImageCoordinates& image_coordinates) const;
 
@@ -92,7 +93,6 @@ class ProjectorBase {
   virtual FloatingPoint imageOffsetToErrorSquaredNorm(
       const ImageCoordinates& linearization_point,
       const Vector2D& offset) const = 0;
-  using CellToBeamOffsetArray = std::array<Vector2D, 4>;
   std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
       const ImageCoordinates& linearization_point,
       const CellToBeamOffsetArray& offsets) const;
