@@ -117,9 +117,11 @@ inline FloatingPoint ContinuousBeam::computeBeamUpdate(
 
   const FloatingPoint g =
       std::sqrt(cell_to_beam_image_error_norm_squared) / config_.angle_sigma;
+  // NOTE: As derived in our paper, angle_contrib = C(g + 3.f) - C(g - 3.f)
+  //       where C is ApproximateGaussianDistribution::cumulative. Since 0 <= g,
+  //       C is always 1 and angle_contrib simplifies to 1 - C(g - 3.f).
   const FloatingPoint angle_contrib =
-      ApproximateGaussianDistribution::cumulative(g + 3.f) -
-      ApproximateGaussianDistribution::cumulative(g - 3.f);
+      1.f - ApproximateGaussianDistribution::cumulative(g - 3.f);
 
   const bool fully_in_free_space =
       cell_to_sensor_distance < measured_distance - range_threshold_front;
