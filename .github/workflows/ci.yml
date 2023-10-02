@@ -379,6 +379,7 @@ jobs:
         shell: bash
         run: |
           all_tests_passed=1
+          source devel/setup.bash
           for f in devel/lib/wavemap*/test_*
             do $f --gtest_color=yes || all_tests_passed=0
           done
