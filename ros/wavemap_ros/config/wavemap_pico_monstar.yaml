@@ -4,6 +4,7 @@ map:
     thresholding_period: { seconds: 2.0 }
     pruning_period: { seconds: 10.0 }
     publication_period: { seconds: 2.0 }
+    logging_level: debug
   data_structure:
     type: hashed_chunked_wavelet_octree
     min_cell_width: { meters: 0.01 }
