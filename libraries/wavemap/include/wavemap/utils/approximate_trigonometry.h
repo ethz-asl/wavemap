@@ -31,14 +31,12 @@ inline FloatingPoint atan_fma_approximation(FloatingPoint x) {
 
   // Compute approximation using Horner's method
   const FloatingPoint x_sq = x * x;
-  return x *
-         std::fma(
-             x_sq,
-             std::fma(x_sq,
-                      std::fma(x_sq,
-                               std::fma(x_sq, std::fma(x_sq, a11, a9), a7), a5),
-                      a3),
-             a1);
+  FloatingPoint u = std::fma(x_sq, a11, a9);
+  u = std::fma(x_sq, u, a7);
+  u = std::fma(x_sq, u, a5);
+  u = std::fma(x_sq, u, a3);
+  u = std::fma(x_sq, u, a1);
+  return x * u;
 }
 }  // namespace internal
 
