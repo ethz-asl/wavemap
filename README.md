@@ -1,12 +1,20 @@
 # Wavemap
-[![tests](https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ci.yml?label=tests&logo=githubactions&logoColor=white)](https://github.com/ethz-asl/wavemap/actions/workflows/ci.yml)
-[![deployment](https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ci.yml?label=deployment&logo=githubactions&logoColor=white)](https://github.com/ethz-asl/wavemap/actions/workflows/cd.yml)
-[![docs](https://img.shields.io/badge/docs-online-brightgreen?logo=sphinx)](https://ethz-asl.github.io/wavemap/)
-[![release](https://img.shields.io/github/v/tag/ethz-asl/wavemap?label=release&logo=github)](https://github.com/ethz-asl/wavemap/releases)
-[![license](https://img.shields.io/badge/license-BSD%203-blue?logo=bsd)](https://github.com/ethz-asl/wavemap/blob/main/LICENSE)
-[![linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://ethz-asl.github.io/wavemap/pages/installation.html)
-[![docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=black)](https://github.com/ethz-asl/wavemap/pkgs/container/wavemap)
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)]([https://github.com/dwyl/esta/issues](https://github.com/ethz-asl/wavemap/issues))
+<div>
+<a href="https://github.com/ethz-asl/wavemap/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ci.yml?label=test&logo=githubactions&logoColor=white" alt="test"/></a>
+<a href="https://github.com/ethz-asl/wavemap/actions/workflows/cd.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/cd.yml?label=deploy&logo=githubactions&logoColor=white" alt="deploy"/></a>
+<a href="https://ethz-asl.github.io/wavemap/"><img src="https://img.shields.io/badge/docs-online-brightgreen?logo=sphinx" alt="docs"/></a>
+<a href="https://github.com/ethz-asl/wavemap/releases"><img src="https://img.shields.io/github/v/tag/ethz-asl/wavemap?label=release&logo=github" alt="release"/></a>
+<a href="https://github.com/ethz-asl/wavemap/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD%203-blue?logo=bsd" alt="license"/></a>
+<a href="https://github.com/ethz-asl/wavemap/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen" alt="contributions welcome"/></a>
+</div>
+<div>
+<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" alt="linux"/></a>
+<a href="https://github.com/ethz-asl/wavemap/pkgs/container/wavemap"><img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=black" alt="docker"/></a>
+<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/intel-0071C5?logo=intel" alt="intel"/></a>
+<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/amd-ED1C24?logo=amd" alt="amd"/></a>
+<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/arm-0091BD?logo=arm&logoColor=white" alt="arm"/></a> 
+</div>
+
 ![3D reconstruction of Newer College's Cloister](https://github.com/ethz-asl/wavemap/assets/6238939/0df66963-3871-4fae-8567-523518c43494)
 
 ## Hierarchical, multi-resolution volumetric mapping
