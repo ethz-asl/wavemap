@@ -1,5 +1,12 @@
 # Wavemap
-
+[![tests](https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ci.yml?label=tests&logo=githubactions&logoColor=white)](https://github.com/ethz-asl/wavemap/actions/workflows/ci.yml)
+[![deployment](https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ci.yml?label=deployment&logo=githubactions&logoColor=white)](https://github.com/ethz-asl/wavemap/actions/workflows/cd.yml)
+[![docs](https://img.shields.io/badge/docs-online-brightgreen?logo=sphinx)](https://ethz-asl.github.io/wavemap/)
+[![release](https://img.shields.io/github/v/tag/ethz-asl/wavemap?label=release&logo=github)](https://github.com/ethz-asl/wavemap/releases)
+[![license](https://img.shields.io/badge/license-BSD%203-blue?logo=bsd)](https://github.com/ethz-asl/wavemap/blob/main/LICENSE)
+[![linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://ethz-asl.github.io/wavemap/pages/installation.html)
+[![docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=black)](https://github.com/ethz-asl/wavemap/pkgs/container/wavemap)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)]([https://github.com/dwyl/esta/issues](https://github.com/ethz-asl/wavemap/issues))
 ![3D reconstruction of Newer College's Cloister](https://github.com/ethz-asl/wavemap/assets/6238939/0df66963-3871-4fae-8567-523518c43494)
 
 ## Hierarchical, multi-resolution volumetric mapping
@@ -7,6 +14,8 @@
 Wavemap achieves state-of-the-art memory and computational efficiency by combining Haar wavelet compression and a coarse-to-fine measurement integration scheme. Advanced measurement models allow it to attain exceptionally high recall rates on challenging obstacles like thin objects.
 
 The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single map.
+
+⭐ If you find wavemap useful, consider starring it on GitHub to be notified of new releases!
 
 ## Documentation
 The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.github.io/wavemap/).
