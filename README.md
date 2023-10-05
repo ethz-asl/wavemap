@@ -8,11 +8,10 @@
 <a href="https://ethz-asl.github.io/wavemap/pages/contributing.html"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen" alt="contributions welcome"/></a>
 </div>
 <div>
-<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" alt="linux"/></a>
-<a href="https://github.com/ethz-asl/wavemap/pkgs/container/wavemap"><img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=black" alt="docker"/></a>
 <a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/Intel-0071C5?logo=intel" alt="Intel"/></a>
 <a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/AMD-ED1C24?logo=amd" alt="AMD"/></a>
 <a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/Arm-0091BD?logo=arm&logoColor=white" alt="Arm"/></a>
+<a href="https://github.com/ethz-asl/wavemap/pkgs/container/wavemap"><img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=black" alt="docker"/></a>
 </div>
 
 ![3D reconstruction of Newer College's Cloister](https://github.com/ethz-asl/wavemap/assets/6238939/0df66963-3871-4fae-8567-523518c43494)
