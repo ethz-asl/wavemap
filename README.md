@@ -22,7 +22,7 @@ Wavemap achieves state-of-the-art memory and computational efficiency by combini
 
 The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single map.
 
-⭐ If you find wavemap useful, consider starring it on GitHub to be notified of new releases!
+⭐ If you find wavemap useful, star it on GitHub to get notified of new releases!
 
 ## Documentation
 The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.github.io/wavemap/).
