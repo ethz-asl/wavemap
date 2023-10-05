@@ -5,7 +5,7 @@
 <a href="https://ethz-asl.github.io/wavemap/"><img src="https://img.shields.io/badge/docs-online-brightgreen?logo=sphinx" alt="docs"/></a>
 <a href="https://github.com/ethz-asl/wavemap/releases"><img src="https://img.shields.io/github/v/tag/ethz-asl/wavemap?label=release&logo=github" alt="release"/></a>
 <a href="https://github.com/ethz-asl/wavemap/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD%203-blue?logo=bsd" alt="license"/></a>
-<a href="https://github.com/ethz-asl/wavemap/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen" alt="contributions welcome"/></a>
+<a href="https://ethz-asl.github.io/wavemap/pages/contributing.html"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen" alt="contributions welcome"/></a>
 </div>
 <div>
 <a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" alt="linux"/></a>
