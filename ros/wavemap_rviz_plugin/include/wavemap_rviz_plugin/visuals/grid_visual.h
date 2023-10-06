@@ -18,6 +18,7 @@
 #include <rviz/properties/property.h>
 #include <rviz/view_manager.h>
 #include <wavemap/config/type_selector.h>
+#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
 #include <wavemap/utils/time.h>
@@ -112,6 +113,18 @@ class GridVisual : public QObject {
   static NdtreeIndexElement computeRecommendedBlockLodHeight(
       FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
       NdtreeIndexElement min_height, NdtreeIndexElement max_height);
+
+  // Hidden cell pruning methods
+  const HashedWaveletOctree* hashed_map_;
+  static bool isOccupied(FloatingPoint min_occupancy_log_odds,
+                         FloatingPoint max_occupancy_log_odds,
+                         FloatingPoint cell_log_odds) {
+    return min_occupancy_log_odds < cell_log_odds &&
+           cell_log_odds < max_occupancy_log_odds;
+  }
+  bool hasFreeNeighbor(FloatingPoint min_occupancy_log_odds,
+                       FloatingPoint max_occupancy_log_odds,
+                       const OctreeIndex& cell_index);
 
   // Drawing related methods
   using GridLayerList = std::vector<std::vector<GridCell>>;

@@ -292,6 +292,24 @@ void GridVisual::flatColorUpdateCallback() {
   }
 }
 
+bool GridVisual::hasFreeNeighbor(FloatingPoint min_occupancy_log_odds,
+                                 FloatingPoint max_occupancy_log_odds,
+                                 const OctreeIndex& cell_index) {
+  for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+    for (const int offset : {-1, 1}) {
+      auto neighbor_index = cell_index;
+      neighbor_index.position[dim_idx] += offset;
+      const FloatingPoint neighbor_log_odds =
+          hashed_map_->getCellValue(neighbor_index);
+      if (!isOccupied(min_occupancy_log_odds, max_occupancy_log_odds,
+                      neighbor_log_odds)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 void GridVisual::getLeafCentersAndColors(int tree_height,
                                          FloatingPoint min_cell_width,
                                          FloatingPoint min_occupancy_log_odds,
@@ -300,8 +318,14 @@ void GridVisual::getLeafCentersAndColors(int tree_height,
                                          FloatingPoint cell_log_odds,
                                          GridLayerList& cells_per_level) {
   // Skip cells that don't meet the occupancy threshold
-  if (cell_log_odds < min_occupancy_log_odds ||
-      max_occupancy_log_odds < cell_log_odds) {
+  if (!isOccupied(min_occupancy_log_odds, max_occupancy_log_odds,
+                  cell_log_odds)) {
+    return;
+  }
+
+  // Skip cells that are occluded by neighbors on all sides
+  if (!hasFreeNeighbor(min_occupancy_log_odds, max_occupancy_log_odds,
+                       cell_index)) {
     return;
   }
 
@@ -383,9 +407,8 @@ void GridVisual::processBlockUpdateQueue() {
     return;
   }
 
-  if (const auto* hashed_map =
-          dynamic_cast<const HashedWaveletOctree*>(map.get());
-      hashed_map) {
+  if (hashed_map_ = dynamic_cast<const HashedWaveletOctree*>(map.get());
+      hashed_map_) {
     // Constants
     const FloatingPoint min_cell_width = map->getMinCellWidth();
     const FloatingPoint min_log_odds =
@@ -398,7 +421,7 @@ void GridVisual::processBlockUpdateQueue() {
     std::map<Timestamp, Index3D> changed_blocks_sorted;
     for (const auto& [block_idx, term_height] : block_update_queue_) {
       const Timestamp& last_modified_time =
-          hashed_map->getBlock(block_idx).getLastUpdatedStamp();
+          hashed_map_->getBlock(block_idx).getLastUpdatedStamp();
       changed_blocks_sorted[last_modified_time] = block_idx;
     }
 
@@ -409,7 +432,7 @@ void GridVisual::processBlockUpdateQueue() {
         std::chrono::milliseconds(max_ms_per_frame_property_.getInt());
     const auto max_end_time = start_time + max_time_per_frame;
     for (const auto& [_, block_idx] : changed_blocks_sorted) {
-      const auto& block = hashed_map->getBlock(block_idx);
+      const auto& block = hashed_map_->getBlock(block_idx);
       const IndexElement tree_height = map->getTreeHeight();
       const IndexElement term_height = block_update_queue_[block_idx];
       const int num_levels = tree_height + 1 - term_height;
