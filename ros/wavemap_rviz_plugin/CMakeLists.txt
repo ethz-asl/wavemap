@@ -28,7 +28,8 @@ set(CMAKE_AUTOMOC ON)
 set(HEADERS_TO_MOC
     include/wavemap_rviz_plugin/wavemap_map_display.h
     include/wavemap_rviz_plugin/visuals/grid_visual.h
-    include/wavemap_rviz_plugin/visuals/slice_visual.h)
+    include/wavemap_rviz_plugin/visuals/slice_visual.h
+    include/wavemap_rviz_plugin/visuals/cell_selector.h)
 if (rviz_QT_VERSION VERSION_LESS "5")
   message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
   find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
@@ -56,7 +57,8 @@ add_library(${PROJECT_NAME}
     src/utils/listeners.cc
     src/visuals/grid_visual.cc
     src/visuals/slice_visual.cc
-    src/visuals/grid_layer.cpp
+    src/visuals/grid_layer.cc
+    src/visuals/cell_selector.cc
     src/wavemap_map_display.cc
     ${QT_MOC})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})

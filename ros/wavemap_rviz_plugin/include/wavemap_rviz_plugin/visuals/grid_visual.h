@@ -18,7 +18,6 @@
 #include <rviz/properties/property.h>
 #include <rviz/view_manager.h>
 #include <wavemap/config/type_selector.h>
-#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
 #include <wavemap/utils/time.h>
@@ -26,6 +25,7 @@
 #include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/utils/color_conversions.h"
 #include "wavemap_rviz_plugin/utils/listeners.h"
+#include "wavemap_rviz_plugin/visuals/cell_selector.h"
 #include "wavemap_rviz_plugin/visuals/grid_layer.h"
 #endif
 
@@ -64,9 +64,8 @@ class GridVisual : public QObject {
  private Q_SLOTS:  // NOLINT
   // These Qt slots get connected to signals indicating changes in the
   // user-editable properties
-  void thresholdUpdateCallback() { updateMap(true); }
-  void terminationHeightUpdateCallback() { force_lod_update_ = true; }
   void visibilityUpdateCallback();
+  void terminationHeightUpdateCallback() { force_lod_update_ = true; }
   void opacityUpdateCallback();
   void colorModeUpdateCallback();
   void flatColorUpdateCallback();
@@ -87,13 +86,16 @@ class GridVisual : public QObject {
   Ogre::SceneNode* frame_node_;
 
   // User-editable property variables, contained in the visual's submenu
+  // Grid visibility
   rviz::BoolProperty visibility_property_;
-  rviz::FloatProperty min_occupancy_threshold_property_;
-  rviz::FloatProperty max_occupancy_threshold_property_;
+  // Cell selection
+  CellSelector cell_selector_;
   rviz::IntProperty termination_height_property_;
+  // Colors
   rviz::FloatProperty opacity_property_;
   rviz::EnumProperty color_mode_property_;
   rviz::ColorProperty flat_color_property_;
+  // Frame-rate stats
   rviz::Property frame_rate_properties_;
   rviz::IntProperty num_queued_blocks_indicator_;
   rviz::IntProperty max_ms_per_frame_property_;
@@ -114,26 +116,12 @@ class GridVisual : public QObject {
       FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
       NdtreeIndexElement min_height, NdtreeIndexElement max_height);
 
-  // Hidden cell pruning methods
-  const HashedWaveletOctree* hashed_map_;
-  static bool isOccupied(FloatingPoint min_occupancy_log_odds,
-                         FloatingPoint max_occupancy_log_odds,
-                         FloatingPoint cell_log_odds) {
-    return min_occupancy_log_odds < cell_log_odds &&
-           cell_log_odds < max_occupancy_log_odds;
-  }
-  bool hasFreeNeighbor(FloatingPoint min_occupancy_log_odds,
-                       FloatingPoint max_occupancy_log_odds,
-                       const OctreeIndex& cell_index);
-
   // Drawing related methods
   using GridLayerList = std::vector<std::vector<GridCell>>;
-  void getLeafCentersAndColors(int tree_height, FloatingPoint min_cell_width,
-                               FloatingPoint min_occupancy_log_odds,
-                               FloatingPoint max_occupancy_log_odds,
-                               const OctreeIndex& cell_index,
-                               FloatingPoint cell_log_odds,
-                               GridLayerList& cells_per_level);
+  void appendLeafCenterAndColor(int tree_height, FloatingPoint min_cell_width,
+                                const OctreeIndex& cell_index,
+                                FloatingPoint cell_log_odds,
+                                GridLayerList& cells_per_level);
   void drawMultiResolutionGrid(IndexElement tree_height,
                                FloatingPoint min_cell_width,
                                const Index3D& block_index, FloatingPoint alpha,

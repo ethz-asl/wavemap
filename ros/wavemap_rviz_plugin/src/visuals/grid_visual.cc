@@ -20,12 +20,7 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
           "Whether to show the octree as a multi-resolution grid.",
           CHECK_NOTNULL(submenu_root_property),
           SLOT(visibilityUpdateCallback()), this),
-      min_occupancy_threshold_property_(
-          "Min log odds", 1e-3, "Ranges from -Inf to Inf.",
-          submenu_root_property, SLOT(thresholdUpdateCallback()), this),
-      max_occupancy_threshold_property_(
-          "Max log odds", 1e6, "Ranges from -Inf to Inf.",
-          submenu_root_property, SLOT(thresholdUpdateCallback()), this),
+      cell_selector_(submenu_root_property, [this]() { updateMap(true); }),
       termination_height_property_(
           "Termination height", 0,
           "Controls the resolution at which the map is drawn. Set to 0 to draw "
@@ -54,15 +49,17 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
           "a reasonable frame rate when maps are large.",
           &frame_rate_properties_) {
   // Initialize the property menu
+  // General
+  termination_height_property_.setMin(0);
+  num_queued_blocks_indicator_.setReadOnly(true);
+  max_ms_per_frame_property_.setMin(0);
+  // Color mode
   color_mode_property_.clearOptions();
   for (const auto& name : ColorMode::names) {
     color_mode_property_.addOption(name);
   }
   color_mode_property_.setStringStd(grid_color_mode_.toStr());
   flat_color_property_.setHidden(grid_color_mode_ != ColorMode::kFlat);
-  termination_height_property_.setMin(0);
-  num_queued_blocks_indicator_.setReadOnly(true);
-  max_ms_per_frame_property_.setMin(0);
 
   // Initialize the camera tracker used to update the LOD levels for each block
   prerender_listener_ = std::make_unique<ViewportPrerenderListener>(
@@ -103,14 +100,11 @@ void GridVisual::updateMap(bool redraw_all) {
     if (!map) {
       return;
     }
+    cell_selector_.setMap(map);
 
     // Constants
     const IndexElement tree_height = map->getTreeHeight();
     const FloatingPoint min_cell_width = map->getMinCellWidth();
-    const FloatingPoint min_log_odds =
-        min_occupancy_threshold_property_.getFloat();
-    const FloatingPoint max_log_odds =
-        max_occupancy_threshold_property_.getFloat();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
     // Limit the max selectable termination height to the height of the tree
@@ -163,9 +157,8 @@ void GridVisual::updateMap(bool redraw_all) {
       const IndexElement num_levels = tree_height + 1;
       GridLayerList cells_per_level(num_levels);
       map->forEachLeaf([&](const auto& cell_index, auto cell_log_odds) {
-        getLeafCentersAndColors(tree_height, min_cell_width, min_log_odds,
-                                max_log_odds, cell_index, cell_log_odds,
-                                cells_per_level);
+        appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
+                                 cell_log_odds, cells_per_level);
       });
       const Index3D root_idx = Index3D::Zero();
       drawMultiResolutionGrid(tree_height, min_cell_width, root_idx, alpha,
@@ -292,40 +285,13 @@ void GridVisual::flatColorUpdateCallback() {
   }
 }
 
-bool GridVisual::hasFreeNeighbor(FloatingPoint min_occupancy_log_odds,
-                                 FloatingPoint max_occupancy_log_odds,
-                                 const OctreeIndex& cell_index) {
-  for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-    for (const int offset : {-1, 1}) {
-      auto neighbor_index = cell_index;
-      neighbor_index.position[dim_idx] += offset;
-      const FloatingPoint neighbor_log_odds =
-          hashed_map_->getCellValue(neighbor_index);
-      if (!isOccupied(min_occupancy_log_odds, max_occupancy_log_odds,
-                      neighbor_log_odds)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-void GridVisual::getLeafCentersAndColors(int tree_height,
-                                         FloatingPoint min_cell_width,
-                                         FloatingPoint min_occupancy_log_odds,
-                                         FloatingPoint max_occupancy_log_odds,
-                                         const OctreeIndex& cell_index,
-                                         FloatingPoint cell_log_odds,
-                                         GridLayerList& cells_per_level) {
-  // Skip cells that don't meet the occupancy threshold
-  if (!isOccupied(min_occupancy_log_odds, max_occupancy_log_odds,
-                  cell_log_odds)) {
-    return;
-  }
-
-  // Skip cells that are occluded by neighbors on all sides
-  if (!hasFreeNeighbor(min_occupancy_log_odds, max_occupancy_log_odds,
-                       cell_index)) {
+void GridVisual::appendLeafCenterAndColor(int tree_height,
+                                          FloatingPoint min_cell_width,
+                                          const OctreeIndex& cell_index,
+                                          FloatingPoint cell_log_odds,
+                                          GridLayerList& cells_per_level) {
+  // Check if the cell should be drawn
+  if (!cell_selector_.shouldBeDrawn(cell_index, cell_log_odds)) {
     return;
   }
 
@@ -407,21 +373,18 @@ void GridVisual::processBlockUpdateQueue() {
     return;
   }
 
-  if (hashed_map_ = dynamic_cast<const HashedWaveletOctree*>(map.get());
-      hashed_map_) {
+  if (const auto* hashed_map =
+          dynamic_cast<const HashedWaveletOctree*>(map.get());
+      hashed_map) {
     // Constants
     const FloatingPoint min_cell_width = map->getMinCellWidth();
-    const FloatingPoint min_log_odds =
-        min_occupancy_threshold_property_.getFloat();
-    const FloatingPoint max_log_odds =
-        max_occupancy_threshold_property_.getFloat();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
     // Sort the blocks in the queue by their modification time
     std::map<Timestamp, Index3D> changed_blocks_sorted;
     for (const auto& [block_idx, term_height] : block_update_queue_) {
       const Timestamp& last_modified_time =
-          hashed_map_->getBlock(block_idx).getLastUpdatedStamp();
+          hashed_map->getBlock(block_idx).getLastUpdatedStamp();
       changed_blocks_sorted[last_modified_time] = block_idx;
     }
 
@@ -432,7 +395,7 @@ void GridVisual::processBlockUpdateQueue() {
         std::chrono::milliseconds(max_ms_per_frame_property_.getInt());
     const auto max_end_time = start_time + max_time_per_frame;
     for (const auto& [_, block_idx] : changed_blocks_sorted) {
-      const auto& block = hashed_map_->getBlock(block_idx);
+      const auto& block = hashed_map->getBlock(block_idx);
       const IndexElement tree_height = map->getTreeHeight();
       const IndexElement term_height = block_update_queue_[block_idx];
       const int num_levels = tree_height + 1 - term_height;
@@ -440,9 +403,8 @@ void GridVisual::processBlockUpdateQueue() {
       block.forEachLeaf(
           block_idx,
           [&](const auto& cell_index, auto cell_log_odds) {
-            getLeafCentersAndColors(tree_height, min_cell_width, min_log_odds,
-                                    max_log_odds, cell_index, cell_log_odds,
-                                    cells_per_level);
+            appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
+                                     cell_log_odds, cells_per_level);
           },
           term_height);
       drawMultiResolutionGrid(tree_height, min_cell_width, block_idx, alpha,
