@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ITERATOR_SUBTREE_ITERATOR_H_
-#define WAVEMAP_ITERATOR_SUBTREE_ITERATOR_H_
+#ifndef WAVEMAP_UTILS_ITERATE_SUBTREE_ITERATOR_H_
+#define WAVEMAP_UTILS_ITERATE_SUBTREE_ITERATOR_H_
 
 #include <deque>
 
@@ -134,6 +134,6 @@ class Subtree {
 };
 }  // namespace wavemap
 
-#include "wavemap/iterator/impl/subtree_iterator_inl.h"
+#include "wavemap/utils/iterate/impl/subtree_iterator_inl.h"
 
-#endif  // WAVEMAP_ITERATOR_SUBTREE_ITERATOR_H_
+#endif  // WAVEMAP_UTILS_ITERATE_SUBTREE_ITERATOR_H_

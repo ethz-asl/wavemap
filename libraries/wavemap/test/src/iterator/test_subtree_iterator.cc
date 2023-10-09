@@ -2,8 +2,8 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/ndtree/ndtree_node.h"
-#include "wavemap/iterator/subtree_iterator.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/utils/iterate/subtree_iterator.h"
 
 namespace wavemap {
 class SubtreeIteratorTest : public FixtureBase {

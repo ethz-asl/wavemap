@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ITERATOR_IMPL_SUBTREE_ITERATOR_INL_H_
-#define WAVEMAP_ITERATOR_IMPL_SUBTREE_ITERATOR_INL_H_
+#ifndef WAVEMAP_UTILS_ITERATE_IMPL_SUBTREE_ITERATOR_INL_H_
+#define WAVEMAP_UTILS_ITERATE_IMPL_SUBTREE_ITERATOR_INL_H_
 
 namespace wavemap {
 template <typename NodeT>
@@ -98,4 +98,4 @@ void SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>::enqueueNodeChildren(
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ITERATOR_IMPL_SUBTREE_ITERATOR_INL_H_
+#endif  // WAVEMAP_UTILS_ITERATE_IMPL_SUBTREE_ITERATOR_INL_H_

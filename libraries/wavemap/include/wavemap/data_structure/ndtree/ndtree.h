@@ -8,7 +8,7 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/ndtree/ndtree_node.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/iterator/subtree_iterator.h"
+#include "wavemap/utils/iterate/subtree_iterator.h"
 
 namespace wavemap {
 template <typename NodeDataT, int dim>

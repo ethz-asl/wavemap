@@ -18,10 +18,10 @@
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
-#include "wavemap/iterator/grid_iterator.h"
 #include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
+#include "wavemap/utils/iterate/grid_iterator.h"
 #include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {

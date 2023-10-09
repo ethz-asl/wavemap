@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/iterator/ray_iterator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
+#include "wavemap/utils/iterate/ray_iterator.h"
 #include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {

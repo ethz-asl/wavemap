@@ -1,6 +1,6 @@
 #include "wavemap_rviz_plugin/visuals/cell_selector.h"
 
-#include <wavemap/iterator/grid_iterator.h>
+#include <wavemap/utils/iterate/grid_iterator.h>
 
 namespace wavemap::rviz_plugin {
 std::array<Index3D, 26> generateNeighborIndexOffsets() {

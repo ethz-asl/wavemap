@@ -3,9 +3,9 @@
 #include "wavemap/common.h"
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/integrator/projective/coarse_to_fine/hierarchical_range_bounds.h"
-#include "wavemap/iterator/grid_iterator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
+#include "wavemap/utils/iterate/grid_iterator.h"
 
 namespace wavemap {
 class HierarchicalRangeImage2DTest : public FixtureBase,

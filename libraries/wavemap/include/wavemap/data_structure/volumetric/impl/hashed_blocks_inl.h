@@ -6,7 +6,7 @@
 #include <unordered_set>
 
 #include "wavemap/indexing/index_conversions.h"
-#include "wavemap/iterator/grid_iterator.h"
+#include "wavemap/utils/iterate/grid_iterator.h"
 
 namespace wavemap {
 inline FloatingPoint HashedBlocks::getCellValue(const Index3D& index) const {

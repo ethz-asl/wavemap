@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ITERATOR_RAY_ITERATOR_H_
-#define WAVEMAP_ITERATOR_RAY_ITERATOR_H_
+#ifndef WAVEMAP_UTILS_ITERATE_RAY_ITERATOR_H_
+#define WAVEMAP_UTILS_ITERATE_RAY_ITERATOR_H_
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/index_conversions.h"
@@ -104,4 +104,4 @@ class Ray {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ITERATOR_RAY_ITERATOR_H_
+#endif  // WAVEMAP_UTILS_ITERATE_RAY_ITERATOR_H_
