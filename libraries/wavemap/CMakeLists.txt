@@ -66,7 +66,6 @@ add_library(${PROJECT_NAME}
     src/integrator/ray_tracing/ray_tracing_integrator.cc
     src/integrator/integrator_base.cc
     src/integrator/integrator_factory.cc
-    src/utils/eigen_format.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

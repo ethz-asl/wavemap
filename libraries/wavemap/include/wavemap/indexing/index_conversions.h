@@ -8,12 +8,10 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/aabb.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/utils/int_math.h"
-#include "wavemap/utils/morton_encoding.h"
+#include "wavemap/utils/bits/morton_encoding.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap::convert {
-// TODO(victorr): Check styleguide on whether these classless methods names
-//                should start with a capital
 template <int dim>
 inline Index<dim> scaledPointToNearestIndex(const Point<dim>& point) {
   return (point - Vector<dim>::Constant(0.5f))

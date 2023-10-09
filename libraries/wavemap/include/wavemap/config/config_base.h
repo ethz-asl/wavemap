@@ -6,7 +6,7 @@
 #include "wavemap/config/param.h"
 #include "wavemap/config/param_checks.h"
 #include "wavemap/config/value_with_unit.h"
-#include "wavemap/utils/type_utils.h"
+#include "wavemap/utils/meta/type_utils.h"
 
 namespace wavemap {
 template <typename ConfigDerivedT, size_t num_members = 0,
@@ -42,8 +42,8 @@ struct ConfigBase {
       Meters<FloatingPoint>, Radians<FloatingPoint>, Pixels<FloatingPoint>,
       Seconds<FloatingPoint>>::Append<CustomMemberTypes...>;
   using MemberPointer =
-      inject_type_list_as_member_ptrs_t<std::variant, ConfigDerivedT,
-                                        MemberTypes>;
+      meta::inject_type_list_as_member_ptrs_t<std::variant, ConfigDerivedT,
+                                              MemberTypes>;
   struct MemberMetadata {
     param::Name name;
     MemberPointer ptr;

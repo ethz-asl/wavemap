@@ -6,7 +6,7 @@
 #include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
-#include "wavemap/utils/time.h"
+#include "wavemap/utils/time/time.h"
 
 namespace wavemap {
 class HashedWaveletOctreeBlock {

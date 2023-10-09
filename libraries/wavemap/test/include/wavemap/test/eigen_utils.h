@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename ComparisonOp, typename EigenA, typename EigenB>
@@ -19,8 +19,8 @@ template <typename ComparisonOp, typename EigenA, typename EigenB>
     return ::testing::AssertionSuccess();
   } else {
     return ::testing::AssertionFailure()
-           << "for matrix A" << EigenFormat::oneLine(matrix_a)
-           << " and matrix B" << EigenFormat::oneLine(matrix_b);
+           << "for matrix A" << print::eigen::oneLine(matrix_a)
+           << " and matrix B" << print::eigen::oneLine(matrix_b);
   }
 }
 
@@ -34,8 +34,8 @@ template <typename EigenA, typename EigenB>
     return ::testing::AssertionSuccess();
   } else {
     return ::testing::AssertionFailure()
-           << "for matrix A" << EigenFormat::oneLine(matrix_a)
-           << " and matrix B" << EigenFormat::oneLine(matrix_b)
+           << "for matrix A" << print::eigen::oneLine(matrix_a)
+           << " and matrix B" << print::eigen::oneLine(matrix_b)
            << " with precision " << precision;
   }
 }

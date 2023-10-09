@@ -1,6 +1,5 @@
 #include "wavemap_rviz_plugin/visuals/grid_visual.h"
 
-#include <ros/console.h>
 #include <rviz/properties/parse_color.h>
 #include <rviz/render_panel.h>
 #include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>

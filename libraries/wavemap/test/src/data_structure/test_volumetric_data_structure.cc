@@ -11,7 +11,6 @@
 #include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/container_print_utils.h"
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
@@ -184,7 +183,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     // If all non-zero values were visited, reference map should now be empty
     auto IndexToString = [](const Index3D& index) -> std::string {
       std::stringstream ss;
-      ss << EigenFormat::oneLine(index);
+      ss << print::eigen::oneLine(index);
       return ss.str();
     };
     auto PrintMap = [IndexToString](const auto& map) -> std::string {

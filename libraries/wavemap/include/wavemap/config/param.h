@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "wavemap/common.h"
-#include "wavemap/utils/type_utils.h"
+#include "wavemap/utils/meta/type_utils.h"
 
 namespace wavemap::param {
 using Name = std::string;
@@ -57,8 +57,9 @@ class ValueT {
   std::variant<PrimitiveValueTs..., Array, Map> data_;
 };
 
-using PrimitiveValueTypes = TypeList<bool, int, FloatingPoint, std::string>;
-using Value = inject_type_list_t<ValueT, PrimitiveValueTypes>;
+using PrimitiveValueTypes =
+    meta::TypeList<bool, int, FloatingPoint, std::string>;
+using Value = meta::inject_type_list_t<ValueT, PrimitiveValueTypes>;
 using Array = Value::Array;
 using Map = Value::Map;
 }  // namespace wavemap::param

@@ -5,7 +5,7 @@
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 class SphericalProjectorTest : public FixtureBase, public GeometryGenerator {
@@ -84,11 +84,11 @@ TEST_F(SphericalProjectorTest, CellToBeamAngles) {
     const FloatingPoint angle_from_offset =
         projector.imageOffsetToErrorNorm(sensor_coordinates.image, offset);
     EXPECT_NEAR(angle_from_offset, angle, kMaxAcceptableAngleError)
-        << "For C_point " << EigenFormat::oneLine(C_point)
+        << "For C_point " << print::eigen::oneLine(C_point)
         << ", C_from_closest_pixel "
-        << EigenFormat::oneLine(C_from_closest_pixel)
+        << print::eigen::oneLine(C_from_closest_pixel)
         << " and intermediate sensor coordinates "
-        << EigenFormat::oneLine(sensor_coordinates.image) << ", "
+        << print::eigen::oneLine(sensor_coordinates.image) << ", "
         << sensor_coordinates.normal;
   }
 }

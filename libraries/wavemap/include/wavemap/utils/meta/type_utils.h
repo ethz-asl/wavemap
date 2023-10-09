@@ -1,9 +1,9 @@
-#ifndef WAVEMAP_UTILS_TYPE_UTILS_H_
-#define WAVEMAP_UTILS_TYPE_UTILS_H_
+#ifndef WAVEMAP_UTILS_META_TYPE_UTILS_H_
+#define WAVEMAP_UTILS_META_TYPE_UTILS_H_
 
 #include <type_traits>
 
-namespace wavemap {
+namespace wavemap::meta {
 // Helpers for enum classes
 template <typename T>
 constexpr auto to_underlying(T value) noexcept {
@@ -74,6 +74,6 @@ struct has_to_str_member_fn<T, std::void_t<decltype(std::declval<T>().toStr())>>
 
 template <typename T>
 constexpr bool has_to_str_member_fn_v = has_to_str_member_fn<T>::value;
-}  // namespace wavemap
+}  // namespace wavemap::meta
 
-#endif  // WAVEMAP_UTILS_TYPE_UTILS_H_
+#endif  // WAVEMAP_UTILS_META_TYPE_UTILS_H_

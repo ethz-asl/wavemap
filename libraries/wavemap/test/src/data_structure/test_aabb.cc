@@ -4,7 +4,7 @@
 #include "wavemap/data_structure/aabb.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename PointT>
@@ -37,7 +37,7 @@ TYPED_TEST(AabbTest, ClosestPointsAndDistances) {
     std::string getDescription() const {
       std::stringstream ss;
       ss << "For aabb " << aabb.toString() << " and query_point "
-         << EigenFormat::oneLine(query_point) << ".";
+         << print::eigen::oneLine(query_point) << ".";
       return ss.str();
     }
   };

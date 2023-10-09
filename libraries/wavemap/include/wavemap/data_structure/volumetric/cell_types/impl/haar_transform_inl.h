@@ -1,6 +1,9 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_IMPL_HAAR_TRANSFORM_INL_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_CELL_TYPES_IMPL_HAAR_TRANSFORM_INL_H_
 
+#include "wavemap/utils/bits/bit_operations.h"
+#include "wavemap/utils/math/int_math.h"
+
 namespace wavemap {
 template <typename ValueT, int dim>
 typename HaarCoefficients<ValueT, dim>::Parent ForwardLifted(
@@ -13,9 +16,9 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardLifted(
   // Perform the transform along axis 0 while moving the data into the array
   for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
     const NdtreeIndexElement scale_idx =
-        bit_manip::squeeze_in(beam_idx, false, 0);
+        bit_ops::squeeze_in(beam_idx, false, 0);
     const NdtreeIndexElement detail_idx =
-        bit_manip::squeeze_in(beam_idx, true, 0);
+        bit_ops::squeeze_in(beam_idx, true, 0);
     parent_coefficients[detail_idx] =
         child_scales[detail_idx] - child_scales[scale_idx];
     parent_coefficients[scale_idx] =
@@ -26,9 +29,9 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardLifted(
   for (NdtreeIndexElement dim_idx = 1; dim_idx < dim; ++dim_idx) {
     for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
       const NdtreeIndexElement scale_idx =
-          bit_manip::squeeze_in(beam_idx, false, dim_idx);
+          bit_ops::squeeze_in(beam_idx, false, dim_idx);
       const NdtreeIndexElement detail_idx =
-          bit_manip::squeeze_in(beam_idx, true, dim_idx);
+          bit_ops::squeeze_in(beam_idx, true, dim_idx);
       parent_coefficients[detail_idx] -= parent_coefficients[scale_idx];
       parent_coefficients[scale_idx] +=
           static_cast<ValueT>(0.5) * parent_coefficients[detail_idx];
@@ -54,11 +57,11 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardParallel(
     for (NdtreeIndexElement child_idx = 0; child_idx < kNumCoefficients;
          ++child_idx) {
       parent_coefficients[parent_idx] +=
-          bit_manip::parity(parent_idx & ~child_idx) ? -child_scales[child_idx]
-                                                     : +child_scales[child_idx];
+          bit_ops::parity(parent_idx & ~child_idx) ? -child_scales[child_idx]
+                                                   : +child_scales[child_idx];
     }
     parent_coefficients[parent_idx] /= static_cast<ValueT>(
-        int_math::exp2(dim - bit_manip::popcount(parent_idx)));
+        int_math::exp2(dim - bit_ops::popcount(parent_idx)));
   }
 
   return parent_coefficients;
@@ -74,11 +77,10 @@ typename HaarCoefficients<ValueT, dim>::Parent ForwardSingleChild(
       HaarCoefficients<ValueT, dim>::kNumCoefficients;
   for (NdtreeIndexElement parent_idx = 0; parent_idx < kNumCoefficients;
        ++parent_idx) {
-    parent_coefficients[parent_idx] = bit_manip::parity(parent_idx & ~child_idx)
-                                          ? -child_scale
-                                          : +child_scale;
+    parent_coefficients[parent_idx] =
+        bit_ops::parity(parent_idx & ~child_idx) ? -child_scale : +child_scale;
     parent_coefficients[parent_idx] /= static_cast<ValueT>(
-        int_math::exp2(dim - bit_manip::popcount(parent_idx)));
+        int_math::exp2(dim - bit_ops::popcount(parent_idx)));
   }
 
   return parent_coefficients;
@@ -94,9 +96,9 @@ typename HaarCoefficients<ValueT, dim>::CoefficientsArray BackwardLifted(
   // Perform the transform along axis 0 while moving the data into the array
   for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
     const NdtreeIndexElement scale_idx =
-        bit_manip::squeeze_in(beam_idx, false, 0);
+        bit_ops::squeeze_in(beam_idx, false, 0);
     const NdtreeIndexElement detail_idx =
-        bit_manip::squeeze_in(beam_idx, true, 0);
+        bit_ops::squeeze_in(beam_idx, true, 0);
     child_scales[scale_idx] =
         parent[scale_idx] - static_cast<ValueT>(0.5) * parent[detail_idx];
     child_scales[detail_idx] = parent[detail_idx] + child_scales[scale_idx];
@@ -105,9 +107,9 @@ typename HaarCoefficients<ValueT, dim>::CoefficientsArray BackwardLifted(
   for (NdtreeIndexElement dim_idx = 1; dim_idx < dim; ++dim_idx) {
     for (NdtreeIndexElement beam_idx = 0; beam_idx < kNumBeams; ++beam_idx) {
       const NdtreeIndexElement scale_idx =
-          bit_manip::squeeze_in(beam_idx, false, dim_idx);
+          bit_ops::squeeze_in(beam_idx, false, dim_idx);
       const NdtreeIndexElement detail_idx =
-          bit_manip::squeeze_in(beam_idx, true, dim_idx);
+          bit_ops::squeeze_in(beam_idx, true, dim_idx);
       child_scales[scale_idx] -=
           static_cast<ValueT>(0.5) * child_scales[detail_idx];
       child_scales[detail_idx] += child_scales[scale_idx];
@@ -131,8 +133,8 @@ typename HaarCoefficients<ValueT, dim>::CoefficientsArray BackwardParallel(
          ++parent_idx) {
       const ValueT contribution =
           parent.details[parent_idx - 1] /
-          static_cast<ValueT>(int_math::exp2(bit_manip::popcount(parent_idx)));
-      child_scales[child_idx] += bit_manip::parity(~child_idx & parent_idx)
+          static_cast<ValueT>(int_math::exp2(bit_ops::popcount(parent_idx)));
+      child_scales[child_idx] += bit_ops::parity(~child_idx & parent_idx)
                                      ? -contribution
                                      : contribution;
     }
@@ -152,9 +154,9 @@ typename HaarCoefficients<ValueT, dim>::Scale BackwardSingleChild(
        ++parent_idx) {
     const ValueT contribution =
         parent.details[parent_idx - 1] /
-        static_cast<ValueT>(int_math::exp2(bit_manip::popcount(parent_idx)));
-    scale += bit_manip::parity(~child_idx & parent_idx) ? -contribution
-                                                        : contribution;
+        static_cast<ValueT>(int_math::exp2(bit_ops::popcount(parent_idx)));
+    scale +=
+        bit_ops::parity(~child_idx & parent_idx) ? -contribution : contribution;
   }
 
   return scale;

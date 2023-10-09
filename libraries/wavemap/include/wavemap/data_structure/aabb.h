@@ -5,8 +5,8 @@
 #include <string>
 
 #include "wavemap/common.h"
-#include "wavemap/utils/eigen_format.h"
-#include "wavemap/utils/int_math.h"
+#include "wavemap/utils/math/int_math.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename PointT>
@@ -89,8 +89,8 @@ struct AABB {
 
   std::string toString() const {
     std::stringstream ss;
-    ss << "[min =" << EigenFormat::oneLine(min)
-       << ", max =" << EigenFormat::oneLine(max) << "]";
+    ss << "[min =" << print::eigen::oneLine(min)
+       << ", max =" << print::eigen::oneLine(max) << "]";
     return ss.str();
   }
 };

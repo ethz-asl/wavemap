@@ -1,6 +1,6 @@
 #include "wavemap/integrator/projection_model/ouster_projector.h"
 
-#include "wavemap/utils/angle_utils.h"
+#include "wavemap/utils/math/angle_normalization.h"
 
 namespace wavemap {
 OusterProjector::OusterProjector(const OusterProjector::Config& config)

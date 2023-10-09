@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "wavemap/utils/bit_manipulation.h"
-#include "wavemap/utils/tree_math.h"
+#include "wavemap/utils/bits/bit_operations.h"
+#include "wavemap/utils/math/tree_math.h"
 
 namespace wavemap {
 template <int dim>

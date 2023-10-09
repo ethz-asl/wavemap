@@ -1,7 +1,7 @@
-#ifndef WAVEMAP_UTILS_TREE_MATH_H_
-#define WAVEMAP_UTILS_TREE_MATH_H_
+#ifndef WAVEMAP_UTILS_MATH_TREE_MATH_H_
+#define WAVEMAP_UTILS_MATH_TREE_MATH_H_
 
-#include "wavemap/utils/int_math.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap::tree_math::perfect_tree {
 template <int dim>
@@ -31,4 +31,4 @@ constexpr size_t num_leaf_nodes(size_t tree_height) {
 }
 }  // namespace wavemap::tree_math::perfect_tree
 
-#endif  // WAVEMAP_UTILS_TREE_MATH_H_
+#endif  // WAVEMAP_UTILS_MATH_TREE_MATH_H_

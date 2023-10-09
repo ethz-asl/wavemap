@@ -1,7 +1,11 @@
-#ifndef WAVEMAP_UTILS_DATA_UTILS_H_
-#define WAVEMAP_UTILS_DATA_UTILS_H_
+#ifndef WAVEMAP_UTILS_DATA_COMPARISONS_H_
+#define WAVEMAP_UTILS_DATA_COMPARISONS_H_
 
-namespace wavemap::data_utils {
+#include <algorithm>
+#include <cmath>
+#include <type_traits>
+
+namespace wavemap::data {
 // Test strict equality to zero
 template <typename T>
 bool is_nonzero(const T& data) {
@@ -23,6 +27,6 @@ bool is_nonzero(const DataT& data, ThresholdT threshold) {
     return threshold < std::abs(value);
   });
 }
-}  // namespace wavemap::data_utils
+}  // namespace wavemap::data
 
-#endif  // WAVEMAP_UTILS_DATA_UTILS_H_
+#endif  // WAVEMAP_UTILS_DATA_COMPARISONS_H_

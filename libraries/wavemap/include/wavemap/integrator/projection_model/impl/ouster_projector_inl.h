@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMPL_OUSTER_PROJECTOR_INL_H_
 #define WAVEMAP_INTEGRATOR_PROJECTION_MODEL_IMPL_OUSTER_PROJECTOR_INL_H_
 
+#include "wavemap/utils/math/approximate_trigonometry.h"
+
 namespace wavemap {
 inline SensorCoordinates OusterProjector::cartesianToSensor(
     const Point3D& C_point) const {

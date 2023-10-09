@@ -9,7 +9,7 @@
 #include "wavemap/data_structure/volumetric/hashed_wavelet_octree_block.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/indexing/index_hashes.h"
-#include "wavemap/utils/int_math.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
 /**

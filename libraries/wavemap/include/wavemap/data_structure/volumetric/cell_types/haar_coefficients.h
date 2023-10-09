@@ -7,6 +7,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/ndtree_index.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
 template <typename ValueT, int dim>

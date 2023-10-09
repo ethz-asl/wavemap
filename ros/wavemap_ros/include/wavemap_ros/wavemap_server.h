@@ -15,9 +15,9 @@
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
 #include <wavemap/integrator/integrator_base.h>
-#include <wavemap/utils/stopwatch.h>
 #include <wavemap/utils/thread_pool.h>
-#include <wavemap/utils/time.h>
+#include <wavemap/utils/time/stopwatch.h>
+#include <wavemap/utils/time/time.h>
 #include <wavemap_ros/logging_level.h>
 
 #include "wavemap_ros/input_handler/input_handler.h"

@@ -3,7 +3,7 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
 #include "wavemap/test/fixture_base.h"
-#include "wavemap/utils/container_print_utils.h"
+#include "wavemap/utils/print/container.h"
 
 namespace wavemap {
 template <typename TypeParamT>
@@ -133,9 +133,9 @@ TYPED_TEST(HaarCellTest, ParallelAndLiftedBackwardTransformEquivalence) {
     }
     EXPECT_TRUE(results_are_equal)
         << "The parallel implementation's child scales are\n["
-        << ToString(parallel_child_scale_coefficients)
+        << print::container(parallel_child_scale_coefficients)
         << "] and the lifted child scales are\n["
-        << ToString(lifted_child_scale_coefficients) << "]";
+        << print::container(lifted_child_scale_coefficients) << "]";
   }
 }
 
@@ -189,8 +189,9 @@ TYPED_TEST(HaarCellTest, LosslessReconstruction) {
     }
     EXPECT_TRUE(round_trip_equals_original)
         << "The full original array was\n["
-        << ToString(child_scale_coefficients) << "] and after the roundtrip\n["
-        << ToString(roundtrip_child_scale_coefficients) << "]";
+        << print::container(child_scale_coefficients)
+        << "] and after the roundtrip\n["
+        << print::container(roundtrip_child_scale_coefficients) << "]";
   }
 }
 
@@ -228,9 +229,9 @@ TYPED_TEST(HaarCellTest, SingleChildForwardTransforms) {
       }
       EXPECT_TRUE(single_child_transform_equals_regular)
           << "The single child transform returned parent coefficients\n["
-          << ToString(parent_from_single_child)
+          << print::container(parent_from_single_child)
           << "] while the regular transform returns\n["
-          << ToString(parent_from_sparse_array) << "]";
+          << print::container(parent_from_sparse_array) << "]";
     }
   }
 }

@@ -7,7 +7,6 @@
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
 #include <wavemap/test/geometry_generator.h>
-#include <wavemap/utils/container_print_utils.h>
 
 #include "wavemap_io/file_conversions.h"
 

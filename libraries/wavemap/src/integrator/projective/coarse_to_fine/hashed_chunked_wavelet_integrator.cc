@@ -176,7 +176,7 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
                           child_has_children, block_needs_thresholding);
     }
 
-    if (child_has_children || data_utils::is_nonzero(child_details)) {
+    if (child_has_children || data::is_nonzero(child_details)) {
       parent_has_child = true;
     }
   }

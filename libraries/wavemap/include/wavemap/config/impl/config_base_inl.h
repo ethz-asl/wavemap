@@ -61,7 +61,7 @@ namespace wavemap {
 namespace detail {
 // Loader for PrimitiveValueTypes
 template <typename ConfigDerivedT, typename MemberPtrT,
-          typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
+          typename ConfigValueT = meta::member_type_t<std::decay_t<MemberPtrT>>,
           std::enable_if_t<param::PrimitiveValueTypes::contains_t<ConfigValueT>,
                            bool> = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
@@ -92,7 +92,7 @@ void loadParam(const param::Name& param_name, const param::Value& param_value,
 // ConfigBase, type IDs derived from TypeSelector, and config values derived
 // from ValueWithUnits
 template <typename ConfigDerivedT, typename MemberPtrT,
-          typename ConfigValueT = member_type_t<std::decay_t<MemberPtrT>>,
+          typename ConfigValueT = meta::member_type_t<std::decay_t<MemberPtrT>>,
           decltype(ConfigValueT::from(std::declval<param::Value>()),
                    bool()) = true>
 void loadParam(const param::Name& param_name, const param::Value& param_value,
@@ -103,7 +103,7 @@ void loadParam(const param::Name& param_name, const param::Value& param_value,
   } else {
     // Report the error, and print the fallback (default) value that will be
     // used instead if possible
-    if constexpr (has_to_str_member_fn_v<ConfigValueT>) {
+    if constexpr (meta::has_to_str_member_fn_v<ConfigValueT>) {
       LOG(WARNING) << "Param " << param_name
                    << " could not be loaded. Keeping default value: "
                    << config_value.toStr() << ".";

@@ -7,7 +7,6 @@
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
 #include <wavemap/test/geometry_generator.h>
-#include <wavemap/utils/container_print_utils.h>
 #include <wavemap_msgs/Map.h>
 
 #include "wavemap_ros_conversions/map_msg_conversions.h"

@@ -1,9 +1,10 @@
-#ifndef WAVEMAP_UTILS_MORTON_ENCODING_H_
-#define WAVEMAP_UTILS_MORTON_ENCODING_H_
+#ifndef WAVEMAP_UTILS_BITS_MORTON_ENCODING_H_
+#define WAVEMAP_UTILS_BITS_MORTON_ENCODING_H_
 
 #include <limits>
 
-#include "wavemap/utils/bit_manipulation.h"
+#include "wavemap/utils/bits/bit_operations.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap::morton {
 template <int dim>
@@ -77,9 +78,9 @@ MortonIndex encode(const Index<dim>& index) {
   // target CPU architecture and LUTs otherwise
   uint64_t morton = 0u;
 #ifdef BIT_EXPAND_AVAILABLE
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
+  constexpr auto pattern = bit_ops::repeat_block<uint64_t>(dim, 0b1);
   for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    morton |= bit_manip::expand<uint64_t>(index[dim_idx], pattern << dim_idx);
+    morton |= bit_ops::expand<uint64_t>(index[dim_idx], pattern << dim_idx);
   }
 #else
   constexpr std::make_unsigned_t<IndexElement> kByteMask = (1 << 8) - 1;
@@ -126,9 +127,9 @@ Index<dim> decode(MortonIndex morton) {
   // target CPU architecture and LUTs otherwise
   Index<dim> index;
 #ifdef BIT_COMPRESS_AVAILABLE
-  constexpr auto pattern = bit_manip::repeat_block<uint64_t>(dim, 0b1);
+  constexpr auto pattern = bit_ops::repeat_block<uint64_t>(dim, 0b1);
   for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    index[dim_idx] = bit_manip::compress<uint64_t>(morton, pattern << dim_idx);
+    index[dim_idx] = bit_ops::compress<uint64_t>(morton, pattern << dim_idx);
   }
 #else
   for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
@@ -139,4 +140,4 @@ Index<dim> decode(MortonIndex morton) {
 }
 }  // namespace wavemap::morton
 
-#endif  // WAVEMAP_UTILS_MORTON_ENCODING_H_
+#endif  // WAVEMAP_UTILS_BITS_MORTON_ENCODING_H_

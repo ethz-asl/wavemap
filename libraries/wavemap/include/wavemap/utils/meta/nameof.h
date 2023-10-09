@@ -27,18 +27,18 @@
 **
 ****************************************************************************/
 
-#ifndef WAVEMAP_UTILS_NAMEOF_H_
-#define WAVEMAP_UTILS_NAMEOF_H_
+#ifndef WAVEMAP_UTILS_META_NAMEOF_H_
+#define WAVEMAP_UTILS_META_NAMEOF_H_
 
-#define NAMEOF(x) wavemap::_nameof<0>(#x, sizeof(x))  // NOLINT
+#define NAMEOF(x) wavemap::meta::nameof<0>(#x, sizeof(x))  // NOLINT
 
 #include <regex>  // NOLINT
 #include <stdexcept>
 #include <string>
 
-namespace wavemap {
+namespace wavemap::meta {
 template <int a>
-std::string _nameof(const std::string& x, std::size_t) {
+std::string nameof(const std::string& x, std::size_t) {
   std::regex regex(R"(^&?([_a-zA-Z]\w*(->|\.|::))*([_a-zA-Z]\w*)$)");
   std::smatch match;
   if (std::regex_match(x, match, regex) && match.size() == 4) {
@@ -47,6 +47,6 @@ std::string _nameof(const std::string& x, std::size_t) {
   throw std::logic_error(
       "A bad expression x in nameof(x). The expression is \"" + x + "\".");
 }
-}  // namespace wavemap
+}  // namespace wavemap::meta
 
-#endif  // WAVEMAP_UTILS_NAMEOF_H_
+#endif  // WAVEMAP_UTILS_META_NAMEOF_H_

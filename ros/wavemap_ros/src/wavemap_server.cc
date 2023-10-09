@@ -3,7 +3,6 @@
 #include <std_srvs/Empty.h>
 #include <tracy/Tracy.hpp>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_factory.h>
-#include <wavemap/utils/nameof.h>
 #include <wavemap_io/file_conversions.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>

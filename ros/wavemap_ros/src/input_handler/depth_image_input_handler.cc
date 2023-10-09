@@ -4,7 +4,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <tracy/Tracy.hpp>
 #include <wavemap/iterator/grid_iterator.h>
-#include <wavemap/utils/eigen_format.h>
+#include <wavemap/utils/print/eigen.h>
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(DepthImageInputHandlerConfig,
@@ -105,7 +105,7 @@ void DepthImageInputHandler::processQueue() {
 
     // Integrate the depth image
     ROS_DEBUG_STREAM("Inserting depth image with "
-                     << EigenFormat::oneLine(posed_range_image.getDimensions())
+                     << print::eigen::oneLine(posed_range_image.getDimensions())
                      << " points. Remaining pointclouds in queue: "
                      << depth_image_queue_.size() - 1 << ".");
     integration_timer_.start();

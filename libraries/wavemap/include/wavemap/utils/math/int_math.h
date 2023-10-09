@@ -1,10 +1,10 @@
-#ifndef WAVEMAP_UTILS_INT_MATH_H_
-#define WAVEMAP_UTILS_INT_MATH_H_
+#ifndef WAVEMAP_UTILS_MATH_INT_MATH_H_
+#define WAVEMAP_UTILS_MATH_INT_MATH_H_
 
 #include <limits>
 
 #include "wavemap/common.h"
-#include "wavemap/utils/bit_manipulation.h"
+#include "wavemap/utils/bits/bit_operations.h"
 
 namespace wavemap::int_math {
 template <typename T>
@@ -17,14 +17,14 @@ template <typename T>
 constexpr T log2_floor(T value) {
   static_assert(std::is_integral_v<T>);
   DCHECK(value != static_cast<T>(0));
-  return std::numeric_limits<T>::digits - bit_manip::clz(value);
+  return std::numeric_limits<T>::digits - bit_ops::clz(value);
 }
 
 template <typename T>
 constexpr T log2_ceil(T value) {
   static_assert(std::is_integral_v<T>);
   const T log2_floored = log2_floor(value);
-  if (bit_manip::popcount(value) == static_cast<T>(1)) {
+  if (bit_ops::popcount(value) == static_cast<T>(1)) {
     return log2_floored;
   } else {
     return log2_floored + static_cast<T>(1);
@@ -79,4 +79,4 @@ constexpr T div_round_up(T numerator, T denominator) {
 }
 }  // namespace wavemap::int_math
 
-#endif  // WAVEMAP_UTILS_INT_MATH_H_
+#endif  // WAVEMAP_UTILS_MATH_INT_MATH_H_

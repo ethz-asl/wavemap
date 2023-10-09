@@ -8,8 +8,7 @@
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/container_print_utils.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 class RangeImage2DIntersectorTest : public FixtureBase,
@@ -174,9 +173,10 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
               W_cell_aabb,
               posed_range_image->getPose().inverse().getRotationMatrix(),
               posed_range_image->getOrigin());
-      EXPECT_TRUE(reference_update_type <= returned_update_type)
-          << "Expected " << getUpdateTypeStr(reference_update_type)
-          << " but got " << getUpdateTypeStr(returned_update_type);
+      EXPECT_TRUE(reference_update_type.toTypeId() <=
+                  returned_update_type.toTypeId())
+          << "Expected " << reference_update_type.toStr() << " but got "
+          << returned_update_type.toStr();
     }
   }
 }

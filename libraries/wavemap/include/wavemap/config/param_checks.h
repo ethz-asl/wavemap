@@ -4,7 +4,7 @@
 #include <functional>
 #include <string>
 
-#include "wavemap/utils/nameof.h"
+#include "wavemap/utils/meta/nameof.h"
 
 namespace wavemap {
 #define IS_PARAM_EQ(value, threshold, verbose) \

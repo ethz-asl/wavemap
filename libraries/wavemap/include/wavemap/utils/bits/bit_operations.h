@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_UTILS_BIT_MANIPULATION_H_
-#define WAVEMAP_UTILS_BIT_MANIPULATION_H_
+#ifndef WAVEMAP_UTILS_BITS_BIT_OPERATIONS_H_
+#define WAVEMAP_UTILS_BITS_BIT_OPERATIONS_H_
 
 #include "wavemap/common.h"
 
@@ -9,7 +9,7 @@
 #define BIT_COMPRESS_AVAILABLE
 #endif
 
-namespace wavemap::bit_manip {
+namespace wavemap::bit_ops {
 namespace detail {
 inline constexpr uint32_t popcount(uint32_t bitstring) {
   return __builtin_popcount(bitstring);
@@ -44,11 +44,11 @@ inline uint64_t expand(uint64_t source, uint64_t selector) {
 template <typename T>
 T expand(T source, T selector) {
   static_assert(
-      "Method bit_manip::expand is not available for the current hardware, "
+      "Method bit_ops::expand is not available for the current hardware, "
       "either because it has yet to be implemented or because general-purpose "
       "bit expansion cannot efficiently be performed/emulated on this "
       "hardware. For portability, it is recommended to implement case-specific "
-      "fallbacks for bit_manip::expand wherever it is used. These fallbacks "
+      "fallbacks for bit_ops::expand wherever it is used. These fallbacks "
       "can be toggled by checking whether the preprocessor variable "
       "BIT_EXPAND_AVAILABLE is set.");
 }
@@ -65,11 +65,11 @@ inline uint64_t compress(uint64_t source, uint64_t selector) {
 template <typename T>
 T compress(T source, T selector) {
   static_assert(
-      "Method bit_manip::compress is not available for the current hardware, "
+      "Method bit_ops::compress is not available for the current hardware, "
       "either because it has yet to be implemented or because general-purpose "
       "bit compression cannot efficiently be performed/emulated on this "
       "hardware. For portability, it is recommended to implement case-specific "
-      "fallbacks for bit_manip::compress wherever it is used. These fallbacks "
+      "fallbacks for bit_ops::compress wherever it is used. These fallbacks "
       "can be toggled by checking whether the preprocessor variable "
       "BIT_COMPRESS_AVAILABLE is set.");
 }
@@ -169,6 +169,6 @@ T compress(T source, T selector) {
   return detail::compress(bit_cast_unsigned(source),
                           bit_cast_unsigned(selector));
 }
-}  // namespace wavemap::bit_manip
+}  // namespace wavemap::bit_ops
 
-#endif  // WAVEMAP_UTILS_BIT_MANIPULATION_H_
+#endif  // WAVEMAP_UTILS_BITS_BIT_OPERATIONS_H_

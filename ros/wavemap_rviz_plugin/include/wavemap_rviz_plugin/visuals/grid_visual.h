@@ -20,7 +20,7 @@
 #include <wavemap/config/type_selector.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
-#include <wavemap/utils/time.h>
+#include <wavemap/utils/time/time.h>
 
 #include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/utils/color_conversions.h"

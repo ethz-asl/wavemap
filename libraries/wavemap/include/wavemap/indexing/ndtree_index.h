@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "wavemap/common.h"
-#include "wavemap/utils/int_math.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
 using NdtreeIndexElement = int;

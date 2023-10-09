@@ -10,7 +10,7 @@
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/integrator/measurement_model/measurement_model_base.h"
 #include "wavemap/integrator/projective/update_type.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 /**

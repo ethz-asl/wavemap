@@ -4,22 +4,23 @@
 #include <string>
 
 #include "wavemap/common.h"
-#include "wavemap/utils/type_utils.h"
+#include "wavemap/config/type_selector.h"
 
 namespace wavemap {
-enum class UpdateType : int {
-  kFullyUnobserved,
-  kFullyFree,
-  kFreeOrUnobserved,
-  kPossiblyOccupied
-};
+struct UpdateType : TypeSelector<UpdateType> {
+  using TypeSelector<UpdateType>::TypeSelector;
 
-inline std::string getUpdateTypeStr(UpdateType update_type) {
-  static constexpr std::array kUpdateTypeStrs{"fully_unobserved", "fully_free",
-                                              "free_or_unobserved",
-                                              "possibly_occupied"};
-  return kUpdateTypeStrs[to_underlying(update_type)];
-}
+  enum Id : TypeId {
+    kFullyUnobserved,
+    kFullyFree,
+    kFreeOrUnobserved,
+    kPossiblyOccupied
+  };
+
+  static constexpr std::array names = {"fully_unobserved", "fully_free",
+                                       "free_or_unobserved",
+                                       "possibly_occupied"};
+};
 }  // namespace wavemap
 
 #endif  // WAVEMAP_INTEGRATOR_PROJECTIVE_UPDATE_TYPE_H_

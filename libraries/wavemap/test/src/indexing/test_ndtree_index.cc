@@ -7,7 +7,7 @@
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename NdtreeIndexT>

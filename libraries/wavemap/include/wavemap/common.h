@@ -8,7 +8,7 @@
 #include <kindr/minimal/quat-transformation.h>
 #include <kindr/minimal/transform-2d.h>
 
-#include "wavemap/constants.h"
+#include "wavemap/utils/data/constants.h"
 
 namespace wavemap {
 using FloatingPoint = float;

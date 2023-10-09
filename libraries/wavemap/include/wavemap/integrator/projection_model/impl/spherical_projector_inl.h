@@ -3,6 +3,8 @@
 
 #include <utility>
 
+#include "wavemap/utils/math/approximate_trigonometry.h"
+
 namespace wavemap {
 inline SensorCoordinates SphericalProjector::cartesianToSensor(
     const Point3D& C_point) const {

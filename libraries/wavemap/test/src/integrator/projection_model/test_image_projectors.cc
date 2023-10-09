@@ -7,9 +7,9 @@
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/angle_utils.h"
-#include "wavemap/utils/container_print_utils.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/math/angle_normalization.h"
+#include "wavemap/utils/print/container.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 class Image2DProjectorTest : public FixtureBase, public GeometryGenerator {
@@ -179,11 +179,11 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
     constexpr FloatingPoint kNoiseTolerance = 1e-5f;
     EXPECT_LE((C_point_roundtrip - C_point).norm(),
               kNoiseTolerance * (1.f + range))
-        << "Original point was " << EigenFormat::oneLine(C_point)
+        << "Original point was " << print::eigen::oneLine(C_point)
         << " with norm " << range << ", but after round trip it became "
-        << EigenFormat::oneLine(C_point_roundtrip)
+        << print::eigen::oneLine(C_point_roundtrip)
         << ". Intermediate sensor coordinates were "
-        << EigenFormat::oneLine(sensor_coordinates.image) << ", "
+        << print::eigen::oneLine(sensor_coordinates.image) << ", "
         << sensor_coordinates.normal << ".";
   }
 
@@ -199,12 +199,12 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
         projector.cartesianToNearestIndex(C_point);
 
     EXPECT_EQ(image_index_roundtrip, image_index)
-        << "Original image index was " << EigenFormat::oneLine(image_index)
+        << "Original image index was " << print::eigen::oneLine(image_index)
         << ", but after round trip it became "
-        << EigenFormat::oneLine(image_index_roundtrip)
+        << print::eigen::oneLine(image_index_roundtrip)
         << ". Intermediate image and Cartesian coordinates were "
-        << EigenFormat::oneLine(image_coordinates) << " and "
-        << EigenFormat::oneLine(C_point) << ".";
+        << print::eigen::oneLine(image_coordinates) << " and "
+        << print::eigen::oneLine(C_point) << ".";
   }
 
   // Test index -> image -> index round trips
@@ -217,12 +217,12 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
         projector.imageToNearestIndex(image_coordinates);
 
     EXPECT_EQ(image_index_roundtrip, image_index)
-        << "Original image index was " << EigenFormat::oneLine(image_index)
+        << "Original image index was " << print::eigen::oneLine(image_index)
         << ", but after round trip it became "
-        << EigenFormat::oneLine(image_index_roundtrip)
+        << print::eigen::oneLine(image_index_roundtrip)
         << ". Intermediate image coordinates were "
-        << EigenFormat::oneLine(image_coordinates) << " and "
-        << EigenFormat::oneLine(image_coordinates) << ".";
+        << print::eigen::oneLine(image_coordinates) << " and "
+        << print::eigen::oneLine(image_coordinates) << ".";
   }
 }
 
@@ -366,16 +366,16 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
         std::cerr << "For\n-W_aabb: " << test.W_aabb.toString() << "\n-T_W_C:\n"
                   << test.T_W_C << "\nWith C_cell_corners:\n"
                   << C_t_C_corners << "\nsensor X-coordinates:\n"
-                  << ToString(corners_x) << "\nsensor Y-coordinates:\n"
-                  << ToString(corners_y) << ToString(corners_x)
+                  << print::container(corners_x) << "\nsensor Y-coordinates:\n"
+                  << print::container(corners_y) << print::container(corners_x)
                   << "\nsensor Z-coordinates:\n"
-                  << ToString(corners_z)
+                  << print::container(corners_z)
                   << "\nand reference min/max sensor coordinates: "
-                  << EigenFormat::oneLine(reference_aabb.min) << ", "
-                  << EigenFormat::oneLine(reference_aabb.max)
+                  << print::eigen::oneLine(reference_aabb.min) << ", "
+                  << print::eigen::oneLine(reference_aabb.max)
                   << "\nWe got min/max sensor coordinates: "
-                  << EigenFormat::oneLine(returned_angle_pair.min) << ", "
-                  << EigenFormat::oneLine(returned_angle_pair.max)
+                  << print::eigen::oneLine(returned_angle_pair.min) << ", "
+                  << print::eigen::oneLine(returned_angle_pair.max)
                   << "\nThis is error nr " << ++error_count << "\n"
                   << std::endl;
       }

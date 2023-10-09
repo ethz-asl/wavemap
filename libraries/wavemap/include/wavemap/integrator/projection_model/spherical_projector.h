@@ -7,7 +7,6 @@
 #include "wavemap/config/config_base.h"
 #include "wavemap/integrator/projection_model/circular_projector.h"
 #include "wavemap/integrator/projection_model/projector_base.h"
-#include "wavemap/utils/approximate_trigonometry.h"
 
 namespace wavemap {
 /**

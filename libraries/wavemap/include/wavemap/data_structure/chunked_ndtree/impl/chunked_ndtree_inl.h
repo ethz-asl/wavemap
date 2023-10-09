@@ -7,7 +7,6 @@
 
 #include "wavemap/data_structure/pointcloud.h"
 #include "wavemap/indexing/index_conversions.h"
-#include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 template <typename NodeDataT, int dim, int chunk_height>

@@ -1,9 +1,9 @@
-#ifndef WAVEMAP_UTILS_FILL_UTILS_H_
-#define WAVEMAP_UTILS_FILL_UTILS_H_
+#ifndef WAVEMAP_UTILS_DATA_FILL_H_
+#define WAVEMAP_UTILS_DATA_FILL_H_
 
 #include <type_traits>
 
-namespace wavemap::fill {
+namespace wavemap::data::fill {
 // Fill POD types with a constant value
 template <typename T, typename V>
 auto constant(V value) -> std::enable_if_t<std::is_pod_v<T>, T> {
@@ -21,6 +21,6 @@ template <typename T>
 T zero() {
   return constant<T>(0);
 }
-}  // namespace wavemap::fill
+}  // namespace wavemap::data::fill
 
-#endif  // WAVEMAP_UTILS_FILL_UTILS_H_
+#endif  // WAVEMAP_UTILS_DATA_FILL_H_
