@@ -113,8 +113,9 @@ if (CATKIN_ENABLE_TESTING)
       test/src/utils/test_data_utils.cc
       test/src/utils/test_fill_utils.cc
       test/src/utils/test_int_math.cc
-      test/src/utils/test_tree_math.cc
-      test/src/utils/test_thread_pool.cc)
+      test/src/utils/test_map_interpolator.cpp
+      test/src/utils/test_thread_pool.cc
+      test/src/utils/test_tree_math.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
   target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
 endif ()
