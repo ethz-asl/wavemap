@@ -135,6 +135,11 @@ TYPED_TEST(NdtreeIndexTest, LastCommonAncestor) {
 
     // Test descendants down to height 0
     for (auto child_index = index; 0 < child_index.height;) {
+      if (31 <= index.height - child_index.height) {
+        // Beyond this point the height difference is so large that the integers
+        // would overflow
+        break;
+      }
       const NdtreeIndexRelativeChild relative_child_idx =
           TestFixture::getRandomInteger(0, kNumChildren - 1);
       child_index = child_index.computeChildIndex(relative_child_idx);

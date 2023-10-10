@@ -15,6 +15,10 @@ class QueryAccelerator {
   explicit QueryAccelerator(const HashedWaveletOctree& map)
       : block_map_(map.getBlocks()), tree_height_(map.getTreeHeight()) {}
 
+  FloatingPoint getCellValue(const Index3D& index) {
+    return getCellValue(OctreeIndex{0, index});
+  }
+
   FloatingPoint getCellValue(const OctreeIndex& index) {
     // Remember previous query indices and compute new ones
     const BlockIndex previous_block_index = block_index_;

@@ -80,6 +80,11 @@ inline FloatingPoint heightToCellWidth(FloatingPoint min_cell_width,
   return min_cell_width * static_cast<FloatingPoint>(int_math::exp2(height));
 }
 
+inline NdtreeIndexElement cellWidthToHeight(FloatingPoint cell_width,
+                                            FloatingPoint min_cell_width_inv) {
+  return std::ceil(std::log2(cell_width * min_cell_width_inv));
+}
+
 template <int cells_per_side, int dim>
 inline LinearIndex indexToLinearIndex(const Index<dim>& index) {
   DCHECK((0 <= index.array() && index.array() < cells_per_side).all());

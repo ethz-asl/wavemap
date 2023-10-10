@@ -4,6 +4,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/index_conversions.h"
+#include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/print/eigen.h"
@@ -136,6 +137,40 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
           << " to node center " << print::eigen::oneLine(node_center)
           << " and back should yield the same node index, but got "
           << roundtrip_node_index.toString() << " instead.";
+    }
+
+    // Roundtrip through AABB
+    {
+      const FloatingPoint random_min_cell_width =
+          TestFixture::getRandomMinCellWidth();
+      const auto node_aabb =
+          convert::nodeIndexToAABB(node_index, random_min_cell_width);
+      const auto min_corner =
+          convert::nodeIndexToMinCorner(node_index, random_min_cell_width);
+      const auto max_corner =
+          convert::nodeIndexToMaxCorner(node_index, random_min_cell_width);
+      const FloatingPoint cell_width =
+          convert::heightToCellWidth(random_min_cell_width, node_index.height);
+      // Skip excessively large cells where numerical noise is too large
+      if ((min_corner.array().abs() < 1e2f || max_corner.array().abs() < 1e2f)
+              .all()) {
+        EXPECT_EIGEN_NEAR(node_aabb.min, min_corner, kEpsilon);
+        EXPECT_EIGEN_NEAR(node_aabb.max, max_corner, kEpsilon);
+        EXPECT_NEAR(node_aabb.template width<0>(), cell_width, kEpsilon);
+
+        const Point<kDim> aabb_center = 0.5f * (node_aabb.min + node_aabb.max);
+        const FloatingPoint aabb_width = node_aabb.template width<0>();
+        const NdtreeIndexElement aabb_height =
+            convert::cellWidthToHeight(aabb_width, 1.f / random_min_cell_width);
+        const NdtreeIndex<kDim> roundtrip_node_index =
+            convert::pointToNodeIndex(aabb_center, random_min_cell_width,
+                                      aabb_height);
+        EXPECT_EQ(roundtrip_node_index, node_index)
+            << "Going from node index " << node_index.toString() << " to aabb "
+            << node_aabb.toString()
+            << " and back should yield the same node index, but got "
+            << roundtrip_node_index.toString() << " instead.";
+      }
     }
   }
 }
