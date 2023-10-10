@@ -380,12 +380,15 @@ void GridVisual::processBlockUpdateQueue() {
     const FloatingPoint alpha = opacity_property_.getFloat();
 
     // Sort the blocks in the queue by their modification time
-    std::map<Timestamp, Index3D> changed_blocks_sorted;
+    std::vector<std::pair<Timestamp, Index3D>> changed_blocks_sorted;
     for (const auto& [block_idx, term_height] : block_update_queue_) {
       const Timestamp& last_modified_time =
           hashed_map->getBlock(block_idx).getLastUpdatedStamp();
-      changed_blocks_sorted[last_modified_time] = block_idx;
+      changed_blocks_sorted.emplace_back(last_modified_time, block_idx);
     }
+    std::sort(
+        changed_blocks_sorted.begin(), changed_blocks_sorted.end(),
+        [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
 
     // Redraw blocks, starting with the oldest and
     // stopping after kMaxDrawsPerCycle
