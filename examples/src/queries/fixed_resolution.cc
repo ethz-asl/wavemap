@@ -1,7 +1,9 @@
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 
+#include "wavemap_examples/common.h"
+
 using namespace wavemap;
-int main(int argc, char** argv) {
+int main(int, char**) {
   // Declare a map pointer for illustration purposes
   // NOTE: See the other tutorials on how to load maps from files or ROS topics,
   //       such as the map topic published by the wavemap ROS server.
@@ -14,4 +16,5 @@ int main(int argc, char** argv) {
 
   // Query the map
   const FloatingPoint value = map->getCellValue(query_index);
+  examples::doSomething(value);
 }

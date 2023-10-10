@@ -7,6 +7,8 @@ catkin_simple(ALL_DEPS_REQUIRED)
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
 
+include_directories(include)
+
 # Binaries
 cs_add_executable(save_map_to_file src/io/save_map_to_file.cc)
 cs_add_executable(load_map_from_file src/io/load_map_from_file.cc)
