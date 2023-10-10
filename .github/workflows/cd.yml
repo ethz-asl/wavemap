@@ -187,7 +187,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
-          pip3 install exhale sphinx-rtd-theme
+          pip3 install exhale sphinx-rtd-theme sphinx-copybutton
 
       - name: Build documentation
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
