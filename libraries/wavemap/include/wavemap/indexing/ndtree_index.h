@@ -46,6 +46,11 @@ struct NdtreeIndex {
   static RelativeChild computeRelativeChildIndex(MortonIndex morton,
                                                  Element parent_height);
 
+  static IndexElement computeLastCommonAncestorHeight(MortonIndex first_morton,
+                                                      Element first_height,
+                                                      MortonIndex second_morton,
+                                                      Element second_height);
+
   static LinearIndex computeLevelTraversalDistance(MortonIndex morton,
                                                    Element parent_height,
                                                    Element child_height);

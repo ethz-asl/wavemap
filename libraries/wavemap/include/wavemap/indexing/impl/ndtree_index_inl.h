@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_INDEXING_IMPL_NDTREE_INDEX_INL_H_
 #define WAVEMAP_INDEXING_IMPL_NDTREE_INDEX_INL_H_
 
+#include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -66,6 +68,22 @@ NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex(
   const Element child_height = parent_height - 1;
   static constexpr MortonIndex kRelativeChildIndexMask = (1 << dim) - 1;
   return (morton >> (child_height * dim)) & kRelativeChildIndexMask;
+}
+
+template <int dim>
+IndexElement NdtreeIndex<dim>::computeLastCommonAncestorHeight(
+    MortonIndex first_morton, Element first_height, MortonIndex second_morton,
+    Element second_height) {
+  const Element max_height = std::max(first_height, second_height);
+  if (first_morton == second_morton) {
+    return max_height;
+  }
+  const MortonIndex morton_diff = first_morton ^ second_morton;
+  const Element first_diff_bit =
+      static_cast<Element>(std::numeric_limits<MortonIndex>::digits) -
+      static_cast<Element>(bit_ops::clz(morton_diff));
+  const Element first_diff_height = int_math::div_round_up(first_diff_bit, dim);
+  return std::max(max_height, first_diff_height);
 }
 
 template <int dim>

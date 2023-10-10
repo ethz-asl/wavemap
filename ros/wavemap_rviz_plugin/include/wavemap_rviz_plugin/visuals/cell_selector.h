@@ -6,6 +6,7 @@
 #include <rviz/properties/float_property.h>
 #include <wavemap/config/type_selector.h>
 #include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
+#include <wavemap/utils/query/query_accelerator.h>
 
 namespace wavemap::rviz_plugin {
 struct CellSelectionMode : public TypeSelector<CellSelectionMode> {
@@ -24,7 +25,7 @@ class CellSelector : public QObject {
 
   void initializePropertyMenu();
 
-  void setMap(const VolumetricDataStructureBase::ConstPtr& hashed_map);
+  void setMap(const VolumetricDataStructureBase::ConstPtr& map);
 
   bool shouldBeDrawn(const OctreeIndex& cell_index,
                      FloatingPoint cell_log_odds) const;
@@ -41,7 +42,7 @@ class CellSelector : public QObject {
 
  private:
   std::function<void()> redraw_map_;
-  HashedWaveletOctree::ConstPtr hashed_map_;
+  mutable std::optional<QueryAccelerator> query_accelerator_;
 
   // Selection mode and thresholds
   CellSelectionMode cell_selection_mode_ = CellSelectionMode::kSurface;
