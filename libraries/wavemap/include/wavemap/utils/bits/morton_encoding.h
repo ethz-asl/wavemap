@@ -8,7 +8,7 @@
 
 namespace wavemap::morton {
 template <int dim>
-constexpr int kMaxTreeHeight = 8 * sizeof(MortonIndex) / dim;
+constexpr int kMaxTreeHeight = 8 * sizeof(MortonIndex) / dim - 1;
 
 template <int dim>
 constexpr IndexElement kMaxSingleCoordinate =

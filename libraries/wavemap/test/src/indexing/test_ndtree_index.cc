@@ -96,7 +96,7 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
 TYPED_TEST(NdtreeIndexTest, LastCommonAncestor) {
   // Generate a combination of random and handpicked node indices for testing
   constexpr IndexElement kMaxTreeHeight =
-      std::min(morton::kMaxTreeHeight<TypeParam::kDim>, 63);
+      morton::kMaxTreeHeight<TypeParam::kDim>;
   constexpr IndexElement kNumChildren = TypeParam::kNumChildren;
   std::vector<TypeParam> random_indices =
       GeometryGenerator::getRandomNdtreeIndexVector<TypeParam>(
