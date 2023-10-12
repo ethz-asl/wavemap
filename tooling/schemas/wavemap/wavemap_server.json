@@ -44,6 +44,10 @@
         "error",
         "fatal"
       ]
+    },
+    "allow_reset_map_service": {
+      "description": "Whether or not to allow resetting the map through the reset_map service.",
+      "type": "boolean"
     }
   }
 }
