@@ -95,8 +95,8 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
       SLOT(loadMapFromDiskCallback()),
       this};
   rviz::Property grid_visual_properties_{
-      "Render grid", QVariant(), "Properties for the grid visualization.",
-      this};
+      "Render voxels", QVariant(),
+      "Properties for the voxel-based visualization.", this};
   rviz::Property slice_visual_properties_{
       "Render slice", QVariant(), "Properties for the slice visualization.",
       this};
