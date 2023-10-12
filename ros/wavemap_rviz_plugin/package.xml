@@ -15,9 +15,10 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>rviz</depend>
+  <depend>wavemap</depend>
+  <depend>wavemap_io</depend>
   <depend>wavemap_msgs</depend>
   <depend>wavemap_ros_conversions</depend>
-  <depend>wavemap</depend>
   <depend>qtbase5-dev</depend>
 
   <export>

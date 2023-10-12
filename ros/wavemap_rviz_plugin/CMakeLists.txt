@@ -7,7 +7,8 @@ project(wavemap_rviz_plugin)
 
 # Dependencies
 find_package(catkin
-    REQUIRED COMPONENTS rviz wavemap wavemap_msgs wavemap_ros_conversions)
+    REQUIRED COMPONENTS
+        rviz wavemap wavemap_io wavemap_msgs wavemap_ros_conversions)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
@@ -15,7 +16,8 @@ add_wavemap_compile_definitions_and_options()
 add_compile_options(-Wno-pedantic -Wno-register)
 
 # Setup catkin package
-catkin_package(CATKIN_DEPENDS wavemap wavemap_msgs wavemap_ros_conversions)
+catkin_package(CATKIN_DEPENDS
+        wavemap wavemap_io wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
 include_directories(include SYSTEM ${catkin_INCLUDE_DIRS})
@@ -29,7 +31,8 @@ set(HEADERS_TO_MOC
     include/wavemap_rviz_plugin/wavemap_map_display.h
     include/wavemap_rviz_plugin/visuals/grid_visual.h
     include/wavemap_rviz_plugin/visuals/slice_visual.h
-    include/wavemap_rviz_plugin/visuals/cell_selector.h)
+    include/wavemap_rviz_plugin/visuals/cell_selector.h
+    include/wavemap_rviz_plugin/utils/button_property.h)
 if (rviz_QT_VERSION VERSION_LESS "5")
   message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
   find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
