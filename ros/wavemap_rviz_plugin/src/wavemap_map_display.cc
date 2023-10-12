@@ -6,6 +6,7 @@
 #include <std_srvs/Empty.h>
 #include <std_srvs/Trigger.h>
 #include <tf/transform_listener.h>
+#include <tracy/Tracy.hpp>
 #include <wavemap_io/file_conversions.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
@@ -28,6 +29,7 @@ WavemapMapDisplay::WavemapMapDisplay() {
 // call our immediate super-class's onInitialize() function, since it
 // does important stuff setting up the message filter.
 void WavemapMapDisplay::onInitialize() {
+  ZoneScoped;
   MFDClass::onInitialize();
   grid_visual_ = std::make_unique<GridVisual>(
       scene_manager_, context_->getViewManager(), scene_node_,
@@ -38,17 +40,20 @@ void WavemapMapDisplay::onInitialize() {
 
 // Clear the visuals by deleting their objects.
 void WavemapMapDisplay::reset() {
+  ZoneScoped;
   MFDClass::reset();
   grid_visual_->clear();
   slice_visual_->clear();
 }
 
 bool WavemapMapDisplay::hasMap() {
+  ZoneScoped;
   std::scoped_lock lock(map_and_mutex_->mutex);
   return static_cast<bool>(map_and_mutex_->map);
 }
 
 void WavemapMapDisplay::clearMap() {
+  ZoneScoped;
   std::scoped_lock lock(map_and_mutex_->mutex);
   if (map_and_mutex_->map) {
     map_and_mutex_->map->clear();
@@ -56,11 +61,13 @@ void WavemapMapDisplay::clearMap() {
 }
 
 bool WavemapMapDisplay::loadMapFromDisk(const std::filesystem::path& filepath) {
+  ZoneScoped;
   std::scoped_lock lock(map_and_mutex_->mutex);
   return io::fileToMap(filepath, map_and_mutex_->map);
 }
 
 void WavemapMapDisplay::updateVisuals(bool redraw_all) {
+  ZoneScoped;
   if (!hasMap()) {
     return;
   }
@@ -71,6 +78,7 @@ void WavemapMapDisplay::updateVisuals(bool redraw_all) {
 // This is our callback to handle an incoming message
 void WavemapMapDisplay::processMessage(
     const wavemap_msgs::Map::ConstPtr& map_msg) {
+  ZoneScoped;
   // Deserialize the octree
   if (!map_msg) {
     ROS_WARN("Ignoring request to process non-existent octree msg (nullptr).");
@@ -106,6 +114,7 @@ void WavemapMapDisplay::processMessage(
 }
 
 void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
+  ZoneScoped;
   std::scoped_lock lock(map_and_mutex_->mutex);
   if (!convert::rosMsgToMap(map_msg, map_and_mutex_->map)) {
     ROS_WARN("Failed to parse map message.");
@@ -113,6 +122,7 @@ void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
 }
 
 void WavemapMapDisplay::updateSourceModeCallback() {
+  ZoneScoped;
   // Update the cached source mode value
   const SourceMode old_source_mode = source_mode_;
   source_mode_ = SourceMode(source_mode_property_.getStdString());
@@ -144,6 +154,7 @@ void WavemapMapDisplay::updateSourceModeCallback() {
 }
 
 void WavemapMapDisplay::requestWavemapServerResetCallback() {
+  ZoneScoped;
   // Resolve name of the service based on the map topic
   const auto& map_topic = sub_.getTopic();
   const auto service_name = resolveWavemapServerNamespaceFromMapTopic(
@@ -206,6 +217,7 @@ void WavemapMapDisplay::requestWavemapServerResetCallback() {
 }
 
 void WavemapMapDisplay::requestWholeMapCallback() {
+  ZoneScoped;
   // Resolve name of the service based on the map topic
   const auto& map_topic = sub_.getTopic();
   const auto service_name = resolveWavemapServerNamespaceFromMapTopic(
@@ -259,6 +271,7 @@ void WavemapMapDisplay::requestWholeMapCallback() {
 }
 
 void WavemapMapDisplay::loadMapFromDiskCallback() {
+  ZoneScoped;
   // Open file selection dialog
   const auto filepath_qt = QFileDialog::getOpenFileName();
 
@@ -285,6 +298,7 @@ void WavemapMapDisplay::loadMapFromDiskCallback() {
 std::optional<std::string>
 WavemapMapDisplay::resolveWavemapServerNamespaceFromMapTopic(
     const std::string& map_topic, const std::string& child_topic) {
+  ZoneScoped;
   const auto pos = map_topic.rfind('/');
   if (pos == std::string::npos) {
     return std::nullopt;

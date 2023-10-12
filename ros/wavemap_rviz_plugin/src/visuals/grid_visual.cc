@@ -2,6 +2,7 @@
 
 #include <rviz/properties/parse_color.h>
 #include <rviz/render_panel.h>
+#include <tracy/Tracy.hpp>
 #include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/indexing/index_conversions.h>
 
@@ -88,6 +89,7 @@ GridVisual::~GridVisual() {
 }
 
 void GridVisual::updateMap(bool redraw_all) {
+  ZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -171,6 +173,7 @@ void GridVisual::updateMap(bool redraw_all) {
 }
 
 void GridVisual::updateLOD(const Point3D& camera_position) {
+  ZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -224,6 +227,7 @@ void GridVisual::updateLOD(const Point3D& camera_position) {
 NdtreeIndexElement GridVisual::computeRecommendedBlockLodHeight(
     FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
     NdtreeIndexElement min_height, NdtreeIndexElement max_height) {
+  ZoneScoped;
   // Compute the recommended level based on the size of the cells projected into
   // the image plane
   constexpr FloatingPoint kFactor = 0.002f;
@@ -234,6 +238,7 @@ NdtreeIndexElement GridVisual::computeRecommendedBlockLodHeight(
 
 std::optional<NdtreeIndexElement> GridVisual::getCurrentBlockLodHeight(
     IndexElement map_tree_height, const Index3D& block_idx) {
+  ZoneScoped;
   if (block_grids_.count(block_idx)) {
     return map_tree_height -
            (static_cast<int>(block_grids_[block_idx].size()) - 1);
@@ -244,14 +249,17 @@ std::optional<NdtreeIndexElement> GridVisual::getCurrentBlockLodHeight(
 
 // Position and orientation are passed through to the SceneNode
 void GridVisual::setFramePosition(const Ogre::Vector3& position) {
+  ZoneScoped;
   frame_node_->setPosition(position);
 }
 
 void GridVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
+  ZoneScoped;
   frame_node_->setOrientation(orientation);
 }
 
 void GridVisual::visibilityUpdateCallback() {
+  ZoneScoped;
   if (visibility_property_.getBool()) {
     updateMap(true);
   } else {
@@ -260,6 +268,7 @@ void GridVisual::visibilityUpdateCallback() {
 }
 
 void GridVisual::opacityUpdateCallback() {
+  ZoneScoped;
   for (auto& [block_idx, block_grid] : block_grids_) {
     for (auto& grid_level : block_grid) {
       grid_level->setAlpha(opacity_property_.getFloat());
@@ -268,6 +277,7 @@ void GridVisual::opacityUpdateCallback() {
 }
 
 void GridVisual::colorModeUpdateCallback() {
+  ZoneScoped;
   // Update the cached color mode value
   const ColorMode old_color_mode = grid_color_mode_;
   grid_color_mode_ = ColorMode(color_mode_property_.getStdString());
@@ -282,6 +292,7 @@ void GridVisual::colorModeUpdateCallback() {
 }
 
 void GridVisual::flatColorUpdateCallback() {
+  ZoneScoped;
   // Update the cached color value
   const Ogre::ColourValue old_flat_color = grid_flat_color_;
   grid_flat_color_ = flat_color_property_.getOgreColor();
@@ -336,6 +347,7 @@ void GridVisual::drawMultiResolutionGrid(IndexElement tree_height,
                                          FloatingPoint alpha,
                                          GridLayerList& cells_per_level,
                                          MultiResGrid& multi_res_grid) {
+  ZoneScoped;
   // Add a grid layer for each scale level
   const std::string prefix =
       "grid_" + std::to_string(Index3DHash()(block_index)) + "_";
@@ -368,6 +380,7 @@ void GridVisual::drawMultiResolutionGrid(IndexElement tree_height,
 }
 
 void GridVisual::processBlockUpdateQueue(const Point3D& camera_position) {
+  ZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -461,6 +474,7 @@ void GridVisual::processBlockUpdateQueue(const Point3D& camera_position) {
 }
 
 void GridVisual::prerenderCallback(Ogre::Camera* active_camera) {
+  ZoneScoped;
   // Recompute the desired LOD level for each block in the map if
   // the camera moved significantly or an update was requested explicitly
   const bool camera_moved =
