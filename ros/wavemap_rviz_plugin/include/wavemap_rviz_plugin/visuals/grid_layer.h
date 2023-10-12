@@ -91,7 +91,10 @@ class GridLayerRenderable : public Ogre::SimpleRenderable {
 
   Ogre::HardwareVertexBufferSharedPtr getBuffer();
 
-  Ogre::Real getBoundingRadius() const override;
+  Ogre::Real getBoundingRadius() const override { return bounding_radius_; }
+  void setBoundingRadius(float bounding_radius) {
+    bounding_radius_ = bounding_radius;
+  }
   Ogre::Real getSquaredViewDepth(const Ogre::Camera* cam) const override;
   uint16_t getNumWorldTransforms() const override { return 1; }
   void getWorldTransforms(Ogre::Matrix4* xform) const override {
@@ -104,6 +107,7 @@ class GridLayerRenderable : public Ogre::SimpleRenderable {
  private:
   Ogre::MaterialPtr material_;
   GridLayer* parent_;
+  float bounding_radius_ = 0.f;
 };
 }  // namespace wavemap
 

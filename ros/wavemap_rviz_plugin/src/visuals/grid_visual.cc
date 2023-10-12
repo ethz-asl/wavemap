@@ -367,7 +367,6 @@ void GridVisual::drawMultiResolutionGrid(IndexElement tree_height,
     }
     // Update the cells
     auto& grid_level = multi_res_grid[depth];
-    grid_level->clear();
     const auto& cells_at_level = cells_per_level[depth];
     grid_level->setCells(cells_at_level);
   }

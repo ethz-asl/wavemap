@@ -107,9 +107,13 @@ void GridLayer::setAlpha(float alpha, bool per_cell_alpha) {
 }
 
 void GridLayer::setCells(const std::vector<GridCell>& cells) {
+  if (!renderables_.empty()) {
+    clear();
+  }
   if (cells.empty()) {
     return;
   }
+
   Ogre::Root* root = Ogre::Root::getSingletonPtr();
 
   uint32_t vpp = getVerticesPerCell();
@@ -136,9 +140,8 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
   Ogre::AxisAlignedBox aabb;
   aabb.setNull();
   uint32_t current_vertex_count = 0;
-  bounding_radius_ = 0.0f;
-  uint32_t vertex_size = 0;
   uint32_t buffer_size = 0;
+  bounding_box_.setNull();
   for (size_t current_cell = 0; current_cell < cells.size(); ++current_cell) {
     // if we didn't create a renderable yet,
     // or we've reached the vertex limit for the current renderable,
@@ -154,10 +157,12 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
                  renderable->getBuffer()->getNumVertices());
         vbuf->unlock();
         renderable->setBoundingBox(aabb);
+        renderable->setBoundingRadius(
+            Ogre::Math::Sqrt(std::max(aabb.getMinimum().squaredLength(),
+                                      aabb.getMaximum().squaredLength())));
         bounding_box_.merge(aabb);
       }
 
-      CHECK_LT(current_cell, cells.size());
       constexpr size_t kVectorBufferCapacity = 36 * 1024 * 10;
       buffer_size =
           std::min(kVectorBufferCapacity, (cells.size() - current_cell) * vpp);
@@ -170,19 +175,16 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
       op->operationType = op_type;
       current_vertex_count = 0;
 
-      vertex_size = op->vertexData->vertexDeclaration->getVertexSize(0);
       fptr = reinterpret_cast<float*>(vdata);
 
       aabb.setNull();
     }
 
     const GridCell& p = cells[current_cell];
-
     uint32_t color;
     root->convertColourValue(p.color, &color);
 
     aabb.merge(p.center);
-    bounding_radius_ = std::max(bounding_radius_, p.center.squaredLength());
 
     float x = p.center.x;
     float y = p.center.y;
@@ -199,11 +201,6 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
         *fptr++ = vertices[(j * 3) + 2];
       }
       std::memcpy(fptr++, &color, sizeof(float));
-
-      CHECK_LE((uint8_t*)fptr,
-               (uint8_t*)vdata +
-                   renderable->getBuffer()->getNumVertices() * vertex_size);
-      Q_UNUSED(vertex_size);
     }
   }
 
@@ -211,6 +208,9 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
       current_vertex_count - op->vertexData->vertexStart;
   renderable->setBoundingBox(aabb);
   bounding_box_.merge(aabb);
+  bounding_radius_ =
+      Ogre::Math::Sqrt(std::max(bounding_box_.getMinimum().squaredLength(),
+                                bounding_box_.getMaximum().squaredLength()));
   CHECK_LE(op->vertexData->vertexCount + op->vertexData->vertexStart,
            renderable->getBuffer()->getNumVertices());
 
@@ -309,11 +309,6 @@ GridLayerRenderable::~GridLayerRenderable() {
 
 Ogre::HardwareVertexBufferSharedPtr GridLayerRenderable::getBuffer() {
   return mRenderOp.vertexData->vertexBufferBinding->getBuffer(0);
-}
-
-Ogre::Real GridLayerRenderable::getBoundingRadius() const {
-  return Ogre::Math::Sqrt(std::max(mBox.getMaximum().squaredLength(),
-                                   mBox.getMinimum().squaredLength()));
 }
 
 Ogre::Real GridLayerRenderable::getSquaredViewDepth(
