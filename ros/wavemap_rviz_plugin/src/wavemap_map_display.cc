@@ -50,7 +50,9 @@ bool WavemapMapDisplay::hasMap() {
 
 void WavemapMapDisplay::clearMap() {
   std::scoped_lock lock(map_and_mutex_->mutex);
-  map_and_mutex_->map->clear();
+  if (map_and_mutex_->map) {
+    map_and_mutex_->map->clear();
+  }
 }
 
 bool WavemapMapDisplay::loadMapFromDisk(const std::filesystem::path& filepath) {
@@ -120,6 +122,8 @@ void WavemapMapDisplay::updateSourceModeCallback() {
   queue_size_property_->setHidden(source_mode_ != SourceMode::kFromTopic);
   topic_property_->setHidden(source_mode_ != SourceMode::kFromTopic);
   request_whole_map_property_.setHidden(source_mode_ != SourceMode::kFromTopic);
+  request_wavemap_server_reset_property_.setHidden(source_mode_ !=
+                                                   SourceMode::kFromTopic);
 
   // Show/hide the properties appropriate for mode kFromFile
   load_map_from_disk_property_.setHidden(source_mode_ != SourceMode::kFromFile);

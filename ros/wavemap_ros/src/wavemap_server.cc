@@ -177,11 +177,15 @@ void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
           if (occupancy_map_) {
             occupancy_map_->clear();
           }
+          ROS_INFO("Map reset request was successfully executed.");
           response.success = true;
         } else {
           response.message =
               "Map resetting is forbidden. To change this, set ROS param \"" +
               NAMEOF(config_.allow_reset_map_service) + "\" to true.";
+          ROS_INFO_STREAM("Received map reset request but ROS param \""
+                          << NAMEOF(config_.allow_reset_map_service)
+                          << "\" is set to false. Ignoring request.");
         }
         return true;
       });

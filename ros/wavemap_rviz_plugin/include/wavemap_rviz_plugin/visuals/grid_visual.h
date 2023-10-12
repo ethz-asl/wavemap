@@ -111,10 +111,12 @@ class GridVisual : public QObject {
   float lod_update_distance_threshold_ = 0.1f;
   Ogre::Vector3 camera_position_at_last_lod_update_{};
   bool force_lod_update_ = true;
-  void updateLOD(Ogre::Camera* cam);
+  void updateLOD(const Point3D& camera_position);
   static NdtreeIndexElement computeRecommendedBlockLodHeight(
       FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
       NdtreeIndexElement min_height, NdtreeIndexElement max_height);
+  std::optional<NdtreeIndexElement> getCurrentBlockLodHeight(
+      IndexElement map_tree_height, const Index3D& block_idx);
 
   // Drawing related methods
   using GridLayerList = std::vector<std::vector<GridCell>>;
@@ -138,7 +140,7 @@ class GridVisual : public QObject {
   //       drops when large changes occur.
   Timestamp last_update_time_{};
   std::unordered_map<Index3D, IndexElement, Index3DHash> block_update_queue_;
-  void processBlockUpdateQueue();
+  void processBlockUpdateQueue(const Point3D& camera_position);
 };
 }  // namespace wavemap::rviz_plugin
 

@@ -170,7 +170,7 @@ void GridVisual::updateMap(bool redraw_all) {
   }
 }
 
-void GridVisual::updateLOD(Ogre::Camera* cam) {
+void GridVisual::updateLOD(const Point3D& camera_position) {
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -181,11 +181,7 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
   if (!map) {
     return;
   }
-
   const IndexElement tree_height = map->getTreeHeight();
-  const Point3D camera_position = {cam->getDerivedPosition().x,
-                                   cam->getDerivedPosition().y,
-                                   cam->getDerivedPosition().z};
 
   // Cast the map to its derived hashed map type
   // NOTE: If the cast fails, we don't need to do anything as non-hashed maps
@@ -208,15 +204,17 @@ void GridVisual::updateLOD(Ogre::Camera* cam) {
       // If the block is already queued to be updated, set the recommended level
       if (block_update_queue_.count(block_idx)) {
         block_update_queue_[block_idx] = term_height_recommended;
-      } else if (block_grids_.count(block_idx)) {
+      } else {
         // Otherwise, only add the block to the update queue if the recommended
         // level is higher than what's currently drawn or significantly lower
-        const IndexElement term_height_current =
-            tree_height - static_cast<int>(block_grids_[block_idx].size()) + 1;
-        if (term_height_current < min_termination_height ||
-            term_height_current < term_height_recommended - 1 ||
-            term_height_recommended < term_height_current) {
-          block_update_queue_[block_idx] = term_height_recommended;
+        const auto term_height_current =
+            getCurrentBlockLodHeight(tree_height, block_idx);
+        if (term_height_current) {
+          if (term_height_current.value() < min_termination_height ||
+              term_height_current.value() < term_height_recommended - 1 ||
+              term_height_recommended < term_height_current.value()) {
+            block_update_queue_[block_idx] = term_height_recommended;
+          }
         }
       }
     }
@@ -232,6 +230,16 @@ NdtreeIndexElement GridVisual::computeRecommendedBlockLodHeight(
   return std::clamp(static_cast<IndexElement>(std::floor(std::log2(
                         1.f + kFactor * distance_to_cam / min_cell_width))),
                     min_height, max_height);
+}
+
+std::optional<NdtreeIndexElement> GridVisual::getCurrentBlockLodHeight(
+    IndexElement map_tree_height, const Index3D& block_idx) {
+  if (block_grids_.count(block_idx)) {
+    return map_tree_height -
+           (static_cast<int>(block_grids_[block_idx].size()) - 1);
+  } else {
+    return std::nullopt;
+  }
 }
 
 // Position and orientation are passed through to the SceneNode
@@ -359,7 +367,7 @@ void GridVisual::drawMultiResolutionGrid(IndexElement tree_height,
   }
 }
 
-void GridVisual::processBlockUpdateQueue() {
+void GridVisual::processBlockUpdateQueue(const Point3D& camera_position) {
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -377,18 +385,47 @@ void GridVisual::processBlockUpdateQueue() {
       hashed_map) {
     // Constants
     const FloatingPoint min_cell_width = map->getMinCellWidth();
+    const IndexElement tree_height = map->getTreeHeight();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
     // Sort the blocks in the queue by their modification time
-    std::vector<std::pair<Timestamp, Index3D>> changed_blocks_sorted;
-    for (const auto& [block_idx, term_height] : block_update_queue_) {
-      const Timestamp& last_modified_time =
-          hashed_map->getBlock(block_idx).getLastUpdatedStamp();
-      changed_blocks_sorted.emplace_back(last_modified_time, block_idx);
+    struct ChangedBlockToSort {
+      Index3D block_index;
+      IndexElement term_height_difference;
+      FloatingPoint distance;
+    };
+    std::vector<ChangedBlockToSort> changed_blocks_sorted;
+    for (const auto& [block_idx, requested_term_height] : block_update_queue_) {
+      const auto block_aabb = convert::nodeIndexToAABB(
+          OctreeIndex{tree_height, block_idx}, min_cell_width);
+      const FloatingPoint distance = block_aabb.minDistanceTo(camera_position);
+      const auto current_term_height =
+          getCurrentBlockLodHeight(tree_height, block_idx);
+      const IndexElement term_height_difference =
+          current_term_height.has_value()
+              ? std::abs(requested_term_height - current_term_height.value())
+              : tree_height;
+      changed_blocks_sorted.emplace_back(
+          ChangedBlockToSort{block_idx, term_height_difference, distance});
     }
-    std::sort(
-        changed_blocks_sorted.begin(), changed_blocks_sorted.end(),
-        [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+    std::sort(changed_blocks_sorted.begin(), changed_blocks_sorted.end(),
+              [](const auto& lhs, const auto& rhs) {
+                // If the LOD level difference is small,
+                // prioritize the most visible (nearby) blocks
+                if (std::abs(lhs.term_height_difference -
+                             rhs.term_height_difference) < 2) {
+                  return lhs.distance < rhs.distance;
+                } else {
+                  // Otherwise, prioritize the blocks with the largest requested
+                  // vs actual LOD level discrepancy
+                  // NOTE: We sort by decreasing absolute LOD level difference,
+                  //       as we assign equal importance to drawing new details
+                  //       (increasing the resolution) vs reducing memory usage
+                  //       (reducing the resolution).
+                  return lhs.term_height_difference >
+                         rhs.term_height_difference;
+                }
+              });
 
     // Redraw blocks, starting with the oldest and
     // stopping after kMaxDrawsPerCycle
@@ -396,9 +433,8 @@ void GridVisual::processBlockUpdateQueue() {
     const auto max_time_per_frame =
         std::chrono::milliseconds(max_ms_per_frame_property_.getInt());
     const auto max_end_time = start_time + max_time_per_frame;
-    for (const auto& [_, block_idx] : changed_blocks_sorted) {
+    for (const auto& [block_idx, _1, _2] : changed_blocks_sorted) {
       const auto& block = hashed_map->getBlock(block_idx);
-      const IndexElement tree_height = map->getTreeHeight();
       const IndexElement term_height = block_update_queue_[block_idx];
       const int num_levels = tree_height + 1 - term_height;
       GridLayerList cells_per_level(num_levels);
@@ -430,13 +466,16 @@ void GridVisual::prerenderCallback(Ogre::Camera* active_camera) {
   const bool camera_moved =
       lod_update_distance_threshold_ < active_camera->getPosition().distance(
                                            camera_position_at_last_lod_update_);
+  const Point3D camera_position{active_camera->getDerivedPosition().x,
+                                active_camera->getDerivedPosition().y,
+                                active_camera->getDerivedPosition().z};
   if (force_lod_update_ || camera_moved) {
-    updateLOD(active_camera);
+    updateLOD(camera_position);
     camera_position_at_last_lod_update_ = active_camera->getPosition();
     force_lod_update_ = false;
   }
 
   // Process (parts of) the block update queue at each prerender frame
-  processBlockUpdateQueue();
+  processBlockUpdateQueue(camera_position);
 }
 }  // namespace wavemap::rviz_plugin
