@@ -84,6 +84,10 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
 }
 
 GridVisual::~GridVisual() {
+  // Destroy the camera prerender listener
+  // NOTE: This must be done before any of the objects that are used in the
+  //       prerender callback (incl. members of GridVisual) are destroyed.
+  prerender_listener_.reset();
   // Destroy the frame node
   scene_manager_->destroySceneNode(frame_node_);
 }
