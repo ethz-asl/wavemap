@@ -1,6 +1,7 @@
 #include "wavemap_ros/wavemap_server.h"
 
 #include <std_srvs/Empty.h>
+#include <std_srvs/Trigger.h>
 #include <tracy/Tracy.hpp>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_factory.h>
 #include <wavemap_io/file_conversions.h>
@@ -19,7 +20,8 @@ DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
                       (publication_period)
                       (max_num_blocks_per_msg)
                       (num_threads)
-                      (logging_level));
+                      (logging_level)
+                      (allow_reset_map_service));
 
 bool WavemapServerConfig::isValid(bool verbose) const {
   bool all_valid = true;
@@ -166,6 +168,23 @@ void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
             publishMap(true);
             return true;
           });
+
+  reset_map_srv_ = nh_private.advertiseService<std_srvs::Trigger::Request,
+                                               std_srvs::Trigger::Response>(
+      "reset_map", [this](auto& /*request*/, auto& response) {
+        response.success = false;
+        if (config_.allow_reset_map_service) {
+          if (occupancy_map_) {
+            occupancy_map_->clear();
+          }
+          response.success = true;
+        } else {
+          response.message =
+              "Map resetting is forbidden. To change this, set ROS param \"" +
+              NAMEOF(config_.allow_reset_map_service) + "\" to true.";
+        }
+        return true;
+      });
 
   save_map_srv_ = nh_private.advertiseService<wavemap_msgs::FilePath::Request,
                                               wavemap_msgs::FilePath::Response>(

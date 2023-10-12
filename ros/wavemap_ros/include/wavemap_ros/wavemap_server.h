@@ -27,7 +27,7 @@ namespace wavemap {
 /**
  * Config struct for wavemap's ROS server.
  */
-struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 7, LoggingLevel> {
+struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 8, LoggingLevel> {
   //! Name of the coordinate frame in which to store the map.
   //! Will be used as the frame_id for ROS TF lookups.
   std::string world_frame = "odom";
@@ -50,6 +50,8 @@ struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 7, LoggingLevel> {
       std::max(1, static_cast<int>(std::thread::hardware_concurrency()));
   //! Minimum severity level for ROS logging messages to be logged.
   LoggingLevel logging_level = LoggingLevel::kInfo;
+  //! Whether or not to allow resetting the map through the reset_map service.
+  bool allow_reset_map_service = false;
 
   static MemberMap memberMap;
 
@@ -95,6 +97,7 @@ class WavemapServer {
 
   void advertiseServices(ros::NodeHandle& nh_private);
   ros::ServiceServer republish_whole_map_srv_;
+  ros::ServiceServer reset_map_srv_;
   ros::ServiceServer save_map_srv_;
   ros::ServiceServer load_map_srv_;
 

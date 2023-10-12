@@ -48,6 +48,7 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   // These Qt slots get connected to signals indicating changes in the
   // user-editable properties
   void updateSourceModeCallback();
+  void requestWavemapServerResetCallback();
   void requestWholeMapCallback();
   void loadMapFromDiskCallback();
 
@@ -71,6 +72,13 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   rviz::EnumProperty source_mode_property_{"Source", "",
                                            "Where to load the map from.", this,
                                            SLOT(updateSourceModeCallback())};
+  ButtonProperty request_wavemap_server_reset_property_{
+      "Reset server",
+      "Request",
+      "Send a request to the wavemap_server to reset the map.",
+      this,
+      SLOT(requestWavemapServerResetCallback()),
+      this};
   ButtonProperty request_whole_map_property_{
       "Map update",
       "Request full",
@@ -94,10 +102,12 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
       this};
 
   // Service client to call wavemap's request_whole_map service
-  static std::optional<std::string> resolveMapUpdateServiceNameFromMapTopic(
-      const std::string& map_topic);
-  inline static const std::string kRepublishWholeMapServiceSuffix =
+  inline static const std::string kResetWavemapServerService = "reset_map";
+  inline static const std::string kRepublishWholeMapService =
       "republish_whole_map";
+  static std::optional<std::string> resolveWavemapServerNamespaceFromMapTopic(
+      const std::string& map_topic, const std::string& child_topic = "");
+  ros::ServiceClient request_wavemap_server_reset_client_;
   ros::ServiceClient request_whole_map_client_;
 
   // Storage for the visuals
