@@ -1,0 +1,10 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [],
+  "workspaceFolder": "/home/ci/catkin_ws/src",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ci/catkin_ws/src,type=bind,consistency=cached",
+  "runArgs": ["--env-file", "${localWorkspaceFolder}/.devcontainer/clion/ros_env.list"],
+  "remoteUser": "ci"
+}

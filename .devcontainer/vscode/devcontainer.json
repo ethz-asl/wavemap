@@ -1,0 +1,10 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [],
+  "workspaceFolder": "/home/ci/catkin_ws/src/wavemap",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ci/catkin_ws/src/wavemap,type=bind,consistency=cached",
+  "containerUser": "ci",
+  "remoteUser": "ci"
+}
