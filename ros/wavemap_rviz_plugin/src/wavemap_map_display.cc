@@ -30,9 +30,9 @@ WavemapMapDisplay::WavemapMapDisplay() {
 void WavemapMapDisplay::onInitialize() {
   ZoneScoped;
   MFDClass::onInitialize();
-  grid_visual_ = std::make_unique<GridVisual>(
+  voxel_visual_ = std::make_unique<VoxelVisual>(
       scene_manager_, context_->getViewManager(), scene_node_,
-      &grid_visual_properties_, map_and_mutex_);
+      &voxel_visual_properties_, map_and_mutex_);
   slice_visual_ = std::make_unique<SliceVisual>(
       scene_manager_, scene_node_, &slice_visual_properties_, map_and_mutex_);
 }
@@ -41,7 +41,7 @@ void WavemapMapDisplay::onInitialize() {
 void WavemapMapDisplay::reset() {
   ZoneScoped;
   MFDClass::reset();
-  grid_visual_->clear();
+  voxel_visual_->clear();
   slice_visual_->clear();
 }
 
@@ -70,7 +70,7 @@ void WavemapMapDisplay::updateVisuals(bool redraw_all) {
   if (!hasMap()) {
     return;
   }
-  grid_visual_->updateMap(redraw_all);
+  voxel_visual_->updateMap(redraw_all);
   slice_visual_->update();
 }
 
@@ -86,7 +86,7 @@ void WavemapMapDisplay::processMessage(
   updateMapFromRosMsg(*map_msg);
 
   // Check that the visuals are initialized before continuing
-  if (!grid_visual_ || !slice_visual_) {
+  if (!voxel_visual_ || !slice_visual_) {
     ROS_WARN("Visuals not initialized yet, skipping message.");
     return;
   }
@@ -103,12 +103,12 @@ void WavemapMapDisplay::processMessage(
              map_msg->header.frame_id.c_str(), qPrintable(fixed_frame_));
     return;
   }
-  grid_visual_->setFramePosition(position);
-  grid_visual_->setFrameOrientation(orientation);
+  voxel_visual_->setFramePosition(position);
+  voxel_visual_->setFrameOrientation(orientation);
   slice_visual_->setFramePosition(position);
   slice_visual_->setFrameOrientation(orientation);
 
-  // Update the multi-resolution grid and slice visual's contents if they exist
+  // Update the voxel and slice visual's contents if they exist
   updateVisuals();
 }
 

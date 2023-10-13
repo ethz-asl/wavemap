@@ -36,7 +36,7 @@ class CellLayer : public Ogre::MovableObject {
   void setCells(const std::vector<Cell>& cells);
 
   void setCellDimensions(float width, float height, float depth);
-  void setAlpha(float alpha, bool per_cell_alpha = false);
+  void setAlpha(float alpha);
 
   const Ogre::String& getMovableType() const override {
     return movable_type_name_;

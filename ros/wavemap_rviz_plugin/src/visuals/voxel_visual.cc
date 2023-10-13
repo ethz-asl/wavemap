@@ -275,11 +275,8 @@ void VoxelVisual::visibilityUpdateCallback() {
 
 void VoxelVisual::opacityUpdateCallback() {
   ZoneScoped;
-  for (auto& [block_idx, block_voxel_layers] : block_voxel_layers_map_) {
-    for (auto& voxel_layer : block_voxel_layers) {
-      voxel_layer->setAlpha(opacity_property_.getFloat());
-    }
-  }
+  FloatingPoint alpha = opacity_property_.getFloat();
+  setAlpha(alpha);
 }
 
 void VoxelVisual::colorModeUpdateCallback() {
@@ -368,7 +365,7 @@ void VoxelVisual::drawMultiResolutionVoxels(IndexElement tree_height,
           std::make_unique<CellLayer>(voxel_material_));
       voxel_layer->setName(name);
       voxel_layer->setCellDimensions(cell_width, cell_width, cell_width);
-      voxel_layer->setAlpha(alpha, false);
+      voxel_layer->setAlpha(alpha);
       frame_node_->attachObject(voxel_layer.get());
     }
     // Update the cells
@@ -477,6 +474,31 @@ void VoxelVisual::processBlockUpdateQueue(const Point3D& camera_position) {
 
   num_queued_blocks_indicator_.setInt(
       static_cast<int>(block_update_queue_.size()));
+}
+
+void VoxelVisual::setAlpha(FloatingPoint alpha) {
+  // Update the material alpha
+  if (alpha < 0.9998) {
+    // Render in alpha blending mode
+    if (voxel_material_->getBestTechnique()) {
+      voxel_material_->getBestTechnique()->setSceneBlending(
+          Ogre::SBT_TRANSPARENT_ALPHA);
+      voxel_material_->getBestTechnique()->setDepthWriteEnabled(false);
+    }
+  } else {
+    // Render in replace mode
+    if (voxel_material_->getBestTechnique()) {
+      voxel_material_->getBestTechnique()->setSceneBlending(Ogre::SBT_REPLACE);
+      voxel_material_->getBestTechnique()->setDepthWriteEnabled(true);
+    }
+  }
+
+  // Update the renderables
+  for (auto& [block_idx, block_voxel_layers] : block_voxel_layers_map_) {
+    for (auto& voxel_layer : block_voxel_layers) {
+      voxel_layer->setAlpha(alpha);
+    }
+  }
 }
 
 void VoxelVisual::prerenderCallback(Ogre::Camera* active_camera) {

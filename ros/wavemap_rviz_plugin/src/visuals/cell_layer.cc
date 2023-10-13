@@ -42,9 +42,6 @@ const Ogre::String CellLayer::movable_type_name_ = "CellLayer";
 
 CellLayer::CellLayer(const Ogre::MaterialPtr& cell_material)
     : cell_material_(cell_material) {
-  // Initialize transparency rendering
-  setAlpha(alpha_);
-
   // Detect geometry shader support
   current_mode_supports_geometry_shader_ = false;
   if (Ogre::Technique* best = cell_material_->getBestTechnique(); best) {
@@ -82,23 +79,8 @@ void CellLayer::setCellDimensions(float width, float height, float depth) {
   }
 }
 
-void CellLayer::setAlpha(float alpha, bool per_cell_alpha) {
+void CellLayer::setAlpha(float alpha) {
   alpha_ = alpha;
-
-  if (alpha < 0.9998 || per_cell_alpha) {
-    // Render in alpha blending mode
-    if (cell_material_->getBestTechnique()) {
-      cell_material_->getBestTechnique()->setSceneBlending(
-          Ogre::SBT_TRANSPARENT_ALPHA);
-      cell_material_->getBestTechnique()->setDepthWriteEnabled(false);
-    }
-  } else {
-    // Render in replace mode
-    if (cell_material_->getBestTechnique()) {
-      cell_material_->getBestTechnique()->setSceneBlending(Ogre::SBT_REPLACE);
-      cell_material_->getBestTechnique()->setDepthWriteEnabled(true);
-    }
-  }
 
   const Ogre::Vector4 alpha4(alpha_, alpha_, alpha_, alpha_);
   for (const auto& renderable : renderables_) {

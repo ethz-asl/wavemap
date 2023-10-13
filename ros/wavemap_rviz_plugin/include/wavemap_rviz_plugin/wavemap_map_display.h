@@ -94,7 +94,7 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
       this,
       SLOT(loadMapFromDiskCallback()),
       this};
-  rviz::Property grid_visual_properties_{
+  rviz::Property voxel_visual_properties_{
       "Render voxels", QVariant(),
       "Properties for the voxel-based visualization.", this};
   rviz::Property slice_visual_properties_{
@@ -113,7 +113,7 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   // Storage for the visuals
   // NOTE: Visuals are enabled when they are allocated, and automatically
   //       removed from the scene when destructed.
-  std::unique_ptr<VoxelVisual> grid_visual_;
+  std::unique_ptr<VoxelVisual> voxel_visual_;
   std::unique_ptr<SliceVisual> slice_visual_;
 };
 }  // namespace wavemap::rviz_plugin

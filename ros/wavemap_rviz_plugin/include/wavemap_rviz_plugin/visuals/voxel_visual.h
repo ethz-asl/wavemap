@@ -103,7 +103,10 @@ class VoxelVisual : public QObject {
   // The objects implementing the voxel visuals
   using VoxelLayers = std::vector<std::unique_ptr<CellLayer>>;
   std::unordered_map<Index3D, VoxelLayers, Index3DHash> block_voxel_layers_map_;
+
+  // Material handling
   Ogre::MaterialPtr voxel_material_;
+  void setAlpha(FloatingPoint alpha);
 
   // Level of Detail control
   std::unique_ptr<ViewportPrerenderListener> prerender_listener_;
