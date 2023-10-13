@@ -2,21 +2,12 @@
 
 namespace wavemap {
 void HashedBlocks::prune() {
-  const Index3D min_local_cell_index = Index3D::Zero();
-  const Index3D max_local_cell_index = Index3D::Constant(kCellsPerSide - 1);
-  // TODO(victorr): Iterate directly over linear index instead of grid
-  const Grid local_grid(min_local_cell_index, max_local_cell_index);
-
   std::unordered_set<BlockIndex, IndexHash<3>> blocks_to_delete;
   for (const auto& [block_index, block_data] : blocks_) {
-    if (!std::any_of(
-            local_grid.begin(), local_grid.end(),
-            [&block_data = block_data](const auto& cell_index) {
-              const FloatingPoint cell_value =
-                  block_data[convert::indexToLinearIndex<kCellsPerSide>(
-                      cell_index)];
-              return cell_value != FloatingPoint{};
-            })) {
+    if (std::all_of(block_data.begin(), block_data.end(),
+                    [default_value = default_value_](const auto& cell_value) {
+                      return cell_value == default_value;
+                    })) {
       blocks_to_delete.emplace(block_index);
     }
   }
