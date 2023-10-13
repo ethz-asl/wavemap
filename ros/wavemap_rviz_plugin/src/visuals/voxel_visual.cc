@@ -1,4 +1,4 @@
-#include "wavemap_rviz_plugin/visuals/grid_visual.h"
+#include "wavemap_rviz_plugin/visuals/voxel_visual.h"
 
 #include <rviz/properties/parse_color.h>
 #include <rviz/render_panel.h>
@@ -7,17 +7,17 @@
 #include <wavemap/indexing/index_conversions.h>
 
 namespace wavemap::rviz_plugin {
-GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
-                       rviz::ViewManager* view_manager,
-                       Ogre::SceneNode* parent_node,
-                       rviz::Property* submenu_root_property,
-                       std::shared_ptr<MapAndMutex> map_and_mutex)
+VoxelVisual::VoxelVisual(Ogre::SceneManager* scene_manager,
+                         rviz::ViewManager* view_manager,
+                         Ogre::SceneNode* parent_node,
+                         rviz::Property* submenu_root_property,
+                         std::shared_ptr<MapAndMutex> map_and_mutex)
     : map_and_mutex_(std::move(map_and_mutex)),
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
           "Enable", true,
-          "Whether to show the octree as a multi-resolution grid.",
+          "Whether to show the octree as a multi-resolution voxel grid.",
           CHECK_NOTNULL(submenu_root_property),
           SLOT(visibilityUpdateCallback()), this),
       cell_selector_(submenu_root_property, [this]() { updateMap(true); }),
@@ -31,10 +31,10 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
                         submenu_root_property, SLOT(opacityUpdateCallback()),
                         this),
       color_mode_property_(
-          "Color mode", "", "Mode determining the grid cell colors.",
+          "Color mode", "", "Mode determining the voxel colors.",
           submenu_root_property, SLOT(colorModeUpdateCallback()), this),
       flat_color_property_(
-          "Flat color", rviz::ogreToQt(grid_flat_color_),
+          "Flat color", rviz::ogreToQt(voxel_flat_color_),
           R"(Solid color to use when "Color Mode" is set to "Flat")",
           submenu_root_property, SLOT(flatColorUpdateCallback()), this),
       frame_rate_properties_("Frame rate", QVariant(),
@@ -58,8 +58,8 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
   for (const auto& name : ColorMode::names) {
     color_mode_property_.addOption(name);
   }
-  color_mode_property_.setStringStd(grid_color_mode_.toStr());
-  flat_color_property_.setHidden(grid_color_mode_ != ColorMode::kFlat);
+  color_mode_property_.setStringStd(voxel_color_mode_.toStr());
+  flat_color_property_.setHidden(voxel_color_mode_ != ColorMode::kFlat);
 
   // Initialize the camera tracker used to update the LOD levels for each block
   prerender_listener_ = std::make_unique<ViewportPrerenderListener>(
@@ -68,31 +68,31 @@ GridVisual::GridVisual(Ogre::SceneManager* scene_manager,
         prerenderCallback(active_camera);
       });
 
-  // Initialize the grid cell material
+  // Initialize the voxel material
   // NOTE: Certain properties, such as alpha transparency, are set on a
   //       per-material basis. We therefore need to create one unique material
-  //       for each grid visual to keep them from overwriting each other's
-  //       settings.
+  //       for each voxel layer visual to keep them from overwriting each
+  //       other's settings.
   static int instance_count = 0;
   ++instance_count;
-  grid_cell_material_ =
+  voxel_material_ =
       Ogre::MaterialManager::getSingleton().getByName("rviz/PointCloudBox");
-  grid_cell_material_ =
-      Ogre::MaterialPtr(grid_cell_material_)
-          ->clone("WavemapGridMaterial_" + std::to_string(instance_count));
-  grid_cell_material_->load();
+  voxel_material_ =
+      Ogre::MaterialPtr(voxel_material_)
+          ->clone("WavemapVoxelMaterial_" + std::to_string(instance_count));
+  voxel_material_->load();
 }
 
-GridVisual::~GridVisual() {
+VoxelVisual::~VoxelVisual() {
   // Destroy the camera prerender listener
   // NOTE: This must be done before any of the objects that are used in the
-  //       prerender callback (incl. members of GridVisual) are destroyed.
+  //       prerender callback (incl. members of VoxelVisual) are destroyed.
   prerender_listener_.reset();
   // Destroy the frame node
   scene_manager_->destroySceneNode(frame_node_);
 }
 
-void GridVisual::updateMap(bool redraw_all) {
+void VoxelVisual::updateMap(bool redraw_all) {
   ZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
@@ -126,10 +126,11 @@ void GridVisual::updateMap(bool redraw_all) {
       // Remove blocks that no longer exist in the map
       {
         // From the visuals (blocks that were already drawn)
-        for (auto it = block_grids_.begin(); it != block_grids_.end();) {
+        for (auto it = block_voxel_layers_map_.begin();
+             it != block_voxel_layers_map_.end();) {
           const auto block_idx = it->first;
           if (!hashed_map->getBlocks().count(block_idx)) {
-            it = block_grids_.erase(it);
+            it = block_voxel_layers_map_.erase(it);
           } else {
             ++it;
           }
@@ -160,14 +161,15 @@ void GridVisual::updateMap(bool redraw_all) {
       }
     } else {  // Otherwise, draw the whole octree at once (legacy support)
       const IndexElement num_levels = tree_height + 1;
-      GridLayerList cells_per_level(num_levels);
+      VoxelsPerLevel voxels_per_level(num_levels);
       map->forEachLeaf([&](const auto& cell_index, auto cell_log_odds) {
         appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
-                                 cell_log_odds, cells_per_level);
+                                 cell_log_odds, voxels_per_level);
       });
       const Index3D root_idx = Index3D::Zero();
-      drawMultiResolutionGrid(tree_height, min_cell_width, root_idx, alpha,
-                              cells_per_level, block_grids_[root_idx]);
+      drawMultiResolutionVoxels(tree_height, min_cell_width, root_idx, alpha,
+                                voxels_per_level,
+                                block_voxel_layers_map_[root_idx]);
     }
 
     // Store the last update time,
@@ -176,7 +178,7 @@ void GridVisual::updateMap(bool redraw_all) {
   }
 }
 
-void GridVisual::updateLOD(const Point3D& camera_position) {
+void VoxelVisual::updateLOD(const Point3D& camera_position) {
   ZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
@@ -228,7 +230,7 @@ void GridVisual::updateLOD(const Point3D& camera_position) {
   }
 }
 
-NdtreeIndexElement GridVisual::computeRecommendedBlockLodHeight(
+NdtreeIndexElement VoxelVisual::computeRecommendedBlockLodHeight(
     FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
     NdtreeIndexElement min_height, NdtreeIndexElement max_height) {
   ZoneScoped;
@@ -240,29 +242,29 @@ NdtreeIndexElement GridVisual::computeRecommendedBlockLodHeight(
                     min_height, max_height);
 }
 
-std::optional<NdtreeIndexElement> GridVisual::getCurrentBlockLodHeight(
+std::optional<NdtreeIndexElement> VoxelVisual::getCurrentBlockLodHeight(
     IndexElement map_tree_height, const Index3D& block_idx) {
   ZoneScoped;
-  if (block_grids_.count(block_idx)) {
+  if (block_voxel_layers_map_.count(block_idx)) {
     return map_tree_height -
-           (static_cast<int>(block_grids_[block_idx].size()) - 1);
+           (static_cast<int>(block_voxel_layers_map_[block_idx].size()) - 1);
   } else {
     return std::nullopt;
   }
 }
 
 // Position and orientation are passed through to the SceneNode
-void GridVisual::setFramePosition(const Ogre::Vector3& position) {
+void VoxelVisual::setFramePosition(const Ogre::Vector3& position) {
   ZoneScoped;
   frame_node_->setPosition(position);
 }
 
-void GridVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
+void VoxelVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
   ZoneScoped;
   frame_node_->setOrientation(orientation);
 }
 
-void GridVisual::visibilityUpdateCallback() {
+void VoxelVisual::visibilityUpdateCallback() {
   ZoneScoped;
   if (visibility_property_.getBool()) {
     updateMap(true);
@@ -271,47 +273,47 @@ void GridVisual::visibilityUpdateCallback() {
   }
 }
 
-void GridVisual::opacityUpdateCallback() {
+void VoxelVisual::opacityUpdateCallback() {
   ZoneScoped;
-  for (auto& [block_idx, block_grid] : block_grids_) {
-    for (auto& grid_level : block_grid) {
-      grid_level->setAlpha(opacity_property_.getFloat());
+  for (auto& [block_idx, block_voxel_layers] : block_voxel_layers_map_) {
+    for (auto& voxel_layer : block_voxel_layers) {
+      voxel_layer->setAlpha(opacity_property_.getFloat());
     }
   }
 }
 
-void GridVisual::colorModeUpdateCallback() {
+void VoxelVisual::colorModeUpdateCallback() {
   ZoneScoped;
   // Update the cached color mode value
-  const ColorMode old_color_mode = grid_color_mode_;
-  grid_color_mode_ = ColorMode(color_mode_property_.getStdString());
+  const ColorMode old_color_mode = voxel_color_mode_;
+  voxel_color_mode_ = ColorMode(color_mode_property_.getStdString());
 
   // Show/hide the flat color picker depending on the chosen mode
-  flat_color_property_.setHidden(grid_color_mode_ != ColorMode::kFlat);
+  flat_color_property_.setHidden(voxel_color_mode_ != ColorMode::kFlat);
 
   // Update the map if the color mode changed
-  if (grid_color_mode_ != old_color_mode) {
+  if (voxel_color_mode_ != old_color_mode) {
     updateMap(true);
   }
 }
 
-void GridVisual::flatColorUpdateCallback() {
+void VoxelVisual::flatColorUpdateCallback() {
   ZoneScoped;
   // Update the cached color value
-  const Ogre::ColourValue old_flat_color = grid_flat_color_;
-  grid_flat_color_ = flat_color_property_.getOgreColor();
+  const Ogre::ColourValue old_flat_color = voxel_flat_color_;
+  voxel_flat_color_ = flat_color_property_.getOgreColor();
 
   // Update the map if the color changed
-  if (grid_flat_color_ != old_flat_color) {
+  if (voxel_flat_color_ != old_flat_color) {
     updateMap(true);
   }
 }
 
-void GridVisual::appendLeafCenterAndColor(int tree_height,
-                                          FloatingPoint min_cell_width,
-                                          const OctreeIndex& cell_index,
-                                          FloatingPoint cell_log_odds,
-                                          GridLayerList& cells_per_level) {
+void VoxelVisual::appendLeafCenterAndColor(int tree_height,
+                                           FloatingPoint min_cell_width,
+                                           const OctreeIndex& cell_index,
+                                           FloatingPoint cell_log_odds,
+                                           VoxelsPerLevel& voxels_per_level) {
   // Check if the cell should be drawn
   if (!cell_selector_.shouldBeDrawn(cell_index, cell_log_odds)) {
     return;
@@ -320,20 +322,20 @@ void GridVisual::appendLeafCenterAndColor(int tree_height,
   // Determine the cell's position
   const IndexElement depth = tree_height - cell_index.height;
   CHECK_GE(depth, 0);
-  CHECK_LT(depth, cells_per_level.size());
+  CHECK_LT(depth, voxels_per_level.size());
   const Point3D cell_center =
       convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
 
   // Create the cube at the right scale
-  auto& point = cells_per_level[depth].emplace_back();
+  auto& point = voxels_per_level[depth].emplace_back();
   point.center.x = cell_center[0];
   point.center.y = cell_center[1];
   point.center.z = cell_center[2];
 
   // Set the cube's color
-  switch (grid_color_mode_.toTypeId()) {
+  switch (voxel_color_mode_.toTypeId()) {
     case ColorMode::kFlat:
-      point.color = grid_flat_color_;
+      point.color = voxel_flat_color_;
       break;
     case ColorMode::kProbability:
       point.color = logOddsToColor(cell_log_odds);
@@ -345,44 +347,44 @@ void GridVisual::appendLeafCenterAndColor(int tree_height,
   }
 }
 
-void GridVisual::drawMultiResolutionGrid(IndexElement tree_height,
-                                         FloatingPoint min_cell_width,
-                                         const Index3D& block_index,
-                                         FloatingPoint alpha,
-                                         GridLayerList& cells_per_level,
-                                         MultiResGrid& multi_res_grid) {
+void VoxelVisual::drawMultiResolutionVoxels(IndexElement tree_height,
+                                            FloatingPoint min_cell_width,
+                                            const Index3D& block_index,
+                                            FloatingPoint alpha,
+                                            VoxelsPerLevel& voxels_per_level,
+                                            VoxelLayers& voxel_layer_visuals) {
   ZoneScoped;
-  // Add a grid layer for each scale level
+  // Add a voxel layer for each scale level
   const std::string prefix =
-      "grid_" + std::to_string(Index3DHash()(block_index)) + "_";
-  for (size_t depth = 0; depth < cells_per_level.size(); ++depth) {
-    // Allocate the pointcloud representing this grid level if needed
-    if (multi_res_grid.size() <= depth) {
+      "voxel_layer_" + std::to_string(Index3DHash()(block_index)) + "_";
+  for (size_t depth = 0; depth < voxels_per_level.size(); ++depth) {
+    // Allocate the pointcloud representing this voxel grid level if needed
+    if (voxel_layer_visuals.size() <= depth) {
       const Ogre::String name = prefix + std::to_string(depth);
       const IndexElement height = tree_height - static_cast<int>(depth);
       const FloatingPoint cell_width =
           convert::heightToCellWidth(min_cell_width, height);
-      auto& grid_level = multi_res_grid.emplace_back(
-          std::make_unique<GridLayer>(grid_cell_material_));
-      grid_level->setName(name);
-      grid_level->setCellDimensions(cell_width, cell_width, cell_width);
-      grid_level->setAlpha(alpha, false);
-      frame_node_->attachObject(grid_level.get());
+      auto& voxel_layer = voxel_layer_visuals.emplace_back(
+          std::make_unique<CellLayer>(voxel_material_));
+      voxel_layer->setName(name);
+      voxel_layer->setCellDimensions(cell_width, cell_width, cell_width);
+      voxel_layer->setAlpha(alpha, false);
+      frame_node_->attachObject(voxel_layer.get());
     }
     // Update the cells
-    auto& grid_level = multi_res_grid[depth];
-    const auto& cells_at_level = cells_per_level[depth];
-    grid_level->setCells(cells_at_level);
+    auto& voxel_layer = voxel_layer_visuals[depth];
+    const auto& cells_at_level = voxels_per_level[depth];
+    voxel_layer->setCells(cells_at_level);
   }
   // Deallocate levels that are no longer needed
-  for (size_t depth = multi_res_grid.size() - 1;
-       cells_per_level.size() <= depth; --depth) {
-    frame_node_->detachObject(multi_res_grid[depth].get());
-    multi_res_grid.pop_back();
+  for (size_t depth = voxel_layer_visuals.size() - 1;
+       voxels_per_level.size() <= depth; --depth) {
+    frame_node_->detachObject(voxel_layer_visuals[depth].get());
+    voxel_layer_visuals.pop_back();
   }
 }
 
-void GridVisual::processBlockUpdateQueue(const Point3D& camera_position) {
+void VoxelVisual::processBlockUpdateQueue(const Point3D& camera_position) {
   ZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
@@ -453,16 +455,17 @@ void GridVisual::processBlockUpdateQueue(const Point3D& camera_position) {
       const auto& block = hashed_map->getBlock(block_idx);
       const IndexElement term_height = block_update_queue_[block_idx];
       const int num_levels = tree_height + 1 - term_height;
-      GridLayerList cells_per_level(num_levels);
+      VoxelsPerLevel voxels_per_level(num_levels);
       block.forEachLeaf(
           block_idx,
           [&](const auto& cell_index, auto cell_log_odds) {
             appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
-                                     cell_log_odds, cells_per_level);
+                                     cell_log_odds, voxels_per_level);
           },
           term_height);
-      drawMultiResolutionGrid(tree_height, min_cell_width, block_idx, alpha,
-                              cells_per_level, block_grids_[block_idx]);
+      drawMultiResolutionVoxels(tree_height, min_cell_width, block_idx, alpha,
+                                voxels_per_level,
+                                block_voxel_layers_map_[block_idx]);
       block_update_queue_.erase(block_idx);
 
       const auto current_time = Time::now();
@@ -476,7 +479,7 @@ void GridVisual::processBlockUpdateQueue(const Point3D& camera_position) {
       static_cast<int>(block_update_queue_.size()));
 }
 
-void GridVisual::prerenderCallback(Ogre::Camera* active_camera) {
+void VoxelVisual::prerenderCallback(Ogre::Camera* active_camera) {
   ZoneScoped;
   // Recompute the desired LOD level for each block in the map if
   // the camera moved significantly or an update was requested explicitly

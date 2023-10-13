@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_VISUAL_H_
-#define WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_VISUAL_H_
+#ifndef WAVEMAP_RVIZ_PLUGIN_VISUALS_VOXEL_VISUAL_H_
+#define WAVEMAP_RVIZ_PLUGIN_VISUALS_VOXEL_VISUAL_H_
 
 #ifndef Q_MOC_RUN
 #include <memory>
@@ -25,8 +25,8 @@
 #include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/utils/color_conversions.h"
 #include "wavemap_rviz_plugin/utils/listeners.h"
+#include "wavemap_rviz_plugin/visuals/cell_layer.h"
 #include "wavemap_rviz_plugin/visuals/cell_selector.h"
-#include "wavemap_rviz_plugin/visuals/grid_layer.h"
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -38,24 +38,24 @@ struct ColorMode : public TypeSelector<ColorMode> {
   static constexpr std::array names = {"Height", "Probability", "Flat"};
 };
 
-// Each instance of MultiResolutionGridVisual represents the visualization of a
-// map's leaves as cubes whose sizes match their height in the tree.
-class GridVisual : public QObject {
+// Each instance of VoxelVisual represents the map's leaves
+// as voxels whose sizes match their height in the tree.
+class VoxelVisual : public QObject {
   Q_OBJECT
  public:  // NOLINT
   // Constructor. Creates the visual elements and puts them into the
   // scene, in an unconfigured state.
-  GridVisual(Ogre::SceneManager* scene_manager, rviz::ViewManager* view_manager,
-             Ogre::SceneNode* parent_node,
-             rviz::Property* submenu_root_property,
-             std::shared_ptr<MapAndMutex> map_and_mutex);
+  VoxelVisual(Ogre::SceneManager* scene_manager,
+              rviz::ViewManager* view_manager, Ogre::SceneNode* parent_node,
+              rviz::Property* submenu_root_property,
+              std::shared_ptr<MapAndMutex> map_and_mutex);
 
   // Destructor. Removes the visual elements from the scene.
-  ~GridVisual() override;
+  ~VoxelVisual() override;
 
   void updateMap(bool redraw_all = false);
 
-  void clear() { block_grids_.clear(); }
+  void clear() { block_voxel_layers_map_.clear(); }
 
   // Set the pose of the coordinate frame the message refers to
   void setFramePosition(const Ogre::Vector3& position);
@@ -71,8 +71,8 @@ class GridVisual : public QObject {
   void flatColorUpdateCallback();
 
  private:
-  ColorMode grid_color_mode_ = ColorMode::kHeight;
-  Ogre::ColourValue grid_flat_color_ = Ogre::ColourValue::Blue;
+  ColorMode voxel_color_mode_ = ColorMode::kHeight;
+  Ogre::ColourValue voxel_flat_color_ = Ogre::ColourValue::Blue;
 
   // Shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<MapAndMutex> map_and_mutex_;
@@ -86,7 +86,7 @@ class GridVisual : public QObject {
   Ogre::SceneNode* frame_node_;
 
   // User-editable property variables, contained in the visual's submenu
-  // Grid visibility
+  // Visibility
   rviz::BoolProperty visibility_property_;
   // Cell selection
   CellSelector cell_selector_;
@@ -100,10 +100,10 @@ class GridVisual : public QObject {
   rviz::IntProperty num_queued_blocks_indicator_;
   rviz::IntProperty max_ms_per_frame_property_;
 
-  // The objects implementing the grid visuals
-  using MultiResGrid = std::vector<std::unique_ptr<GridLayer>>;
-  std::unordered_map<Index3D, MultiResGrid, Index3DHash> block_grids_;
-  Ogre::MaterialPtr grid_cell_material_;
+  // The objects implementing the voxel visuals
+  using VoxelLayers = std::vector<std::unique_ptr<CellLayer>>;
+  std::unordered_map<Index3D, VoxelLayers, Index3DHash> block_voxel_layers_map_;
+  Ogre::MaterialPtr voxel_material_;
 
   // Level of Detail control
   std::unique_ptr<ViewportPrerenderListener> prerender_listener_;
@@ -119,16 +119,17 @@ class GridVisual : public QObject {
       IndexElement map_tree_height, const Index3D& block_idx);
 
   // Drawing related methods
-  using GridLayerList = std::vector<std::vector<GridCell>>;
+  using VoxelsPerLevel = std::vector<std::vector<Cell>>;
   void appendLeafCenterAndColor(int tree_height, FloatingPoint min_cell_width,
                                 const OctreeIndex& cell_index,
                                 FloatingPoint cell_log_odds,
-                                GridLayerList& cells_per_level);
-  void drawMultiResolutionGrid(IndexElement tree_height,
-                               FloatingPoint min_cell_width,
-                               const Index3D& block_index, FloatingPoint alpha,
-                               GridLayerList& cells_per_level,
-                               MultiResGrid& multi_res_grid);
+                                VoxelsPerLevel& voxels_per_level);
+  void drawMultiResolutionVoxels(IndexElement tree_height,
+                                 FloatingPoint min_cell_width,
+                                 const Index3D& block_index,
+                                 FloatingPoint alpha,
+                                 VoxelsPerLevel& voxels_per_level,
+                                 VoxelLayers& voxel_layer_visuals);
 
   // Block update queue
   // NOTE: Instead of performing all the block updates at once whenever the map
@@ -144,4 +145,4 @@ class GridVisual : public QObject {
 };
 }  // namespace wavemap::rviz_plugin
 
-#endif  // WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_VISUAL_H_
+#endif  // WAVEMAP_RVIZ_PLUGIN_VISUALS_VOXEL_VISUAL_H_

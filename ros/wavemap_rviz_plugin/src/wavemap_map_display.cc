@@ -11,7 +11,6 @@
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
 #include "wavemap_rviz_plugin/utils/alert_dialog.h"
-#include "wavemap_rviz_plugin/visuals/grid_visual.h"
 
 namespace wavemap::rviz_plugin {
 WavemapMapDisplay::WavemapMapDisplay() {

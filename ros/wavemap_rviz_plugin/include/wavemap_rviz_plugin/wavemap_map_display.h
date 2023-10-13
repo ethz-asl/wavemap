@@ -12,8 +12,8 @@
 
 #include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/utils/button_property.h"
-#include "wavemap_rviz_plugin/visuals/grid_visual.h"
 #include "wavemap_rviz_plugin/visuals/slice_visual.h"
+#include "wavemap_rviz_plugin/visuals/voxel_visual.h"
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -113,7 +113,7 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   // Storage for the visuals
   // NOTE: Visuals are enabled when they are allocated, and automatically
   //       removed from the scene when destructed.
-  std::unique_ptr<GridVisual> grid_visual_;
+  std::unique_ptr<VoxelVisual> grid_visual_;
   std::unique_ptr<SliceVisual> slice_visual_;
 };
 }  // namespace wavemap::rviz_plugin

@@ -17,7 +17,7 @@
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 
 #include "wavemap_rviz_plugin/common.h"
-#include "wavemap_rviz_plugin/visuals/grid_layer.h"
+#include "wavemap_rviz_plugin/visuals/cell_layer.h"
 #endif
 
 namespace wavemap::rviz_plugin {

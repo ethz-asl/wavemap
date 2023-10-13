@@ -1,4 +1,4 @@
-#include "wavemap_rviz_plugin/visuals/grid_layer.h"
+#include "wavemap_rviz_plugin/visuals/cell_layer.h"
 
 #include <sstream>
 
@@ -38,9 +38,9 @@ static constexpr float kBoxVertices[6 * 6 * 3] = {
     -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
 };  // clang-format on
 
-const Ogre::String GridLayer::movable_type_name_ = "GridLayer";
+const Ogre::String CellLayer::movable_type_name_ = "CellLayer";
 
-GridLayer::GridLayer(const Ogre::MaterialPtr& cell_material)
+CellLayer::CellLayer(const Ogre::MaterialPtr& cell_material)
     : cell_material_(cell_material) {
   // Initialize transparency rendering
   setAlpha(alpha_);
@@ -57,7 +57,7 @@ GridLayer::GridLayer(const Ogre::MaterialPtr& cell_material)
   }
 }
 
-void GridLayer::clear() {
+void CellLayer::clear() {
   bounding_box_.setNull();
   bounding_radius_ = 0.0f;
 
@@ -71,7 +71,7 @@ void GridLayer::clear() {
   renderables_.clear();
 }
 
-void GridLayer::setCellDimensions(float width, float height, float depth) {
+void CellLayer::setCellDimensions(float width, float height, float depth) {
   width_ = width;
   height_ = height;
   depth_ = depth;
@@ -82,7 +82,7 @@ void GridLayer::setCellDimensions(float width, float height, float depth) {
   }
 }
 
-void GridLayer::setAlpha(float alpha, bool per_cell_alpha) {
+void CellLayer::setAlpha(float alpha, bool per_cell_alpha) {
   alpha_ = alpha;
 
   if (alpha < 0.9998 || per_cell_alpha) {
@@ -106,7 +106,7 @@ void GridLayer::setAlpha(float alpha, bool per_cell_alpha) {
   }
 }
 
-void GridLayer::setCells(const std::vector<GridCell>& cells) {
+void CellLayer::setCells(const std::vector<Cell>& cells) {
   if (!renderables_.empty()) {
     clear();
   }
@@ -131,7 +131,7 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
     vertices = kBoxVertices;
   }
 
-  GridLayerRenderablePtr renderable;
+  CellLayerRenderablePtr renderable;
   Ogre::HardwareVertexBufferSharedPtr vbuf;
   void* vdata = nullptr;
   Ogre::RenderOperation* op = nullptr;
@@ -180,7 +180,7 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
       aabb.setNull();
     }
 
-    const GridCell& p = cells[current_cell];
+    const Cell& p = cells[current_cell];
     uint32_t color;
     root->convertColourValue(p.color, &color);
 
@@ -223,9 +223,9 @@ void GridLayer::setCells(const std::vector<GridCell>& cells) {
   }
 }
 
-void GridLayer::shrinkRenderables() {
+void CellLayer::shrinkRenderables() {
   while (!renderables_.empty()) {
-    GridLayerRenderable& renderable = *renderables_.back();
+    CellLayerRenderable& renderable = *renderables_.back();
     Ogre::RenderOperation* op = renderable.getRenderOperation();
     if (op->vertexData->vertexCount == 0) {
       renderables_.pop_back();
@@ -235,13 +235,13 @@ void GridLayer::shrinkRenderables() {
   }
 }
 
-void GridLayer::_updateRenderQueue(Ogre::RenderQueue* queue) {
+void CellLayer::_updateRenderQueue(Ogre::RenderQueue* queue) {
   for (const auto& renderable : renderables_) {
     queue->addRenderable(renderable.get());
   }
 }
 
-uint32_t GridLayer::getVerticesPerCell() const {
+uint32_t CellLayer::getVerticesPerCell() const {
   if (current_mode_supports_geometry_shader_) {
     return 1;
   } else {
@@ -249,8 +249,8 @@ uint32_t GridLayer::getVerticesPerCell() const {
   }
 }
 
-GridLayerRenderablePtr GridLayer::createRenderable(size_t num_cells) {
-  GridLayerRenderablePtr renderable = std::make_shared<GridLayerRenderable>(
+CellLayerRenderablePtr CellLayer::createRenderable(size_t num_cells) {
+  CellLayerRenderablePtr renderable = std::make_shared<CellLayerRenderable>(
       this, num_cells, !current_mode_supports_geometry_shader_);
   rviz::setMaterial(*renderable, cell_material_);
   const Ogre::Vector4 size(width_, height_, depth_, 0.0f);
@@ -269,7 +269,7 @@ GridLayerRenderablePtr GridLayer::createRenderable(size_t num_cells) {
   return renderable;
 }
 
-GridLayerRenderable::GridLayerRenderable(GridLayer* parent, size_t num_cells,
+CellLayerRenderable::CellLayerRenderable(CellLayer* parent, size_t num_cells,
                                          bool use_tex_coords)
     : parent_(parent) {
   // Initialize render operation
@@ -302,16 +302,16 @@ GridLayerRenderable::GridLayerRenderable(GridLayer* parent, size_t num_cells,
   mRenderOp.vertexData->vertexBufferBinding->setBinding(0, vbuf);
 }
 
-GridLayerRenderable::~GridLayerRenderable() {
+CellLayerRenderable::~CellLayerRenderable() {
   delete mRenderOp.vertexData;
   delete mRenderOp.indexData;
 }
 
-Ogre::HardwareVertexBufferSharedPtr GridLayerRenderable::getBuffer() {
+Ogre::HardwareVertexBufferSharedPtr CellLayerRenderable::getBuffer() {
   return mRenderOp.vertexData->vertexBufferBinding->getBuffer(0);
 }
 
-Ogre::Real GridLayerRenderable::getSquaredViewDepth(
+Ogre::Real CellLayerRenderable::getSquaredViewDepth(
     const Ogre::Camera* cam) const {
   const Ogre::Vector3& min = mBox.getMinimum();
   const Ogre::Vector3& max = mBox.getMaximum();

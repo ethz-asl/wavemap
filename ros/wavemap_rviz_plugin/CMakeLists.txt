@@ -34,7 +34,7 @@ set(CMAKE_AUTOMOC ON)
 # We'll use the version that rviz used so they are compatible.
 set(HEADERS_TO_MOC
     include/wavemap_rviz_plugin/wavemap_map_display.h
-    include/wavemap_rviz_plugin/visuals/grid_visual.h
+    include/wavemap_rviz_plugin/visuals/voxel_visual.h
     include/wavemap_rviz_plugin/visuals/slice_visual.h
     include/wavemap_rviz_plugin/visuals/cell_selector.h
     include/wavemap_rviz_plugin/utils/button_property.h)
@@ -63,9 +63,9 @@ add_definitions(-DQT_NO_KEYWORDS)
 add_library(${PROJECT_NAME}
     src/utils/color_conversions.cc
     src/utils/listeners.cc
-    src/visuals/grid_visual.cc
     src/visuals/slice_visual.cc
-    src/visuals/grid_layer.cc
+    src/visuals/voxel_visual.cc
+    src/visuals/cell_layer.cc
     src/visuals/cell_selector.cc
     src/wavemap_map_display.cc
     ${QT_MOC})

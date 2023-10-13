@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_LAYER_H_
-#define WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_LAYER_H_
+#ifndef WAVEMAP_RVIZ_PLUGIN_VISUALS_CELL_LAYER_H_
+#define WAVEMAP_RVIZ_PLUGIN_VISUALS_CELL_LAYER_H_
 
 #include <memory>
 #include <string>
@@ -14,11 +14,11 @@
 #include <OgreString.h>
 
 namespace wavemap {
-class GridLayerRenderable;
-using GridLayerRenderablePtr = std::shared_ptr<GridLayerRenderable>;
-using GridLayerRenderableVector = std::vector<GridLayerRenderablePtr>;
+class CellLayerRenderable;
+using CellLayerRenderablePtr = std::shared_ptr<CellLayerRenderable>;
+using CellLayerRenderableVector = std::vector<CellLayerRenderablePtr>;
 
-struct GridCell {
+struct Cell {
   Ogre::Vector3 center;
   Ogre::ColourValue color;
 
@@ -27,13 +27,13 @@ struct GridCell {
   }
 };
 
-class GridLayer : public Ogre::MovableObject {
+class CellLayer : public Ogre::MovableObject {
  public:
-  explicit GridLayer(const Ogre::MaterialPtr& cell_material);
-  ~GridLayer() override { clear(); }
+  explicit CellLayer(const Ogre::MaterialPtr& cell_material);
+  ~CellLayer() override { clear(); }
 
   void clear();
-  void setCells(const std::vector<GridCell>& cells);
+  void setCells(const std::vector<Cell>& cells);
 
   void setCellDimensions(float width, float height, float depth);
   void setAlpha(float alpha, bool per_cell_alpha = false);
@@ -60,7 +60,7 @@ class GridLayer : public Ogre::MovableObject {
 
  private:
   uint32_t getVerticesPerCell() const;
-  GridLayerRenderablePtr createRenderable(size_t num_cells);
+  CellLayerRenderablePtr createRenderable(size_t num_cells);
   void shrinkRenderables();
 
   Ogre::AxisAlignedBox bounding_box_;
@@ -73,17 +73,17 @@ class GridLayer : public Ogre::MovableObject {
   Ogre::MaterialPtr cell_material_;
   float alpha_ = 1.f;
 
-  GridLayerRenderableVector renderables_;
+  CellLayerRenderableVector renderables_;
 
   bool current_mode_supports_geometry_shader_ = false;
 
   static const Ogre::String movable_type_name_;
 };
 
-class GridLayerRenderable : public Ogre::SimpleRenderable {
+class CellLayerRenderable : public Ogre::SimpleRenderable {
  public:
-  GridLayerRenderable(GridLayer* parent, size_t num_cells, bool use_tex_coords);
-  ~GridLayerRenderable() override;
+  CellLayerRenderable(CellLayer* parent, size_t num_cells, bool use_tex_coords);
+  ~CellLayerRenderable() override;
 
   using Ogre::SimpleRenderable::getRenderOperation;
 
@@ -106,9 +106,9 @@ class GridLayerRenderable : public Ogre::SimpleRenderable {
 
  private:
   Ogre::MaterialPtr material_;
-  GridLayer* parent_;
+  CellLayer* parent_;
   float bounding_radius_ = 0.f;
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_RVIZ_PLUGIN_VISUALS_GRID_LAYER_H_
+#endif  // WAVEMAP_RVIZ_PLUGIN_VISUALS_CELL_LAYER_H_
