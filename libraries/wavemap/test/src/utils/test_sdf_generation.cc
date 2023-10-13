@@ -19,16 +19,24 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
   const Index3D max_index = Index3D::Constant(100);
   constexpr FloatingPoint kMaxSdfDistance = 2.f;
 
-  // Create a map and sample random obstacles
+  // Create the map
   const auto config =
       ConfigGenerator::getRandomConfig<HashedWaveletOctree::Config>();
   HashedWaveletOctree map{config};
-  const auto obstacle_cells =
+
+  // Generate random obstacles
+  auto obstacle_cells =
       GeometryGenerator::getRandomIndexVector<3>(10, 20, min_index, max_index);
+  // Add a cube
   const FloatingPoint min_cell_width = map.getMinCellWidth();
+  const IndexElement padding = std::ceil(kMaxSdfDistance / min_cell_width);
+  const Index3D cube_center{2, 6, 4};
+  for (const Index3D& index :
+       Grid<3>(cube_center.array() - padding, cube_center.array() + padding)) {
+    obstacle_cells.emplace_back(index);
+  }
 
   // Set default occupancy to free
-  const IndexElement padding = std::ceil(kMaxSdfDistance / min_cell_width);
   const OctreeIndex min_block_index = convert::indexAndHeightToNodeIndex<3>(
       min_index.array() - padding, map.getTreeHeight());
   const OctreeIndex max_block_index = convert::indexAndHeightToNodeIndex<3>(
@@ -48,8 +56,9 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
   const auto sdf = sdf_generator.generate(map);
 
   // Compare the SDF distances to the brute force min distance
-  sdf.forEachLeaf([&map, &sdf_generator, &sdf, &obstacle_cells, min_cell_width](
-                      const OctreeIndex& node_index, FloatingPoint sdf_value) {
+  sdf.forEachLeaf([&map, &sdf_generator, &sdf, &obstacle_cells, min_cell_width,
+                   padding](const OctreeIndex& node_index,
+                            FloatingPoint sdf_value) {
     // In unobserved space, the SDF should be uninitialized
     const FloatingPoint occupancy_value = map.getCellValue(node_index);
     if (QuasiEuclideanSDFGenerator::isUnobserved(occupancy_value)) {
@@ -58,38 +67,61 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
       return;
     }
 
-    // In occupied space, the SDF should be negative and vice versa
-    if (sdf_generator.isOccupied(occupancy_value)) {
-      // In occupied space, the SDF should be negative
-      EXPECT_LE(sdf_value, 0.f);
-      return;
-    }
-    if (sdf_value < 0.f) {
-      EXPECT_GT(occupancy_value, 0.f);
-      return;
-    }
-
-    // We're in free space
-    // Compute the distance to the closest obstacle using brute force
-    FloatingPoint min_distance_brute_force = sdf.getDefaultCellValue();
     const Point3D node_center =
         convert::nodeIndexToCenterPoint(node_index, min_cell_width);
-    for (const auto& obstacle_cell : obstacle_cells) {
-      const auto obstacle_aabb = convert::nodeIndexToAABB(
-          OctreeIndex{0, obstacle_cell}, min_cell_width);
-      min_distance_brute_force = std::min(
-          obstacle_aabb.minDistanceTo(node_center), min_distance_brute_force);
+
+    // Find the closest surface using brute force
+    FloatingPoint sdf_brute_force = sdf.getDefaultCellValue();
+    if (sdf_generator.isFree(occupancy_value)) {
+      // In free space, the SDF should always be positive
+      EXPECT_GT(sdf_value, 0.f);
+
+      // Find the distance to the closest obstacle
+      for (const auto& obstacle_cell : obstacle_cells) {
+        const auto obstacle_aabb = convert::nodeIndexToAABB(
+            OctreeIndex{0, obstacle_cell}, min_cell_width);
+        sdf_brute_force =
+            std::min(obstacle_aabb.minDistanceTo(node_center), sdf_brute_force);
+      }
+    } else {
+      // Find the distance to the closest free cell
+      for (const Index3D& neighbor_index :
+           Grid<3>(node_index.position.array() - padding,
+                   node_index.position.array() + padding)) {
+        const FloatingPoint neighbor_occupancy_value =
+            map.getCellValue(neighbor_index);
+        if (sdf_generator.isFree(neighbor_occupancy_value) &&
+            QuasiEuclideanSDFGenerator::isObserved(neighbor_occupancy_value)) {
+          const auto free_cell_aabb = convert::nodeIndexToAABB(
+              OctreeIndex{0, neighbor_index}, min_cell_width);
+          sdf_brute_force = std::min(free_cell_aabb.minDistanceTo(node_center),
+                                     sdf_brute_force);
+        }
+      }
+      // Adjust the sign to reflect we're inside the obstacle
+      sdf_brute_force = -sdf_brute_force;
+
+      // In occupied space, the SDF should be
+      if (std::abs(sdf_brute_force) < sdf.getDefaultCellValue()) {
+        // Negative
+        EXPECT_LT(sdf_value, 0.f);
+      } else {
+        // Or uninitialized
+        EXPECT_NEAR(sdf_value, sdf.getDefaultCellValue(), kEpsilon);
+      }
     }
 
     // Check that the SDF accurately approximates the min obstacle distance
     constexpr FloatingPoint kMaxMultiplicativeError =
         QuasiEuclideanSDFGenerator::kMaxMultiplicativeError;
-    if (min_distance_brute_force <= sdf.getDefaultCellValue()) {
-      EXPECT_NEAR(sdf_value, min_distance_brute_force,
-                  min_distance_brute_force * kMaxMultiplicativeError);
+    if (std::abs(sdf_brute_force) < sdf.getDefaultCellValue()) {
+      EXPECT_NEAR(sdf_value, sdf_brute_force,
+                  std::abs(sdf_brute_force) * kMaxMultiplicativeError)
+          << "At index " << print::eigen::oneLine(node_index.position);
     } else {
       EXPECT_NEAR(sdf_value, sdf.getDefaultCellValue(),
-                  sdf.getDefaultCellValue() * kMaxMultiplicativeError);
+                  sdf.getDefaultCellValue() * kMaxMultiplicativeError)
+          << "At index " << print::eigen::oneLine(node_index.position);
     }
   });
 }

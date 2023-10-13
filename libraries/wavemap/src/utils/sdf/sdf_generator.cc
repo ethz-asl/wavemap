@@ -58,7 +58,8 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
   // For all free cells that border an obstacle:
   // - initialize their SDF value, and
   // - add them to the open queue
-  occupancy_map.forEachLeaf([this, &occupancy_map, &sdf, &open_queue,
+  occupancy_map.forEachLeaf([this, &occupancy_query_accelerator, &sdf,
+                             &open_queue,
                              min_cell_width = occupancy_map.getMinCellWidth()](
                                 const OctreeIndex& node_index,
                                 FloatingPoint node_occupancy) {
@@ -87,7 +88,8 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       }
 
       // Skip the cell if it is not free
-      const FloatingPoint occupancy = occupancy_map.getCellValue(index);
+      const FloatingPoint occupancy =
+          occupancy_query_accelerator.getCellValue(index);
       if (isUnobserved(occupancy) || isOccupied(occupancy)) {
         continue;
       }
@@ -119,10 +121,12 @@ void QuasiEuclideanSDFGenerator::propagate(
   QueryAccelerator occupancy_query_accelerator{occupancy_map};
 
   // Precompute the neighbor distance offsets
+  const FloatingPoint min_cell_width = occupancy_map.getMinCellWidth();
   const auto neighbor_distance_offsets =
-      neighborhood::generateNeighborDistanceOffsets(
-          occupancy_map.getMinCellWidth());
+      neighborhood::generateNeighborDistanceOffsets(min_cell_width);
   CHECK_EQ(kNeighborIndexOffsets.size(), neighbor_distance_offsets.size());
+  const FloatingPoint half_max_neighbor_distance_offset =
+      std::sqrt(3.f) * min_cell_width / 2;
 
   // Propagate the distance
   while (!open_queue.empty()) {
@@ -136,9 +140,9 @@ void QuasiEuclideanSDFGenerator::propagate(
     for (size_t neighbor_idx = 0; neighbor_idx < kNeighborIndexOffsets.size();
          ++neighbor_idx) {
       // Compute the neighbor's distance if reached from the current voxel
-      const FloatingPoint neighbor_distance =
+      FloatingPoint neighbor_df_candidate =
           df_value + neighbor_distance_offsets[neighbor_idx];
-      if (max_distance_ <= neighbor_distance) {
+      if (max_distance_ <= neighbor_df_candidate) {
         continue;
       }
 
@@ -163,14 +167,26 @@ void QuasiEuclideanSDFGenerator::propagate(
         }
       }
 
+      // Handle sign changes when propagating across the surface
+      if (0.f < sdf_value && neighbor_sdf < 0.f) {
+        // NOTE: When the opened cell and the neighbor cell have the same sign,
+        //       the distance field value and offset are summed to obtain the
+        //       unsigned neighbor distance. Whereas when moving across the
+        //       surface, the df_value and offset have opposite signs and reduce
+        //       each other instead.
+        DCHECK_LE(df_value, half_max_neighbor_distance_offset);
+        neighbor_df_candidate =
+            neighbor_distance_offsets[neighbor_idx] - df_value;
+      }
+
       // Update the neighbor's SDF value
-      const FloatingPoint neighbor_df =
-          std::min(std::abs(neighbor_sdf), neighbor_distance);
+      FloatingPoint neighbor_df = std::abs(neighbor_sdf);
+      neighbor_df = std::min(neighbor_df, neighbor_df_candidate);
       neighbor_sdf = std::copysign(neighbor_df, neighbor_sdf);
 
       // If the neighbor is not yet in the open queue, add it
       if (neighbor_sdf_uninitialized) {
-        open_queue.push(neighbor_distance, neighbor_index);
+        open_queue.push(neighbor_df_candidate, neighbor_index);
       }
     }
   }
