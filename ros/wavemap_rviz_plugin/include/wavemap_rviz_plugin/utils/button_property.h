@@ -3,6 +3,7 @@
 
 #ifndef Q_MOC_RUN
 #include <string>
+#include <utility>
 
 #include <QPushButton>
 #include <rviz/properties/string_property.h>
@@ -16,8 +17,10 @@ class ButtonProperty : public rviz::Property {
                  const QString& description = QString(),
                  Property* parent = nullptr,
                  const char* button_released_slot = nullptr,
-                 QObject* receiver = nullptr)
+                 QObject* receiver = nullptr,
+                 std::optional<QColor> color = std::nullopt)
       : rviz::Property(name, default_value, description, parent),
+        color_(std::move(color)),
         value_original_(getValue().toString().toStdString()),
         button_released_slot_(button_released_slot),
         receiver_(receiver) {
@@ -31,6 +34,12 @@ class ButtonProperty : public rviz::Property {
     in_focus_ = true;
     auto* button = new QPushButton(value_in_focus_.c_str(), parent);
     button->setEnabled(enabled_);
+    if (color_) {
+      QPalette pal = button->palette();
+      pal.setColor(QPalette::Button, color_.value());
+      button->setAutoFillBackground(true);
+      button->setPalette(pal);
+    }
     QObject::connect(button, SIGNAL(released()), receiver_,
                      button_released_slot_);
     QObject::connect(button, &QPushButton::destroyed, this,
@@ -74,6 +83,7 @@ class ButtonProperty : public rviz::Property {
  private:
   bool enabled_ = true;
   bool in_focus_ = false;
+  const std::optional<QColor> color_;
 
   std::string value_original_;
   std::string value_in_focus_ = value_original_;

@@ -72,16 +72,9 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   rviz::EnumProperty source_mode_property_{"Source", "",
                                            "Where to load the map from.", this,
                                            SLOT(updateSourceModeCallback())};
-  ButtonProperty request_wavemap_server_reset_property_{
-      "Reset server",
-      "Request",
-      "Send a request to the wavemap_server to reset the map.",
-      this,
-      SLOT(requestWavemapServerResetCallback()),
-      this};
   ButtonProperty request_whole_map_property_{
-      "Map update",
-      "Request full",
+      "Full map update",
+      "Request",
       "Send a request to the wavemap_server to republish the whole map, "
       "instead of only increments.",
       this,
@@ -100,6 +93,14 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   rviz::Property slice_visual_properties_{
       "Render slice", QVariant(), "Properties for the slice visualization.",
       this};
+  ButtonProperty request_wavemap_server_reset_property_{
+      "Reset server",
+      "Request",
+      "Send a request to the wavemap_server to reset the map.",
+      this,
+      SLOT(requestWavemapServerResetCallback()),
+      this,
+      Qt::red};
 
   // Service client to call wavemap's request_whole_map service
   inline static const std::string kResetWavemapServerService = "reset_map";
