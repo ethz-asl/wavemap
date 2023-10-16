@@ -1,5 +1,7 @@
 #include "wavemap/data_structure/volumetric/wavelet_octree.h"
 
+#include "wavemap/utils/query/occupancy_classifier.h"
+
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(WaveletOctreeConfig,
                       (min_cell_width)
@@ -34,7 +36,7 @@ Index3D WaveletOctree::getMinIndex() const {
 
   Index3D min_index = getMaxPossibleIndex();
   forEachLeaf([&min_index](const OctreeIndex& node_index, FloatingPoint value) {
-    if (OccupancyState::isObserved(value)) {
+    if (OccupancyClassifier::isObserved(value)) {
       const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
       min_index = min_index.cwiseMin(index);
     }
@@ -49,7 +51,7 @@ Index3D WaveletOctree::getMaxIndex() const {
 
   Index3D max_index = getMinPossibleIndex();
   forEachLeaf([&max_index](const OctreeIndex& node_index, FloatingPoint value) {
-    if (OccupancyState::isObserved(value)) {
+    if (OccupancyClassifier::isObserved(value)) {
       const Index3D index = convert::nodeIndexToMaxCornerIndex(node_index);
       max_index = max_index.cwiseMax(index);
     }

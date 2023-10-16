@@ -6,8 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
-
 namespace wavemap {
 inline OctreeIndex::ChildArray VolumetricOctree::getFirstChildIndices() const {
   OctreeIndex::ChildArray first_child_indices =

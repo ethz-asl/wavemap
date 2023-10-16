@@ -6,7 +6,7 @@
 #include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/sdf/sdf_generator.h"
+#include "wavemap/utils/sdf/quasi_euclidean_sdf_generator.h"
 
 namespace wavemap {
 class SdfGenerationTest : public FixtureBase,
@@ -19,10 +19,11 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
   const Index3D max_index = Index3D::Constant(100);
   constexpr FloatingPoint kMaxSdfDistance = 2.f;
 
-  // Create the map
+  // Create the map and occupancy classification util
   const auto config =
       ConfigGenerator::getRandomConfig<HashedWaveletOctree::Config>();
   HashedWaveletOctree map{config};
+  const OccupancyClassifier classifier{};
 
   // Generate random obstacles
   auto obstacle_cells =
@@ -56,12 +57,12 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
   const auto sdf = sdf_generator.generate(map);
 
   // Compare the SDF distances to the brute force min distance
-  sdf.forEachLeaf([&map, &sdf_generator, &sdf, &obstacle_cells, min_cell_width,
-                   padding](const OctreeIndex& node_index,
-                            FloatingPoint sdf_value) {
+  sdf.forEachLeaf([&map, &classifier, &sdf_generator, &sdf, &obstacle_cells,
+                   min_cell_width, padding](const OctreeIndex& node_index,
+                                            FloatingPoint sdf_value) {
     // In unobserved space, the SDF should be uninitialized
     const FloatingPoint occupancy_value = map.getCellValue(node_index);
-    if (QuasiEuclideanSDFGenerator::isUnobserved(occupancy_value)) {
+    if (OccupancyClassifier::isUnobserved(occupancy_value)) {
       // In unknown space the SDF should be uninitialized
       EXPECT_NEAR(sdf_value, sdf.getDefaultCellValue(), kEpsilon);
       return;
@@ -72,7 +73,7 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
 
     // Find the closest surface using brute force
     FloatingPoint sdf_brute_force = sdf.getDefaultCellValue();
-    if (sdf_generator.isFree(occupancy_value)) {
+    if (classifier.isFree(occupancy_value)) {
       // In free space, the SDF should always be positive
       EXPECT_GT(sdf_value, 0.f);
 
@@ -90,8 +91,8 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
                    node_index.position.array() + padding)) {
         const FloatingPoint neighbor_occupancy_value =
             map.getCellValue(neighbor_index);
-        if (sdf_generator.isFree(neighbor_occupancy_value) &&
-            QuasiEuclideanSDFGenerator::isObserved(neighbor_occupancy_value)) {
+        if (classifier.isFree(neighbor_occupancy_value) &&
+            OccupancyClassifier::isObserved(neighbor_occupancy_value)) {
           const auto free_cell_aabb = convert::nodeIndexToAABB(
               OctreeIndex{0, neighbor_index}, min_cell_width);
           sdf_brute_force = std::min(free_cell_aabb.minDistanceTo(node_center),

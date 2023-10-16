@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
+#include "wavemap/utils/query/occupancy_classifier.h"
 
 namespace wavemap {
 inline bool WaveletOctree::empty() const {
@@ -15,7 +15,7 @@ inline bool WaveletOctree::empty() const {
   //       coefficients, we also need to check whether its scale coefficient
   //       (average value over the whole map) is zero.
   return ndtree_.empty() &&
-         !OccupancyState::isObserved(root_scale_coefficient_);
+         !OccupancyClassifier::isObserved(root_scale_coefficient_);
 }
 
 inline void WaveletOctree::clear() {

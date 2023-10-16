@@ -1,7 +1,7 @@
 #ifndef WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_IMPL_HASHED_CHUNKED_WAVELET_OCTREE_BLOCK_INL_H_
 #define WAVEMAP_DATA_STRUCTURE_VOLUMETRIC_IMPL_HASHED_CHUNKED_WAVELET_OCTREE_BLOCK_INL_H_
 
-#include "wavemap/data_structure/volumetric/cell_types/occupancy_state.h"
+#include "wavemap/utils/query/occupancy_classifier.h"
 
 namespace wavemap {
 inline bool HashedChunkedWaveletOctreeBlock::empty() const {
@@ -10,7 +10,7 @@ inline bool HashedChunkedWaveletOctreeBlock::empty() const {
   //       coefficients, we also need to check whether its scale coefficient
   //       (average value over the whole block) is zero.
   return chunked_ndtree_.empty() &&
-         !OccupancyState::isObserved(root_scale_coefficient_);
+         !OccupancyClassifier::isObserved(root_scale_coefficient_);
 }
 
 inline FloatingPoint HashedChunkedWaveletOctreeBlock::getTimeSinceLastUpdated()

@@ -1,6 +1,6 @@
-#include "wavemap/utils/sdf/sdf_generator.h"
-
 #include <tracy/Tracy.hpp>
+
+#include "wavemap/utils/sdf/quasi_euclidean_sdf_generator.h"
 
 namespace wavemap {
 std::array<Index3D, 26> neighborhood::generateNeighborIndexOffsets() {
@@ -64,7 +64,8 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
                                 const OctreeIndex& node_index,
                                 FloatingPoint node_occupancy) {
     // Only process obstacles
-    if (isUnobserved(node_occupancy) || isFree(node_occupancy)) {
+    if (OccupancyClassifier::isUnobserved(node_occupancy) ||
+        classifier_.isFree(node_occupancy)) {
       return;
     }
 
@@ -90,7 +91,8 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       // Skip the cell if it is not free
       const FloatingPoint occupancy =
           occupancy_query_accelerator.getCellValue(index);
-      if (isUnobserved(occupancy) || isOccupied(occupancy)) {
+      if (OccupancyClassifier::isUnobserved(occupancy) ||
+          classifier_.isOccupied(occupancy)) {
         continue;
       }
 
@@ -158,11 +160,11 @@ void QuasiEuclideanSDFGenerator::propagate(
         const FloatingPoint neighbor_occupancy =
             occupancy_query_accelerator.getCellValue(neighbor_index);
         // Never initialize or update unknown cells
-        if (!isObserved(neighbor_occupancy)) {
+        if (!OccupancyClassifier::isObserved(neighbor_occupancy)) {
           continue;
         }
         // Set the sign
-        if (isOccupied(neighbor_occupancy)) {
+        if (classifier_.isOccupied(neighbor_occupancy)) {
           neighbor_sdf = -sdf.getDefaultCellValue();
         }
       }
