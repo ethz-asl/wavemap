@@ -75,17 +75,22 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
 
 void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {
   ZoneScoped;
+  // Serialize the map and data structure's metadata
   msg.min_cell_width = map.getMinCellWidth();
   msg.min_log_odds = map.getMinLogOdds();
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
+  // Wavelet scale coefficient of the root node
   msg.root_node_scale_coefficient = map.getRootScale();
 
+  // Serialize the map's data (all nodes of the octree)
   for (const auto& node :
        map.getNodeIterator<TraversalOrder::kDepthFirstPreorder>()) {
+    // Serialize the node's data
     auto& node_msg = msg.nodes.emplace_back();
     std::copy(node.data().cbegin(), node.data().cend(),
               node_msg.detail_coefficients.begin());
+    // Indicate which of its children will be serialized next
     for (int relative_child_idx = 0;
          relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
       if (node.hasChild(relative_child_idx)) {
@@ -98,28 +103,39 @@ void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {
 void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
                  WaveletOctree::Ptr& map) {
   ZoneScoped;
+  // Deserialize the map's config
   WaveletOctreeConfig config;
   config.min_cell_width = msg.min_cell_width;
   config.min_log_odds = msg.min_log_odds;
   config.max_log_odds = msg.max_log_odds;
   config.tree_height = msg.tree_height;
+
   // Check if the map already exists and has compatible settings
   if (!map || map->getConfig() != config) {
     // Otherwise create a new one
     map = std::make_shared<WaveletOctree>(config);
   }
 
+  // Deserialize the map's data
+  // We start with the scale coefficient stored in the map's root node,
+  // which corresponds to the average value of the entire map
   map->getRootScale() = msg.root_node_scale_coefficient;
 
+  // Followed by the remaining data stored in octree nodes
   std::stack<WaveletOctree::NodeType*> stack;
   stack.emplace(&map->getRootNode());
   for (const auto& node_msg : msg.nodes) {
-    CHECK(!stack.empty());
+    DCHECK(!stack.empty());
     WaveletOctree::NodeType* node = stack.top();
     stack.pop();
 
+    // Deserialize the node's (wavelet) detail coefficients
     std::copy(node_msg.detail_coefficients.cbegin(),
               node_msg.detail_coefficients.cend(), node->data().begin());
+
+    // Evaluate which of the node's children are coming next
+    // NOTE: We iterate and add nodes to the stack in decreasing order s.t.
+    //       the nodes are popped from the stack in increasing order.
     for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
          0 <= relative_child_idx; --relative_child_idx) {
       const bool child_exists =
@@ -136,15 +152,20 @@ void mapToRosMsg(
     std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks,
     std::shared_ptr<ThreadPool> thread_pool) {
   ZoneScoped;
+  // Constants
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
   const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
 
+  // Serialize the map and data structure's metadata
   msg.min_cell_width = map.getMinCellWidth();
   msg.min_log_odds = map.getMinLogOdds();
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
 
+  // Indicate which blocks are allocated in the map
+  // NOTE: This is done such that subscribers know when blocks should be removed
+  //       during incremental map transmission.
   msg.allocated_block_indices.reserve(map.getBlocks().size());
   for (const auto& [block_index, _] : map.getBlocks()) {
     auto& block_index_msg = msg.allocated_block_indices.emplace_back();
@@ -154,7 +175,7 @@ void mapToRosMsg(
   }
 
   // If blocks to include were specified, check that they exist
-  // and remove the ones that don't
+  // and remove the ones that do not
   if (include_blocks) {
     for (auto include_block_it = include_blocks->begin();
          include_block_it != include_blocks->end();) {
@@ -199,38 +220,47 @@ void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
                    FloatingPoint min_log_odds, FloatingPoint max_log_odds,
                    wavemap_msgs::HashedWaveletOctreeBlock& msg) {
   ZoneScoped;
+  // Convenience type for elements on the stack used to iterate over the map
   struct StackElement {
     const FloatingPoint scale;
     const HashedWaveletOctreeBlock::NodeType& node;
   };
 
+  // Serialize the block's metadata
   msg.root_node_offset.x = block_index.x();
   msg.root_node_offset.y = block_index.y();
   msg.root_node_offset.z = block_index.z();
+  // Wavelet scale coefficient of the block's root node
   msg.root_node_scale_coefficient = block.getRootScale();
 
+  // Serialize the block's data (all nodes of its octree)
   std::stack<StackElement> stack;
   stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
-
   while (!stack.empty()) {
     const FloatingPoint scale = stack.top().scale;
     const auto& node = stack.top().node;
     stack.pop();
 
+    // Serialize the node's data
     auto& node_msg = msg.nodes.emplace_back();
     std::copy(node.data().cbegin(), node.data().cend(),
               node_msg.detail_coefficients.begin());
     node_msg.allocated_children_bitset = 0;
 
+    // Evaluate which of its children should be serialized
     const auto child_scales =
         HashedWaveletOctreeBlock::Transform::backward({scale, node.data()});
+    // NOTE: We iterate and add nodes to the stack in decreasing order s.t.
+    //       the nodes are popped from the stack in increasing order.
     for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
          0 <= relative_child_idx; --relative_child_idx) {
+      // If the child is saturated, we don't need to store its descendants
       const auto child_scale = child_scales[relative_child_idx];
       if (child_scale < min_log_odds || max_log_odds < child_scale) {
         continue;
       }
-
+      // Otherwise, indicate that the child will be serialized
+      // and add it to the stack
       const auto* child = node.getChild(relative_child_idx);
       if (child) {
         stack.emplace(StackElement{child_scale, *child});
@@ -243,16 +273,15 @@ void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
 void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
                  HashedWaveletOctree::Ptr& map) {
   ZoneScoped;
+  // Deserialize the map's config and initialize the data structure
   HashedWaveletOctreeConfig config;
   config.min_cell_width = msg.min_cell_width;
   config.min_log_odds = msg.min_log_odds;
   config.max_log_odds = msg.max_log_odds;
   config.tree_height = msg.tree_height;
+
   // Check if the map already exists and has compatible settings
-  if (!map || map->getConfig() != config) {
-    // Otherwise create a new one
-    map = std::make_shared<HashedWaveletOctree>(config);
-  } else {
+  if (map && map->getConfig() == config) {
     // Load allocated block list into a hash table for quick membership lookups
     std::unordered_set<Index3D, Index3DHash> allocated_blocks;
     for (const auto& block_index : msg.allocated_block_indices) {
@@ -267,30 +296,42 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
         ++it;
       }
     }
+  } else {
+    // Otherwise create a new map
+    map = std::make_shared<HashedWaveletOctree>(config);
   }
 
+  // Deserialize all the transferred blocks
   for (const auto& block_msg : msg.blocks) {
     const Index3D block_index{block_msg.root_node_offset.x,
                               block_msg.root_node_offset.y,
                               block_msg.root_node_offset.z};
 
+    // Reset the block if it already existed
     const bool block_existed = map->hasBlock(block_index);
     auto& block = map->getOrAllocateBlock(block_index);
     if (block_existed) {
       block.clear();
     }
 
+    // Deserialize the wavelet scale coefficient of the block's root node
     block.getRootScale() = block_msg.root_node_scale_coefficient;
 
+    // Deserialize the block's remaining data into octree nodes
     std::stack<WaveletOctree::NodeType*> stack;
     stack.emplace(&block.getRootNode());
     for (const auto& node_msg : block_msg.nodes) {
-      CHECK(!stack.empty());
+      DCHECK(!stack.empty());
       WaveletOctree::NodeType* node = stack.top();
       stack.pop();
 
+      // Deserialize the node's (wavelet) detail coefficients
       std::copy(node_msg.detail_coefficients.cbegin(),
                 node_msg.detail_coefficients.cend(), node->data().begin());
+
+      // Evaluate which of the node's children are coming next
+      // NOTE: We iterate and add nodes to the stack in decreasing order s.t.
+      //       the nodes are popped from the stack in increasing order.
       for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
         const bool child_exists =
@@ -309,16 +350,21 @@ void mapToRosMsg(
     std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks,
     std::shared_ptr<ThreadPool> thread_pool) {
   ZoneScoped;
+  // Constants
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
   const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
   const auto tree_height = map.getTreeHeight();
 
+  // Serialize the map and data structure's metadata
   msg.min_cell_width = map.getMinCellWidth();
   msg.min_log_odds = map.getMinLogOdds();
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
 
+  // Indicate which blocks are allocated in the map
+  // NOTE: This is done such that subscribers know when blocks should be removed
+  //       during incremental map transmission.
   msg.allocated_block_indices.reserve(map.getBlocks().size());
   for (const auto& [block_index, _] : map.getBlocks()) {
     auto& block_index_msg = msg.allocated_block_indices.emplace_back();
@@ -375,20 +421,23 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
                    IndexElement tree_height,
                    wavemap_msgs::HashedWaveletOctreeBlock& msg) {
   ZoneScoped;
+  // Define convenience types and constants
   struct StackElement {
     const OctreeIndex node_index;
     const HashedChunkedWaveletOctreeBlock::NodeChunkType& chunk;
     const FloatingPoint scale_coefficient;
   };
-
   constexpr IndexElement chunk_height =
       HashedChunkedWaveletOctreeBlock::kChunkHeight;
 
+  // Serialize the block's metadata
   msg.root_node_offset.x = block_index.x();
   msg.root_node_offset.y = block_index.y();
   msg.root_node_offset.z = block_index.z();
+  // Wavelet scale coefficient of the block's root node
   msg.root_node_scale_coefficient = block.getRootScale();
 
+  // Serialize the block's data (all nodes of its octree)
   std::stack<StackElement> stack;
   stack.emplace(StackElement{
       {tree_height, block_index}, block.getRootChunk(), block.getRootScale()});
@@ -398,6 +447,7 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
     const auto& chunk = stack.top().chunk;
     stack.pop();
 
+    // Compute the node's index w.r.t. the data chunk that contains it
     const MortonIndex morton_code = convert::nodeIndexToMorton(index);
     const int chunk_top_height =
         chunk_height * int_math::div_round_up(index.height, chunk_height);
@@ -405,28 +455,36 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
         OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
                                                   index.height);
 
+    // Serialize the node's data
     auto& node_msg = msg.nodes.emplace_back();
     const auto& node_data = chunk.nodeData(relative_node_index);
     std::copy(node_data.cbegin(), node_data.cend(),
               node_msg.detail_coefficients.begin());
     node_msg.allocated_children_bitset = 0;
 
+    // If the node has no children, continue
     if (!chunk.nodeHasAtLeastOneChild(relative_node_index)) {
       continue;
     }
 
+    // Otherwise, evaluate which of its children should be serialized
     const auto child_scales =
         HashedWaveletOctreeBlock::Transform::backward({scale, node_data});
+    // NOTE: We iterate and add nodes to the stack in decreasing order s.t.
+    //       the nodes are popped from the stack in increasing order.
     for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
          0 <= relative_child_idx; --relative_child_idx) {
+      // If the child is saturated, we don't need to store its descendants
       const FloatingPoint child_scale = child_scales[relative_child_idx];
       if (child_scale < min_log_odds || max_log_odds < child_scale) {
         continue;
       }
 
+      // Check if the child is no longer in the current chunk
       const OctreeIndex child_index =
           index.computeChildIndex(relative_child_idx);
       if (child_index.height % chunk_height == 0) {
+        // If so, check if the chunk exists
         const MortonIndex child_morton =
             convert::nodeIndexToMorton(child_index);
         const LinearIndex linear_child_index =
@@ -434,10 +492,13 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
                 child_morton, chunk_top_height, child_index.height);
         if (chunk.hasChild(linear_child_index)) {
           const auto& child_chunk = *chunk.getChild(linear_child_index);
+          // Indicate that the child will be serialized
+          // and add it to the stack
           stack.emplace(StackElement{child_index, child_chunk, child_scale});
           node_msg.allocated_children_bitset += (1 << relative_child_idx);
         }
       } else {
+        // Indicate that the child will be serialized and add it to the stack
         stack.emplace(StackElement{child_index, chunk, child_scale});
         node_msg.allocated_children_bitset += (1 << relative_child_idx);
       }

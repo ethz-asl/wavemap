@@ -48,5 +48,12 @@ Accelerators
 
 Interpolation
 =============
-.. literalinclude:: ../../examples/src/queries/interpolation.cc
+Nearest neighbor interpolation:
+
+.. literalinclude:: ../../examples/src/queries/nearest_neighbor_interpolation.cc
+    :language: c++
+
+Trilinear interpolation:
+
+.. literalinclude:: ../../examples/src/queries/trilinear_interpolation.cc
     :language: c++

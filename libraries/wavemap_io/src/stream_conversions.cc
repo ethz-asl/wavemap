@@ -68,6 +68,7 @@ void mapToStream(const WaveletOctree& map, std::ostream& ostream) {
   wavelet_octree_header.min_log_odds = map.getMinLogOdds();
   wavelet_octree_header.max_log_odds = map.getMaxLogOdds();
   wavelet_octree_header.tree_height = map.getTreeHeight();
+  // Wavelet scale coefficient of the root node
   wavelet_octree_header.root_node_scale_coefficient = map.getRootScale();
   wavelet_octree_header.write(ostream);
 
@@ -115,6 +116,7 @@ bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map) {
   std::stack<WaveletOctree::NodeType*> stack;
   stack.emplace(&map->getRootNode());
   while (!stack.empty()) {
+    DCHECK(!stack.empty());
     WaveletOctree::NodeType* node = stack.top();
     stack.pop();
 
@@ -169,6 +171,7 @@ void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
     streamable::HashedWaveletOctreeBlockHeader block_header;
     block_header.root_node_offset = {block_index.x(), block_index.y(),
                                      block_index.z()};
+    // Wavelet scale coefficient of the block's root node
     block_header.root_node_scale_coefficient = block.getRootScale();
     block_header.write(ostream);
 
@@ -238,7 +241,7 @@ bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
                               block_header.root_node_offset.y,
                               block_header.root_node_offset.z};
     auto& block = map->getOrAllocateBlock(block_index);
-
+    // Wavelet scale coefficient of the block's root node
     block.getRootScale() = block_header.root_node_scale_coefficient;
 
     // Deserialize the block's remaining data into octree nodes
@@ -303,6 +306,7 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
     streamable::HashedWaveletOctreeBlockHeader block_header;
     block_header.root_node_offset = {block_index.x(), block_index.y(),
                                      block_index.z()};
+    // Wavelet scale coefficient of the block's root node
     block_header.root_node_scale_coefficient = block.getRootScale();
     block_header.write(ostream);
 

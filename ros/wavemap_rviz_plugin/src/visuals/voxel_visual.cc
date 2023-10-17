@@ -151,7 +151,6 @@ void VoxelVisual::updateMap(bool redraw_all) {
       // to the drawing queue
       const auto min_termination_height = termination_height_property_.getInt();
       for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-        // NOTE: Since the queue is stored as a set, there are no duplicates.
         if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
           block_update_queue_[block_idx] = min_termination_height;
           // Force the LODs to be updated, s.t. the new blocks directly get
@@ -403,7 +402,7 @@ void VoxelVisual::processBlockUpdateQueue(const Point3D& camera_position) {
     const IndexElement tree_height = map->getTreeHeight();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
-    // Sort the blocks in the queue by their modification time
+    // Sort the blocks in the queue by their drawing priority
     struct ChangedBlockToSort {
       Index3D block_index;
       IndexElement term_height_difference;
