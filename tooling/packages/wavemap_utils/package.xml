@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
     <name>wavemap_utils</name>
-    <version>1.5.3</version>
+    <version>1.6.0</version>
     <description>Small package containing scripts to simplify common wavemap development tasks.</description>
 
     <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>

@@ -2,8 +2,8 @@
 Changelog for package wavemap_ros_conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.0 (2023-10-17)
+------------------
 * Update incremental transmission and Rviz to remove deleted blocks
 * Multi-thread block to ROS msg serialization
 * Add tests for map to ROS msg conversions

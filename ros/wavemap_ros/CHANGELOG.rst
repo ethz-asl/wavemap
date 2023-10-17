@@ -2,8 +2,8 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.0 (2023-10-17)
+------------------
 * New features
 
   * Add service and button to reset the wavemap_server's map

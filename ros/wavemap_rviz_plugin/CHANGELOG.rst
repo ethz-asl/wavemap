@@ -2,8 +2,8 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.0 (2023-10-17)
+------------------
 * New features
   * Add service and button to reset the wavemap_server's map
   * Add option to load maps directly from disk
