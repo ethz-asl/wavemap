@@ -23,6 +23,9 @@ The framework is very flexible and supports several data structures, measurement
    api/library_root
    pages/faq
 
+Code
+****
+This documentation website accompanies wavemap's `open-source implementation <https://github.com/ethz-asl/wavemap>`_, which is hosted on GitHub.
 
 Paper
 *****
