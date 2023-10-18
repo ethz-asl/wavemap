@@ -17,7 +17,8 @@ int main(int, char**) {
   // Query all points within a grid
   for (const auto& query_index :
        Grid<3>(Index3D::Constant(-10), Index3D::Constant(10))) {
-    const FloatingPoint value = query_accelerator.getCellValue(query_index);
-    examples::doSomething(value);
+    const FloatingPoint occupancy_log_odds =
+        query_accelerator.getCellValue(query_index);
+    examples::doSomething(occupancy_log_odds);
   }
 }

@@ -19,6 +19,7 @@ int main(int, char**) {
       convert::pointToNearestIndex(query_point, min_cell_width_inv);
 
   // Query the map
-  const FloatingPoint value = map->getCellValue(nearest_neighbor_index);
-  examples::doSomething(value);
+  const FloatingPoint occupancy_log_odds =
+      map->getCellValue(nearest_neighbor_index);
+  examples::doSomething(occupancy_log_odds);
 }

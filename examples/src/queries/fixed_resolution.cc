@@ -15,6 +15,6 @@ int main(int, char**) {
   const Index3D query_index = Index3D::Zero();
 
   // Query the map
-  const FloatingPoint value = map->getCellValue(query_index);
-  examples::doSomething(value);
+  const FloatingPoint occupancy_log_odds = map->getCellValue(query_index);
+  examples::doSomething(occupancy_log_odds);
 }

@@ -19,13 +19,18 @@ cs_add_executable(receive_map_over_ros
         src/io/receive_map_over_ros.cc)
 cs_add_executable(send_map_over_ros
         src/io/send_map_over_ros.cc)
+
 cs_add_executable(fixed_resolution
         src/queries/fixed_resolution.cc)
 cs_add_executable(multi_resolution
         src/queries/multi_resolution.cc)
 cs_add_executable(accelerated_queries
         src/queries/accelerated_queries.cc)
+
 cs_add_executable(nearest_neighbor_interpolation
         src/queries/nearest_neighbor_interpolation.cc)
 cs_add_executable(trilinear_interpolation
         src/queries/trilinear_interpolation.cc)
+
+cs_add_executable(classification
+        src/queries/classification.cc)
