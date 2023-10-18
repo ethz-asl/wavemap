@@ -13,7 +13,7 @@ To get an impression of the maps wavemap can generate, you can download the maps
 * Load wavemap's rviz plugin by clicking: `Add` |rarr| `By display type` |rarr| `wavemap_rviz_plugin` |rarr| `WavemapMap`
 * In the plugin settings, under `Source` select `File`
 * Load the map you just downloaded by clicking: `Loaded map` |rarr| `Choose file`
-* Control what data is shown using the options under `Render voxels` and `Render slice`
+* [Optional] Tweak the visualization options under `Render voxels` and `Render slice`
 
 
 Newer College dataset
