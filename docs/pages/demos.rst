@@ -1,17 +1,24 @@
 Demos
 #####
 .. highlight:: bash
+.. include:: <isonum.txt>
 .. rstcheck: ignore-roles=repo_file
+
+Quick start
+***********
+To get an impression of the maps wavemap can generate, you can download the maps of our `RSS paper's <https://www.roboticsproceedings.org/rss19/p065.pdf>`__ and directly view them in Rviz. To do so,
+
+* Choose and download one of the maps provided `here <https://drive.google.com/drive/folders/1sTmDBUt97wwE220gVFwCq88JT5IOQlk5>`__
+* Open Rviz, for example by running :code:`roscore & rviz`
+* Load wavemap's rviz plugin by clicking: `Add` |rarr| `By display type` |rarr| `wavemap_rviz_plugin` |rarr| `WavemapMap`
+* In the plugin settings, under `Source` select `File`
+* Load the map you just downloaded by clicking: `Loaded map` |rarr| `Choose file`
+* Control what data is shown using the options under `Render voxels` and `Render slice`
+
 
 Newer College dataset
 *********************
-The Newer College dataset is available `here <https://ori-drs.github.io/newer-college-dataset/download/>`__. To get the
-sharpest maps, we recommend supplying wavemap with a high-rate odometry estimate and turning on its built-in pointcloud
-motion undistortion. In our experiments, we got these estimates by modifying FastLIO2 to publish its forward-integrated
-IMU poses. If you would like to run FastLIO2 yourself, our public fork
-is `available here <https://github.com/ethz-asl/fast_lio>`_. Alternatively, we provide rosbags with pre-recorded odometry
-for the Multi-Cam Cloister, Park, Math-easy and Mine-easy
-sequences `here <https://drive.google.com/drive/folders/1sTmDBUt97wwE220gVFwCq88JT5IOQlk5>`__.
+The Newer College dataset is available `here <https://ori-drs.github.io/newer-college-dataset/download/>`__. To get the sharpest maps, we recommend supplying wavemap with a high-rate odometry estimate and turning on wavemap's built-in pointcloud motion undistortion. In our experiments, we got these estimates by modifying FastLIO2 to publish its forward-integrated IMU poses. If you would like to run FastLIO2 yourself, our public fork is `available here <https://github.com/ethz-asl/fast_lio>`_. Alternatively, we provide rosbags with pre-recorded odometry for the Multi-Cam Cloister, Park, Math-easy and Mine-easy sequences `here <https://drive.google.com/drive/folders/1sTmDBUt97wwE220gVFwCq88JT5IOQlk5>`__.
 
 To run wavemap on the Cloister sequence used in the paper, run::
 
