@@ -191,7 +191,7 @@ Visualization Manager:
       Name: Input
     - Class: rviz/Group
       Displays:
-        - Class: wavemap_rviz_plugin/WavemapOctree
+        - Class: wavemap_rviz_plugin/WavemapMap
           Enabled: true
           Name: Map
           Queue Size: 10
