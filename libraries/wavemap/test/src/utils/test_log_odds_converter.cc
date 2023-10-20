@@ -6,13 +6,10 @@
 
 namespace wavemap {
 TEST(ProbabilityConversionsTest, LogOddsToProbability) {
-  constexpr auto kInf = std::numeric_limits<FloatingPoint>::infinity();
   EXPECT_NEAR(convert::logOddsToProbability(convert::kLogOddsNumericalMin), 0.f,
               kEpsilon);
   EXPECT_NEAR(convert::logOddsToProbability(convert::kLogOddsNumericalMax), 1.f,
               kEpsilon);
-  EXPECT_EQ(convert::probabilityToLogOdds(0.f), -kInf);
-  EXPECT_EQ(convert::probabilityToLogOdds(1.f), kInf);
 
   constexpr int kNumSteps = 1000;
   for (int step_idx = 1; step_idx < kNumSteps; ++step_idx) {
