@@ -57,7 +57,7 @@ TEST_F(SphericalProjectorTest, CellToBeamAngles) {
     const auto sensor_coordinates = projector.cartesianToSensor(C_point);
     const auto [index, offset] =
         projector.imageToNearestIndexAndOffset(sensor_coordinates.image);
-    if (sensor_coordinates.normal < 1e-1f || (index.array() < 0).any() ||
+    if (sensor_coordinates.depth < 1e-1f || (index.array() < 0).any() ||
         (projector.getDimensions().array() <= index.array()).any()) {
       --repetition;
       continue;
@@ -66,11 +66,11 @@ TEST_F(SphericalProjectorTest, CellToBeamAngles) {
     const Point3D C_point_round_trip =
         projector.sensorToCartesian(sensor_coordinates);
     ASSERT_LE((C_point - C_point_round_trip).norm(),
-              kNoiseTolerance * (1.f + sensor_coordinates.normal));
+              kNoiseTolerance * (1.f + sensor_coordinates.depth));
 
     // Compute "ground truth" using double precision
     const Point3D C_from_closest_pixel = projector.sensorToCartesian(
-        {projector.indexToImage(index), sensor_coordinates.normal});
+        {projector.indexToImage(index), sensor_coordinates.depth});
     const double projected_double =
         C_point.cast<double>().dot(C_from_closest_pixel.cast<double>()) /
         (C_point.cast<double>().norm() *
@@ -89,7 +89,7 @@ TEST_F(SphericalProjectorTest, CellToBeamAngles) {
         << print::eigen::oneLine(C_from_closest_pixel)
         << " and intermediate sensor coordinates "
         << print::eigen::oneLine(sensor_coordinates.image) << ", "
-        << sensor_coordinates.normal;
+        << sensor_coordinates.depth;
   }
 }
 

@@ -2,6 +2,29 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.0 (2023-10-17)
+------------------
+* New features
+  * Add service and button to reset the wavemap_server's map
+  * Add option to load maps directly from disk
+  * Add option to only draw surface voxels
+
+* Improvements
+  * General Rviz plugin UI improvements
+  * Improve Rviz plugin block drawing scheduling
+  * Update incremental transmission and Rviz to remove deleted blocks
+  * Rename "grid" to "voxels" in Rviz plugin UI and code for clarity
+  * Clean up and optimize visibility query handling
+  * Clean up and optimize alpha handling
+  * Add Tracy annotations for Rviz plugin
+  * Refactor wavemap utils
+
+* Bug fixes
+  * Fix bug causing delays when drawing blocks with identical timestamps
+  * Fix bug causing segfaults upon Rviz plugin instance destruction
+
+* Contributors: Victor Reijgwart
+
 1.5.3 (2023-09-28)
 ------------------
 

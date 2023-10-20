@@ -11,8 +11,8 @@ inline FloatingPoint ProjectiveIntegrator::computeUpdate(
   // NOTE: For spherical (e.g. LiDAR) projection models, sensor_coordinates.z()
   //       corresponds to the range, whereas for camera models it corresponds to
   //       the depth.
-  if (sensor_coordinates.normal < config_.min_range ||
-      config_.max_range < sensor_coordinates.normal) {
+  if (sensor_coordinates.depth < config_.min_range ||
+      config_.max_range < sensor_coordinates.depth) {
     return 0.f;
   }
 

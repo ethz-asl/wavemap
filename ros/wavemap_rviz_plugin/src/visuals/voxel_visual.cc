@@ -150,16 +150,14 @@ void VoxelVisual::updateMap(bool redraw_all) {
       // Add all blocks that changed since the last publication time
       // to the drawing queue
       hashed_map->forEachBlock(
-          [&update_queue = block_update_queue_,
-           &force_lod_update = force_lod_update_,
-           last_update_time = last_update_time_, redraw_all,
+          [this, redraw_all,
            min_termination_height = termination_height_property_.getInt()](
               const Index3D& block_index, const auto& block) {
-            if (redraw_all || last_update_time < block.getLastUpdatedStamp()) {
-              update_queue[block_index] = min_termination_height;
+            if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
+              block_update_queue_[block_index] = min_termination_height;
               // Force the LODs to be updated, s.t. the new blocks directly get
               // drawn at the right max resolution
-              force_lod_update = true;
+              force_lod_update_ = true;
             }
           });
     } else {  // Otherwise, draw the whole octree at once (legacy support)
@@ -414,7 +412,7 @@ void VoxelVisual::processBlockUpdateQueue(const Point3D& camera_position) {
     const IndexElement tree_height = map->getTreeHeight();
     const FloatingPoint alpha = opacity_property_.getFloat();
 
-    // Sort the blocks in the queue by their modification time
+    // Sort the blocks in the queue by their drawing priority
     struct ChangedBlockToSort {
       Index3D block_index;
       IndexElement term_height_difference;

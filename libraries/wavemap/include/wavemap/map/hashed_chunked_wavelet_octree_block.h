@@ -56,7 +56,6 @@ class HashedChunkedWaveletOctreeBlock {
 
   void setNeedsThresholding(bool value = true) { needs_thresholding_ = value; }
   bool getNeedsThresholding() const { return needs_thresholding_; }
-  bool& getNeedsThresholding() { return needs_thresholding_; }
 
   void setLastUpdatedStamp(Timestamp stamp = Time::now()) {
     last_updated_stamp_ = stamp;

@@ -54,10 +54,9 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
     }
 
     // Remove the published blocks from the publication queue
-    std::for_each(blocks_to_publish.begin(), blocks_to_publish.end(),
-                  [&queue = changed_blocks](const auto& published_block) {
-                    queue.erase(published_block);
-                  });
+    auto last_published_block = changed_blocks.begin();
+    std::advance(last_published_block, blocks_to_publish.size());
+    changed_blocks.erase(changed_blocks.begin(), last_published_block);
   }
 }
 }  // namespace wavemap

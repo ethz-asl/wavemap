@@ -158,7 +158,7 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
         GeometryGenerator::getRandomPoint<3>(min_range, max_range);
     const auto sensor_coordinates = projector.cartesianToSensor(C_point);
     const Vector2D image_coordinates = sensor_coordinates.image;
-    const FloatingPoint range_or_depth = sensor_coordinates.normal;
+    const FloatingPoint range_or_depth = sensor_coordinates.depth;
     if (range_or_depth < 1e-1f) {
       --repetition;
       continue;
@@ -184,7 +184,7 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
         << print::eigen::oneLine(C_point_roundtrip)
         << ". Intermediate sensor coordinates were "
         << print::eigen::oneLine(sensor_coordinates.image) << ", "
-        << sensor_coordinates.normal << ".";
+        << sensor_coordinates.depth << ".";
   }
 
   // Test sensor -> Cartesian -> sensor round trips
@@ -258,7 +258,7 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
             projector.cartesianToSensor(C_t_C_corner);
         corners_x[corner_idx] = corner_sensor_coordinates.image.x();
         corners_y[corner_idx] = corner_sensor_coordinates.image.y();
-        corners_z[corner_idx] = corner_sensor_coordinates.normal;
+        corners_z[corner_idx] = corner_sensor_coordinates.depth;
       }
       // Find the min/max corner coordinates
       for (auto [axis, coordinates] :

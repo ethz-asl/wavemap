@@ -1,14 +1,12 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/measurement_model/continuous_beam.h"
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 class RangeImage2DIntersectorTest : public FixtureBase,

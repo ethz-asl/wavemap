@@ -56,14 +56,14 @@ inline FloatingPoint ContinuousRay::computeBeamUpdate(
 
   const FloatingPoint measured_distance = range_image_->at(image_index);
 
-  if (range_threshold_back_ < sensor_coordinates.normal - measured_distance) {
+  if (range_threshold_back_ < sensor_coordinates.depth - measured_distance) {
     return 0.f;
   }
 
-  if (sensor_coordinates.normal < measured_distance - range_threshold_front_) {
+  if (sensor_coordinates.depth < measured_distance - range_threshold_front_) {
     return computeFreeSpaceBeamUpdate();
   } else {
-    return computeFullBeamUpdate(sensor_coordinates.normal, measured_distance);
+    return computeFullBeamUpdate(sensor_coordinates.depth, measured_distance);
   }
 }
 

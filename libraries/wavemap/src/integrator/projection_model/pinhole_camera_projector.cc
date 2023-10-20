@@ -49,10 +49,10 @@ AABB<Vector3D> PinholeCameraProjector::cartesianToSensorAABB(
     }
     sensor_coordinate_aabb.min[2] =
         std::min(sensor_coordinate_aabb.min[2],
-                 corner_sensor_coordinates[corner_idx].normal);
+                 corner_sensor_coordinates[corner_idx].depth);
     sensor_coordinate_aabb.max[2] =
         std::max(sensor_coordinate_aabb.max[2],
-                 corner_sensor_coordinates[corner_idx].normal);
+                 corner_sensor_coordinates[corner_idx].depth);
   }
   return sensor_coordinate_aabb;
 }

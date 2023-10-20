@@ -74,10 +74,16 @@ template <int dim>
 IndexElement NdtreeIndex<dim>::computeLastCommonAncestorHeight(
     MortonIndex first_morton, Element first_height, MortonIndex second_morton,
     Element second_height) {
+  // When the morton indices are identical, the last common ancestor
+  // corresponds to the most senior of the two children
   const Element max_height = std::max(first_height, second_height);
   if (first_morton == second_morton) {
     return max_height;
   }
+
+  // Find the first height where the indices start to differ
+  // NOTE: We count the bit index from right to left s.t. it corresponds to the
+  //       height in the tree, instead of the depth.
   const MortonIndex morton_diff = first_morton ^ second_morton;
   const Element first_diff_bit =
       static_cast<Element>(std::numeric_limits<MortonIndex>::digits) -

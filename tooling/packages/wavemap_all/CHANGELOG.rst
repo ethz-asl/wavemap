@@ -2,6 +2,11 @@
 Changelog for package wavemap_all
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.0 (2023-10-17)
+------------------
+* Add initial usage examples
+* Contributors: Victor Reijgwart
+
 1.5.3 (2023-09-28)
 ------------------
 

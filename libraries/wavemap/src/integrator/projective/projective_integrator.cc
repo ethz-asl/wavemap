@@ -67,7 +67,7 @@ void ProjectiveIntegrator::importPointcloud(
 
     // Add the point to the range image, if multiple points hit the same image
     // pixel, keep the closest point
-    const FloatingPoint range = sensor_coordinates.normal;
+    const FloatingPoint range = sensor_coordinates.depth;
     const FloatingPoint old_range_value =
         posed_range_image_->at(range_image_index);
     if (old_range_value < config_.min_range || range < old_range_value) {

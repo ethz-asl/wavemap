@@ -13,9 +13,9 @@
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
-class FileConversionsTest : public FixtureBase,
-                            public GeometryGenerator,
-                            public ConfigGenerator {
+class MapMsgConversionsTest : public FixtureBase,
+                              public GeometryGenerator,
+                              public ConfigGenerator {
  protected:
   void SetUp() override {
     ros::Time::init();
@@ -30,9 +30,9 @@ class FileConversionsTest : public FixtureBase,
 using VolumetricDataStructureTypes =
     ::testing::Types<WaveletOctree, HashedWaveletOctree,
                      HashedChunkedWaveletOctree>;
-TYPED_TEST_SUITE(FileConversionsTest, VolumetricDataStructureTypes, );
+TYPED_TEST_SUITE(MapMsgConversionsTest, VolumetricDataStructureTypes, );
 
-TYPED_TEST(FileConversionsTest, MetadataPreservation) {
+TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
   const auto config =
       ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
 
@@ -87,7 +87,7 @@ TYPED_TEST(FileConversionsTest, MetadataPreservation) {
   }
 }
 
-TYPED_TEST(FileConversionsTest, InsertionAndLeafVisitor) {
+TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Create a random map

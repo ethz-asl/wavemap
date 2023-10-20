@@ -42,9 +42,14 @@ inline ProjectorBase::NearestIndexArray ProjectorBase::imageToNearestIndices(
     const ImageCoordinates& image_coordinates) const {
   NearestIndexArray indices;
 
+  // Populate the indices for the min and max corners, where
+  // min_corner = [floor_x, floor_y] and max_corner = [ceil_x, ceil_y]
   const Vector2D index_real = imageToIndexReal(image_coordinates);
   indices.col(0) = index_real.array().floor().cast<IndexElement>();
   indices.col(3) = index_real.array().ceil().cast<IndexElement>();
+
+  // Fill in the intermediate corners, where
+  // corner_1 = [ceil_x, floor_y] and corner_2 = [floor_x, ceil_y]
   indices(0, 1) = indices(0, 3);
   indices(1, 1) = indices(1, 0);
   indices(0, 2) = indices(0, 0);
@@ -61,15 +66,23 @@ ProjectorBase::imageToNearestIndicesAndOffsets(
   auto& indices = result.first;
   auto& offsets = result.second;
 
+  // Write the real-valued indices for the min and max corners into the offsets
+  // array, where min_corner = [floor_x, floor_y], max_corner = [ceil_x, ceil_y]
   const Vector2D index_real = imageToIndexReal(image_coordinates);
   offsets.col(0) = index_real.array().floor();
   offsets.col(3) = index_real.array().ceil();
+  // Also fill in the intermediate corners, where
+  // corner_1 = [ceil_x, floor_y] and corner_2 = [floor_x, ceil_y]
   offsets(0, 1) = offsets(0, 3);
   offsets(1, 1) = offsets(1, 0);
   offsets(0, 2) = offsets(0, 0);
   offsets(1, 2) = offsets(1, 3);
 
+  // Obtain the indices by casting the real-values into integers
   indices = offsets.cast<IndexElement>();
+
+  // Compute the offsets by taking the difference between the real valued and
+  // rounded indices and rescaling the result back into image coordinates
   offsets = index_to_image_scale_factor_.asDiagonal() *
             (offsets.colwise() - index_real);
 

@@ -115,6 +115,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/utils/test_data_utils.cc
       test/src/utils/test_fill_utils.cc
       test/src/utils/test_int_math.cc
+      test/src/utils/test_log_odds_converter.cc
       test/src/utils/test_map_interpolator.cpp
       test/src/utils/test_query_accelerator.cc
       test/src/utils/test_sdf_generation.cc

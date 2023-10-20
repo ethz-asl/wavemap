@@ -22,6 +22,6 @@ int main(int, char**) {
       convert::pointToNodeIndex(query_point, map_min_cell_width, query_height);
 
   // Query the map
-  const FloatingPoint value = map->getCellValue(query_index);
-  examples::doSomething(value);
+  const FloatingPoint occupancy_log_odds = map->getCellValue(query_index);
+  examples::doSomething(occupancy_log_odds);
 }

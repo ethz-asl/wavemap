@@ -97,6 +97,16 @@ class ContinuousBeam : public MeasurementModelBase {
   //       angular/range uncertainty extends the non-zero regions with another 3
   //       sigma.
 
+  // Compute the measurement update for a neighborhood in the range image
+  FloatingPoint computeBeamUpdateNearestNeighbor(
+      const Image<>& range_image, const Image<Vector2D>& beam_offset_image,
+      const ProjectorBase& projection_model,
+      const SensorCoordinates& sensor_coordinates) const;
+  FloatingPoint computeBeamUpdateAllNeighbors(
+      const Image<>& range_image, const Image<Vector2D>& beam_offset_image,
+      const ProjectorBase& projection_model,
+      const SensorCoordinates& sensor_coordinates) const;
+
   // Compute the measurement update for a single beam
   FloatingPoint computeBeamUpdate(
       FloatingPoint cell_to_sensor_distance,

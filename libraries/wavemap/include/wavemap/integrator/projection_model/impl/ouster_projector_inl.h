@@ -24,7 +24,7 @@ inline Point3D OusterProjector::sensorToCartesian(
     const SensorCoordinates& coordinates) const {
   const FloatingPoint elevation_angle = coordinates.image[0];
   const FloatingPoint azimuth_angle = coordinates.image[1];
-  const FloatingPoint range = coordinates.normal;
+  const FloatingPoint range = coordinates.depth;
   const Point2D B_point =
       range * Vector2D(std::cos(elevation_angle), std::sin(elevation_angle)) +
       Vector2D(config_.lidar_origin_to_beam_origin,
@@ -39,8 +39,11 @@ inline FloatingPoint OusterProjector::imageOffsetToErrorSquaredNorm(
   // Scale the azimuth offset by the cosine of the elevation angle to account
   // for the change in density along the azimuth axis in function of elevation
   const FloatingPoint cos_elevation_angle = std::cos(linearization_point[0]);
-  return offset[0] * offset[0] +
-         (cos_elevation_angle * cos_elevation_angle) * (offset[1] * offset[1]);
+  const FloatingPoint cos_elevation_angle_sq =
+      cos_elevation_angle * cos_elevation_angle;
+  const FloatingPoint offset_x = offset[0];
+  const FloatingPoint offset_y = offset[1];
+  return (offset_x * offset_x) + cos_elevation_angle_sq * (offset_y * offset_y);
 }
 
 inline std::array<FloatingPoint, 4>
@@ -52,10 +55,10 @@ OusterProjector::imageOffsetsToErrorSquaredNorms(
       cos_elevation_angle * cos_elevation_angle;
   std::array<FloatingPoint, 4> error_norms{};
   for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
+    const FloatingPoint offset_x = offsets(0, offset_idx);
+    const FloatingPoint offset_y = offsets(1, offset_idx);
     error_norms[offset_idx] =
-        (offsets(0, offset_idx) * offsets(0, offset_idx)) +
-        cos_elevation_angle_sq *
-            (offsets(1, offset_idx) * offsets(1, offset_idx));
+        (offset_x * offset_x) + cos_elevation_angle_sq * (offset_y * offset_y);
   }
   return error_norms;
 }

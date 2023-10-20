@@ -14,6 +14,7 @@ int main(int, char**) {
   const Point3D query_point = Point3D::Zero();
 
   // Query the map and compute the interpolated value
-  const FloatingPoint value = interpolate::trilinear(*map, query_point);
-  examples::doSomething(value);
+  const FloatingPoint occupancy_log_odds =
+      interpolate::trilinear(*map, query_point);
+  examples::doSomething(occupancy_log_odds);
 }
