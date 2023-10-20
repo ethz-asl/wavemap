@@ -73,7 +73,7 @@ void SliceVisual::update() {
   const int max_height = map->getTreeHeight();
 
   // Cache the intersecting node z-indices in function of node height
-  const NdtreeIndexElement num_levels = max_height + 1;
+  const IndexElement num_levels = max_height + 1;
   std::vector<IndexElement> intersecting_indices(num_levels);
   std::generate(intersecting_indices.begin(), intersecting_indices.end(),
                 [=, height = 0]() mutable {

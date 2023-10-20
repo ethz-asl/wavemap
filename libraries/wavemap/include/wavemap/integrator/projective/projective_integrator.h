@@ -6,10 +6,10 @@
 
 #include "wavemap/config/type_selector.h"
 #include "wavemap/data_structure/image.h"
-#include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/measurement_model/measurement_model_base.h"
 #include "wavemap/integrator/projection_model/projector_base.h"
+#include "wavemap/map/volumetric_data_structure_base.h"
 
 namespace wavemap {
 /**
@@ -29,7 +29,7 @@ struct ProjectiveIntegratorConfig : ConfigBase<ProjectiveIntegratorConfig, 4> {
   //! res). Can be set to 1 for 1/2 of the max resolution, to 2 for 1/4 of the
   //! max resolution, etc.This can be used to fuse multiple inputs with
   //! different maximum resolutions into a single map.
-  NdtreeIndexElement termination_height = 0;
+  IndexElement termination_height = 0;
   //! The update error threshold at which the coarse-to-fine measurement
   //! integrator is allowed to terminate, in log-odds. For more information,
   //! please refer to: https://www.roboticsproceedings.org/rss19/p065.pdf.

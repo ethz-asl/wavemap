@@ -1,4 +1,4 @@
-#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
+#include <wavemap/map/hashed_wavelet_octree.h>
 #include <wavemap/utils/iterate/grid_iterator.h>
 #include <wavemap/utils/query/query_accelerator.h>
 

@@ -145,13 +145,13 @@ void mapToRosMsg(
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
 
-  msg.allocated_block_indices.reserve(map.getBlocks().size());
-  for (const auto& [block_index, _] : map.getBlocks()) {
+  msg.allocated_block_indices.reserve(map.getHashMap().size());
+  map.forEachBlock([&msg](const Index3D& block_index, const auto& /*block*/) {
     auto& block_index_msg = msg.allocated_block_indices.emplace_back();
     block_index_msg.x = block_index.x();
     block_index_msg.y = block_index.y();
     block_index_msg.z = block_index.z();
-  }
+  });
 
   // If blocks to include were specified, check that they exist
   // and remove the ones that don't
@@ -166,25 +166,29 @@ void mapToRosMsg(
     }
   } else {  // Otherwise, include all blocks
     include_blocks.emplace();
-    for (const auto& [block_index, block] : map.getBlocks()) {
-      include_blocks->emplace(block_index);
-    }
+    map.forEachBlock(
+        [&include_blocks](const Index3D& block_index, const auto& /*block*/) {
+          include_blocks->emplace(block_index);
+        });
   }
 
   // Serialize the specified blocks
   int block_idx = 0;
   msg.blocks.resize(include_blocks->size());
   for (const auto& block_index : include_blocks.value()) {
-    const auto& block = map.getBlock(block_index);
-    auto& block_msg = msg.blocks[block_idx++];
-    // If a thread pool was provided, use it
-    if (thread_pool) {
-      thread_pool->add_task([&]() {
-        blockToRosMsg(block_index, block, min_log_odds, max_log_odds,
+    if (const auto* block = map.getBlock(block_index); block) {
+      auto& block_msg = msg.blocks[block_idx++];
+      // If a thread pool was provided, use it
+      if (thread_pool) {
+        thread_pool->add_task(
+            [block_index, block, min_log_odds, max_log_odds, &block_msg]() {
+              blockToRosMsg(block_index, *block, min_log_odds, max_log_odds,
+                            block_msg);
+            });
+      } else {  // Otherwise, use the current thread
+        blockToRosMsg(block_index, *block, min_log_odds, max_log_odds,
                       block_msg);
-      });
-    } else {  // Otherwise, use the current thread
-      blockToRosMsg(block_index, block, min_log_odds, max_log_odds, block_msg);
+      }
     }
   }
 
@@ -259,14 +263,10 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
       allocated_blocks.emplace(block_index.x, block_index.y, block_index.z);
     }
     // Remove local blocks that should no longer exist according to the map msg
-    for (auto it = map->getBlocks().begin(); it != map->getBlocks().end();) {
-      const auto block_index = it->first;
-      if (!allocated_blocks.count(block_index)) {
-        it = map->getBlocks().erase(it);
-      } else {
-        ++it;
-      }
-    }
+    map->getHashMap().eraseBlockIf(
+        [&allocated_blocks](const Index3D& block_index, const auto& /*block*/) {
+          return !allocated_blocks.count(block_index);
+        });
   }
 
   for (const auto& block_msg : msg.blocks) {
@@ -319,13 +319,13 @@ void mapToRosMsg(
   msg.max_log_odds = map.getMaxLogOdds();
   msg.tree_height = map.getTreeHeight();
 
-  msg.allocated_block_indices.reserve(map.getBlocks().size());
-  for (const auto& [block_index, _] : map.getBlocks()) {
+  msg.allocated_block_indices.reserve(map.getHashMap().size());
+  map.forEachBlock([&msg](const Index3D& block_index, const auto& /*block*/) {
     auto& block_index_msg = msg.allocated_block_indices.emplace_back();
     block_index_msg.x = block_index.x();
     block_index_msg.y = block_index.y();
     block_index_msg.z = block_index.z();
-  }
+  });
 
   // If blocks to include were specified, check that they exist
   // and remove the ones that don't
@@ -340,26 +340,29 @@ void mapToRosMsg(
     }
   } else {  // Otherwise, include all blocks
     include_blocks.emplace();
-    for (const auto& [block_index, block] : map.getBlocks()) {
-      include_blocks->emplace(block_index);
-    }
+    map.forEachBlock(
+        [&include_blocks](const Index3D& block_index, const auto& /*block*/) {
+          include_blocks->emplace(block_index);
+        });
   }
 
   // Serialize the specified blocks
   int block_idx = 0;
   msg.blocks.resize(include_blocks->size());
   for (const auto& block_index : include_blocks.value()) {
-    const auto& block = map.getBlock(block_index);
-    auto& block_msg = msg.blocks[block_idx++];
-    // If a thread pool was provided, use it
-    if (thread_pool) {
-      thread_pool->add_task([&]() {
-        blockToRosMsg(block_index, block, min_log_odds, max_log_odds,
+    if (const auto* block = map.getBlock(block_index); block) {
+      auto& block_msg = msg.blocks[block_idx++];
+      // If a thread pool was provided, use it
+      if (thread_pool) {
+        thread_pool->add_task([block_index, block, min_log_odds, max_log_odds,
+                               tree_height, &block_msg]() {
+          blockToRosMsg(block_index, *block, min_log_odds, max_log_odds,
+                        tree_height, block_msg);
+        });
+      } else {  // Otherwise, use the current thread
+        blockToRosMsg(block_index, *block, min_log_odds, max_log_odds,
                       tree_height, block_msg);
-      });
-    } else {  // Otherwise, use the current thread
-      blockToRosMsg(block_index, block, min_log_odds, max_log_odds, tree_height,
-                    block_msg);
+      }
     }
   }
 

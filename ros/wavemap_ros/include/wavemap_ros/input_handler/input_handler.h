@@ -10,8 +10,8 @@
 #include <wavemap/config/config_base.h>
 #include <wavemap/data_structure/image.h>
 #include <wavemap/data_structure/pointcloud.h>
-#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/integrator/integrator_base.h>
+#include <wavemap/map/volumetric_data_structure_base.h>
 #include <wavemap/utils/thread_pool.h>
 #include <wavemap/utils/time/stopwatch.h>
 

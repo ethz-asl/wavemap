@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <wavemap/common.h>
-#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
-#include <wavemap/data_structure/volumetric/wavelet_octree.h>
+#include <wavemap/map/hashed_wavelet_octree.h>
+#include <wavemap/map/wavelet_octree.h>
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
 #include <wavemap/test/geometry_generator.h>

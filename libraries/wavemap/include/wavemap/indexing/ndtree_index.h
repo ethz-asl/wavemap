@@ -9,7 +9,6 @@
 #include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
-using NdtreeIndexElement = int;
 using NdtreeIndexRelativeChild = uint8_t;
 
 // TODO(victorr): Consider renaming NdtreeIndex to something like
@@ -18,7 +17,7 @@ using NdtreeIndexRelativeChild = uint8_t;
 //                structure that's being indexed.
 template <int dim>
 struct NdtreeIndex {
-  using Element = NdtreeIndexElement;
+  using Element = IndexElement;
   using RelativeChild = NdtreeIndexRelativeChild;
   using Position = Eigen::Matrix<Element, dim, 1>;
 

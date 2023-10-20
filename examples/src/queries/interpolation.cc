@@ -1,4 +1,4 @@
-#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
+#include <wavemap/map/volumetric_data_structure_base.h>
 #include <wavemap/utils/query/map_interpolator.h>
 
 #include "wavemap_examples/common.h"

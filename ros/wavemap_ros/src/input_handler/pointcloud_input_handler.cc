@@ -44,7 +44,7 @@ PointcloudInputHandler::PointcloudInputHandler(
           transformer,
           config_.num_undistortion_interpolation_intervals_per_cloud) {
   // Subscribe to the pointcloud input
-  registerCallback(config_.topic_type, [&](auto callback_ptr) {
+  registerCallback(config_.topic_type, [this, &nh](auto callback_ptr) {
     pointcloud_sub_ = nh.subscribe(
         config_.topic_name, config_.topic_queue_length, callback_ptr, this);
   });
@@ -271,7 +271,8 @@ void PointcloudInputHandler::processQueue() {
 bool PointcloudInputHandler::hasField(const sensor_msgs::PointCloud2& msg,
                                       const std::string& field_name) {
   return std::any_of(msg.fields.cbegin(), msg.fields.cend(),
-                     [&](const sensor_msgs::PointField& field) {
+                     [&field_name = std::as_const(field_name)](
+                         const sensor_msgs::PointField& field) {
                        return field.name == field_name;
                      });
 }

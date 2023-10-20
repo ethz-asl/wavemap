@@ -1,5 +1,5 @@
-#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/indexing/index_conversions.h>
+#include <wavemap/map/hashed_wavelet_octree.h>
 
 #include "wavemap_examples/common.h"
 

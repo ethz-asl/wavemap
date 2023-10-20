@@ -160,11 +160,12 @@ void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
   hashed_wavelet_octree_header.min_log_odds = map.getMinLogOdds();
   hashed_wavelet_octree_header.max_log_odds = map.getMaxLogOdds();
   hashed_wavelet_octree_header.tree_height = map.getTreeHeight();
-  hashed_wavelet_octree_header.num_blocks = map.getBlocks().size();
+  hashed_wavelet_octree_header.num_blocks = map.getHashMap().size();
   hashed_wavelet_octree_header.write(ostream);
 
   // Iterate over all the map's blocks
-  for (const auto& [block_index, block] : map.getBlocks()) {
+  map.forEachBlock([&ostream, min_log_odds, max_log_odds](
+                       const Index3D& block_index, const auto& block) {
     // Serialize the block's metadata
     streamable::HashedWaveletOctreeBlockHeader block_header;
     block_header.root_node_offset = {block_index.x(), block_index.y(),
@@ -208,7 +209,7 @@ void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
       }
       streamable_node.write(ostream);
     }
-  }
+  });
 }
 
 bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
@@ -294,11 +295,13 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
   hashed_wavelet_octree_header.min_log_odds = map.getMinLogOdds();
   hashed_wavelet_octree_header.max_log_odds = map.getMaxLogOdds();
   hashed_wavelet_octree_header.tree_height = map.getTreeHeight();
-  hashed_wavelet_octree_header.num_blocks = map.getBlocks().size();
+  hashed_wavelet_octree_header.num_blocks = map.getHashMap().size();
   hashed_wavelet_octree_header.write(ostream);
 
   // Iterate over all the map's blocks
-  for (const auto& [block_index, block] : map.getBlocks()) {
+  map.forEachBlock([&ostream, tree_height, chunk_height, min_log_odds,
+                    max_log_odds](const Index3D& block_index,
+                                  const auto& block) {
     // Serialize the block's metadata
     streamable::HashedWaveletOctreeBlockHeader block_header;
     block_header.root_node_offset = {block_index.x(), block_index.y(),
@@ -377,6 +380,6 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
       }
       streamable_node.write(ostream);
     }
-  }
+  });
 }
 }  // namespace wavemap::io

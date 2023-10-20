@@ -4,10 +4,10 @@
 #include <memory>
 #include <utility>
 
-#include "wavemap/data_structure/volumetric/volumetric_octree.h"
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/integrator/projective/update_type.h"
+#include "wavemap/map/volumetric_octree.h"
 
 namespace wavemap {
 class CoarseToFineIntegrator : public ProjectiveIntegrator {

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "wavemap/data_structure/volumetric/hashed_blocks.h"
 #include "wavemap/indexing/index_conversions.h"
+#include "wavemap/map/hashed_blocks.h"
 #include "wavemap/utils/iterate/grid_iterator.h"
 #include "wavemap/utils/query/map_interpolator.h"
 

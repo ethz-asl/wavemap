@@ -14,7 +14,7 @@ namespace wavemap {
 template <typename NdtreeIndexT>
 class NdtreeIndexTest : public FixtureBase, public GeometryGenerator {
  protected:
-  static constexpr NdtreeIndexElement kMaxHeight = 14;
+  static constexpr IndexElement kMaxHeight = 14;
   const typename NdtreeIndexT::Position kMinNdtreePositionIndex =
       NdtreeIndexT::Position::Zero();
   const typename NdtreeIndexT::Position kMaxNdtreePositionIndex =

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "wavemap/data_structure/image.h"
+#include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/integrator/projection_model/projector_base.h"
 #include "wavemap/integrator/projective/update_type.h"
 
@@ -34,7 +35,7 @@ class HierarchicalRangeBounds {
     DCHECK_EQ(upper_bound_levels_.size(), max_height_);
   }
 
-  NdtreeIndexElement getMaxHeight() const { return max_height_; }
+  IndexElement getMaxHeight() const { return max_height_; }
   FloatingPoint getMinRange() const { return min_range_; }
   static FloatingPoint getUnknownValueLowerBound() {
     return kUnknownValueLowerBound;
@@ -109,8 +110,8 @@ class HierarchicalRangeBounds {
           range_image_->transform([=](auto val) { return isUnobserved(val); }),
           [](auto a, auto b) { return a || b; }, true);
 
-  const NdtreeIndexElement max_height_ =
-      static_cast<NdtreeIndexElement>(lower_bound_levels_.size());
+  const IndexElement max_height_ =
+      static_cast<IndexElement>(lower_bound_levels_.size());
 
   template <typename T = FloatingPoint, typename BinaryFunctor>
   std::vector<Image<T>> computeReducedPyramid(const Image<T>& range_image,

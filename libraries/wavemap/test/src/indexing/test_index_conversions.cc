@@ -16,7 +16,7 @@ namespace wavemap {
 template <typename TypeParamT>
 class IndexConversionsTest : public FixtureBase, public GeometryGenerator {
  protected:
-  static constexpr NdtreeIndexElement kMaxHeight = 14;
+  static constexpr IndexElement kMaxHeight = 14;
   const typename NdtreeIndex<TypeParamT::kDim>::Position
       kMinNdtreePositionIndex = NdtreeIndex<TypeParamT::kDim>::Position::Zero();
   const typename NdtreeIndex<TypeParamT::kDim>::Position
@@ -60,10 +60,10 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, 1, TestFixture::kMaxHeight);
   random_indices.emplace_back(NdtreeIndex<kDim>{0, {0, 0}});
-  for (NdtreeIndexElement index_height = 0;
-       index_height < TestFixture::kMaxHeight; ++index_height) {
-    for (NdtreeIndexElement index_x = -1; index_x <= 1; ++index_x) {
-      for (NdtreeIndexElement index_y = -1; index_y <= 1; ++index_y) {
+  for (IndexElement index_height = 0; index_height < TestFixture::kMaxHeight;
+       ++index_height) {
+    for (IndexElement index_x = -1; index_x <= 1; ++index_x) {
+      for (IndexElement index_y = -1; index_y <= 1; ++index_y) {
         random_indices.emplace_back(
             NdtreeIndex<kDim>{index_height, {index_x, index_y}});
       }
@@ -160,7 +160,7 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
 
         const Point<kDim> aabb_center = 0.5f * (node_aabb.min + node_aabb.max);
         const FloatingPoint aabb_width = node_aabb.template width<0>();
-        const NdtreeIndexElement aabb_height =
+        const IndexElement aabb_height =
             convert::cellWidthToHeight(aabb_width, 1.f / random_min_cell_width);
         const NdtreeIndex<kDim> roundtrip_node_index =
             convert::pointToNodeIndex(aabb_center, random_min_cell_width,

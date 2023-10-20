@@ -2,10 +2,10 @@
 #define WAVEMAP_UTILS_QUERY_QUERY_ACCELERATOR_H_
 
 #include <limits>
-#include <unordered_map>
 
-#include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
+#include "wavemap/data_structure/spatial_hash.h"
 #include "wavemap/indexing/index_hashes.h"
+#include "wavemap/map/hashed_wavelet_octree.h"
 
 namespace wavemap {
 class QueryAccelerator {
@@ -13,7 +13,7 @@ class QueryAccelerator {
   static constexpr int kDim = 3;
 
   explicit QueryAccelerator(const HashedWaveletOctree& map)
-      : block_map_(map.getBlocks()), tree_height_(map.getTreeHeight()) {}
+      : block_map_(map.getHashMap()), tree_height_(map.getTreeHeight()) {}
 
   FloatingPoint getCellValue(const Index3D& index) {
     return getCellValue(OctreeIndex{0, index});
@@ -36,11 +36,11 @@ class QueryAccelerator {
       DCHECK_LE(height_, tree_height_);
     } else {
       // Test if the queried block exists
-      if (block_map_.count(block_index_)) {
+      const auto* current_block = block_map_.getBlock(block_index_);
+      if (current_block) {
         // If yes, load it
-        const auto& current_block = block_map_.at(block_index_);
-        node_stack_[tree_height_] = &current_block.getRootNode();
-        value_stack_[tree_height_] = current_block.getRootScale();
+        node_stack_[tree_height_] = &current_block->getRootNode();
+        value_stack_[tree_height_] = current_block->getRootScale();
         height_ = tree_height_;
       } else {
         // Otherwise return ignore this query and return 'unknown'
@@ -90,11 +90,9 @@ class QueryAccelerator {
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using BlockIndex = Index3D;
-  using BlockMap =
-      std::unordered_map<BlockIndex, HashedWaveletOctreeBlock, IndexHash<kDim>>;
   using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
 
-  const BlockMap& block_map_;
+  const HashedWaveletOctree::BlockHashMap& block_map_;
   const IndexElement tree_height_;
 
   std::array<const NodeType*, morton::kMaxTreeHeight<3>> node_stack_{};

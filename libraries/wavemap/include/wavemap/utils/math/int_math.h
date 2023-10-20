@@ -17,7 +17,11 @@ template <typename T>
 constexpr T log2_floor(T value) {
   static_assert(std::is_integral_v<T>);
   DCHECK(value != static_cast<T>(0));
-  return std::numeric_limits<T>::digits - bit_ops::clz(value);
+  if (std::is_signed_v<T>) {
+    return std::numeric_limits<T>::digits - bit_ops::clz(value);
+  } else {
+    return std::numeric_limits<T>::digits - bit_ops::clz(value) - 1;
+  }
 }
 
 template <typename T>
@@ -29,6 +33,11 @@ constexpr T log2_ceil(T value) {
   } else {
     return log2_floored + static_cast<T>(1);
   }
+}
+
+template <typename T>
+constexpr bool is_power_of_two(T x) {
+  return x && ((x & (x - 1)) == 0);
 }
 
 template <typename T>

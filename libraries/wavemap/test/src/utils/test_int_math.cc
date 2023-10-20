@@ -8,7 +8,11 @@ namespace wavemap {
 TEST(IntMathTest, Exp2) {
   constexpr int kMaxExponent = 31;
   for (int exponent = 0; exponent < kMaxExponent; ++exponent) {
-    EXPECT_EQ(int_math::exp2(exponent), std::exp2(exponent))
+    EXPECT_EQ(int_math::exp2(static_cast<int>(exponent)),
+              std::exp2(static_cast<int>(exponent)))
+        << "For exponent " << exponent;
+    EXPECT_EQ(int_math::exp2(static_cast<unsigned>(exponent)),
+              std::exp2(static_cast<unsigned>(exponent)))
         << "For exponent " << exponent;
   }
 }
@@ -25,9 +29,17 @@ TEST(IntMathTest, Log2) {
   for (int base_value = 2; 0 < base_value; base_value <<= 1) {
     for (int offset : {-1, 0, 1}) {
       const int value = base_value + offset;
-      EXPECT_EQ(int_math::log2_floor(value), std::floor(std::log2(value)))
+      EXPECT_EQ(int_math::log2_floor(static_cast<int>(value)),
+                std::floor(std::log2(static_cast<int>(value))))
           << "For value " << value;
-      EXPECT_EQ(int_math::log2_ceil(value), std::ceil(std::log2(value)))
+      EXPECT_EQ(int_math::log2_ceil(static_cast<int>(value)),
+                std::ceil(std::log2(static_cast<int>(value))))
+          << "For value " << value;
+      EXPECT_EQ(int_math::log2_floor(static_cast<unsigned>(value)),
+                std::floor(std::log2(static_cast<unsigned>(value))))
+          << "For value " << value;
+      EXPECT_EQ(int_math::log2_ceil(static_cast<unsigned>(value)),
+                std::ceil(std::log2(static_cast<unsigned>(value))))
           << "For value " << value;
     }
   }

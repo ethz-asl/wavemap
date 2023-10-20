@@ -9,10 +9,10 @@
 #include <utility>
 
 #include <ros/time.h>
-#include <wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree.h>
-#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
-#include <wavemap/data_structure/volumetric/volumetric_octree.h>
-#include <wavemap/data_structure/volumetric/wavelet_octree.h>
+#include <wavemap/map/hashed_chunked_wavelet_octree.h>
+#include <wavemap/map/hashed_wavelet_octree.h>
+#include <wavemap/map/volumetric_octree.h>
+#include <wavemap/map/wavelet_octree.h>
 #include <wavemap/utils/thread_pool.h>
 #include <wavemap_msgs/Map.h>
 

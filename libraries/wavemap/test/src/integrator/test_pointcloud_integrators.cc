@@ -3,11 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/hashed_blocks.h"
-#include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
-#include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
-#include "wavemap/data_structure/volumetric/volumetric_octree.h"
-#include "wavemap/data_structure/volumetric/wavelet_octree.h"
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/indexing/index_hashes.h"
 #include "wavemap/integrator/integrator_base.h"
@@ -18,6 +13,11 @@
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
+#include "wavemap/map/hashed_blocks.h"
+#include "wavemap/map/hashed_wavelet_octree.h"
+#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/volumetric_octree.h"
+#include "wavemap/map/wavelet_octree.h"
 #include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"

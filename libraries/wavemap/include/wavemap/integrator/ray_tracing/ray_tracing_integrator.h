@@ -3,9 +3,9 @@
 
 #include <utility>
 
-#include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/measurement_model/constant_ray.h"
+#include "wavemap/map/volumetric_data_structure_base.h"
 #include "wavemap/utils/iterate/ray_iterator.h"
 
 namespace wavemap {

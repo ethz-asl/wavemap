@@ -146,11 +146,15 @@ ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
     // See if the current param name matches one of the config's members
     const auto& member_it = std::find_if(
         member_map.begin(), member_map.end(),
-        [&](const auto& member) { return member.name == param_name; });
+        [&param_name = std::as_const(param_name)](const auto& member) {
+          return member.name == param_name;
+        });
 
     // If so, load it
     if (member_it != member_map.end()) {
-      auto param_loader = [&](auto&& ptr) {
+      auto param_loader = [&param_name = std::as_const(param_name),
+                           &param_value = std::as_const(param_value),
+                           &config](auto&& ptr) {
         detail::loadParam(param_name, param_value, config, ptr);
       };
       std::visit(param_loader, member_it->ptr);

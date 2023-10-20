@@ -3,7 +3,7 @@
 
 #include <filesystem>
 
-#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
+#include <wavemap/map/volumetric_data_structure_base.h>
 
 #include "wavemap_io/stream_conversions.h"
 

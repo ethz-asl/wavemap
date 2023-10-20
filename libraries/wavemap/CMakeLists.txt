@@ -39,15 +39,6 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 # cmake-lint: disable=C0301
 add_library(${PROJECT_NAME}
     src/config/value_with_unit.cc
-    src/data_structure/volumetric/hashed_blocks.cc
-    src/data_structure/volumetric/hashed_chunked_wavelet_octree.cc
-    src/data_structure/volumetric/hashed_chunked_wavelet_octree_block.cc
-    src/data_structure/volumetric/hashed_wavelet_octree.cc
-    src/data_structure/volumetric/hashed_wavelet_octree_block.cc
-    src/data_structure/volumetric/volumetric_octree.cc
-    src/data_structure/volumetric/wavelet_octree.cc
-    src/data_structure/volumetric/volumetric_data_structure_base.cc
-    src/data_structure/volumetric/volumetric_data_structure_factory.cc
     src/integrator/measurement_model/continuous_beam.cc
     src/integrator/measurement_model/constant_ray.cc
     src/integrator/measurement_model/continuous_ray.cc
@@ -66,7 +57,17 @@ add_library(${PROJECT_NAME}
     src/integrator/ray_tracing/ray_tracing_integrator.cc
     src/integrator/integrator_base.cc
     src/integrator/integrator_factory.cc
-    src/utils/sdf/sdf_generator.cc
+    src/map/hashed_blocks.cc
+    src/map/hashed_chunked_wavelet_octree.cc
+    src/map/hashed_chunked_wavelet_octree_block.cc
+    src/map/hashed_wavelet_octree.cc
+    src/map/hashed_wavelet_octree_block.cc
+    src/map/volumetric_octree.cc
+    src/map/wavelet_octree.cc
+    src/map/volumetric_data_structure_base.cc
+    src/map/volumetric_data_structure_factory.cc
+    src/utils/sdf/cell_neighborhoods.cc
+    src/utils/sdf/quasi_euclidean_sdf_generator.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

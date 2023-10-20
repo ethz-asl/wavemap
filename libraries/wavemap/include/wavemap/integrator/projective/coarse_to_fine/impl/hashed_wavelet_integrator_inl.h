@@ -22,9 +22,9 @@ inline void HashedWaveletIntegrator::recursiveTester(  // NOLINT
       update_job_list.emplace_back(node_index);
       return;
     }
-    if (occupancy_map_->hasBlock(node_index.position)) {
-      const auto& block = occupancy_map_->getBlock(node_index.position);
-      if (min_log_odds_ + kNoiseThreshold / 10.f <= block.getRootScale()) {
+    if (const auto* block = occupancy_map_->getBlock(node_index.position);
+        block) {
+      if (min_log_odds_ + kNoiseThreshold / 10.f <= block->getRootScale()) {
         // Add the block to the job list
         update_job_list.emplace_back(node_index);
       }

@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 
-#include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
-#include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
+#include "wavemap/map/cell_types/haar_coefficients.h"
+#include "wavemap/map/cell_types/haar_transform.h"
 #include "wavemap/utils/random_number_generator.h"
 
 namespace wavemap {

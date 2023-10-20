@@ -1,12 +1,14 @@
 #ifndef WAVEMAP_RVIZ_PLUGIN_VISUALS_CELL_SELECTOR_H_
 #define WAVEMAP_RVIZ_PLUGIN_VISUALS_CELL_SELECTOR_H_
 
+#ifndef Q_MOC_RUN
 #include <ros/console.h>
 #include <rviz/properties/enum_property.h>
 #include <rviz/properties/float_property.h>
 #include <wavemap/config/type_selector.h>
-#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
+#include <wavemap/map/hashed_wavelet_octree.h>
 #include <wavemap/utils/query/query_accelerator.h>
+#endif
 
 namespace wavemap::rviz_plugin {
 struct CellSelectionMode : public TypeSelector<CellSelectionMode> {

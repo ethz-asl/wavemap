@@ -39,9 +39,8 @@ TEST_F(HierarchicalRangeImage2DTest, PyramidConstruction) {
         hierarchical_range_image.getImageToPyramidScaleFactor());
 
     // Test all the bounds from top to bottom
-    const NdtreeIndexElement max_height =
-        hierarchical_range_image.getMaxHeight();
-    for (NdtreeIndexElement height = 0; height <= max_height; ++height) {
+    const IndexElement max_height = hierarchical_range_image.getMaxHeight();
+    for (IndexElement height = 0; height <= max_height; ++height) {
       const Index2D current_level_dims =
           int_math::div_exp2_ceil(range_image_dims_scaled, height);
       for (const Index2D& position :

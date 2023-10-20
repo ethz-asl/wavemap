@@ -18,8 +18,8 @@
 #include <rviz/properties/property.h>
 #include <rviz/view_manager.h>
 #include <wavemap/config/type_selector.h>
-#include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
 #include <wavemap/indexing/index_hashes.h>
+#include <wavemap/map/volumetric_data_structure_base.h>
 #include <wavemap/utils/time/time.h>
 
 #include "wavemap_rviz_plugin/common.h"
@@ -115,10 +115,10 @@ class VoxelVisual : public QObject {
   Ogre::Vector3 camera_position_at_last_lod_update_{};
   bool force_lod_update_ = true;
   void updateLOD(const Point3D& camera_position);
-  static NdtreeIndexElement computeRecommendedBlockLodHeight(
+  static IndexElement computeRecommendedBlockLodHeight(
       FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
-      NdtreeIndexElement min_height, NdtreeIndexElement max_height);
-  std::optional<NdtreeIndexElement> getCurrentBlockLodHeight(
+      IndexElement min_height, IndexElement max_height);
+  std::optional<IndexElement> getCurrentBlockLodHeight(
       IndexElement map_tree_height, const Index3D& block_idx);
 
   // Drawing related methods

@@ -88,13 +88,21 @@ R bit_cast(T bitstring) {
 }
 
 template <typename T>
-std::make_unsigned_t<T> bit_cast_unsigned(T bitstring) {
-  return bit_cast<std::make_unsigned_t<T>>(bitstring);
+constexpr std::make_unsigned_t<T> bit_cast_unsigned(T bitstring) {
+  if constexpr (std::is_unsigned_v<T>) {
+    return bitstring;
+  } else {
+    return bit_cast<std::make_unsigned_t<T>>(bitstring);
+  }
 }
 
 template <typename T>
-std::make_signed_t<T> bit_cast_signed(T bitstring) {
-  return bit_cast<std::make_signed_t<T>>(bitstring);
+constexpr std::make_signed_t<T> bit_cast_signed(T bitstring) {
+  if constexpr (std::is_signed_v<T>) {
+    return bitstring;
+  } else {
+    return bit_cast<std::make_signed_t<T>>(bitstring);
+  }
 }
 
 template <typename T, T width = 8 * sizeof(T)>

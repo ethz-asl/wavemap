@@ -1,14 +1,15 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/hashed_blocks.h"
-#include "wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree.h"
-#include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
-#include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
-#include "wavemap/data_structure/volumetric/volumetric_octree.h"
-#include "wavemap/data_structure/volumetric/wavelet_octree.h"
 #include "wavemap/indexing/index_conversions.h"
+#include "wavemap/map/hashed_blocks.h"
+#include "wavemap/map/hashed_chunked_wavelet_octree.h"
+#include "wavemap/map/hashed_wavelet_octree.h"
+#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/volumetric_octree.h"
+#include "wavemap/map/wavelet_octree.h"
 #include "wavemap/test/config_generator.h"
+#include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
 
@@ -102,10 +103,8 @@ TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
     {
       const Index3D map_min_index = map_base_ptr->getMinIndex();
       const Index3D map_max_index = map_base_ptr->getMaxIndex();
-      for (OctreeIndex::Element dim = 0; dim < OctreeIndex::kDim; ++dim) {
-        EXPECT_EQ(map_min_index[dim], 0) << " along dimension " << dim;
-        EXPECT_EQ(map_max_index[dim], 0) << " along dimension " << dim;
-      }
+      EXPECT_EIGEN_EQ(map_min_index, Index3D::Zero());
+      EXPECT_EIGEN_EQ(map_max_index, Index3D::Zero());
     }
     const std::vector<Index3D> random_indices =
         GeometryGenerator::getRandomIndexVector<3>();
@@ -121,12 +120,8 @@ TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
     {
       const Index3D map_min_index = map_base_ptr->getMinIndex();
       const Index3D map_max_index = map_base_ptr->getMaxIndex();
-      for (OctreeIndex::Element dim = 0; dim < OctreeIndex::kDim; ++dim) {
-        EXPECT_LE(map_min_index[dim], reference_min_index[dim])
-            << " along dimension " << dim;
-        EXPECT_GE(map_max_index[dim], reference_max_index[dim])
-            << " along dimension " << dim;
-      }
+      EXPECT_EIGEN_LE(map_min_index, reference_min_index);
+      EXPECT_EIGEN_GE(map_max_index, reference_max_index);
     }
   }
 }

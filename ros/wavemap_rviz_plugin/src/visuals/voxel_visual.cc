@@ -3,8 +3,8 @@
 #include <rviz/properties/parse_color.h>
 #include <rviz/render_panel.h>
 #include <tracy/Tracy.hpp>
-#include <wavemap/data_structure/volumetric/hashed_wavelet_octree.h>
 #include <wavemap/indexing/index_conversions.h>
+#include <wavemap/map/hashed_wavelet_octree.h>
 
 namespace wavemap::rviz_plugin {
 VoxelVisual::VoxelVisual(Ogre::SceneManager* scene_manager,
@@ -129,7 +129,7 @@ void VoxelVisual::updateMap(bool redraw_all) {
         for (auto it = block_voxel_layers_map_.begin();
              it != block_voxel_layers_map_.end();) {
           const auto block_idx = it->first;
-          if (!hashed_map->getBlocks().count(block_idx)) {
+          if (!hashed_map->hasBlock(block_idx)) {
             it = block_voxel_layers_map_.erase(it);
           } else {
             ++it;
@@ -139,7 +139,7 @@ void VoxelVisual::updateMap(bool redraw_all) {
         for (auto it = block_update_queue_.begin();
              it != block_update_queue_.end();) {
           const auto block_idx = it->first;
-          if (!hashed_map->getBlocks().count(block_idx)) {
+          if (!hashed_map->hasBlock(block_idx)) {
             it = block_update_queue_.erase(it);
           } else {
             ++it;
@@ -149,20 +149,24 @@ void VoxelVisual::updateMap(bool redraw_all) {
 
       // Add all blocks that changed since the last publication time
       // to the drawing queue
-      const auto min_termination_height = termination_height_property_.getInt();
-      for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-        // NOTE: Since the queue is stored as a set, there are no duplicates.
-        if (redraw_all || last_update_time_ < block.getLastUpdatedStamp()) {
-          block_update_queue_[block_idx] = min_termination_height;
-          // Force the LODs to be updated, s.t. the new blocks directly get
-          // drawn at the right max resolution
-          force_lod_update_ = true;
-        }
-      }
+      hashed_map->forEachBlock(
+          [&update_queue = block_update_queue_,
+           &force_lod_update = force_lod_update_,
+           last_update_time = last_update_time_, redraw_all,
+           min_termination_height = termination_height_property_.getInt()](
+              const Index3D& block_index, const auto& block) {
+            if (redraw_all || last_update_time < block.getLastUpdatedStamp()) {
+              update_queue[block_index] = min_termination_height;
+              // Force the LODs to be updated, s.t. the new blocks directly get
+              // drawn at the right max resolution
+              force_lod_update = true;
+            }
+          });
     } else {  // Otherwise, draw the whole octree at once (legacy support)
       const IndexElement num_levels = tree_height + 1;
       VoxelsPerLevel voxels_per_level(num_levels);
-      map->forEachLeaf([&](const auto& cell_index, auto cell_log_odds) {
+      map->forEachLeaf([&voxels_per_level, this, tree_height, min_cell_width](
+                           const auto& cell_index, auto cell_log_odds) {
         appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
                                  cell_log_odds, voxels_per_level);
       });
@@ -199,40 +203,47 @@ void VoxelVisual::updateLOD(const Point3D& camera_position) {
           dynamic_cast<const HashedWaveletOctree*>(map.get());
       hashed_map) {
     const auto min_termination_height = termination_height_property_.getInt();
-    for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-      // Compute the recommended LOD level height
-      const OctreeIndex block_node_idx{tree_height, block_idx};
-      const AABB block_aabb =
-          convert::nodeIndexToAABB(block_node_idx, map->getMinCellWidth());
-      const FloatingPoint distance_to_cam =
-          block_aabb.minDistanceTo(camera_position);
-      const auto term_height_recommended = computeRecommendedBlockLodHeight(
-          distance_to_cam, hashed_map->getMinCellWidth(),
-          min_termination_height, tree_height - 1);
+    const auto min_cell_width = hashed_map->getMinCellWidth();
+    hashed_map->forEachBlock(
+        [&block_update_queue = block_update_queue_,
+         &camera_position = std::as_const(camera_position), this, tree_height,
+         min_termination_height,
+         min_cell_width](const Index3D& block_index, const auto& /*block*/) {
+          // Compute the recommended LOD level height
+          const OctreeIndex block_node_idx{tree_height, block_index};
+          const AABB block_aabb =
+              convert::nodeIndexToAABB(block_node_idx, min_cell_width);
+          const FloatingPoint distance_to_cam =
+              block_aabb.minDistanceTo(camera_position);
+          const auto term_height_recommended = computeRecommendedBlockLodHeight(
+              distance_to_cam, min_cell_width, min_termination_height,
+              tree_height - 1);
 
-      // If the block is already queued to be updated, set the recommended level
-      if (block_update_queue_.count(block_idx)) {
-        block_update_queue_[block_idx] = term_height_recommended;
-      } else {
-        // Otherwise, only add the block to the update queue if the recommended
-        // level is higher than what's currently drawn or significantly lower
-        const auto term_height_current =
-            getCurrentBlockLodHeight(tree_height, block_idx);
-        if (term_height_current) {
-          if (term_height_current.value() < min_termination_height ||
-              term_height_current.value() < term_height_recommended - 1 ||
-              term_height_recommended < term_height_current.value()) {
-            block_update_queue_[block_idx] = term_height_recommended;
+          // If the block is already queued to be updated, set the recommended
+          // level
+          if (block_update_queue.count(block_index)) {
+            block_update_queue[block_index] = term_height_recommended;
+          } else {
+            // Otherwise, only add the block to the update queue if the
+            // recommended level is higher than what's currently drawn or
+            // significantly lower
+            const auto term_height_current =
+                getCurrentBlockLodHeight(tree_height, block_index);
+            if (term_height_current) {
+              if (term_height_current.value() < min_termination_height ||
+                  term_height_current.value() < term_height_recommended - 1 ||
+                  term_height_recommended < term_height_current.value()) {
+                block_update_queue_[block_index] = term_height_recommended;
+              }
+            }
           }
-        }
-      }
-    }
+        });
   }
 }
 
-NdtreeIndexElement VoxelVisual::computeRecommendedBlockLodHeight(
+IndexElement VoxelVisual::computeRecommendedBlockLodHeight(
     FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
-    NdtreeIndexElement min_height, NdtreeIndexElement max_height) {
+    IndexElement min_height, IndexElement max_height) {
   ZoneScoped;
   // Compute the recommended level based on the size of the cells projected into
   // the image plane
@@ -242,7 +253,7 @@ NdtreeIndexElement VoxelVisual::computeRecommendedBlockLodHeight(
                     min_height, max_height);
 }
 
-std::optional<NdtreeIndexElement> VoxelVisual::getCurrentBlockLodHeight(
+std::optional<IndexElement> VoxelVisual::getCurrentBlockLodHeight(
     IndexElement map_tree_height, const Index3D& block_idx) {
   ZoneScoped;
   if (block_voxel_layers_map_.count(block_idx)) {
@@ -449,25 +460,27 @@ void VoxelVisual::processBlockUpdateQueue(const Point3D& camera_position) {
         std::chrono::milliseconds(max_ms_per_frame_property_.getInt());
     const auto max_end_time = start_time + max_time_per_frame;
     for (const auto& [block_idx, _1, _2] : changed_blocks_sorted) {
-      const auto& block = hashed_map->getBlock(block_idx);
-      const IndexElement term_height = block_update_queue_[block_idx];
-      const int num_levels = tree_height + 1 - term_height;
-      VoxelsPerLevel voxels_per_level(num_levels);
-      block.forEachLeaf(
-          block_idx,
-          [&](const auto& cell_index, auto cell_log_odds) {
-            appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
-                                     cell_log_odds, voxels_per_level);
-          },
-          term_height);
-      drawMultiResolutionVoxels(tree_height, min_cell_width, block_idx, alpha,
-                                voxels_per_level,
-                                block_voxel_layers_map_[block_idx]);
-      block_update_queue_.erase(block_idx);
+      if (const auto* block = hashed_map->getBlock(block_idx); block) {
+        const IndexElement term_height = block_update_queue_[block_idx];
+        const int num_levels = tree_height + 1 - term_height;
+        VoxelsPerLevel voxels_per_level(num_levels);
+        block->forEachLeaf(
+            block_idx,
+            [&voxels_per_level, this, tree_height, min_cell_width](
+                const auto& cell_index, auto cell_log_odds) {
+              appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
+                                       cell_log_odds, voxels_per_level);
+            },
+            term_height);
+        drawMultiResolutionVoxels(tree_height, min_cell_width, block_idx, alpha,
+                                  voxels_per_level,
+                                  block_voxel_layers_map_[block_idx]);
+        block_update_queue_.erase(block_idx);
 
-      const auto current_time = Time::now();
-      if (max_end_time < current_time) {
-        break;
+        const auto current_time = Time::now();
+        if (max_end_time < current_time) {
+          break;
+        }
       }
     }
   }

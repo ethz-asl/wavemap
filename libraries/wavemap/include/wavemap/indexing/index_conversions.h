@@ -9,6 +9,7 @@
 #include "wavemap/data_structure/aabb.h"
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/utils/bits/morton_encoding.h"
+#include "wavemap/utils/data/eigen_checks.h"
 #include "wavemap/utils/math/int_math.h"
 
 namespace wavemap::convert {
@@ -76,18 +77,19 @@ inline Index<dim> indexToNewResolution(const Index<dim>& src_index,
 }
 
 inline FloatingPoint heightToCellWidth(FloatingPoint min_cell_width,
-                                       NdtreeIndexElement height) {
+                                       IndexElement height) {
   return min_cell_width * static_cast<FloatingPoint>(int_math::exp2(height));
 }
 
-inline NdtreeIndexElement cellWidthToHeight(FloatingPoint cell_width,
-                                            FloatingPoint min_cell_width_inv) {
+inline IndexElement cellWidthToHeight(FloatingPoint cell_width,
+                                      FloatingPoint min_cell_width_inv) {
   return std::ceil(std::log2(cell_width * min_cell_width_inv));
 }
 
 template <int cells_per_side, int dim>
 inline LinearIndex indexToLinearIndex(const Index<dim>& index) {
-  DCHECK((0 <= index.array() && index.array() < cells_per_side).all());
+  DCHECK_EIGEN_GE(index, Index<dim>::Zero());
+  DCHECK_EIGEN_LT(index, Index<dim>::Constant(cells_per_side));
   constexpr auto pow_sequence =
       int_math::pow_sequence<IndexElement, cells_per_side, dim>();
   return std::transform_reduce(pow_sequence.cbegin(), pow_sequence.cend(),
@@ -96,6 +98,7 @@ inline LinearIndex indexToLinearIndex(const Index<dim>& index) {
 
 template <int cells_per_side, int dim>
 inline Index<dim> linearIndexToIndex(LinearIndex linear_index) {
+  DCHECK_GE(linear_index, 0);
   DCHECK_LT(linear_index, std::pow(cells_per_side, dim));
   constexpr auto pow_sequence =
       int_math::pow_sequence<IndexElement, cells_per_side, dim>();
@@ -109,7 +112,7 @@ inline Index<dim> linearIndexToIndex(LinearIndex linear_index) {
 template <int dim>
 inline NdtreeIndex<dim> pointToNodeIndex(const Point<dim>& point,
                                          FloatingPoint min_cell_width,
-                                         NdtreeIndexElement height) {
+                                         IndexElement height) {
   const FloatingPoint node_width = heightToCellWidth(min_cell_width, height);
   const Index<dim> position_index =
       pointToNearestIndex(point, 1.f / node_width);
@@ -154,7 +157,7 @@ inline AABB<Point<dim>> nodeIndexToAABB(const NdtreeIndex<dim>& node_index,
 
 template <int dim>
 inline NdtreeIndex<dim> indexAndHeightToNodeIndex(const Index<dim>& index,
-                                                  NdtreeIndexElement height) {
+                                                  IndexElement height) {
   DCHECK_GE(height, 0);
   NdtreeIndex<dim> node_index{height, index};
   node_index.position = int_math::div_exp2_floor(node_index.position, height);
@@ -174,8 +177,7 @@ template <int dim>
 inline Index<dim> nodeIndexToMaxCornerIndex(
     const NdtreeIndex<dim>& node_index) {
   DCHECK_GE(node_index.height, 0);
-  const NdtreeIndexElement max_child_offset =
-      int_math::exp2(node_index.height) - 1;
+  const IndexElement max_child_offset = int_math::exp2(node_index.height) - 1;
   Index<dim> index =
       nodeIndexToMinCornerIndex(node_index).array() + max_child_offset;
   return index;

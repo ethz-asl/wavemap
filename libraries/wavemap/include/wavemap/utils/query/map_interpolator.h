@@ -2,8 +2,8 @@
 #define WAVEMAP_UTILS_QUERY_MAP_INTERPOLATOR_H_
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/indexing/index_conversions.h"
+#include "wavemap/map/volumetric_data_structure_base.h"
 
 namespace wavemap::interpolate {
 FloatingPoint trilinear(const wavemap::VolumetricDataStructureBase& map,

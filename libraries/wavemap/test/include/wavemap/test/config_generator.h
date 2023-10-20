@@ -4,15 +4,15 @@
 #include <utility>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree.h"
-#include "wavemap/data_structure/volumetric/hashed_wavelet_octree.h"
-#include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
-#include "wavemap/data_structure/volumetric/volumetric_octree.h"
-#include "wavemap/data_structure/volumetric/wavelet_octree.h"
 #include "wavemap/integrator/measurement_model/continuous_beam.h"
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
+#include "wavemap/map/hashed_chunked_wavelet_octree.h"
+#include "wavemap/map/hashed_wavelet_octree.h"
+#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/volumetric_octree.h"
+#include "wavemap/map/wavelet_octree.h"
 #include "wavemap/utils/random_number_generator.h"
 
 namespace wavemap {

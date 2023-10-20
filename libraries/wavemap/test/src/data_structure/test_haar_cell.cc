@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/volumetric/cell_types/haar_transform.h"
+#include "wavemap/map/cell_types/haar_transform.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/utils/print/container.h"
 

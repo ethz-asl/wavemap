@@ -17,12 +17,13 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
   // Find the blocks that changed since the last publication time
   const Timestamp start_time = Time::now();
   std::unordered_set<Index3D, Index3DHash> changed_blocks;
-  for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
-    if (republish_whole_map ||
-        last_map_pub_time_ < block.getLastUpdatedStamp()) {
-      changed_blocks.emplace(block_idx);
+  hashed_map->forEachBlock([&changed_blocks, republish_whole_map,
+                            last_pub_time = last_map_pub_time_](
+                               const Index3D& block_index, const auto& block) {
+    if (republish_whole_map || last_pub_time < block.getLastUpdatedStamp()) {
+      changed_blocks.emplace(block_index);
     }
-  }
+  });
   last_map_pub_time_ = start_time;
 
   // Publish the changed blocks, 'max_num_blocks_per_msg' at a time
@@ -30,11 +31,13 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
     // Prepare the blocks to publish in the current iteration
     std::unordered_set<Index3D, Index3DHash> blocks_to_publish;
     int block_cnt = 0;
-    for (const auto& block_idx : changed_blocks) {
-      hashed_map->getBlock(block_idx).threshold();
-      blocks_to_publish.insert(block_idx);
-      if (config_.max_num_blocks_per_msg <= ++block_cnt) {
-        break;
+    for (const auto& block_index : changed_blocks) {
+      if (auto* block = hashed_map->getBlock(block_index); block) {
+        block->threshold();
+        blocks_to_publish.insert(block_index);
+        if (config_.max_num_blocks_per_msg <= ++block_cnt) {
+          break;
+        }
       }
     }
 

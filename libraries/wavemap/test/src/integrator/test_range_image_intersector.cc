@@ -92,7 +92,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
         integrator_config.min_range, integrator_config.max_range);
 
     const FloatingPoint min_cell_width_inv = 1.f / min_cell_width;
-    constexpr NdtreeIndexElement kMaxHeight = 6;
+    constexpr IndexElement kMaxHeight = 6;
     const Index3D min_index = convert::pointToCeilIndex<3>(
         posed_range_image->getOrigin() - Vector3D::Constant(kMaxRange),
         min_cell_width_inv);
@@ -101,8 +101,7 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
         min_cell_width_inv);
     for (const Index3D& index :
          getRandomIndexVector(min_index, max_index, 50, 100)) {
-      const NdtreeIndexElement height =
-          getRandomNdtreeIndexHeight(2, kMaxHeight);
+      const IndexElement height = getRandomNdtreeIndexHeight(2, kMaxHeight);
       const OctreeIndex query_index =
           convert::indexAndHeightToNodeIndex(index, height);
       const Index3D min_reference_index =
