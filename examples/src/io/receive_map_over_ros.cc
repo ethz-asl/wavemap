@@ -20,7 +20,5 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh_private("~");
 
   // Subscribe to the ROS topic
-  const std::string ros_topic = "map";
-  const int queue_size = 1;
-  ros::Subscriber map_sub = nh.subscribe(ros_topic, queue_size, &mapCallback);
+  ros::Subscriber map_sub = nh.subscribe("map", 1, &mapCallback);
 }

@@ -72,7 +72,7 @@ inline constexpr int dim_v<Rotation3D> = 3;
 using ImageCoordinates = Vector2D;
 struct SensorCoordinates {
   ImageCoordinates image;
-  FloatingPoint normal;
+  FloatingPoint depth;
 };
 
 constexpr auto kEpsilon = constants<FloatingPoint>::kEpsilon;

@@ -30,7 +30,7 @@ int main(int, char**) {
   constexpr FloatingPoint kOccupancyThresholdProb = 0.5;
   constexpr FloatingPoint kOccupancyThresholdLogOdds = 0.0;
 
-  // NOTE: To taylor the threshold, we recommend running wavemap on a dataset
+  // NOTE: To tailor the threshold, we recommend running wavemap on a dataset
   //       that is representative of your application and analyzing the Receiver
   //       Operating Characteristic curve.
 

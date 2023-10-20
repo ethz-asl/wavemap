@@ -17,7 +17,7 @@ inline Point3D SphericalProjector::sensorToCartesian(
     const SensorCoordinates& coordinates) const {
   const FloatingPoint elevation_angle = coordinates.image[0];
   const FloatingPoint azimuth_angle = coordinates.image[1];
-  const FloatingPoint range = coordinates.normal;
+  const FloatingPoint range = coordinates.depth;
   const FloatingPoint cos_elevation_angle = std::cos(elevation_angle);
   const Vector3D bearing{cos_elevation_angle * std::cos(azimuth_angle),
                          cos_elevation_angle * std::sin(azimuth_angle),

@@ -17,12 +17,11 @@ Changelog for package wavemap_rviz_plugin
   * Clean up and optimize visibility query handling
   * Clean up and optimize alpha handling
   * Add Tracy annotations for Rviz plugin
+  * Refactor wavemap utils
 
 * Bug fixes
   * Fix bug causing delays when drawing blocks with identical timestamps
   * Fix bug causing segfaults upon Rviz plugin instance destruction
-
-* Refactor wavemap utils
 
 * Contributors: Victor Reijgwart
 

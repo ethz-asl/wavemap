@@ -6,6 +6,7 @@ catkin_simple(ALL_DEPS_REQUIRED)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
+add_compile_options(-Wno-suggest-attribute=const)
 
 # For all targets
 include_directories(include)

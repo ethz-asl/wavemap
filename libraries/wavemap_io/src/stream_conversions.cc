@@ -116,7 +116,6 @@ bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map) {
   std::stack<WaveletOctree::NodeType*> stack;
   stack.emplace(&map->getRootNode());
   while (!stack.empty()) {
-    DCHECK(!stack.empty());
     WaveletOctree::NodeType* node = stack.top();
     stack.pop();
 

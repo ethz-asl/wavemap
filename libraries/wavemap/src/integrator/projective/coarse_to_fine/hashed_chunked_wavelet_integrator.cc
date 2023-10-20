@@ -71,11 +71,13 @@ void HashedChunkedWaveletIntegrator::updateBlock(
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
+  bool block_needs_thresholding = block.getNeedsThresholding();
   const OctreeIndex root_node_index{tree_height_, block_index};
   updateNodeRecursive(block.getRootChunk(), root_node_index, 0u,
                       block.getRootScale(),
                       block.getRootChunk().nodeHasAtLeastOneChild(0u),
-                      block.getNeedsThresholding());
+                      block_needs_thresholding);
+  block.setNeedsThresholding(block_needs_thresholding);
 }
 
 void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT

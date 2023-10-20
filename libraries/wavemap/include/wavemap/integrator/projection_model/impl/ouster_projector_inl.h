@@ -24,7 +24,7 @@ inline Point3D OusterProjector::sensorToCartesian(
     const SensorCoordinates& coordinates) const {
   const FloatingPoint elevation_angle = coordinates.image[0];
   const FloatingPoint azimuth_angle = coordinates.image[1];
-  const FloatingPoint range = coordinates.normal;
+  const FloatingPoint range = coordinates.depth;
   const Point2D B_point =
       range * Vector2D(std::cos(elevation_angle), std::sin(elevation_angle)) +
       Vector2D(config_.lidar_origin_to_beam_origin,

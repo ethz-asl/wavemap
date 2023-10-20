@@ -9,20 +9,22 @@ Changelog for package wavemap
   * Map query accelerator
   * Trilinear interpolator
 
-* Optimize measurement integration
+* Improvements
 
-  * Replace stack with recursion (faster and easier to read)
-  * Vectorize batched leaf updater
-  * Reduce memory move and copy overheads
-  * Simplify measurement model math
-  * Postpone image offset error norm root computation
-  * Share a single thread pool among all integrators
+  * Optimize measurement integration
 
-* Add initial usage examples
-* Refactor wavemap utils
-* Add tests for nearest index and offset methods
+    * Replace stack with recursion (faster and easier to read)
+    * Vectorize batched leaf updater
+    * Reduce memory move and copy overheads
+    * Simplify measurement model math
+    * Postpone image offset error norm root computation
+    * Share a single thread pool among all integrators
 
-* Contributors: Victor, Victor Reijgwart
+  * Refactor wavemap utils
+  * Add tests for nearest index and offset methods
+  * Add initial usage examples
+
+* Contributors: Victor Reijgwart
 
 1.5.3 (2023-09-28)
 ------------------

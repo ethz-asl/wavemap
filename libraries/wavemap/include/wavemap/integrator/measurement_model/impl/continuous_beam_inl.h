@@ -32,76 +32,85 @@ inline FloatingPoint ContinuousBeam::computeWorstCaseApproximationError(
 
 inline FloatingPoint ContinuousBeam::computeUpdate(
     const SensorCoordinates& sensor_coordinates) const {
-  const auto& range_image = *range_image_;
-  const auto& beam_offset_image = *beam_offset_image_;
-  const auto& projection_model = *projection_model_;
-  const FloatingPoint cell_to_sensor_distance = sensor_coordinates.normal;
-
   switch (config_.beam_selector_type.toTypeId()) {
-    case BeamSelectorType::kNearestNeighbor: {
-      // Get the measured distance and cell to beam offset
-      const auto [image_index, cell_offset] =
-          projection_model.imageToNearestIndexAndOffset(
-              sensor_coordinates.image);
-      if (!range_image.isIndexWithinBounds(image_index)) {
-        return 0.f;
-      }
-      const FloatingPoint measured_distance = range_image.at(image_index);
-      const Vector2D cell_to_beam_offset =
-          beam_offset_image.at(image_index) - cell_offset;
-
-      // Compute the image error norm
-      const FloatingPoint cell_to_beam_image_error_norm_squared =
-          projection_model.imageOffsetToErrorSquaredNorm(
-              sensor_coordinates.image, cell_to_beam_offset);
-
-      // Compute the update
-      return computeBeamUpdate(cell_to_sensor_distance,
-                               cell_to_beam_image_error_norm_squared,
-                               measured_distance);
-    }
-
-    case BeamSelectorType::kAllNeighbors: {
-      // Get the measured distances and cell to beam offsets
-      std::array<FloatingPoint, 4> measured_distances{};
-      auto [image_indices, cell_to_beam_offsets] =
-          projection_model.imageToNearestIndicesAndOffsets(
-              sensor_coordinates.image);
-      constexpr bool row_major = Image<>::Data::IsRowMajor;
-      const int stride = static_cast<int>(range_image.getData().outerStride());
-      for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
-        const auto& image_index = image_indices.col(neighbor_idx);
-        // Get the measured distance and cell to beam offset
-        if (range_image.isIndexWithinBounds(image_index)) {
-          const int linear_index =
-              row_major ? stride * image_index[0] + image_index[1]  // NOLINT
-                        : stride * image_index[1] + image_index[0];
-          measured_distances[neighbor_idx] =
-              range_image.getData().coeff(linear_index);
-          cell_to_beam_offsets.col(neighbor_idx) -=
-              beam_offset_image.getData().coeffRef(linear_index);
-        }
-      }
-
-      // Compute the image error norms
-      const auto cell_to_beam_image_error_norms_sq =
-          projection_model.imageOffsetsToErrorSquaredNorms(
-              sensor_coordinates.image, cell_to_beam_offsets);
-
-      // Compute the update
-      FloatingPoint update = 0.f;
-      for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
-        update +=
-            computeBeamUpdate(cell_to_sensor_distance,
-                              cell_to_beam_image_error_norms_sq[neighbor_idx],
-                              measured_distances[neighbor_idx]);
-      }
-      return update;
-    }
-
+    case BeamSelectorType::kNearestNeighbor:
+      return computeBeamUpdateNearestNeighbor(
+          *range_image_, *beam_offset_image_, *projection_model_,
+          sensor_coordinates);
+    case BeamSelectorType::kAllNeighbors:
+      return computeBeamUpdateAllNeighbors(*range_image_, *beam_offset_image_,
+                                           *projection_model_,
+                                           sensor_coordinates);
     default:
       return 0.f;
   }
+}
+
+inline FloatingPoint ContinuousBeam::computeBeamUpdateNearestNeighbor(
+    const Image<>& range_image, const Image<Vector2D>& beam_offset_image,
+    const ProjectorBase& projection_model,
+    const SensorCoordinates& sensor_coordinates) const {
+  // Get the measured distance and cell to beam offset
+  const auto [image_index, cell_offset] =
+      projection_model.imageToNearestIndexAndOffset(sensor_coordinates.image);
+  if (!range_image.isIndexWithinBounds(image_index)) {
+    return 0.f;
+  }
+  const FloatingPoint measured_distance = range_image.at(image_index);
+  const Vector2D cell_to_beam_offset =
+      beam_offset_image.at(image_index) - cell_offset;
+
+  // Compute the image error norm
+  const FloatingPoint cell_to_beam_image_error_norm_squared =
+      projection_model.imageOffsetToErrorSquaredNorm(sensor_coordinates.image,
+                                                     cell_to_beam_offset);
+
+  // Compute the update
+  const FloatingPoint cell_to_sensor_distance = sensor_coordinates.depth;
+  return computeBeamUpdate(cell_to_sensor_distance,
+                           cell_to_beam_image_error_norm_squared,
+                           measured_distance);
+}
+
+inline FloatingPoint ContinuousBeam::computeBeamUpdateAllNeighbors(
+    const Image<>& range_image, const Image<Vector2D>& beam_offset_image,
+    const ProjectorBase& projection_model,
+    const SensorCoordinates& sensor_coordinates) const {
+  // Get the measured distances and cell to beam offsets
+  std::array<FloatingPoint, 4> measured_distances{};
+  auto [image_indices, cell_to_beam_offsets] =
+      projection_model.imageToNearestIndicesAndOffsets(
+          sensor_coordinates.image);
+  constexpr bool row_major = Image<>::Data::IsRowMajor;
+  const int stride = static_cast<int>(range_image.getData().outerStride());
+  for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
+    const auto& image_index = image_indices.col(neighbor_idx);
+    // Get the measured distance and cell to beam offset
+    if (range_image.isIndexWithinBounds(image_index)) {
+      const int linear_index =
+          row_major ? stride * image_index[0] + image_index[1]  // NOLINT
+                    : stride * image_index[1] + image_index[0];
+      measured_distances[neighbor_idx] =
+          range_image.getData().coeff(linear_index);
+      cell_to_beam_offsets.col(neighbor_idx) -=
+          beam_offset_image.getData().coeffRef(linear_index);
+    }
+  }
+
+  // Compute the image error norms
+  const auto cell_to_beam_image_error_norms_sq =
+      projection_model.imageOffsetsToErrorSquaredNorms(sensor_coordinates.image,
+                                                       cell_to_beam_offsets);
+
+  // Compute the update
+  FloatingPoint update = 0.f;
+  const FloatingPoint cell_to_sensor_distance = sensor_coordinates.depth;
+  for (int neighbor_idx = 0; neighbor_idx < 4; ++neighbor_idx) {
+    update += computeBeamUpdate(cell_to_sensor_distance,
+                                cell_to_beam_image_error_norms_sq[neighbor_idx],
+                                measured_distances[neighbor_idx]);
+  }
+  return update;
 }
 
 inline FloatingPoint ContinuousBeam::computeBeamUpdate(

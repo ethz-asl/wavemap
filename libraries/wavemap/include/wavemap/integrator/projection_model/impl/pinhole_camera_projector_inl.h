@@ -16,7 +16,7 @@ inline Point3D PinholeCameraProjector::sensorToCartesian(
     const SensorCoordinates& coordinates) const {
   const FloatingPoint u_scaled = coordinates.image[0];
   const FloatingPoint v_scaled = coordinates.image[1];
-  const FloatingPoint w = coordinates.normal;
+  const FloatingPoint w = coordinates.depth;
   Point3D C_point = w * fxfy_inv_ *
                     Point3D{config_.fy * u_scaled - cxfy_,
                             config_.fx * v_scaled - cyfx_, fxfy_};
