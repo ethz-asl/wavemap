@@ -10,15 +10,9 @@
 
 namespace wavemap {
 namespace convert {
-template <unsigned cells_per_side, int dim>
-Index<dim> indexToBlockIndex(const Index<dim>& index);
-
-template <unsigned cells_per_side, int dim>
-Index<dim> indexToCellIndex(const Index<dim>& index);
-
-template <unsigned cells_per_side, int dim>
-Index<dim> cellAndBlockIndexToIndex(const Index<dim>& block_index,
-                                    const Index<dim>& cell_index);
+template <int dim>
+Index<dim> indexToBlockIndex(const Index<dim>& index,
+                             IndexElement cells_per_block_side_log_2);
 }  // namespace convert
 
 template <typename BlockDataT, int dim>

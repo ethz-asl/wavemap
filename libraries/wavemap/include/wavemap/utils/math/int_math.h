@@ -51,12 +51,27 @@ constexpr int div_exp2_ceil(int value, int exp) {
   return (value + exp2(exp) - 1) >> exp;
 }
 
+constexpr int div_exp2_floor_remainder(int value, int exp) {
+  const IndexElement mask = (1 << exp) - 1;
+  return value & mask;
+}
+
 template <int dim>
 Eigen::Matrix<int, dim, 1> div_exp2_floor(Eigen::Matrix<int, dim, 1> vector,
                                           int exp) {
   DCHECK_GE(exp, 0);
   for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
     vector[dim_idx] = div_exp2_floor(vector[dim_idx], exp);
+  }
+  return vector;
+}
+
+template <int dim>
+Eigen::Matrix<int, dim, 1> div_exp2_floor_remainder(
+    Eigen::Matrix<int, dim, 1> vector, int exp) {
+  DCHECK_GE(exp, 0);
+  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+    vector[dim_idx] = div_exp2_floor_remainder(vector[dim_idx], exp);
   }
   return vector;
 }

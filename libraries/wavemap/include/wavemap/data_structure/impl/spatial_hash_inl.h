@@ -6,33 +6,10 @@
 
 namespace wavemap {
 namespace convert {
-template <unsigned int cells_per_side, int dim>
-Index<dim> indexToBlockIndex(const Index<dim>& index) {
-  static_assert(int_math::is_power_of_two(cells_per_side),
-                "Cells per side must be an exact power of 2.");
-  static constexpr IndexElement kCellsPerSideLog2 =
-      int_math::log2_floor(cells_per_side);
-  return int_math::div_exp2_floor(index, kCellsPerSideLog2);
-}
-
-template <unsigned int cells_per_side, int dim>
-Index<dim> indexToCellIndex(const Index<dim>& index) {
-  static_assert(int_math::is_power_of_two(cells_per_side),
-                "Cells per side must be an exact power of 2.");
-  static constexpr IndexElement kCellsPerSideLog2 =
-      int_math::log2_floor(cells_per_side);
-  constexpr IndexElement mask = (1 << kCellsPerSideLog2) - 1;
-  Index<dim> cell_index{};
-  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
-    cell_index[dim_idx] = index[dim_idx] & mask;
-  }
-  return cell_index;
-}
-
-template <unsigned int cells_per_side, int dim>
-Index<dim> cellAndBlockIndexToIndex(const Index<dim>& block_index,
-                                    const Index<dim>& cell_index) {
-  return cells_per_side * block_index + cell_index;
+template <int dim>
+Index<dim> indexToBlockIndex(const Index<dim>& index,
+                             IndexElement cells_per_block_side_log_2) {
+  return int_math::div_exp2_floor(index, cells_per_block_side_log_2);
 }
 }  // namespace convert
 

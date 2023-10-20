@@ -16,7 +16,9 @@
 namespace wavemap {
 class HashedBlocks : public VolumetricDataStructureBase {
  private:
-  static constexpr IndexElement kCellsPerSide = int_math::exp2(4);
+  static constexpr IndexElement kCellsPerSideLog2 = 4;
+  static constexpr IndexElement kCellsPerSide =
+      int_math::exp2(kCellsPerSideLog2);
 
  public:
   using Ptr = std::shared_ptr<HashedBlocks>;
@@ -85,6 +87,11 @@ class HashedBlocks : public VolumetricDataStructureBase {
  private:
   const FloatingPoint default_value_;
   BlockHashMap block_map_;
+
+  static Index3D indexToBlockIndex(const Index3D& index);
+  static Index3D indexToCellIndex(const Index3D& index);
+  static Index3D cellAndBlockIndexToIndex(const Index3D& block_index,
+                                          const Index3D& cell_index);
 };
 }  // namespace wavemap
 

@@ -59,6 +59,20 @@ TEST(IntMathTest, DivExp2) {
   }
 }
 
+TEST(IntMathTest, DivExp2Remainder) {
+  constexpr int kMaxExp = 10;
+  constexpr int kMaxValue = 2000;
+  constexpr int kMinValue = -kMaxValue;
+  for (int exp = 0; exp < kMaxExp; ++exp) {
+    for (int value = kMinValue; value < kMaxValue; ++value) {
+      EXPECT_EQ(
+          int_math::div_exp2_floor_remainder(value, exp),
+          value - int_math::exp2(exp) * int_math::div_exp2_floor(value, exp))
+          << "For value " << value << " and exp " << exp;
+    }
+  }
+}
+
 TEST(IntMathTest, PowSequence) {
   // Test trivial (length 1) sequences
   constexpr std::array<IndexElement, 1> expected_pow_sequence_length_1 = {1};

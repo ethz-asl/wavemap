@@ -14,43 +14,42 @@ inline size_t HashedWaveletOctree::size() const {
 
 inline FloatingPoint HashedWaveletOctree::getCellValue(
     const Index3D& index) const {
-  const BlockIndex block_index = computeBlockIndexFromIndex(index);
+  const BlockIndex block_index =
+      convert::indexToBlockIndex(index, config_.tree_height);
   const Block* block = getBlock(block_index);
   if (!block) {
     return 0.f;
   }
-  const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, {0, index});
+  const CellIndex cell_index = indexToCellIndex({0, index});
   return block->getCellValue(cell_index);
 }
 
 inline FloatingPoint HashedWaveletOctree::getCellValue(
     const OctreeIndex& index) const {
-  const BlockIndex block_index = computeBlockIndexFromIndex(index);
+  const BlockIndex block_index = indexToBlockIndex(index);
   const Block* block = getBlock(block_index);
   if (!block) {
     return 0.f;
   }
-  const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, index);
+  const CellIndex cell_index = indexToCellIndex(index);
   return block->getCellValue(cell_index);
 }
 
 inline void HashedWaveletOctree::setCellValue(const Index3D& index,
                                               FloatingPoint new_value) {
-  const BlockIndex block_index = computeBlockIndexFromIndex(index);
+  const BlockIndex block_index =
+      convert::indexToBlockIndex(index, config_.tree_height);
   auto& block = getOrAllocateBlock(block_index);
-  const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, {0, index});
+  const CellIndex cell_index = indexToCellIndex({0, index});
   block.setCellValue(cell_index, new_value);
 }
 
 inline void HashedWaveletOctree::addToCellValue(const Index3D& index,
                                                 FloatingPoint update) {
-  const BlockIndex block_index = computeBlockIndexFromIndex(index);
+  const BlockIndex block_index =
+      convert::indexToBlockIndex(index, config_.tree_height);
   auto& block = getOrAllocateBlock(block_index);
-  const CellIndex cell_index =
-      computeCellIndexFromBlockIndexAndIndex(block_index, {0, index});
+  const CellIndex cell_index = indexToCellIndex({0, index});
   block.addToCellValue(cell_index, update);
 }
 
@@ -75,14 +74,18 @@ inline HashedWaveletOctree::Block& HashedWaveletOctree::getOrAllocateBlock(
                                        config_.max_log_odds);
 }
 
-inline HashedWaveletOctree::CellIndex
-HashedWaveletOctree::computeCellIndexFromBlockIndexAndIndex(
-    const HashedWaveletOctree::BlockIndex& block_index,
+inline HashedWaveletOctree::BlockIndex HashedWaveletOctree::indexToBlockIndex(
+    const OctreeIndex& node_index) const {
+  const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
+  return convert::indexToBlockIndex(index, config_.tree_height);
+}
+
+inline HashedWaveletOctree::CellIndex HashedWaveletOctree::indexToCellIndex(
     OctreeIndex index) const {
   DCHECK_LE(index.height, config_.tree_height);
   const IndexElement height_difference = config_.tree_height - index.height;
-  index.position -= int_math::mult_exp2(block_index, height_difference);
-  DCHECK((0 <= index.position.array()).all());
+  index.position =
+      int_math::div_exp2_floor_remainder(index.position, height_difference);
   return index;
 }
 }  // namespace wavemap

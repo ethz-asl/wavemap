@@ -129,18 +129,8 @@ class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
 
   BlockHashMap block_map_;
 
-  // TODO(victorr): Remove
-  BlockIndex computeBlockIndexFromIndex(const Index3D& index) const {
-    return int_math::div_exp2_floor(index, config_.tree_height);
-  }
-  // TODO(victorr): Remove
-  BlockIndex computeBlockIndexFromIndex(const OctreeIndex& node_index) const {
-    const Index3D index = convert::nodeIndexToMinCornerIndex(node_index);
-    return int_math::div_exp2_floor(index, config_.tree_height);
-  }
-  // TODO(victorr): Remove
-  CellIndex computeCellIndexFromBlockIndexAndIndex(
-      const BlockIndex& block_index, OctreeIndex index) const;
+  BlockIndex indexToBlockIndex(const OctreeIndex& node_index) const;
+  CellIndex indexToCellIndex(OctreeIndex index) const;
 };
 }  // namespace wavemap
 

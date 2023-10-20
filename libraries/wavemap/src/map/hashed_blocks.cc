@@ -31,8 +31,7 @@ void HashedBlocks::forEachLeaf(
          ++cell_idx) {
       const Index3D cell_index =
           convert::linearIndexToIndex<kCellsPerSide, kDim>(cell_idx);
-      const Index3D index = convert::cellAndBlockIndexToIndex<kCellsPerSide>(
-          block_index, cell_index);
+      const Index3D index = cellAndBlockIndexToIndex(block_index, cell_index);
       const FloatingPoint cell_data = block[cell_idx];
       const OctreeIndex hierarchical_cell_index = OctreeIndex{0, index};
       visitor_fn(hierarchical_cell_index, cell_data);
