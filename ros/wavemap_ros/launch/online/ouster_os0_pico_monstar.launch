@@ -1,0 +1,87 @@
+<launch>
+    <!-- Wavemap params -->
+    <arg name="param_file"
+         default="$(find wavemap_ros)/config/wavemap_ouster_os0.yaml"
+         doc="Name of the file from which to read wavemap's server params."/>
+    <arg name="rviz_config"
+         default="$(find wavemap_ros)/config/rviz/online.rviz"/>
+
+    <!-- Run the Ouster driver -->
+    <include file="$(find ouster_ros)/launch/driver.launch">
+        <arg name="ouster_ns" value="os_cloud_node"/>
+        <arg name="sensor_hostname" value="192.168.10.50"/>
+        <arg name="timestamp_mode" value="TIME_FROM_ROS_TIME"/>
+        <arg name="lidar_mode" value="1024x10"/>
+        <arg name="viz" value="false"/>
+    </include>
+
+    <!-- Run the pico monstar driver -->
+    <node pkg="nodelet" type="nodelet" name="manager" args="manager">
+        <param name="num_worker_threads" value="4"/>
+    </node>
+    <node pkg="nodelet" type="nodelet" name="pico_flexx_driver"
+          args="load pico_flexx_driver/pico_flexx_nodelet manager true"
+          respawn="true" output="screen">
+        <param name="base_name" type="str" value="pico_monstar"/>
+        <param name="sensor" type="str" value=""/>
+        <param name="use_case" type="int" value="0"/>
+        <param name="automatic_exposure" type="bool" value="true"/>
+        <param name="exposure_time" type="int" value="1000"/>
+        <param name="exposure_mode" type="int" value="1"/>
+        <param name="exposure_time_stream2" type="int" value="1000"/>
+        <param name="exposure_mode_stream2" type="int" value="1"/>
+        <param name="max_noise" type="double" value="0.03"/>
+        <param name="filter_level" type="int" value="255"/>
+        <param name="range_factor" type="double" value="2.0"/>
+        <param name="queue_size" type="int" value="5"/>
+    </node>
+
+    <!-- Undistort the depth images -->
+    <node pkg="nodelet" type="nodelet" name="rectify_depth"
+          args="load image_proc/rectify manager --no-bond"
+          respawn="true">
+        <remap from="image_mono" to="pico_monstar/image_depth"/>
+        <remap from="image_rect" to="pico_monstar/image_rect"/>
+        <param name="interpolation" value="0"/>
+    </node>
+
+    <!-- Run odometry -->
+    <rosparam command="load"
+              file="$(find wavemap_ros)/config/other_packages/fast_lio/ouster_os0.yaml"/>
+    <param name="feature_extract_enable" type="bool" value="0"/>
+    <param name="point_filter_num" type="int" value="2"/>
+    <param name="max_iteration" type="int" value="3"/>
+    <param name="filter_size_surf" type="double" value="0.25"/>
+    <param name="filter_size_map" type="double" value="0.25"/>
+    <param name="cube_side_length" type="double" value="500"/>
+    <param name="runtime_pos_log_enable" type="bool" value="0"/>
+    <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping"
+          output="screen"/>
+
+    <!-- Frames and calibrations -->
+    <group>
+        <node pkg="tf" type="static_transform_publisher"
+              name="static_tf_odom_camera_init"
+              args="0 0 0 0 0 0 1 odom camera_init 100"/>
+        <node pkg="tf" type="static_transform_publisher"
+              name="static_tf_fast_lio_imu"
+              args="0 0 0 0 0 0 1 imu_forward_prop os_imu 100"/>
+        <node pkg="tf" type="static_transform_publisher"
+              name="static_tf_os_imu_os_sensor"
+              args="-0.006253, 0.011775, -0.007645 0 0 0 1 os_imu os_sensor 100"/>
+        <node pkg="tf"
+              type="static_transform_publisher"
+              name="link_body_pico_monstar_frame"
+              args="0.0445574 0.0167807 -0.03849 0.50022 -0.50058 0.497528 -0.501662
+              imu_forward_prop pico_monstar_optical_frame 100"/>
+    </group>
+
+    <!-- Run wavemap -->
+    <include file="$(find wavemap_ros)/launch/wavemap_server.launch"
+             pass_all_args="true"/>
+
+    <!-- [Optional] Record topics for calibration -->
+    <node if="false" pkg="rosbag" type="record" name="rosbag_record" output="screen"
+          args="/wavemap/reprojected_pointcloud /Odometry
+          --output-prefix /home/victor/catkin_ws/lidar_align_os0_monstar"/>
+</launch>

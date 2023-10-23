@@ -1,7 +1,7 @@
 <launch>
   <!-- Wavemap params -->
   <arg name="param_file"
-       default="$(find wavemap_ros)/config/wavemap_azure_kinect.yaml"
+       default="$(find wavemap_ros)/config/wavemap_livox_mid360_azure_kinect.yaml"
        doc="Name of the file from which to read wavemap's server params."/>
 
   <!-- Run the Kinect driver -->
