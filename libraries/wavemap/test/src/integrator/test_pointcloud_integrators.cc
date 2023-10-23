@@ -18,11 +18,11 @@
 #include "wavemap/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 #include "wavemap/integrator/projective/fixed_resolution/fixed_resolution_integrator.h"
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
-#include "wavemap/iterator/grid_iterator.h"
 #include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/iterate/grid_iterator.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 class PointcloudIntegratorTest : public FixtureBase,
@@ -48,7 +48,7 @@ class PointcloudIntegratorTest : public FixtureBase,
           pointcloud_index / projection_model.getNumRows()};
       pointcloud[pointcloud_index] =
           range * projection_model.sensorToCartesian(
-                      projection_model.indexToImage(image_index), 1.f);
+                      {projection_model.indexToImage(image_index), 1.f});
     }
 
     return PosedPointcloud<>(getRandomTransformation<3>(), pointcloud);
@@ -139,7 +139,7 @@ TYPED_TEST(PointcloudIntegratorTypedTest,
             reference_occupancy_map->getCellValue(index);
         EXPECT_NEAR(evaluated_value, reference_value,
                     projective_integrator_config.termination_update_error)
-            << "For cell index " << EigenFormat::oneLine(index);
+            << "For cell index " << print::eigen::oneLine(index);
       }
     });
   }
@@ -201,7 +201,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
           (0.f < occupancy_map->getCellValue(index));
       const bool cell_contains_ray_end_point = ray_end_points.count(index);
       EXPECT_EQ(cell_occupied_in_map, cell_contains_ray_end_point)
-          << "for index " << EigenFormat::oneLine(index) << ", min cell width "
+          << "for index " << print::eigen::oneLine(index) << ", min cell width "
           << data_structure_config.min_cell_width << " and pointcloud size "
           << random_pointcloud.getPointsLocal().size();
     }

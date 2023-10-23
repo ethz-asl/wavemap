@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap_rviz_plugin</name>
-  <version>1.5.3</version>
+  <version>1.6.0</version>
   <description>Plugin to interactively visualize maps published in wavemap's
     native format.
   </description>
@@ -15,9 +15,11 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>rviz</depend>
+  <depend>wavemap</depend>
+  <depend>wavemap_io</depend>
   <depend>wavemap_msgs</depend>
   <depend>wavemap_ros_conversions</depend>
-  <depend>wavemap</depend>
+  <depend>tracy_catkin</depend>
   <depend>qtbase5-dev</depend>
 
   <export>

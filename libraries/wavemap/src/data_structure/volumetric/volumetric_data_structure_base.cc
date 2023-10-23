@@ -1,6 +1,6 @@
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 
-#include "wavemap/utils/nameof.h"
+#include "wavemap/utils/meta/nameof.h"
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(VolumetricDataStructureConfig,

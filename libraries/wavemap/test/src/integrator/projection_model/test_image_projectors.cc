@@ -7,9 +7,9 @@
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/angle_utils.h"
-#include "wavemap/utils/container_print_utils.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/math/angle_normalization.h"
+#include "wavemap/utils/print/container.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 class Image2DProjectorTest : public FixtureBase, public GeometryGenerator {
@@ -156,9 +156,9 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
     // Get a random point in Cartesian space and ensure it's in the FoV
     const Point3D C_point =
         GeometryGenerator::getRandomPoint<3>(min_range, max_range);
-    const Vector3D sensor_coordinates = projector.cartesianToSensor(C_point);
-    const Vector2D image_coordinates = sensor_coordinates.head<2>();
-    const FloatingPoint range_or_depth = sensor_coordinates[2];
+    const auto sensor_coordinates = projector.cartesianToSensor(C_point);
+    const Vector2D image_coordinates = sensor_coordinates.image;
+    const FloatingPoint range_or_depth = sensor_coordinates.depth;
     if (range_or_depth < 1e-1f) {
       --repetition;
       continue;
@@ -179,11 +179,12 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
     constexpr FloatingPoint kNoiseTolerance = 1e-5f;
     EXPECT_LE((C_point_roundtrip - C_point).norm(),
               kNoiseTolerance * (1.f + range))
-        << "Original point was " << EigenFormat::oneLine(C_point)
+        << "Original point was " << print::eigen::oneLine(C_point)
         << " with norm " << range << ", but after round trip it became "
-        << EigenFormat::oneLine(C_point_roundtrip)
+        << print::eigen::oneLine(C_point_roundtrip)
         << ". Intermediate sensor coordinates were "
-        << EigenFormat::oneLine(sensor_coordinates) << ".";
+        << print::eigen::oneLine(sensor_coordinates.image) << ", "
+        << sensor_coordinates.depth << ".";
   }
 
   // Test sensor -> Cartesian -> sensor round trips
@@ -192,17 +193,18 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
     const Index2D image_index = GeometryGenerator::getRandomIndex<2>(
         Index2D::Zero(), projector.getDimensions());
     const Vector2D image_coordinates = projector.indexToImage(image_index);
-    const Point3D C_point = projector.sensorToCartesian(image_coordinates, 1.f);
+    const Point3D C_point =
+        projector.sensorToCartesian({image_coordinates, 1.f});
     const Index2D image_index_roundtrip =
         projector.cartesianToNearestIndex(C_point);
 
     EXPECT_EQ(image_index_roundtrip, image_index)
-        << "Original image index was " << EigenFormat::oneLine(image_index)
+        << "Original image index was " << print::eigen::oneLine(image_index)
         << ", but after round trip it became "
-        << EigenFormat::oneLine(image_index_roundtrip)
+        << print::eigen::oneLine(image_index_roundtrip)
         << ". Intermediate image and Cartesian coordinates were "
-        << EigenFormat::oneLine(image_coordinates) << " and "
-        << EigenFormat::oneLine(C_point) << ".";
+        << print::eigen::oneLine(image_coordinates) << " and "
+        << print::eigen::oneLine(C_point) << ".";
   }
 
   // Test index -> image -> index round trips
@@ -215,12 +217,12 @@ TYPED_TEST(Image2DProjectorTypedTest, Conversions) {
         projector.imageToNearestIndex(image_coordinates);
 
     EXPECT_EQ(image_index_roundtrip, image_index)
-        << "Original image index was " << EigenFormat::oneLine(image_index)
+        << "Original image index was " << print::eigen::oneLine(image_index)
         << ", but after round trip it became "
-        << EigenFormat::oneLine(image_index_roundtrip)
+        << print::eigen::oneLine(image_index_roundtrip)
         << ". Intermediate image coordinates were "
-        << EigenFormat::oneLine(image_coordinates) << " and "
-        << EigenFormat::oneLine(image_coordinates) << ".";
+        << print::eigen::oneLine(image_coordinates) << " and "
+        << print::eigen::oneLine(image_coordinates) << ".";
   }
 }
 
@@ -252,11 +254,11 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
            ++corner_idx) {
         const Point3D C_t_C_corner =
             test.T_W_C.inverse() * test.W_aabb.corner_point(corner_idx);
-        const Vector3D corner_sensor_coordinates =
+        const auto corner_sensor_coordinates =
             projector.cartesianToSensor(C_t_C_corner);
-        corners_x[corner_idx] = corner_sensor_coordinates.x();
-        corners_y[corner_idx] = corner_sensor_coordinates.y();
-        corners_z[corner_idx] = corner_sensor_coordinates.z();
+        corners_x[corner_idx] = corner_sensor_coordinates.image.x();
+        corners_y[corner_idx] = corner_sensor_coordinates.image.y();
+        corners_z[corner_idx] = corner_sensor_coordinates.depth;
       }
       // Find the min/max corner coordinates
       for (auto [axis, coordinates] :
@@ -364,19 +366,60 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
         std::cerr << "For\n-W_aabb: " << test.W_aabb.toString() << "\n-T_W_C:\n"
                   << test.T_W_C << "\nWith C_cell_corners:\n"
                   << C_t_C_corners << "\nsensor X-coordinates:\n"
-                  << ToString(corners_x) << "\nsensor Y-coordinates:\n"
-                  << ToString(corners_y) << ToString(corners_x)
+                  << print::container(corners_x) << "\nsensor Y-coordinates:\n"
+                  << print::container(corners_y) << print::container(corners_x)
                   << "\nsensor Z-coordinates:\n"
-                  << ToString(corners_z)
+                  << print::container(corners_z)
                   << "\nand reference min/max sensor coordinates: "
-                  << EigenFormat::oneLine(reference_aabb.min) << ", "
-                  << EigenFormat::oneLine(reference_aabb.max)
+                  << print::eigen::oneLine(reference_aabb.min) << ", "
+                  << print::eigen::oneLine(reference_aabb.max)
                   << "\nWe got min/max sensor coordinates: "
-                  << EigenFormat::oneLine(returned_angle_pair.min) << ", "
-                  << EigenFormat::oneLine(returned_angle_pair.max)
+                  << print::eigen::oneLine(returned_angle_pair.min) << ", "
+                  << print::eigen::oneLine(returned_angle_pair.max)
                   << "\nThis is error nr " << ++error_count << "\n"
                   << std::endl;
       }
+    }
+  }
+}
+
+TYPED_TEST(Image2DProjectorTypedTest, imageToNearestIndicesAndOffsets) {
+  constexpr int kNumRandomProjectorConfigs = 10;
+  for (int config_idx = 0; config_idx < kNumRandomProjectorConfigs;
+       ++config_idx) {
+    // Create a projector with random params
+    typename TypeParam::Config projector_config;
+    Image2DProjectorTest::getRandomProjectorConfig(projector_config);
+    const TypeParam projector(projector_config);
+
+    // Test single and batched computation equivalence
+    const Vector2D image_coordinates = Vector2D::Random();
+    const auto indices = projector.imageToNearestIndices(image_coordinates);
+    const auto indices_and_offsets =
+        projector.imageToNearestIndicesAndOffsets(image_coordinates);
+
+    const Vector2D index_real = projector.imageToIndexReal(image_coordinates);
+    const Vector2D index_lower = index_real.array().floor();
+    const Vector2D index_upper = index_real.array().ceil();
+
+    for (int neighbox_idx = 0; neighbox_idx < 4; ++neighbox_idx) {
+      const Vector2D index_rounded{
+          neighbox_idx & 0b01 ? index_upper[0] : index_lower[0],
+          neighbox_idx & 0b10 ? index_upper[1] : index_lower[1]};
+      const Index2D index_expected = index_rounded.cast<IndexElement>();
+      const Vector2D offset_expected =
+          projector.index_to_image_scale_factor_.cwiseProduct(index_rounded -
+                                                              index_real);
+
+      EXPECT_EQ(indices(0, neighbox_idx), index_expected[0]);
+      EXPECT_EQ(indices(1, neighbox_idx), index_expected[1]);
+
+      EXPECT_EQ(indices_and_offsets.first(0, neighbox_idx), index_expected[0]);
+      EXPECT_EQ(indices_and_offsets.first(1, neighbox_idx), index_expected[1]);
+      EXPECT_NEAR(indices_and_offsets.second(0, neighbox_idx),
+                  offset_expected[0], kEpsilon);
+      EXPECT_NEAR(indices_and_offsets.second(1, neighbox_idx),
+                  offset_expected[1], kEpsilon);
     }
   }
 }
@@ -392,14 +435,13 @@ TYPED_TEST(Image2DProjectorTypedTest, ImageOffsetErrorNorms) {
 
     // Test single and batched computation equivalence
     const Vector2D linearization_point = Vector2D::Random();
-    ProjectorBase::CellToBeamOffsetArray offsets{};
-    std::generate(offsets.begin(), offsets.end(),
-                  []() { return Vector2D::Random(); });
+    const ProjectorBase::CellToBeamOffsetArray offsets =
+        ProjectorBase::CellToBeamOffsetArray::Random();
     const auto error_norms =
         projector.imageOffsetsToErrorNorms(linearization_point, offsets);
     for (int offset_idx = 0; offset_idx < 4; ++offset_idx) {
       const FloatingPoint error_norm = projector.imageOffsetToErrorNorm(
-          linearization_point, offsets[offset_idx]);
+          linearization_point, offsets.col(offset_idx));
       EXPECT_NEAR(error_norms[offset_idx], error_norm, kEpsilon);
     }
   }

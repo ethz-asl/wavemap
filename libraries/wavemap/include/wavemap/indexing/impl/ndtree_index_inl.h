@@ -1,11 +1,13 @@
 #ifndef WAVEMAP_INDEXING_IMPL_NDTREE_INDEX_INL_H_
 #define WAVEMAP_INDEXING_IMPL_NDTREE_INDEX_INL_H_
 
+#include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
-#include "wavemap/utils/bit_manipulation.h"
-#include "wavemap/utils/tree_math.h"
+#include "wavemap/utils/bits/bit_operations.h"
+#include "wavemap/utils/math/tree_math.h"
 
 namespace wavemap {
 template <int dim>
@@ -66,6 +68,28 @@ NdtreeIndexRelativeChild NdtreeIndex<dim>::computeRelativeChildIndex(
   const Element child_height = parent_height - 1;
   static constexpr MortonIndex kRelativeChildIndexMask = (1 << dim) - 1;
   return (morton >> (child_height * dim)) & kRelativeChildIndexMask;
+}
+
+template <int dim>
+IndexElement NdtreeIndex<dim>::computeLastCommonAncestorHeight(
+    MortonIndex first_morton, Element first_height, MortonIndex second_morton,
+    Element second_height) {
+  // When the morton indices are identical, the last common ancestor
+  // corresponds to the most senior of the two children
+  const Element max_height = std::max(first_height, second_height);
+  if (first_morton == second_morton) {
+    return max_height;
+  }
+
+  // Find the first height where the indices start to differ
+  // NOTE: We count the bit index from right to left s.t. it corresponds to the
+  //       height in the tree, instead of the depth.
+  const MortonIndex morton_diff = first_morton ^ second_morton;
+  const Element first_diff_bit =
+      static_cast<Element>(std::numeric_limits<MortonIndex>::digits) -
+      static_cast<Element>(bit_ops::clz(morton_diff));
+  const Element first_diff_height = int_math::div_round_up(first_diff_bit, dim);
+  return std::max(max_height, first_diff_height);
 }
 
 template <int dim>

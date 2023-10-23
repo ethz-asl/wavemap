@@ -1,4 +1,4 @@
-#include "wavemap/utils/stopwatch.h"
+#include "wavemap/utils/time/stopwatch.h"
 
 #include <glog/logging.h>
 

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "wavemap/utils/tree_math.h"
+#include "wavemap/utils/math/tree_math.h"
 
 namespace wavemap {
 TEST(TreeMathTest, PerfectTreeLeafCounts) {

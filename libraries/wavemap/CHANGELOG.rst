@@ -2,6 +2,30 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.0 (2023-10-17)
+------------------
+* New features
+
+  * Map query accelerator
+  * Trilinear interpolator
+
+* Improvements
+
+  * Optimize measurement integration
+
+    * Replace stack with recursion (faster and easier to read)
+    * Vectorize batched leaf updater
+    * Reduce memory move and copy overheads
+    * Simplify measurement model math
+    * Postpone image offset error norm root computation
+    * Share a single thread pool among all integrators
+
+  * Refactor wavemap utils
+  * Add tests for nearest index and offset methods
+  * Add initial usage examples
+
+* Contributors: Victor Reijgwart
+
 1.5.3 (2023-09-28)
 ------------------
 * Address failing DCHECKs for Morton conversions of negative indices

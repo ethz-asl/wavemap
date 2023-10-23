@@ -4,9 +4,9 @@
 #include "wavemap/integrator/measurement_model/constant_ray.h"
 #include "wavemap/integrator/measurement_model/continuous_beam.h"
 #include "wavemap/integrator/measurement_model/continuous_ray.h"
-#include "wavemap/iterator/grid_iterator.h"
-#include "wavemap/iterator/ray_iterator.h"
 #include "wavemap/test/fixture_base.h"
+#include "wavemap/utils/iterate/grid_iterator.h"
+#include "wavemap/utils/iterate/ray_iterator.h"
 
 namespace wavemap {
 using MeasurementModelTest = FixtureBase;

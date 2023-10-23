@@ -33,10 +33,12 @@ bool PointcloudInputHandlerConfig::isValid(bool verbose) const {
 PointcloudInputHandler::PointcloudInputHandler(
     const PointcloudInputHandlerConfig& config, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    std::shared_ptr<TfTransformer> transformer,
+    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
-                   std::move(occupancy_map), transformer, nh, nh_private),
+                   std::move(occupancy_map), transformer,
+                   std::move(thread_pool), nh, nh_private),
       config_(config.checkValid()),
       pointcloud_undistorter_(
           transformer,
@@ -227,19 +229,19 @@ void PointcloudInputHandler::processQueue() {
     }
 
     // Integrate the pointcloud
-    ROS_INFO_STREAM("Inserting pointcloud with "
-                    << posed_pointcloud.size()
-                    << " points. Remaining pointclouds in queue: "
-                    << pointcloud_queue_.size() - 1 << ".");
+    ROS_DEBUG_STREAM("Inserting pointcloud with "
+                     << posed_pointcloud.size()
+                     << " points. Remaining pointclouds in queue: "
+                     << pointcloud_queue_.size() - 1 << ".");
     integration_timer_.start();
     for (const auto& integrator : integrators_) {
       integrator->integratePointcloud(posed_pointcloud);
     }
     integration_timer_.stop();
-    ROS_INFO_STREAM("Integrated new pointcloud in "
-                    << integration_timer_.getLastEpisodeDuration()
-                    << "s. Total integration time: "
-                    << integration_timer_.getTotalDuration() << "s.");
+    ROS_DEBUG_STREAM("Integrated new pointcloud in "
+                     << integration_timer_.getLastEpisodeDuration()
+                     << "s. Total integration time: "
+                     << integration_timer_.getTotalDuration() << "s.");
 
     // Publish debugging visualizations
     if (shouldPublishReprojectedPointcloud()) {

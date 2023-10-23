@@ -23,11 +23,14 @@ The framework is very flexible and supports several data structures, measurement
    api/library_root
    pages/faq
 
+Code
+****
+This documentation website accompanies wavemap's `open-source implementation <https://github.com/ethz-asl/wavemap>`__, which is hosted on GitHub.
 
 Paper
 *****
 
-A technical introduction to the theory behind the wavemap is provided in our open-access `RSS paper <https://www.roboticsproceedings.org/rss19/p065.pdf>`_.
+A technical introduction to the theory behind the wavemap is provided in our open-access `RSS paper <https://www.roboticsproceedings.org/rss19/p065.pdf>`__.
 
 Abstract:
     Volumetric maps are widely used in robotics due to their desirable properties in applications such as path planning, exploration, and manipulation. Constant advances in mapping technologies are needed to keep up with the improvements in sensor technology, generating increasingly vast amounts of precise measurements. Handling this data in a computationally and memory-efficient manner is paramount to representing the environment at the desired scales and resolutions. In this work, we express the desirable properties of a volumetric mapping framework through the lens of multi-resolution analysis. This shows that wavelets are a natural foundation for hierarchical and multi-resolution volumetric mapping. Based on this insight we design an efficient mapping system that uses wavelet decomposition. The efficiency of the system enables the use of uncertainty-aware sensor models, improving the quality of the maps. Experiments on both synthetic and real-world data provide mapping accuracy and runtime performance comparisons with state-of-the-art methods on both RGB-D and 3D LiDAR data. The framework is open-sourced to allow the robotics community at large to explore this approach.
@@ -46,4 +49,4 @@ BibTeX::
     }
 
 
-Note that the code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`_.
+Note that the code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.

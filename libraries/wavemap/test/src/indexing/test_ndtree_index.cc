@@ -1,3 +1,4 @@
+#include <bitset>
 #include <queue>
 
 #include <gtest/gtest.h>
@@ -7,7 +8,7 @@
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename NdtreeIndexT>
@@ -88,6 +89,81 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
           << child_index.computeParentIndex().toString()
           << " should be equal to the parent it was derived from "
           << node_index.toString() << ".";
+    }
+  }
+}
+
+TYPED_TEST(NdtreeIndexTest, LastCommonAncestor) {
+  // Generate a combination of random and handpicked node indices for testing
+  constexpr IndexElement kMaxTreeHeight =
+      morton::kMaxTreeHeight<TypeParam::kDim>;
+  constexpr IndexElement kNumChildren = TypeParam::kNumChildren;
+  std::vector<TypeParam> random_indices =
+      GeometryGenerator::getRandomNdtreeIndexVector<TypeParam>(
+          TestFixture::kMinNdtreePositionIndex,
+          TestFixture::kMaxNdtreePositionIndex, 0, 0);
+  for (auto& index : random_indices) {
+    const int test_height =
+        TestFixture::getRandomNdtreeIndexHeight(index.height, 14);
+    index = index.computeParentIndex(test_height);
+  }
+  random_indices.emplace_back(TypeParam{0, TypeParam::Position::Zero()});
+  random_indices.emplace_back(
+      TypeParam{kMaxTreeHeight, TypeParam::Position::Zero()});
+
+  for (const auto& index : random_indices) {
+    const MortonIndex morton = convert::nodeIndexToMorton(index);
+    // Test identity
+    EXPECT_EQ(TypeParam::computeLastCommonAncestorHeight(morton, index.height,
+                                                         morton, index.height),
+              index.height);
+
+    // Test all ancestors up to max height
+    for (auto parent_index = index.computeParentIndex();
+         parent_index.height < kMaxTreeHeight;
+         parent_index = parent_index.computeParentIndex()) {
+      const MortonIndex parent_morton =
+          convert::nodeIndexToMorton(parent_index);
+      EXPECT_EQ(TypeParam::computeLastCommonAncestorHeight(
+                    morton, index.height, parent_morton, parent_index.height),
+                parent_index.height)
+          << "For index " << index.toString() << " with morton code "
+          << std::bitset<64>(morton) << ", parent index "
+          << parent_index.toString() << " with morton code "
+          << std::bitset<64>(parent_morton);
+    }
+
+    // Test descendants down to height 0
+    for (auto child_index = index; 0 < child_index.height;) {
+      if (31 <= index.height - child_index.height) {
+        // Beyond this point the height difference is so large that the integers
+        // would overflow
+        break;
+      }
+      const NdtreeIndexRelativeChild relative_child_idx =
+          TestFixture::getRandomInteger(0, kNumChildren - 1);
+      child_index = child_index.computeChildIndex(relative_child_idx);
+      const MortonIndex child_morton = convert::nodeIndexToMorton(child_index);
+      EXPECT_EQ(TypeParam::computeLastCommonAncestorHeight(
+                    morton, index.height, child_morton, child_index.height),
+                index.height)
+          << "For index " << index.toString() << " with morton code "
+          << std::bitset<64>(morton) << ", child index "
+          << child_index.toString() << " with morton code "
+          << std::bitset<64>(child_morton);
+    }
+
+    // Test offsets
+    if (index.height != kMaxTreeHeight) {
+      for (const auto& offset : {TypeParam::Position::Constant(-1),
+                                 TypeParam::Position::Constant(1)}) {
+        const TypeParam index_offset{index.height, index.position + offset};
+        const MortonIndex morton_offset =
+            convert::nodeIndexToMorton(index_offset);
+        EXPECT_GT(TypeParam::computeLastCommonAncestorHeight(
+                      morton, index.height, morton_offset, index_offset.height),
+                  index.height);
+      }
     }
   }
 }

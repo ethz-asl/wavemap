@@ -6,8 +6,6 @@
 #include <limits>
 
 #include "wavemap/integrator/measurement_model/continuous_beam.h"
-#include "wavemap/utils/angle_utils.h"
-#include "wavemap/utils/approximate_trigonometry.h"
 
 namespace wavemap {
 inline UpdateType RangeImageIntersector::determineUpdateType(

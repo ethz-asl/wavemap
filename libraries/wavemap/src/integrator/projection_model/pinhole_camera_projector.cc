@@ -1,6 +1,13 @@
 #include "wavemap/integrator/projection_model/pinhole_camera_projector.h"
 
 namespace wavemap {
+PinholeCameraProjector::PinholeCameraProjector(
+    const PinholeCameraProjector::Config& config)
+    : ProjectorBase({config.width, config.height}, Vector2D::Ones(),
+                    Vector2D::Zero(), indexToImage(Index2D::Zero()),
+                    indexToImage({config.width - 1, config.height - 1})),
+      config_(config.checkValid()) {}
+
 AABB<Vector3D> PinholeCameraProjector::cartesianToSensorAABB(
     const AABB<Point3D>& W_aabb,
     const kindr::minimal::QuatTransformationTemplate<
@@ -21,7 +28,8 @@ AABB<Vector3D> PinholeCameraProjector::cartesianToSensorAABB(
     }
   }
 
-  std::array<Vector3D, AABB<Point3D>::kNumCorners> corner_sensor_coordinates;
+  std::array<SensorCoordinates, AABB<Point3D>::kNumCorners>
+      corner_sensor_coordinates;
   for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
        ++corner_idx) {
     corner_sensor_coordinates[corner_idx] =
@@ -29,16 +37,22 @@ AABB<Vector3D> PinholeCameraProjector::cartesianToSensorAABB(
   }
 
   AABB<Vector3D> sensor_coordinate_aabb;
-  for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-    for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
-         ++corner_idx) {
+  for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
+       ++corner_idx) {
+    for (int dim_idx = 0; dim_idx < 2; ++dim_idx) {
       sensor_coordinate_aabb.min[dim_idx] =
           std::min(sensor_coordinate_aabb.min[dim_idx],
-                   corner_sensor_coordinates[corner_idx][dim_idx]);
+                   corner_sensor_coordinates[corner_idx].image[dim_idx]);
       sensor_coordinate_aabb.max[dim_idx] =
           std::max(sensor_coordinate_aabb.max[dim_idx],
-                   corner_sensor_coordinates[corner_idx][dim_idx]);
+                   corner_sensor_coordinates[corner_idx].image[dim_idx]);
     }
+    sensor_coordinate_aabb.min[2] =
+        std::min(sensor_coordinate_aabb.min[2],
+                 corner_sensor_coordinates[corner_idx].depth);
+    sensor_coordinate_aabb.max[2] =
+        std::max(sensor_coordinate_aabb.max[2],
+                 corner_sensor_coordinates[corner_idx].depth);
   }
   return sensor_coordinate_aabb;
 }

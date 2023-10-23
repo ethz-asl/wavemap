@@ -6,7 +6,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/posed_object.h"
-#include "wavemap/iterator/pointcloud_iterator.h"
+#include "wavemap/utils/iterate/pointcloud_iterator.h"
 
 namespace wavemap {
 template <typename PointT = Point3D>

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/utils/approximate_trigonometry.h"
+#include "wavemap/utils/math/approximate_trigonometry.h"
 
 namespace wavemap {
 TEST(ApproximateTrigonometryTest, ApproxAtan2) {

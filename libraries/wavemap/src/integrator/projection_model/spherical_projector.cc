@@ -1,16 +1,19 @@
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 
-#include "wavemap/utils/angle_utils.h"
+#include "wavemap/utils/math/angle_normalization.h"
 
 namespace wavemap {
 SphericalProjector::SphericalProjector(const SphericalProjector::Config& config)
     : ProjectorBase(
+          {config.elevation.num_cells, config.azimuth.num_cells},
           Vector2D(config.elevation.max_angle - config.elevation.min_angle,
                    config.azimuth.max_angle - config.azimuth.min_angle)
               .cwiseQuotient(Index2D(config.elevation.num_cells - 1,
                                      config.azimuth.num_cells - 1)
                                  .cast<FloatingPoint>()),
-          Vector2D(config.elevation.min_angle, config.azimuth.min_angle)),
+          {config.elevation.min_angle, config.azimuth.min_angle},
+          {config.elevation.min_angle, config.azimuth.min_angle},
+          {config.elevation.max_angle, config.azimuth.max_angle}),
       config_(config.checkValid()) {}
 
 Eigen::Matrix<bool, 3, 1> SphericalProjector::sensorAxisIsPeriodic() const {
@@ -57,7 +60,7 @@ AABB<Vector3D> SphericalProjector::cartesianToSensorAABB(
   for (int corner_idx = 0; corner_idx < AABB<Point3D>::kNumCorners;
        ++corner_idx) {
     corner_sensor_coordinates[corner_idx] =
-        cartesianToImageApprox(C_aabb_corners[corner_idx]);
+        cartesianToImage(C_aabb_corners[corner_idx]);
   }
 
   for (const int axis : {0, 1}) {

@@ -2,6 +2,33 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.0 (2023-10-17)
+------------------
+* New features
+
+  * Add service and button to reset the wavemap_server's map
+  * Make ROS logging level configurable through ROS params
+  * Make the number of threads to use configurable through ROS params
+  * Add option to directly query the most up-to-date transform to TF handler
+
+* Improvements
+
+  * Share a single thread pool among all integrators
+  * Multi-thread block to ROS msg serialization
+  * Update incremental transmission and Rviz to remove deleted blocks
+  * Simplify incremental map transmission
+  * Improve Rviz plugin block drawing scheduling
+  * Do not latch map topic
+  * Improve example configs
+  * Consistently use ROS logging in ROS packages
+  * Refactor wavemap utils
+
+* Bug fixes
+
+  * Fix bug causing delays when transmitting blocks with identical timestamps
+
+* Contributors: Victor Reijgwart
+
 1.5.3 (2023-09-28)
 ------------------
 

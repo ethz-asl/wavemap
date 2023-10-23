@@ -287,7 +287,7 @@ HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
       chunk.nodeData(dst_idx) = new_details;
       chunk.nodeHasAtLeastOneChild(dst_idx) = has_nonzero_child;
       is_nonzero_child[dst_idx] =
-          has_nonzero_child || data_utils::is_nonzero(new_details);
+          has_nonzero_child || data::is_nonzero(new_details);
     }
   }
 

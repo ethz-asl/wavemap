@@ -1,9 +1,9 @@
 #include "wavemap_ros/wavemap_server.h"
 
 #include <std_srvs/Empty.h>
+#include <std_srvs/Trigger.h>
 #include <tracy/Tracy.hpp>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_factory.h>
-#include <wavemap/utils/nameof.h>
 #include <wavemap_io/file_conversions.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>
@@ -18,13 +18,17 @@ DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
                       (thresholding_period)
                       (pruning_period)
                       (publication_period)
-                      (max_num_blocks_per_msg));
+                      (max_num_blocks_per_msg)
+                      (num_threads)
+                      (logging_level)
+                      (allow_reset_map_service));
 
 bool WavemapServerConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(world_frame, std::string(""), verbose);
   all_valid &= IS_PARAM_GT(max_num_blocks_per_msg, 0, verbose);
+  all_valid &= IS_PARAM_GT(num_threads, 0, verbose);
 
   return all_valid;
 }
@@ -41,12 +45,25 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                              const WavemapServerConfig& config)
     : config_(config.checkValid()),
       transformer_(std::make_shared<TfTransformer>()) {
+  // Set the ROS logging level
+  if (ros::console::set_logger_level(
+          ROSCONSOLE_DEFAULT_NAME,
+          LoggingLevel::ros_levels[config_.logging_level.toTypeId()])) {
+    ros::console::notifyLoggerLevelsChanged();
+  }
+
   // Setup data structure
   const auto data_structure_params =
       param::convert::toParamValue(nh_private, "map/data_structure");
   occupancy_map_ = VolumetricDataStructureFactory::create(
       data_structure_params, VolumetricDataStructureType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
+
+  // Setup thread pool
+  ROS_INFO_STREAM("Creating thread pool with " << config_.num_threads
+                                               << " threads.");
+  thread_pool_ = std::make_shared<ThreadPool>(config_.num_threads);
+  CHECK_NOTNULL(thread_pool_);
 
   // Setup input handlers
   const param::Array integrator_params_array =
@@ -90,7 +107,7 @@ bool WavemapServer::saveMap(const std::filesystem::path& file_path) const {
     occupancy_map_->threshold();
     return io::mapToFile(*occupancy_map_, file_path);
   } else {
-    LOG(ERROR) << "Could not save map because it has not yet been allocated.";
+    ROS_ERROR("Could not save map because it has not yet been allocated.");
   }
   return false;
 }
@@ -102,9 +119,9 @@ bool WavemapServer::loadMap(const std::filesystem::path& file_path) {
 InputHandler* WavemapServer::addInput(const param::Value& integrator_params,
                                       const ros::NodeHandle& nh,
                                       ros::NodeHandle nh_private) {
-  auto input_handler =
-      InputHandlerFactory::create(integrator_params, config_.world_frame,
-                                  occupancy_map_, transformer_, nh, nh_private);
+  auto input_handler = InputHandlerFactory::create(
+      integrator_params, config_.world_frame, occupancy_map_, transformer_,
+      thread_pool_, nh, nh_private);
   if (input_handler) {
     return input_handlers_.emplace_back(std::move(input_handler)).get();
   }
@@ -125,7 +142,7 @@ void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
                     << config_.pruning_period << "s");
     map_pruning_timer_ = nh.createTimer(
         ros::Duration(config_.pruning_period),
-        [this](const auto& /*event*/) { occupancy_map_->pruneDistant(); });
+        [this](const auto& /*event*/) { occupancy_map_->pruneSmart(); });
   }
 
   if (0.f < config_.publication_period) {
@@ -140,7 +157,7 @@ void WavemapServer::subscribeToTimers(const ros::NodeHandle& nh) {
 void WavemapServer::subscribeToTopics(ros::NodeHandle& /*nh*/) {}
 
 void WavemapServer::advertiseTopics(ros::NodeHandle& nh_private) {
-  map_pub_ = nh_private.advertise<wavemap_msgs::Map>("map", 10, true);
+  map_pub_ = nh_private.advertise<wavemap_msgs::Map>("map", 10);
 }
 
 void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
@@ -151,6 +168,27 @@ void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
             publishMap(true);
             return true;
           });
+
+  reset_map_srv_ = nh_private.advertiseService<std_srvs::Trigger::Request,
+                                               std_srvs::Trigger::Response>(
+      "reset_map", [this](auto& /*request*/, auto& response) {
+        response.success = false;
+        if (config_.allow_reset_map_service) {
+          if (occupancy_map_) {
+            occupancy_map_->clear();
+          }
+          ROS_INFO("Map reset request was successfully executed.");
+          response.success = true;
+        } else {
+          response.message =
+              "Map resetting is forbidden. To change this, set ROS param \"" +
+              NAMEOF(config_.allow_reset_map_service) + "\" to true.";
+          ROS_INFO_STREAM("Received map reset request but ROS param \""
+                          << NAMEOF(config_.allow_reset_map_service)
+                          << "\" is set to false. Ignoring request.");
+        }
+        return true;
+      });
 
   save_map_srv_ = nh_private.advertiseService<wavemap_msgs::FilePath::Request,
                                               wavemap_msgs::FilePath::Response>(

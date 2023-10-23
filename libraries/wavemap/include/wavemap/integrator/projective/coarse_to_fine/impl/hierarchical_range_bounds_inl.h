@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "wavemap/iterator/grid_iterator.h"
-#include "wavemap/utils/bit_manipulation.h"
+#include "wavemap/utils/bits/bit_operations.h"
+#include "wavemap/utils/iterate/grid_iterator.h"
 
 namespace wavemap {
 inline Bounds<FloatingPoint> HierarchicalRangeBounds::getBounds(
@@ -293,7 +293,7 @@ inline Index2D HierarchicalRangeBounds::computeImageToPyramidScaleFactor(
 template <typename T, typename BinaryFunctor>
 std::vector<Image<T>> HierarchicalRangeBounds::computeReducedPyramid(
     const Image<T>& range_image, BinaryFunctor reduction_functor, T init) {
-  CHECK(!azimuth_wraps_pi_ || bit_manip::popcount(range_image.getNumColumns()))
+  CHECK(!azimuth_wraps_pi_ || bit_ops::popcount(range_image.getNumColumns()))
       << "For LiDAR range images that wrap around horizontally (FoV of "
          "360deg), only column numbers that are exact powers of 2 are "
          "currently supported.";

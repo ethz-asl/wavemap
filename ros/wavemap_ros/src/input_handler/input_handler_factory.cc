@@ -7,31 +7,35 @@ namespace wavemap {
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
     const param::Value& params, std::string world_frame,
     VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    std::shared_ptr<TfTransformer> transformer,
+    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private,
     std::optional<InputHandlerType> default_input_handler_type) {
   if (const auto type = InputHandlerType::from(params); type) {
     return create(type.value(), params, world_frame, occupancy_map,
-                  std::move(transformer), nh, nh_private);
+                  std::move(transformer), std::move(thread_pool), nh,
+                  nh_private);
   }
 
   if (default_input_handler_type.has_value()) {
-    LOG(WARNING) << "Default type \""
-                 << default_input_handler_type.value().toStr()
-                 << "\" will be created instead.";
+    ROS_WARN_STREAM("Default type \""
+                    << default_input_handler_type.value().toStr()
+                    << "\" will be created instead.");
     return create(default_input_handler_type.value(), params,
                   std::move(world_frame), std::move(occupancy_map),
-                  std::move(transformer), nh, nh_private);
+                  std::move(transformer), std::move(thread_pool), nh,
+                  nh_private);
   }
 
-  LOG(ERROR) << "No default was set. Returning nullptr.";
+  ROS_ERROR("No default was set. Returning nullptr.");
   return nullptr;
 }
 
 std::unique_ptr<InputHandler> InputHandlerFactory::create(
     InputHandlerType input_handler_type, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    std::shared_ptr<TfTransformer> transformer,
+    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private) {
   // Create the input handler
   switch (input_handler_type.toTypeId()) {
@@ -41,9 +45,10 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
           config) {
         return std::make_unique<PointcloudInputHandler>(
             config.value(), params, std::move(world_frame),
-            std::move(occupancy_map), std::move(transformer), nh, nh_private);
+            std::move(occupancy_map), std::move(transformer),
+            std::move(thread_pool), nh, nh_private);
       } else {
-        LOG(ERROR) << "Pointcloud input handler config could not be loaded.";
+        ROS_ERROR("Pointcloud input handler config could not be loaded.");
         return nullptr;
       }
     }
@@ -53,9 +58,10 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
           config) {
         return std::make_unique<DepthImageInputHandler>(
             config.value(), params, std::move(world_frame),
-            std::move(occupancy_map), std::move(transformer), nh, nh_private);
+            std::move(occupancy_map), std::move(transformer),
+            std::move(thread_pool), nh, nh_private);
       } else {
-        LOG(ERROR) << "Depth image input handler config could not be loaded.";
+        ROS_ERROR("Depth image input handler config could not be loaded.");
         return nullptr;
       }
     }

@@ -44,7 +44,7 @@ void HashedChunkedWaveletOctree::prune() {
   }
 }
 
-void HashedChunkedWaveletOctree::pruneDistant() {
+void HashedChunkedWaveletOctree::pruneSmart() {
   ZoneScoped;
   std::unordered_set<BlockIndex, IndexHash<kDim>> blocks_to_remove;
   for (auto& [block_index, block] : blocks_) {

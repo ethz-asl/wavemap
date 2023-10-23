@@ -43,7 +43,7 @@ class MeasurementModelBase {
       FloatingPoint cell_bounding_radius) const = 0;
 
   virtual FloatingPoint computeUpdate(
-      const Vector3D& sensor_coordinates) const = 0;
+      const SensorCoordinates& sensor_coordinates) const = 0;
 };
 }  // namespace wavemap
 

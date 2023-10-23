@@ -3,6 +3,8 @@ map:
     world_frame: "odom"
     pruning_period: { seconds: 10.0 }
     publication_period: { seconds: 10.0 }
+    logging_level: debug
+    allow_reset_map_service: true
   data_structure:
     type: wavelet_octree
     min_cell_width: { meters: 0.2 }
@@ -11,7 +13,8 @@ inputs:
   - type: pointcloud
     general:
       topic_name: "/os1_cloud_node/points"
-      topic_type: PointCloud2
+      topic_type: ouster
+      undistort_motion: true
       topic_queue_length: 10
       max_wait_for_pose: { seconds: 1.0 }
     integrators:

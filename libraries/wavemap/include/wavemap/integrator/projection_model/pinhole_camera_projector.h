@@ -45,18 +45,8 @@ class PinholeCameraProjector : public ProjectorBase {
  public:
   using Config = PinholeCameraProjectorConfig;
 
-  explicit PinholeCameraProjector(const Config& config)
-      : ProjectorBase(Vector2D::Ones(), Vector2D::Zero()),
-        config_(config.checkValid()) {}
+  explicit PinholeCameraProjector(const Config& config);
 
-  IndexElement getNumRows() const final { return config_.width; }
-  IndexElement getNumColumns() const final { return config_.height; }
-  Vector2D getMinImageCoordinates() const final {
-    return indexToImage(Index2D::Zero());
-  }
-  Vector2D getMaxImageCoordinates() const final {
-    return {indexToImage({config_.width - 1, config_.height - 1})};
-  }
   Eigen::Matrix<bool, 3, 1> sensorAxisIsPeriodic() const final {
     return {false, false, false};
   }
@@ -66,19 +56,18 @@ class PinholeCameraProjector : public ProjectorBase {
   SiUnit getImageCoordinatesUnit() const final { return SiUnit::kPixels; }
 
   // Coordinate transforms between Cartesian and sensor space
-  Vector3D cartesianToSensor(const Point3D& C_point) const final;
-  Point3D sensorToCartesian(const Vector3D& coordinates) const final;
-  Point3D sensorToCartesian(const Vector2D& image_coordinates,
-                            FloatingPoint depth) const final;
-  FloatingPoint imageOffsetToErrorNorm(const Vector2D& /*linearization_point*/,
-                                       Vector2D offset) const final;
-  std::array<FloatingPoint, 4> imageOffsetsToErrorNorms(
-      const Vector2D& /*linearization_point*/,
-      CellToBeamOffsetArray offsets) const final;
+  SensorCoordinates cartesianToSensor(const Point3D& C_point) const final;
+  Point3D sensorToCartesian(const SensorCoordinates& coordinates) const final;
+  FloatingPoint imageOffsetToErrorSquaredNorm(
+      const ImageCoordinates& /*linearization_point*/,
+      const Vector2D& offset) const final;
+  std::array<FloatingPoint, 4> imageOffsetsToErrorSquaredNorms(
+      const ImageCoordinates& /*linearization_point*/,
+      const CellToBeamOffsetArray& offsets) const final;
 
   // Projection from Cartesian space onto the sensor's image surface
-  Vector2D cartesianToImage(const Point3D& C_point) const final {
-    return cartesianToSensor(C_point).head<2>();
+  ImageCoordinates cartesianToImage(const Point3D& C_point) const final {
+    return cartesianToSensor(C_point).image;
   }
   FloatingPoint cartesianToSensorZ(const Point3D& C_point) const final {
     return C_point.z();

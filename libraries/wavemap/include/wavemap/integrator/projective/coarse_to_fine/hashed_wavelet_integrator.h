@@ -19,17 +19,20 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
                           PosedImage<>::Ptr posed_range_image,
                           Image<Vector2D>::Ptr beam_offset_image,
                           MeasurementModelBase::ConstPtr measurement_model,
-                          HashedWaveletOctree::Ptr occupancy_map)
+                          HashedWaveletOctree::Ptr occupancy_map,
+                          std::shared_ptr<ThreadPool> thread_pool = nullptr)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
             std::move(beam_offset_image), std::move(measurement_model)),
-        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
+        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))),
+        thread_pool_(thread_pool ? std::move(thread_pool)
+                                 : std::make_shared<ThreadPool>()) {}
 
  private:
   const HashedWaveletOctree::Ptr occupancy_map_;
   const FloatingPoint min_cell_width_ = occupancy_map_->getMinCellWidth();
   const FloatingPoint min_cell_width_inv_ = 1.f / min_cell_width_;
-  ThreadPool thread_pool_;
+  std::shared_ptr<ThreadPool> thread_pool_;
 
   static constexpr FloatingPoint kNoiseThreshold = 1e-4f;
   const FloatingPoint min_log_odds_ = occupancy_map_->getMinLogOdds();

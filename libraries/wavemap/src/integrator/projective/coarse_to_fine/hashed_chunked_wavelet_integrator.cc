@@ -35,12 +35,12 @@ void HashedChunkedWaveletIntegrator::updateMap() {
 
   // Update it with the threadpool
   for (const auto& block_index : blocks_to_update) {
-    thread_pool_.add_task([this, block_index]() {
+    thread_pool_->add_task([this, block_index]() {
       auto& block = occupancy_map_->getBlock(block_index);
       updateBlock(block, block_index);
     });
   }
-  thread_pool_.wait_all();
+  thread_pool_->wait_all();
 }
 
 std::pair<OctreeIndex, OctreeIndex>
@@ -71,96 +71,39 @@ void HashedChunkedWaveletIntegrator::updateBlock(
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
-  struct StackElement {
-    HashedChunkedWaveletOctreeBlock::NodeChunkType& parent_chunk;
-    const OctreeIndex parent_node_index;
-    NdtreeIndexRelativeChild next_child_idx;
-    HashedChunkedWaveletOctreeBlock::Coefficients::CoefficientsArray
-        child_scale_coefficients;
-    bool has_nonzero_child;
-  };
-  std::stack<StackElement, std::vector<StackElement>> stack;
-  stack.emplace(StackElement{
-      block.getRootChunk(), OctreeIndex{tree_height_, block_index}, 0,
-      HashedChunkedWaveletOctreeBlock::Transform::backward(
-          {block.getRootScale(), block.getRootChunk().nodeData(0u)}),
-      block.getRootChunk().nodeHasAtLeastOneChild(0u)});
+  bool block_needs_thresholding = block.getNeedsThresholding();
+  const OctreeIndex root_node_index{tree_height_, block_index};
+  updateNodeRecursive(block.getRootChunk(), root_node_index, 0u,
+                      block.getRootScale(),
+                      block.getRootChunk().nodeHasAtLeastOneChild(0u),
+                      block_needs_thresholding);
+  block.setNeedsThresholding(block_needs_thresholding);
+}
 
-  while (!stack.empty()) {
-    // If the current stack element has fully been processed, propagate upward
-    if (OctreeIndex::kNumChildren <= stack.top().next_child_idx) {
-      const auto [new_scale, new_details] =
-          HashedChunkedWaveletOctreeBlock::Transform::forward(
-              stack.top().child_scale_coefficients);
-      const MortonIndex morton_code =
-          convert::nodeIndexToMorton(stack.top().parent_node_index);
-      const int parent_height = stack.top().parent_node_index.height;
-      const int chunk_top_height =
-          chunk_height_ * int_math::div_round_up(parent_height, chunk_height_);
-      const LinearIndex relative_node_index =
-          OctreeIndex::computeTreeTraversalDistance(
-              morton_code, chunk_top_height, parent_height);
-      stack.top().parent_chunk.nodeData(relative_node_index) = new_details;
-      stack.top().parent_chunk.nodeHasAtLeastOneChild(relative_node_index) =
-          stack.top().has_nonzero_child;
-      const bool is_nonzero_child =
-          stack.top().has_nonzero_child || data_utils::is_nonzero(new_details);
-      stack.pop();
-      if (stack.empty()) {
-        block.getRootScale() = new_scale;
-        return;
-      } else {
-        const NdtreeIndexRelativeChild current_child_idx =
-            stack.top().next_child_idx - 1;
-        stack.top().child_scale_coefficients[current_child_idx] = new_scale;
-        stack.top().has_nonzero_child |= is_nonzero_child;
-        continue;
-      }
-    }
+void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
+    HashedChunkedWaveletOctreeBlock::NodeChunkType& parent_chunk,
+    const OctreeIndex& parent_node_index, LinearIndex parent_in_chunk_index,
+    FloatingPoint& parent_value,
+    HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child,
+    bool& block_needs_thresholding) {
+  auto& parent_details = parent_chunk.nodeData(parent_in_chunk_index);
+  auto child_values = HashedChunkedWaveletOctreeBlock::Transform::backward(
+      {parent_value, parent_details});
 
-    // If we're at the leaf level, directly compute the update for all children
-    if (stack.top().parent_node_index.height ==
-        config_.termination_height + 1) {
-      DCHECK_EQ(stack.top().next_child_idx, 0);
-      for (NdtreeIndexRelativeChild relative_child_idx = 0;
-           relative_child_idx < OctreeIndex::kNumChildren;
-           ++relative_child_idx) {
-        const OctreeIndex node_index =
-            stack.top().parent_node_index.computeChildIndex(relative_child_idx);
-        FloatingPoint& node_value =
-            stack.top().child_scale_coefficients[relative_child_idx];
-        const Point3D W_node_center =
-            convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
-        const Point3D C_node_center =
-            posed_range_image_->getPoseInverse() * W_node_center;
-        const FloatingPoint sample = computeUpdate(C_node_center);
-        node_value = std::clamp(sample + node_value, min_log_odds_padded_,
-                                max_log_odds_padded_);
-      }
-      stack.top().next_child_idx = OctreeIndex::kNumChildren;
-      continue;
-    }
-
-    // Otherwise, handle the stack element's children one by one
-    // Get the active child
-    const NdtreeIndexRelativeChild current_child_idx =
-        stack.top().next_child_idx;
-    ++stack.top().next_child_idx;
-    DCHECK_GE(current_child_idx, 0);
-    DCHECK_LT(current_child_idx, OctreeIndex::kNumChildren);
-
-    const OctreeIndex node_index =
-        stack.top().parent_node_index.computeChildIndex(current_child_idx);
-    FloatingPoint& node_value =
-        stack.top().child_scale_coefficients[current_child_idx];
-    DCHECK_GE(node_index.height, 0);
+  // Handle all the children
+  for (NdtreeIndexRelativeChild relative_child_idx = 0;
+       relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
+    const OctreeIndex child_index =
+        parent_node_index.computeChildIndex(relative_child_idx);
+    const int child_height = child_index.height;
+    FloatingPoint& child_value = child_values[relative_child_idx];
 
     // Test whether it is fully occupied; free or unknown; or fully unknown
-    const AABB<Point3D> W_cell_aabb =
-        convert::nodeIndexToAABB(node_index, min_cell_width_);
+    const AABB<Point3D> W_child_aabb =
+        convert::nodeIndexToAABB(child_index, min_cell_width_);
     const UpdateType update_type =
         range_image_intersector_->determineUpdateType(
-            W_cell_aabb, posed_range_image_->getRotationMatrixInverse(),
+            W_child_aabb, posed_range_image_->getRotationMatrixInverse(),
             posed_range_image_->getOrigin());
 
     // If we're fully in unknown space,
@@ -172,63 +115,77 @@ void HashedChunkedWaveletIntegrator::updateBlock(
     // We can also stop here if the cell will result in a free space update
     // (or zero) and the map is already saturated free
     if (update_type != UpdateType::kPossiblyOccupied &&
-        node_value < min_log_odds_shrunk_) {
+        child_value < min_log_odds_shrunk_) {
       continue;
     }
 
     // Test if the worst-case error for the intersection type at the current
     // resolution falls within the acceptable approximation error
-    const FloatingPoint node_width = W_cell_aabb.width<0>();
-    const Point3D W_node_center =
-        W_cell_aabb.min + Vector3D::Constant(node_width / 2.f);
-    const Point3D C_node_center =
-        posed_range_image_->getPoseInverse() * W_node_center;
-    const FloatingPoint d_C_cell =
-        projection_model_->cartesianToSensorZ(C_node_center);
+    const FloatingPoint child_width = W_child_aabb.width<0>();
+    const Point3D W_child_center =
+        W_child_aabb.min + Vector3D::Constant(child_width / 2.f);
+    const Point3D C_child_center =
+        posed_range_image_->getPoseInverse() * W_child_center;
+    const FloatingPoint d_C_child =
+        projection_model_->cartesianToSensorZ(C_child_center);
     const FloatingPoint bounding_sphere_radius =
-        kUnitCubeHalfDiagonal * node_width;
+        kUnitCubeHalfDiagonal * child_width;
     if (measurement_model_->computeWorstCaseApproximationError(
-            update_type, d_C_cell, bounding_sphere_radius) <
+            update_type, d_C_child, bounding_sphere_radius) <
         config_.termination_update_error) {
-      const FloatingPoint sample = computeUpdate(C_node_center);
-      node_value += sample;
-      // TODO(victorr) Threshold directly if child has no children
-      block.setNeedsThresholding();
+      const FloatingPoint sample = computeUpdate(C_child_center);
+      child_value += sample;
+      block_needs_thresholding = true;
       continue;
     }
 
     // Since the approximation error would still be too big, refine
-    const MortonIndex morton_code = convert::nodeIndexToMorton(node_index);
-    const int node_height = node_index.height;
-    auto& parent_chunk = stack.top().parent_chunk;
-    const int parent_height = node_height + 1;
+    const MortonIndex morton_code = convert::nodeIndexToMorton(child_index);
+    const int parent_height = child_height + 1;
     const int parent_chunk_top_height =
         chunk_height_ * int_math::div_round_up(parent_height, chunk_height_);
-    if (node_height % chunk_height_ != 0) {
-      const LinearIndex relative_node_index =
-          OctreeIndex::computeTreeTraversalDistance(
-              morton_code, parent_chunk_top_height, node_height);
-      stack.emplace(StackElement{
-          parent_chunk, node_index, 0,
-          HashedChunkedWaveletOctreeBlock::Transform::backward(
-              {node_value, parent_chunk.nodeData(relative_node_index)}),
-          parent_chunk.nodeHasAtLeastOneChild(relative_node_index)});
+
+    HashedChunkedWaveletOctreeBlock::NodeChunkType* chunk_containing_child;
+    LinearIndex child_node_in_chunk_index;
+    if (child_height % chunk_height_ != 0) {
+      chunk_containing_child = &parent_chunk;
+      child_node_in_chunk_index = OctreeIndex::computeTreeTraversalDistance(
+          morton_code, parent_chunk_top_height, child_height);
     } else {
       const LinearIndex linear_child_index =
           OctreeIndex::computeLevelTraversalDistance(
-              morton_code, parent_chunk_top_height, node_height);
-      HashedChunkedWaveletOctreeBlock::NodeChunkType* child_chunk =
-          parent_chunk.getChild(linear_child_index);
-      if (!child_chunk) {
-        child_chunk = parent_chunk.allocateChild(linear_child_index);
+              morton_code, parent_chunk_top_height, child_height);
+      chunk_containing_child = parent_chunk.getChild(linear_child_index);
+      if (!chunk_containing_child) {
+        chunk_containing_child = parent_chunk.allocateChild(linear_child_index);
       }
-      constexpr LinearIndex kRelativeNodeIndex = 0u;
-      stack.emplace(StackElement{
-          *child_chunk, node_index, 0,
-          HashedChunkedWaveletOctreeBlock::Transform::backward(
-              {node_value, child_chunk->nodeData(kRelativeNodeIndex)}),
-          child_chunk->nodeHasAtLeastOneChild(kRelativeNodeIndex)});
+      child_node_in_chunk_index = 0u;
+    }
+
+    auto& child_details =
+        chunk_containing_child->nodeData(child_node_in_chunk_index);
+    auto child_has_children = chunk_containing_child->nodeHasAtLeastOneChild(
+        child_node_in_chunk_index);
+
+    // If we're at the leaf level, directly compute the update
+    if (child_height == config_.termination_height + 1) {
+      updateLeavesBatch(child_index, child_value, child_details);
+    } else {
+      // Otherwise, recurse
+      DCHECK_GE(child_height, 0);
+      updateNodeRecursive(*chunk_containing_child, child_index,
+                          child_node_in_chunk_index, child_value,
+                          child_has_children, block_needs_thresholding);
+    }
+
+    if (child_has_children || data::is_nonzero(child_details)) {
+      parent_has_child = true;
     }
   }
+
+  const auto [new_value, new_details] =
+      HashedChunkedWaveletOctreeBlock::Transform::forward(child_values);
+  parent_details = new_details;
+  parent_value = new_value;
 }
 }  // namespace wavemap

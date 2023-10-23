@@ -43,7 +43,8 @@ release = textelem.text
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.mathjax', 'sphinx.ext.githubpages', 'breathe', 'exhale'
+    'sphinx.ext.mathjax', 'sphinx.ext.githubpages', 'breathe', 'exhale',
+    'sphinx_copybutton'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -213,7 +214,7 @@ html_context = {
 extensions.append("sphinx.ext.extlinks")
 extlinks = {
     'repo_file':
-    ('https://github.com/ethz-asl/wavemap/tree/main/%s', 'source file %s')
+    ('https://github.com/ethz-asl/wavemap/tree/main/%s', 'source: %s')
 }
 
 # Configure the link checker (invoked with `make linkcheck`)

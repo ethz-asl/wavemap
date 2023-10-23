@@ -2,6 +2,11 @@
 Changelog for package wavemap_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.6.0 (2023-10-17)
+------------------
+* Update incremental transmission and Rviz to remove deleted blocks
+* Contributors: Victor Reijgwart
+
 1.5.3 (2023-09-28)
 ------------------
 

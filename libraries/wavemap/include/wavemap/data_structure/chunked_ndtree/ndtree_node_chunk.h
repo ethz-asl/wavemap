@@ -8,7 +8,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/utils/tree_math.h"
+#include "wavemap/utils/math/tree_math.h"
 
 namespace wavemap {
 template <typename DataT, int dim, int height>

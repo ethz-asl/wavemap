@@ -20,17 +20,20 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
       PosedImage<>::Ptr posed_range_image,
       Image<Vector2D>::Ptr beam_offset_image,
       MeasurementModelBase::ConstPtr measurement_model,
-      HashedChunkedWaveletOctree::Ptr occupancy_map)
+      HashedChunkedWaveletOctree::Ptr occupancy_map,
+      std::shared_ptr<ThreadPool> thread_pool = nullptr)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
             std::move(beam_offset_image), std::move(measurement_model)),
-        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
+        occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))),
+        thread_pool_(thread_pool ? std::move(thread_pool)
+                                 : std::make_shared<ThreadPool>()) {}
 
  private:
   using BlockList = std::vector<HashedChunkedWaveletOctree::BlockIndex>;
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
-  ThreadPool thread_pool_;
+  std::shared_ptr<ThreadPool> thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
   // Cache/pre-computed commonly used values
@@ -55,6 +58,16 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   void updateMap() override;
   void updateBlock(HashedChunkedWaveletOctree::Block& block,
                    const HashedChunkedWaveletOctree::BlockIndex& block_index);
+
+  void updateNodeRecursive(
+      HashedChunkedWaveletOctreeBlock::NodeChunkType& parent_chunk,
+      const OctreeIndex& parent_node_index, LinearIndex parent_in_chunk_index,
+      FloatingPoint& parent_value,
+      HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child,
+      bool& block_needs_thresholding);
+  void updateLeavesBatch(
+      const OctreeIndex& parent_index, FloatingPoint& parent_value,
+      HashedChunkedWaveletOctreeBlock::NodeChunkType::DataType& parent_details);
 };
 }  // namespace wavemap
 

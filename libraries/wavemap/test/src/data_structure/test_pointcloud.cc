@@ -4,7 +4,7 @@
 #include "wavemap/data_structure/pointcloud.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename PointT>
@@ -219,8 +219,8 @@ TYPED_TEST(PosedPointcloudTest, Transformations) {
       const PointType& posed_pointcloud_point_W = pointcloud_W[point_idx];
       EXPECT_LE((posed_pointcloud_point_W - point_W).norm(),
                 kMaxAcceptableOffset)
-          << " for points " << EigenFormat::oneLine(posed_pointcloud_point_W)
-          << " and " << EigenFormat::oneLine(point_W);
+          << " for points " << print::eigen::oneLine(posed_pointcloud_point_W)
+          << " and " << print::eigen::oneLine(point_W);
       ++point_idx;
     }
   }

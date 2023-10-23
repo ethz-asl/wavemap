@@ -9,7 +9,7 @@
 #include "wavemap/data_structure/volumetric/hashed_chunked_wavelet_octree_block.h"
 #include "wavemap/data_structure/volumetric/volumetric_data_structure_base.h"
 #include "wavemap/indexing/index_hashes.h"
-#include "wavemap/utils/int_math.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
 /**
@@ -78,7 +78,7 @@ class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
   size_t size() const override;
   void threshold() override;
   void prune() override;
-  void pruneDistant() override;
+  void pruneSmart() override;
   void clear() override { blocks_.clear(); }
 
   size_t getMemoryUsage() const override;

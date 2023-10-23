@@ -31,6 +31,7 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
                            const param::Value& params, std::string world_frame,
                            VolumetricDataStructureBase::Ptr occupancy_map,
                            std::shared_ptr<TfTransformer> transformer,
+                           std::shared_ptr<ThreadPool> thread_pool,
                            const ros::NodeHandle& nh,
                            ros::NodeHandle nh_private)
     : config_(config.checkValid()),
@@ -39,19 +40,21 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
   // Create the integrators
   const auto integrators_param = params.getChild("integrators");
   if (!integrators_param) {
-    LOG(WARNING) << "Could not find key named \"integrators\" in input handler "
-                    "params. Input handler will be disabled.";
+    ROS_WARN(
+        "Could not find key named \"integrators\" in input handler "
+        "params. Input handler will be disabled.");
     return;
   }
   const auto integrators_array = integrators_param->get<param::Array>();
   if (!integrators_array) {
-    LOG(WARNING) << "Key named \"integrators\" in input handler params is not "
-                    "of type Array (list). Input handler will be disabled.";
+    ROS_WARN(
+        "Key named \"integrators\" in input handler params is not "
+        "of type Array (list). Input handler will be disabled.");
     return;
   }
   for (const auto& integrator_params : integrators_array.value()) {
     auto integrator =
-        IntegratorFactory::create(integrator_params, occupancy_map,
+        IntegratorFactory::create(integrator_params, occupancy_map, thread_pool,
                                   IntegratorType::kRayTracingIntegrator);
     CHECK_NOTNULL(integrator);
     integrators_.emplace_back(std::move(integrator));

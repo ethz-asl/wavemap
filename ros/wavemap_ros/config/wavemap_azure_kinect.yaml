@@ -4,6 +4,8 @@ map:
     thresholding_period: { seconds: 2.0 }
     pruning_period: { seconds: 10.0 }
     publication_period: { seconds: 2.0 }
+    logging_level: debug
+    allow_reset_map_service: true
   data_structure:
     type: hashed_chunked_wavelet_octree
     min_cell_width: { meters: 0.01 }
@@ -61,6 +63,7 @@ inputs:
     general:
       topic_name: "/livox/lidar"
       topic_type: livox
+      undistort_motion: true
       #      reprojected_topic_name: "/wavemap/livox_input"
       topic_queue_length: 1
       max_wait_for_pose: { seconds: 1.0 }
@@ -74,18 +77,18 @@ inputs:
         projection_model:
           type: spherical_projector
           elevation:
-            num_cells: 64
+            num_cells: 32
             min_angle: { degrees: -7.0 }
             max_angle: { degrees: 52.0 }
           azimuth:
-            num_cells: 1024
+            num_cells: 512
             min_angle: { degrees: -180.0 }
             max_angle: { degrees: 180.0 }
         measurement_model:
           type: continuous_beam
-          angle_sigma: { degrees: 0.035 }
+          angle_sigma: { degrees: 0.05 }
           # NOTE: For best results, we recommend setting range_sigma to
           #       max(min_cell_width / 2, ouster_noise) where ouster_noise = 0.05
-          range_sigma: { meters: 0.05 }
+          range_sigma: { meters: 0.08 }
           scaling_free: 0.2
           scaling_occupied: 0.4

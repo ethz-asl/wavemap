@@ -83,7 +83,7 @@ void SliceVisual::update() {
                 });
 
   // Add a colored square for each leaf
-  std::vector<std::vector<GridCell>> cells_per_level(num_levels);
+  std::vector<std::vector<Cell>> cells_per_level(num_levels);
   map->forEachLeaf([=, &cells_per_level](const OctreeIndex& cell_index,
                                          FloatingPoint cell_log_odds) {
     // Skip cells that don't intersect the slice
@@ -127,10 +127,10 @@ void SliceVisual::update() {
       const FloatingPoint cell_width =
           convert::heightToCellWidth(min_cell_width, height);
       auto& grid_level = grid_levels_.emplace_back(
-          std::make_unique<GridLayer>(slice_cell_material_));
+          std::make_unique<CellLayer>(slice_cell_material_));
       grid_level->setName(name);
       grid_level->setCellDimensions(cell_width, cell_width, 0.0);
-      grid_level->setAlpha(alpha, false);
+      grid_level->setAlpha(alpha);
       frame_node_->attachObject(grid_level.get());
     }
     // Update the points
@@ -151,8 +151,31 @@ void SliceVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
 }
 
 void SliceVisual::opacityUpdateCallback() {
+  FloatingPoint alpha = opacity_property_.getFloat();
+  setAlpha(alpha);
+}
+
+void SliceVisual::setAlpha(FloatingPoint alpha) {
+  // Update the material alpha
+  if (alpha < 0.9998) {
+    // Render in alpha blending mode
+    if (slice_cell_material_->getBestTechnique()) {
+      slice_cell_material_->getBestTechnique()->setSceneBlending(
+          Ogre::SBT_TRANSPARENT_ALPHA);
+      slice_cell_material_->getBestTechnique()->setDepthWriteEnabled(false);
+    }
+  } else {
+    // Render in replace mode
+    if (slice_cell_material_->getBestTechnique()) {
+      slice_cell_material_->getBestTechnique()->setSceneBlending(
+          Ogre::SBT_REPLACE);
+      slice_cell_material_->getBestTechnique()->setDepthWriteEnabled(true);
+    }
+  }
+
+  // Update the renderables
   for (auto& grid_level : grid_levels_) {
-    grid_level->setAlpha(opacity_property_.getFloat());
+    grid_level->setAlpha(alpha);
   }
 }
 }  // namespace wavemap::rviz_plugin

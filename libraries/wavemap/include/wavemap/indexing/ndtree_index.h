@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "wavemap/common.h"
-#include "wavemap/utils/int_math.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
 using NdtreeIndexElement = int;
@@ -45,6 +45,11 @@ struct NdtreeIndex {
   RelativeChild computeRelativeChildIndex() const;
   static RelativeChild computeRelativeChildIndex(MortonIndex morton,
                                                  Element parent_height);
+
+  static IndexElement computeLastCommonAncestorHeight(MortonIndex first_morton,
+                                                      Element first_height,
+                                                      MortonIndex second_morton,
+                                                      Element second_height);
 
   static LinearIndex computeLevelTraversalDistance(MortonIndex morton,
                                                    Element parent_height,

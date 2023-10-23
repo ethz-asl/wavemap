@@ -1,15 +1,12 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/measurement_model/continuous_beam.h"
 #include "wavemap/integrator/projection_model/spherical_projector.h"
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/container_print_utils.h"
-#include "wavemap/utils/eigen_format.h"
 
 namespace wavemap {
 class RangeImage2DIntersectorTest : public FixtureBase,
@@ -174,9 +171,10 @@ TEST_F(RangeImage2DIntersectorTest, RangeImageUpdateType) {
               W_cell_aabb,
               posed_range_image->getPose().inverse().getRotationMatrix(),
               posed_range_image->getOrigin());
-      EXPECT_TRUE(reference_update_type <= returned_update_type)
-          << "Expected " << getUpdateTypeStr(reference_update_type)
-          << " but got " << getUpdateTypeStr(returned_update_type);
+      EXPECT_TRUE(reference_update_type.toTypeId() <=
+                  returned_update_type.toTypeId())
+          << "Expected " << reference_update_type.toStr() << " but got "
+          << returned_update_type.toStr();
     }
   }
 }

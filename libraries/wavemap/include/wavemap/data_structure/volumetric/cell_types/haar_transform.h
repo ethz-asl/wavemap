@@ -6,7 +6,6 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/volumetric/cell_types/haar_coefficients.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/utils/bit_manipulation.h"
 
 namespace wavemap {
 // Transform 2^d scale space coefficients into 1 coarse scale and 2^d - 1

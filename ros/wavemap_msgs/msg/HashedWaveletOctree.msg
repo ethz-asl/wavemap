@@ -4,4 +4,6 @@ float32 max_log_odds
 
 int32 tree_height
 
+Index3D[] allocated_block_indices
+
 HashedWaveletOctreeBlock[] blocks

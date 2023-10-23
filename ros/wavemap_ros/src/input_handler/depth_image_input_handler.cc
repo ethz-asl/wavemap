@@ -3,8 +3,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
 #include <tracy/Tracy.hpp>
-#include <wavemap/iterator/grid_iterator.h>
-#include <wavemap/utils/eigen_format.h>
+#include <wavemap/utils/iterate/grid_iterator.h>
+#include <wavemap/utils/print/eigen.h>
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(DepthImageInputHandlerConfig,
@@ -33,11 +33,12 @@ bool DepthImageInputHandlerConfig::isValid(bool verbose) const {
 DepthImageInputHandler::DepthImageInputHandler(
     const DepthImageInputHandlerConfig& config, const param::Value& params,
     std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer, ros::NodeHandle nh,
+    std::shared_ptr<TfTransformer> transformer,
+    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private)
     : InputHandler(config, params, std::move(world_frame),
-                   std::move(occupancy_map), std::move(transformer), nh,
-                   nh_private),
+                   std::move(occupancy_map), std::move(transformer),
+                   std::move(thread_pool), nh, nh_private),
       config_(config.checkValid()) {
   // Get pointers to the underlying scanwise integrators
   for (const auto& integrator : integrators_) {
@@ -103,19 +104,19 @@ void DepthImageInputHandler::processQueue() {
     posed_range_image.setPose(T_W_C);
 
     // Integrate the depth image
-    ROS_INFO_STREAM("Inserting depth image with "
-                    << EigenFormat::oneLine(posed_range_image.getDimensions())
-                    << " points. Remaining pointclouds in queue: "
-                    << depth_image_queue_.size() - 1 << ".");
+    ROS_DEBUG_STREAM("Inserting depth image with "
+                     << print::eigen::oneLine(posed_range_image.getDimensions())
+                     << " points. Remaining pointclouds in queue: "
+                     << depth_image_queue_.size() - 1 << ".");
     integration_timer_.start();
     for (const auto& integrator : scanwise_integrators_) {
       integrator->integrateRangeImage(posed_range_image);
     }
     integration_timer_.stop();
-    ROS_INFO_STREAM("Integrated new depth image in "
-                    << integration_timer_.getLastEpisodeDuration()
-                    << "s. Total integration time: "
-                    << integration_timer_.getTotalDuration() << "s.");
+    ROS_DEBUG_STREAM("Integrated new depth image in "
+                     << integration_timer_.getLastEpisodeDuration()
+                     << "s. Total integration time: "
+                     << integration_timer_.getTotalDuration() << "s.");
 
     // Publish debugging visualizations
     if (shouldPublishReprojectedPointcloud()) {

@@ -8,12 +8,10 @@
 #include "wavemap/common.h"
 #include "wavemap/data_structure/aabb.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/utils/int_math.h"
-#include "wavemap/utils/morton_encoding.h"
+#include "wavemap/utils/bits/morton_encoding.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap::convert {
-// TODO(victorr): Check styleguide on whether these classless methods names
-//                should start with a capital
 template <int dim>
 inline Index<dim> scaledPointToNearestIndex(const Point<dim>& point) {
   return (point - Vector<dim>::Constant(0.5f))
@@ -80,6 +78,11 @@ inline Index<dim> indexToNewResolution(const Index<dim>& src_index,
 inline FloatingPoint heightToCellWidth(FloatingPoint min_cell_width,
                                        NdtreeIndexElement height) {
   return min_cell_width * static_cast<FloatingPoint>(int_math::exp2(height));
+}
+
+inline NdtreeIndexElement cellWidthToHeight(FloatingPoint cell_width,
+                                            FloatingPoint min_cell_width_inv) {
+  return std::ceil(std::log2(cell_width * min_cell_width_inv));
 }
 
 template <int cells_per_side, int dim>

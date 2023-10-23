@@ -10,7 +10,7 @@
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/integrator/measurement_model/measurement_model_base.h"
 #include "wavemap/integrator/projective/update_type.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 /**
@@ -59,7 +59,10 @@ class ContinuousBeam : public MeasurementModelBase {
       : config_(config.checkValid()),
         projection_model_(std::move(projection_model)),
         range_image_(std::move(range_image)),
-        beam_offset_image_(std::move(beam_offset_image)) {}
+        beam_offset_image_(std::move(beam_offset_image)) {
+    CHECK_EQ(range_image_->getDimensions(),
+             beam_offset_image_->getDimensions());
+  }
 
   const ContinuousBeamConfig& getConfig() const { return config_; }
   FloatingPoint getPaddingAngle() const override { return angle_threshold_; }
@@ -75,7 +78,7 @@ class ContinuousBeam : public MeasurementModelBase {
       FloatingPoint cell_bounding_radius) const override;
 
   FloatingPoint computeUpdate(
-      const Vector3D& sensor_coordinates) const override;
+      const SensorCoordinates& sensor_coordinates) const override;
 
  private:
   const ContinuousBeamConfig config_;
@@ -85,6 +88,8 @@ class ContinuousBeam : public MeasurementModelBase {
   const Image<Vector2D>::ConstPtr beam_offset_image_;
 
   const FloatingPoint angle_threshold_ = 6.f * config_.angle_sigma;
+  const FloatingPoint angle_threshold_squared =
+      angle_threshold_ * angle_threshold_;
   const FloatingPoint range_threshold_front = 3.f * config_.range_sigma;
   const FloatingPoint range_threshold_back_ = 6.f * config_.range_sigma;
   // NOTE: The angle and upper range thresholds have a width of 6 sigmas because
@@ -92,10 +97,21 @@ class ContinuousBeam : public MeasurementModelBase {
   //       angular/range uncertainty extends the non-zero regions with another 3
   //       sigma.
 
+  // Compute the measurement update for a neighborhood in the range image
+  FloatingPoint computeBeamUpdateNearestNeighbor(
+      const Image<>& range_image, const Image<Vector2D>& beam_offset_image,
+      const ProjectorBase& projection_model,
+      const SensorCoordinates& sensor_coordinates) const;
+  FloatingPoint computeBeamUpdateAllNeighbors(
+      const Image<>& range_image, const Image<Vector2D>& beam_offset_image,
+      const ProjectorBase& projection_model,
+      const SensorCoordinates& sensor_coordinates) const;
+
   // Compute the measurement update for a single beam
-  FloatingPoint computeBeamUpdate(FloatingPoint cell_to_sensor_distance,
-                                  FloatingPoint cell_to_beam_image_error_norm,
-                                  FloatingPoint measured_distance) const;
+  FloatingPoint computeBeamUpdate(
+      FloatingPoint cell_to_sensor_distance,
+      FloatingPoint cell_to_beam_image_error_norm_squared,
+      FloatingPoint measured_distance) const;
 };
 }  // namespace wavemap
 

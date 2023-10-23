@@ -112,10 +112,8 @@ jobs:
 
           if dpkg --compare-versions $version_main "lt" $version_local; then
             echo "Local version ($version_local) is ahead of origin main ($version_main)"
-            exit 0
           else
-            echo "Local version ($version_local) lags origin main ($version_main)"
-            exit 1
+            echo "::warning title=Not ready to merge::Local version ($version_local) lags origin main ($version_main)"
           fi
 
   tag-release:

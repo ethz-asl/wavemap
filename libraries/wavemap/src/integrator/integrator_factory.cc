@@ -13,17 +13,19 @@
 namespace wavemap {
 IntegratorBase::Ptr IntegratorFactory::create(
     const param::Value& params, VolumetricDataStructureBase::Ptr occupancy_map,
+    std::shared_ptr<ThreadPool> thread_pool,
     std::optional<IntegratorType> default_integrator_type) {
   if (const auto type = IntegratorType::from(params, "integration_method");
       type) {
-    return create(type.value(), params, std::move(occupancy_map));
+    return create(type.value(), params, std::move(occupancy_map),
+                  std::move(thread_pool));
   }
 
   if (default_integrator_type.has_value()) {
     LOG(WARNING) << "Default type \"" << default_integrator_type.value().toStr()
                  << "\" will be created instead.";
     return create(default_integrator_type.value(), params,
-                  std::move(occupancy_map));
+                  std::move(occupancy_map), std::move(thread_pool));
   }
 
   LOG(ERROR) << "No default was set. Returning nullptr.";
@@ -32,7 +34,8 @@ IntegratorBase::Ptr IntegratorFactory::create(
 
 IntegratorBase::Ptr IntegratorFactory::create(
     IntegratorType integrator_type, const param::Value& params,
-    VolumetricDataStructureBase::Ptr occupancy_map) {
+    VolumetricDataStructureBase::Ptr occupancy_map,
+    std::shared_ptr<ThreadPool> thread_pool) {
   // If we're using a ray tracing based integrator, we can build it directly
   if (integrator_type == IntegratorType::kRayTracingIntegrator) {
     if (const auto config =
@@ -123,8 +126,8 @@ IntegratorBase::Ptr IntegratorFactory::create(
       if (hashed_wavelet_map) {
         return std::make_shared<HashedWaveletIntegrator>(
             integrator_config.value(), projection_model, posed_range_image,
-            beam_offset_image, measurement_model,
-            std::move(hashed_wavelet_map));
+            beam_offset_image, measurement_model, std::move(hashed_wavelet_map),
+            std::move(thread_pool));
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
                    << " only supports data structures of type "
@@ -141,7 +144,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
         return std::make_shared<HashedChunkedWaveletIntegrator>(
             integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model,
-            std::move(hashed_chunked_wavelet_map));
+            std::move(hashed_chunked_wavelet_map), std::move(thread_pool));
       } else {
         LOG(ERROR)
             << "Integrator of type " << integrator_type.toStr()

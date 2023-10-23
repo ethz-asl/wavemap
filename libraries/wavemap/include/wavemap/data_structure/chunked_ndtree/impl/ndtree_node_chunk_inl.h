@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 
-#include "wavemap/utils/data_utils.h"
+#include "wavemap/utils/data/comparisons.h"
 
 namespace wavemap {
 template <typename DataT, int dim, int height>
@@ -22,7 +22,7 @@ template <typename DataT, int dim, int height>
 bool NdtreeNodeChunk<DataT, dim, height>::hasNonzeroData() const {
   return std::any_of(
       node_data_.cbegin(), node_data_.cend(),
-      [](const auto& node_data) { return data_utils::is_nonzero(node_data); });
+      [](const auto& node_data) { return data::is_nonzero(node_data); });
 }
 
 template <typename DataT, int dim, int height>
@@ -30,7 +30,7 @@ bool NdtreeNodeChunk<DataT, dim, height>::hasNonzeroData(
     FloatingPoint threshold) const {
   return std::any_of(node_data_.cbegin(), node_data_.cend(),
                      [threshold](const auto& node_data) {
-                       return data_utils::is_nonzero(node_data, threshold);
+                       return data::is_nonzero(node_data, threshold);
                      });
 }
 
@@ -127,14 +127,14 @@ template <typename DataT, int dim, int height>
 bool NdtreeNodeChunk<DataT, dim, height>::nodeHasNonzeroData(
     LinearIndex relative_node_index) const {
   DCHECK_LT(relative_node_index, kNumInnerNodes);
-  return data_utils::is_nonzero(node_data_[relative_node_index]);
+  return data::is_nonzero(node_data_[relative_node_index]);
 }
 
 template <typename DataT, int dim, int height>
 bool NdtreeNodeChunk<DataT, dim, height>::nodeHasNonzeroData(
     LinearIndex relative_node_index, FloatingPoint threshold) const {
   DCHECK_LT(relative_node_index, kNumInnerNodes);
-  return data_utils::is_nonzero(node_data_[relative_node_index], threshold);
+  return data::is_nonzero(node_data_[relative_node_index], threshold);
 }
 
 template <typename DataT, int dim, int height>

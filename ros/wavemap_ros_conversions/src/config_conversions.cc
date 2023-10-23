@@ -7,8 +7,8 @@ param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {
     return toParamMap(xml_rpc_value);
   }
 
-  LOG(WARNING) << "Could not load ROS params under namespace "
-               << nh.resolveName(ns);
+  ROS_WARN_STREAM("Could not load ROS params under namespace "
+                  << nh.resolveName(ns));
   return {};
 }
 
@@ -18,8 +18,8 @@ param::Array toParamArray(const ros::NodeHandle& nh, const std::string& ns) {
     return toParamArray(xml_rpc_value);
   }
 
-  LOG(WARNING) << "Could not load ROS params under namespace "
-               << nh.resolveName(ns);
+  ROS_WARN_STREAM("Could not load ROS params under namespace "
+                  << nh.resolveName(ns));
   return {};
 }
 
@@ -29,15 +29,15 @@ param::Value toParamValue(const ros::NodeHandle& nh, const std::string& ns) {
     return toParamValue(xml_rpc_value);
   }
 
-  LOG(WARNING) << "Could not load ROS params under namespace "
-               << nh.resolveName(ns);
+  ROS_WARN_STREAM("Could not load ROS params under namespace "
+                  << nh.resolveName(ns));
   return param::Value{param::Map{}};  // Return an empty map
 }
 
 param::Map toParamMap(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-    LOG(WARNING) << "Expected param map.";
+    ROS_WARN("Expected param map.");
     return {};
   }
 
@@ -51,7 +51,7 @@ param::Map toParamMap(  // NOLINT
 param::Array toParamArray(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeArray) {
-    LOG(WARNING) << "Expected param array.";
+    ROS_WARN("Expected param array.");
     return {};
   }
 

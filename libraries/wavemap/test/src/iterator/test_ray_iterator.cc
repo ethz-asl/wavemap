@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/iterator/ray_iterator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/iterate/ray_iterator.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename TypeParamT>
@@ -92,10 +92,10 @@ TYPED_TEST(RayIteratorTest, IterationOrderAndCompleteness) {
                                 std::sqrt(0.5f) * min_cell_width)
             << "Ray iterator updated cell that is not traversed by the ray, "
                "for cell with index"
-            << EigenFormat::oneLine(index) << " and center point"
-            << EigenFormat::oneLine(current_point) << " on ray from"
-            << EigenFormat::oneLine(start_point) << " to"
-            << EigenFormat::oneLine(end_point) << " at min cell width "
+            << print::eigen::oneLine(index) << " and center point"
+            << print::eigen::oneLine(current_point) << " on ray from"
+            << print::eigen::oneLine(start_point) << " to"
+            << print::eigen::oneLine(end_point) << " at min cell width "
             << min_cell_width << ".";
       }
       last_index = index;

@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "wavemap/utils/int_math.h"
+#include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
 TEST(IntMathTest, Exp2) {

@@ -4,10 +4,10 @@
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/index_conversions.h"
+#include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/container_print_utils.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 // TODO(victorr): Add tests for remaining index conversions:
@@ -45,8 +45,8 @@ TYPED_TEST(IndexConversionsTest, LinearIndexConversions) {
     const Index<kDim> round_trip_index =
         convert::linearIndexToIndex<kCellsPerSide, kDim>(linear_index);
     EXPECT_EQ(round_trip_index, index)
-        << "Expected index " << EigenFormat::oneLine(index) << " but got "
-        << EigenFormat::oneLine(round_trip_index)
+        << "Expected index " << print::eigen::oneLine(index) << " but got "
+        << print::eigen::oneLine(round_trip_index)
         << ", from intermediate linear_index " << linear_index;
   }
 }
@@ -80,9 +80,9 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
           node_index.position * int_math::exp2(node_index.height);
       EXPECT_EQ(min_corner_index, min_corner_index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
-          << " to regular index " << EigenFormat::oneLine(min_corner_index)
+          << " to regular index " << print::eigen::oneLine(min_corner_index)
           << " does not match convention "
-          << EigenFormat::oneLine(min_corner_index_from_convention);
+          << print::eigen::oneLine(min_corner_index_from_convention);
     }
     {
       const Index<kDim> max_corner_index =
@@ -93,9 +93,9 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
           Index<kDim>::Ones();
       EXPECT_EQ(max_corner_index, max_corner_index_from_convention)
           << "Quadtree converts node index " << node_index.toString()
-          << " to regular index " << EigenFormat::oneLine(max_corner_index)
+          << " to regular index " << print::eigen::oneLine(max_corner_index)
           << " does not match convention "
-          << EigenFormat::oneLine(max_corner_index_from_convention);
+          << print::eigen::oneLine(max_corner_index_from_convention);
     }
 
     // Roundtrip through regular indices (integer coordinates)
@@ -107,7 +107,7 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
                                              node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
-          << " to min corner index " << EigenFormat::oneLine(min_corner_index)
+          << " to min corner index " << print::eigen::oneLine(min_corner_index)
           << " and back should yield the same node index, but got "
           << roundtrip_node_index.toString() << " instead.";
     }
@@ -119,7 +119,7 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
                                              node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
-          << " to max corner index " << EigenFormat::oneLine(max_corner_index)
+          << " to max corner index " << print::eigen::oneLine(max_corner_index)
           << " and back should yield the same node index, but got "
           << roundtrip_node_index.toString() << " instead.";
     }
@@ -134,9 +134,43 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
           node_center, random_min_cell_width, node_index.height);
       EXPECT_EQ(roundtrip_node_index, node_index)
           << "Going from node index " << node_index.toString()
-          << " to node center " << EigenFormat::oneLine(node_center)
+          << " to node center " << print::eigen::oneLine(node_center)
           << " and back should yield the same node index, but got "
           << roundtrip_node_index.toString() << " instead.";
+    }
+
+    // Roundtrip through AABB
+    {
+      const FloatingPoint random_min_cell_width =
+          TestFixture::getRandomMinCellWidth();
+      const auto node_aabb =
+          convert::nodeIndexToAABB(node_index, random_min_cell_width);
+      const auto min_corner =
+          convert::nodeIndexToMinCorner(node_index, random_min_cell_width);
+      const auto max_corner =
+          convert::nodeIndexToMaxCorner(node_index, random_min_cell_width);
+      const FloatingPoint cell_width =
+          convert::heightToCellWidth(random_min_cell_width, node_index.height);
+      // Skip excessively large cells where numerical noise is too large
+      if ((min_corner.array().abs() < 1e2f || max_corner.array().abs() < 1e2f)
+              .all()) {
+        EXPECT_EIGEN_NEAR(node_aabb.min, min_corner, kEpsilon);
+        EXPECT_EIGEN_NEAR(node_aabb.max, max_corner, kEpsilon);
+        EXPECT_NEAR(node_aabb.template width<0>(), cell_width, kEpsilon);
+
+        const Point<kDim> aabb_center = 0.5f * (node_aabb.min + node_aabb.max);
+        const FloatingPoint aabb_width = node_aabb.template width<0>();
+        const NdtreeIndexElement aabb_height =
+            convert::cellWidthToHeight(aabb_width, 1.f / random_min_cell_width);
+        const NdtreeIndex<kDim> roundtrip_node_index =
+            convert::pointToNodeIndex(aabb_center, random_min_cell_width,
+                                      aabb_height);
+        EXPECT_EQ(roundtrip_node_index, node_index)
+            << "Going from node index " << node_index.toString() << " to aabb "
+            << node_aabb.toString()
+            << " and back should yield the same node index, but got "
+            << roundtrip_node_index.toString() << " instead.";
+      }
     }
   }
 }
@@ -159,10 +193,10 @@ TYPED_TEST(IndexConversionsTest, MortonCodes) {
     const Index<kDim> round_trip_index =
         convert::mortonToIndex<kDim>(morton_code);
     EXPECT_EQ(round_trip_index, index)
-        << "For original index " << EigenFormat::oneLine(index) << "(\n"
+        << "For original index " << print::eigen::oneLine(index) << "(\n"
         << bitset_printer(index) << "), morton code " << morton_code << " (\n"
         << std::bitset<64>(morton_code) << "\n) and round trip index "
-        << EigenFormat::oneLine(round_trip_index) << "(\n"
+        << print::eigen::oneLine(round_trip_index) << "(\n"
         << bitset_printer(round_trip_index) << ")";
   }
   // Test the last coordinate over its full range
@@ -179,10 +213,10 @@ TYPED_TEST(IndexConversionsTest, MortonCodes) {
       const Index<kDim> round_trip_index =
           convert::mortonToIndex<kDim>(morton_code);
       EXPECT_EQ(round_trip_index, index)
-          << "For original index " << EigenFormat::oneLine(index) << "(\n"
+          << "For original index " << print::eigen::oneLine(index) << "(\n"
           << bitset_printer(index) << "), morton code " << morton_code << " (\n"
           << std::bitset<64>(morton_code) << "\n) and round trip index "
-          << EigenFormat::oneLine(round_trip_index) << "(\n"
+          << print::eigen::oneLine(round_trip_index) << "(\n"
           << bitset_printer(round_trip_index) << ")";
     }
   }

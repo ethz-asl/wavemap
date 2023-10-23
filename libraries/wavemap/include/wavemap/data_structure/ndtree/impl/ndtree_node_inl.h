@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 
-#include "wavemap/utils/data_utils.h"
+#include "wavemap/utils/data/comparisons.h"
 
 namespace wavemap {
 template <typename DataT, int dim>
@@ -20,12 +20,12 @@ void NdtreeNode<DataT, dim>::clear() {
 
 template <typename DataT, int dim>
 bool NdtreeNode<DataT, dim>::hasNonzeroData() const {
-  return data_utils::is_nonzero(data_);
+  return data::is_nonzero(data_);
 }
 
 template <typename DataT, int dim>
 bool NdtreeNode<DataT, dim>::hasNonzeroData(FloatingPoint threshold) const {
-  return data_utils::is_nonzero(data_, threshold);
+  return data::is_nonzero(data_, threshold);
 }
 
 template <typename DataT, int dim>

@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/common.h"
-#include "wavemap/iterator/grid_iterator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
-#include "wavemap/utils/eigen_format.h"
+#include "wavemap/utils/iterate/grid_iterator.h"
+#include "wavemap/utils/print/eigen.h"
 
 namespace wavemap {
 template <typename TypeParamT>
@@ -68,16 +68,16 @@ TYPED_TEST(GridIteratorTest, EquivalenceToNestedLoops) {
     NestedLoopGridVisitor(
         bottom_left_idx, top_right_idx, [&](const Index<kDim>& index) {
           EXPECT_EQ(*grid_it, index)
-              << "Got *grid_it " << EigenFormat::oneLine(*grid_it)
-              << ", while expecting index " << EigenFormat::oneLine(index)
-              << " between min index " << EigenFormat::oneLine(bottom_left_idx)
-              << " and max index " << EigenFormat::oneLine(top_right_idx);
+              << "Got *grid_it " << print::eigen::oneLine(*grid_it)
+              << ", while expecting index " << print::eigen::oneLine(index)
+              << " between min index " << print::eigen::oneLine(bottom_left_idx)
+              << " and max index " << print::eigen::oneLine(top_right_idx);
           EXPECT_NE(grid_it, grid_it_end)
-              << "For *grid_it " << EigenFormat::oneLine(*grid_it)
-              << ", *grid_it_end " << EigenFormat::oneLine(*grid_it_end)
-              << " while at index " << EigenFormat::oneLine(index)
-              << " between min index " << EigenFormat::oneLine(bottom_left_idx)
-              << " and max index " << EigenFormat::oneLine(top_right_idx);
+              << "For *grid_it " << print::eigen::oneLine(*grid_it)
+              << ", *grid_it_end " << print::eigen::oneLine(*grid_it_end)
+              << " while at index " << print::eigen::oneLine(index)
+              << " between min index " << print::eigen::oneLine(bottom_left_idx)
+              << " and max index " << print::eigen::oneLine(top_right_idx);
           ++grid_it;
           ++count;
         });
@@ -87,10 +87,10 @@ TYPED_TEST(GridIteratorTest, EquivalenceToNestedLoops) {
     EXPECT_EQ(count, num_grid_indices)
         << "If this fails, the test itself is broken";
     EXPECT_EQ(grid_it, grid_it_end)
-        << "For *grid_it " << EigenFormat::oneLine(*grid_it)
-        << ", *grid_it_end " << EigenFormat::oneLine(*grid_it_end)
-        << ", min index " << EigenFormat::oneLine(bottom_left_idx)
-        << " and max index " << EigenFormat::oneLine(top_right_idx);
+        << "For *grid_it " << print::eigen::oneLine(*grid_it)
+        << ", *grid_it_end " << print::eigen::oneLine(*grid_it_end)
+        << ", min index " << print::eigen::oneLine(bottom_left_idx)
+        << " and max index " << print::eigen::oneLine(top_right_idx);
   }
 }
 }  // namespace wavemap

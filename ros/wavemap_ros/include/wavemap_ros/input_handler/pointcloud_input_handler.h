@@ -86,6 +86,7 @@ class PointcloudInputHandler : public InputHandler {
                          const param::Value& params, std::string world_frame,
                          VolumetricDataStructureBase::Ptr occupancy_map,
                          std::shared_ptr<TfTransformer> transformer,
+                         std::shared_ptr<ThreadPool> thread_pool,
                          ros::NodeHandle nh, ros::NodeHandle nh_private);
 
   InputHandlerType getType() const override {
