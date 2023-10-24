@@ -1,10 +1,10 @@
 <launch>
     <!-- Wavemap params -->
     <arg name="param_file"
-         default="$(find wavemap_ros)/config/wavemap_ouster_os0.yaml"
+         default="$(find wavemap_ros)/config/wavemap_ouster_os0_pico_monstar.yaml"
          doc="Name of the file from which to read wavemap's server params."/>
     <arg name="rviz_config"
-         default="$(find wavemap_ros)/config/rviz/online.rviz"/>
+         default="$(find wavemap_ros)/config/rviz/live_demo.rviz"/>
 
     <!-- Run the Ouster driver -->
     <include file="$(find ouster_ros)/launch/driver.launch">
@@ -84,4 +84,9 @@
     <node if="false" pkg="rosbag" type="record" name="rosbag_record" output="screen"
           args="/wavemap/reprojected_pointcloud /Odometry
           --output-prefix /home/victor/catkin_ws/lidar_align_os0_monstar"/>
+
+    <!-- [Optional] Record topics for replay -->
+    <node if="false" pkg="rosbag" type="record" name="rosbag_record" output="screen"
+          args="/pico_monstar/image_rect /os_cloud_node/points /os_cloud_node/imu
+          --output-prefix /home/victor/catkin_ws/os0_monstar_eth"/>
 </launch>

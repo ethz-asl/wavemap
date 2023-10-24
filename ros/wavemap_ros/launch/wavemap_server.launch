@@ -45,6 +45,6 @@
   <!-- Show Rviz -->
   <group if="$(arg show_rviz)">
     <node pkg="rviz" type="rviz" name="$(anon rviz)" output="screen"
-          args="-d $(arg rviz_file)"/>
+          args="-d $(arg rviz_config)"/>
   </group>
 </launch>
