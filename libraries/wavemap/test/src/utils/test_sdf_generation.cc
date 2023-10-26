@@ -6,14 +6,20 @@
 #include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
+#include "wavemap/utils/sdf/full_euclidean_sdf_generator.h"
 #include "wavemap/utils/sdf/quasi_euclidean_sdf_generator.h"
 
 namespace wavemap {
+template <typename T>
 class SdfGenerationTest : public FixtureBase,
                           public GeometryGenerator,
                           public ConfigGenerator {};
 
-TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
+using SdfGeneratorTypes =
+    ::testing::Types<QuasiEuclideanSDFGenerator, FullEuclideanSDFGenerator>;
+TYPED_TEST_SUITE(SdfGenerationTest, SdfGeneratorTypes, );
+
+TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
   // Params
   const Index3D min_index = Index3D::Constant(-10);
   const Index3D max_index = Index3D::Constant(100);
@@ -53,7 +59,7 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
   }
 
   // Generate the SDF
-  QuasiEuclideanSDFGenerator sdf_generator{kMaxSdfDistance};
+  TypeParam sdf_generator{kMaxSdfDistance};
   const auto sdf = sdf_generator.generate(map);
 
   // Compare the SDF distances to the brute force min distance
@@ -73,6 +79,8 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
 
     // Find the closest surface using brute force
     FloatingPoint sdf_brute_force = sdf.getDefaultCellValue();
+    Index3D parent_brute_force =
+        Index3D::Constant(std::numeric_limits<IndexElement>::max());
     if (classifier.isFree(occupancy_value)) {
       // In free space, the SDF should always be positive
       EXPECT_GT(sdf_value, 0.f);
@@ -81,8 +89,11 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
       for (const auto& obstacle_cell : obstacle_cells) {
         const auto obstacle_aabb = convert::nodeIndexToAABB(
             OctreeIndex{0, obstacle_cell}, min_cell_width);
-        sdf_brute_force =
-            std::min(obstacle_aabb.minDistanceTo(node_center), sdf_brute_force);
+        const FloatingPoint min_dist = obstacle_aabb.minDistanceTo(node_center);
+        if (min_dist < sdf_brute_force) {
+          sdf_brute_force = min_dist;
+          parent_brute_force = obstacle_cell;
+        }
       }
     } else {
       // Find the distance to the closest free cell
@@ -95,8 +106,12 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
             OccupancyClassifier::isObserved(neighbor_occupancy_value)) {
           const auto free_cell_aabb = convert::nodeIndexToAABB(
               OctreeIndex{0, neighbor_index}, min_cell_width);
-          sdf_brute_force = std::min(free_cell_aabb.minDistanceTo(node_center),
-                                     sdf_brute_force);
+          const FloatingPoint min_dist =
+              free_cell_aabb.minDistanceTo(node_center);
+          if (min_dist < sdf_brute_force) {
+            sdf_brute_force = min_dist;
+            parent_brute_force = neighbor_index;
+          }
         }
       }
       // Adjust the sign to reflect we're inside the obstacle
@@ -113,15 +128,38 @@ TEST_F(SdfGenerationTest, QuasiEuclideanSDFGenerator) {
     }
 
     // Check that the SDF accurately approximates the min obstacle distance
-    constexpr FloatingPoint kMaxMultiplicativeError =
-        QuasiEuclideanSDFGenerator::kMaxMultiplicativeError;
+    constexpr FloatingPoint kMaxRelativeUnderEstimate =
+        TypeParam::kMaxRelativeUnderEstimate;
+    constexpr FloatingPoint kMaxRelativeOverEstimate =
+        TypeParam::kMaxRelativeOverEstimate;
     if (std::abs(sdf_brute_force) < sdf.getDefaultCellValue()) {
-      EXPECT_NEAR(sdf_value, sdf_brute_force,
-                  std::abs(sdf_brute_force) * kMaxMultiplicativeError)
-          << "At index " << print::eigen::oneLine(node_index.position);
+      if (0.f < sdf_brute_force) {
+        EXPECT_LT(sdf_value, sdf_brute_force * (1.f + kMaxRelativeOverEstimate))
+            << "At index " << print::eigen::oneLine(node_index.position)
+            << " with nearest obstacle "
+            << print::eigen::oneLine(parent_brute_force);
+        EXPECT_GT(sdf_value,
+                  sdf_brute_force * (1.f - kMaxRelativeUnderEstimate))
+            << "At index " << print::eigen::oneLine(node_index.position)
+            << " with nearest obstacle "
+            << print::eigen::oneLine(parent_brute_force);
+      } else {
+        EXPECT_GT(sdf_value, sdf_brute_force * (1.f + kMaxRelativeOverEstimate))
+            << "At index " << print::eigen::oneLine(node_index.position)
+            << " with nearest free cell "
+            << print::eigen::oneLine(parent_brute_force);
+        EXPECT_LT(sdf_value,
+                  sdf_brute_force * (1.f - kMaxRelativeUnderEstimate))
+            << "At index " << print::eigen::oneLine(node_index.position)
+            << " with nearest free cell "
+            << print::eigen::oneLine(parent_brute_force);
+      }
     } else {
-      EXPECT_NEAR(sdf_value, sdf.getDefaultCellValue(),
-                  sdf.getDefaultCellValue() * kMaxMultiplicativeError)
+      EXPECT_LT(sdf_value,
+                sdf.getDefaultCellValue() * (1.f + kMaxRelativeOverEstimate))
+          << "At index " << print::eigen::oneLine(node_index.position);
+      EXPECT_GT(sdf_value,
+                sdf.getDefaultCellValue() * (1.f - kMaxRelativeUnderEstimate))
           << "At index " << print::eigen::oneLine(node_index.position);
     }
   });

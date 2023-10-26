@@ -67,7 +67,9 @@ add_library(${PROJECT_NAME}
     src/map/volumetric_data_structure_base.cc
     src/map/volumetric_data_structure_factory.cc
     src/utils/sdf/cell_neighborhoods.cc
+    src/utils/sdf/full_euclidean_sdf_generator.cc
     src/utils/sdf/quasi_euclidean_sdf_generator.cc
+    src/utils/sdf/vector_distance_field.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})

@@ -10,7 +10,8 @@
 namespace wavemap {
 class QuasiEuclideanSDFGenerator {
  public:
-  static constexpr FloatingPoint kMaxMultiplicativeError = 0.125f + 1e-3f;
+  static constexpr FloatingPoint kMaxRelativeUnderEstimate = kEpsilon;
+  static constexpr FloatingPoint kMaxRelativeOverEstimate = 0.125f + 1e-3f;
 
   explicit QuasiEuclideanSDFGenerator(FloatingPoint max_distance = 2.f,
                                       FloatingPoint occupancy_threshold = 0.f)
@@ -21,7 +22,6 @@ class QuasiEuclideanSDFGenerator {
   FloatingPoint getMaxDistance() const { return max_distance_; }
 
  private:
-  static constexpr FloatingPoint kTolerance = 1e-2f;
   inline static const auto kNeighborIndexOffsets =
       neighborhood::generateNeighborIndexOffsets();
 

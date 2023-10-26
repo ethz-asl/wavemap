@@ -1,4 +1,4 @@
-#include "wavemap/utils/sdf/quasi_euclidean_sdf_generator.h"
+#include "wavemap/utils/sdf/full_euclidean_sdf_generator.h"
 
 #include <tracy/Tracy.hpp>
 
@@ -6,14 +6,12 @@
 #include "wavemap/utils/query/query_accelerator.h"
 
 namespace wavemap {
-HashedBlocks QuasiEuclideanSDFGenerator::generate(
+HashedBlocks FullEuclideanSDFGenerator::generate(
     const HashedWaveletOctree& occupancy_map) {
   ZoneScoped;
   // Initialize the SDF data structure
   const FloatingPoint min_cell_width = occupancy_map.getMinCellWidth();
-  const VolumetricDataStructureConfig config{min_cell_width, 0.f,
-                                             max_distance_};
-  HashedBlocks sdf(config, max_distance_);
+  VectorDistanceField full_sdf(min_cell_width, max_distance_);
 
   // Initialize the bucketed priority queue
   const int num_bins =
@@ -21,15 +19,24 @@ HashedBlocks QuasiEuclideanSDFGenerator::generate(
   BucketQueue<Index3D> open{num_bins, max_distance_};
 
   // Seed and propagate the SDF
-  seed(occupancy_map, sdf, open);
-  propagate(occupancy_map, sdf, open);
+  seed(occupancy_map, full_sdf, open);
+  propagate(occupancy_map, full_sdf, open);
+
+  // Copy into regular data structure
+  const VolumetricDataStructureConfig config{min_cell_width, 0.f,
+                                             max_distance_};
+  HashedBlocks sdf(config, max_distance_);
+  full_sdf.forEachLeaf(
+      [&sdf](const Index3D& cell_index, const VectorDistance& cell_value) {
+        sdf.setCellValue(cell_index, cell_value.distance);
+      });
 
   return sdf;
 }
 
-void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
-                                      HashedBlocks& sdf,
-                                      BucketQueue<Index3D>& open_queue) const {
+void FullEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
+                                     VectorDistanceField& sdf,
+                                     BucketQueue<Index3D>& open_queue) const {
   ZoneScoped;
   // Create an occupancy query accelerator
   QueryAccelerator occupancy_query_accelerator{occupancy_map};
@@ -76,14 +83,17 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       }
 
       // Get the voxel's SDF value
-      FloatingPoint& sdf_value = sdf.getCellValueRef(index);
-      const bool sdf_uninitialized = sdf.getDefaultCellValue() == sdf_value;
+      auto& [sdf_parent, sdf_value] = sdf.getCellValueRef(index);
+      const bool sdf_uninitialized =
+          sdf_parent == sdf.getDefaultCellValue().parent;
 
       // Update the voxel's SDF value
       const FloatingPoint distance_to_surface =
-          0.5f * min_cell_width *
-          (index - nearest_inner_index).cast<FloatingPoint>().norm();
-      sdf_value = std::min(sdf_value, distance_to_surface);
+          minDistanceTo(index, nearest_inner_index, min_cell_width);
+      if (distance_to_surface < sdf_value) {
+        sdf_value = distance_to_surface;
+        sdf_parent = nearest_inner_index;
+      }
 
       // If the voxel is not yet in the open queue, add it
       if (sdf_uninitialized) {
@@ -93,8 +103,8 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
   });
 }
 
-void QuasiEuclideanSDFGenerator::propagate(
-    const HashedWaveletOctree& occupancy_map, HashedBlocks& sdf,
+void FullEuclideanSDFGenerator::propagate(
+    const HashedWaveletOctree& occupancy_map, VectorDistanceField& sdf,
     BucketQueue<Index3D>& open_queue) const {
   ZoneScoped;
   // Create an occupancy query accelerator
@@ -102,9 +112,6 @@ void QuasiEuclideanSDFGenerator::propagate(
 
   // Precompute the neighbor distance offsets
   const FloatingPoint min_cell_width = occupancy_map.getMinCellWidth();
-  const auto neighbor_distance_offsets =
-      neighborhood::generateNeighborDistanceOffsets(min_cell_width);
-  CHECK_EQ(kNeighborIndexOffsets.size(), neighbor_distance_offsets.size());
   const FloatingPoint half_max_neighbor_distance_offset =
       0.5f * std::sqrt(3.f) * min_cell_width + 1e-3f;
 
@@ -112,28 +119,27 @@ void QuasiEuclideanSDFGenerator::propagate(
   while (!open_queue.empty()) {
     TracyPlot("QueueLength", static_cast<int64_t>(open_queue.size()));
     const Index3D index = open_queue.front();
-    const FloatingPoint sdf_value = sdf.getCellValue(index);
+    const auto& [sdf_parent, sdf_value] = sdf.getCellValue(index);
     const FloatingPoint df_value = std::abs(sdf_value);
     TracyPlot("Distance", df_value);
     open_queue.pop();
 
-    for (size_t neighbor_idx = 0; neighbor_idx < kNeighborIndexOffsets.size();
-         ++neighbor_idx) {
+    for (const Index3D& index_offset : kNeighborIndexOffsets) {
       // Compute the neighbor's distance if reached from the current voxel
+      const Index3D neighbor_index = index + index_offset;
       FloatingPoint neighbor_df_candidate =
-          df_value + neighbor_distance_offsets[neighbor_idx];
+          minDistanceTo(neighbor_index, sdf_parent, min_cell_width);
       if (max_distance_ <= neighbor_df_candidate) {
         continue;
       }
 
       // Get the neighbor's SDF value
-      const Index3D neighbor_index =
-          index + kNeighborIndexOffsets[neighbor_idx];
-      FloatingPoint& neighbor_sdf = sdf.getCellValueRef(neighbor_index);
+      auto& [neighbor_sdf_parent, neighbor_sdf_value] =
+          sdf.getCellValueRef(neighbor_index);
 
       // If the neighbor is uninitialized, get its sign from the occupancy map
       const bool neighbor_sdf_uninitialized =
-          sdf.getDefaultCellValue() == neighbor_sdf;
+          neighbor_sdf_parent == sdf.getDefaultCellValue().parent;
       if (neighbor_sdf_uninitialized) {
         const FloatingPoint neighbor_occupancy =
             occupancy_query_accelerator.getCellValue(neighbor_index);
@@ -143,30 +149,34 @@ void QuasiEuclideanSDFGenerator::propagate(
         }
         // Set the sign
         if (classifier_.isOccupied(neighbor_occupancy)) {
-          neighbor_sdf = -sdf.getDefaultCellValue();
+          neighbor_sdf_value = -sdf.getDefaultCellValue().distance;
         }
       }
 
       // Handle sign changes when propagating across the surface
-      if (std::signbit(neighbor_sdf) != std::signbit(sdf_value)) {
-        if (neighbor_sdf < 0.f) {
-          // NOTE: When the opened cell and the neighbor cell have the same
-          //       sign, the distance field value and offset are summed to
-          //       obtain the unsigned neighbor distance. Whereas when moving
-          //       across the surface, the df_value and offset have opposite
-          //       signs and reduce each other instead.
+      const bool crossed_surface =
+          std::signbit(neighbor_sdf_value) != std::signbit(sdf_value);
+      if (crossed_surface) {
+        if (neighbor_sdf_value < 0.f) {
           DCHECK_LE(df_value, half_max_neighbor_distance_offset);
           neighbor_df_candidate =
-              neighbor_distance_offsets[neighbor_idx] - df_value;
+              minDistanceTo(neighbor_index, index, min_cell_width);
         } else {
           continue;
         }
       }
 
       // Update the neighbor's SDF value
-      FloatingPoint neighbor_df = std::abs(neighbor_sdf);
-      neighbor_df = std::min(neighbor_df, neighbor_df_candidate);
-      neighbor_sdf = std::copysign(neighbor_df, neighbor_sdf);
+      const FloatingPoint neighbor_df = std::abs(neighbor_sdf_value);
+      if (neighbor_df_candidate < neighbor_df) {
+        neighbor_sdf_value =
+            std::copysign(neighbor_df_candidate, neighbor_sdf_value);
+        if (crossed_surface) {
+          neighbor_sdf_parent = index;
+        } else {
+          neighbor_sdf_parent = sdf_parent;
+        }
+      }
 
       // If the neighbor is not yet in the open queue, add it
       if (neighbor_sdf_uninitialized) {
@@ -174,5 +184,14 @@ void QuasiEuclideanSDFGenerator::propagate(
       }
     }
   }
+}
+
+FloatingPoint FullEuclideanSDFGenerator::minDistanceTo(
+    const Index3D& child, const Index3D& parent, FloatingPoint min_cell_width) {
+  const auto parent_aabb =
+      convert::nodeIndexToAABB(OctreeIndex{0, parent}, min_cell_width);
+  const auto child_center = convert::indexToCenterPoint(child, min_cell_width);
+  const FloatingPoint min_dist = parent_aabb.minDistanceTo(child_center);
+  return min_dist;
 }
 }  // namespace wavemap

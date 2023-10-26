@@ -21,7 +21,7 @@ class DenseGrid {
   static constexpr IndexElement kCellsPerBlock =
       int_math::exp2(dim * kCellsPerSideLog2);
 
-  using DataArrayType = std::array<FloatingPoint, kCellsPerBlock>;
+  using DataArrayType = std::array<CellDataT, kCellsPerBlock>;
 
   explicit DenseGrid(const CellDataT& default_value) {
     if (default_value != CellDataT{}) {
