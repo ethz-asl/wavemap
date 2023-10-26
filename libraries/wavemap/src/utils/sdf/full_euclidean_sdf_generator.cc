@@ -188,10 +188,17 @@ void FullEuclideanSDFGenerator::propagate(
 
 FloatingPoint FullEuclideanSDFGenerator::minDistanceTo(
     const Index3D& child, const Index3D& parent, FloatingPoint min_cell_width) {
-  const auto parent_aabb =
-      convert::nodeIndexToAABB(OctreeIndex{0, parent}, min_cell_width);
-  const auto child_center = convert::indexToCenterPoint(child, min_cell_width);
-  const FloatingPoint min_dist = parent_aabb.minDistanceTo(child_center);
-  return min_dist;
+  const Point3D child_center =
+      convert::indexToCenterPoint(child, min_cell_width);
+
+  const Point3D parent_min_corner =
+      convert::indexToMinCorner(parent, min_cell_width);
+  const Point3D parent_max_corner =
+      parent_min_corner + Vector3D::Constant(min_cell_width);
+  const Point3D closest_point =
+      child_center.cwiseMax(parent_min_corner).cwiseMin(parent_max_corner);
+
+  const FloatingPoint min_distance = (child_center - closest_point).norm();
+  return min_distance;
 }
 }  // namespace wavemap
