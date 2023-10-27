@@ -4,6 +4,11 @@ namespace wavemap::io {
 bool mapToStream(const VolumetricDataStructureBase& map,
                  std::ostream& ostream) {
   // Call the appropriate mapToStream converter based on the map's derived type
+  if (const auto* hashed_blocks = dynamic_cast<const HashedBlocks*>(&map);
+      hashed_blocks) {
+    io::mapToStream(*hashed_blocks, ostream);
+    return true;
+  }
   if (const auto* wavelet_octree = dynamic_cast<const WaveletOctree*>(&map);
       wavelet_octree) {
     io::mapToStream(*wavelet_octree, ostream);
@@ -31,6 +36,14 @@ bool streamToMap(std::istream& istream, VolumetricDataStructureBase::Ptr& map) {
   // Call the appropriate streamToMap converter based on the received map's type
   const auto storage_format = streamable::StorageFormat::peek(istream);
   switch (storage_format.toTypeId()) {
+    case streamable::StorageFormat::kHashedBlocks: {
+      auto hashed_blocks = std::dynamic_pointer_cast<HashedBlocks>(map);
+      if (!streamToMap(istream, hashed_blocks)) {
+        return false;
+      }
+      map = hashed_blocks;
+      return true;
+    }
     case streamable::StorageFormat::kWaveletOctree: {
       auto wavelet_octree = std::dynamic_pointer_cast<WaveletOctree>(map);
       if (!streamToMap(istream, wavelet_octree)) {
@@ -54,6 +67,77 @@ bool streamToMap(std::istream& istream, VolumetricDataStructureBase::Ptr& map) {
       map = nullptr;
       return false;
   }
+}
+
+void mapToStream(const HashedBlocks& map, std::ostream& ostream) {
+  // Serialize the map's data structure type
+  streamable::StorageFormat storage_format =
+      streamable::StorageFormat::kHashedBlocks;
+  storage_format.write(ostream);
+
+  // Serialize the map and data structure's metadata
+  streamable::HashedBlocksHeader hashed_blocks_header;
+  hashed_blocks_header.min_cell_width = map.getMinCellWidth();
+  hashed_blocks_header.min_log_odds = map.getMinLogOdds();
+  hashed_blocks_header.max_log_odds = map.getMaxLogOdds();
+  hashed_blocks_header.num_blocks = map.getHashMap().size();
+  hashed_blocks_header.write(ostream);
+
+  // Iterate over all the map's blocks
+  map.getHashMap().forEachBlock(
+      [&ostream](const Index3D& block_index, const HashedBlocks::Block& block) {
+        // Serialize the block's metadata
+        streamable::HashedBlockHeader block_header;
+        block_header.block_offset = {block_index.x(), block_index.y(),
+                                     block_index.z()};
+        block_header.write(ostream);
+
+        // Serialize the block's data (its cells)
+        for (FloatingPoint value : block.data()) {
+          streamable::Float value_serialized = value;
+          ostream.write(reinterpret_cast<const char*>(&value_serialized),
+                        sizeof(value_serialized));
+        }
+      });
+}
+
+bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map) {
+  // Make sure the map in the input stream is of the correct type
+  if (streamable::StorageFormat::read(istream) !=
+      streamable::StorageFormat::kHashedBlocks) {
+    return false;
+  }
+
+  // Deserialize the map's config and initialize the data structure
+  const auto hashed_blocks_header =
+      streamable::HashedBlocksHeader::read(istream);
+  VolumetricDataStructureConfig config;
+  config.min_cell_width = hashed_blocks_header.min_cell_width;
+  config.min_log_odds = hashed_blocks_header.min_log_odds;
+  config.max_log_odds = hashed_blocks_header.max_log_odds;
+  map = std::make_shared<HashedBlocks>(config);
+
+  // Deserialize all the blocks
+  for (size_t block_idx = 0; block_idx < hashed_blocks_header.num_blocks;
+       ++block_idx) {
+    // Deserialize the block header, containing its position
+    const auto block_header = streamable::HashedBlockHeader::read(istream);
+    const Index3D block_index{block_header.block_offset.x,
+                              block_header.block_offset.y,
+                              block_header.block_offset.z};
+    auto& block = map->getOrAllocateBlock(block_index);
+
+    // Deserialize the block's remaining data (its cells)
+    for (LinearIndex linear_index = 0;
+         linear_index < HashedBlocks::Block::kCellsPerBlock; ++linear_index) {
+      streamable::Float value_deserialized{};
+      istream.read(reinterpret_cast<char*>(&value_deserialized),
+                   sizeof(value_deserialized));
+      block[linear_index] = value_deserialized;
+    }
+  }
+
+  return true;
 }
 
 void mapToStream(const WaveletOctree& map, std::ostream& ostream) {

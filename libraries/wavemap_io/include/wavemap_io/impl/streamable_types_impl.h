@@ -16,6 +16,39 @@ Index3D Index3D::read(std::istream& istream) {
   return instance;
 }
 
+void HashedBlockHeader::write(std::ostream& ostream) const {
+  block_offset.write(ostream);
+}
+
+HashedBlockHeader HashedBlockHeader::read(std::istream& istream) {
+  HashedBlockHeader instance;
+  instance.block_offset = Index3D::read(istream);
+  return instance;
+}
+
+void HashedBlocksHeader::write(std::ostream& ostream) const {
+  ostream.write(reinterpret_cast<const char*>(&min_cell_width),
+                sizeof(min_cell_width));
+  ostream.write(reinterpret_cast<const char*>(&min_log_odds),
+                sizeof(min_log_odds));
+  ostream.write(reinterpret_cast<const char*>(&max_log_odds),
+                sizeof(max_log_odds));
+  ostream.write(reinterpret_cast<const char*>(&num_blocks), sizeof(num_blocks));
+}
+
+HashedBlocksHeader HashedBlocksHeader::read(std::istream& istream) {
+  HashedBlocksHeader instance;
+  istream.read(reinterpret_cast<char*>(&instance.min_cell_width),
+               sizeof(min_cell_width));
+  istream.read(reinterpret_cast<char*>(&instance.min_log_odds),
+               sizeof(min_log_odds));
+  istream.read(reinterpret_cast<char*>(&instance.max_log_odds),
+               sizeof(max_log_odds));
+  istream.read(reinterpret_cast<char*>(&instance.num_blocks),
+               sizeof(num_blocks));
+  return instance;
+}
+
 void WaveletOctreeNode::write(std::ostream& ostream) const {
   for (Float coefficient : detail_coefficients) {
     ostream.write(reinterpret_cast<const char*>(&coefficient),
@@ -64,8 +97,7 @@ WaveletOctreeHeader WaveletOctreeHeader::read(std::istream& istream) {
 }
 
 void HashedWaveletOctreeBlockHeader::write(std::ostream& ostream) const {
-  ostream.write(reinterpret_cast<const char*>(&root_node_offset),
-                sizeof(root_node_offset));
+  root_node_offset.write(ostream);
   ostream.write(reinterpret_cast<const char*>(&root_node_scale_coefficient),
                 sizeof(root_node_scale_coefficient));
 }
@@ -73,8 +105,7 @@ void HashedWaveletOctreeBlockHeader::write(std::ostream& ostream) const {
 HashedWaveletOctreeBlockHeader HashedWaveletOctreeBlockHeader::read(
     std::istream& istream) {
   HashedWaveletOctreeBlockHeader instance;
-  istream.read(reinterpret_cast<char*>(&instance.root_node_offset),
-               sizeof(root_node_offset));
+  instance.root_node_offset = Index3D::read(istream);
   istream.read(reinterpret_cast<char*>(&instance.root_node_scale_coefficient),
                sizeof(root_node_scale_coefficient));
   return instance;

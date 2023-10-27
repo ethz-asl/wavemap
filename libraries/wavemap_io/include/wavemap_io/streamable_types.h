@@ -8,7 +8,7 @@ namespace wavemap::io::streamable {
 // NOTE: This file defines the serialization format for all types that might be
 //       used in wavemap map files. The idea is that these are used as common
 //       building blocks (e.g. 3D indices are always (de)serialized using
-//       serializable::Index3D) and modified as little as possible to avoid
+//       streamable::Index3D) and modified as little as possible to avoid
 //       breaking backward compatibility with previously saved maps.
 
 using UInt8 = uint8_t;
@@ -23,6 +23,24 @@ struct Index3D {
 
   inline void write(std::ostream& ostream) const;
   inline static Index3D read(std::istream& istream);
+};
+
+struct HashedBlockHeader {
+  Index3D block_offset{};
+
+  inline void write(std::ostream& ostream) const;
+  inline static HashedBlockHeader read(std::istream& istream);
+};
+
+struct HashedBlocksHeader {
+  Float min_cell_width{};
+  Float min_log_odds{};
+  Float max_log_odds{};
+
+  UInt64 num_blocks{};
+
+  inline void write(std::ostream& ostream) const;
+  inline static HashedBlocksHeader read(std::istream& istream);
 };
 
 struct WaveletOctreeNode {
@@ -68,13 +86,10 @@ struct HashedWaveletOctreeHeader {
 struct StorageFormat : TypeSelector<StorageFormat> {
   using TypeSelector<StorageFormat>::TypeSelector;
 
-  enum Id : TypeId {
-    kWaveletOctree,
-    kHashedWaveletOctree,
-  };
+  enum Id : TypeId { kWaveletOctree, kHashedWaveletOctree, kHashedBlocks };
 
-  static constexpr std::array names = {"wavelet_octree",
-                                       "hashed_wavelet_octree"};
+  static constexpr std::array names = {
+      "wavelet_octree", "hashed_wavelet_octree", "hashed_blocks"};
 
   inline void write(std::ostream& ostream) const;
   inline static StorageFormat read(std::istream& istream);
