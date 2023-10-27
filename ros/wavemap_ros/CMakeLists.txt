@@ -37,6 +37,9 @@ target_link_libraries(wavemap_server_node ${PROJECT_NAME})
 cs_add_executable(wavemap_rosbag_processor app/rosbag_processor.cc)
 target_link_libraries(wavemap_rosbag_processor ${PROJECT_NAME})
 
+add_executable(occupancy_to_esdf app/occupancy_to_esdf.cc)
+target_link_libraries(occupancy_to_esdf ${PROJECT_NAME})
+
 # Export
 cs_install()
 cs_export()

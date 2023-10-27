@@ -7,7 +7,7 @@
 
 namespace wavemap {
 HashedBlocks QuasiEuclideanSDFGenerator::generate(
-    const HashedWaveletOctree& occupancy_map) {
+    const HashedWaveletOctree& occupancy_map) const {
   ZoneScoped;
   // Initialize the SDF data structure
   const FloatingPoint min_cell_width = occupancy_map.getMinCellWidth();

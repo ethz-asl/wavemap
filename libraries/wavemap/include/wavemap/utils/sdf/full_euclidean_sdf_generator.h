@@ -18,7 +18,7 @@ class FullEuclideanSDFGenerator {
                                      FloatingPoint occupancy_threshold = 0.f)
       : max_distance_(max_distance), classifier_(occupancy_threshold) {}
 
-  HashedBlocks generate(const HashedWaveletOctree& occupancy_map);
+  HashedBlocks generate(const HashedWaveletOctree& occupancy_map) const;
 
   FloatingPoint getMaxDistance() const { return max_distance_; }
 
