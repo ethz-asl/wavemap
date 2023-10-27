@@ -21,6 +21,22 @@ inline Ogre::ColourValue logOddsToColor(FloatingPoint log_odds) {
 
 // Map a voxel's position to a color (HSV color map)
 Ogre::ColourValue positionToColor(const Point3D& center_point);
+
+// Map a voxel's raw value to a color after normalizing it (grey value)
+inline Ogre::ColourValue scalarToColor(FloatingPoint value,
+                                       FloatingPoint min_value,
+                                       FloatingPoint max_value) {
+  Ogre::ColourValue color;
+  color.a = 1.f;
+
+  const FloatingPoint rescaled_odds =
+      (value - min_value) / (max_value - min_value);
+  color.a = 1.f;
+  color.r = rescaled_odds;
+  color.g = rescaled_odds;
+  color.b = rescaled_odds;
+  return color;
+}
 }  // namespace wavemap::rviz_plugin
 
 #endif  // WAVEMAP_RVIZ_PLUGIN_UTILS_COLOR_CONVERSIONS_H_

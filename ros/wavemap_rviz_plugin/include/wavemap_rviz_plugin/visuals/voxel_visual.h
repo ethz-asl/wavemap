@@ -30,8 +30,8 @@
 #endif
 
 namespace wavemap::rviz_plugin {
-struct ColorMode : public TypeSelector<ColorMode> {
-  using TypeSelector<ColorMode>::TypeSelector;
+struct VoxelColorMode : public TypeSelector<VoxelColorMode> {
+  using TypeSelector<VoxelColorMode>::TypeSelector;
 
   enum Id : TypeId { kHeight, kProbability, kFlat };
 
@@ -71,7 +71,7 @@ class VoxelVisual : public QObject {
   void flatColorUpdateCallback();
 
  private:
-  ColorMode voxel_color_mode_ = ColorMode::kHeight;
+  VoxelColorMode voxel_color_mode_ = VoxelColorMode::kHeight;
   Ogre::ColourValue voxel_flat_color_ = Ogre::ColourValue::Blue;
 
   // Shared pointer to the map, owned by WavemapMapDisplay

@@ -55,11 +55,11 @@ VoxelVisual::VoxelVisual(Ogre::SceneManager* scene_manager,
   max_ms_per_frame_property_.setMin(0);
   // Color mode
   color_mode_property_.clearOptions();
-  for (const auto& name : ColorMode::names) {
+  for (const auto& name : VoxelColorMode::names) {
     color_mode_property_.addOption(name);
   }
   color_mode_property_.setStringStd(voxel_color_mode_.toStr());
-  flat_color_property_.setHidden(voxel_color_mode_ != ColorMode::kFlat);
+  flat_color_property_.setHidden(voxel_color_mode_ != VoxelColorMode::kFlat);
 
   // Initialize the camera tracker used to update the LOD levels for each block
   prerender_listener_ = std::make_unique<ViewportPrerenderListener>(
@@ -291,11 +291,11 @@ void VoxelVisual::opacityUpdateCallback() {
 void VoxelVisual::colorModeUpdateCallback() {
   ZoneScoped;
   // Update the cached color mode value
-  const ColorMode old_color_mode = voxel_color_mode_;
-  voxel_color_mode_ = ColorMode(color_mode_property_.getStdString());
+  const VoxelColorMode old_color_mode = voxel_color_mode_;
+  voxel_color_mode_ = VoxelColorMode(color_mode_property_.getStdString());
 
   // Show/hide the flat color picker depending on the chosen mode
-  flat_color_property_.setHidden(voxel_color_mode_ != ColorMode::kFlat);
+  flat_color_property_.setHidden(voxel_color_mode_ != VoxelColorMode::kFlat);
 
   // Update the map if the color mode changed
   if (voxel_color_mode_ != old_color_mode) {
@@ -340,13 +340,13 @@ void VoxelVisual::appendLeafCenterAndColor(int tree_height,
 
   // Set the cube's color
   switch (voxel_color_mode_.toTypeId()) {
-    case ColorMode::kFlat:
+    case VoxelColorMode::kFlat:
       point.color = voxel_flat_color_;
       break;
-    case ColorMode::kProbability:
+    case VoxelColorMode::kProbability:
       point.color = logOddsToColor(cell_log_odds);
       break;
-    case ColorMode::kHeight:
+    case VoxelColorMode::kHeight:
     default:
       point.color = positionToColor(cell_center);
       break;
