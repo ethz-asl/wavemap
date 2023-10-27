@@ -28,7 +28,7 @@ class MapMsgConversionsTest : public FixtureBase,
 };
 
 using VolumetricDataStructureTypes =
-    ::testing::Types<WaveletOctree, HashedWaveletOctree,
+    ::testing::Types<HashedBlocks, WaveletOctree, HashedWaveletOctree,
                      HashedChunkedWaveletOctree>;
 TYPED_TEST_SUITE(MapMsgConversionsTest, VolumetricDataStructureTypes, );
 
@@ -41,7 +41,9 @@ TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
   ASSERT_EQ(map->getMinCellWidth(), config.min_cell_width);
   ASSERT_EQ(map->getMinLogOdds(), config.min_log_odds);
   ASSERT_EQ(map->getMaxLogOdds(), config.max_log_odds);
-  ASSERT_EQ(map->getTreeHeight(), config.tree_height);
+  if constexpr (!std::is_same_v<TypeParam, HashedBlocks>) {
+    ASSERT_EQ(map->getTreeHeight(), config.tree_height);
+  }
 
   // Convert to base pointer
   VolumetricDataStructureBase::ConstPtr map_base = map;
@@ -64,7 +66,7 @@ TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
   // TODO(victorr): Add option to deserialize into hashed chunked wavelet
   //                octrees, instead of implicitly converting them to regular
   //                hashed wavelet octrees.
-  if (std::is_same_v<TypeParam, HashedChunkedWaveletOctree>) {
+  if constexpr (std::is_same_v<TypeParam, HashedChunkedWaveletOctree>) {
     HashedWaveletOctree::ConstPtr map_round_trip =
         std::dynamic_pointer_cast<HashedWaveletOctree>(map_base_round_trip);
     ASSERT_TRUE(map_round_trip);
@@ -83,7 +85,9 @@ TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
     EXPECT_EQ(map_round_trip->getMinCellWidth(), config.min_cell_width);
     EXPECT_EQ(map_round_trip->getMinLogOdds(), config.min_log_odds);
     EXPECT_EQ(map_round_trip->getMaxLogOdds(), config.max_log_odds);
-    EXPECT_EQ(map_round_trip->getTreeHeight(), config.tree_height);
+    if constexpr (!std::is_same_v<TypeParam, HashedBlocks>) {
+      EXPECT_EQ(map_round_trip->getTreeHeight(), config.tree_height);
+    }
   }
 }
 
@@ -115,8 +119,15 @@ TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
     map_base_round_trip->forEachLeaf(
         [&map_original](const OctreeIndex& node_index,
                         FloatingPoint round_trip_value) {
-          EXPECT_NEAR(round_trip_value, map_original.getCellValue(node_index),
-                      TestFixture::kAcceptableReconstructionError);
+          if constexpr (std::is_same_v<TypeParam, HashedBlocks>) {
+            EXPECT_EQ(node_index.height, 0);
+            EXPECT_NEAR(round_trip_value,
+                        map_original.getCellValue(node_index.position),
+                        TestFixture::kAcceptableReconstructionError);
+          } else {
+            EXPECT_NEAR(round_trip_value, map_original.getCellValue(node_index),
+                        TestFixture::kAcceptableReconstructionError);
+          }
         });
 
     // TODO(victorr): Remove this special case once deserializing directly
@@ -138,8 +149,15 @@ TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
 
       map_original.forEachLeaf([&map_round_trip](const OctreeIndex& node_index,
                                                  FloatingPoint original_value) {
-        EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
-                    TestFixture::kAcceptableReconstructionError);
+        if constexpr (std::is_same_v<TypeParam, HashedBlocks>) {
+          EXPECT_EQ(node_index.height, 0);
+          EXPECT_NEAR(original_value,
+                      map_round_trip->getCellValue(node_index.position),
+                      TestFixture::kAcceptableReconstructionError);
+        } else {
+          EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
+                      TestFixture::kAcceptableReconstructionError);
+        }
       });
     }
   }

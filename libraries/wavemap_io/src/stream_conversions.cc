@@ -84,7 +84,7 @@ void mapToStream(const HashedBlocks& map, std::ostream& ostream) {
   hashed_blocks_header.write(ostream);
 
   // Iterate over all the map's blocks
-  map.getHashMap().forEachBlock(
+  map.forEachBlock(
       [&ostream](const Index3D& block_index, const HashedBlocks::Block& block) {
         // Serialize the block's metadata
         streamable::HashedBlockHeader block_header;

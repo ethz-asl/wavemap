@@ -12,6 +12,11 @@ bool mapToRosMsg(const VolumetricDataStructureBase& map,
   msg.header.frame_id = frame_id;
 
   // Write the map data
+  if (const auto* hashed_blocks = dynamic_cast<const HashedBlocks*>(&map);
+      hashed_blocks) {
+    convert::mapToRosMsg(*hashed_blocks, msg.hashed_blocks.emplace_back());
+    return true;
+  }
   if (const auto* wavelet_octree = dynamic_cast<const WaveletOctree*>(&map);
       wavelet_octree) {
     convert::mapToRosMsg(*wavelet_octree, msg.wavelet_octree.emplace_back());
@@ -42,16 +47,40 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
                  VolumetricDataStructureBase::Ptr& map) {
   ZoneScoped;
   // Check validity
-  if ((msg.wavelet_octree.size() == 1) !=
-      (msg.hashed_wavelet_octree.size() != 1)) {
-    ROS_WARN(
-        "Maps must be serialized either as wavelet octrees or hashed "
-        "wavelet octrees. Encountered message contains both. Ignoring.");
+  bool is_valid = true;
+  std::string error_msg =
+      "Maps must be serialized as either one hashed block data structure, "
+      "wavelet octree, or hashed wavelet octree. ";
+  if (1 < msg.hashed_blocks.size()) {
+    error_msg += "Message contains multiple hashed block data structures. ";
+    is_valid = false;
+  }
+  if (1 < msg.wavelet_octree.size()) {
+    error_msg += "Message contains multiple wavelet octrees. ";
+    is_valid = false;
+  }
+  if (1 < msg.hashed_wavelet_octree.size()) {
+    error_msg += "Message contains multiple hashed wavelet octrees. ";
+    is_valid = false;
+  }
+  if (msg.hashed_blocks.empty() && msg.wavelet_octree.empty() &&
+      msg.hashed_wavelet_octree.empty()) {
+    error_msg += "Message contains neither. ";
+    is_valid = false;
+  }
+  if (!is_valid) {
+    ROS_WARN_STREAM(error_msg + "Ignoring.");
     map = nullptr;
     return false;
   }
 
   // Read the data
+  if (!msg.hashed_blocks.empty()) {
+    auto hashed_blocks = std::dynamic_pointer_cast<HashedBlocks>(map);
+    rosMsgToMap(msg.hashed_blocks.front(), hashed_blocks);
+    map = hashed_blocks;
+    return true;
+  }
   if (!msg.wavelet_octree.empty()) {
     auto wavelet_octree = std::dynamic_pointer_cast<WaveletOctree>(map);
     rosMsgToMap(msg.wavelet_octree.front(), wavelet_octree);
@@ -71,6 +100,81 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg,
       "not yet supported.");
   map = nullptr;
   return false;
+}
+
+void mapToRosMsg(const HashedBlocks& map, wavemap_msgs::HashedBlocks& msg) {
+  ZoneScoped;
+  // Serialize the map and data structure's metadata
+  msg.min_cell_width = map.getMinCellWidth();
+  msg.min_log_odds = map.getMinLogOdds();
+  msg.max_log_odds = map.getMaxLogOdds();
+
+  // Indicate which blocks are allocated in the map
+  // NOTE: This is done such that subscribers know when blocks should be removed
+  //       during incremental map transmission.
+  msg.allocated_block_indices.reserve(map.getHashMap().size());
+  map.forEachBlock([&msg](const Index3D& block_index, const auto& /*block*/) {
+    auto& block_index_msg = msg.allocated_block_indices.emplace_back();
+    block_index_msg.x = block_index.x();
+    block_index_msg.y = block_index.y();
+    block_index_msg.z = block_index.z();
+  });
+
+  // Serialize all blocks
+  map.forEachBlock(
+      [&msg](const Index3D& block_index, const HashedBlocks::Block& block) {
+        auto& block_msg = msg.blocks.emplace_back();
+        // Serialize the block's metadata
+        block_msg.block_offset = {block_index.x(), block_index.y(),
+                                  block_index.z()};
+        // Serialize the block's data (dense grid)
+        block_msg.values.reserve(HashedBlocks::Block::kCellsPerBlock);
+        for (FloatingPoint value : block.data()) {
+          block_msg.values.emplace_back(value);
+        }
+      });
+}
+
+void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg,
+                 HashedBlocks::Ptr& map) {
+  ZoneScoped;
+  // Deserialize the map's config
+  VolumetricDataStructureConfig config;
+  config.min_cell_width = msg.min_cell_width;
+  config.min_log_odds = msg.min_log_odds;
+  config.max_log_odds = msg.max_log_odds;
+
+  // Check if the map already exists and has compatible settings
+  if (map && map->getConfig() == config) {
+    // Load allocated block list into a hash table for quick membership lookups
+    std::unordered_set<Index3D, Index3DHash> allocated_blocks;
+    for (const auto& block_index : msg.allocated_block_indices) {
+      allocated_blocks.emplace(block_index.x, block_index.y, block_index.z);
+    }
+    // Remove local blocks that should no longer exist according to the map msg
+    map->getHashMap().eraseBlockIf(
+        [&allocated_blocks](const Index3D& block_index, const auto& /*block*/) {
+          return !allocated_blocks.count(block_index);
+        });
+  } else {
+    // Otherwise create a new map
+    map = std::make_shared<HashedBlocks>(config);
+  }
+
+  // Deserialize all blocks
+  for (const auto& block_msg : msg.blocks) {
+    // Get the block
+    const Index3D block_index{block_msg.block_offset[0],
+                              block_msg.block_offset[1],
+                              block_msg.block_offset[2]};
+    auto& block = map->getOrAllocateBlock(block_index);
+
+    // Deserialize the block's data (dense grid)
+    for (LinearIndex linear_index = 0; linear_index < block_msg.values.size();
+         ++linear_index) {
+      block[linear_index] = block_msg.values[linear_index];
+    }
+  }
 }
 
 void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {

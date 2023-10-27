@@ -54,7 +54,7 @@ TYPED_TEST(FileConversionsTest, MetadataPreservation) {
   // TODO(victorr): Add option to deserialize into hashed chunked wavelet
   //                octrees, instead of implicitly converting them to regular
   //                hashed wavelet octrees.
-  if (std::is_same_v<TypeParam, HashedChunkedWaveletOctree>) {
+  if constexpr (std::is_same_v<TypeParam, HashedChunkedWaveletOctree>) {
     HashedWaveletOctree::ConstPtr map_round_trip =
         std::dynamic_pointer_cast<HashedWaveletOctree>(map_base_round_trip);
     ASSERT_TRUE(map_round_trip);
@@ -63,9 +63,7 @@ TYPED_TEST(FileConversionsTest, MetadataPreservation) {
     EXPECT_EQ(map_round_trip->getMinCellWidth(), config.min_cell_width);
     EXPECT_EQ(map_round_trip->getMinLogOdds(), config.min_log_odds);
     EXPECT_EQ(map_round_trip->getMaxLogOdds(), config.max_log_odds);
-    if constexpr (!std::is_same_v<TypeParam, HashedBlocks>) {
-      EXPECT_EQ(map_round_trip->getTreeHeight(), config.tree_height);
-    }
+    EXPECT_EQ(map_round_trip->getTreeHeight(), config.tree_height);
   } else {
     typename TypeParam::ConstPtr map_round_trip =
         std::dynamic_pointer_cast<TypeParam>(map_base_round_trip);
