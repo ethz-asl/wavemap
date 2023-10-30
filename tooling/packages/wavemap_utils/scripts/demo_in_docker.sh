@@ -36,7 +36,7 @@ if docker info | grep "Runtimes.*nvidia.*" &>/dev/null; then
 #       you can add the --network="host" flag or configure custom networks.
 #       The full documentation for docker run is available at:
 #       https://docs.docker.com/engine/reference/run/
-  docker run --rm -it --priviliged \
+  docker run --rm -it --privileged --net=host \
     -e DISPLAY="${DISPLAY}" \
     -e QT_X11_NO_MITSHM=1 \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
@@ -51,7 +51,7 @@ else
 # NOTE: This mode works well for regular processing. However, displaying large
 #       maps in Rviz might be slow as it will only be able to use software
 #       rendering.
-  docker run --rm -it --priviliged --device /dev/dri \
+  docker run --rm -it --privileged --net=host --device /dev/dri \
     -e DISPLAY="${DISPLAY}" \
     -e QT_X11_NO_MITSHM=1 \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
