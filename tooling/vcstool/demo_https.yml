@@ -1,0 +1,21 @@
+repositories:
+  ouster_ros:
+    type: git
+    url: https://github.com/ouster-lidar/ouster-ros.git
+    version: master
+  pico_flexx_driver:
+    type: git
+    url: https://github.com/code-iai/pico_flexx_driver.git
+    version: master
+  livox_sdk2:
+    type: git
+    url: https://github.com/Livox-SDK/Livox-SDK2.git
+    version: master
+  livox_ros_driver2:
+    type: git
+    url: https://github.com/Livox-SDK/livox_ros_driver2.git
+    version: master
+  fast_lio:
+    type: git
+    url: https://github.com/ethz-asl/fast_lio
+    version: feature/new_ouster_driver
