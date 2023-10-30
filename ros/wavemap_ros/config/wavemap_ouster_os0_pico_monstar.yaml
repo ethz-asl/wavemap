@@ -17,7 +17,7 @@ inputs:
       topic_name: "/pico_monstar/image_rect"
       topic_queue_length: 1
       max_wait_for_pose: { seconds: 1.0 }
-      time_offset: { seconds: 0.00201747 }
+      time_offset: { seconds: 0.0118462 }
       # depth_scale_factor: 0.001
       # reprojected_pointcloud_topic_name: "/wavemap/reprojected_pointcloud"
     integrators:
