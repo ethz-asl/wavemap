@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+    branches: [ main ]
 
 # NOTE: We do not store the work files under $HOME ("/github/home/") since that
 #       dir persists between jobs when using self-hosted GitHub Actions runners
@@ -34,6 +35,7 @@ jobs:
 
   draft-release:
     name: Draft Release
+    if: startsWith(github.event.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -42,8 +44,8 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
 
-  publish-image:
-    name: Publish Docker image
+  build-image:
+    name: Build Docker image
     needs: [ common-variables ]
     runs-on: [ self-hosted, vwire ]
     container:
@@ -129,13 +131,7 @@ jobs:
       - name: Test the ${{ env.DOCKER_RELEASE_TARGET }} image
         run: docker run --rm ${{ env.LOCAL_IMAGE_NAME }}
 
-      - name: Extract metadata for published image
-        id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ github.repository }}
-
-      - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image
+      - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image locally
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -150,10 +146,7 @@ jobs:
             PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
-          tags: |
-            ${{ steps.meta.outputs.tags }}
-            ${{ env.LOCAL_IMAGE_NAME }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Write back the build's ccache cache
         if: steps.should-writeback-ccache.outputs.answer == 'true'
@@ -173,12 +166,37 @@ jobs:
           tags: ${{ env.LOCAL_IMAGE_NAME }}
           outputs: type=local,dest=ccache
 
+      - name: Extract metadata to annotate the image
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ github.repository }}
+
+      - name: Publish the ${{ env.DOCKER_RELEASE_TARGET }} image
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          target: ${{ env.DOCKER_RELEASE_TARGET }}
+          build-args: |
+            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+            ROS_HOME=${{ env.ROS_HOME }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
+          push: true
+          cache-from: ${{ env.CACHE_IMAGE_NAME }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   build-docs:
     name: Build docs
-    needs: [ publish-image ]
+    needs: [ build-image ]
     runs-on: [ self-hosted, vwire ]
     container:
-      image: ${{ needs.publish-image.outputs.image }}
+      image: ${{ needs.build-image.outputs.image }}
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v3
@@ -213,6 +231,7 @@ jobs:
           retention-days: 1
 
       - name: Attach docs to GitHub release
+        if: startsWith(github.event.ref, 'refs/tags/v')
         uses: actions/github-script@v6
         with:
           script: |
