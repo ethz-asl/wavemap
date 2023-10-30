@@ -231,6 +231,7 @@ jobs:
           retention-days: 1
 
       - name: Attach docs to GitHub release
+        if: startsWith(github.event.ref, 'refs/tags/v')
         uses: actions/github-script@v6
         with:
           script: |
