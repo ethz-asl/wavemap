@@ -1,10 +1,21 @@
-ARG VERSION=latest
+ARG WAVEMAP_BASE_RELEASE=latest
+ARG WAVEMAP_BRANCH=feature/srd_demo
+ARG DEMO_DEPENDENCIES_FILE=tooling/vcstool/live_demo_https.yml
 
-FROM ghcr.io/ethz-asl/wavemap:${VERSION}
+FROM ghcr.io/ethz-asl/wavemap:${WAVEMAP_BASE_RELEASE} AS cacher
 
 # Checkout wavemap's demo branch
+ARG WAVEMAP_BRANCH
+ARG DEMO_DEPENDENCIES_FILE
 RUN rm -rf src/wavemap && \
-    git clone -b feature/srd_demo https://github.com/ethz-asl/wavemap src/wavemap
+    git clone -b ${WAVEMAP_BRANCH} https://github.com/ethz-asl/wavemap src/wavemap && \
+    cp src/wavemap/${DEMO_DEPENDENCIES_FILE} /tmp/demo_dependencies.yml
+
+
+FROM ghcr.io/ethz-asl/wavemap:${WAVEMAP_BASE_RELEASE}
+
+# Load the cached dependency spec file
+COPY --from=cacher /tmp/demo_dependencies.yml /tmp/demo_dependencies.yml
 
 # Install vcstool
 ARG DEBIAN_FRONTEND=noninteractive
@@ -15,7 +26,7 @@ RUN apt-get update && \
 
 # Import from-source dependencies with vcstool
 RUN mkdir src/demo_dependencies && \
-    vcs import --recursive --input src/wavemap/tooling/vcstool/demo_https.yml \
+    vcs import --recursive --input /tmp/demo_dependencies.yml \
       src/demo_dependencies
 
 # Configure the Livox ROS driver for ROS1
@@ -53,6 +64,13 @@ RUN cp src/demo_dependencies/pico_flexx_driver/royale/libroyale-*/driver/udev/10
        /etc/udev/rules.d/ && \
     usermod -a -G plugdev root
 
-# Build catkin dependencies and wavemap
-RUN catkin build --force-color ouster_ros pico_flexx_driver livox_ros_driver2 fast_lio && \
-    catkin build --force-color wavemap_all
+# Build catkin dependencies
+RUN catkin build --force-color ouster_ros pico_flexx_driver livox_ros_driver2 fast_lio
+
+# Checkout the demo branch
+ARG WAVEMAP_BRANCH
+RUN rm -rf src/wavemap && \
+    git clone -b ${WAVEMAP_BRANCH} https://github.com/ethz-asl/wavemap src/wavemap
+
+# Build wavemap
+RUN catkin build --force-color wavemap_all
