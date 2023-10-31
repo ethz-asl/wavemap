@@ -37,9 +37,15 @@
     </node>
 
     <!-- Undistort the depth images -->
+    <!-- NOTE: We delay launching this rectification nodelet by a few seconds
+               s.t. it starts after the Pico Monstar driver. The reason for this
+               is that the driver only seems to publish depth images for topics
+               that have subscribers and subscribers that are created before the
+               publisher are not (always) accounted for. -->
     <node pkg="nodelet" type="nodelet" name="rectify_depth"
-          args="load image_proc/rectify manager --no-bond"
-          respawn="true">
+          args="load image_proc/rectify manager"
+          respawn="true" output="screen"
+          launch-prefix="bash -c 'sleep 3; $0 $@' ">
         <remap from="image_mono" to="pico_monstar/image_depth"/>
         <remap from="image_rect" to="pico_monstar/image_rect"/>
         <param name="interpolation" value="0"/>
@@ -51,8 +57,8 @@
     <param name="feature_extract_enable" type="bool" value="0"/>
     <param name="point_filter_num" type="int" value="2"/>
     <param name="max_iteration" type="int" value="3"/>
-    <param name="filter_size_surf" type="double" value="0.25"/>
-    <param name="filter_size_map" type="double" value="0.25"/>
+    <param name="filter_size_surf" type="double" value="0.5"/>
+    <param name="filter_size_map" type="double" value="0.5"/>
     <param name="cube_side_length" type="double" value="500"/>
     <param name="runtime_pos_log_enable" type="bool" value="0"/>
     <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping"
@@ -81,12 +87,14 @@
              pass_all_args="true"/>
 
     <!-- [Optional] Record topics for calibration -->
-    <node if="false" pkg="rosbag" type="record" name="rosbag_record" output="screen"
+    <node if="false" pkg="rosbag" type="record" name="rosbag_record"
+          output="screen"
           args="/wavemap/reprojected_pointcloud /Odometry
           --output-prefix /home/victor/catkin_ws/lidar_align_os0_monstar"/>
 
     <!-- [Optional] Record topics for replay -->
-    <node if="false" pkg="rosbag" type="record" name="rosbag_record" output="screen"
+    <node if="false" pkg="rosbag" type="record" name="rosbag_record"
+          output="screen"
           args="/pico_monstar/image_rect /os_cloud_node/points /os_cloud_node/imu
           --output-prefix /home/victor/catkin_ws/os0_monstar_eth"/>
 </launch>
