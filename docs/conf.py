@@ -138,15 +138,14 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'wavemap.tex', 'wavemap Documentation', 'Victor Reijgwart',
-     'manual'),
+    ('latex_index', 'wavemap.tex', 'Wavemap Documentation', author, 'manual'),
 ]
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, 'wavemap', 'wavemap Documentation', [author], 1)]
+man_pages = []
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -154,8 +153,9 @@ man_pages = [(master_doc, 'wavemap', 'wavemap Documentation', [author], 1)]
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'wavemap', 'wavemap Documentation', author, 'wavemap',
-     'One line description of project.', 'Miscellaneous'),
+    ('latex_index', 'wavemap', 'Wavemap Documentation', author, 'wavemap',
+     'Fast, efficient and accurate multi-resolution, '
+     'multi-sensor 3D occupancy mapping.', 'Miscellaneous'),
 ]
 
 # -- Options for Epub output -------------------------------------------------
