@@ -72,7 +72,7 @@ inputs:
     integrators:
       - integration_method:
           type: hashed_chunked_wavelet_integrator
-          min_range: { meters: 2.0 }
+          min_range: { meters: 1.5 }
           max_range: { meters: 15.0 }
           termination_update_error: 0.1
           termination_height: 3
