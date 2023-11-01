@@ -8,24 +8,6 @@ Wavemap achieves state-of-the-art memory and computational efficiency by combini
 
 The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single map.
 
-.. only:: html
-
-  .. toctree::
-     :maxdepth: 1
-     :caption: Table of contents:
-
-     pages/installation
-     pages/demos
-     pages/configuration
-     pages/usage_examples
-     pages/contributing
-     api/library_root
-     pages/faq
-
-Code
-****
-This documentation website accompanies wavemap's `open-source implementation <https://github.com/ethz-asl/wavemap>`__, which is hosted on GitHub.
-
 Paper
 *****
 
@@ -49,3 +31,18 @@ BibTeX::
 
 
 Note that the code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.
+
+.. only:: html
+
+    .. toctree::
+     :maxdepth: 1
+     :caption: Table of contents
+     :hidden:
+
+     pages/installation
+     pages/demos
+     pages/configuration
+     pages/usage_examples
+     pages/contributing
+     api/library_root
+     pages/faq

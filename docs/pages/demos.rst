@@ -2,7 +2,7 @@ Demos
 #####
 .. highlight:: bash
 .. include:: <isonum.txt>
-.. rstcheck: ignore-roles=repo_file
+.. rstcheck: ignore-roles=gh_file
 
 Quick start
 ***********
@@ -25,7 +25,7 @@ To run wavemap on the Cloister sequence used in the paper, run::
     roslaunch wavemap_ros newer_college_os0_cloister.launch rosbag_dir:=<path_to_downloaded_dataset_directory>
 
 For additional options, please refer to the launch file's documented arguments
-:repo_file:`here <ros/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch>`. To experiment with wavemap's configuration, modify :repo_file:`this config file <ros/wavemap_ros/config/ouster_os0.yaml>`.
+:gh_file:`here <ros/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch>`. To experiment with wavemap's configuration, modify :gh_file:`this config file <ros/wavemap_ros/config/ouster_os0.yaml>`.
 
 Panoptic mapping dataset
 ************************
@@ -38,7 +38,7 @@ To process it with wavemap, run::
 
     roslaunch wavemap_ros panoptic_mapping_rgbd_flat.launch base_path:="${FLAT_DATA_DIR}"/flat_dataset/run1
 
-To experiment with different wavemap settings, modify :repo_file:`this config file <ros/wavemap_ros/config/panoptic_mapping_rgbd.yaml>`.
+To experiment with different wavemap settings, modify :gh_file:`this config file <ros/wavemap_ros/config/panoptic_mapping_rgbd.yaml>`.
 
 Your own data
 *************
@@ -49,5 +49,5 @@ The only requirements for running wavemap are:
 
 We usually use depth measurements from depth cameras or 3D LiDARs, but any source would work as long as a sufficiently good :ref:`projection <configuration_projection_models>` and :ref:`measurement <configuration_measurement_models>` model is available. Wavemap's ROS interface natively supports depth image and pointcloud inputs, and automatically queries the sensor poses from the TF tree.
 
-To help you get started quickly, we provide various example :repo_file:`config <ros/wavemap_ros/config>` and ROS :repo_file:`launch <ros/wavemap_ros/launch>` files.
+To help you get started quickly, we provide various example :gh_file:`config <ros/wavemap_ros/config>` and ROS :gh_file:`launch <ros/wavemap_ros/launch>` files.
 For a brief introduction on how to edit wavemap configs and an overview of all the available settings, see the :doc:`configuration page <configuration>`.
