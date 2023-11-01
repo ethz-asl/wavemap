@@ -207,15 +207,15 @@ jobs:
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
           apt-get install -q -y --no-install-recommends latexmk texlive-latex-extra tex-gyre texlive-fonts-recommended texlive-latex-recommended
-          pip3 install exhale sphinx-sitemap
           pip3 install sphinxawesome-theme --pre
+          pip3 install exhale sphinx-sitemap
 
-      - name: Build documentation
+      - name: Build documentation site
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
         shell: bash
-        run: make html
+        run: sphinx-build -b html . _build/html
 
-      - name: Archive pages artifact
+      - name: Bundle site sources into tarball
         shell: bash
         run: |
           tar \
@@ -226,14 +226,19 @@ jobs:
             --exclude=.github \
             .
 
-      - name: Upload HTML docs as GH Pages artifact
+      - name: Upload tarball as GH Pages artifact
         uses: actions/upload-artifact@main
         with:
           name: github-pages
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
 
-      - name: Upload PDF doc as artifact
+      - name: Build documentation PDF
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: sphinx-build -M latexpdf . _build/latex
+
+      - name: Upload PDF
         uses: actions/upload-artifact@main
         with:
           name: documentation-pdf
