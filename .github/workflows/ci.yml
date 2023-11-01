@@ -206,7 +206,9 @@ jobs:
         run: |
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
-          pip3 install exhale sphinx-rtd-theme sphinx-copybutton
+          apt-get install -q -y --no-install-recommends latexmk texlive-latex-extra tex-gyre texlive-fonts-recommended texlive-latex-recommended
+          pip3 install exhale sphinx-sitemap
+          pip3 install sphinxawesome-theme --pre
 
       - name: Build documentation
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
@@ -224,12 +226,19 @@ jobs:
             --exclude=.github \
             .
 
-      - name: Upload pages artifact
+      - name: Upload HTML docs as GH Pages artifact
         uses: actions/upload-artifact@main
         with:
           name: github-pages
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
+
+      - name: Upload PDF doc as artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: documentation-pdf
+          path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/latex/latex/wavemap.pdf
+          retention-days: 3
 
   build:
     name: Build

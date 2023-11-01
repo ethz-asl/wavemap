@@ -205,7 +205,9 @@ jobs:
         run: |
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
-          pip3 install exhale sphinx-rtd-theme sphinx-copybutton
+          apt-get install -q -y --no-install-recommends latexmk texlive-latex-extra tex-gyre texlive-fonts-recommended texlive-latex-recommended
+          pip3 install exhale sphinx-sitemap
+          pip3 install sphinxawesome-theme --pre
 
       - name: Build documentation
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
@@ -249,7 +251,7 @@ jobs:
               repo: context.repo.repo,
               release_id: release.data.id,
               name: "docs.tar",
-              data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar")
+              data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/latex/latex/wavemap.pdf")
             });
 
   publish-docs:
