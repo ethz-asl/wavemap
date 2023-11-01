@@ -205,14 +205,16 @@ jobs:
         run: |
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
-          pip3 install exhale sphinx-rtd-theme sphinx-copybutton
+          apt-get install -q -y --no-install-recommends latexmk texlive-latex-extra tex-gyre texlive-fonts-recommended texlive-latex-recommended
+          pip3 install sphinxawesome-theme --pre
+          pip3 install exhale sphinx-sitemap
 
-      - name: Build documentation
+      - name: Build documentation site
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
         shell: bash
-        run: make html
+        run: sphinx-build -b html . _build/html
 
-      - name: Archive pages artifact
+      - name: Bundle site sources into tarball
         shell: bash
         run: |
           tar \
@@ -223,14 +225,19 @@ jobs:
             --exclude=.github \
             .
 
-      - name: Upload pages artifact
+      - name: Upload tarball as GH Pages artifact
         uses: actions/upload-artifact@main
         with:
           name: github-pages
           path: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar
           retention-days: 1
 
-      - name: Attach docs to GitHub release
+      - name: Build documentation PDF
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: sphinx-build -M latexpdf . _build/latex
+
+      - name: Attach PDF to GitHub release
         if: startsWith(github.event.ref, 'refs/tags/v')
         uses: actions/github-script@v6
         with:
@@ -248,8 +255,8 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.data.id,
-              name: "docs.tar",
-              data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/artifact.tar")
+              name: "docs.pdf",
+              data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/latex/latex/wavemap.pdf")
             });
 
   publish-docs:
