@@ -250,7 +250,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.data.id,
-              name: "docs.tar",
+              name: "docs.pdf",
               data: await fs.readFileSync("${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs/_build/latex/latex/wavemap.pdf")
             });
 
