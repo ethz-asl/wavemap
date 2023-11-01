@@ -1,3 +1,4 @@
+from sys import argv
 from dataclasses import asdict
 from sphinxawesome_theme import ThemeOptions
 from sphinxawesome_theme.postprocess import Icons
@@ -25,8 +26,12 @@ master_doc = 'index'
 language = 'en'
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-# The name of the Pygments (syntax highlighting) style to use.
+# The name of the Pygments (syntax highlighting) style to use
 pygments_style = 'sas'
+
+# Exclude latex helper files when building other document types
+if 'latexpdf' not in argv:
+    exclude_patterns = ['**latex_*']
 
 # Options for HTML output
 
@@ -41,7 +46,7 @@ html_logo = 'logo.png'
 html_favicon = 'favicon.ico'
 html_permalinks_icon = Icons.permalinks_icon
 html_baseurl = 'https://ethz-asl.github.io/wavemap/'
-html_extra_path = ["robots.txt", "_redirects"]
+html_extra_path = ["robots.txt", "_redirects", "google1182636d9b15b461.html"]
 html_context = {
     "mode": "production",
 }
@@ -54,7 +59,7 @@ theme_options = ThemeOptions(
     show_prev_next=True,
     awesome_external_links=True,
     main_nav_links={
-        "Docs": "/index",
+        "Docs": "index",
         "Code": "https://github.com/ethz-asl/wavemap",
         "Releases": "https://github.com/ethz-asl/wavemap/releases"
     },
