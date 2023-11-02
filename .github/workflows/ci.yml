@@ -207,8 +207,9 @@ jobs:
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
           apt-get install -q -y --no-install-recommends latexmk texlive-latex-extra tex-gyre texlive-fonts-recommended texlive-latex-recommended
-          pip3 install sphinxawesome-theme --pre
           pip3 install exhale sphinx-sitemap
+          pip3 install sphinxawesome-theme --pre
+          pip3 install "sphinx<7,>6"
 
       - name: Build documentation site
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
