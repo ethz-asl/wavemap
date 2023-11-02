@@ -1,4 +1,4 @@
-.. image:: https://github.com/ethz-asl/wavemap/assets/6238939/0df66963-3871-4fae-8567-523518c43494
+.. image:: https://github.com/ethz-asl/wavemap/assets/6238939/e432d4ea-440d-4e9d-adf9-af3ae3b09a10
   :alt: 3D reconstruction of Newer College's Cloister
 
 Hierarchical, multi-resolution volumetric mapping
