@@ -62,7 +62,7 @@
   <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping"
         output="screen"/>
 
-  <!-- Link TF frames -->
+  <!-- Frames and calibrations -->
   <node pkg="tf"
         type="static_transform_publisher"
         name="link_odom_camera_init"

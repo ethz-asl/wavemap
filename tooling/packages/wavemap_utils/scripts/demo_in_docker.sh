@@ -6,10 +6,13 @@
 # command in the container, for example:
 # `run_in_docker.sh roslaunch wavemap_ros newer_college_os0_cloister.launch`
 
-# The following path on the host will be mounted into the container. Data in
-# this directory can be accessed from the host and the container, and persists
-# when the container is erased.
-host_data_dir_path=/home/$USER/data
+# The following named volume will be used to persist wavemap's configuration
+# files when the container is restarted. This allows users to set the sensor
+# extrinsics (e.g. depth camera and LiDAR to IMU transformations) directly in
+# the container and have the changes persist across Docker runs.
+# To reset the configuration files, run
+# docker volume rm wavemap_demo_config
+config_volume=wavemap_demo_config
 
 # Allow the docker user to connect to the X window display, to open GUIs
 xhost + local:docker
@@ -41,10 +44,10 @@ if docker info | grep "Runtimes.*nvidia.*" &>/dev/null; then
     -e QT_X11_NO_MITSHM=1 \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     --runtime=nvidia --gpus all \
-    -v "$host_data_dir_path":/home/ci/data:ro \
+    -v "$config_volume":/home/ci/catkin_ws/src/wavemap/ros/wavemap_ros:rw \
     -e NVIDIA_VISIBLE_DEVICES=all \
     -e NVIDIA_DRIVER_CAPABILITIES=graphics \
-    wavemap "$@"
+    wavemap_demo "$@"
 else
 # If the Nvidia container toolkit is not available, we launch the container with
 # access to the host display but without GPU acceleration.
@@ -55,6 +58,6 @@ else
     -e DISPLAY="${DISPLAY}" \
     -e QT_X11_NO_MITSHM=1 \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-    -v "$host_data_dir_path":/home/ci/data:ro \
-    wavemap "$@"
+    -v "$config_volume":/home/ci/catkin_ws/src/wavemap/ros/wavemap_ros:rw \
+    wavemap_demo "$@"
 fi

@@ -1,5 +1,5 @@
 ARG WAVEMAP_BASE_RELEASE=latest
-ARG WAVEMAP_BRANCH=feature/srd_demo
+ARG WAVEMAP_BRANCH=main
 ARG DEMO_DEPENDENCIES_FILE=tooling/vcstool/live_demo_https.yml
 
 FROM ghcr.io/ethz-asl/wavemap:${WAVEMAP_BASE_RELEASE} AS cacher
