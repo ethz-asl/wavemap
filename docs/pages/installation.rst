@@ -1,7 +1,7 @@
 Installation
 ############
 .. highlight:: bash
-.. rstcheck: ignore-roles=repo_file
+.. rstcheck: ignore-roles=gh_file
 
 If you would like to quickly try out wavemap or if you're not already using Ubuntu Noetic and ROS1, we recommend running wavemap in Docker.
 For active wavemap development, it is probably easiest to install wavemap directly on your system.
@@ -19,7 +19,7 @@ This will create a local image on your machine containing the latest version of 
 
 There are many ways to work with Docker containers, with different pros and cons depending on the application.
 
-One documented example of how to run wavemap containers with GUI (e.g. Rviz) support is provided in this :repo_file:`run_in_docker.sh <tooling/packages/wavemap_utils/scripts/run_in_docker.sh>` script. This example should suffice to run all the :doc:`demos`.
+One documented example of how to run wavemap containers with GUI (e.g. Rviz) support is provided in this :gh_file:`run_in_docker.sh <tooling/packages/wavemap_utils/scripts/run_in_docker.sh>` script. This example should suffice to run all the :doc:`demos`.
 
 System install with ROS
 ***********************

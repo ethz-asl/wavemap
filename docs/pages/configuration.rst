@@ -2,13 +2,13 @@ Configuration
 #############
 .. highlight:: YAML
 .. rstcheck: ignore-directives=doxygenstruct
-.. rstcheck: ignore-roles=repo_file
+.. rstcheck: ignore-roles=gh_file
 
 Wavemap's configuration system is designed to be flexible and expressive. Let's start with an example to illustrate the overall structure:
 
 .. literalinclude:: ../../ros/wavemap_ros/config/wavemap_ouster_os0.yaml
     :language: YAML
-    :caption: :repo_file:`Example config to use wavemap with an Ouster OS0-128 LiDAR<ros/wavemap_ros/config/wavemap_ouster_os0.yaml>`
+    :caption: :gh_file:`Example config to use wavemap with an Ouster OS0-128 LiDAR<ros/wavemap_ros/config/wavemap_ouster_os0.yaml>`
 
 The map's general settings, such as the coordinate frame in which it's represented and the rate at which it's published, are configured under ``map/general``.
 The data structure used to store the volumetric map is configured under ``map/data_structure``.
@@ -20,7 +20,7 @@ The second is that **units** are specified explicitly. This eliminates misunders
 
 Note that the wavemap ROS server prints warnings for all unrecognized params at startup. This can be helpful for debugging and to quickly find typos in config param names.
 
-To get started quickly, we recommend skimming through these :repo_file:`example configs <ros/wavemap_ros/config>`.
+To get started quickly, we recommend skimming through these :gh_file:`example configs <ros/wavemap_ros/config>`.
 For reference, an overview of all available config options is provided below.
 
 ROS server
