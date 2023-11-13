@@ -2,20 +2,19 @@ ARG WAVEMAP_BASE_RELEASE=latest
 ARG WAVEMAP_BRANCH=main
 ARG DEMO_DEPENDENCIES_FILE=tooling/vcstool/live_demo_https.yml
 
-FROM ghcr.io/ethz-asl/wavemap:${WAVEMAP_BASE_RELEASE} AS cacher
+FROM alpine/git:2.40.1 AS cacher
 
 # Checkout wavemap's demo branch
 ARG WAVEMAP_BRANCH
 ARG DEMO_DEPENDENCIES_FILE
-RUN rm -rf src/wavemap && \
-    git clone -b ${WAVEMAP_BRANCH} https://github.com/ethz-asl/wavemap src/wavemap && \
-    cp src/wavemap/${DEMO_DEPENDENCIES_FILE} /tmp/demo_dependencies.yml
+RUN git clone -b ${WAVEMAP_BRANCH} https://github.com/ethz-asl/wavemap wavemap && \
+    cp wavemap/${DEMO_DEPENDENCIES_FILE} /demo_dependencies.yml
 
 
 FROM ghcr.io/ethz-asl/wavemap:${WAVEMAP_BASE_RELEASE}
 
 # Load the cached dependency spec file
-COPY --from=cacher /tmp/demo_dependencies.yml /tmp/demo_dependencies.yml
+COPY --from=cacher /demo_dependencies.yml /tmp/demo_dependencies.yml
 
 # Install vcstool
 ARG DEBIAN_FRONTEND=noninteractive
