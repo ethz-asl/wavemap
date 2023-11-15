@@ -25,17 +25,10 @@ void HashedBlocks::prune() {
 
 void HashedBlocks::forEachLeaf(
     VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
-  forEachBlock([&visitor_fn](const BlockIndex& block_index,
-                             const Block& block) {
-    for (LinearIndex cell_idx = 0u; cell_idx < Block::kCellsPerBlock;
-         ++cell_idx) {
-      const Index3D cell_index =
-          convert::linearIndexToIndex<kCellsPerSide, kDim>(cell_idx);
-      const Index3D index = cellAndBlockIndexToIndex(block_index, cell_index);
-      const FloatingPoint cell_data = block[cell_idx];
-      const OctreeIndex hierarchical_cell_index = OctreeIndex{0, index};
-      visitor_fn(hierarchical_cell_index, cell_data);
-    }
-  });
+  DenseBlockHash::forEachLeaf(
+      [&visitor_fn](const Index3D& index, FloatingPoint cell_data) {
+        const OctreeIndex hierarchical_cell_index = OctreeIndex{0, index};
+        visitor_fn(hierarchical_cell_index, cell_data);
+      });
 }
 }  // namespace wavemap

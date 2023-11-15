@@ -76,7 +76,7 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       }
 
       // Get the voxel's SDF value
-      FloatingPoint& sdf_value = sdf.getCellValueRef(index);
+      FloatingPoint& sdf_value = sdf.getOrAllocateCellValue(index);
       const bool sdf_uninitialized = sdf.getDefaultCellValue() == sdf_value;
 
       // Update the voxel's SDF value
@@ -129,7 +129,7 @@ void QuasiEuclideanSDFGenerator::propagate(
       // Get the neighbor's SDF value
       const Index3D neighbor_index =
           index + kNeighborIndexOffsets[neighbor_idx];
-      FloatingPoint& neighbor_sdf = sdf.getCellValueRef(neighbor_index);
+      FloatingPoint& neighbor_sdf = sdf.getOrAllocateCellValue(neighbor_index);
 
       // If the neighbor is uninitialized, get its sign from the occupancy map
       const bool neighbor_sdf_uninitialized =

@@ -21,7 +21,6 @@ class SpatialHash {
   static constexpr IndexElement kDim = dim;
 
   using BlockIndex = Index<dim>;
-  using CellIndex = Index<dim>;
   using BlockData = BlockDataT;
 
   bool empty() const { return block_map_.empty(); }

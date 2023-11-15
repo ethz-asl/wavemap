@@ -11,7 +11,10 @@ HashedBlocks FullEuclideanSDFGenerator::generate(
   ZoneScoped;
   // Initialize the SDF data structure
   const FloatingPoint min_cell_width = occupancy_map.getMinCellWidth();
-  VectorDistanceField full_sdf(min_cell_width, max_distance_);
+  const Index3D uninitialized_parent =
+      Index3D::Constant(std::numeric_limits<IndexElement>::max());
+  VectorDistanceField full_sdf(
+      min_cell_width, VectorDistance{uninitialized_parent, max_distance_});
 
   // Initialize the bucketed priority queue
   const int num_bins =
@@ -83,7 +86,7 @@ void FullEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       }
 
       // Get the voxel's SDF value
-      auto& [sdf_parent, sdf_value] = sdf.getCellValueRef(index);
+      auto& [sdf_parent, sdf_value] = sdf.getOrAllocateCellValue(index);
       const bool sdf_uninitialized =
           sdf_parent == sdf.getDefaultCellValue().parent;
 
@@ -135,7 +138,7 @@ void FullEuclideanSDFGenerator::propagate(
 
       // Get the neighbor's SDF value
       auto& [neighbor_sdf_parent, neighbor_sdf_value] =
-          sdf.getCellValueRef(neighbor_index);
+          sdf.getOrAllocateCellValue(neighbor_index);
 
       // If the neighbor is uninitialized, get its sign from the occupancy map
       const bool neighbor_sdf_uninitialized =

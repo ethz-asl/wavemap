@@ -6,9 +6,23 @@
 #include "wavemap/map/hashed_blocks.h"
 #include "wavemap/map/hashed_wavelet_octree.h"
 #include "wavemap/utils/sdf/cell_neighborhoods.h"
-#include "wavemap/utils/sdf/vector_distance_field.h"
 
 namespace wavemap {
+struct VectorDistance {
+  Index3D parent;
+  FloatingPoint distance;
+
+  friend bool operator==(const VectorDistance& lhs, const VectorDistance& rhs) {
+    return lhs.parent == rhs.parent && lhs.distance == rhs.distance;
+  }
+  friend bool operator!=(const VectorDistance& lhs, const VectorDistance& rhs) {
+    return !(lhs == rhs);
+  }
+};
+
+using VectorDistanceField =
+    DenseBlockHash<VectorDistance, VolumetricDataStructureBase::kDim, 16>;
+
 class FullEuclideanSDFGenerator {
  public:
   static constexpr FloatingPoint kMaxRelativeUnderEstimate = 1e-3f;
