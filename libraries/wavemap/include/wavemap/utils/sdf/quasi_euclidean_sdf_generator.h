@@ -10,7 +10,7 @@
 namespace wavemap {
 class QuasiEuclideanSDFGenerator {
  public:
-  static constexpr FloatingPoint kMaxRelativeUnderEstimate = kEpsilon;
+  static constexpr FloatingPoint kMaxRelativeUnderEstimate = 1e-3f;
   static constexpr FloatingPoint kMaxRelativeOverEstimate = 0.125f + 1e-3f;
 
   explicit QuasiEuclideanSDFGenerator(FloatingPoint max_distance = 2.f,
