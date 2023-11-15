@@ -35,3 +35,5 @@ cs_add_executable(trilinear_interpolation
 
 cs_add_executable(classification
         src/queries/classification.cc)
+
+cs_add_executable(occupancy_to_esdf src/planning/occupancy_to_esdf.cc)
