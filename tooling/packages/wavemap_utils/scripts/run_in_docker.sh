@@ -10,6 +10,7 @@
 # this directory can be accessed from the host and the container, and persists
 # when the container is erased.
 host_data_dir_path=/home/$USER/data
+wavemap_dir_path=/home/$USER/wavemap
 
 # Allow the docker user to connect to the X window display, to open GUIs
 xhost + local:docker
@@ -42,6 +43,7 @@ if docker info | grep "Runtimes.*nvidia.*" &>/dev/null; then
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     --runtime=nvidia --gpus all \
     -v "$host_data_dir_path":/home/ci/data:ro \
+    -v "$wavemap_dir_path":/home/ci/catkin_ws/src/wavemap:ro \
     -e NVIDIA_VISIBLE_DEVICES=all \
     -e NVIDIA_DRIVER_CAPABILITIES=graphics \
     wavemap "$@"
