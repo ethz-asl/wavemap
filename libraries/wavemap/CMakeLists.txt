@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap)
 
+add_definitions(-std=c++17)
+
 # Dependencies
 find_package(catkin
-    REQUIRED COMPONENTS glog_catkin eigen_catkin tracy_catkin minkindr)
+    REQUIRED COMPONENTS tracy_catkin minkindr)
+find_package(Eigen3 3.3 REQUIRED Eigen)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(glog REQUIRED libglog)
+pkg_check_modules(Eigen3 REQUIRED eigen3)
 
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
@@ -21,10 +27,10 @@ catkin_package(
     LIBRARIES
     ${PROJECT_NAME}
     CATKIN_DEPENDS
-    glog_catkin
-    eigen_catkin
     tracy_catkin
     minkindr
+    DEPENDS
+    EIGEN3
     CFG_EXTRAS
     wavemap-extras.cmake)
 # NOTE: The test headers are normally not exported (e.g. by adding test/include
@@ -33,7 +39,7 @@ catkin_package(
 # reused in downstream wavemap packages.
 
 # For all targets
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
 # Libraries
 # cmake-lint: disable=C0301
@@ -68,7 +74,7 @@ add_library(${PROJECT_NAME}
     src/integrator/integrator_factory.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen3_INCLUDE_DIR} ${glog_INCLUDE_DIRS})
 
 # Install targets
 install(TARGETS ${PROJECT_NAME}
