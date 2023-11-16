@@ -31,6 +31,7 @@ catkin_package(
     minkindr
     DEPENDS
     EIGEN3
+    glog
     CFG_EXTRAS
     wavemap-extras.cmake)
 # NOTE: The test headers are normally not exported (e.g. by adding test/include
