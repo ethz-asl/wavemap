@@ -38,7 +38,7 @@ void RayTracingIntegrator::integratePointcloud(
         (W_start_point - W_end_point).norm();
     const Point3D W_end_point_truncated = getEndPointOrMaxRange(
         W_start_point, W_end_point, measured_distance, config_.max_range);
-    const Ray ray(W_start_point, W_end_point_truncated, measured_distance);
+    const Ray ray(W_start_point, W_end_point_truncated, min_cell_width);
     for (const auto& index : ray) {
       const FloatingPoint update = measurement_model.computeUpdate(index);
       occupancy_map_->addToCellValue(index, update);
