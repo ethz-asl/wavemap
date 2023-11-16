@@ -1,7 +1,7 @@
 Contributing
 ############
 .. highlight:: bash
-.. rstcheck: ignore-roles=repo_file
+.. rstcheck: ignore-roles=gh_file
 
 Thank you for investing time in contributing to wavemap!
 
@@ -47,7 +47,7 @@ The tests are located in the `test` subfolders of each package and implemented u
 
 Documentation
 *************
-The documentation consists of pages for specific topics, located in the :repo_file:`docs/pages <docs/pages>` directory, and inline Doxygen annotations for the C++ source code.
+The documentation consists of pages for specific topics, located in the :gh_file:`docs/pages <docs/pages>` directory, and inline Doxygen annotations for the C++ source code.
 
 To read the documentation for a specific wavemap version:
 
