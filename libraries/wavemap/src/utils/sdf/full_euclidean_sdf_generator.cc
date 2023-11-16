@@ -141,9 +141,9 @@ void FullEuclideanSDFGenerator::propagate(
           sdf.getOrAllocateCellValue(neighbor_index);
 
       // If the neighbor is uninitialized, get its sign from the occupancy map
-      const bool neighbor_sdf_uninitialized =
+      const bool neighbor_uninitialized =
           neighbor_sdf_parent == sdf.getDefaultCellValue().parent;
-      if (neighbor_sdf_uninitialized) {
+      if (neighbor_uninitialized) {
         const FloatingPoint neighbor_occupancy =
             occupancy_query_accelerator.getCellValue(neighbor_index);
         // Never initialize or update unknown cells
@@ -182,7 +182,7 @@ void FullEuclideanSDFGenerator::propagate(
       }
 
       // If the neighbor is not yet in the open queue, add it
-      if (neighbor_sdf_uninitialized) {
+      if (neighbor_uninitialized) {
         open_queue.push(neighbor_df_candidate, neighbor_index);
       }
     }

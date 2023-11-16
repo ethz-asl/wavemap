@@ -1,5 +1,4 @@
 #include <filesystem>
-#include <iostream>
 
 #include <glog/logging.h>
 #include <wavemap/common.h>
