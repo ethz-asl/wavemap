@@ -5,7 +5,7 @@ add_definitions(-std=c++17)
 
 # Dependencies
 find_package(catkin REQUIRED COMPONENTS minkindr)
-find_package(Eigen3 3.3 REQUIRED Eigen)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
 pkg_check_modules(Eigen3 REQUIRED eigen3)
