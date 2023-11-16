@@ -4,8 +4,7 @@ project(wavemap)
 add_definitions(-std=c++17)
 
 # Dependencies
-find_package(catkin
-    REQUIRED COMPONENTS tracy_catkin minkindr)
+find_package(catkin REQUIRED COMPONENTS minkindr)
 find_package(Eigen3 3.3 REQUIRED Eigen)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
@@ -19,6 +18,16 @@ endif ()
 include(cmake/wavemap-extras.cmake)
 add_wavemap_compile_definitions_and_options()
 
+include(FetchContent)
+FetchContent_Declare(
+    tracy
+    GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+    GIT_TAG v0.10
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(tracy)
+
 # Setup catkin package
 catkin_package(
     INCLUDE_DIRS
@@ -27,7 +36,6 @@ catkin_package(
     LIBRARIES
     ${PROJECT_NAME}
     CATKIN_DEPENDS
-    tracy_catkin
     minkindr
     DEPENDS
     EIGEN3
@@ -75,7 +83,7 @@ add_library(${PROJECT_NAME}
     src/integrator/integrator_factory.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen3_INCLUDE_DIR} ${glog_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen3_INCLUDE_DIR} ${glog_INCLUDE_DIRS} PUBLIC TracyClient)
 
 # Install targets
 install(TARGETS ${PROJECT_NAME}
