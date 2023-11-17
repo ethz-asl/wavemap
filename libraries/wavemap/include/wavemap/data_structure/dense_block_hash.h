@@ -20,7 +20,7 @@ class DenseBlockHash {
   using BlockHashMap = SpatialHash<Block, kDim>;
 
   explicit DenseBlockHash(FloatingPoint min_cell_width,
-                          CellDataT default_value = 0.f)
+                          CellDataT default_value = CellDataT{})
       : min_cell_width_(min_cell_width), default_value_(default_value) {}
 
   bool empty() const { return block_map_.empty(); }
