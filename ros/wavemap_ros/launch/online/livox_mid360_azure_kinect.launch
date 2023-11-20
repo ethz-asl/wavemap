@@ -6,7 +6,7 @@
 
   <!-- Run the Kinect driver -->
   <node pkg="nodelet" type="nodelet" name="manager" args="manager">
-    <param name="num_worker_threads" value="4" />
+    <param name="num_worker_threads" value="4"/>
   </node>
   <node pkg="nodelet" type="nodelet" name="k4a_ros_bridge"
         args="load Azure_Kinect_ROS_Driver/K4AROSBridgeNodelet manager --no-bond"
