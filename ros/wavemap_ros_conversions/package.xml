@@ -11,11 +11,9 @@
   <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>roscpp</depend>
   <depend>wavemap</depend>
-  <depend>tracy_catkin</depend>
   <depend>wavemap_msgs</depend>
   <depend>eigen_conversions</depend>
 </package>
