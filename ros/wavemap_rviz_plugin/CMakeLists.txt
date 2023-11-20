@@ -12,17 +12,26 @@ find_package(catkin
         wavemap
         wavemap_io
         wavemap_msgs
-        wavemap_ros_conversions
-        tracy_catkin)
+        wavemap_ros_conversions)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
 # Disable some warnings coming from Qt code in combination with C++17
 add_compile_options(-Wno-pedantic -Wno-register)
 
+include(FetchContent)
+FetchContent_Declare(
+    tracy
+    GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+    GIT_TAG v0.10
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(tracy)
+
 # Setup catkin package
 catkin_package(CATKIN_DEPENDS
-        wavemap wavemap_io wavemap_msgs wavemap_ros_conversions tracy_catkin)
+        wavemap wavemap_io wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
 include_directories(include SYSTEM ${catkin_INCLUDE_DIRS})
@@ -69,7 +78,7 @@ add_library(${PROJECT_NAME}
     src/visuals/cell_selector.cc
     src/wavemap_map_display.cc
     ${QT_MOC})
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES} ${catkin_LIBRARIES} TracyClient)
 
 # Install
 install(TARGETS
