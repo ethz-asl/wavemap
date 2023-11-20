@@ -83,7 +83,7 @@ add_library(${PROJECT_NAME}
     src/integrator/integrator_factory.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen3_INCLUDE_DIR} ${glog_INCLUDE_DIRS} PUBLIC TracyClient)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} ${Eigen3_INCLUDE_DIR} ${glog_INCLUDE_DIRS} TracyClient)
 
 # Install targets
 install(TARGETS ${PROJECT_NAME}
