@@ -1,14 +1,19 @@
+general:
+  world_frame: "odom"
+  logging_level: debug
+  allow_reset_map_service: true
+
 map:
-  general:
-    world_frame: "odom"
-    thresholding_period: { seconds: 2.0 }
-    pruning_period: { seconds: 10.0 }
-    publication_period: { seconds: 2.0 }
-    logging_level: debug
-    allow_reset_map_service: true
-  data_structure:
     type: hashed_chunked_wavelet_octree
     min_cell_width: { meters: 0.1 }
+
+operations:
+  - type: threshold_map
+    once_every: { seconds: 2.0 }
+  - type: prune_map
+    once_every: { seconds: 10.0 }
+  - type: publish_map
+    once_every: { seconds: 2.0 }
 
 inputs:
   - type: pointcloud

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Properties of a single map pruning operation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "prune_map"
+    },
+    "once_every": {
+      "description": "Time period controlling how often the map is pruned.",
+      "$ref": "../value_with_unit/convertible_to_seconds.json"
+    }
+  }
+}
