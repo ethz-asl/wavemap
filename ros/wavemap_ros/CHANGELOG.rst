@@ -2,8 +2,8 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.1 (2023-11-20)
+------------------
 * Add config for Ouster OS0 + Pico Monstar
 * Improve demo settings and tune FastLIO
 * Make depth camera startup more reliable
