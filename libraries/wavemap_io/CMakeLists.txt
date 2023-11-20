@@ -1,18 +1,30 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_io)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
+find_package(catkin REQUIRED COMPONENTS wavemap wavemap_msgs wavemap_ros_conversions)
+#catkin_simple(ALL_DEPS_REQUIRED)
 # TODO(victorr): Switch to regular catkin
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
 
+catkin_package(
+    INCLUDE_DIRS
+    include
+    LIBRARIES
+    ${PROJECT_NAME}
+    CATKIN_DEPENDS
+    wavemap
+    wavemap_msgs
+    wavemap_ros_conversions
+)
+
 # Libraries
 # cmake-lint: disable=C0301
-cs_add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME}
     src/file_conversions.cc
     src/stream_conversions.cc)
+include_directories(include ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 # Tests
@@ -24,5 +36,6 @@ if (CATKIN_ENABLE_TESTING)
 endif ()
 
 # Export
-cs_install()
-cs_export()
+install(DIRECTORY include/${PROJECT_NAME}/
+DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+# cs_export()
