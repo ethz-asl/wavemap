@@ -2,6 +2,12 @@
 Changelog for package wavemap_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add Dockerfile and scripts to run the demo in Docker
+* Document how to replicate the live demo
+* Contributors: Victor Reijgwart
+
 1.6.0 (2023-10-17)
 ------------------
 

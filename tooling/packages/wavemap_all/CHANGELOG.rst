@@ -2,6 +2,9 @@
 Changelog for package wavemap_all
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.6.0 (2023-10-17)
 ------------------
 * Add initial usage examples

@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros_conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.6.0 (2023-10-17)
 ------------------
 * Update incremental transmission and Rviz to remove deleted blocks
