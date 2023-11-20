@@ -11,7 +11,7 @@
   <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <buildtool_depend>catkin_simple</buildtool_depend>
+  <!-- <buildtool_depend>catkin_simple</buildtool_depend> -->
 
   <depend>wavemap</depend>
   <depend>wavemap_io</depend>
@@ -20,9 +20,12 @@
   <depend>rosbag</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
+  <depend>tf2</depend>
   <depend>tf2_ros</depend>
-  <depend>tracy_catkin</depend>
-  <depend>gflags_catkin</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>eigen_conversions</depend>
+  <!-- <depend>tracy_catkin</depend>
+  <depend>gflags_catkin</depend> -->
 
   <depend>wavemap_msgs</depend>
   <depend>std_srvs</depend>
