@@ -18,9 +18,13 @@ Abstract:
 
 Please cite it when using wavemap for research:
 
+.. code-block:: text
+
     Reijgwart, V., Cadena, C., Siegwart, R., & Ott, L. (2023). Efficient volumetric mapping of multi-scale environments using wavelet-based compression. Proceedings of Robotics: Science and System XIX.
 
-BibTeX::
+BibTeX:
+
+.. code-block:: text
 
     @INPROCEEDINGS{reijgwart2023wavemap,
         author = {Reijgwart, Victor and Cadena, Cesar and Siegwart, Roland and Ott, Lionel},

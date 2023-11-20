@@ -9,6 +9,8 @@
   <arg name="show_rviz"
        default="true"
        doc="Automatically launch Rviz."/>
+  <arg name="rviz_config"
+       default="$(find wavemap_ros)/config/rviz/default.rviz"/>
 
   <!-- Dataset params -->
   <arg name="rosbag_path"
@@ -42,9 +44,7 @@
 
   <!-- Show Rviz -->
   <group if="$(arg show_rviz)">
-    <arg name="rviz_file"
-         default="$(find wavemap_ros)/config/wavemap_server.rviz"/>
     <node pkg="rviz" type="rviz" name="$(anon rviz)" output="screen"
-          args="-d $(arg rviz_file)"/>
+          args="-d $(arg rviz_config)"/>
   </group>
 </launch>
