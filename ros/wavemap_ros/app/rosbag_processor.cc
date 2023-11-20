@@ -1,11 +1,11 @@
-#include "wavemap_ros/rosbag_processor.h"
+#include "wavemap_ros/utils/rosbag_processor.h"
 
 #include <rosgraph_msgs/Clock.h>
 #include <tf/tfMessage.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
-#include "wavemap_ros/input_handler/depth_image_input_handler.h"
-#include "wavemap_ros/input_handler/pointcloud_input_handler.h"
+#include "wavemap_ros/inputs/depth_image_input.h"
+#include "wavemap_ros/inputs/pointcloud_input.h"
 #include "wavemap_ros/wavemap_server.h"
 
 using namespace wavemap;  // NOLINT
@@ -39,24 +39,24 @@ int main(int argc, char** argv) {
   const param::Array integrator_params_array =
       param::convert::toParamArray(nh_private, "inputs");
   for (const auto& integrator_params : integrator_params_array) {
-    InputHandler* input_handler =
+    InputBase* input_handler =
         wavemap_server.addInput(integrator_params, nh, nh_private);
     if (input_handler) {
       switch (input_handler->getType().toTypeId()) {
-        case InputHandlerType::kPointcloud: {
+        case InputType::kPointcloud: {
           auto pointcloud_handler =
-              dynamic_cast<PointcloudInputHandler*>(input_handler);
-          PointcloudInputHandler::registerCallback(
+              dynamic_cast<PointcloudInput*>(input_handler);
+          PointcloudInput::registerCallback(
               pointcloud_handler->getTopicType(), [&](auto callback_ptr) {
                 rosbag_processor.addCallback(input_handler->getTopicName(),
                                              callback_ptr, pointcloud_handler);
               });
         }
           continue;
-        case InputHandlerType::kDepthImage:
+        case InputType::kDepthImage:
           rosbag_processor.addCallback<const sensor_msgs::Image&>(
-              input_handler->getTopicName(), &DepthImageInputHandler::callback,
-              dynamic_cast<DepthImageInputHandler*>(input_handler));
+              input_handler->getTopicName(), &DepthImageInput::callback,
+              dynamic_cast<DepthImageInput*>(input_handler));
           continue;
       }
     }
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
   }
 
   wavemap_server.getMap()->prune();
-  wavemap_server.publishMap();
+  wavemap_server.runOperations(/*force_run_all*/ true);
 
   if (nh_private.param("keep_alive", false)) {
     ros::spin();

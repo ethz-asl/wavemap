@@ -1,4 +1,4 @@
-#include "wavemap_ros/input_handler/input_handler.h"
+#include "wavemap_ros/inputs/input_base.h"
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
@@ -10,14 +10,14 @@
 #include <wavemap/integrator/projective/projective_integrator.h>
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(InputHandlerConfig,
+DECLARE_CONFIG_MEMBERS(InputBaseConfig,
                       (topic_name)
                       (topic_queue_length)
                       (processing_retry_period)
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 
-bool InputHandlerConfig::isValid(bool verbose) const {
+bool InputBaseConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
@@ -27,16 +27,17 @@ bool InputHandlerConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-InputHandler::InputHandler(const InputHandlerConfig& config,
-                           const param::Value& params, std::string world_frame,
-                           VolumetricDataStructureBase::Ptr occupancy_map,
-                           std::shared_ptr<TfTransformer> transformer,
-                           std::shared_ptr<ThreadPool> thread_pool,
-                           const ros::NodeHandle& nh,
-                           ros::NodeHandle nh_private)
+InputBase::InputBase(const InputBaseConfig& config, const param::Value& params,
+                     std::string world_frame,
+                     VolumetricDataStructureBase::Ptr occupancy_map,
+                     std::shared_ptr<TfTransformer> transformer,
+                     std::shared_ptr<ThreadPool> thread_pool,
+                     const ros::NodeHandle& nh, ros::NodeHandle nh_private,
+                     std::function<void()> map_update_callback)
     : config_(config.checkValid()),
       world_frame_(std::move(world_frame)),
-      transformer_(std::move(transformer)) {
+      transformer_(std::move(transformer)),
+      map_update_callback_(std::move(map_update_callback)) {
   // Create the integrators
   const auto integrators_param = params.getChild("integrators");
   if (!integrators_param) {
@@ -79,7 +80,12 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
   }
 }
 
-void InputHandler::publishReprojectedPointcloud(
+bool InputBase::shouldPublishReprojectedPointcloud() const {
+  return !config_.reprojected_pointcloud_topic_name.empty() &&
+         0 < reprojected_pointcloud_pub_.getNumSubscribers();
+}
+
+void InputBase::publishReprojectedPointcloud(
     const ros::Time& stamp, const PosedPointcloud<>& posed_pointcloud) {
   ZoneScoped;
   sensor_msgs::PointCloud pointcloud_msg;
@@ -99,8 +105,13 @@ void InputHandler::publishReprojectedPointcloud(
   reprojected_pointcloud_pub_.publish(pointcloud2_msg);
 }
 
-void InputHandler::publishProjectedRangeImage(const ros::Time& stamp,
-                                              const Image<>& range_image) {
+bool InputBase::shouldPublishProjectedRangeImage() const {
+  return !config_.projected_range_image_topic_name.empty() &&
+         0 < projected_range_image_pub_.getNumSubscribers();
+}
+
+void InputBase::publishProjectedRangeImage(const ros::Time& stamp,
+                                           const Image<>& range_image) {
   ZoneScoped;
   cv_bridge::CvImage cv_image;
   cv_image.header.stamp = stamp;

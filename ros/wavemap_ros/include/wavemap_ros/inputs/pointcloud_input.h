@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_INPUT_HANDLER_POINTCLOUD_INPUT_HANDLER_H_
-#define WAVEMAP_ROS_INPUT_HANDLER_POINTCLOUD_INPUT_HANDLER_H_
+#ifndef WAVEMAP_ROS_INPUTS_POINTCLOUD_INPUT_H_
+#define WAVEMAP_ROS_INPUTS_POINTCLOUD_INPUT_H_
 
 #include <memory>
 #include <queue>
@@ -7,8 +7,8 @@
 
 #include <sensor_msgs/PointCloud2.h>
 
-#include "wavemap_ros/input_handler/input_handler.h"
-#include "wavemap_ros/input_handler/pointcloud_undistorter.h"
+#include "wavemap_ros/inputs/input_base.h"
+#include "wavemap_ros/utils/pointcloud_undistortion/pointcloud_undistorter.h"
 
 #ifdef LIVOX_AVAILABLE
 #include <livox_ros_driver2/CustomMsg.h>
@@ -26,8 +26,8 @@ struct PointcloudTopicType : public TypeSelector<PointcloudTopicType> {
 /**
  * Config struct for the pointcloud input handler.
  */
-struct PointcloudInputHandlerConfig
-    : public ConfigBase<PointcloudInputHandlerConfig, 11, PointcloudTopicType> {
+struct PointcloudInputConfig
+    : public ConfigBase<PointcloudInputConfig, 11, PointcloudTopicType> {
   //! Name of the ROS topic to subscribe to.
   std::string topic_name = "scan";
   //! Message type of the ROS topic to subscribe to.
@@ -71,7 +71,7 @@ struct PointcloudInputHandlerConfig
   static MemberMap memberMap;
 
   // Conversion to InputHandler base config
-  operator InputHandlerConfig() const {  // NOLINT
+  operator InputBaseConfig() const {  // NOLINT
     return {topic_name, topic_queue_length, processing_retry_period,
             reprojected_pointcloud_topic_name,
             projected_range_image_topic_name};
@@ -80,18 +80,17 @@ struct PointcloudInputHandlerConfig
   bool isValid(bool verbose) const override;
 };
 
-class PointcloudInputHandler : public InputHandler {
+class PointcloudInput : public InputBase {
  public:
-  PointcloudInputHandler(const PointcloudInputHandlerConfig& config,
-                         const param::Value& params, std::string world_frame,
-                         VolumetricDataStructureBase::Ptr occupancy_map,
-                         std::shared_ptr<TfTransformer> transformer,
-                         std::shared_ptr<ThreadPool> thread_pool,
-                         ros::NodeHandle nh, ros::NodeHandle nh_private);
+  PointcloudInput(const PointcloudInputConfig& config,
+                  const param::Value& params, std::string world_frame,
+                  VolumetricDataStructureBase::Ptr occupancy_map,
+                  std::shared_ptr<TfTransformer> transformer,
+                  std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
+                  ros::NodeHandle nh_private,
+                  std::function<void()> map_update_callback = {});
 
-  InputHandlerType getType() const override {
-    return InputHandlerType::kPointcloud;
-  }
+  InputType getType() const override { return InputType::kPointcloud; }
   PointcloudTopicType getTopicType() const { return config_.topic_type; }
 
   void callback(const sensor_msgs::PointCloud2& pointcloud_msg);
@@ -103,11 +102,11 @@ class PointcloudInputHandler : public InputHandler {
   static bool registerCallback(PointcloudTopicType type, RegistrarT registrar);
 
  private:
-  const PointcloudInputHandlerConfig config_;
+  const PointcloudInputConfig config_;
 
   PointcloudUndistorter pointcloud_undistorter_;
   ros::Subscriber pointcloud_sub_;
-  std::queue<GenericStampedPointcloud> pointcloud_queue_;
+  std::queue<StampedPointcloud> pointcloud_queue_;
   void processQueue() override;
 
   static bool hasField(const sensor_msgs::PointCloud2& msg,
@@ -115,6 +114,6 @@ class PointcloudInputHandler : public InputHandler {
 };
 }  // namespace wavemap
 
-#include "wavemap_ros/input_handler/impl/pointcloud_input_handler_impl.h"
+#include "wavemap_ros/inputs/impl/pointcloud_input_impl.h"
 
-#endif  // WAVEMAP_ROS_INPUT_HANDLER_POINTCLOUD_INPUT_HANDLER_H_
+#endif  // WAVEMAP_ROS_INPUTS_POINTCLOUD_INPUT_H_

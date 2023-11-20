@@ -1,4 +1,4 @@
-#include "wavemap_ros/input_handler/pointcloud_input_handler.h"
+#include "wavemap_ros/inputs/pointcloud_input.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <tracy/Tracy.hpp>
@@ -6,7 +6,7 @@
 #include <wavemap_ros_conversions/time_conversions.h>
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(PointcloudInputHandlerConfig,
+DECLARE_CONFIG_MEMBERS(PointcloudInputConfig,
                       (topic_name)
                       (topic_type)
                       (topic_queue_length)
@@ -19,7 +19,7 @@ DECLARE_CONFIG_MEMBERS(PointcloudInputHandlerConfig,
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 
-bool PointcloudInputHandlerConfig::isValid(bool verbose) const {
+bool PointcloudInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
@@ -30,15 +30,17 @@ bool PointcloudInputHandlerConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-PointcloudInputHandler::PointcloudInputHandler(
-    const PointcloudInputHandlerConfig& config, const param::Value& params,
-    std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer,
-    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-    ros::NodeHandle nh_private)
-    : InputHandler(config, params, std::move(world_frame),
-                   std::move(occupancy_map), transformer,
-                   std::move(thread_pool), nh, nh_private),
+PointcloudInput::PointcloudInput(const PointcloudInputConfig& config,
+                                 const param::Value& params,
+                                 std::string world_frame,
+                                 VolumetricDataStructureBase::Ptr occupancy_map,
+                                 std::shared_ptr<TfTransformer> transformer,
+                                 std::shared_ptr<ThreadPool> thread_pool,
+                                 ros::NodeHandle nh, ros::NodeHandle nh_private,
+                                 std::function<void()> map_update_callback)
+    : InputBase(config, params, std::move(world_frame),
+                std::move(occupancy_map), transformer, std::move(thread_pool),
+                nh, nh_private, std::move(map_update_callback)),
       config_(config.checkValid()),
       pointcloud_undistorter_(
           transformer,
@@ -50,8 +52,7 @@ PointcloudInputHandler::PointcloudInputHandler(
   });
 }
 
-void PointcloudInputHandler::callback(
-    const sensor_msgs::PointCloud2& pointcloud_msg) {
+void PointcloudInput::callback(const sensor_msgs::PointCloud2& pointcloud_msg) {
   ZoneScoped;
   // Skip empty clouds
   const size_t num_points = pointcloud_msg.height * pointcloud_msg.width;
@@ -82,8 +83,8 @@ void PointcloudInputHandler::callback(
   std::string sensor_frame_id = config_.sensor_frame_id.empty()
                                     ? pointcloud_msg.header.frame_id
                                     : config_.sensor_frame_id;
-  GenericStampedPointcloud stamped_pointcloud{
-      stamp_nsec, std::move(sensor_frame_id), num_points};
+  StampedPointcloud stamped_pointcloud{stamp_nsec, std::move(sensor_frame_id),
+                                       num_points};
 
   // Load the points with time information if undistortion is enabled
   bool loaded = false;
@@ -154,7 +155,7 @@ void PointcloudInputHandler::callback(
 }
 #endif
 
-void PointcloudInputHandler::processQueue() {
+void PointcloudInput::processQueue() {
   ZoneScoped;
   while (!pointcloud_queue_.empty()) {
     auto& oldest_msg = pointcloud_queue_.front();
@@ -243,6 +244,11 @@ void PointcloudInputHandler::processQueue() {
                      << "s. Total integration time: "
                      << integration_timer_.getTotalDuration() << "s.");
 
+    // Notify subscribers that the map was updated
+    if (map_update_callback_) {
+      std::invoke(map_update_callback_);
+    }
+
     // Publish debugging visualizations
     if (shouldPublishReprojectedPointcloud()) {
       publishReprojectedPointcloud(
@@ -268,8 +274,8 @@ void PointcloudInputHandler::processQueue() {
   }
 }
 
-bool PointcloudInputHandler::hasField(const sensor_msgs::PointCloud2& msg,
-                                      const std::string& field_name) {
+bool PointcloudInput::hasField(const sensor_msgs::PointCloud2& msg,
+                               const std::string& field_name) {
   return std::any_of(msg.fields.cbegin(), msg.fields.cend(),
                      [&](const sensor_msgs::PointField& field) {
                        return field.name == field_name;

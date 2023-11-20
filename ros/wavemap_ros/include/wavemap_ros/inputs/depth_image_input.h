@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_INPUT_HANDLER_DEPTH_IMAGE_INPUT_HANDLER_H_
-#define WAVEMAP_ROS_INPUT_HANDLER_DEPTH_IMAGE_INPUT_HANDLER_H_
+#ifndef WAVEMAP_ROS_INPUTS_DEPTH_IMAGE_INPUT_H_
+#define WAVEMAP_ROS_INPUTS_DEPTH_IMAGE_INPUT_H_
 
 #include <memory>
 #include <queue>
@@ -11,14 +11,13 @@
 #include <wavemap/data_structure/image.h>
 #include <wavemap/integrator/projective/projective_integrator.h>
 
-#include "wavemap_ros/input_handler/input_handler.h"
+#include "wavemap_ros/inputs/input_base.h"
 
 namespace wavemap {
 /**
  * Config struct for the depth image input handler.
  */
-struct DepthImageInputHandlerConfig
-    : public ConfigBase<DepthImageInputHandlerConfig, 10> {
+struct DepthImageInputConfig : public ConfigBase<DepthImageInputConfig, 10> {
   //! Name of the ROS topic to subscribe to.
   std::string topic_name = "scan";
   //! Queue length to use when subscribing to the ROS topic.
@@ -57,7 +56,7 @@ struct DepthImageInputHandlerConfig
   static MemberMap memberMap;
 
   // Conversion to InputHandler base config
-  operator InputHandlerConfig() const {  // NOLINT
+  operator InputBaseConfig() const {  // NOLINT
     return {topic_name, topic_queue_length, processing_retry_period,
             reprojected_pointcloud_topic_name,
             projected_range_image_topic_name};
@@ -66,18 +65,17 @@ struct DepthImageInputHandlerConfig
   bool isValid(bool verbose) const override;
 };
 
-class DepthImageInputHandler : public InputHandler {
+class DepthImageInput : public InputBase {
  public:
-  DepthImageInputHandler(const DepthImageInputHandlerConfig& config,
-                         const param::Value& params, std::string world_frame,
-                         VolumetricDataStructureBase::Ptr occupancy_map,
-                         std::shared_ptr<TfTransformer> transformer,
-                         std::shared_ptr<ThreadPool> thread_pool,
-                         ros::NodeHandle nh, ros::NodeHandle nh_private);
+  DepthImageInput(const DepthImageInputConfig& config,
+                  const param::Value& params, std::string world_frame,
+                  VolumetricDataStructureBase::Ptr occupancy_map,
+                  std::shared_ptr<TfTransformer> transformer,
+                  std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
+                  ros::NodeHandle nh_private,
+                  std::function<void()> map_update_callback = {});
 
-  InputHandlerType getType() const override {
-    return InputHandlerType::kDepthImage;
-  }
+  InputType getType() const override { return InputType::kDepthImage; }
 
   void callback(const sensor_msgs::ImageConstPtr& depth_image_msg) {
     callback(*depth_image_msg);
@@ -87,7 +85,7 @@ class DepthImageInputHandler : public InputHandler {
   }
 
  private:
-  const DepthImageInputHandlerConfig config_;
+  const DepthImageInputConfig config_;
   std::vector<ProjectiveIntegrator::Ptr> scanwise_integrators_;
 
   image_transport::Subscriber depth_image_sub_;
@@ -98,4 +96,4 @@ class DepthImageInputHandler : public InputHandler {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_INPUT_HANDLER_DEPTH_IMAGE_INPUT_HANDLER_H_
+#endif  // WAVEMAP_ROS_INPUTS_DEPTH_IMAGE_INPUT_H_

@@ -1,4 +1,4 @@
-#include "wavemap_ros/rosbag_processor.h"
+#include "wavemap_ros/utils/rosbag_processor.h"
 
 #include <tracy/Tracy.hpp>
 

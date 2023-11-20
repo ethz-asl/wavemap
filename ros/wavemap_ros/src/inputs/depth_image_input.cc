@@ -1,4 +1,4 @@
-#include "wavemap_ros/input_handler/depth_image_input_handler.h"
+#include "wavemap_ros/inputs/depth_image_input.h"
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
@@ -7,7 +7,7 @@
 #include <wavemap/utils/print/eigen.h>
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(DepthImageInputHandlerConfig,
+DECLARE_CONFIG_MEMBERS(DepthImageInputConfig,
                       (topic_name)
                       (topic_queue_length)
                       (processing_retry_period)
@@ -19,7 +19,7 @@ DECLARE_CONFIG_MEMBERS(DepthImageInputHandlerConfig,
                       (reprojected_pointcloud_topic_name)
                       (projected_range_image_topic_name));
 
-bool DepthImageInputHandlerConfig::isValid(bool verbose) const {
+bool DepthImageInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
@@ -30,15 +30,18 @@ bool DepthImageInputHandlerConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-DepthImageInputHandler::DepthImageInputHandler(
-    const DepthImageInputHandlerConfig& config, const param::Value& params,
-    std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer,
-    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-    ros::NodeHandle nh_private)
-    : InputHandler(config, params, std::move(world_frame),
-                   std::move(occupancy_map), std::move(transformer),
-                   std::move(thread_pool), nh, nh_private),
+DepthImageInput::DepthImageInput(const DepthImageInputConfig& config,
+                                 const param::Value& params,
+                                 std::string world_frame,
+                                 VolumetricDataStructureBase::Ptr occupancy_map,
+                                 std::shared_ptr<TfTransformer> transformer,
+                                 std::shared_ptr<ThreadPool> thread_pool,
+                                 ros::NodeHandle nh, ros::NodeHandle nh_private,
+                                 std::function<void()> map_update_callback)
+    : InputBase(config, params, std::move(world_frame),
+                std::move(occupancy_map), std::move(transformer),
+                std::move(thread_pool), nh, nh_private,
+                std::move(map_update_callback)),
       config_(config.checkValid()) {
   // Get pointers to the underlying scanwise integrators
   for (const auto& integrator : integrators_) {
@@ -54,11 +57,11 @@ DepthImageInputHandler::DepthImageInputHandler(
   image_transport::ImageTransport it(nh);
   depth_image_sub_ = it.subscribe(
       config_.topic_name, config_.topic_queue_length,
-      &DepthImageInputHandler::callback, this,
+      &DepthImageInput::callback, this,
       image_transport::TransportHints(config_.image_transport_hints));
 }
 
-void DepthImageInputHandler::processQueue() {
+void DepthImageInput::processQueue() {
   ZoneScoped;
   while (!depth_image_queue_.empty()) {
     const sensor_msgs::Image& oldest_msg = depth_image_queue_.front();
@@ -118,6 +121,11 @@ void DepthImageInputHandler::processQueue() {
                      << "s. Total integration time: "
                      << integration_timer_.getTotalDuration() << "s.");
 
+    // Notify subscribers that the map was updated
+    if (map_update_callback_) {
+      std::invoke(map_update_callback_);
+    }
+
     // Publish debugging visualizations
     if (shouldPublishReprojectedPointcloud()) {
       const auto posed_pointcloud = reproject(posed_range_image);
@@ -140,7 +148,7 @@ void DepthImageInputHandler::processQueue() {
   }
 }
 
-PosedPointcloud<> DepthImageInputHandler::reproject(
+PosedPointcloud<> DepthImageInput::reproject(
     const PosedImage<>& posed_range_image) {
   ZoneScoped;
   auto projective_integrator =

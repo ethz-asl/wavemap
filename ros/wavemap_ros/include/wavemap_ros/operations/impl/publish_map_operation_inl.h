@@ -1,29 +1,28 @@
-#ifndef WAVEMAP_ROS_IMPL_WAVEMAP_SERVER_INL_H_
-#define WAVEMAP_ROS_IMPL_WAVEMAP_SERVER_INL_H_
+#ifndef WAVEMAP_ROS_OPERATIONS_IMPL_PUBLISH_MAP_OPERATION_INL_H_
+#define WAVEMAP_ROS_OPERATIONS_IMPL_PUBLISH_MAP_OPERATION_INL_H_
 
-#include <functional>
 #include <unordered_set>
-#include <utility>
-#include <vector>
 
 #include <tracy/Tracy.hpp>
+#include <wavemap/indexing/index_hashes.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
 namespace wavemap {
 template <typename HashedMapT>
-void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
-                                     bool republish_whole_map) {
+void PublishMapOperation::publishHashedMap(const ros::Time& current_time,
+                                           HashedMapT* hashed_map,
+                                           bool republish_whole_map) {
   // Find the blocks that changed since the last publication time
-  const Timestamp start_time = Time::now();
+  const Timestamp start_time_internal = Time::now();
   std::unordered_set<Index3D, Index3DHash> changed_blocks;
   for (const auto& [block_idx, block] : hashed_map->getBlocks()) {
     if (republish_whole_map ||
-        last_map_pub_time_ < block.getLastUpdatedStamp()) {
+        last_run_timestamp_internal_ < block.getLastUpdatedStamp()) {
       changed_blocks.emplace(block_idx);
     }
   }
-  last_map_pub_time_ = start_time;
+  last_run_timestamp_internal_ = start_time_internal;
 
   // Publish the changed blocks, 'max_num_blocks_per_msg' at a time
   while (!changed_blocks.empty()) {
@@ -40,8 +39,8 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
 
     // Serialize and publish the selected blocks
     wavemap_msgs::Map map_msg;
-    map_msg.header.frame_id = config_.world_frame;
-    map_msg.header.stamp = ros::Time::now();
+    map_msg.header.frame_id = world_frame_;
+    map_msg.header.stamp = current_time;
     convert::mapToRosMsg(*hashed_map,
                          map_msg.hashed_wavelet_octree.emplace_back(),
                          blocks_to_publish, thread_pool_);
@@ -58,4 +57,4 @@ void WavemapServer::publishHashedMap(HashedMapT* hashed_map,
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_IMPL_WAVEMAP_SERVER_INL_H_
+#endif  // WAVEMAP_ROS_OPERATIONS_IMPL_PUBLISH_MAP_OPERATION_INL_H_

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_LOGGING_LEVEL_H_
-#define WAVEMAP_ROS_LOGGING_LEVEL_H_
+#ifndef WAVEMAP_ROS_UTILS_LOGGING_LEVEL_H_
+#define WAVEMAP_ROS_UTILS_LOGGING_LEVEL_H_
 
 #include <ros/console.h>
 #include <wavemap/config/type_selector.h>
@@ -19,4 +19,4 @@ struct LoggingLevel : public TypeSelector<LoggingLevel> {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_LOGGING_LEVEL_H_
+#endif  // WAVEMAP_ROS_UTILS_LOGGING_LEVEL_H_

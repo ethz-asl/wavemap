@@ -19,13 +19,17 @@ add_wavemap_compile_definitions_and_options()
 
 # Libraries
 cs_add_library(${PROJECT_NAME}
-    src/rosbag_processor.cc
-    src/tf_transformer.cc
-    src/input_handler/depth_image_input_handler.cc
-    src/input_handler/input_handler.cc
-    src/input_handler/input_handler_factory.cc
-    src/input_handler/pointcloud_input_handler.cc
-    src/input_handler/pointcloud_undistorter.cc
+    src/inputs/depth_image_input.cc
+    src/inputs/input_base.cc
+    src/inputs/input_factory.cc
+    src/inputs/pointcloud_input.cc
+    src/operations/operation_factory.cc
+    src/operations/prune_map_operation.cc
+    src/operations/publish_map_operation.cc
+    src/operations/threshold_map_operation.cc
+    src/utils/pointcloud_undistortion/pointcloud_undistorter.cc
+    src/utils/rosbag_processor.cc
+    src/utils/tf_transformer.cc
     src/wavemap_server.cc)
 # Link OpenCV explicitly to avoid issues on Jetson
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})

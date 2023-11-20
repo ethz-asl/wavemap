@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_INPUT_HANDLER_GENERIC_STAMPED_POINTCLOUD_H_
-#define WAVEMAP_ROS_INPUT_HANDLER_GENERIC_STAMPED_POINTCLOUD_H_
+#ifndef WAVEMAP_ROS_UTILS_POINTCLOUD_UNDISTORTION_STAMPED_POINTCLOUD_H_
+#define WAVEMAP_ROS_UTILS_POINTCLOUD_UNDISTORTION_STAMPED_POINTCLOUD_H_
 
 #include <algorithm>
 #include <string>
@@ -9,12 +9,12 @@
 #include <wavemap/common.h>
 
 namespace wavemap {
-struct GenericStampedPoint {
+struct StampedPoint {
   Point3D position;
   uint32_t time_offset;
 
-  GenericStampedPoint(FloatingPoint x, FloatingPoint y, FloatingPoint z,
-                      uint64_t time_offset)
+  StampedPoint(FloatingPoint x, FloatingPoint y, FloatingPoint z,
+               uint64_t time_offset)
       : position(x, y, z), time_offset(time_offset) {}
 
   std::string toStr() const {
@@ -24,10 +24,10 @@ struct GenericStampedPoint {
   }
 };
 
-class GenericStampedPointcloud {
+class StampedPointcloud {
  public:
-  GenericStampedPointcloud(uint64_t time_base, std::string sensor_frame,
-                           size_t expected_num_points = 0)
+  StampedPointcloud(uint64_t time_base, std::string sensor_frame,
+                    size_t expected_num_points = 0)
       : sensor_frame_(std::move(sensor_frame)), time_base_(time_base) {
     points_.reserve(expected_num_points);
   }
@@ -61,13 +61,11 @@ class GenericStampedPointcloud {
   }
 
   // Point related getters
-  std::vector<GenericStampedPoint>& getPoints() { return points_; }
-  const std::vector<GenericStampedPoint>& getPoints() const { return points_; }
+  std::vector<StampedPoint>& getPoints() { return points_; }
+  const std::vector<StampedPoint>& getPoints() const { return points_; }
 
-  GenericStampedPoint& operator[](size_t point_idx) {
-    return points_[point_idx];
-  }
-  const GenericStampedPoint& operator[](size_t point_idx) const {
+  StampedPoint& operator[](size_t point_idx) { return points_[point_idx]; }
+  const StampedPoint& operator[](size_t point_idx) const {
     return points_[point_idx];
   }
 
@@ -85,10 +83,10 @@ class GenericStampedPointcloud {
  private:
   std::string sensor_frame_;
   uint64_t time_base_;
-  std::vector<GenericStampedPoint> points_;
+  std::vector<StampedPoint> points_;
 
   bool is_sorted = false;
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_INPUT_HANDLER_GENERIC_STAMPED_POINTCLOUD_H_
+#endif  // WAVEMAP_ROS_UTILS_POINTCLOUD_UNDISTORTION_STAMPED_POINTCLOUD_H_
