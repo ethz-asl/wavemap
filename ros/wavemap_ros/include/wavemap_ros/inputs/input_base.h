@@ -62,7 +62,7 @@ class InputBase {
             std::shared_ptr<TfTransformer> transformer,
             std::shared_ptr<ThreadPool> thread_pool, const ros::NodeHandle& nh,
             ros::NodeHandle nh_private,
-            std::function<void()> map_update_callback = {});
+            std::function<void(const ros::Time&)> map_update_callback = {});
   virtual ~InputBase() = default;
 
   virtual InputType getType() const = 0;
@@ -72,7 +72,7 @@ class InputBase {
   const InputBaseConfig config_;
   const std::string world_frame_;
 
-  std::shared_ptr<TfTransformer> transformer_;
+  const std::shared_ptr<TfTransformer> transformer_;
 
   std::vector<IntegratorBase::Ptr> integrators_;
   Stopwatch integration_timer_;
@@ -80,7 +80,7 @@ class InputBase {
   virtual void processQueue() = 0;
   ros::Timer queue_processing_retry_timer_;
 
-  std::function<void()> map_update_callback_;
+  std::function<void(const ros::Time&)> map_update_callback_;
 
   bool shouldPublishReprojectedPointcloud() const;
   void publishReprojectedPointcloud(const ros::Time& stamp,

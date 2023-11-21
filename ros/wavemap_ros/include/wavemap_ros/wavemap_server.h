@@ -52,7 +52,7 @@ class WavemapServer {
   OperationBase* addOperation(const param::Value& operation_params,
                               ros::NodeHandle nh_private);
 
-  void runOperations(bool force_run_all = false);
+  void runOperations(const ros::Time& current_time, bool force_run_all = false);
 
   VolumetricDataStructureBase::Ptr getMap() { return occupancy_map_; }
   VolumetricDataStructureBase::ConstPtr getMap() const {

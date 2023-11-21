@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
   }
 
   wavemap_server.getMap()->prune();
-  wavemap_server.runOperations(/*force_run_all*/ true);
+  wavemap_server.runOperations(ros::Time::now(), /*force_run_all*/ true);
 
   if (nh_private.param("keep_alive", false)) {
     ros::spin();

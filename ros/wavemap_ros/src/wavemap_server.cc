@@ -81,7 +81,7 @@ InputBase* WavemapServer::addInput(const param::Value& integrator_params,
   auto input_handler = InputFactory::create(
       integrator_params, config_.world_frame, occupancy_map_, transformer_,
       thread_pool_, nh, nh_private, std::nullopt,
-      [this]() { runOperations(); });
+      [this](const ros::Time& current_time) { runOperations(current_time); });
   if (input_handler) {
     return input_handlers_.emplace_back(std::move(input_handler)).get();
   }
@@ -99,8 +99,8 @@ OperationBase* WavemapServer::addOperation(const param::Value& operation_params,
   return nullptr;
 }
 
-void WavemapServer::runOperations(bool force_run_all) {
-  const ros::Time current_time = ros::Time::now();
+void WavemapServer::runOperations(const ros::Time& current_time,
+                                  bool force_run_all) {
   for (auto& operation : operations_) {
     operation->run(current_time, force_run_all);
   }

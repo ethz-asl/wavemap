@@ -30,14 +30,13 @@ bool PointcloudInputConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-PointcloudInput::PointcloudInput(const PointcloudInputConfig& config,
-                                 const param::Value& params,
-                                 std::string world_frame,
-                                 VolumetricDataStructureBase::Ptr occupancy_map,
-                                 std::shared_ptr<TfTransformer> transformer,
-                                 std::shared_ptr<ThreadPool> thread_pool,
-                                 ros::NodeHandle nh, ros::NodeHandle nh_private,
-                                 std::function<void()> map_update_callback)
+PointcloudInput::PointcloudInput(
+    const PointcloudInputConfig& config, const param::Value& params,
+    std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
+    std::shared_ptr<TfTransformer> transformer,
+    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
+    ros::NodeHandle nh_private,
+    std::function<void(const ros::Time&)> map_update_callback)
     : InputBase(config, params, std::move(world_frame),
                 std::move(occupancy_map), transformer, std::move(thread_pool),
                 nh, nh_private, std::move(map_update_callback)),
@@ -246,7 +245,8 @@ void PointcloudInput::processQueue() {
 
     // Notify subscribers that the map was updated
     if (map_update_callback_) {
-      std::invoke(map_update_callback_);
+      std::invoke(map_update_callback_,
+                  convert::nanoSecondsToRosTime(oldest_msg.getEndTime()));
     }
 
     // Publish debugging visualizations

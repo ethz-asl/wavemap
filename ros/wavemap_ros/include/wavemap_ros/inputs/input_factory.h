@@ -17,7 +17,7 @@ class InputFactory {
       std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
       ros::NodeHandle nh_private,
       std::optional<InputType> default_input_type = std::nullopt,
-      std::function<void()> map_update_callback = {});
+      std::function<void(const ros::Time&)> map_update_callback = {});
 
   static std::unique_ptr<InputBase> create(
       InputType input_type, const param::Value& params, std::string world_frame,
@@ -25,7 +25,7 @@ class InputFactory {
       std::shared_ptr<TfTransformer> transformer,
       std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
       ros::NodeHandle nh_private,
-      std::function<void()> map_update_callback = {});
+      std::function<void(const ros::Time&)> map_update_callback = {});
 };
 }  // namespace wavemap
 

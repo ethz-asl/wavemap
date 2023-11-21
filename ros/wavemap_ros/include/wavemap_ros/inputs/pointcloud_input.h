@@ -82,13 +82,13 @@ struct PointcloudInputConfig
 
 class PointcloudInput : public InputBase {
  public:
-  PointcloudInput(const PointcloudInputConfig& config,
-                  const param::Value& params, std::string world_frame,
-                  VolumetricDataStructureBase::Ptr occupancy_map,
-                  std::shared_ptr<TfTransformer> transformer,
-                  std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-                  ros::NodeHandle nh_private,
-                  std::function<void()> map_update_callback = {});
+  PointcloudInput(
+      const PointcloudInputConfig& config, const param::Value& params,
+      std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
+      std::shared_ptr<TfTransformer> transformer,
+      std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
+      ros::NodeHandle nh_private,
+      std::function<void(const ros::Time&)> map_update_callback = {});
 
   InputType getType() const override { return InputType::kPointcloud; }
   PointcloudTopicType getTopicType() const { return config_.topic_type; }

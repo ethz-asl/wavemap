@@ -33,7 +33,7 @@ InputBase::InputBase(const InputBaseConfig& config, const param::Value& params,
                      std::shared_ptr<TfTransformer> transformer,
                      std::shared_ptr<ThreadPool> thread_pool,
                      const ros::NodeHandle& nh, ros::NodeHandle nh_private,
-                     std::function<void()> map_update_callback)
+                     std::function<void(const ros::Time&)> map_update_callback)
     : config_(config.checkValid()),
       world_frame_(std::move(world_frame)),
       transformer_(std::move(transformer)),

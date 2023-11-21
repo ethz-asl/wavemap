@@ -10,7 +10,7 @@ std::unique_ptr<InputBase> InputFactory::create(
     std::shared_ptr<TfTransformer> transformer,
     std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private, std::optional<InputType> default_input_type,
-    std::function<void()> map_update_callback) {
+    std::function<void(const ros::Time&)> map_update_callback) {
   if (const auto type = InputType::from(params); type) {
     return create(type.value(), params, world_frame, occupancy_map,
                   std::move(transformer), std::move(thread_pool), nh,
@@ -35,7 +35,8 @@ std::unique_ptr<InputBase> InputFactory::create(
     VolumetricDataStructureBase::Ptr occupancy_map,
     std::shared_ptr<TfTransformer> transformer,
     std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-    ros::NodeHandle nh_private, std::function<void()> map_update_callback) {
+    ros::NodeHandle nh_private,
+    std::function<void(const ros::Time&)> map_update_callback) {
   if (!input_type.isValid()) {
     ROS_ERROR("Received request to create input handler with invalid type.");
     return nullptr;
