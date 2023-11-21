@@ -8,10 +8,10 @@ namespace wavemap {
 struct OperationType : public TypeSelector<OperationType> {
   using TypeSelector<OperationType>::TypeSelector;
 
-  enum Id : TypeId { kThresholdMap, kPruneMap, kPublishMap };
+  enum Id : TypeId { kThresholdMap, kPruneMap, kPublishMap, kCropMap };
 
   static constexpr std::array names = {"threshold_map", "prune_map",
-                                       "publish_map"};
+                                       "publish_map", "crop_map"};
 };
 
 class OperationBase {

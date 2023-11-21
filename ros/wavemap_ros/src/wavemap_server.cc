@@ -90,9 +90,9 @@ InputBase* WavemapServer::addInput(const param::Value& integrator_params,
 
 OperationBase* WavemapServer::addOperation(const param::Value& operation_params,
                                            ros::NodeHandle nh_private) {
-  auto operation_handler =
-      OperationFactory::create(operation_params, config_.world_frame,
-                               occupancy_map_, thread_pool_, nh_private);
+  auto operation_handler = OperationFactory::create(
+      operation_params, config_.world_frame, occupancy_map_, transformer_,
+      thread_pool_, nh_private);
   if (operation_handler) {
     return operations_.emplace_back(std::move(operation_handler)).get();
   }

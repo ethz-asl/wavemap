@@ -23,6 +23,7 @@ cs_add_library(${PROJECT_NAME}
     src/inputs/input_base.cc
     src/inputs/input_factory.cc
     src/inputs/pointcloud_input.cc
+    src/operations/crop_map_operation.cc
     src/operations/operation_factory.cc
     src/operations/prune_map_operation.cc
     src/operations/publish_map_operation.cc

@@ -36,6 +36,11 @@ std::unique_ptr<InputBase> InputFactory::create(
     std::shared_ptr<TfTransformer> transformer,
     std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private, std::function<void()> map_update_callback) {
+  if (!input_type.isValid()) {
+    ROS_ERROR("Received request to create input handler with invalid type.");
+    return nullptr;
+  }
+
   // Create the input handler
   switch (input_type.toTypeId()) {
     case InputType::kPointcloud:
@@ -63,6 +68,9 @@ std::unique_ptr<InputBase> InputFactory::create(
         return nullptr;
       }
   }
+
+  ROS_ERROR_STREAM("Factory does not support creation of input type "
+                   << input_type.toStr() << ".");
   return nullptr;
 }
 }  // namespace wavemap
