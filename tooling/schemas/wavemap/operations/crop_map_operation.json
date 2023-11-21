@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Properties of a single map cropping operation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "crop_map"
+    },
+    "once_every": {
+      "description": "Time period controlling how often the map is cropped.",
+      "$ref": "../value_with_unit/convertible_to_seconds.json"
+    },
+    "body_frame": {
+      "description": "Name of the TF frame to treat as the center point. Usually the robot's body frame. When the cropper runs, all blocks that are further than remove_blocks_beyond_distance from this point are deleted.",
+      "type": "string",
+      "examples": [
+        "body"
+      ]
+    },
+    "remove_blocks_beyond_distance": {
+      "description": "Distance beyond which blocks are deleted when the cropper is executed.",
+      "$ref": "../value_with_unit/convertible_to_meters.json"
+    }
+  }
+}

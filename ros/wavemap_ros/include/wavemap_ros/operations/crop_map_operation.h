@@ -24,7 +24,7 @@ struct CropMapOperationConfig : public ConfigBase<CropMapOperationConfig, 3> {
   //! remove_blocks_beyond_distance from this point are deleted.
   std::string body_frame = "body";
 
-  //! Distance beyond which blocks are deleted.
+  //! Distance beyond which blocks are deleted when the cropper is executed.
   Meters<FloatingPoint> remove_blocks_beyond_distance;
 
   static MemberMap memberMap;
