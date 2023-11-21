@@ -17,9 +17,9 @@ bool PointcloudInput::registerCallback(PointcloudTopicType type,
     case PointcloudTopicType::kLivox:
 #ifdef LIVOX_AVAILABLE
       // clang-format off
-      registrar(static_cast<void(PointcloudInputHandler::*)(
+      registrar(static_cast<void(PointcloudInput::*)(
                     const livox_ros_driver2::CustomMsg&)>(
-          &PointcloudInputHandler::callback));
+          &PointcloudInput::callback));
       // clang-format on
       return true;
 #else
