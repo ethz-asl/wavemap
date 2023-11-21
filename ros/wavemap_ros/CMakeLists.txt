@@ -19,6 +19,7 @@ sensor_msgs
 visualization_msgs
 std_srvs
 eigen_conversions
+minkindr
 )
 # catkin_simple(ALL_DEPS_REQUIRED)
 
@@ -48,6 +49,10 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(tracy)
+
+# Add minkindr as header-only library
+add_library(minkindr INTERFACE)
+target_include_directories(minkindr INTERFACE ${minkindr_SOURCE_DIR}/include)
 
 catkin_package(
     INCLUDE_DIRS
@@ -84,11 +89,11 @@ add_library(${PROJECT_NAME}
     src/input_handler/pointcloud_undistorter.cc
     src/wavemap_server.cc)
 # Link OpenCV explicitly to avoid issues on Jetson
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBRARIES} TracyClient)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBRARIES} TracyClient minkindr)
 
 # Binaries
 add_executable(wavemap_server_node app/server_node.cc)
-target_link_libraries(wavemap_server_node PUBLIC ${PROJECT_NAME} ${catkin_LIBRARIES} ${EIGEN3_INCLUDE_DIRS} TracyClient gflags)
+target_link_libraries(wavemap_server_node PUBLIC ${PROJECT_NAME} ${catkin_LIBRARIES} ${EIGEN3_INCLUDE_DIRS} TracyClient gflags minkindr)
 
 # add_executable(wavemap_rosbag_processor app/rosbag_processor.cc)
 # target_link_libraries(wavemap_rosbag_processor PUBLIC ${PROJECT_NAME} TracyClient gflags)

@@ -12,7 +12,8 @@ find_package(catkin
         wavemap
         wavemap_io
         wavemap_msgs
-        wavemap_ros_conversions)
+        wavemap_ros_conversions
+        minkindr)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
@@ -28,6 +29,10 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(tracy)
+
+# Add minkindr as header-only library
+add_library(minkindr INTERFACE)
+target_include_directories(minkindr INTERFACE ${minkindr_SOURCE_DIR}/include)
 
 # Setup catkin package
 catkin_package(CATKIN_DEPENDS
@@ -78,7 +83,7 @@ add_library(${PROJECT_NAME}
     src/visuals/cell_selector.cc
     src/wavemap_map_display.cc
     ${QT_MOC})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES} ${catkin_LIBRARIES} TracyClient)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES} ${catkin_LIBRARIES} TracyClient minkindr)
 
 # Install
 install(TARGETS

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_ros_conversions)
 
-find_package(catkin REQUIRED COMPONENTS roscpp wavemap wavemap_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp wavemap wavemap_msgs minkindr)
 
 # Compiler definitions and options
 add_wavemap_compile_definitions_and_options()
@@ -27,6 +27,10 @@ catkin_package(
     wavemap_msgs
 )
 
+# Add minkindr as header-only library
+add_library(minkindr INTERFACE)
+target_include_directories(minkindr INTERFACE ${minkindr_SOURCE_DIR}/include)
+
 # Libraries
 add_library(${PROJECT_NAME}
     src/config_conversions.cc
@@ -35,14 +39,14 @@ add_library(${PROJECT_NAME}
     )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} TracyClient)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} TracyClient minkindr)
 
 # Tests
 if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
       test_${PROJECT_NAME}
       test/src/test_map_msg_conversions.cc)
-  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
+  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main minkindr)
 endif ()
 
 # Export
