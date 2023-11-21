@@ -11,8 +11,6 @@
   <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>minkindr</depend>
-
+  
   <test_depend>gtest</test_depend>
 </package>
