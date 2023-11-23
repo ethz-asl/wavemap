@@ -1,0 +1,1 @@
+docker build . -t ros1_catkin -f Dockerfile.ros1

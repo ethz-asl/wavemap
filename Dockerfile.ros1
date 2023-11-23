@@ -1,0 +1,7 @@
+FROM ros:noetic
+
+RUN apt update && apt install -q -y --no-install-recommends \
+    git \
+    python3-catkin-tools
+
+WORKDIR /root/ros_ws

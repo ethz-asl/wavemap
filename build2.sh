@@ -1,0 +1,1 @@
+docker build . -t ros2_colcon -f Dockerfile.ros2

@@ -1,0 +1,7 @@
+FROM ros:humble
+
+RUN apt update && apt install -q -y --no-install-recommends \
+    libboost-dev \
+    git
+
+WORKDIR /root/ros_ws
