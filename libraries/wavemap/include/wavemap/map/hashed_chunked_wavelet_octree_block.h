@@ -17,8 +17,8 @@ class HashedChunkedWaveletOctreeBlock {
   using BlockIndex = Index3D;
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
-  using NodeChunkType =
-      NdtreeNodeChunk<typename Coefficients::Details, kDim, kChunkHeight>;
+  using ChunkedOctreeType = ChunkedOctree<Coefficients::Details, kChunkHeight>;
+  using NodeChunkType = ChunkedOctreeType::NodeChunkType;
 
   explicit HashedChunkedWaveletOctreeBlock(IndexElement tree_height,
                                            FloatingPoint min_log_odds,
@@ -82,8 +82,7 @@ class HashedChunkedWaveletOctreeBlock {
   const FloatingPoint min_log_odds_;
   const FloatingPoint max_log_odds_;
 
-  ChunkedNdtree<Coefficients::Details, kDim, kChunkHeight> chunked_ndtree_{
-      tree_height_ - 1};
+  ChunkedOctreeType chunked_ndtree_{tree_height_ - 1};
   Coefficients::Scale root_scale_coefficient_{};
 
   bool needs_thresholding_ = false;

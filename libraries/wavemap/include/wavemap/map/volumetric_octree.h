@@ -47,7 +47,8 @@ class VolumetricOctree : public VolumetricDataStructureBase {
   using Ptr = std::shared_ptr<VolumetricOctree>;
   using ConstPtr = std::shared_ptr<const VolumetricOctree>;
   using Config = VolumetricOctreeConfig;
-  using NodeType = NdtreeNode<FloatingPoint, kDim>;
+  using OctreeType = Octree<FloatingPoint>;
+  using NodeType = OctreeType::NodeType;
 
   static constexpr bool kRequiresExplicitThresholding = true;
 
@@ -94,7 +95,7 @@ class VolumetricOctree : public VolumetricDataStructureBase {
  private:
   const VolumetricOctreeConfig config_;
 
-  Ndtree<FloatingPoint, kDim> ndtree_{config_.tree_height};
+  OctreeType ndtree_{config_.tree_height};
 
   OctreeIndex getInternalRootNodeIndex() const {
     return OctreeIndex{config_.tree_height, OctreeIndex::Position::Zero()};

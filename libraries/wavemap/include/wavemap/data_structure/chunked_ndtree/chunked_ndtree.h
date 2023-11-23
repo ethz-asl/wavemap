@@ -56,6 +56,13 @@ class ChunkedNdtree {
   std::pair<const NodeChunkType*, LinearIndex> getChunkAndRelativeIndex(
       const IndexType& index) const;
 };
+
+template <typename NodeDataT, int chunk_height>
+using ChunkedBinaryTree = ChunkedNdtree<NodeDataT, 1, chunk_height>;
+template <typename NodeDataT, int chunk_height>
+using ChunkedQuadtree = ChunkedNdtree<NodeDataT, 2, chunk_height>;
+template <typename NodeDataT, int chunk_height>
+using ChunkedOctree = ChunkedNdtree<NodeDataT, 3, chunk_height>;
 }  // namespace wavemap
 
 #include "wavemap/data_structure/chunked_ndtree/impl/chunked_ndtree_inl.h"

@@ -57,6 +57,13 @@ class Ndtree {
   NodeType* getNode(const IndexType& index, bool auto_allocate);
   const NodeType* getNode(const IndexType& index) const;
 };
+
+template <typename NodeDataT>
+using BinaryTree = Ndtree<NodeDataT, 1>;
+template <typename NodeDataT>
+using Quadtree = Ndtree<NodeDataT, 2>;
+template <typename NodeDataT>
+using Octree = Ndtree<NodeDataT, 3>;
 }  // namespace wavemap
 
 #include "wavemap/data_structure/ndtree/impl/ndtree_inl.h"

@@ -15,7 +15,8 @@ class HashedWaveletOctreeBlock {
   using BlockIndex = Index3D;
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
-  using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
+  using OctreeType = Octree<Coefficients::Details>;
+  using NodeType = OctreeType::NodeType;
 
   explicit HashedWaveletOctreeBlock(IndexElement tree_height,
                                     FloatingPoint min_log_odds,
@@ -73,7 +74,7 @@ class HashedWaveletOctreeBlock {
   const FloatingPoint min_log_odds_;
   const FloatingPoint max_log_odds_;
 
-  Ndtree<Coefficients::Details, kDim> ndtree_{tree_height_ - 1};
+  OctreeType ndtree_{tree_height_ - 1};
   Coefficients::Scale root_scale_coefficient_{};
 
   bool needs_thresholding_ = false;
