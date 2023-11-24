@@ -7,7 +7,7 @@ map:
   type: wavelet_octree
   min_cell_width: { meters: 0.2 }
 
-operations:
+operations_pipeline:
   - type: threshold_map
     once_every: { seconds: 2.0 }
   - type: prune_map

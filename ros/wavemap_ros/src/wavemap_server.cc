@@ -66,7 +66,7 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Setup operation handlers
   const param::Array operation_params_array =
-      param::convert::toParamArray(nh_private, "operations");
+      param::convert::toParamArray(nh_private, "operations_pipeline");
   for (const auto& operation_params : operation_params_array) {
     addOperation(operation_params, nh_private);
   }

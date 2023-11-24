@@ -8,7 +8,7 @@ map:
   min_cell_width: { meters: 0.01 }
   tree_height: 9
 
-operations:
+operations_pipeline:
   - type: threshold_map
     once_every: { seconds: 2.0 }
   - type: prune_map

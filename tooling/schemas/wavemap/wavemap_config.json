@@ -17,11 +17,11 @@
         "$ref": "inputs/input.json"
       }
     },
-    "operations": {
+    "operations_pipeline": {
       "description": "A list of operations to perform after map updates.",
       "type": "array",
       "items": {
-        "$ref": "operations/operation.json"
+        "$ref": "operations/operations_pipeline.json"
       }
     }
   },
