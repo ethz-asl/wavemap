@@ -73,7 +73,7 @@ inline FloatingPoint WaveletIntegrator::recursiveSamplerCompressor(  // NOLINT
   // Since the approximation error would still be too big, refine
   if (!node) {
     // Allocate the current node if it has not yet been allocated
-    node = parent_node.allocateChild(relative_child_index);
+    node = &parent_node.getOrAllocateChild(relative_child_index);
   }
   const WaveletOctree::Coefficients::CoefficientsArray
       child_scale_coefficients =

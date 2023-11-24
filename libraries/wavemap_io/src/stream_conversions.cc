@@ -216,7 +216,7 @@ bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map) {
       const bool child_exists =
           read_node.allocated_children_bitset & (1 << relative_child_idx);
       if (child_exists) {
-        stack.emplace(node->allocateChild(relative_child_idx));
+        stack.emplace(&node->getOrAllocateChild(relative_child_idx));
       }
     }
   }
@@ -348,7 +348,7 @@ bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
         const bool child_exists =
             read_node.allocated_children_bitset & (1 << relative_child_idx);
         if (child_exists) {
-          stack.emplace(node->allocateChild(relative_child_idx));
+          stack.emplace(&node->getOrAllocateChild(relative_child_idx));
         }
       }
     }

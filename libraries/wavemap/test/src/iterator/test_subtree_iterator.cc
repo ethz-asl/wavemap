@@ -12,22 +12,22 @@ class SubtreeIteratorTest : public FixtureBase {
 
   static std::unique_ptr<NodeType> demoTree() {
     auto root_node = std::make_unique<NodeType>(1);
-    auto child_0 = root_node->allocateChild(0, 2);
-    auto child_1 = root_node->allocateChild(1, 3);
+    auto& child_0 = root_node->getOrAllocateChild(0, 2);
+    auto& child_1 = root_node->getOrAllocateChild(1, 3);
 
-    child_0->allocateChild(0, 4);
-    auto child_01 = child_0->allocateChild(1, 5);
-    child_0->allocateChild(2, 6);
-    auto child_11 = child_1->allocateChild(1, 7);
-    auto child_13 = child_1->allocateChild(3, 8);
+    child_0.getOrAllocateChild(0, 4);
+    auto& child_01 = child_0.getOrAllocateChild(1, 5);
+    child_0.getOrAllocateChild(2, 6);
+    auto& child_11 = child_1.getOrAllocateChild(1, 7);
+    auto& child_13 = child_1.getOrAllocateChild(3, 8);
 
-    child_01->allocateChild(2, 9);
-    child_01->allocateChild(3, 10);
-    child_11->allocateChild(0, 11);
-    child_11->allocateChild(1, 12);
-    child_11->allocateChild(2, 13);
-    child_11->allocateChild(3, 14);
-    child_13->allocateChild(2, 15);
+    child_01.getOrAllocateChild(2, 9);
+    child_01.getOrAllocateChild(3, 10);
+    child_11.getOrAllocateChild(0, 11);
+    child_11.getOrAllocateChild(1, 12);
+    child_11.getOrAllocateChild(2, 13);
+    child_11.getOrAllocateChild(3, 14);
+    child_13.getOrAllocateChild(2, 15);
 
     return root_node;
   }

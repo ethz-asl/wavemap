@@ -3,6 +3,7 @@
 
 #include <array>
 #include <memory>
+#include <utility>
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/ndtree_index.h"
@@ -15,15 +16,14 @@ class NdtreeNode {
   static constexpr int kNumChildren = NdtreeIndex<dim>::kNumChildren;
 
   NdtreeNode() = default;
-  explicit NdtreeNode(DataT data) : data_(data) {}
+  template <typename... Args>
+  explicit NdtreeNode(Args&&... args) : data_(std::forward<Args>(args)...) {}
   ~NdtreeNode() = default;
 
   bool empty() const;
   void clear();
 
-  friend bool operator==(const NdtreeNode& lhs, const NdtreeNode& rhs) {
-    return &rhs == &lhs;
-  }
+  size_t getMemoryUsage() const;
 
   bool hasNonzeroData() const;
   bool hasNonzeroData(FloatingPoint threshold) const;
@@ -31,21 +31,25 @@ class NdtreeNode {
   const DataT& data() const { return data_; }
 
   bool hasChildrenArray() const { return static_cast<bool>(children_); }
+  bool hasAtLeastOneChild() const;
   void deleteChildrenArray() { children_.reset(); }
 
   bool hasChild(NdtreeIndexRelativeChild child_index) const;
-  bool hasAtLeastOneChild() const;
-  template <typename... NodeConstructorArgs>
-  NdtreeNode* allocateChild(NdtreeIndexRelativeChild child_index,
-                            NodeConstructorArgs&&... args);
-  bool deleteChild(NdtreeIndexRelativeChild child_index);
+  bool eraseChild(NdtreeIndexRelativeChild child_index);
+
   NdtreeNode* getChild(NdtreeIndexRelativeChild child_index);
   const NdtreeNode* getChild(NdtreeIndexRelativeChild child_index) const;
+  template <typename... DefaultArgs>
+  NdtreeNode& getOrAllocateChild(NdtreeIndexRelativeChild child_index,
+                                 DefaultArgs&&... args);
 
-  size_t getMemoryUsage() const;
+  friend bool operator==(const NdtreeNode& lhs, const NdtreeNode& rhs) {
+    return &rhs == &lhs;
+  }
 
  private:
-  using ChildrenArray = std::array<std::unique_ptr<NdtreeNode>, kNumChildren>;
+  using ChildPtr = std::unique_ptr<NdtreeNode>;
+  using ChildrenArray = std::array<ChildPtr, kNumChildren>;
 
   DataT data_{};
   std::unique_ptr<ChildrenArray> children_;

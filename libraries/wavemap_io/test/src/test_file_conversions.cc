@@ -109,10 +109,11 @@ TYPED_TEST(FileConversionsTest, InsertionAndLeafVisitor) {
           if constexpr (std::is_same_v<TypeParam, HashedBlocks>) {
             EXPECT_EQ(node_index.height, 0);
             EXPECT_NEAR(round_trip_value,
-                        map_original.getCellValue(node_index.position),
+                        map_original.getValueOrDefault(node_index.position),
                         TestFixture::kAcceptableReconstructionError);
           } else {
-            EXPECT_NEAR(round_trip_value, map_original.getCellValue(node_index),
+            EXPECT_NEAR(round_trip_value,
+                        map_original.getValueOrDefault(node_index),
                         TestFixture::kAcceptableReconstructionError);
           }
         });
@@ -139,10 +140,11 @@ TYPED_TEST(FileConversionsTest, InsertionAndLeafVisitor) {
         if constexpr (std::is_same_v<TypeParam, HashedBlocks>) {
           EXPECT_EQ(node_index.height, 0);
           EXPECT_NEAR(original_value,
-                      map_round_trip->getCellValue(node_index.position),
+                      map_round_trip->getValueOrDefault(node_index.position),
                       TestFixture::kAcceptableReconstructionError);
         } else {
-          EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
+          EXPECT_NEAR(original_value,
+                      map_round_trip->getValueOrDefault(node_index),
                       TestFixture::kAcceptableReconstructionError);
         }
       });

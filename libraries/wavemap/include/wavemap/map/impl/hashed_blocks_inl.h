@@ -10,17 +10,17 @@
 
 namespace wavemap {
 inline FloatingPoint HashedBlocks::getCellValue(const Index3D& index) const {
-  return DenseBlockHash::getCellValue(index);
+  return getValueOrDefault(index);
 }
 
 inline void HashedBlocks::setCellValue(const Index3D& index,
                                        FloatingPoint new_value) {
-  getOrAllocateCellValue(index) = new_value;
+  getOrAllocateValue(index) = new_value;
 }
 
 inline void HashedBlocks::addToCellValue(const Index3D& index,
                                          FloatingPoint update) {
-  FloatingPoint& cell_data = getOrAllocateCellValue(index);
+  FloatingPoint& cell_data = getOrAllocateValue(index);
   cell_data = clampedAdd(cell_data, update);
 }
 }  // namespace wavemap

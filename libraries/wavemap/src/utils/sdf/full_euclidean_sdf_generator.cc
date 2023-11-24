@@ -86,9 +86,8 @@ void FullEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       }
 
       // Get the voxel's SDF value
-      auto& [sdf_parent, sdf_value] = sdf.getOrAllocateCellValue(index);
-      const bool sdf_uninitialized =
-          sdf_parent == sdf.getDefaultCellValue().parent;
+      auto& [sdf_parent, sdf_value] = sdf.getOrAllocateValue(index);
+      const bool sdf_uninitialized = sdf_parent == sdf.getDefaultValue().parent;
 
       // Update the voxel's SDF value
       const FloatingPoint distance_to_surface =
@@ -122,7 +121,7 @@ void FullEuclideanSDFGenerator::propagate(
   while (!open_queue.empty()) {
     TracyPlot("QueueLength", static_cast<int64_t>(open_queue.size()));
     const Index3D index = open_queue.front();
-    const auto& [sdf_parent, sdf_value] = sdf.getCellValue(index);
+    const auto& [sdf_parent, sdf_value] = sdf.getValueOrDefault(index);
     const FloatingPoint df_value = std::abs(sdf_value);
     TracyPlot("Distance", df_value);
     open_queue.pop();
@@ -138,11 +137,11 @@ void FullEuclideanSDFGenerator::propagate(
 
       // Get the neighbor's SDF value
       auto& [neighbor_sdf_parent, neighbor_sdf_value] =
-          sdf.getOrAllocateCellValue(neighbor_index);
+          sdf.getOrAllocateValue(neighbor_index);
 
       // If the neighbor is uninitialized, get its sign from the occupancy map
       const bool neighbor_uninitialized =
-          neighbor_sdf_parent == sdf.getDefaultCellValue().parent;
+          neighbor_sdf_parent == sdf.getDefaultValue().parent;
       if (neighbor_uninitialized) {
         const FloatingPoint neighbor_occupancy =
             occupancy_query_accelerator.getCellValue(neighbor_index);
@@ -152,7 +151,7 @@ void FullEuclideanSDFGenerator::propagate(
         }
         // Set the sign
         if (classifier_.isOccupied(neighbor_occupancy)) {
-          neighbor_sdf_value = -sdf.getDefaultCellValue().distance;
+          neighbor_sdf_value = -sdf.getDefaultValue().distance;
         }
       }
 

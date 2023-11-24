@@ -138,7 +138,7 @@ WaveletOctree::Coefficients::Scale WaveletOctree::recursivePrune(  // NOLINT
       child_scale_coefficients[child_idx] =
           recursivePrune(child_node, child_scale_coefficients[child_idx]);
       if (!child_node.hasChildrenArray() && !child_node.hasNonzeroData(1e-3f)) {
-        node.deleteChild(child_idx);
+        node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;
       }

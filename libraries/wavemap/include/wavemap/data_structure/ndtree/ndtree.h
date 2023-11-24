@@ -15,11 +15,13 @@ template <typename NodeDataT, int dim>
 class Ndtree {
  public:
   using IndexType = NdtreeIndex<dim>;
+  using HeightType = IndexElement;
   using NodeType = NdtreeNode<NodeDataT, dim>;
   using NodeDataType = NodeDataT;
-  static constexpr int kChunkHeight = 1;
+  static constexpr HeightType kChunkHeight = 1;
 
-  explicit Ndtree(int max_height);
+  template <typename... RootNodeArgs>
+  explicit Ndtree(HeightType max_height, RootNodeArgs&&... args);
   ~Ndtree() = default;
 
   bool empty() const { return root_node_.empty(); }
@@ -27,35 +29,31 @@ class Ndtree {
   void clear() { root_node_.clear(); }
   void prune();
 
-  bool hasNode(const IndexType& index) const { return getNode(index); }
-  void allocateNode(const IndexType& index) {
-    getNode(index, /*auto_allocate*/ true);
-  }
-  bool deleteNode(const IndexType& index);
-  NodeDataT* getNodeData(const IndexType& index, bool auto_allocate = true);
-  const NodeDataT* getNodeData(const IndexType& index) const;
+  HeightType getMaxHeight() const { return max_height_; }
+  size_t getMemoryUsage() const;
 
-  int getMaxHeight() const { return max_height_; }
+  bool hasNode(const IndexType& index) const { return getNode(index); }
+  bool eraseNode(const IndexType& index);
+  NodeType* getNode(const IndexType& index);
+  const NodeType* getNode(const IndexType& index) const;
+  template <typename... DefaultArgs>
+  NodeType& getOrAllocateNode(const IndexType& index, DefaultArgs&&... args);
+
+  std::pair<NodeType*, HeightType> getNodeOrAncestor(const IndexType& index);
+  std::pair<const NodeType*, HeightType> getNodeOrAncestor(
+      const IndexType& index) const;
+
   NodeType& getRootNode() { return root_node_; }
   const NodeType& getRootNode() const { return root_node_; }
 
   template <TraversalOrder traversal_order>
-  auto getIterator() {
-    return Subtree<NodeType, traversal_order>(&root_node_);
-  }
+  auto getIterator();
   template <TraversalOrder traversal_order>
-  auto getIterator() const {
-    return Subtree<const NodeType, traversal_order>(&root_node_);
-  }
-
-  size_t getMemoryUsage() const;
+  auto getIterator() const;
 
  private:
+  const HeightType max_height_;
   NodeType root_node_;
-  const int max_height_;
-
-  NodeType* getNode(const IndexType& index, bool auto_allocate);
-  const NodeType* getNode(const IndexType& index) const;
 };
 
 template <typename NodeDataT>

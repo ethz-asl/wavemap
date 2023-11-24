@@ -76,8 +76,8 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       }
 
       // Get the voxel's SDF value
-      FloatingPoint& sdf_value = sdf.getOrAllocateCellValue(index);
-      const bool sdf_uninitialized = sdf.getDefaultCellValue() == sdf_value;
+      FloatingPoint& sdf_value = sdf.getOrAllocateValue(index);
+      const bool sdf_uninitialized = sdf.getDefaultValue() == sdf_value;
 
       // Update the voxel's SDF value
       const FloatingPoint distance_to_surface =
@@ -129,11 +129,10 @@ void QuasiEuclideanSDFGenerator::propagate(
       // Get the neighbor's SDF value
       const Index3D neighbor_index =
           index + kNeighborIndexOffsets[neighbor_idx];
-      FloatingPoint& neighbor_sdf = sdf.getOrAllocateCellValue(neighbor_index);
+      FloatingPoint& neighbor_sdf = sdf.getOrAllocateValue(neighbor_index);
 
       // If the neighbor is uninitialized, get its sign from the occupancy map
-      const bool neighbor_uninitialized =
-          sdf.getDefaultCellValue() == neighbor_sdf;
+      const bool neighbor_uninitialized = sdf.getDefaultValue() == neighbor_sdf;
       if (neighbor_uninitialized) {
         const FloatingPoint neighbor_occupancy =
             occupancy_query_accelerator.getCellValue(neighbor_index);
@@ -143,7 +142,7 @@ void QuasiEuclideanSDFGenerator::propagate(
         }
         // Set the sign
         if (classifier_.isOccupied(neighbor_occupancy)) {
-          neighbor_sdf = -sdf.getDefaultCellValue();
+          neighbor_sdf = -sdf.getDefaultValue();
         }
       }
 

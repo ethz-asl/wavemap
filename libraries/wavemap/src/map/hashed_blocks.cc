@@ -14,11 +14,10 @@ Index3D HashedBlocks::getMaxIndex() const {
 
 void HashedBlocks::prune() {
   block_map_.eraseBlockIf(
-      [default_value = default_value_](const BlockIndex& /*block_index*/,
-                                       const Block& block) {
+      [this](const Index3D& /*block_index*/, const Block& block) {
         return std::all_of(block.data().cbegin(), block.data().cend(),
-                           [default_value](const auto& cell_value) {
-                             return cell_value == default_value;
+                           [this](const auto& cell_value) {
+                             return equalsDefaultValue(cell_value);
                            });
       });
 }

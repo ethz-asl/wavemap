@@ -15,11 +15,12 @@ template <typename NodeDataT, int dim, int chunk_height>
 class ChunkedNdtree {
  public:
   using IndexType = NdtreeIndex<dim>;
+  using HeightType = IndexElement;
   using NodeChunkType = NdtreeNodeChunk<NodeDataT, dim, chunk_height>;
   using NodeDataType = NodeDataT;
-  static constexpr int kChunkHeight = chunk_height;
+  static constexpr HeightType kChunkHeight = chunk_height;
 
-  explicit ChunkedNdtree(int max_height);
+  explicit ChunkedNdtree(HeightType max_height);
   ~ChunkedNdtree() = default;
 
   bool empty() const { return root_chunk_.empty(); }
@@ -27,12 +28,15 @@ class ChunkedNdtree {
   void clear() { root_chunk_.clear(); }
   void prune();
 
+  HeightType getMaxHeight() const { return max_height_; }
+  size_t getMemoryUsage() const;
+
   bool hasNode(const IndexType& index) const;
-  void allocateNode(const IndexType& index);
+
   NodeDataT* getNodeData(const IndexType& index, bool auto_allocate = true);
   const NodeDataT* getNodeData(const IndexType& index) const;
+  void getOrAllocateNode(const IndexType& index);
 
-  int getMaxHeight() const { return max_height_; }
   NodeChunkType& getRootChunk() { return root_chunk_; }
   const NodeChunkType& getRootChunk() const { return root_chunk_; }
 
@@ -45,11 +49,9 @@ class ChunkedNdtree {
     return Subtree<const NodeChunkType, traversal_order>(&root_chunk_);
   }
 
-  size_t getMemoryUsage() const;
-
  private:
   NodeChunkType root_chunk_;
-  const int max_height_;
+  const HeightType max_height_;
 
   std::pair<NodeChunkType*, LinearIndex> getChunkAndRelativeIndex(
       const IndexType& index, bool auto_allocate);

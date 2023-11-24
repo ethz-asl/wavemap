@@ -46,10 +46,8 @@ void HashedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
     NodeType* current_parent = node_ptrs.back();
     current_value = Transform::backwardSingleChild(
         {current_value, current_parent->data()}, child_index);
-    if (!current_parent->hasChild(child_index)) {
-      current_parent->allocateChild(child_index);
-    }
-    node_ptrs.emplace_back(current_parent->getChild(child_index));
+    NodeType& child = current_parent->getOrAllocateChild(child_index);
+    node_ptrs.emplace_back(&child);
   }
   DCHECK_EQ(node_ptrs.size(), height_difference);
 
@@ -84,10 +82,8 @@ void HashedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     NodeType* current_parent = node_ptrs.back();
-    if (!current_parent->hasChild(child_index)) {
-      current_parent->allocateChild(child_index);
-    }
-    node_ptrs.emplace_back(current_parent->getChild(child_index));
+    NodeType& child = current_parent->getOrAllocateChild(child_index);
+    node_ptrs.emplace_back(&child);
   }
   DCHECK_EQ(node_ptrs.size(), height_difference);
 
@@ -182,7 +178,7 @@ void HashedWaveletOctreeBlock::recursivePrune(  // NOLINT
       NodeType& child_node = *node.getChild(child_idx);
       recursivePrune(child_node);
       if (!child_node.hasChildrenArray() && !child_node.hasNonzeroData(1e-3f)) {
-        node.deleteChild(child_idx);
+        node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;
       }

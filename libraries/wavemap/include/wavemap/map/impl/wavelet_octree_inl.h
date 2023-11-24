@@ -88,10 +88,8 @@ inline void WaveletOctree::setCellValue(const OctreeIndex& index,
     NodeType* current_parent = node_ptrs.back();
     current_value = Transform::backwardSingleChild(
         {current_value, current_parent->data()}, child_index);
-    if (!current_parent->hasChild(child_index)) {
-      current_parent->allocateChild(child_index);
-    }
-    node_ptrs.emplace_back(current_parent->getChild(child_index));
+    NodeType& child = current_parent->getOrAllocateChild(child_index);
+    node_ptrs.emplace_back(&child);
   }
   DCHECK_EQ(node_ptrs.size(), height_difference);
 
@@ -130,10 +128,8 @@ inline void WaveletOctree::addToCellValue(const OctreeIndex& index,
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     NodeType* current_parent = node_ptrs.back();
-    if (!current_parent->hasChild(child_index)) {
-      current_parent->allocateChild(child_index);
-    }
-    node_ptrs.emplace_back(current_parent->getChild(child_index));
+    NodeType& child = current_parent->getOrAllocateChild(child_index);
+    node_ptrs.emplace_back(&child);
   }
   DCHECK_EQ(node_ptrs.size(), height_difference);
 

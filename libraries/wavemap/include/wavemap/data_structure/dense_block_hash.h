@@ -14,8 +14,6 @@ class DenseBlockHash {
       int_math::log2_floor(cells_per_side);
   static constexpr IndexElement kDim = dim;
 
-  using BlockIndex = Index3D;
-  using CellIndex = Index3D;
   using Block = DenseGrid<CellDataT, dim, cells_per_side>;
   using BlockHashMap = SpatialHash<Block, kDim>;
 
@@ -27,25 +25,31 @@ class DenseBlockHash {
   size_t size() const { return Block::kCellsPerBlock * block_map_.size(); }
   void clear() { block_map_.clear(); }
 
-  bool hasBlock(const Index3D& block_index) const {
-    return block_map_.hasBlock(block_index);
-  }
-  Block* getBlock(const Index3D& block_index);
-  const Block* getBlock(const Index3D& block_index) const;
-  Block& getOrAllocateBlock(const Index3D& block_index);
+  bool hasBlock(const Index<dim>& block_index) const;
+  bool eraseBlock(const Index<dim>& block_index);
+  Block* getBlock(const Index<dim>& block_index);
+  const Block* getBlock(const Index<dim>& block_index) const;
+  Block& getOrAllocateBlock(const Index<dim>& block_index);
 
-  const CellDataT& getCellValue(const Index3D& index) const;
-  CellDataT& getOrAllocateCellValue(const Index3D& index);
-  const CellDataT& getDefaultCellValue() const { return default_value_; }
+  // NOTE: The values are stored in blocks. Therefore, allocating a value in a
+  //       block that does not yet exist also allocates all its siblings. These
+  //       will be initialized to default_value_.
+  //       If you want to make sure a value has been explicitly set by you,
+  //       check that it differs from the default_value_. For example, using the
+  //       equalsDefaultValue(value) method below.
+  bool hasValue(const Index<dim>& index) const;
+  CellDataT* getValue(const Index<dim>& index);
+  const CellDataT* getValue(const Index<dim>& index) const;
+  CellDataT& getOrAllocateValue(const Index<dim>& index);
+
+  const CellDataT& getValueOrDefault(const Index<dim>& index) const;
+  const CellDataT& getDefaultValue() const { return default_value_; }
+  bool equalsDefaultValue(const CellDataT& value) const;
 
   template <typename IndexedBlockVisitor>
-  void forEachBlock(IndexedBlockVisitor visitor_fn) {
-    block_map_.forEachBlock(visitor_fn);
-  }
+  void forEachBlock(IndexedBlockVisitor visitor_fn);
   template <typename IndexedBlockVisitor>
-  void forEachBlock(IndexedBlockVisitor visitor_fn) const {
-    block_map_.forEachBlock(visitor_fn);
-  }
+  void forEachBlock(IndexedBlockVisitor visitor_fn) const;
 
   template <typename IndexedLeafVisitorFunction>
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn);
@@ -57,10 +61,10 @@ class DenseBlockHash {
   const CellDataT default_value_;
   BlockHashMap block_map_;
 
-  static Index3D indexToBlockIndex(const Index3D& index);
-  static Index3D indexToCellIndex(const Index3D& index);
-  static Index3D cellAndBlockIndexToIndex(const Index3D& block_index,
-                                          const Index3D& cell_index);
+  static Index<dim> indexToBlockIndex(const Index<dim>& index);
+  static Index<dim> indexToCellIndex(const Index<dim>& index);
+  static Index<dim> cellAndBlockIndexToIndex(const Index<dim>& block_index,
+                                             const Index<dim>& cell_index);
 };
 }  // namespace wavemap
 

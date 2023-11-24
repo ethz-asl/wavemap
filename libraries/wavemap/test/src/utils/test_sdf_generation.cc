@@ -73,7 +73,7 @@ TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
       const FloatingPoint occupancy_value = map.getCellValue(node_index);
       if (OccupancyClassifier::isUnobserved(occupancy_value)) {
         // In unknown space the SDF should be uninitialized
-        EXPECT_NEAR(sdf_value, sdf.getDefaultCellValue(), kEpsilon);
+        EXPECT_NEAR(sdf_value, sdf.getDefaultValue(), kEpsilon);
         return;
       }
 
@@ -81,7 +81,7 @@ TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
           convert::nodeIndexToCenterPoint(node_index, min_cell_width);
 
       // Find the closest surface using brute force
-      FloatingPoint sdf_brute_force = sdf.getDefaultCellValue();
+      FloatingPoint sdf_brute_force = sdf.getDefaultValue();
       Index3D parent_brute_force =
           Index3D::Constant(std::numeric_limits<IndexElement>::max());
       if (classifier.isFree(occupancy_value)) {
@@ -122,12 +122,12 @@ TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
         sdf_brute_force = -sdf_brute_force;
 
         // In occupied space, the SDF should be
-        if (std::abs(sdf_brute_force) < sdf.getDefaultCellValue()) {
+        if (std::abs(sdf_brute_force) < sdf.getDefaultValue()) {
           // Negative
           EXPECT_LT(sdf_value, 0.f);
         } else {
           // Or uninitialized
-          EXPECT_NEAR(sdf_value, sdf.getDefaultCellValue(), kEpsilon);
+          EXPECT_NEAR(sdf_value, sdf.getDefaultValue(), kEpsilon);
         }
       }
 
@@ -136,7 +136,7 @@ TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
           TypeParam::kMaxRelativeUnderEstimate;
       constexpr FloatingPoint kMaxRelativeOverEstimate =
           TypeParam::kMaxRelativeOverEstimate;
-      if (std::abs(sdf_brute_force) < sdf.getDefaultCellValue()) {
+      if (std::abs(sdf_brute_force) < sdf.getDefaultValue()) {
         if (0.f < sdf_brute_force) {
           EXPECT_LT(sdf_value,
                     sdf_brute_force * (1.f + kMaxRelativeOverEstimate))
@@ -162,10 +162,10 @@ TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
         }
       } else {
         EXPECT_LT(sdf_value,
-                  sdf.getDefaultCellValue() * (1.f + kMaxRelativeOverEstimate))
+                  sdf.getDefaultValue() * (1.f + kMaxRelativeOverEstimate))
             << "At index " << print::eigen::oneLine(node_index.position);
         EXPECT_GT(sdf_value,
-                  sdf.getDefaultCellValue() * (1.f - kMaxRelativeUnderEstimate))
+                  sdf.getDefaultValue() * (1.f - kMaxRelativeUnderEstimate))
             << "At index " << print::eigen::oneLine(node_index.position);
       }
     });

@@ -42,7 +42,7 @@ TYPED_TEST(NdtreeTest, AllocatingAndClearing) {
 
     EXPECT_EQ(ndtree.hasNode(random_index), index_is_inside_root_chunk_node)
         << random_index.toString() << " and tree height " << tree_height;
-    ndtree.allocateNode(random_index);
+    ndtree.getOrAllocateNode(random_index);
     EXPECT_TRUE(ndtree.hasNode(random_index))
         << random_index.toString() << " and tree height " << tree_height;
     EXPECT_EQ(ndtree.empty(), index_is_inside_root_chunk_node);
@@ -51,6 +51,31 @@ TYPED_TEST(NdtreeTest, AllocatingAndClearing) {
     EXPECT_EQ(ndtree.hasNode(random_index), index_is_inside_root_chunk_node)
         << random_index.toString() << " and tree height " << tree_height;
     EXPECT_TRUE(ndtree.empty());
+  }
+}
+
+// TODO(victorr): Remove this workaround after improving the interfaces of the
+//                ChunkedNdtree.
+template <typename TreeT, typename IndexT>
+auto* getOrAllocateNodeData(const IndexT& index, TreeT& ndtree) {
+  using TreeType = std::decay_t<TreeT>;
+  if constexpr (std::is_same_v<TreeType, ChunkedNdtree<int, 1, 3>> ||
+                std::is_same_v<TreeType, ChunkedNdtree<int, 2, 3>> ||
+                std::is_same_v<TreeType, ChunkedNdtree<int, 3, 3>>) {
+    return ndtree.getNodeData(index);
+  } else {
+    return &ndtree.getOrAllocateNode(index).data();
+  }
+}
+template <typename TreeT, typename IndexT>
+auto* getNodeData(const IndexT& index, TreeT& ndtree) {
+  using TreeType = std::decay_t<TreeT>;
+  if constexpr (std::is_same_v<TreeType, ChunkedNdtree<int, 1, 3>> ||
+                std::is_same_v<TreeType, ChunkedNdtree<int, 2, 3>> ||
+                std::is_same_v<TreeType, ChunkedNdtree<int, 3, 3>>) {
+    return ndtree.getNodeData(index);
+  } else {
+    return &CHECK_NOTNULL(ndtree.getNode(index))->data();
   }
 }
 
@@ -89,7 +114,7 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
       inserted_values.emplace(random_index, random_value);
 
       // Insert
-      auto* data = ndtree.getNodeData(random_index);
+      auto* data = getOrAllocateNodeData(random_index, ndtree);
       ASSERT_NE(data, nullptr) << "At index " << random_index.toString();
       *data = random_value;
     }
@@ -97,7 +122,7 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
     // Test regular getter
     for (const auto& [index, value] : inserted_values) {
       EXPECT_TRUE(ndtree.hasNode(index)) << "At index " << index.toString();
-      auto* data = ndtree.getNodeData(index);
+      auto* data = getNodeData(index, ndtree);
       ASSERT_NE(data, nullptr) << "At index " << index.toString();
       EXPECT_EQ(*data, value) << "At index " << index.toString();
     }
@@ -107,7 +132,7 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
     for (const auto& [index, value] : inserted_values) {
       EXPECT_TRUE(ndtree_cref.hasNode(index))
           << "At index " << index.toString();
-      auto* data = ndtree_cref.getNodeData(index);
+      auto* data = getNodeData(index, ndtree_cref);
       ASSERT_NE(data, nullptr) << "At index " << index.toString();
       EXPECT_EQ(*data, value) << "At index " << index.toString();
     }

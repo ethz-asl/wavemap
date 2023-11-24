@@ -50,6 +50,27 @@ bool SpatialHash<BlockDataT, dim>::hasBlock(
 }
 
 template <typename BlockDataT, int dim>
+bool SpatialHash<BlockDataT, dim>::eraseBlock(
+    const SpatialHash::BlockIndex& block_index) {
+  return block_map_.erase(block_index);
+}
+
+template <typename BlockDataT, int dim>
+template <typename IndexedBlockVisitor>
+void SpatialHash<BlockDataT, dim>::eraseBlockIf(
+    IndexedBlockVisitor indicator_fn) {
+  for (auto it = block_map_.begin(); it != block_map_.end();) {
+    const BlockIndex& block_index = it->first;
+    BlockData& block = it->second;
+    if (std::invoke(indicator_fn, block_index, block)) {
+      it = block_map_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+template <typename BlockDataT, int dim>
 typename SpatialHash<BlockDataT, dim>::BlockData*
 SpatialHash<BlockDataT, dim>::getBlock(
     const SpatialHash::BlockIndex& block_index) {
@@ -74,33 +95,12 @@ SpatialHash<BlockDataT, dim>::getBlock(
 }
 
 template <typename BlockDataT, int dim>
-template <typename... Args>
+template <typename... DefaultArgs>
 typename SpatialHash<BlockDataT, dim>::BlockData&
 SpatialHash<BlockDataT, dim>::getOrAllocateBlock(
-    const SpatialHash::BlockIndex& block_index, Args... args) {
-  return block_map_.try_emplace(block_index, std::forward<Args>(args)...)
+    const SpatialHash::BlockIndex& block_index, DefaultArgs&&... args) {
+  return block_map_.try_emplace(block_index, std::forward<DefaultArgs>(args)...)
       .first->second;
-}
-
-template <typename BlockDataT, int dim>
-void SpatialHash<BlockDataT, dim>::eraseBlock(
-    const SpatialHash::BlockIndex& block_index) {
-  block_map_.erase(block_index);
-}
-
-template <typename BlockDataT, int dim>
-template <typename IndexedBlockVisitor>
-void SpatialHash<BlockDataT, dim>::eraseBlockIf(
-    IndexedBlockVisitor indicator_fn) {
-  for (auto it = block_map_.begin(); it != block_map_.end();) {
-    const BlockIndex& block_index = it->first;
-    BlockData& block = it->second;
-    if (std::invoke(indicator_fn, block_index, block)) {
-      it = block_map_.erase(it);
-    } else {
-      ++it;
-    }
-  }
 }
 
 template <typename BlockDataT, int dim>

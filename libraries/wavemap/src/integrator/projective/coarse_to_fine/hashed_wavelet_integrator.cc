@@ -186,7 +186,8 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
     // Since the approximation error would still be too big, refine
     if (!node) {
       // Allocate the current node if it has not yet been allocated
-      node = parent_node.allocateChild(node_index.computeRelativeChildIndex());
+      node = &parent_node.getOrAllocateChild(
+          node_index.computeRelativeChildIndex());
     }
     stack.emplace(StackElement{*node, node_index, 0,
                                HashedWaveletOctreeBlock::Transform::backward(

@@ -245,7 +245,7 @@ void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
       const bool child_exists =
           node_msg.allocated_children_bitset & (1 << relative_child_idx);
       if (child_exists) {
-        stack.emplace(node->allocateChild(relative_child_idx));
+        stack.emplace(&node->getOrAllocateChild(relative_child_idx));
       }
     }
   }
@@ -441,7 +441,7 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
         const bool child_exists =
             node_msg.allocated_children_bitset & (1 << relative_child_idx);
         if (child_exists) {
-          stack.emplace(node->allocateChild(relative_child_idx));
+          stack.emplace(&node->getOrAllocateChild(relative_child_idx));
         }
       }
     }

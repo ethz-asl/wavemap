@@ -11,10 +11,6 @@
 namespace wavemap {
 using NdtreeIndexRelativeChild = uint8_t;
 
-// TODO(victorr): Consider renaming NdtreeIndex to something like
-//                HierarchicalNdIndex, since it can represent hierarchical
-//                quadtrant/octant subvolumes regardless of the exact data
-//                structure that's being indexed.
 template <int dim>
 struct NdtreeIndex {
   using Element = IndexElement;

@@ -31,15 +31,15 @@ class SpatialHash {
   Index<dim> getMaxBlockIndex() const;
 
   bool hasBlock(const BlockIndex& block_index) const;
+  bool eraseBlock(const BlockIndex& block_index);
+  template <typename IndexedBlockVisitor>
+  void eraseBlockIf(IndexedBlockVisitor indicator_fn);
 
   BlockData* getBlock(const BlockIndex& block_index);
   const BlockData* getBlock(const BlockIndex& block_index) const;
-  template <typename... Args>
-  BlockData& getOrAllocateBlock(const BlockIndex& block_index, Args... args);
-
-  void eraseBlock(const BlockIndex& block_index);
-  template <typename IndexedBlockVisitor>
-  void eraseBlockIf(IndexedBlockVisitor indicator_fn);
+  template <typename... DefaultArgs>
+  BlockData& getOrAllocateBlock(const BlockIndex& block_index,
+                                DefaultArgs&&... args);
 
   auto& getHashMap() { return block_map_; }
   const auto& getHashMap() const { return block_map_; }

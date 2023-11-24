@@ -33,11 +33,12 @@ void VolumetricOctree::prune() {
         if (node.hasChildrenArray()) {
           for (NdtreeIndexRelativeChild child_idx = 0;
                child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-            if (node.hasChild(child_idx)) {
-              recursive_fn(node_value, *node.getChild(child_idx));
+            NodeType* child = node.getChild(child_idx);
+            if (child) {
+              recursive_fn(node_value, *child);
             } else if (kEpsilon < std::abs(node_value)) {
               // Always propagate non-zero internal node value down to leaves
-              recursive_fn(node_value, *node.allocateChild(child_idx));
+              recursive_fn(node_value, node.getOrAllocateChild(child_idx));
             }
           }
         }
