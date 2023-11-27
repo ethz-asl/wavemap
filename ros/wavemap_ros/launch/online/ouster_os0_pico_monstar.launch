@@ -78,7 +78,7 @@
     <node pkg="tf"
           type="static_transform_publisher"
           name="link_body_pico_monstar_frame"
-          args="0.0570284 0.0162747 -0.0397672 0.502059 -0.501131 0.498357 -0.498442
+          args="0.0382061 0.00965665 -0.0453536 0.503979 -0.499713 0.496641 -0.49964
               imu_forward_prop pico_monstar_optical_frame 100"/>
   </group>
 
