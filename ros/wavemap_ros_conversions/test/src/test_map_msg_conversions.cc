@@ -125,8 +125,7 @@ TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
                         map_original.getValueOrDefault(node_index.position),
                         TestFixture::kAcceptableReconstructionError);
           } else {
-            EXPECT_NEAR(round_trip_value,
-                        map_original.getValueOrDefault(node_index),
+            EXPECT_NEAR(round_trip_value, map_original.getCellValue(node_index),
                         TestFixture::kAcceptableReconstructionError);
           }
         });
@@ -156,8 +155,7 @@ TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
                       map_round_trip->getValueOrDefault(node_index.position),
                       TestFixture::kAcceptableReconstructionError);
         } else {
-          EXPECT_NEAR(original_value,
-                      map_round_trip->getValueOrDefault(node_index),
+          EXPECT_NEAR(original_value, map_round_trip->getCellValue(node_index),
                       TestFixture::kAcceptableReconstructionError);
         }
       });
