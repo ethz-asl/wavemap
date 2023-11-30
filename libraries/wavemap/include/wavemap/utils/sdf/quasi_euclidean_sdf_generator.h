@@ -4,8 +4,8 @@
 #include "wavemap/data_structure/bucket_queue.h"
 #include "wavemap/map/hashed_blocks.h"
 #include "wavemap/map/hashed_wavelet_octree.h"
+#include "wavemap/utils/neighbors/grid_neighborhood.h"
 #include "wavemap/utils/query/occupancy_classifier.h"
-#include "wavemap/utils/sdf/cell_neighborhoods.h"
 
 namespace wavemap {
 class QuasiEuclideanSDFGenerator {
@@ -23,7 +23,7 @@ class QuasiEuclideanSDFGenerator {
 
  private:
   inline static const auto kNeighborIndexOffsets =
-      neighborhood::generateNeighborIndexOffsets();
+      grid_neighborhood<3>::generateIndexOffsets();
 
   const FloatingPoint max_distance_;
   const OccupancyClassifier classifier_;

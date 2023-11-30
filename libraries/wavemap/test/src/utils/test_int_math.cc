@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/utils/math/int_math.h"
+#include "wavemap/utils/random_number_generator.h"
 
 namespace wavemap {
 TEST(IntMathTest, Exp2) {
@@ -70,6 +71,20 @@ TEST(IntMathTest, DivExp2Remainder) {
           value - int_math::exp2(exp) * int_math::div_exp2_floor(value, exp))
           << "For value " << value << " and exp " << exp;
     }
+  }
+}
+
+TEST(IntMathTest, Pow) {
+  constexpr int kNumIterations = 10;
+  constexpr int kMinBase = -50;
+  constexpr int kMaxBase = 50;
+  constexpr int kMaxExponent = 5;
+  RandomNumberGenerator rng;
+  for (int iteration = 0; iteration < kNumIterations; ++iteration) {
+    const int base = rng.getRandomInteger(kMinBase, kMaxBase);
+    const int exponent = rng.getRandomInteger(0, kMaxExponent);
+    EXPECT_EQ(int_math::pow(base, exponent), std::pow(base, exponent))
+        << "For base " << base << " and exponent " << exponent;
   }
 }
 

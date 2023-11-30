@@ -1,23 +1,10 @@
 #include "wavemap_rviz_plugin/visuals/cell_selector.h"
 
-#include <wavemap/utils/iterate/grid_iterator.h>
+#include <wavemap/utils/neighbors/grid_neighborhood.h>
 
 namespace wavemap::rviz_plugin {
-std::array<Index3D, 26> generateNeighborIndexOffsets() {
-  std::array<Index3D, 26> neighbor_offsets{};
-  size_t array_idx = 0u;
-  for (const Index3D& index : Grid<3>(-Index3D::Ones(), Index3D::Ones())) {
-    if (index != Index3D::Zero()) {
-      neighbor_offsets[array_idx] = index;
-      ++array_idx;
-    }
-  }
-  std::sort(
-      neighbor_offsets.begin(), neighbor_offsets.end(),
-      [](const auto& lhs, const auto& rhs) { return lhs.norm() < rhs.norm(); });
-  return neighbor_offsets;
-}
-static const auto kNeighborOffsets = generateNeighborIndexOffsets();
+static const auto kNeighborOffsets =
+    grid_neighborhood<3>::generateIndexOffsets();
 
 CellSelector::CellSelector(rviz::Property* submenu_root_property,
                            std::function<void()> redraw_map)

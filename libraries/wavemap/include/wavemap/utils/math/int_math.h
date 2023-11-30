@@ -86,6 +86,15 @@ Eigen::Matrix<int, dim, 1> div_exp2_ceil(Eigen::Matrix<int, dim, 1> vector,
   return vector;
 }
 
+template <typename T>
+constexpr T pow(T base, int exponent) {
+  T pow = 1;
+  for (int iteration = 0; iteration < exponent; ++iteration) {
+    pow *= base;
+  }
+  return pow;
+}
+
 template <typename T, T pow_base, int dim>
 constexpr std::array<T, dim> pow_sequence() {
   static_assert(0 < dim);

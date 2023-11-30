@@ -66,7 +66,6 @@ add_library(${PROJECT_NAME}
     src/map/wavelet_octree.cc
     src/map/volumetric_data_structure_base.cc
     src/map/volumetric_data_structure_factory.cc
-    src/utils/sdf/cell_neighborhoods.cc
     src/utils/sdf/full_euclidean_sdf_generator.cc
     src/utils/sdf/quasi_euclidean_sdf_generator.cc
     src/utils/stopwatch.cc

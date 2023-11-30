@@ -5,7 +5,7 @@
 #include "wavemap/data_structure/bucket_queue.h"
 #include "wavemap/map/hashed_blocks.h"
 #include "wavemap/map/hashed_wavelet_octree.h"
-#include "wavemap/utils/sdf/cell_neighborhoods.h"
+#include "wavemap/utils/neighbors/grid_neighborhood.h"
 
 namespace wavemap {
 struct VectorDistance {
@@ -38,7 +38,7 @@ class FullEuclideanSDFGenerator {
 
  private:
   inline static const auto kNeighborIndexOffsets =
-      neighborhood::generateNeighborIndexOffsets();
+      grid_neighborhood<3>::generateIndexOffsets();
 
   const FloatingPoint max_distance_;
   const OccupancyClassifier classifier_;
