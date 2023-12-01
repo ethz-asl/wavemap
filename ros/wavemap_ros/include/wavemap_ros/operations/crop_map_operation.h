@@ -13,7 +13,7 @@
 
 namespace wavemap {
 /**
- * Config struct for map pruning operations.
+ * Config struct for map cropping operations.
  */
 struct CropMapOperationConfig : public ConfigBase<CropMapOperationConfig, 3> {
   //! Time period controlling how often the map is cropped.

@@ -14,7 +14,7 @@
 
 namespace wavemap {
 /**
- * Config struct for map pruning operations.
+ * Config struct for map publishing operations.
  */
 struct PublishMapOperationConfig
     : public ConfigBase<PublishMapOperationConfig, 3> {

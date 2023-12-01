@@ -26,6 +26,7 @@ void CropMapOperation::run(const ros::Time& current_time, bool force_run) {
   }
   last_run_timestamp_ = current_time;
 
+  // If the map is empty, there's no work to do
   if (occupancy_map_->empty()) {
     return;
   }

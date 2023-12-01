@@ -43,25 +43,27 @@ PublishMapOperation::PublishMapOperation(
 void PublishMapOperation::publishMap(const ros::Time& current_time,
                                      bool republish_whole_map) {
   ZoneScoped;
-  if (!occupancy_map_->empty()) {
-    if (auto* hashed_wavelet_octree =
-            dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
-        hashed_wavelet_octree) {
-      publishHashedMap(current_time, hashed_wavelet_octree,
-                       republish_whole_map);
-    } else if (auto* hashed_chunked_wavelet_octree =
-                   dynamic_cast<HashedChunkedWaveletOctree*>(
-                       occupancy_map_.get());
-               hashed_chunked_wavelet_octree) {
-      publishHashedMap(current_time, hashed_chunked_wavelet_octree,
-                       republish_whole_map);
-    } else {
-      occupancy_map_->threshold();
-      wavemap_msgs::Map map_msg;
-      if (convert::mapToRosMsg(*occupancy_map_, world_frame_, current_time,
-                               map_msg)) {
-        map_pub_.publish(map_msg);
-      }
+  // If the map is empty, there's no work to do
+  if (occupancy_map_->empty()) {
+    return;
+  }
+
+  if (auto* hashed_wavelet_octree =
+          dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
+      hashed_wavelet_octree) {
+    publishHashedMap(current_time, hashed_wavelet_octree, republish_whole_map);
+  } else if (auto* hashed_chunked_wavelet_octree =
+                 dynamic_cast<HashedChunkedWaveletOctree*>(
+                     occupancy_map_.get());
+             hashed_chunked_wavelet_octree) {
+    publishHashedMap(current_time, hashed_chunked_wavelet_octree,
+                     republish_whole_map);
+  } else {
+    occupancy_map_->threshold();
+    wavemap_msgs::Map map_msg;
+    if (convert::mapToRosMsg(*occupancy_map_, world_frame_, current_time,
+                             map_msg)) {
+      map_pub_.publish(map_msg);
     }
   }
 }

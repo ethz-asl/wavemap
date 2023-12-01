@@ -73,7 +73,7 @@ bool TfTransformer::lookupTransformImpl(const std::string& to_frame_id,
   }
   geometry_msgs::TransformStamped transform_msg =
       tf_buffer_.lookupTransform(to_frame_id, from_frame_id, frame_timestamp);
-  convert::rosMsgToTransformation3D(transform_msg.transform, transform);
+  transform = convert::transformMsgToTransformation3D(transform_msg.transform);
   return true;
 }
 }  // namespace wavemap
