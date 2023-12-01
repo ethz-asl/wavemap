@@ -3,6 +3,7 @@
 #include "wavemap_ros/operations/crop_map_operation.h"
 #include "wavemap_ros/operations/prune_map_operation.h"
 #include "wavemap_ros/operations/publish_map_operation.h"
+#include "wavemap_ros/operations/publish_pointcloud_operation.h"
 #include "wavemap_ros/operations/threshold_map_operation.h"
 
 namespace wavemap {
@@ -68,6 +69,16 @@ std::unique_ptr<OperationBase> OperationFactory::create(
         ROS_ERROR("Publish map operation config could not be loaded.");
         return nullptr;
       }
+    case OperationType::kPublishPointcloud:
+      if (const auto config = PublishPointcloudOperationConfig::from(params);
+          config) {
+        return std::make_unique<PublishPointcloudOperation>(
+            config.value(), std::move(world_frame), std::move(occupancy_map),
+            nh_private);
+      } else {
+        ROS_ERROR("Publish pointcloud operation config could not be loaded.");
+        return nullptr;
+      }
     case OperationType::kCropMap:
       if (const auto config = CropMapOperationConfig::from(params); config) {
         return std::make_unique<CropMapOperation>(
@@ -79,7 +90,7 @@ std::unique_ptr<OperationBase> OperationFactory::create(
       }
   }
 
-  ROS_ERROR_STREAM("Factory does not support creation of operation type "
+  ROS_ERROR_STREAM("Factory does not (yet) support creation of operation type "
                    << operation_type.toStr() << ".");
   return nullptr;
 }
