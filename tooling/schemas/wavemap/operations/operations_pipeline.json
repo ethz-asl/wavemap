@@ -13,6 +13,7 @@
         "threshold_map",
         "prune_map",
         "publish_map",
+        "publish_pointcloud",
         "crop_map"
       ]
     }
@@ -26,6 +27,9 @@
     },
     {
       "$ref": "publish_map_operation.json"
+    },
+    {
+      "$ref": "publish_pointcloud_operation.json"
     },
     {
       "$ref": "crop_map_operation.json"
