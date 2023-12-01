@@ -1,6 +1,8 @@
 #include "wavemap_ros/operations/publish_pointcloud_operation.h"
 
 #include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 #include <tracy/Tracy.hpp>
 #include <wavemap/indexing/index_conversions.h>
 #include <wavemap/utils/iterate/grid_iterator.h>
@@ -28,7 +30,7 @@ PublishPointcloudOperation::PublishPointcloudOperation(
       world_frame_(std::move(world_frame)),
       occupancy_map_(std::move(occupancy_map)) {
   pointcloud_pub_ =
-      nh_private.advertise<sensor_msgs::PointCloud>(config_.topic, 10);
+      nh_private.advertise<sensor_msgs::PointCloud2>(config_.topic, 10);
 }
 
 void PublishPointcloudOperation::publishPointcloud(
@@ -71,6 +73,9 @@ void PublishPointcloudOperation::publishPointcloud(
   });
 
   // Publish the msg
-  pointcloud_pub_.publish(obstacle_pointcloud_msg);
+  sensor_msgs::PointCloud2 obstacle_pointcloud2_msg;
+  sensor_msgs::convertPointCloudToPointCloud2(obstacle_pointcloud_msg,
+                                              obstacle_pointcloud2_msg);
+  pointcloud_pub_.publish(obstacle_pointcloud2_msg);
 }
 }  // namespace wavemap
