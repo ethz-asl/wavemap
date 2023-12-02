@@ -32,7 +32,7 @@ inline FloatingPoint ContinuousBeam::computeWorstCaseApproximationError(
 
 inline FloatingPoint ContinuousBeam::computeUpdate(
     const SensorCoordinates& sensor_coordinates) const {
-  switch (config_.beam_selector_type.toTypeId()) {
+  switch (config_.beam_selector_type) {
     case BeamSelectorType::kNearestNeighbor:
       return computeBeamUpdateNearestNeighbor(
           *range_image_, *beam_offset_image_, *projection_model_,

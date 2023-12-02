@@ -17,66 +17,25 @@ struct TypeSelector {
   static constexpr TypeId kInvalidTypeId = -1;
 
   // Construct from a given type name or ID
-  explicit TypeSelector(const TypeName& type_name) {
-    id_ = strToTypeId(type_name);
-  }
-  TypeSelector(TypeId type_id) {  // NOLINT
-    if (isValidTypeId(type_id)) {
-      id_ = type_id;
-    }
-  }
+  TypeSelector(const TypeName& type_name);  // NOLINT
+  TypeSelector(TypeId type_id);             // NOLINT
 
-  ~TypeSelector() {
-    // Force the derived config classes to specify:
-    // - an enum with Ids
-    // - an array of names
-    // NOTE: These static asserts have to be placed in a method that's
-    //       guaranteed to be evaluated by the compiler, making the dtor is a
-    //       good option.
-    static_assert(std::is_enum_v<typename DerivedTypeSelectorT::Id>,
-                  "Derived TypeSelector type must define an enum called Id.");
-    static_assert(
-        std::is_convertible_v<decltype(DerivedTypeSelectorT::names[0]),
-                              std::string>,
-        "Derived TypeSelector type must define an array called names whose "
-        "members are convertible to std::strings.");
-  }
+  // Destructor
+  ~TypeSelector();
 
-  // Conversions to the underlying type's name or ID
-  explicit operator TypeName() const { return typeIdToStr(id_); }
-  explicit operator TypeId() const { return id_; }
-  TypeName toStr() const { return typeIdToStr(id_); }
-  constexpr TypeId toTypeId() const { return id_; }
-
-  // Comparison operators
-  friend bool operator==(const DerivedTypeSelectorT& lhs,
-                         const DerivedTypeSelectorT& rhs) {
-    return lhs.id_ == rhs.id_;
-  }
-  friend bool operator!=(const DerivedTypeSelectorT& lhs,
-                         const DerivedTypeSelectorT& rhs) {
-    return !(lhs == rhs);
-  }
+  // Allow implicit conversions to the underlying type's name or ID
+  operator TypeName() const { return toStr(id_); }
+  operator TypeId() const { return id_; }
 
   // Method to check if the type ID is currently valid
-  bool isValid() const { return isValidTypeId(id_); }
+  bool isValid() const { return isValid(id_); }
+  static bool isValid(TypeId type_id);
 
-  // Static methods for convenience
-  // TODO(victorr): Simplify name to "toStr()"
-  static TypeName typeIdToStr(TypeId type_id) {
-    if (isValidTypeId(type_id)) {
-      return DerivedTypeSelectorT::names[static_cast<TypeId>(type_id)];
-    } else {
-      return "Invalid";
-    }
-  }
-  // TODO(victorr): Simplify name to "toTypeId()"
-  static TypeId strToTypeId(const std::string& name);
-  // TODO(victorr): Simplify name to "isValid()"
-  static bool isValidTypeId(TypeId type_id) {
-    return 0 <= type_id &&
-           static_cast<size_t>(type_id) < DerivedTypeSelectorT::names.size();
-  }
+  // Explicit conversions to the underlying type's name or ID
+  TypeName toStr() const { return toStr(id_); }
+  static TypeName toStr(TypeId type_id);
+  constexpr TypeId toTypeId() const { return id_; }
+  static TypeId toTypeId(const std::string& name);
 
   // Convenience method to read the type from params
   static std::optional<DerivedTypeSelectorT> from(const param::Value& params);

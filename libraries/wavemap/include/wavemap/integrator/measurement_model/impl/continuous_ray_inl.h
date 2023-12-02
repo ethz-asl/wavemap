@@ -26,7 +26,7 @@ inline FloatingPoint ContinuousRay::computeWorstCaseApproximationError(
 
 inline FloatingPoint ContinuousRay::computeUpdate(
     const SensorCoordinates& sensor_coordinates) const {
-  switch (config_.beam_selector_type.toTypeId()) {
+  switch (config_.beam_selector_type) {
     case BeamSelectorType::kNearestNeighbor: {
       const auto image_index =
           projection_model_->imageToNearestIndex(sensor_coordinates.image);

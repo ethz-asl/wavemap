@@ -90,7 +90,7 @@ void PointcloudInputHandler::callback(
   sensor_msgs::PointCloud2ConstIterator<float> pos_it(pointcloud_msg, "x");
   if (config_.undistort_motion) {
     // NOTE: Livox pointclouds are not handled here but in their own callback.
-    switch (config_.topic_type.toTypeId()) {
+    switch (config_.topic_type) {
       case PointcloudTopicType::kOuster:
         if (hasField(pointcloud_msg, "t")) {
           sensor_msgs::PointCloud2ConstIterator<uint32_t> t_it(pointcloud_msg,

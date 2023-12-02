@@ -26,7 +26,7 @@ TYPED_TEST(GridAdjacencyTest, SharedVertexAdjacency) {
       const IndexType neighbor = index + offset;
       const auto adjacency_type = Adjacency{computeAdjacency(index, neighbor)};
       EXPECT_TRUE(adjacency_type.isValid());
-      EXPECT_EQ(adjacency_type.toTypeId(), Adjacency::kSharedVertex);
+      EXPECT_EQ(adjacency_type, Adjacency::kSharedVertex);
       EXPECT_TRUE(areAdjacent(index, neighbor, Adjacency::kSharedVertex));
     }
   }
@@ -44,7 +44,7 @@ TYPED_TEST(GridAdjacencyTest, SharedEdgeAdjacency) {
       const IndexType neighbor = index + offset;
       const auto adjacency_type = Adjacency{computeAdjacency(index, neighbor)};
       EXPECT_TRUE(adjacency_type.isValid());
-      EXPECT_EQ(adjacency_type.toTypeId(), Adjacency::kSharedEdge);
+      EXPECT_EQ(adjacency_type, Adjacency::kSharedEdge);
       EXPECT_TRUE(areAdjacent(index, neighbor, Adjacency::kSharedEdge));
     }
   }
@@ -62,7 +62,7 @@ TYPED_TEST(GridAdjacencyTest, SharedFaceAdjacency) {
       const IndexType neighbor = index + offset;
       const auto adjacency_type = Adjacency{computeAdjacency(index, neighbor)};
       EXPECT_TRUE(adjacency_type.isValid());
-      EXPECT_EQ(adjacency_type.toTypeId(), Adjacency::kSharedFace);
+      EXPECT_EQ(adjacency_type, Adjacency::kSharedFace);
       EXPECT_TRUE(areAdjacent(index, neighbor, Adjacency::kSharedFace));
     }
   }
@@ -80,7 +80,7 @@ TYPED_TEST(GridAdjacencyTest, SharedCubeAdjacency) {
       const IndexType neighbor = index + offset;
       const auto adjacency_type = Adjacency{computeAdjacency(index, neighbor)};
       EXPECT_TRUE(adjacency_type.isValid());
-      EXPECT_EQ(adjacency_type.toTypeId(), Adjacency::kSharedCube);
+      EXPECT_EQ(adjacency_type, Adjacency::kSharedCube);
       EXPECT_TRUE(areAdjacent(index, neighbor, Adjacency::kSharedCube));
     }
   }

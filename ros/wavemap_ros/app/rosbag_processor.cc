@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     InputHandler* input_handler =
         wavemap_server.addInput(integrator_params, nh, nh_private);
     if (input_handler) {
-      switch (input_handler->getType().toTypeId()) {
+      switch (input_handler->getType()) {
         case InputHandlerType::kPointcloud: {
           auto pointcloud_handler =
               dynamic_cast<PointcloudInputHandler*>(input_handler);

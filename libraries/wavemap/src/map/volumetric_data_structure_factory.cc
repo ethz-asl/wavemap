@@ -28,7 +28,7 @@ VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
 VolumetricDataStructureBase::Ptr VolumetricDataStructureFactory::create(
     VolumetricDataStructureType data_structure_type,
     const param::Value& params) {
-  switch (data_structure_type.toTypeId()) {
+  switch (data_structure_type) {
     case VolumetricDataStructureType::kHashedBlocks: {
       if (const auto config = VolumetricDataStructureConfig::from(params);
           config) {

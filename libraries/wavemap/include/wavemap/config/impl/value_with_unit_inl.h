@@ -6,7 +6,7 @@
 namespace wavemap {
 template <SiUnit::Id unit, typename T>
 std::string ValueWithUnit<unit, T>::toStr() const {
-  return std::to_string(value) + " [" + SiUnit::typeIdToStr(unit) + "]";
+  return std::to_string(value) + " [" + SiUnit::toStr(unit) + "]";
 }
 
 template <SiUnit::Id unit, typename T>
@@ -17,14 +17,14 @@ std::optional<ValueWithUnit<unit, T>> ValueWithUnit<unit, T>::from(
     LOG(WARNING) << "Tried to load a value with annotated units from a param "
                     "that is not of type Map (dictionary). Cannot perform "
                     "conversion to SI unit \""
-                 << SiUnit::typeIdToStr(unit) << "\". Will be ignored.";
+                 << SiUnit::toStr(unit) << "\". Will be ignored.";
     return std::nullopt;
   }
 
   if (param_map->size() != 1) {
     LOG(WARNING) << "Value with unit should have exactly one key and value. "
                     "Cannot perform conversion to SI unit \""
-                 << SiUnit::typeIdToStr(unit) << "\". Will be ignored.";
+                 << SiUnit::toStr(unit) << "\". Will be ignored.";
     return std::nullopt;
   }
 
@@ -34,7 +34,7 @@ std::optional<ValueWithUnit<unit, T>> ValueWithUnit<unit, T>::from(
   if (!si_unit_and_conversion) {
     LOG(WARNING) << "Value has unknown unit \"" << param_unit
                  << "\". Cannot perform conversion to SI unit \""
-                 << SiUnit::typeIdToStr(unit) << "\". Will be ignored.";
+                 << SiUnit::toStr(unit) << "\". Will be ignored.";
     return std::nullopt;
   }
 
@@ -42,7 +42,7 @@ std::optional<ValueWithUnit<unit, T>> ValueWithUnit<unit, T>::from(
   if (si_unit != unit) {
     LOG(WARNING) << "Value has unit \"" << param_unit
                  << "\" which cannot be converted to SI unit \""
-                 << SiUnit::typeIdToStr(unit) << "\". Will be ignored.";
+                 << SiUnit::toStr(unit) << "\". Will be ignored.";
     return std::nullopt;
   }
 
@@ -56,7 +56,7 @@ std::optional<ValueWithUnit<unit, T>> ValueWithUnit<unit, T>::from(
 
   LOG(WARNING) << "Value must be of type float or int. Cannot perform "
                   "conversion to SI unit \""
-               << SiUnit::typeIdToStr(unit) << "\". Will be ignored.";
+               << SiUnit::toStr(unit) << "\". Will be ignored.";
   return std::nullopt;
 }
 }  // namespace wavemap

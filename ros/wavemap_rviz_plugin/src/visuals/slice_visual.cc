@@ -122,7 +122,7 @@ void SliceVisual::update() {
     cell.center.z = slice_height;
 
     // Set the cube's color
-    switch (slice_color_mode_.toTypeId()) {
+    switch (slice_color_mode_) {
       case SliceColorMode::kRaw: {
         cell.color = scalarToColor(cell_log_odds, min_occupancy_log_odds,
                                    max_occupancy_log_odds);

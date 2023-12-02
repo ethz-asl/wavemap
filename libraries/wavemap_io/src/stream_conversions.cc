@@ -35,7 +35,7 @@ bool mapToStream(const VolumetricDataStructureBase& map,
 bool streamToMap(std::istream& istream, VolumetricDataStructureBase::Ptr& map) {
   // Call the appropriate streamToMap converter based on the received map's type
   const auto storage_format = streamable::StorageFormat::peek(istream);
-  switch (storage_format.toTypeId()) {
+  switch (storage_format) {
     case streamable::StorageFormat::kHashedBlocks: {
       auto hashed_blocks = std::dynamic_pointer_cast<HashedBlocks>(map);
       if (!streamToMap(istream, hashed_blocks)) {

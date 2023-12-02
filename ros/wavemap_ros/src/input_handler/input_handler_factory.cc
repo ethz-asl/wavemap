@@ -38,7 +38,7 @@ std::unique_ptr<InputHandler> InputHandlerFactory::create(
     std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
     ros::NodeHandle nh_private) {
   // Create the input handler
-  switch (input_handler_type.toTypeId()) {
+  switch (input_handler_type) {
     case InputHandlerType::kPointcloud: {
       if (const auto config =
               PointcloudInputHandlerConfig::from(params, "general");

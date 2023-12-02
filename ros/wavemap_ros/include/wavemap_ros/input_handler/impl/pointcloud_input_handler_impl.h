@@ -5,7 +5,7 @@ namespace wavemap {
 template <typename RegistrarT>
 bool PointcloudInputHandler::registerCallback(PointcloudTopicType type,
                                               RegistrarT registrar) {
-  switch (type.toTypeId()) {
+  switch (type) {
     case PointcloudTopicType::kPointCloud2:
       // clang-format off
       registrar(static_cast<void(PointcloudInputHandler::*)(

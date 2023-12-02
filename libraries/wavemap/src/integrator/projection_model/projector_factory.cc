@@ -24,7 +24,7 @@ ProjectorBase::Ptr wavemap::ProjectorFactory::create(
 
 ProjectorBase::Ptr wavemap::ProjectorFactory::create(
     ProjectorType projector_type, const param::Value& params) {
-  switch (projector_type.toTypeId()) {
+  switch (projector_type) {
     case ProjectorType::kSphericalProjector: {
       if (const auto config =
               SphericalProjectorConfig::from(params, "projection_model");

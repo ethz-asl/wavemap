@@ -31,7 +31,7 @@ MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
     MeasurementModelType measurement_model_type,
     ProjectorBase::ConstPtr projection_model, Image<>::ConstPtr range_image,
     Image<Vector2D>::ConstPtr beam_offset_image, const param::Value& params) {
-  switch (measurement_model_type.toTypeId()) {
+  switch (measurement_model_type) {
     case MeasurementModelType::kContinuousRay: {
       if (const auto config =
               ContinuousRayConfig::from(params, "measurement_model");

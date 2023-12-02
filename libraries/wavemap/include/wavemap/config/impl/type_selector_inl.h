@@ -6,9 +6,58 @@
 #include <utility>
 
 namespace wavemap {
+template <typename DerivedTypeSelectorT>
+TypeSelector<DerivedTypeSelectorT>::TypeSelector(
+    const TypeSelector::TypeName& type_name) {
+  id_ = toTypeId(type_name);
+}
+
+template <typename DerivedTypeSelectorT>
+TypeSelector<DerivedTypeSelectorT>::TypeSelector(TypeId type_id) {
+  if (isValid(type_id)) {
+    id_ = type_id;
+  }
+}
+
+template <typename DerivedTypeSelectorT>
+TypeSelector<DerivedTypeSelectorT>::~TypeSelector() {
+  // Force the derived config classes to specify:
+  // - an enum with Ids, using type "int" as the enum's underlying type
+  // - an array of names
+  // NOTE: These static asserts have to be placed in a method that's
+  //       guaranteed to be evaluated by the compiler, making the dtor is a
+  //       good option.
+  static_assert(
+      std::is_same_v<std::underlying_type_t<typename DerivedTypeSelectorT::Id>,
+                     int>);
+  static_assert(std::is_enum_v<typename DerivedTypeSelectorT::Id>,
+                "Derived TypeSelector type must define an enum called Id.");
+  static_assert(
+      std::is_convertible_v<decltype(DerivedTypeSelectorT::names[0]),
+                            std::string>,
+      "Derived TypeSelector type must define an array called names whose "
+      "members are convertible to std::strings.");
+}
+
+template <typename DerivedTypeSelectorT>
+bool TypeSelector<DerivedTypeSelectorT>::isValid(TypeId type_id) {
+  return 0 <= type_id &&
+         static_cast<size_t>(type_id) < DerivedTypeSelectorT::names.size();
+}
+
+template <typename DerivedTypeSelectorT>
+typename TypeSelector<DerivedTypeSelectorT>::TypeName
+TypeSelector<DerivedTypeSelectorT>::toStr(TypeId type_id) {
+  if (isValid(type_id)) {
+    return DerivedTypeSelectorT::names[static_cast<TypeId>(type_id)];
+  } else {
+    return "Invalid";
+  }
+}
+
 template <typename DerivedNamedTypeSetT>
 typename TypeSelector<DerivedNamedTypeSetT>::TypeId
-TypeSelector<DerivedNamedTypeSetT>::strToTypeId(const std::string& name) {
+TypeSelector<DerivedNamedTypeSetT>::toTypeId(const std::string& name) {
   for (size_t type_idx = 0; type_idx < DerivedNamedTypeSetT::names.size();
        ++type_idx) {
     if (name == DerivedNamedTypeSetT::names[type_idx]) {

@@ -339,7 +339,7 @@ void VoxelVisual::appendLeafCenterAndColor(int tree_height,
   point.center.z = cell_center[2];
 
   // Set the cube's color
-  switch (voxel_color_mode_.toTypeId()) {
+  switch (voxel_color_mode_) {
     case VoxelColorMode::kFlat:
       point.color = voxel_flat_color_;
       break;

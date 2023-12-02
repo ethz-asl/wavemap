@@ -68,7 +68,7 @@ void CellSelector::setMap(const VolumetricDataStructureBase::ConstPtr& map) {
 
 bool CellSelector::shouldBeDrawn(const OctreeIndex& cell_index,
                                  FloatingPoint cell_log_odds) const {
-  switch (cell_selection_mode_.toTypeId()) {
+  switch (cell_selection_mode_) {
     case CellSelectionMode::kSurface:
       // Skip free cells
       if (cell_log_odds < surface_occupancy_threshold_ ||

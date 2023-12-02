@@ -82,7 +82,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
   }
 
   // Assemble the projective integrator
-  switch (integrator_type.toTypeId()) {
+  switch (integrator_type) {
     case IntegratorType::kFixedResolutionIntegrator: {
       return std::make_shared<FixedResolutionIntegrator>(
           integrator_config.value(), projection_model, posed_range_image,
@@ -98,7 +98,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
                    << " only supports data structures of type "
-                   << VolumetricDataStructureType::typeIdToStr(
+                   << VolumetricDataStructureType::toStr(
                           VolumetricDataStructureType::kOctree)
                    << ". Returning nullptr.";
       }
@@ -114,7 +114,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
                    << " only supports data structures of type "
-                   << VolumetricDataStructureType::typeIdToStr(
+                   << VolumetricDataStructureType::toStr(
                           VolumetricDataStructureType::kWaveletOctree)
                    << ". Returning nullptr.";
       }
@@ -131,7 +131,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
                    << " only supports data structures of type "
-                   << VolumetricDataStructureType::typeIdToStr(
+                   << VolumetricDataStructureType::toStr(
                           VolumetricDataStructureType::kHashedWaveletOctree)
                    << ". Returning nullptr.";
       }
@@ -149,7 +149,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
         LOG(ERROR)
             << "Integrator of type " << integrator_type.toStr()
             << " only supports data structures of type "
-            << VolumetricDataStructureType::typeIdToStr(
+            << VolumetricDataStructureType::toStr(
                    VolumetricDataStructureType::kHashedChunkedWaveletOctree)
             << ". Returning nullptr.";
       }
