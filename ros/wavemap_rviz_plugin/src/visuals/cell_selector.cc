@@ -1,10 +1,10 @@
 #include "wavemap_rviz_plugin/visuals/cell_selector.h"
 
-#include <wavemap/utils/neighbors/grid_neighborhood.h>
+#include <wavemap/utils/neighbors/offsets.h>
 
 namespace wavemap::rviz_plugin {
 static const auto kNeighborOffsets =
-    grid_neighborhood<3>::generateIndexOffsets();
+    neighbors::generateIndexOffsetLut<3, kAnyDisjointAdjacency<3>>();
 
 CellSelector::CellSelector(rviz::Property* submenu_root_property,
                            std::function<void()> redraw_map)

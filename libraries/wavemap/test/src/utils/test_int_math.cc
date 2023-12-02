@@ -127,4 +127,46 @@ TEST(IntMathTest, PowSequence) {
   EXPECT_EQ(pow_sequence_base_min_2_length_4,
             expected_pow_sequence_base_min_2_length_4);
 }
+
+TEST(IntMathTest, Factorial) {
+  EXPECT_EQ(int_math::factorial(0), 1);
+  EXPECT_EQ(int_math::factorial(1), 1);
+  EXPECT_EQ(int_math::factorial(2), 2);
+  EXPECT_EQ(int_math::factorial(3), 6);
+  EXPECT_EQ(int_math::factorial(4), 24);
+  EXPECT_EQ(int_math::factorial(5), 120);
+  EXPECT_EQ(int_math::factorial(6), 720);
+  EXPECT_EQ(int_math::factorial(7), 5040);
+  EXPECT_EQ(int_math::factorial(8), 40320);
+  EXPECT_EQ(int_math::factorial(9), 362880);
+  EXPECT_EQ(int_math::factorial(10), 3628800);
+}
+
+TEST(IntMathTest, Binomial) {
+  EXPECT_EQ(int_math::binomial(0, 0), 1);
+  EXPECT_EQ(int_math::binomial(0, 1), 0);
+  EXPECT_EQ(int_math::binomial(0, 2), 0);
+  EXPECT_EQ(int_math::binomial(0, 3), 0);
+  EXPECT_EQ(int_math::binomial(0, 4), 0);
+  EXPECT_EQ(int_math::binomial(1, 0), 1);
+  EXPECT_EQ(int_math::binomial(1, 1), 1);
+  EXPECT_EQ(int_math::binomial(1, 2), 0);
+  EXPECT_EQ(int_math::binomial(1, 3), 0);
+  EXPECT_EQ(int_math::binomial(1, 4), 0);
+  EXPECT_EQ(int_math::binomial(2, 0), 1);
+  EXPECT_EQ(int_math::binomial(2, 1), 2);
+  EXPECT_EQ(int_math::binomial(2, 2), 1);
+  EXPECT_EQ(int_math::binomial(2, 3), 0);
+  EXPECT_EQ(int_math::binomial(2, 4), 0);
+  EXPECT_EQ(int_math::binomial(3, 0), 1);
+  EXPECT_EQ(int_math::binomial(3, 1), 3);
+  EXPECT_EQ(int_math::binomial(3, 2), 3);
+  EXPECT_EQ(int_math::binomial(3, 3), 1);
+  EXPECT_EQ(int_math::binomial(3, 4), 0);
+  EXPECT_EQ(int_math::binomial(4, 0), 1);
+  EXPECT_EQ(int_math::binomial(4, 1), 4);
+  EXPECT_EQ(int_math::binomial(4, 2), 6);
+  EXPECT_EQ(int_math::binomial(4, 3), 4);
+  EXPECT_EQ(int_math::binomial(4, 4), 1);
+}
 }  // namespace wavemap

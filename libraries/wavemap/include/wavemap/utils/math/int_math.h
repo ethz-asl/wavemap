@@ -110,6 +110,26 @@ template <typename T>
 constexpr T div_round_up(T numerator, T denominator) {
   return numerator / denominator + (numerator % denominator != 0);
 }
+
+template <typename T>
+constexpr T factorial(T x) {
+  T result = 1;
+  for (; 1 < x; --x) {
+    result *= x;
+  }
+  return result;
+}
+
+template <typename T>
+constexpr T binomial(T n, T m) {
+  if (n < m) {
+    return 0;
+  } else if (n == m) {
+    return 1;
+  } else {
+    return factorial(n) / (factorial(m) * factorial(n - m));
+  }
+}
 }  // namespace wavemap::int_math
 
 #endif  // WAVEMAP_UTILS_MATH_INT_MATH_H_

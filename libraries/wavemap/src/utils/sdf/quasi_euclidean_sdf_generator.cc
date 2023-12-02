@@ -103,8 +103,8 @@ void QuasiEuclideanSDFGenerator::propagate(
   // Precompute the neighbor distance offsets
   const FloatingPoint min_cell_width = occupancy_map.getMinCellWidth();
   const auto neighbor_distance_offsets =
-      grid_neighborhood<3>::generateDistanceOffsets(min_cell_width);
-  CHECK_EQ(kNeighborIndexOffsets.size(), neighbor_distance_offsets.size());
+      GridNeighborhood<3>::computeOffsetLengths(kNeighborIndexOffsets,
+                                                min_cell_width);
   const FloatingPoint half_max_neighbor_distance_offset =
       0.5f * std::sqrt(3.f) * min_cell_width + 1e-3f;
 

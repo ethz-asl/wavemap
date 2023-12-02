@@ -8,6 +8,16 @@
 namespace wavemap {
 using BitManipulationTest = FixtureBase;
 
+TEST_F(BitManipulationTest, IsBitSet) {
+  for (int iteration = 0; iteration < 1000; ++iteration) {
+    const auto bitstring =
+        getRandomInteger<unsigned>(0, std::numeric_limits<unsigned>::max());
+    const auto bit_index = getRandomInteger(0, 31);
+    EXPECT_EQ(bit_ops::is_bit_set(bitstring, bit_index),
+              static_cast<bool>((bitstring >> bit_index) & 1));
+  }
+}
+
 TEST_F(BitManipulationTest, RotateLeft) {
   // Test default template argument deduction
   EXPECT_EQ(bit_ops::rotate_left(0b1011, 3), 0b1011000);

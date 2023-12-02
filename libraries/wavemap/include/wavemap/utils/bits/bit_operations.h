@@ -105,6 +105,11 @@ constexpr std::make_signed_t<T> bit_cast_signed(T bitstring) {
   }
 }
 
+template <typename T>
+constexpr bool is_bit_set(T bitstring, int bit_index) {
+  return (bitstring >> bit_index) & 1;
+}
+
 template <typename T, T width = 8 * sizeof(T)>
 constexpr T rotate_left(T bitstring, T shift) {
   static_assert(width <= 8 * sizeof(T));

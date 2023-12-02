@@ -38,7 +38,7 @@ class FullEuclideanSDFGenerator {
 
  private:
   inline static const auto kNeighborIndexOffsets =
-      grid_neighborhood<3>::generateIndexOffsets();
+      GridNeighborhood<3>::generateIndexOffsetsAllDisjointAdjacent();
 
   const FloatingPoint max_distance_;
   const OccupancyClassifier classifier_;

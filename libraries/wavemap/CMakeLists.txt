@@ -110,10 +110,14 @@ if (CATKIN_ENABLE_TESTING)
       test/src/iterator/test_grid_iterator.cc
       test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc
+      test/src/utils/test_adjacency.cc
       test/src/utils/test_approximate_trigonometry.cc
       test/src/utils/test_bit_manipulation.cc
       test/src/utils/test_data_utils.cc
       test/src/utils/test_fill_utils.cc
+      test/src/utils/test_grid_neighborhood.cc
+      test/src/utils/test_grid_adjacency.cc
+      test/src/utils/test_ndtree_adjacency.cc
       test/src/utils/test_int_math.cc
       test/src/utils/test_log_odds_converter.cc
       test/src/utils/test_map_interpolator.cpp
