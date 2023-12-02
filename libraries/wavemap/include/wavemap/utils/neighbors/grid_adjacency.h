@@ -6,20 +6,37 @@
 
 namespace wavemap {
 template <int dim>
-constexpr std::optional<AdjacencyType> computeAdjacencyType(
-    const Index<dim>& index_1, const Index<dim>& index_2);
+constexpr Adjacency::Id computeAdjacency(const Index<dim>& index_1,
+                                         const Index<dim>& index_2);
 
 template <int dim>
-constexpr std::optional<AdjacencyType> computeAdjacencyType(
-    const Index<dim>& index_offset);
+constexpr Adjacency::Id computeAdjacency(const Index<dim>& index_offset);
 
 template <int dim>
 constexpr bool areAdjacent(const Index<dim>& index_1, const Index<dim>& index_2,
-                           AdjacencyMask adjacency_mask);
+                           Adjacency::Id adjacency);
 
 template <int dim>
 constexpr bool isAdjacent(const Index<dim>& index_offset,
-                          AdjacencyMask adjacency_mask);
+                          Adjacency::Id adjacency);
+
+template <int dim>
+constexpr bool areAdjacent(const Index<dim>& index_1, const Index<dim>& index_2,
+                           Adjacency::Mask adjacency_mask);
+
+template <int dim>
+constexpr bool isAdjacent(const Index<dim>& index_offset,
+                          Adjacency::Mask adjacency_mask);
+
+// Forbid implicit conversions
+template <int dim, typename T>
+constexpr bool areAdjacent(const Index<dim>& index_1, const Index<dim>& index_2,
+                           T adjacency_mask) = delete;
+
+// Forbid implicit conversions
+template <int dim, typename T>
+constexpr bool isAdjacent(const Index<dim>& index_offset,
+                          T adjacency_mask) = delete;
 }  // namespace wavemap
 
 #include "wavemap/utils/neighbors/impl/grid_adjacency_inl.h"

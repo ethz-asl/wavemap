@@ -2,19 +2,34 @@
 #define WAVEMAP_UTILS_NEIGHBORS_ADJACENCY_H_
 
 #include "wavemap/common.h"
+#include "wavemap/config/type_selector.h"
 
 namespace wavemap {
-enum class AdjacencyType : int { kVertex = 0, kEdge, kFace, kCube };
+struct Adjacency : TypeSelector<Adjacency> {
+  using TypeSelector<Adjacency>::TypeSelector;
+  using Mask = uint8_t;
 
-using AdjacencyMask = uint8_t;
+  enum Id : TypeId {
+    kSharedVertex,
+    kSharedEdge,
+    kSharedFace,
+    kSharedCube,
+    kAnyDisjoint,
+    kAny,
+    kNone
+  };
+  static constexpr std::array names = {
+      "shared_vertex", "shared_edge", "shared_face", "shared_cube",
+      "any_disjoint",  "any",         "none"};
 
-constexpr AdjacencyMask kAdjacencyNone = AdjacencyMask{0};
+  template <int dim>
+  static constexpr Mask toMask(Id type_id);
 
-template <int dim>
-constexpr AdjacencyMask kAdjacencyAnyDisjoint =
-    static_cast<AdjacencyMask>((1 << dim) - 1);
-
-constexpr AdjacencyMask kAdjacencyAny = static_cast<AdjacencyMask>(-1);
+  template <int dim>
+  constexpr Mask toMask() const;
+};
 }  // namespace wavemap
+
+#include "wavemap/utils/neighbors/impl/adjacency_inl.h"
 
 #endif  // WAVEMAP_UTILS_NEIGHBORS_ADJACENCY_H_

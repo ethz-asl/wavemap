@@ -10,20 +10,11 @@
 namespace wavemap {
 template <int dim>
 struct GridNeighborhood {
-  static constexpr int numNeighbors(AdjacencyType adjacency_type);
-  static constexpr int numNeighbors(AdjacencyMask adjacency_mask);
+  static constexpr int numNeighbors(Adjacency::Id adjacency);
 
-  template <AdjacencyMask adjacency_mask>
-  static std::array<Index<dim>,
-                    GridNeighborhood<dim>::numNeighbors(adjacency_mask)>
+  template <Adjacency::Id adjacency>
+  static std::array<Index<dim>, GridNeighborhood<dim>::numNeighbors(adjacency)>
   generateIndexOffsets();
-
-  static auto generateIndexOffsetsAllDisjointAdjacent() {
-    return generateIndexOffsets<kAdjacencyAnyDisjoint<dim>>();
-  }
-  static auto generateIndexOffsetsAllAdjacent() {
-    return generateIndexOffsets<kAdjacencyAny>();
-  }
 
   template <typename VectorT, size_t array_length>
   static constexpr std::array<FloatingPoint, array_length> computeOffsetLengths(

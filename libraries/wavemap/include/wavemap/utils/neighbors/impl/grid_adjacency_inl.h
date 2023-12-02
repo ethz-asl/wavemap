@@ -5,37 +5,45 @@
 
 namespace wavemap {
 template <int dim>
-constexpr std::optional<AdjacencyType> computeAdjacencyType(
-    const Index<dim>& index_1, const Index<dim>& index_2) {
-  return computeAdjacencyType(index_1 - index_2);
+constexpr Adjacency::Id computeAdjacency(const Index<dim>& index_1,
+                                         const Index<dim>& index_2) {
+  return computeAdjacency<dim>(index_1 - index_2);
 }
 
 template <int dim>
-constexpr std::optional<AdjacencyType> computeAdjacencyType(
-    const Index<dim>& index_offset) {
+constexpr Adjacency::Id computeAdjacency(const Index<dim>& index_offset) {
   static_assert(dim <= 3);
   const auto offset_abs = index_offset.cwiseAbs();
   if ((1 < offset_abs.array()).any()) {
-    return std::nullopt;
+    return Adjacency::kNone;
   }
   const int num_offset_axes = offset_abs.sum();
-  return static_cast<AdjacencyType>(dim - num_offset_axes);
+  return Adjacency::Id{dim - num_offset_axes};
 }
 
 template <int dim>
 constexpr bool areAdjacent(const Index<dim>& index_1, const Index<dim>& index_2,
-                           AdjacencyMask adjacency_mask) {
-  return isAdjacent(index_1 - index_2, adjacency_mask);
+                           Adjacency::Id adjacency) {
+  return areAdjacent(index_1, index_2, Adjacency::toMask<dim>(adjacency));
 }
 
 template <int dim>
 constexpr bool isAdjacent(const Index<dim>& index_offset,
-                          AdjacencyMask adjacency_mask) {
-  if (const auto adjacency = computeAdjacencyType(index_offset); adjacency) {
-    return bit_ops::is_bit_set(adjacency_mask,
-                               static_cast<int>(adjacency.value()));
-  }
-  return false;
+                          Adjacency::Id adjacency) {
+  return isAdjacent(index_offset, Adjacency::toMask<dim>(adjacency));
+}
+
+template <int dim>
+constexpr bool areAdjacent(const Index<dim>& index_1, const Index<dim>& index_2,
+                           Adjacency::Mask adjacency_mask) {
+  return isAdjacent<dim>(index_1 - index_2, adjacency_mask);
+}
+
+template <int dim>
+constexpr bool isAdjacent(const Index<dim>& index_offset,
+                          Adjacency::Mask adjacency_mask) {
+  const auto adjacency = computeAdjacency(index_offset);
+  return Adjacency::toMask<dim>(adjacency) & adjacency_mask;
 }
 }  // namespace wavemap
 

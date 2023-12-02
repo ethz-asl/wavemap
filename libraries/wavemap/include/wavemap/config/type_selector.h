@@ -46,7 +46,7 @@ struct TypeSelector {
   explicit operator TypeName() const { return typeIdToStr(id_); }
   explicit operator TypeId() const { return id_; }
   TypeName toStr() const { return typeIdToStr(id_); }
-  TypeId toTypeId() const { return id_; }
+  constexpr TypeId toTypeId() const { return id_; }
 
   // Comparison operators
   friend bool operator==(const DerivedTypeSelectorT& lhs,
@@ -62,6 +62,7 @@ struct TypeSelector {
   bool isValid() const { return isValidTypeId(id_); }
 
   // Static methods for convenience
+  // TODO(victorr): Simplify name to "toStr()"
   static TypeName typeIdToStr(TypeId type_id) {
     if (isValidTypeId(type_id)) {
       return DerivedTypeSelectorT::names[static_cast<TypeId>(type_id)];
@@ -69,7 +70,9 @@ struct TypeSelector {
       return "Invalid";
     }
   }
+  // TODO(victorr): Simplify name to "toTypeId()"
   static TypeId strToTypeId(const std::string& name);
+  // TODO(victorr): Simplify name to "isValid()"
   static bool isValidTypeId(TypeId type_id) {
     return 0 <= type_id &&
            static_cast<size_t>(type_id) < DerivedTypeSelectorT::names.size();

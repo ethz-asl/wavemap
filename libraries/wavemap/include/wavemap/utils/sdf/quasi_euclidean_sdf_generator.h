@@ -23,7 +23,7 @@ class QuasiEuclideanSDFGenerator {
 
  private:
   inline static const auto kNeighborIndexOffsets =
-      GridNeighborhood<3>::generateIndexOffsetsAllDisjointAdjacent();
+      GridNeighborhood<3>::generateIndexOffsets<Adjacency::kAnyDisjoint>();
 
   const FloatingPoint max_distance_;
   const OccupancyClassifier classifier_;

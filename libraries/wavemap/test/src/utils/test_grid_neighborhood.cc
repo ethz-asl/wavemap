@@ -4,7 +4,7 @@
 #include "wavemap/utils/neighbors/grid_neighborhood.h"
 #include "wavemap/utils/print/eigen.h"
 
-namespace wavemap::neighbors {
+namespace wavemap {
 template <typename DimT>
 class GridNeighborhoodTest : public FixtureBase {};
 
@@ -20,13 +20,13 @@ TYPED_TEST(GridNeighborhoodTest, NumNeighborsForAdjacencyType) {
   const std::array num_edges = {1, 4, 12};
   const std::array num_faces = {0, 1, 6};
   const std::array num_cubes = {0, 0, 1};
-  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(AdjacencyType::kVertex),
+  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(Adjacency::kSharedVertex),
             num_vertices[kDimIdx]);
-  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(AdjacencyType::kEdge),
+  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(Adjacency::kSharedEdge),
             num_edges[kDimIdx]);
-  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(AdjacencyType::kFace),
+  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(Adjacency::kSharedFace),
             num_faces[kDimIdx]);
-  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(AdjacencyType::kCube),
+  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(Adjacency::kSharedCube),
             num_cubes[kDimIdx]);
 }
 
@@ -36,11 +36,11 @@ TYPED_TEST(GridNeighborhoodTest, NumNeighborsForAdjacencyMask) {
   const std::array num_no_adjacency_neighbors = {0, 0, 0};
   const std::array num_any_disjoint_adjacency_neighbors = {2, 8, 26};
   const std::array num_any_adjacency_neighbors = {3, 9, 27};
-  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(kAdjacencyNone),
+  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(Adjacency::kNone),
             num_no_adjacency_neighbors[kDimIdx]);
-  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(kAdjacencyAnyDisjoint<kDim>),
+  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(Adjacency::kAnyDisjoint),
             num_any_disjoint_adjacency_neighbors[kDimIdx]);
-  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(kAdjacencyAny),
+  EXPECT_EQ(GridNeighborhood<kDim>::numNeighbors(Adjacency::kAny),
             num_any_adjacency_neighbors[kDimIdx]);
 }
 
@@ -49,9 +49,9 @@ TYPED_TEST(GridNeighborhoodTest, IndexOffsets) {
 
   // All neighbors with disjoint adjacency
   const auto all_disjoint_adjacent_offsets = GridNeighborhood<
-      kDim>::template generateIndexOffsets<kAdjacencyAnyDisjoint<kDim>>();
+      kDim>::template generateIndexOffsets<Adjacency::kAnyDisjoint>();
   EXPECT_EQ(all_disjoint_adjacent_offsets.size(),
-            GridNeighborhood<kDim>::numNeighbors(kAdjacencyAnyDisjoint<kDim>));
+            GridNeighborhood<kDim>::numNeighbors(Adjacency::kAnyDisjoint));
   for (const auto& offset :
        Grid<kDim>(Index<kDim>::Constant(-1), Index<kDim>::Constant(1))) {
     if (!offset.isZero()) {
@@ -64,9 +64,9 @@ TYPED_TEST(GridNeighborhoodTest, IndexOffsets) {
 
   // All neighbors, including the node itself (i.e. no offset)
   const auto all_adjacent_offsets =
-      GridNeighborhood<kDim>::template generateIndexOffsets<kAdjacencyAny>();
+      GridNeighborhood<kDim>::template generateIndexOffsets<Adjacency::kAny>();
   EXPECT_EQ(all_adjacent_offsets.size(),
-            GridNeighborhood<kDim>::numNeighbors(kAdjacencyAny));
+            GridNeighborhood<kDim>::numNeighbors(Adjacency::kAny));
   for (const auto& offset :
        Grid<kDim>(Index<kDim>::Constant(-1), Index<kDim>::Constant(1))) {
     EXPECT_EQ(std::count(all_adjacent_offsets.begin(),
@@ -75,4 +75,4 @@ TYPED_TEST(GridNeighborhoodTest, IndexOffsets) {
         << "For offset " << print::eigen::oneLine(offset);
   }
 }
-}  // namespace wavemap::neighbors
+}  // namespace wavemap

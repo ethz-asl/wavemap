@@ -5,38 +5,32 @@
 
 namespace wavemap {
 template <int dim>
-constexpr int GridNeighborhood<dim>::numNeighbors(
-    AdjacencyType adjacency_type) {
-  return int_math::exp2(dim - static_cast<int>(adjacency_type)) *
-         int_math::binomial(dim, static_cast<int>(adjacency_type));
-}
-
-template <int dim>
-constexpr int GridNeighborhood<dim>::numNeighbors(
-    AdjacencyMask adjacency_mask) {
+constexpr int GridNeighborhood<dim>::numNeighbors(Adjacency::Id adjacency) {
+  const Adjacency::Mask adjacency_mask = Adjacency::toMask<dim>(adjacency);
   int num_neighbors = 0;
-  for (int adjacency_type = 0; adjacency_type <= dim; ++adjacency_type) {
-    if (bit_ops::is_bit_set(adjacency_mask, adjacency_type)) {
-      num_neighbors += numNeighbors(static_cast<AdjacencyType>(adjacency_type));
+  for (int polygon_dim = 0; polygon_dim <= dim; ++polygon_dim) {
+    if (bit_ops::is_bit_set(adjacency_mask, polygon_dim)) {
+      const int num_polygons_in_boundary =
+          int_math::exp2(dim - static_cast<int>(polygon_dim)) *
+          int_math::binomial(dim, static_cast<int>(polygon_dim));
+      num_neighbors += num_polygons_in_boundary;
     }
   }
   return num_neighbors;
 }
 
 template <int dim>
-template <AdjacencyMask adjacency_mask>
-std::array<Index<dim>, GridNeighborhood<dim>::numNeighbors(adjacency_mask)>
+template <Adjacency::Id adjacency>
+std::array<Index<dim>, GridNeighborhood<dim>::numNeighbors(adjacency)>
 GridNeighborhood<dim>::generateIndexOffsets() {
-  static_assert(dim <= 3);
   // Initialize the array
-  constexpr int num_neighbors = numNeighbors(adjacency_mask);
-  std::array<Index<dim>, num_neighbors> neighbor_offsets{};
+  std::array<Index<dim>, numNeighbors(adjacency)> neighbor_offsets{};
   // Iterate over all possible neighbor offsets, storing the ones that match
   size_t array_idx = 0u;
   for (const Index<dim>& offset :
        Grid<dim>(-Index<dim>::Ones(), Index<dim>::Ones())) {
     // Add the offset if its adjacency type matches the adjacency mask
-    if (adjacency_mask == kAdjacencyAny || isAdjacent(offset, adjacency_mask)) {
+    if (adjacency == Adjacency::kAny || isAdjacent(offset, adjacency)) {
       neighbor_offsets[array_idx] = offset;
       ++array_idx;
     }
