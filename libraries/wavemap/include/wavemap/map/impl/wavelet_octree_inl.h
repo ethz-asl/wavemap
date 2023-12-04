@@ -15,7 +15,7 @@ inline bool WaveletOctree::empty() const {
   //       coefficients, we also need to check whether its scale coefficient
   //       (average value over the whole map) is zero.
   return ndtree_.empty() &&
-         !OccupancyClassifier::isObserved(root_scale_coefficient_);
+         OccupancyClassifier::isUnobserved(root_scale_coefficient_);
 }
 
 inline void WaveletOctree::clear() {

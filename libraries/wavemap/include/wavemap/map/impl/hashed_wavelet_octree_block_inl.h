@@ -10,7 +10,7 @@ inline bool HashedWaveletOctreeBlock::empty() const {
   //       coefficients, we also need to check whether its scale coefficient
   //       (average value over the whole block) is zero.
   return ndtree_.empty() &&
-         !OccupancyClassifier::isObserved(root_scale_coefficient_);
+         OccupancyClassifier::isUnobserved(root_scale_coefficient_);
 }
 
 inline FloatingPoint HashedWaveletOctreeBlock::getTimeSinceLastUpdated() const {

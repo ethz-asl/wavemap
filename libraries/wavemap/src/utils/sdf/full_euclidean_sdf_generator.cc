@@ -146,7 +146,7 @@ void FullEuclideanSDFGenerator::propagate(
         const FloatingPoint neighbor_occupancy =
             occupancy_query_accelerator.getCellValue(neighbor_index);
         // Never initialize or update unknown cells
-        if (!OccupancyClassifier::isObserved(neighbor_occupancy)) {
+        if (OccupancyClassifier::isUnobserved(neighbor_occupancy)) {
           continue;
         }
         // Set the sign
