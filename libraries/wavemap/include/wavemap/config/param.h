@@ -8,6 +8,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/utils/meta/type_utils.h"
+#include <optional>
 
 namespace wavemap::param {
 using Name = std::string;
