@@ -7,9 +7,10 @@
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
 #include <wavemap/test/geometry_generator.h>
-#include <wavemap_msgs/Map.h>
+#include <wavemap_msgs/msg/map.hpp>
 
 #include "wavemap_ros_conversions/map_msg_conversions.h"
+#include "rclcpp/rclcpp.hpp"
 
 namespace wavemap {
 template <typename VolumetricDataStructureType>
@@ -18,12 +19,12 @@ class MapMsgConversionsTest : public FixtureBase,
                               public ConfigGenerator {
  protected:
   void SetUp() override {
-    ros::Time::init();
-    stamp = ros::Time::now();
+    rclcpp::ok();
+    stamp = rclcpp::Clock().now();
   }
 
   const std::string frame_id = "odom";
-  ros::Time stamp{};
+  rclcpp::Time stamp{};
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
 };
 
@@ -50,7 +51,7 @@ TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
   ASSERT_EQ(map_base->getMaxLogOdds(), config.max_log_odds);
 
   // Serialize and deserialize
-  wavemap_msgs::Map map_msg;
+  wavemap_msgs::msg::Map map_msg;
   ASSERT_TRUE(convert::mapToRosMsg(*map_base, TestFixture::frame_id,
                                    TestFixture::stamp, map_msg));
   VolumetricDataStructureBase::Ptr map_base_round_trip;
@@ -104,7 +105,7 @@ TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
     map_original.prune();
 
     // Serialize and deserialize
-    wavemap_msgs::Map map_msg;
+    wavemap_msgs::msg::Map map_msg;
     ASSERT_TRUE(convert::mapToRosMsg(map_original, TestFixture::frame_id,
                                      TestFixture::stamp, map_msg));
     VolumetricDataStructureBase::Ptr map_base_round_trip;

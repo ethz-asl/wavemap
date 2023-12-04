@@ -1,48 +1,48 @@
 #include "wavemap_ros_conversions/config_conversions.h"
 
 namespace wavemap::param::convert {
-param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {
+param::Map toParamMap(const rclcpp::Node& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;
-  if (nh.getParam(ns, xml_rpc_value)) {
+  if (nh.get_parameter(ns, xml_rpc_value)) {
     return toParamMap(xml_rpc_value);
   }
 
-  ROS_WARN_STREAM("Could not load ROS params under namespace "
-                  << nh.resolveName(ns));
+  RCLCPP_WARN_STREAM(rclcpp::get_logger("rclcpp"), "Could not load ROS params under namespace "
+                  << nh.get_name() << ns);
   return {};
 }
 
-param::Array toParamArray(const ros::NodeHandle& nh, const std::string& ns) {
+param::Array toParamArray(const rclcpp::Node& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;
-  if (nh.getParam(ns, xml_rpc_value)) {
+  if (nh.get_parameter(ns, xml_rpc_value)) {
     return toParamArray(xml_rpc_value);
   }
 
-  ROS_WARN_STREAM("Could not load ROS params under namespace "
-                  << nh.resolveName(ns));
+  RCLCPP_WARN_STREAM(rclcpp::get_logger("rclcpp"), "Could not load ROS params under namespace "
+                  << nh.get_name() << ns);
   return {};
 }
 
-param::Value toParamValue(const ros::NodeHandle& nh, const std::string& ns) {
+param::Value toParamValue(const rclcpp::Node& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;
-  if (nh.getParam(ns, xml_rpc_value)) {
+  if (nh.get_parameter(ns, xml_rpc_value)) {
     return toParamValue(xml_rpc_value);
   }
 
-  ROS_WARN_STREAM("Could not load ROS params under namespace "
-                  << nh.resolveName(ns));
+  RCLCPP_WARN_STREAM(rclcpp::get_logger("rclcpp"), "Could not load ROS params under namespace "
+                  << nh.get_name() << ns);
   return param::Value{param::Map{}};  // Return an empty map
 }
 
 param::Map toParamMap(  // NOLINT
-    const XmlRpc::XmlRpcValue& xml_rpc_value) {
+    XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-    ROS_WARN("Expected param map.");
+    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Expected param map.");
     return {};
   }
 
   param::Map param_map;
-  for (const auto& kv : xml_rpc_value) {
+  for (auto& kv : xml_rpc_value) {
     param_map.emplace(kv.first, toParamValue(kv.second));
   }
   return param_map;
@@ -51,7 +51,7 @@ param::Map toParamMap(  // NOLINT
 param::Array toParamArray(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeArray) {
-    ROS_WARN("Expected param array.");
+    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Expected param array.");
     return {};
   }
 
@@ -64,7 +64,7 @@ param::Array toParamArray(  // NOLINT
 }
 
 param::Value toParamValue(  // NOLINT
-    const XmlRpc::XmlRpcValue& xml_rpc_value) {
+    XmlRpc::XmlRpcValue& xml_rpc_value) {
   switch (xml_rpc_value.getType()) {
     case XmlRpc::XmlRpcValue::TypeBoolean:
       return param::Value(static_cast<bool>(xml_rpc_value));
@@ -79,20 +79,20 @@ param::Value toParamValue(  // NOLINT
     case XmlRpc::XmlRpcValue::TypeStruct:
       return param::Value(toParamMap(xml_rpc_value));
     case XmlRpc::XmlRpcValue::TypeInvalid:
-      ROS_ERROR("Encountered invalid type while parsing ROS params.");
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Encountered invalid type while parsing ROS params.");
       break;
     case XmlRpc::XmlRpcValue::TypeDateTime:
-      ROS_ERROR(
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
           "Encountered a date-time field when parsing ROS params. These "
           "are not yet supported and will be ignored.");
       break;
     case XmlRpc::XmlRpcValue::TypeBase64:
-      ROS_ERROR(
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
           "Encountered a binary data field when parsing ROS paramsThese "
           "are not yet supported and will be ignored.");
       break;
     default:
-      ROS_ERROR("Encountered unknown type while parsing ROS params.");
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Encountered unknown type while parsing ROS params.");
       break;
   }
 
