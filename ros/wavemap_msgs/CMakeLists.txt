@@ -1,37 +1,23 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(wavemap_msgs)
 
-find_package(catkin REQUIRED COMPONENTS message_generation message_runtime std_msgs)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-add_message_files(
-    FILES
-    HashedWaveletOctree.msg
-    HashedWaveletOctreeBlock.msg
-    Index3D.msg
-    Map.msg
-    OctreeNode.msg
-    WaveletOctree.msg
-    WaveletOctreeNode.msg
+find_package(ament_cmake REQUIRED)
+find_package(std_msgs REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+    "msg/HashedWaveletOctree.msg"
+    "msg/HashedWaveletOctreeBlock.msg"
+    "msg/Index3D.msg"
+    "msg/Map.msg"
+    "msg/OctreeNode.msg"
+    "msg/WaveletOctree.msg"
+    "msg/WaveletOctreeNode.msg"
+    "srv/FilePath.srv"
+    DEPENDENCIES std_msgs builtin_interfaces
 )
 
-add_service_files(
-  FILES
-  FilePath.srv
-)
-
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
-
-catkin_package(
-    CATKIN_DEPENDS 
-    message_generation
-    message_runtime
-    std_msgs
-)
-
-# Export
-install(DIRECTORY include/${PROJECT_NAME}/
-DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
-# export()
+ament_package()
