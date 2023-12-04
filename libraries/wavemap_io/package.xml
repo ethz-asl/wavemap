@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>wavemap_io</name>
   <version>1.6.0</version>
   <description>(De)serialization of wavemap types to files.</description>
@@ -10,11 +10,13 @@
 
   <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>wavemap</depend>
   <depend>wavemap_msgs</depend>
   <depend>wavemap_ros_conversions</depend>
 
-  <test_depend>gtest</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 </package>
