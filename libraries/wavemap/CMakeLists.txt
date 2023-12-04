@@ -1,14 +1,15 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(wavemap)
 
-add_definitions(-std=c++17)
+set(CMAKE_CXX_STANDARD 17)
 
 # Dependencies
-find_package(catkin REQUIRED)
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
-pkg_check_modules(Eigen3 REQUIRED eigen3)
+# pkg_check_modules(Eigen3 REQUIRED eigen3)
 
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
@@ -31,35 +32,18 @@ FetchContent_MakeAvailable(tracy)
 FetchContent_Declare(
     minkindr
     GIT_REPOSITORY https://github.com/edwinpha/minkindr.git
-    GIT_TAG feature/without_catkin_simple
+    GIT_TAG feature/ROS2
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(minkindr)
-
-# Setup catkin package
-catkin_package(
-    INCLUDE_DIRS
-    include
-    test/include
-    LIBRARIES
-    ${PROJECT_NAME}
-    DEPENDS
-    EIGEN3
-    glog
-    CFG_EXTRAS
-    wavemap-extras.cmake)
-# NOTE: The test headers are normally not exported (e.g. by adding test/include
-# to the catkin_package's INCLUDE_DIRS), but we make an exception for this base
-# package's test headers, such that common tooling and test fixtures can be
-# reused in downstream wavemap packages.
 
 # Add minkindr as header-only library
 add_library(minkindr INTERFACE)
 target_include_directories(minkindr INTERFACE ${minkindr_SOURCE_DIR}/include)
 
 # For all targets
-include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
+include_directories(include test/include ${EIGEN3_INCLUDE_DIRS})
 
 # Libraries
 # cmake-lint: disable=C0301
@@ -94,24 +78,14 @@ add_library(${PROJECT_NAME}
     src/integrator/integrator_factory.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES} ${Eigen3_INCLUDE_DIR} ${glog_INCLUDE_DIRS} TracyClient minkindr)
+target_link_libraries(${PROJECT_NAME} ${Eigen3_INCLUDE_DIR} ${glog_INCLUDE_DIRS} TracyClient minkindr)
+ament_target_dependencies(${PROJECT_NAME})
 
-# Install targets
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-)
-
+find_package(ament_cmake_gtest REQUIRED)
+find_package(ament_lint_auto REQUIRED)
 # Tests
-if (CATKIN_ENABLE_TESTING)
-  catkin_add_gtest(
+if (BUILD_TESTING)
+  ament_add_gtest(
       test_${PROJECT_NAME}
       test/src/data_structure/test_aabb.cc
       test/src/data_structure/test_haar_cell.cc
@@ -144,18 +118,38 @@ if (CATKIN_ENABLE_TESTING)
       test/src/utils/test_query_accelerator.cc
       test/src/utils/test_thread_pool.cc
       test/src/utils/test_tree_math.cc)
-  target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
-  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main minkindr)
-endif ()
+  target_include_directories(test_${PROJECT_NAME} PUBLIC test/include $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
+  $<INSTALL_INTERFACE:include:test/include)
+  target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main glog minkindr ${Eigen3_INCLUDE_DIR})
+  ament_lint_auto_find_test_dependencies()
+    endif ()
 
 # Benchmarks
 if (ENABLE_BENCHMARKING)
   add_executable(benchmark_haar_transforms
       benchmark/benchmark_haar_transforms.cc)
-  target_link_libraries(benchmark_haar_transforms ${PROJECT_NAME}
-      benchmark::benchmark minkindr)
+  target_link_libraries(benchmark_haar_transforms ${PROJECT_NAME} minkindr
+      benchmark::benchmark)
 
   add_executable(benchmark_sparse_vector benchmark/benchmark_sparse_vector.cc)
-  target_link_libraries(benchmark_sparse_vector ${PROJECT_NAME}
-      benchmark::benchmark minkindr)
+  target_link_libraries(benchmark_sparse_vector ${PROJECT_NAME} minkindr
+      benchmark::benchmark)
 endif ()
+
+# Install targets
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+    DIRECTORY include/ test/include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+)
+
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+#ament_export_dependencies(rosidl_default_runtime)
+ament_package(CONFIG_EXTRAS cmake/wavemap-extras.cmake)
