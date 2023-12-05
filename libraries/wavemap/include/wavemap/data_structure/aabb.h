@@ -32,37 +32,64 @@ struct AABB {
   }
 
   PointType closestPointTo(const PointType& point) const {
-    PointType closest_point = point.cwiseMax(min);
-    closest_point = closest_point.cwiseMin(max);
+    PointType closest_point = point.cwiseMax(min).cwiseMin(max);
     return closest_point;
   }
   PointType furthestPointFrom(const PointType& point) const {
     const PointType aabb_center = (min + max) / static_cast<ScalarType>(2);
-    const PointType furthest_point =
+    PointType furthest_point =
         (aabb_center.array() < point.array()).select(min, max);
     return furthest_point;
   }
 
-  FloatingPoint minSquaredDistanceTo(const PointType& point) const {
-    return (point - closestPointTo(point)).squaredNorm();
+  PointType minOffsetTo(const PointType& point) const {
+    return point - closestPointTo(point);
   }
-  FloatingPoint maxSquaredDistanceTo(const PointType& point) const {
-    return (point - furthestPointFrom(point)).squaredNorm();
+  PointType maxOffsetTo(const PointType& point) const {
+    return point - furthestPointFrom(point);
   }
-  FloatingPoint minDistanceTo(const PointType& point) const {
-    return (point - closestPointTo(point)).norm();
+  // TODO(victorr): Check correctness with unit tests
+  PointType minOffsetTo(const AABB& aabb) const {
+    const PointType greatest_min = min.cwiseMax(aabb.min);
+    const PointType smallest_max = max.cwiseMin(aabb.max);
+    return (greatest_min - smallest_max).cwiseMax(0);
   }
-  FloatingPoint maxDistanceTo(const PointType& point) const {
-    return (point - furthestPointFrom(point)).norm();
+  // TODO(victorr): Check correctness with unit tests. Pay particular
+  //                attention to whether the offset signs are correct.
+  PointType maxOffsetTo(const AABB& aabb) const {
+    const PointType diff_1 = min - aabb.max;
+    const PointType diff_2 = max - aabb.min;
+    PointType offset =
+        (diff_2.array().abs() < diff_1.array().abs()).select(diff_1, diff_2);
+    return offset;
+  }
+
+  template <typename GeometricEntityT>
+  ScalarType minSquaredDistanceTo(const GeometricEntityT& entity) const {
+    return minOffsetTo(entity).squaredNorm();
+  }
+  template <typename GeometricEntityT>
+  ScalarType maxSquaredDistanceTo(const GeometricEntityT& entity) const {
+    return maxOffsetTo(entity).squaredNorm();
+  }
+
+  template <typename GeometricEntityT>
+  ScalarType minDistanceTo(const GeometricEntityT& entity) const {
+    return minOffsetTo(entity).norm();
+  }
+  template <typename GeometricEntityT>
+  ScalarType maxDistanceTo(const GeometricEntityT& entity) const {
+    return maxOffsetTo(entity).norm();
   }
 
   template <int dim>
   ScalarType width() const {
     return max[dim] - min[dim];
   }
+  PointType widths() const { return max - min; }
 
   Corners corner_matrix() const {
-    Eigen::Matrix<FloatingPoint, kDim, kNumCorners> corners;
+    Eigen::Matrix<ScalarType, kDim, kNumCorners> corners;
     for (int corner_idx = 0; corner_idx < kNumCorners; ++corner_idx) {
       for (int dim_idx = 0; dim_idx < kDim; ++dim_idx) {
         corners(dim_idx, corner_idx) = corner_coordinate(dim_idx, corner_idx);

@@ -257,7 +257,7 @@ inline bool HierarchicalRangeBounds::hasUnobserved(
 inline UpdateType HierarchicalRangeBounds::getUpdateType(
     const Index2D& min_image_idx, const Index2D& max_image_idx,
     FloatingPoint range_min, FloatingPoint range_max) const {
-  const Index2D min_image_idx_clamped = min_image_idx.cwiseMax(Index2D::Zero());
+  const Index2D min_image_idx_clamped = min_image_idx.cwiseMax(0);
   const Index2D max_image_idx_clamped =
       max_image_idx.cwiseMin(range_image_->getDimensions() - Index2D::Ones());
 
