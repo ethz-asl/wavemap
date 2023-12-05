@@ -21,6 +21,15 @@ class OccupancyClassifier {
     return occupancy_threshold_ < log_odds_occupancy_value;
   }
 
+  bool isObservedAndFree(FloatingPoint log_odds_occupancy_value) const {
+    return isObserved(log_odds_occupancy_value) &&
+           isFree(log_odds_occupancy_value);
+  }
+  bool isObservedAndOccupied(FloatingPoint log_odds_occupancy_value) const {
+    return isObserved(log_odds_occupancy_value) &&
+           isOccupied(log_odds_occupancy_value);
+  }
+
  private:
   const FloatingPoint occupancy_threshold_;
 };
