@@ -3,18 +3,24 @@
 
 namespace wavemap {
 inline bool IntegratorBase::isMeasurementValid(const Point3D& C_end_point) {
+  // Reject points with NaN coordinates
   if (C_end_point.hasNaN()) {
     return false;
   }
-  const FloatingPoint measured_distance = C_end_point.norm();
-  if (measured_distance < 1e-3f) {
+
+  // Reject points with suspicious range values
+  constexpr FloatingPoint kValidRangeLowerThresholdSquared = 1e-3f * 1e-3f;
+  constexpr FloatingPoint kValidRangeUpperThresholdSquared = 1e3f * 1e3f;
+  const FloatingPoint measured_distance_squared = C_end_point.squaredNorm();
+  if (measured_distance_squared < kValidRangeLowerThresholdSquared) {
     return false;
   }
-  if (1e3 < measured_distance) {
-    LOG(INFO) << "Skipping measurement with suspicious length: "
-              << measured_distance;
+  if (kValidRangeUpperThresholdSquared < measured_distance_squared) {
+    LOG(INFO) << "Skipping point with suspicious range value: "
+              << std::sqrt(measured_distance_squared);
     return false;
   }
+
   return true;
 }
 
