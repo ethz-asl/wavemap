@@ -22,7 +22,7 @@ AABB<Vector3D> PinholeCameraProjector::cartesianToSensorAABB(
        ++corner_idx) {
     C_aabb_corners[corner_idx] = C_aabb_min;
     for (int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-      if ((corner_idx >> dim_idx) & 1) {
+      if (bit_ops::is_bit_set(corner_idx, dim_idx)) {
         C_aabb_corners[corner_idx] += C_aabb_edges.col(dim_idx);
       }
     }

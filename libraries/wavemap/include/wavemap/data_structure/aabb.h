@@ -107,7 +107,7 @@ struct AABB {
   }
 
   ScalarType corner_coordinate(int dim_idx, int corner_idx) const {
-    if (corner_idx & (0b1 << dim_idx)) {
+    if (bit_ops::is_bit_set(corner_idx, dim_idx)) {
       return max[dim_idx];
     } else {
       return min[dim_idx];

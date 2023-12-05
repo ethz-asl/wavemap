@@ -63,7 +63,7 @@ struct HaarCoefficients {
       for (int coeff_idx = 1; coeff_idx <= kNumDetailCoefficients;
            ++coeff_idx) {
         for (int dim_idx = 0; dim_idx < kDim; ++dim_idx) {
-          ss << ((coeff_idx & (0b1 << dim_idx)) ? "H" : "L");
+          ss << (bit_ops::is_bit_set(coeff_idx, dim_idx) ? "H" : "L");
         }
         ss << " = " << this->operator[](coeff_idx) << ", ";
       }

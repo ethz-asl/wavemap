@@ -213,8 +213,8 @@ bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map) {
     //       the nodes are popped from the stack in increasing order.
     for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
          0 <= relative_child_idx; --relative_child_idx) {
-      const bool child_exists =
-          read_node.allocated_children_bitset & (1 << relative_child_idx);
+      const bool child_exists = bit_ops::is_bit_set(
+          read_node.allocated_children_bitset, relative_child_idx);
       if (child_exists) {
         stack.emplace(&node->getOrAllocateChild(relative_child_idx));
       }
@@ -345,8 +345,8 @@ bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
       //       the nodes are popped from the stack in increasing order.
       for (int relative_child_idx = wavemap::OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
-        const bool child_exists =
-            read_node.allocated_children_bitset & (1 << relative_child_idx);
+        const bool child_exists = bit_ops::is_bit_set(
+            read_node.allocated_children_bitset, relative_child_idx);
         if (child_exists) {
           stack.emplace(&node->getOrAllocateChild(relative_child_idx));
         }
