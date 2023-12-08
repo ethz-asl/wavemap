@@ -17,12 +17,12 @@ static bool areAdjacent(const NdtreeIndex<dim>& index_1,
   const NdtreeIndex<dim>& biggest_node =
       index_1.height < index_2.height ? index_2 : index_1;
 
-  const Index3D biggest_node_min_corner =
+  const Index<dim> biggest_node_min_corner =
       int_math::mult_exp2(biggest_node.position, height_diff);
   const auto min_neighbor = biggest_node_min_corner.array() - 1;
   const auto max_neighbor = biggest_node_min_corner.array() + width;
 
-  return (min_neighbor <= smallest_node.position.array() ||
+  return (min_neighbor <= smallest_node.position.array() &&
           smallest_node.position.array() <= max_neighbor)
       .all();
 }
