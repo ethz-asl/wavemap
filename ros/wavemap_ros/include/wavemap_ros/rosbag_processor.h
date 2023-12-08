@@ -4,6 +4,7 @@
 #include <functional>
 #include <list>
 #include <map>
+#include <optional>
 #include <string>
 
 #include <glog/logging.h>
