@@ -2,6 +2,7 @@
 #define WAVEMAP_CONFIG_PARAM_H_
 
 #include <map>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>

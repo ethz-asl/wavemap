@@ -2,6 +2,7 @@
 #define WAVEMAP_RVIZ_PLUGIN_UTILS_BUTTON_PROPERTY_H_
 
 #ifndef Q_MOC_RUN
+#include <optional>
 #include <string>
 #include <utility>
 
