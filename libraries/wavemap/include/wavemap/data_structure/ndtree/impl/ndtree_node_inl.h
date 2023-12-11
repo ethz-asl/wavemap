@@ -40,9 +40,12 @@ bool NdtreeNode<DataT, dim>::hasNonzeroData(FloatingPoint threshold) const {
 template <typename DataT, int dim>
 bool NdtreeNode<DataT, dim>::hasAtLeastOneChild() const {
   if (hasChildrenArray()) {
-    return std::any_of(
-        children_->cbegin(), children_->cend(),
-        [](const auto& child_ptr) { return static_cast<bool>(child_ptr); });
+    for (NdtreeIndexRelativeChild child_idx = 0; child_idx < kNumChildren;
+         ++child_idx) {
+      if (children_->operator[](child_idx)) {
+        return true;
+      }
+    }
   }
   return false;
 }
