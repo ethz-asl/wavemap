@@ -2,6 +2,9 @@
 Changelog for package wavemap_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.6.1 (2023-11-20)
 ------------------
 * Add Dockerfile and scripts to run the demo in Docker

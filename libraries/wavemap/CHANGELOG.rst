@@ -2,6 +2,11 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Include <optional> for std::optional
+* Contributors: Lucas Walter
+
 1.6.1 (2023-11-20)
 ------------------
 

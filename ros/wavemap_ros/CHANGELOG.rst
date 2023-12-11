@@ -2,6 +2,11 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Include <optional> for std::optional
+* Contributors: Lucas Walter
+
 1.6.1 (2023-11-20)
 ------------------
 * Add config for Ouster OS0 + Pico Monstar
