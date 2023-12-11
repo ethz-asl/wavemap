@@ -6,10 +6,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include <OGRE/Ogre.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
-#include <OGRE/Ogre.h>
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/enum_property.h>
