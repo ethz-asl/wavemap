@@ -2,8 +2,8 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.2 (2023-12-11)
+------------------
 * Update included Ogre and Rviz headers to support Ubuntu 23
 * Include <optional> for std::optional
 * Contributors: Lucas Walter
