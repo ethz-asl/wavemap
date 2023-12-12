@@ -114,10 +114,11 @@ class VoxelVisual : public QObject {
   float lod_update_distance_threshold_ = 0.1f;
   Ogre::Vector3 camera_position_at_last_lod_update_{};
   bool force_lod_update_ = true;
-  void updateLOD(const Point3D& camera_position);
+  void updateLOD(const Ogre::Camera& active_camera);
   static NdtreeIndexElement computeRecommendedBlockLodHeight(
-      FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
-      NdtreeIndexElement min_height, NdtreeIndexElement max_height);
+      const Ogre::Camera& active_camera, const OctreeIndex& block_index,
+      FloatingPoint min_cell_width, NdtreeIndexElement min_height,
+      NdtreeIndexElement max_height);
   std::optional<NdtreeIndexElement> getCurrentBlockLodHeight(
       IndexElement map_tree_height, const Index3D& block_idx);
 

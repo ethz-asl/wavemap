@@ -9,7 +9,7 @@ namespace wavemap {
 inline SensorCoordinates SphericalProjector::cartesianToSensor(
     const Point3D& C_point) const {
   ImageCoordinates image_coordinates = cartesianToImage(C_point);
-  const FloatingPoint range = C_point.norm();
+  const FloatingPoint range = cartesianToSensorZ(C_point);
   return {std::move(image_coordinates), range};
 }
 
