@@ -2,14 +2,16 @@ Wavemap documentation
 #####################
 
 .. toctree::
-   :maxdepth: 2
    :caption: Table of contents:
+   :maxdepth: 2
 
    pages/latex_intro
    pages/installation
    pages/demos
-   pages/configuration
+   pages/configuration/index
    pages/usage_examples
    pages/contributing
-   api/library_root
    pages/faq
+
+..
+   _TODO: Include the Library API again once more code is documented in Doxygen
