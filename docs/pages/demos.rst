@@ -50,7 +50,7 @@ The only requirements for running wavemap are:
 We usually use depth measurements from depth cameras or 3D LiDARs, but any source would work as long as a sufficiently good :ref:`projection <configuration_projection_models>` and :ref:`measurement <configuration_measurement_models>` model is available. Wavemap's ROS interface natively supports depth image and pointcloud inputs, and automatically queries the sensor poses from the TF tree.
 
 To help you get started quickly, we provide various example :gh_file:`config <ros/wavemap_ros/config>` and ROS :gh_file:`launch <ros/wavemap_ros/launch>` files.
-For a brief introduction on how to edit wavemap configs and an overview of all the available settings, see the :doc:`configuration page <configuration>`.
+For a brief introduction on how to edit wavemap configs and an overview of all the available settings, see the :doc:`configuration page <configuration/index>`.
 
 Multi-sensor live demo
 **********************
@@ -58,7 +58,7 @@ This section provides instructions to reproduce the interactive multi-sensor, mu
 
 Hardware
 ========
-Wavemap can be :doc:`configured <configuration>` to work with almost any depth input. In case you want to replicate our exact setup, we used a Livox MID-360 LiDAR at RSS and an Ouster OS0-128 at the Swiss Robotics Day. We chose the PMD Pico Monstar depth camera for both demos, but the Azure Kinect also works well. Although any recent laptop will suffice, we recommend using a laptop with a discrete GPU as it will help Rviz run much smoother.
+Wavemap can be :doc:`configured <configuration/index>` to work with almost any depth input. In case you want to replicate our exact setup, we used a Livox MID-360 LiDAR at RSS and an Ouster OS0-128 at the Swiss Robotics Day. We chose the PMD Pico Monstar depth camera for both demos, but the Azure Kinect also works well. Although any recent laptop will suffice, we recommend using a laptop with a discrete GPU as it will help Rviz run much smoother.
 
 Docker
 ======
