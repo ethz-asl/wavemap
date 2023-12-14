@@ -223,30 +223,33 @@ void NdtreeBlockHash<CellDataT, dim>::forEachLeaf(
     const Node& node;
   };
 
-  block_map_.forEachBlock(
-      [&visitor_fn, tree_height = tree_height_](const Index<dim>& block_index,
-                                                const Block& block) {
-        std::stack<StackElement> stack;
-        stack.emplace(StackElement{OctreeIndex{tree_height, block_index},
-                                   block.getRootNode()});
-        while (!stack.empty()) {
-          const OctreeIndex node_index = stack.top().node_index;
-          const Node& node = stack.top().node;
-          stack.pop();
+  block_map_.forEachBlock([&visitor_fn, tree_height = tree_height_](
+                              const Index<dim>& block_index,
+                              const Block& block) {
+    std::stack<StackElement> stack;
+    stack.emplace(StackElement{OctreeIndex{tree_height, block_index},
+                               block.getRootNode()});
+    while (!stack.empty()) {
+      const OctreeIndex node_index = stack.top().node_index;
+      const Node& node = stack.top().node;
+      stack.pop();
 
-          for (NdtreeIndexRelativeChild child_idx = 0;
-               child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-            const OctreeIndex child_node_index =
-                node_index.computeChildIndex(child_idx);
-            if (node.hasChild(child_idx)) {
-              const Node& child_node = *node.getChild(child_idx);
-              stack.emplace(StackElement{child_node_index, child_node});
-            } else {
-              visitor_fn(child_node_index, node.data());
-            }
+      if (node.hasAtLeastOneChild()) {
+        for (NdtreeIndexRelativeChild child_idx = 0;
+             child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+          const OctreeIndex child_node_index =
+              node_index.computeChildIndex(child_idx);
+          if (const Node* child_node = node.getChild(child_idx); child_node) {
+            stack.emplace(StackElement{child_node_index, *child_node});
+          } else {
+            visitor_fn(child_node_index, node.data());
           }
         }
-      });
+      } else {
+        visitor_fn(node_index, node.data());
+      }
+    }
+  });
 }
 
 template <typename CellDataT, int dim>
