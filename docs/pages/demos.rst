@@ -6,7 +6,7 @@ Demos
 
 Quick start
 ***********
-To get an impression of the maps wavemap can generate, you can download the maps of our `RSS paper's <https://www.roboticsproceedings.org/rss19/p065.pdf>`__ and directly view them in Rviz. To do so,
+To get an impression of the maps wavemap can generate, you can download the maps of our `RSS paper <https://www.roboticsproceedings.org/rss19/p065.pdf>`__ and directly view them in Rviz. To do so,
 
 * Choose and download one of the maps provided `here <https://drive.google.com/drive/folders/1sTmDBUt97wwE220gVFwCq88JT5IOQlk5>`__
 * Open Rviz, for example by running :code:`roscore & rviz`
