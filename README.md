@@ -28,13 +28,13 @@ The framework is very flexible and supports several data structures, measurement
 The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.github.io/wavemap/).
 
 ### Table of contents
-* [Installation](https://ethz-asl.github.io/wavemap/pages/installation.html)
-* [Demos](https://ethz-asl.github.io/wavemap/pages/demos.html)
-* [Configuration](https://ethz-asl.github.io/wavemap/pages/configuration.html)
-* [Usage examples](https://ethz-asl.github.io/wavemap/pages/usage_examples.html)
-* [Contributing](https://ethz-asl.github.io/wavemap/pages/contributing.html)
-* [Library API](https://ethz-asl.github.io/wavemap/api/library_root.html)
-* [FAQ](https://ethz-asl.github.io/wavemap/pages/faq.html)
+* [Installation](https://ethz-asl.github.io/wavemap/pages/installation)
+* [Demos](https://ethz-asl.github.io/wavemap/pages/demos)
+* [Configuration](https://ethz-asl.github.io/wavemap/pages/configuration)
+* [Usage examples](https://ethz-asl.github.io/wavemap/pages/usage_examples)
+* [Contributing](https://ethz-asl.github.io/wavemap/pages/contributing)
+* [Library API](https://ethz-asl.github.io/wavemap/api/unabridged_api)
+* [FAQ](https://ethz-asl.github.io/wavemap/pages/faq)
 
 ## Paper
 A technical introduction to the theory behind wavemap is provided in our open-access RSS paper, available [here](https://www.roboticsproceedings.org/rss19/p065.pdf). For a quick overview, watch the accompanying 5-minute presentation [here](https://www.youtube.com/live/ftQhK75Ri1E?si=9txTYyJ78wQuhyN-&t=733).
@@ -49,7 +49,7 @@ Please cite this paper when using wavemap for research.
 
 APA-style:
 ```
-Reijgwart, V., Cadena, C., Siegwart, R., & Ott, L. (2023). Efficient volumetric mapping of multi-scale environments using wavelet-based compression. Proceedings of Robotics: Science and System XIX. https://doi.org/10.15607/RSS.2023.XIX.065
+Reijgwart, V., Cadena, C., Siegwart, R., & Ott, L. (2023). Efficient volumetric mapping of multi-scale environments using wavelet-based compression. Proceedings of Robotics: Science and Systems XIX. https://doi.org/10.15607/RSS.2023.XIX.065
 ```
 
 BibTeX:
