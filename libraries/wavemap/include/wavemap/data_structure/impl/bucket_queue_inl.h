@@ -33,7 +33,7 @@ void BucketQueue<ValueT>::clear() {
 
 template <typename ValueT>
 void BucketQueue<ValueT>::push(FloatingPoint key, const ValueT& value) {
-  CHECK_NE(num_buckets_, 0);
+  DCHECK_NE(num_buckets_, 0);
   if (key > max_key_) {
     key = max_key_;
   }
@@ -65,8 +65,8 @@ void BucketQueue<ValueT>::pop() {
 
 template <typename ValueT>
 ValueT BucketQueue<ValueT>::front() {
-  CHECK_NE(num_buckets_, 0);
-  CHECK(!empty());
+  DCHECK_NE(num_buckets_, 0);
+  DCHECK(!empty());
   while (last_bucket_index_ < num_buckets_ &&
          buckets_[last_bucket_index_].empty()) {
     last_bucket_index_++;
