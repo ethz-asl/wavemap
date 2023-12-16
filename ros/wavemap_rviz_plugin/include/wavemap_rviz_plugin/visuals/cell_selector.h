@@ -44,7 +44,8 @@ class CellSelector : public QObject {
 
  private:
   std::function<void()> redraw_map_;
-  mutable std::optional<QueryAccelerator> query_accelerator_;
+  mutable std::optional<QueryAccelerator<HashedWaveletOctree>>
+      query_accelerator_;
 
   // Selection mode and thresholds
   CellSelectionMode cell_selection_mode_ = CellSelectionMode::kSurface;
