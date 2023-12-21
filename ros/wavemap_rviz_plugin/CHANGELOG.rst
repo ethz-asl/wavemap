@@ -2,6 +2,11 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix a bug in LoD level selection when using Rviz's TopDownOrtho ViewController
+* Contributors: Victor Reijgwart
+
 1.6.2 (2023-12-11)
 ------------------
 * Update included Ogre and Rviz headers to support Ubuntu 23

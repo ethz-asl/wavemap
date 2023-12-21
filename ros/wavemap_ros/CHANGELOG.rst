@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.6.2 (2023-12-11)
 ------------------
 * Include <optional> for std::optional
