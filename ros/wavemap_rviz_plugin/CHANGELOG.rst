@@ -2,8 +2,8 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.3 (2023-12-21)
+------------------
 * Fix a bug in LoD level selection when using Rviz's TopDownOrtho ViewController
 * Contributors: Victor Reijgwart
 

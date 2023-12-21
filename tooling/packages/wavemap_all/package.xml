@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap_all</name>
-  <version>1.6.2</version>
+  <version>1.6.3</version>
   <description>Metapackage that builds all wavemap packages.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
