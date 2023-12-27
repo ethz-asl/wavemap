@@ -51,7 +51,6 @@ void mapToRosMsg(const HashedChunkedWaveletOctree& map,
 void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
                    const HashedChunkedWaveletOctree::Block& block,
                    FloatingPoint min_log_odds, FloatingPoint max_log_odds,
-                   IndexElement tree_height,
                    wavemap_msgs::HashedWaveletOctreeBlock& msg);
 }  // namespace wavemap::convert
 

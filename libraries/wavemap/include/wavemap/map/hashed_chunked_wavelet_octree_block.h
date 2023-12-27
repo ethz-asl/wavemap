@@ -19,6 +19,8 @@ class HashedChunkedWaveletOctreeBlock {
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using ChunkedOctreeType = ChunkedOctree<Coefficients::Details, kChunkHeight>;
   using NodeChunkType = ChunkedOctreeType::ChunkType;
+  using NodePtrType = ChunkedOctreeType::NodePtrType;
+  using NodeConstPtrType = ChunkedOctreeType::NodeConstPtrType;
 
   explicit HashedChunkedWaveletOctreeBlock(IndexElement tree_height,
                                            FloatingPoint min_log_odds,
@@ -46,6 +48,8 @@ class HashedChunkedWaveletOctreeBlock {
   const Coefficients::Scale& getRootScale() const {
     return root_scale_coefficient_;
   }
+  NodePtrType getRootNode() { return chunked_ndtree_.getRootNode(); }
+  NodeConstPtrType getRootNode() const { return chunked_ndtree_.getRootNode(); }
   NodeChunkType& getRootChunk() { return chunked_ndtree_.getRootChunk(); }
   const NodeChunkType& getRootChunk() const {
     return chunked_ndtree_.getRootChunk();

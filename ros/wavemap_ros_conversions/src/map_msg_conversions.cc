@@ -507,11 +507,11 @@ void mapToRosMsg(
         thread_pool->add_task([block_index, block, min_log_odds, max_log_odds,
                                tree_height, &block_msg]() {
           blockToRosMsg(block_index, *block, min_log_odds, max_log_odds,
-                        tree_height, block_msg);
+                        block_msg);
         });
       } else {  // Otherwise, use the current thread
         blockToRosMsg(block_index, *block, min_log_odds, max_log_odds,
-                      tree_height, block_msg);
+                      block_msg);
       }
     }
   }
@@ -525,17 +525,13 @@ void mapToRosMsg(
 void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
                    const HashedChunkedWaveletOctree::Block& block,
                    FloatingPoint min_log_odds, FloatingPoint max_log_odds,
-                   IndexElement tree_height,
                    wavemap_msgs::HashedWaveletOctreeBlock& msg) {
   ZoneScoped;
   // Define convenience types and constants
   struct StackElement {
-    const OctreeIndex node_index;
-    const HashedChunkedWaveletOctreeBlock::NodeChunkType& chunk;
-    const FloatingPoint scale_coefficient;
+    const FloatingPoint scale;
+    HashedChunkedWaveletOctreeBlock::NodeConstPtrType node;
   };
-  constexpr IndexElement chunk_height =
-      HashedChunkedWaveletOctreeBlock::kChunkHeight;
 
   // Serialize the block's metadata
   msg.root_node_offset.x = block_index.x();
@@ -546,67 +542,35 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
 
   // Serialize the block's data (all nodes of its octree)
   std::stack<StackElement> stack;
-  stack.emplace(StackElement{
-      {tree_height, block_index}, block.getRootChunk(), block.getRootScale()});
+  stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
   while (!stack.empty()) {
-    const OctreeIndex index = stack.top().node_index;
-    const FloatingPoint scale = stack.top().scale_coefficient;
-    const auto& chunk = stack.top().chunk;
+    const FloatingPoint scale = stack.top().scale;
+    auto node = stack.top().node;
     stack.pop();
-
-    // Compute the node's index w.r.t. the data chunk that contains it
-    const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-    const int chunk_top_height =
-        chunk_height * int_math::div_round_up(index.height, chunk_height);
-    const LinearIndex relative_node_index =
-        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
-                                                  index.height);
 
     // Serialize the node's data
     auto& node_msg = msg.nodes.emplace_back();
-    const auto& node_data = chunk.nodeData(relative_node_index);
-    std::copy(node_data.cbegin(), node_data.cend(),
+    std::copy(node.data().cbegin(), node.data().cend(),
               node_msg.detail_coefficients.begin());
     node_msg.allocated_children_bitset = 0;
 
-    // If the node has no children, continue
-    if (!chunk.nodeHasAtLeastOneChild(relative_node_index)) {
-      continue;
-    }
-
-    // Otherwise, evaluate which of its children should be serialized
+    // Evaluate which of its children should be serialized
     const auto child_scales =
-        HashedWaveletOctreeBlock::Transform::backward({scale, node_data});
+        HashedWaveletOctreeBlock::Transform::backward({scale, node.data()});
     // NOTE: We iterate and add nodes to the stack in decreasing order s.t.
     //       the nodes are popped from the stack in increasing order.
     for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
          0 <= relative_child_idx; --relative_child_idx) {
       // If the child is saturated, we don't need to store its descendants
-      const FloatingPoint child_scale = child_scales[relative_child_idx];
+      const auto child_scale = child_scales[relative_child_idx];
       if (child_scale < min_log_odds || max_log_odds < child_scale) {
         continue;
       }
-
-      // Check if the child is no longer in the current chunk
-      const OctreeIndex child_index =
-          index.computeChildIndex(relative_child_idx);
-      if (child_index.height % chunk_height == 0) {
-        // If so, check if the chunk exists
-        const MortonIndex child_morton =
-            convert::nodeIndexToMorton(child_index);
-        const LinearIndex linear_child_index =
-            OctreeIndex::computeLevelTraversalDistance(
-                child_morton, chunk_top_height, child_index.height);
-        if (chunk.hasChild(linear_child_index)) {
-          const auto& child_chunk = *chunk.getChild(linear_child_index);
-          // Indicate that the child will be serialized
-          // and add it to the stack
-          stack.emplace(StackElement{child_index, child_chunk, child_scale});
-          node_msg.allocated_children_bitset += (1 << relative_child_idx);
-        }
-      } else {
-        // Indicate that the child will be serialized and add it to the stack
-        stack.emplace(StackElement{child_index, chunk, child_scale});
+      // Otherwise, indicate that the child will be serialized
+      // and add it to the stack
+      auto child = node.getChild(relative_child_idx);
+      if (child) {
+        stack.emplace(StackElement{child_scale, child});
         node_msg.allocated_children_bitset += (1 << relative_child_idx);
       }
     }

@@ -360,15 +360,12 @@ bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
 void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
   // Define convenience types and constants
   struct StackElement {
-    const OctreeIndex node_index;
-    const HashedChunkedWaveletOctreeBlock::NodeChunkType& chunk;
-    const FloatingPoint scale_coefficient;
+    const FloatingPoint scale;
+    HashedChunkedWaveletOctreeBlock::NodeConstPtrType node;
   };
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
   const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
-  const auto tree_height = map.getTreeHeight();
-  const auto chunk_height = map.getChunkHeight();
 
   // Indicate the map's data structure type
   streamable::StorageFormat storage_format =
@@ -385,9 +382,8 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
   hashed_wavelet_octree_header.write(ostream);
 
   // Iterate over all the map's blocks
-  map.forEachBlock([&ostream, tree_height, chunk_height, min_log_odds,
-                    max_log_odds](const Index3D& block_index,
-                                  const auto& block) {
+  map.forEachBlock([&ostream, min_log_odds, max_log_odds](
+                       const Index3D& block_index, const auto& block) {
     // Serialize the block's metadata
     streamable::HashedWaveletOctreeBlockHeader block_header;
     block_header.root_node_offset = {block_index.x(), block_index.y(),
@@ -398,69 +394,34 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
 
     // Serialize the block's data (all nodes of its octree)
     std::stack<StackElement> stack;
-    stack.emplace(StackElement{{tree_height, block_index},
-                               block.getRootChunk(),
-                               block.getRootScale()});
+    stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
     while (!stack.empty()) {
-      const OctreeIndex index = stack.top().node_index;
-      const FloatingPoint scale = stack.top().scale_coefficient;
-      const auto& chunk = stack.top().chunk;
+      const FloatingPoint scale = stack.top().scale;
+      auto node = stack.top().node;
       stack.pop();
-
-      // Compute the node's index w.r.t. the data chunk that contains it
-      const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-      const int chunk_top_height =
-          chunk_height * int_math::div_round_up(index.height, chunk_height);
-      const LinearIndex relative_node_index =
-          OctreeIndex::computeTreeTraversalDistance(
-              morton_code, chunk_top_height, index.height);
 
       // Serialize the node's data
       streamable::WaveletOctreeNode streamable_node;
-      const auto& node_data = chunk.nodeData(relative_node_index);
-      std::copy(node_data.begin(), node_data.end(),
+      std::copy(node.data().begin(), node.data().end(),
                 streamable_node.detail_coefficients.begin());
 
-      // If the node has no children, continue
-      if (!chunk.nodeHasAtLeastOneChild(relative_node_index)) {
-        streamable_node.write(ostream);
-        continue;
-      }
-
-      // Otherwise, evaluate which of its children should be serialized
+      // Evaluate which of its children should be serialized
       const auto child_scales =
-          HashedWaveletOctreeBlock::Transform::backward({scale, node_data});
+          HashedWaveletOctreeBlock::Transform::backward({scale, node.data()});
       // NOTE: We iterate and add nodes to the stack in decreasing order s.t.
       //       the nodes are popped from the stack in increasing order.
       for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
            0 <= relative_child_idx; --relative_child_idx) {
         // If the child is saturated, we don't need to store its descendants
-        const FloatingPoint child_scale = child_scales[relative_child_idx];
+        const auto child_scale = child_scales[relative_child_idx];
         if (child_scale < min_log_odds || max_log_odds < child_scale) {
           continue;
         }
-
-        // Check if the child is no longer in the current chunk
-        const OctreeIndex child_index =
-            index.computeChildIndex(relative_child_idx);
-        if (child_index.height % chunk_height == 0) {
-          // If so, check if the chunk exists
-          const MortonIndex child_morton =
-              convert::nodeIndexToMorton(child_index);
-          const LinearIndex linear_child_index =
-              OctreeIndex::computeLevelTraversalDistance(
-                  child_morton, chunk_top_height, child_index.height);
-          if (chunk.hasChild(linear_child_index)) {
-            const auto& child_chunk = *chunk.getChild(linear_child_index);
-            // Indicate that the child will be serialized
-            // and add it to the stack
-            stack.emplace(StackElement{child_index, child_chunk, child_scale});
-            streamable_node.allocated_children_bitset +=
-                (1 << relative_child_idx);
-          }
-        } else {
-          // Indicate that the child will be serialized and add it to the stack
-          stack.emplace(StackElement{child_index, chunk, child_scale});
+        // Otherwise, indicate that the child will be serialized
+        // and add it to the stack
+        auto child = node.getChild(relative_child_idx);
+        if (child) {
+          stack.emplace(StackElement{child_scale, child});
           streamable_node.allocated_children_bitset +=
               (1 << relative_child_idx);
         }
