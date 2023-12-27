@@ -6,7 +6,8 @@
 #include <vector>
 
 #include "wavemap/common.h"
-#include "wavemap/data_structure/chunked_ndtree/ndtree_node_chunk.h"
+#include "wavemap/data_structure/chunked_ndtree/chunked_ndtree_chunk.h"
+#include "wavemap/data_structure/chunked_ndtree/chunked_ndtree_node_ptr.h"
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/utils/iterate/subtree_iterator.h"
 
@@ -16,7 +17,9 @@ class ChunkedNdtree {
  public:
   using IndexType = NdtreeIndex<dim>;
   using HeightType = IndexElement;
-  using NodeChunkType = NdtreeNodeChunk<NodeDataT, dim, chunk_height>;
+  using ChunkType = ChunkedNdtreeChunk<NodeDataT, dim, chunk_height>;
+  using NodePtrType = ChunkedNdtreeNodePtr<ChunkType>;
+  using NodeConstPtrType = ChunkedNdtreeNodePtr<const ChunkType>;
   using NodeDataType = NodeDataT;
   static constexpr HeightType kChunkHeight = chunk_height;
 
@@ -31,32 +34,36 @@ class ChunkedNdtree {
   HeightType getMaxHeight() const { return max_height_; }
   size_t getMemoryUsage() const;
 
-  bool hasNode(const IndexType& index) const;
+  // TODO(victorr): Add methods to directly query and operate on chunks,
+  //                once a proper index type for chunks has been defined.
+  //                The ChunkIndex type would be similar to NdtreeIndex, but has
+  //                to account for the chunks having a branching factor that
+  //                differs from 2 (probably 2^(dim * chunk_height)).
 
-  NodeDataT* getNodeData(const IndexType& index, bool auto_allocate = true);
-  const NodeDataT* getNodeData(const IndexType& index) const;
-  void getOrAllocateNode(const IndexType& index);
+  bool hasNode(const IndexType& index) const { return getNode(index); }
+  NodePtrType getNode(const IndexType& index);
+  NodeConstPtrType getNode(const IndexType& index) const;
+  template <typename... DefaultArgs>
+  NodePtrType getOrAllocateNode(const IndexType& index, DefaultArgs&&... args);
 
-  NodeChunkType& getRootChunk() { return root_chunk_; }
-  const NodeChunkType& getRootChunk() const { return root_chunk_; }
+  std::pair<NodePtrType, HeightType> getNodeOrAncestor(const IndexType& index);
+  std::pair<NodeConstPtrType, HeightType> getNodeOrAncestor(
+      const IndexType& index) const;
+
+  ChunkType& getRootChunk() { return root_chunk_; }
+  const ChunkType& getRootChunk() const { return root_chunk_; }
+
+  NodePtrType getRootNode() { return {root_chunk_, 0, 0}; }
+  NodeConstPtrType getRootNode() const { return {root_chunk_, 0, 0}; }
 
   template <TraversalOrder traversal_order>
-  auto getIterator() {
-    return Subtree<NodeChunkType, traversal_order>(&root_chunk_);
-  }
+  auto getChunkIterator();
   template <TraversalOrder traversal_order>
-  auto getIterator() const {
-    return Subtree<const NodeChunkType, traversal_order>(&root_chunk_);
-  }
+  auto getChunkIterator() const;
 
  private:
-  NodeChunkType root_chunk_;
+  ChunkType root_chunk_;
   const HeightType max_height_;
-
-  std::pair<NodeChunkType*, LinearIndex> getChunkAndRelativeIndex(
-      const IndexType& index, bool auto_allocate);
-  std::pair<const NodeChunkType*, LinearIndex> getChunkAndRelativeIndex(
-      const IndexType& index) const;
 };
 
 template <typename NodeDataT, int chunk_height>

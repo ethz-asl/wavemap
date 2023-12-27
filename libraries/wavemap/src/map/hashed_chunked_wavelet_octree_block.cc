@@ -67,7 +67,7 @@ void HashedChunkedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
       chunk_ptrs[chunk_depth + 1] = current_chunk->getChild(linear_child_index);
     } else {
       chunk_ptrs[chunk_depth + 1] =
-          current_chunk->allocateChild(linear_child_index);
+          &current_chunk->getOrAllocateChild(linear_child_index);
     }
   }
 
@@ -116,7 +116,7 @@ void HashedChunkedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
       chunk_ptrs[chunk_depth] = current_chunk->getChild(linear_child_index);
     } else {
       chunk_ptrs[chunk_depth] =
-          current_chunk->allocateChild(linear_child_index);
+          &current_chunk->getOrAllocateChild(linear_child_index);
     }
   }
 
@@ -145,7 +145,8 @@ void HashedChunkedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
 
 void HashedChunkedWaveletOctreeBlock::forEachLeaf(
     const BlockIndex& block_index,
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
+    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn,
+    IndexElement termination_height) const {
   ZoneScoped;
   if (empty()) {
     return;
@@ -153,60 +154,32 @@ void HashedChunkedWaveletOctreeBlock::forEachLeaf(
 
   struct StackElement {
     const OctreeIndex node_index;
-    const NodeChunkType& chunk;
+    ChunkedNdtreeNodePtr<const NodeChunkType> node;
     const Coefficients::Scale scale_coefficient{};
   };
   std::stack<StackElement> stack;
   stack.emplace(StackElement{{tree_height_, block_index},
-                             chunked_ndtree_.getRootChunk(),
+                             chunked_ndtree_.getRootNode(),
                              root_scale_coefficient_});
   while (!stack.empty()) {
     const OctreeIndex index = stack.top().node_index;
-    const NodeChunkType& chunk = stack.top().chunk;
+    const auto node = stack.top().node;
     const FloatingPoint scale_coefficient = stack.top().scale_coefficient;
     stack.pop();
 
-    const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-    const int chunk_top_height =
-        kChunkHeight * int_math::div_round_up(index.height, kChunkHeight);
-    const LinearIndex relative_node_index =
-        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
-                                                  index.height);
     const Coefficients::CoefficientsArray child_scale_coefficients =
-        Transform::backward(
-            {scale_coefficient, chunk.nodeData(relative_node_index)});
-    const bool parent_has_nonzero_children =
-        chunk.nodeHasAtLeastOneChild(relative_node_index);
-
-    for (NdtreeIndexRelativeChild relative_child_idx = 0;
-         relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
-      const OctreeIndex child_index =
-          index.computeChildIndex(relative_child_idx);
+        Transform::backward({scale_coefficient, {node.data()}});
+    for (NdtreeIndexRelativeChild child_idx = 0;
+         child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+      const OctreeIndex child_node_index = index.computeChildIndex(child_idx);
       const FloatingPoint child_scale_coefficient =
-          child_scale_coefficients[relative_child_idx];
-
-      const bool child_in_same_chunk = child_index.height % kChunkHeight != 0;
-      if (child_in_same_chunk) {
-        if (parent_has_nonzero_children) {
-          stack.emplace(
-              StackElement{child_index, chunk, child_scale_coefficient});
-        } else {
-          visitor_fn(child_index, child_scale_coefficient);
-        }
+          child_scale_coefficients[child_idx];
+      auto child_node = node.getChild(child_idx);
+      if (child_node && termination_height < child_node_index.height) {
+        stack.emplace(StackElement{child_node_index, child_node,
+                                   child_scale_coefficient});
       } else {
-        const MortonIndex child_morton =
-            convert::nodeIndexToMorton(child_index);
-        const LinearIndex relative_child_chunk_index =
-            OctreeIndex::computeLevelTraversalDistance(
-                child_morton, chunk_top_height, child_index.height);
-        if (chunk.hasChild(relative_child_chunk_index)) {
-          const NodeChunkType& child_chunk =
-              *chunk.getChild(relative_child_chunk_index);
-          stack.emplace(
-              StackElement{child_index, child_chunk, child_scale_coefficient});
-        } else {
-          visitor_fn(child_index, child_scale_coefficient);
-        }
+        visitor_fn(child_node_index, child_scale_coefficient);
       }
     }
   }
@@ -305,7 +278,7 @@ void HashedChunkedWaveletOctreeBlock::recursivePrune(  // NOLINT
       recursivePrune(child_chunk);
       if (!child_chunk.hasChildrenArray() &&
           !child_chunk.hasNonzeroData(kNonzeroCoefficientThreshold)) {
-        chunk.deleteChild(linear_child_idx);
+        chunk.eraseChild(linear_child_idx);
       } else {
         has_at_least_one_child = true;
       }

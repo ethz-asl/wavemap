@@ -18,7 +18,7 @@ class HashedChunkedWaveletOctreeBlock {
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using ChunkedOctreeType = ChunkedOctree<Coefficients::Details, kChunkHeight>;
-  using NodeChunkType = ChunkedOctreeType::NodeChunkType;
+  using NodeChunkType = ChunkedOctreeType::ChunkType;
 
   explicit HashedChunkedWaveletOctreeBlock(IndexElement tree_height,
                                            FloatingPoint min_log_odds,
@@ -39,7 +39,8 @@ class HashedChunkedWaveletOctreeBlock {
   void forEachLeaf(
       const BlockIndex& block_index,
       typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
-          visitor_fn) const;
+          visitor_fn,
+      IndexElement termination_height = 0) const;
 
   Coefficients::Scale& getRootScale() { return root_scale_coefficient_; }
   const Coefficients::Scale& getRootScale() const {
@@ -65,11 +66,11 @@ class HashedChunkedWaveletOctreeBlock {
 
   template <TraversalOrder traversal_order>
   auto getChunkIterator() {
-    return chunked_ndtree_.getIterator<traversal_order>();
+    return chunked_ndtree_.getChunkIterator<traversal_order>();
   }
   template <TraversalOrder traversal_order>
   auto getChunkIterator() const {
-    return chunked_ndtree_.getIterator<traversal_order>();
+    return chunked_ndtree_.getChunkIterator<traversal_order>();
   }
 
   size_t getMemoryUsage() const { return chunked_ndtree_.getMemoryUsage(); }

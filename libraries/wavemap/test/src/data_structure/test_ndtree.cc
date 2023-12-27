@@ -54,31 +54,6 @@ TYPED_TEST(NdtreeTest, AllocatingAndClearing) {
   }
 }
 
-// TODO(victorr): Remove this workaround after improving the interfaces of the
-//                ChunkedNdtree.
-template <typename TreeT, typename IndexT>
-auto* getOrAllocateNodeData(const IndexT& index, TreeT& ndtree) {
-  using TreeType = std::decay_t<TreeT>;
-  if constexpr (std::is_same_v<TreeType, ChunkedNdtree<int, 1, 3>> ||
-                std::is_same_v<TreeType, ChunkedNdtree<int, 2, 3>> ||
-                std::is_same_v<TreeType, ChunkedNdtree<int, 3, 3>>) {
-    return ndtree.getNodeData(index);
-  } else {
-    return &ndtree.getOrAllocateNode(index).data();
-  }
-}
-template <typename TreeT, typename IndexT>
-auto* getNodeData(const IndexT& index, TreeT& ndtree) {
-  using TreeType = std::decay_t<TreeT>;
-  if constexpr (std::is_same_v<TreeType, ChunkedNdtree<int, 1, 3>> ||
-                std::is_same_v<TreeType, ChunkedNdtree<int, 2, 3>> ||
-                std::is_same_v<TreeType, ChunkedNdtree<int, 3, 3>>) {
-    return ndtree.getNodeData(index);
-  } else {
-    return &CHECK_NOTNULL(ndtree.getNode(index))->data();
-  }
-}
-
 TYPED_TEST(NdtreeTest, GettingAndSetting) {
   using IndexType = typename TypeParam::IndexType;
   using PositionType = typename IndexType::Position;
@@ -114,17 +89,24 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
       inserted_values.emplace(random_index, random_value);
 
       // Insert
-      auto* data = getOrAllocateNodeData(random_index, ndtree);
-      ASSERT_NE(data, nullptr) << "At index " << random_index.toString();
-      *data = random_value;
+      auto& data = ndtree.getOrAllocateNode(random_index).data();
+      data = random_value;
     }
 
     // Test regular getter
     for (const auto& [index, value] : inserted_values) {
       EXPECT_TRUE(ndtree.hasNode(index)) << "At index " << index.toString();
-      auto* data = getNodeData(index, ndtree);
-      ASSERT_NE(data, nullptr) << "At index " << index.toString();
-      EXPECT_EQ(*data, value) << "At index " << index.toString();
+      auto node = ndtree.getNode(index);
+      ASSERT_TRUE(node) << "At index " << index.toString();
+      if (node) {
+        typename TypeParam::NodeDataType data;
+        if constexpr (TypeParam::kChunkHeight == 1) {
+          data = node->data();
+        } else {
+          data = node.data();
+        }
+        EXPECT_EQ(data, value) << "At index " << index.toString();
+      }
     }
 
     // Test const getter
@@ -132,9 +114,17 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
     for (const auto& [index, value] : inserted_values) {
       EXPECT_TRUE(ndtree_cref.hasNode(index))
           << "At index " << index.toString();
-      auto* data = getNodeData(index, ndtree_cref);
-      ASSERT_NE(data, nullptr) << "At index " << index.toString();
-      EXPECT_EQ(*data, value) << "At index " << index.toString();
+      auto node = ndtree_cref.getNode(index);
+      ASSERT_TRUE(node) << "At index " << index.toString();
+      if (node) {
+        typename TypeParam::NodeDataType data;
+        if constexpr (TypeParam::kChunkHeight == 1) {
+          data = node->data();
+        } else {
+          data = node.data();
+        }
+        EXPECT_EQ(data, value) << "At index " << index.toString();
+      }
     }
   }
 }

@@ -15,7 +15,8 @@ constexpr size_t num_total_nodes_fast(size_t tree_height) {
   constexpr size_t kMaxHeight = kBitWidth / dim - 1;
   constexpr size_t kMaxNumNodes = num_total_nodes<dim>(kMaxHeight);
   DCHECK(tree_height <= kMaxHeight);
-  return kMaxNumNodes >> ((kMaxHeight - tree_height) * dim);
+  const size_t height_difference = kMaxHeight - tree_height;
+  return kMaxNumNodes >> (height_difference * dim);
 }
 
 template <int dim>

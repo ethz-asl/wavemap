@@ -158,7 +158,8 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
               morton_code, parent_chunk_top_height, child_height);
       chunk_containing_child = parent_chunk.getChild(linear_child_index);
       if (!chunk_containing_child) {
-        chunk_containing_child = parent_chunk.allocateChild(linear_child_index);
+        chunk_containing_child =
+            &parent_chunk.getOrAllocateChild(linear_child_index);
       }
       child_node_in_chunk_index = 0u;
     }
