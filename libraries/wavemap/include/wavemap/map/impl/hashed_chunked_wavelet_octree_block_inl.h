@@ -22,7 +22,8 @@ inline FloatingPoint HashedChunkedWaveletOctreeBlock::getCellValue(
     const OctreeIndex& index) const {
   // Descend the tree chunk by chunk
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  const NodeChunkType* current_chunk = &chunked_ndtree_.getRootChunk();
+  const ChunkedOctreeType::ChunkType* current_chunk =
+      &chunked_ndtree_.getRootChunk();
   FloatingPoint value = root_scale_coefficient_;
   for (int chunk_top_height = tree_height_; index.height < chunk_top_height;
        chunk_top_height -= kChunkHeight) {

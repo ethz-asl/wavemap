@@ -99,12 +99,7 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
       auto node = ndtree.getNode(index);
       ASSERT_TRUE(node) << "At index " << index.toString();
       if (node) {
-        typename TypeParam::NodeDataType data;
-        if constexpr (TypeParam::kChunkHeight == 1) {
-          data = node->data();
-        } else {
-          data = node.data();
-        }
+        auto data = node->data();
         EXPECT_EQ(data, value) << "At index " << index.toString();
       }
     }
@@ -117,12 +112,7 @@ TYPED_TEST(NdtreeTest, GettingAndSetting) {
       auto node = ndtree_cref.getNode(index);
       ASSERT_TRUE(node) << "At index " << index.toString();
       if (node) {
-        typename TypeParam::NodeDataType data;
-        if constexpr (TypeParam::kChunkHeight == 1) {
-          data = node->data();
-        } else {
-          data = node.data();
-        }
+        auto data = node->data();
         EXPECT_EQ(data, value) << "At index " << index.toString();
       }
     }

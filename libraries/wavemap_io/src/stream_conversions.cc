@@ -361,7 +361,7 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
-    HashedChunkedWaveletOctreeBlock::NodeConstPtrType node;
+    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::NodeConstRefType node;
   };
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
@@ -419,9 +419,8 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
         }
         // Otherwise, indicate that the child will be serialized
         // and add it to the stack
-        auto child = node.getChild(relative_child_idx);
-        if (child) {
-          stack.emplace(StackElement{child_scale, child});
+        if (auto child = node.getChild(relative_child_idx); child) {
+          stack.emplace(StackElement{child_scale, *child});
           streamable_node.allocated_children_bitset +=
               (1 << relative_child_idx);
         }

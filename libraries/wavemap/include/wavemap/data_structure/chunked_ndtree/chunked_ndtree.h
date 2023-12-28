@@ -18,6 +18,8 @@ class ChunkedNdtree {
   using IndexType = NdtreeIndex<dim>;
   using HeightType = IndexElement;
   using ChunkType = ChunkedNdtreeChunk<NodeDataT, dim, chunk_height>;
+  using NodeRefType = ChunkedNdtreeNodeRef<ChunkType>;
+  using NodeConstRefType = ChunkedNdtreeNodeRef<const ChunkType>;
   using NodePtrType = ChunkedNdtreeNodePtr<ChunkType>;
   using NodeConstPtrType = ChunkedNdtreeNodePtr<const ChunkType>;
   using NodeDataType = NodeDataT;
@@ -44,7 +46,7 @@ class ChunkedNdtree {
   NodePtrType getNode(const IndexType& index);
   NodeConstPtrType getNode(const IndexType& index) const;
   template <typename... DefaultArgs>
-  NodePtrType getOrAllocateNode(const IndexType& index, DefaultArgs&&... args);
+  NodeRefType getOrAllocateNode(const IndexType& index, DefaultArgs&&... args);
 
   std::pair<NodePtrType, HeightType> getNodeOrAncestor(const IndexType& index);
   std::pair<NodeConstPtrType, HeightType> getNodeOrAncestor(
@@ -53,8 +55,8 @@ class ChunkedNdtree {
   ChunkType& getRootChunk() { return root_chunk_; }
   const ChunkType& getRootChunk() const { return root_chunk_; }
 
-  NodePtrType getRootNode() { return {root_chunk_, 0, 0}; }
-  NodeConstPtrType getRootNode() const { return {root_chunk_, 0, 0}; }
+  NodeRefType getRootNode() { return {root_chunk_, 0, 0}; }
+  NodeConstRefType getRootNode() const { return {root_chunk_, 0, 0}; }
 
   template <TraversalOrder traversal_order>
   auto getChunkIterator();

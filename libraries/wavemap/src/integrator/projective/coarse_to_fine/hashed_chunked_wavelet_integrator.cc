@@ -82,10 +82,11 @@ void HashedChunkedWaveletIntegrator::updateBlock(
 }
 
 void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
-    HashedChunkedWaveletOctreeBlock::NodeChunkType& parent_chunk,
+    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType& parent_chunk,
     const OctreeIndex& parent_node_index, LinearIndex parent_in_chunk_index,
     FloatingPoint& parent_value,
-    HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child,
+    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType::BitRef
+        parent_has_child,
     bool& block_needs_thresholding) {
   auto& parent_details = parent_chunk.nodeData(parent_in_chunk_index);
   auto child_values = HashedChunkedWaveletOctreeBlock::Transform::backward(
@@ -146,7 +147,8 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
     const int parent_chunk_top_height =
         chunk_height_ * int_math::div_round_up(parent_height, chunk_height_);
 
-    HashedChunkedWaveletOctreeBlock::NodeChunkType* chunk_containing_child;
+    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType*
+        chunk_containing_child;
     LinearIndex child_node_in_chunk_index;
     if (child_height % chunk_height_ != 0) {
       chunk_containing_child = &parent_chunk;

@@ -18,9 +18,6 @@ class HashedChunkedWaveletOctreeBlock {
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using ChunkedOctreeType = ChunkedOctree<Coefficients::Details, kChunkHeight>;
-  using NodeChunkType = ChunkedOctreeType::ChunkType;
-  using NodePtrType = ChunkedOctreeType::NodePtrType;
-  using NodeConstPtrType = ChunkedOctreeType::NodeConstPtrType;
 
   explicit HashedChunkedWaveletOctreeBlock(IndexElement tree_height,
                                            FloatingPoint min_log_odds,
@@ -48,10 +45,16 @@ class HashedChunkedWaveletOctreeBlock {
   const Coefficients::Scale& getRootScale() const {
     return root_scale_coefficient_;
   }
-  NodePtrType getRootNode() { return chunked_ndtree_.getRootNode(); }
-  NodeConstPtrType getRootNode() const { return chunked_ndtree_.getRootNode(); }
-  NodeChunkType& getRootChunk() { return chunked_ndtree_.getRootChunk(); }
-  const NodeChunkType& getRootChunk() const {
+  ChunkedOctreeType::NodeRefType getRootNode() {
+    return chunked_ndtree_.getRootNode();
+  }
+  ChunkedOctreeType::NodeConstRefType getRootNode() const {
+    return chunked_ndtree_.getRootNode();
+  }
+  ChunkedOctreeType::ChunkType& getRootChunk() {
+    return chunked_ndtree_.getRootChunk();
+  }
+  const ChunkedOctreeType::ChunkType& getRootChunk() const {
     return chunked_ndtree_.getRootChunk();
   }
 
@@ -99,8 +102,9 @@ class HashedChunkedWaveletOctreeBlock {
     bool is_nonzero_child;
   };
   RecursiveThresholdReturnValue recursiveThreshold(
-      NodeChunkType& chunk, Coefficients::Scale scale_coefficient);
-  void recursivePrune(NodeChunkType& chunk);
+      ChunkedOctreeType::ChunkType& chunk,
+      Coefficients::Scale scale_coefficient);
+  void recursivePrune(ChunkedOctreeType::ChunkType& chunk);
 };
 }  // namespace wavemap
 

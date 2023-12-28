@@ -60,14 +60,17 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
                    const HashedChunkedWaveletOctree::BlockIndex& block_index);
 
   void updateNodeRecursive(
-      HashedChunkedWaveletOctreeBlock::NodeChunkType& parent_chunk,
+      HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType&
+          parent_chunk,
       const OctreeIndex& parent_node_index, LinearIndex parent_in_chunk_index,
       FloatingPoint& parent_value,
-      HashedChunkedWaveletOctreeBlock::NodeChunkType::BitRef parent_has_child,
+      HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType::BitRef
+          parent_has_child,
       bool& block_needs_thresholding);
   void updateLeavesBatch(
       const OctreeIndex& parent_index, FloatingPoint& parent_value,
-      HashedChunkedWaveletOctreeBlock::NodeChunkType::DataType& parent_details);
+      HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType::DataType&
+          parent_details);
 };
 }  // namespace wavemap
 

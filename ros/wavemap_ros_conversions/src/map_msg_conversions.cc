@@ -530,7 +530,7 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
-    HashedChunkedWaveletOctreeBlock::NodeConstPtrType node;
+    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::NodeConstRefType node;
   };
 
   // Serialize the block's metadata
@@ -568,9 +568,8 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
       }
       // Otherwise, indicate that the child will be serialized
       // and add it to the stack
-      auto child = node.getChild(relative_child_idx);
-      if (child) {
-        stack.emplace(StackElement{child_scale, child});
+      if (auto child = node.getChild(relative_child_idx); child) {
+        stack.emplace(StackElement{child_scale, *child});
         node_msg.allocated_children_bitset += (1 << relative_child_idx);
       }
     }

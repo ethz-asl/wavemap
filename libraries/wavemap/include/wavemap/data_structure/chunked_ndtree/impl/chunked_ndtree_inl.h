@@ -33,7 +33,7 @@ void ChunkedNdtree<NodeDataT, dim, chunk_height>::prune() {
       bool has_non_empty_child = false;
       for (LinearIndex child_idx = 0; child_idx < ChunkType::kNumChildren;
            ++child_idx) {
-        ChunkType* child_ptr = chunk.getChild(child_idx);
+        ChunkType* child_ptr = chunk->getChild(child_idx);
         if (child_ptr) {
           if (child_ptr->empty()) {
             chunk.eraseChild(child_idx);
@@ -79,14 +79,14 @@ template <typename NodeDataT, int dim, int chunk_height>
 typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodePtrType
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getNode(
     const ChunkedNdtree::IndexType& index) {
-  NodePtrType node = getRootNode();
+  NodePtrType node = &getRootNode();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   for (int node_height = max_height_; index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
     // Check if the child is allocated
-    NodePtrType child = node.getChild(child_index);
+    NodePtrType child = node->getChild(child_index);
     if (!child) {
       return {};
     }
@@ -99,14 +99,14 @@ template <typename NodeDataT, int dim, int chunk_height>
 typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeConstPtrType
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getNode(
     const ChunkedNdtree::IndexType& index) const {
-  NodeConstPtrType node = getRootNode();
+  NodeConstPtrType node = &getRootNode();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   for (int node_height = max_height_; index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
     // Check if the child is allocated
-    NodeConstPtrType child = node.getChild(child_index);
+    NodeConstPtrType child = node->getChild(child_index);
     if (!child) {
       return {};
     }
@@ -117,20 +117,20 @@ ChunkedNdtree<NodeDataT, dim, chunk_height>::getNode(
 
 template <typename NodeDataT, int dim, int chunk_height>
 template <typename... DefaultArgs>
-typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodePtrType
+typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodeRefType
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getOrAllocateNode(
     const ChunkedNdtree::IndexType& index, DefaultArgs&&... args) {
-  NodePtrType node = getRootNode();
+  NodePtrType node = &getRootNode();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   for (int node_height = max_height_; index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
     // Get the child, allocating if needed
-    node = node.getOrAllocateChild(child_index,
-                                   std::forward<DefaultArgs>(args)...);
+    node = &node->getOrAllocateChild(child_index,
+                                     std::forward<DefaultArgs>(args)...);
   }
-  return node;
+  return *node;
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
@@ -138,14 +138,14 @@ std::pair<typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodePtrType,
           typename ChunkedNdtree<NodeDataT, dim, chunk_height>::HeightType>
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeOrAncestor(
     const ChunkedNdtree::IndexType& index) {
-  NodePtrType node = getRootNode();
+  NodePtrType node = &getRootNode();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   for (int node_height = max_height_; index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
     // Check if the child is allocated
-    NodePtrType child = node.getChild(child_index);
+    NodePtrType child = node->getChild(child_index);
     if (!child) {
       return {node, node_height};
     }
@@ -160,14 +160,14 @@ std::pair<
     typename ChunkedNdtree<NodeDataT, dim, chunk_height>::HeightType>
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeOrAncestor(
     const ChunkedNdtree::IndexType& index) const {
-  NodeConstPtrType node = getRootNode();
+  NodeConstPtrType node = &getRootNode();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   for (int node_height = max_height_; index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
     // Check if the child is allocated
-    NodeConstPtrType child = node.getChild(child_index);
+    NodeConstPtrType child = node->getChild(child_index);
     if (!child) {
       return {node, node_height};
     }
