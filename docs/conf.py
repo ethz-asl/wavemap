@@ -98,13 +98,17 @@ exhale_args = {
     "verboseBuild": False,
     # These arguments are required
     "containmentFolder": "./api",
-    "rootFileName": "library_root.rst",
+    # Tell exhale we'll build our TOC tree and pin the file names
+    "rootFileName": "EXCLUDE",
+    "classHierarchyFilename": 'class_view_hierarchy.rst',
+    "fileHierarchyFilename": 'file_view_hierarchy.rst',
+    "unabridgedApiFilename": 'unabridged_api.rst',
     # Must be the same as STRIP_FROM_PATH in the Doxyfile
     "doxygenStripFromPath": "..",
     # Heavily encouraged optional argument (see docs)
-    "rootFileTitle": "Library API",
+    # "rootFileTitle": "API",
     # Suggested optional arguments
-    "createTreeView": True,
+    "createTreeView": False,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,

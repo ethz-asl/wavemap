@@ -6,10 +6,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include <OGRE/Ogre.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
-#include <OGRE/OgreVector3.h>
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/enum_property.h>
@@ -114,10 +114,11 @@ class VoxelVisual : public QObject {
   float lod_update_distance_threshold_ = 0.1f;
   Ogre::Vector3 camera_position_at_last_lod_update_{};
   bool force_lod_update_ = true;
-  void updateLOD(const Point3D& camera_position);
+  void updateLOD(const Ogre::Camera& active_camera);
   static IndexElement computeRecommendedBlockLodHeight(
-      FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
-      IndexElement min_height, IndexElement max_height);
+      const Ogre::Camera& active_camera, const OctreeIndex& block_index,
+      FloatingPoint min_cell_width, IndexElement min_height,
+      IndexElement max_height);
   std::optional<IndexElement> getCurrentBlockLodHeight(
       IndexElement map_tree_height, const Index3D& block_idx);
 

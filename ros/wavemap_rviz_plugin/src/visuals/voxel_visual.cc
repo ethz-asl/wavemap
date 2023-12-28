@@ -180,7 +180,7 @@ void VoxelVisual::updateMap(bool redraw_all) {
   }
 }
 
-void VoxelVisual::updateLOD(const Point3D& camera_position) {
+void VoxelVisual::updateLOD(const Ogre::Camera& active_camera) {
   ZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
@@ -192,7 +192,6 @@ void VoxelVisual::updateLOD(const Point3D& camera_position) {
   if (!map) {
     return;
   }
-  const IndexElement tree_height = map->getTreeHeight();
 
   // Cast the map to its derived hashed map type
   // NOTE: If the cast fails, we don't need to do anything as non-hashed maps
@@ -200,22 +199,17 @@ void VoxelVisual::updateLOD(const Point3D& camera_position) {
   if (const auto* hashed_map =
           dynamic_cast<const HashedWaveletOctree*>(map.get());
       hashed_map) {
-    const auto min_termination_height = termination_height_property_.getInt();
-    const auto min_cell_width = hashed_map->getMinCellWidth();
     hashed_map->forEachBlock(
-        [&block_update_queue = block_update_queue_,
-         &camera_position = std::as_const(camera_position), this, tree_height,
-         min_termination_height,
-         min_cell_width](const Index3D& block_index, const auto& /*block*/) {
+        [this, tree_height = map->getTreeHeight(),
+         min_termination_height = termination_height_property_.getInt(),
+         min_cell_width = map->getMinCellWidth(),
+         &block_update_queue = block_update_queue_,
+         &active_camera](const Index3D& block_index, const auto& /*block*/) {
           // Compute the recommended LOD level height
-          const OctreeIndex block_node_idx{tree_height, block_index};
-          const AABB block_aabb =
-              convert::nodeIndexToAABB(block_node_idx, min_cell_width);
-          const FloatingPoint distance_to_cam =
-              block_aabb.minDistanceTo(camera_position);
+          const OctreeIndex block_node_index{tree_height, block_index};
           const auto term_height_recommended = computeRecommendedBlockLodHeight(
-              distance_to_cam, min_cell_width, min_termination_height,
-              tree_height - 1);
+              active_camera, block_node_index, min_cell_width,
+              min_termination_height, tree_height - 1);
 
           // If the block is already queued to be updated, set the recommended
           // level
@@ -240,11 +234,27 @@ void VoxelVisual::updateLOD(const Point3D& camera_position) {
 }
 
 IndexElement VoxelVisual::computeRecommendedBlockLodHeight(
-    FloatingPoint distance_to_cam, FloatingPoint min_cell_width,
-    IndexElement min_height, IndexElement max_height) {
+    const Ogre::Camera& active_camera, const OctreeIndex& block_index,
+    FloatingPoint min_cell_width, IndexElement min_height,
+    IndexElement max_height) {
   ZoneScoped;
+  // TODO(victorr): Compute the LoD level using the camera's projection matrix
+  //                and the screen's pixel density, to better generalize across
+  //                displays (high/low DPI) and alternative projection modes
+  // If the projection type is orthographic, e.g. when
+  // using Rviz's TopDownOrtho ViewController, always use the highest resolution
+  if (active_camera.getProjectionType() == Ogre::PT_ORTHOGRAPHIC) {
+    return min_height;
+  }
+
   // Compute the recommended level based on the size of the cells projected into
   // the image plane
+  const AABB block_aabb = convert::nodeIndexToAABB(block_index, min_cell_width);
+  const Point3D camera_position{active_camera.getPosition().x,
+                                active_camera.getPosition().y,
+                                active_camera.getPosition().z};
+  const FloatingPoint distance_to_cam =
+      block_aabb.minDistanceTo(camera_position);
   constexpr FloatingPoint kFactor = 0.002f;
   return std::clamp(static_cast<IndexElement>(std::floor(std::log2(
                         1.f + kFactor * distance_to_cam / min_cell_width))),
@@ -514,6 +524,7 @@ void VoxelVisual::setAlpha(FloatingPoint alpha) {
 
 void VoxelVisual::prerenderCallback(Ogre::Camera* active_camera) {
   ZoneScoped;
+  CHECK_NOTNULL(active_camera);
   // Recompute the desired LOD level for each block in the map if
   // the camera moved significantly or an update was requested explicitly
   const bool camera_moved =
@@ -523,7 +534,7 @@ void VoxelVisual::prerenderCallback(Ogre::Camera* active_camera) {
                                 active_camera->getDerivedPosition().y,
                                 active_camera->getDerivedPosition().z};
   if (force_lod_update_ || camera_moved) {
-    updateLOD(camera_position);
+    updateLOD(*active_camera);
     camera_position_at_last_lod_update_ = active_camera->getPosition();
     force_lod_update_ = false;
   }

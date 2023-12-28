@@ -5,10 +5,10 @@
 #include <memory>
 #include <vector>
 
+#include <OGRE/Ogre.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
-#include <OGRE/OgreVector3.h>
 #include <rviz/properties/bool_property.h>
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/enum_property.h>

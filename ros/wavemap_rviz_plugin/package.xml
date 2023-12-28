@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap_rviz_plugin</name>
-  <version>1.6.0</version>
+  <version>1.6.3</version>
   <description>Plugin to interactively visualize maps published in wavemap's
     native format.
   </description>
