@@ -3,7 +3,7 @@
 #include <glog/logging.h>
 #include <wavemap/common.h>
 #include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/map/volumetric_data_structure_base.h>
+#include <wavemap/map/map_base.h>
 #include <wavemap/utils/sdf/quasi_euclidean_sdf_generator.h>
 #include <wavemap_io/file_conversions.h>
 
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
   const std::filesystem::path map_file_path = argv[1];
 
   // Load the occupancy map
-  VolumetricDataStructureBase::Ptr occupancy_map;
+  MapBase::Ptr occupancy_map;
   io::fileToMap(map_file_path, occupancy_map);
   CHECK_NOTNULL(occupancy_map);
 

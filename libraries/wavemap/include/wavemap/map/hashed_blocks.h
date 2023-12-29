@@ -8,24 +8,22 @@
 #include "wavemap/common.h"
 #include "wavemap/config/config_base.h"
 #include "wavemap/data_structure/dense_block_hash.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 
 namespace wavemap {
-class HashedBlocks
-    : public VolumetricDataStructureBase,
-      public DenseBlockHash<FloatingPoint, VolumetricDataStructureBase::kDim,
-                            16> {
+class HashedBlocks : public MapBase,
+                     public DenseBlockHash<FloatingPoint, MapBase::kDim, 16> {
  public:
   using Ptr = std::shared_ptr<HashedBlocks>;
   using ConstPtr = std::shared_ptr<const HashedBlocks>;
-  using Config = VolumetricDataStructureConfig;
+  using Config = MapBaseConfig;
   static constexpr bool kRequiresExplicitThresholding = false;
 
-  using VolumetricDataStructureBase::kDim;
+  using MapBase::kDim;
 
-  explicit HashedBlocks(const VolumetricDataStructureConfig& config,
+  explicit HashedBlocks(const MapBaseConfig& config,
                         FloatingPoint default_value = 0.f)
-      : VolumetricDataStructureBase(config.checkValid()),
+      : MapBase(config.checkValid()),
         DenseBlockHash(config.min_cell_width, default_value) {}
 
   bool empty() const override { return DenseBlockHash::empty(); }
@@ -45,7 +43,7 @@ class HashedBlocks
   Index3D getMinBlockIndex() const { return block_map_.getMinBlockIndex(); }
   Index3D getMaxBlockIndex() const { return block_map_.getMaxBlockIndex(); }
   IndexElement getTreeHeight() const override { return 0; }
-  const VolumetricDataStructureConfig& getConfig() { return config_; }
+  const MapBaseConfig& getConfig() { return config_; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
@@ -55,8 +53,7 @@ class HashedBlocks
   const auto& getHashMap() const { return block_map_; }
 
   void forEachLeaf(
-      typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
-          visitor_fn) const override;
+      typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;
 };
 }  // namespace wavemap
 

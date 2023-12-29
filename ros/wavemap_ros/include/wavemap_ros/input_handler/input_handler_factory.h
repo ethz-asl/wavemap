@@ -12,8 +12,7 @@ class InputHandlerFactory {
  public:
   static std::unique_ptr<InputHandler> create(
       const param::Value& params, std::string world_frame,
-      VolumetricDataStructureBase::Ptr occupancy_map,
-      std::shared_ptr<TfTransformer> transformer,
+      MapBase::Ptr occupancy_map, std::shared_ptr<TfTransformer> transformer,
       std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
       ros::NodeHandle nh_private,
       std::optional<InputHandlerType> default_input_handler_type =
@@ -21,7 +20,7 @@ class InputHandlerFactory {
 
   static std::unique_ptr<InputHandler> create(
       InputHandlerType input_handler_type, const param::Value& params,
-      std::string world_frame, VolumetricDataStructureBase::Ptr occupancy_map,
+      std::string world_frame, MapBase::Ptr occupancy_map,
       std::shared_ptr<TfTransformer> transformer,
       std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
       ros::NodeHandle nh_private);

@@ -7,7 +7,7 @@
 
 #include "wavemap/common.h"
 #include "wavemap/data_structure/chunked_ndtree/chunked_ndtree_chunk.h"
-#include "wavemap/data_structure/chunked_ndtree/chunked_ndtree_node_ptr.h"
+#include "wavemap/data_structure/chunked_ndtree/chunked_ndtree_node_address.h"
 #include "wavemap/indexing/ndtree_index.h"
 #include "wavemap/utils/iterate/subtree_iterator.h"
 

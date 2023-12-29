@@ -11,7 +11,7 @@
 #include <wavemap/data_structure/image.h>
 #include <wavemap/data_structure/pointcloud.h>
 #include <wavemap/integrator/integrator_base.h>
-#include <wavemap/map/volumetric_data_structure_base.h>
+#include <wavemap/map/map_base.h>
 #include <wavemap/utils/thread_pool.h>
 #include <wavemap/utils/time/stopwatch.h>
 

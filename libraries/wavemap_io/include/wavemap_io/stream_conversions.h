@@ -14,8 +14,8 @@
 #include "wavemap_io/streamable_types.h"
 
 namespace wavemap::io {
-bool mapToStream(const VolumetricDataStructureBase& map, std::ostream& ostream);
-bool streamToMap(std::istream& istream, VolumetricDataStructureBase::Ptr& map);
+bool mapToStream(const MapBase& map, std::ostream& ostream);
+bool streamToMap(std::istream& istream, MapBase::Ptr& map);
 
 void mapToStream(const HashedBlocks& map, std::ostream& ostream);
 bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map);

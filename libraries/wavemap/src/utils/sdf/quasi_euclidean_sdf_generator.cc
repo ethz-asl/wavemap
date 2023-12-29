@@ -11,8 +11,7 @@ HashedBlocks QuasiEuclideanSDFGenerator::generate(
   ZoneScoped;
   // Initialize the SDF data structure
   const FloatingPoint min_cell_width = occupancy_map.getMinCellWidth();
-  const VolumetricDataStructureConfig config{min_cell_width, 0.f,
-                                             max_distance_};
+  const MapBaseConfig config{min_cell_width, 0.f, max_distance_};
   HashedBlocks sdf(config, max_distance_);
 
   // Initialize the bucketed priority queue

@@ -101,7 +101,7 @@ void VoxelVisual::updateMap(bool redraw_all) {
   // Lock the map mutex, to ensure it doesn't get written to while we read it
   {
     std::scoped_lock lock(map_and_mutex_->mutex);
-    VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
+    MapBase::ConstPtr map = map_and_mutex_->map;
     if (!map) {
       return;
     }
@@ -188,7 +188,7 @@ void VoxelVisual::updateLOD(const Ogre::Camera& active_camera) {
 
   // Lock to the map mutex, to ensure it doesn't get written to while we read it
   std::scoped_lock lock(map_and_mutex_->mutex);
-  VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
+  MapBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
     return;
   }
@@ -409,7 +409,7 @@ void VoxelVisual::processBlockUpdateQueue(const Point3D& camera_position) {
   // Get a shared-access lock to the map,
   // to ensure it doesn't get written to while we read it
   std::scoped_lock lock(map_and_mutex_->mutex);
-  VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
+  MapBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
     return;
   }

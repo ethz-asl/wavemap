@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_PTR_H_
-#define WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_PTR_H_
+#ifndef WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_ADDRESS_H_
+#define WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_ADDRESS_H_
 
 #include <optional>
 
@@ -105,6 +105,6 @@ class ChunkedNdtreeNodeRef {
 };
 }  // namespace wavemap
 
-#include "wavemap/data_structure/chunked_ndtree/impl/chunked_ndtree_node_ptr_inl.h"
+#include "wavemap/data_structure/chunked_ndtree/impl/chunked_ndtree_node_address_inl.h"
 
-#endif  // WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_PTR_H_
+#endif  // WAVEMAP_DATA_STRUCTURE_CHUNKED_NDTREE_CHUNKED_NDTREE_NODE_ADDRESS_H_

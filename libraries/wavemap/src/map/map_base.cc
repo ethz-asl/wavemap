@@ -1,4 +1,4 @@
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 
 #include "wavemap/utils/meta/nameof.h"
 
@@ -8,7 +8,7 @@ DECLARE_CONFIG_MEMBERS(VolumetricDataStructureConfig,
                       (min_log_odds)
                       (max_log_odds));
 
-bool VolumetricDataStructureConfig::isValid(bool verbose) const {
+bool MapBaseConfig::isValid(bool verbose) const {
   bool is_valid = true;
 
   is_valid &= IS_PARAM_GT(min_cell_width, 0.f, verbose);

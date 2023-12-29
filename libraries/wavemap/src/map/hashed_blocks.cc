@@ -23,7 +23,7 @@ void HashedBlocks::prune() {
 }
 
 void HashedBlocks::forEachLeaf(
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
+    MapBase::IndexedLeafVisitorFunction visitor_fn) const {
   DenseBlockHash::forEachLeaf(
       [&visitor_fn](const Index3D& index, FloatingPoint cell_data) {
         const OctreeIndex hierarchical_cell_index = OctreeIndex{0, index};

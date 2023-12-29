@@ -10,7 +10,7 @@
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
 #include "wavemap/map/hashed_chunked_wavelet_octree.h"
 #include "wavemap/map/hashed_wavelet_octree.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/map/volumetric_octree.h"
 #include "wavemap/map/wavelet_octree.h"
 #include "wavemap/utils/random_number_generator.h"
@@ -23,9 +23,9 @@ ConfigT getRandomConfig(RandomNumberGenerator&, Args...);
 
 // Volumetric data structure configs
 template <>
-inline VolumetricDataStructureConfig
-getRandomConfig<VolumetricDataStructureConfig>(RandomNumberGenerator& rng) {
-  VolumetricDataStructureConfig config;
+inline MapBaseConfig getRandomConfig<MapBaseConfig>(
+    RandomNumberGenerator& rng) {
+  MapBaseConfig config;
   config.min_cell_width = rng.getRandomRealNumber(0.05f, 1.f);
   config.min_log_odds = rng.getRandomRealNumber(-10.f, 0.f);
   config.max_log_odds = rng.getRandomRealNumber(0.f, 10.f);

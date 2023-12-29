@@ -60,7 +60,7 @@ Index3D WaveletOctree::getMaxIndex() const {
 }
 
 void WaveletOctree::forEachLeaf(
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
+    MapBase::IndexedLeafVisitorFunction visitor_fn) const {
   if (empty()) {
     return;
   }

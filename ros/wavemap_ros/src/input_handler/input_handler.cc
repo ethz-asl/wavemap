@@ -29,7 +29,7 @@ bool InputHandlerConfig::isValid(bool verbose) const {
 
 InputHandler::InputHandler(const InputHandlerConfig& config,
                            const param::Value& params, std::string world_frame,
-                           VolumetricDataStructureBase::Ptr occupancy_map,
+                           MapBase::Ptr occupancy_map,
                            std::shared_ptr<TfTransformer> transformer,
                            std::shared_ptr<ThreadPool> thread_pool,
                            const ros::NodeHandle& nh,

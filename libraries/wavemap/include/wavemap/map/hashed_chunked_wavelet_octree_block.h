@@ -5,7 +5,7 @@
 #include "wavemap/data_structure/chunked_ndtree/chunked_ndtree.h"
 #include "wavemap/map/cell_types/haar_coefficients.h"
 #include "wavemap/map/cell_types/haar_transform.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/utils/time/time.h"
 
 namespace wavemap {
@@ -35,11 +35,9 @@ class HashedChunkedWaveletOctreeBlock {
   void setCellValue(const OctreeIndex& index, FloatingPoint new_value);
   void addToCellValue(const OctreeIndex& index, FloatingPoint update);
 
-  void forEachLeaf(
-      const BlockIndex& block_index,
-      typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
-          visitor_fn,
-      IndexElement termination_height = 0) const;
+  void forEachLeaf(const BlockIndex& block_index,
+                   typename MapBase::IndexedLeafVisitorFunction visitor_fn,
+                   IndexElement termination_height = 0) const;
 
   Coefficients::Scale& getRootScale() { return root_scale_coefficient_; }
   const Coefficients::Scale& getRootScale() const {

@@ -64,8 +64,8 @@ add_library(${PROJECT_NAME}
     src/map/hashed_wavelet_octree_block.cc
     src/map/volumetric_octree.cc
     src/map/wavelet_octree.cc
-    src/map/volumetric_data_structure_base.cc
-    src/map/volumetric_data_structure_factory.cc
+    src/map/map_base.cc
+    src/map/map_factory.cc
     src/utils/query/query_accelerator.cc
     src/utils/sdf/full_euclidean_sdf_generator.cc
     src/utils/sdf/quasi_euclidean_sdf_generator.cc

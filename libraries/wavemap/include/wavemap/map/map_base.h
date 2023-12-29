@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_MAP_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
-#define WAVEMAP_MAP_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
+#ifndef WAVEMAP_MAP_MAP_BASE_H_
+#define WAVEMAP_MAP_MAP_BASE_H_
 
 #include <algorithm>
 #include <memory>
@@ -11,8 +11,8 @@
 #include "wavemap/indexing/ndtree_index.h"
 
 namespace wavemap {
-struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
-  using TypeSelector<VolumetricDataStructureType>::TypeSelector;
+struct MapType : TypeSelector<MapType> {
+  using TypeSelector<MapType>::TypeSelector;
 
   enum Id : TypeId {
     kHashedBlocks,
@@ -28,10 +28,9 @@ struct VolumetricDataStructureType : TypeSelector<VolumetricDataStructureType> {
 };
 
 /**
- * Base config struct for volumetric data structures.
+ * Base config struct for maps.
  */
-struct VolumetricDataStructureConfig
-    : ConfigBase<VolumetricDataStructureConfig, 3> {
+struct MapBaseConfig : ConfigBase<MapBaseConfig, 3> {
   //! Maximum resolution of the map, set as the width of the smallest cell that
   //! it can represent.
   Meters<FloatingPoint> min_cell_width = 0.1f;
@@ -44,10 +43,9 @@ struct VolumetricDataStructureConfig
   static MemberMap memberMap;
 
   // Constructors
-  VolumetricDataStructureConfig() = default;
-  VolumetricDataStructureConfig(FloatingPoint min_cell_width,
-                                FloatingPoint min_log_odds,
-                                FloatingPoint max_log_odds)
+  MapBaseConfig() = default;
+  MapBaseConfig(FloatingPoint min_cell_width, FloatingPoint min_log_odds,
+                FloatingPoint max_log_odds)
       : min_cell_width(min_cell_width),
         min_log_odds(min_log_odds),
         max_log_odds(max_log_odds) {}
@@ -55,16 +53,15 @@ struct VolumetricDataStructureConfig
   bool isValid(bool verbose) const override;
 };
 
-class VolumetricDataStructureBase {
+class MapBase {
  public:
   static constexpr int kDim = 3;
-  using Ptr = std::shared_ptr<VolumetricDataStructureBase>;
-  using ConstPtr = std::shared_ptr<const VolumetricDataStructureBase>;
+  using Ptr = std::shared_ptr<MapBase>;
+  using ConstPtr = std::shared_ptr<const MapBase>;
 
-  explicit VolumetricDataStructureBase(
-      const VolumetricDataStructureConfig& config)
+  explicit MapBase(const MapBaseConfig& config)
       : config_(config.checkValid()) {}
-  virtual ~VolumetricDataStructureBase() = default;
+  virtual ~MapBase() = default;
 
   virtual bool empty() const = 0;
   virtual size_t size() const = 0;
@@ -95,7 +92,7 @@ class VolumetricDataStructureBase {
   virtual void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const = 0;
 
  protected:
-  const VolumetricDataStructureConfig config_;
+  const MapBaseConfig config_;
 
   FloatingPoint clamp(FloatingPoint value) const {
     return std::clamp(value, config_.min_log_odds, config_.max_log_odds);
@@ -106,4 +103,4 @@ class VolumetricDataStructureBase {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_MAP_VOLUMETRIC_DATA_STRUCTURE_BASE_H_
+#endif  // WAVEMAP_MAP_MAP_BASE_H_

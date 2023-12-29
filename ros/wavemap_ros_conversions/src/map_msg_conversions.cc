@@ -4,9 +4,8 @@
 #include <tracy/Tracy.hpp>
 
 namespace wavemap::convert {
-bool mapToRosMsg(const VolumetricDataStructureBase& map,
-                 const std::string& frame_id, const ros::Time& stamp,
-                 wavemap_msgs::Map& msg) {
+bool mapToRosMsg(const MapBase& map, const std::string& frame_id,
+                 const ros::Time& stamp, wavemap_msgs::Map& msg) {
   // Write the msg header
   msg.header.stamp = stamp;
   msg.header.frame_id = frame_id;
@@ -43,8 +42,7 @@ bool mapToRosMsg(const VolumetricDataStructureBase& map,
   return false;
 }
 
-bool rosMsgToMap(const wavemap_msgs::Map& msg,
-                 VolumetricDataStructureBase::Ptr& map) {
+bool rosMsgToMap(const wavemap_msgs::Map& msg, MapBase::Ptr& map) {
   ZoneScoped;
   // Check validity
   bool is_valid = true;
@@ -139,7 +137,7 @@ void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg,
                  HashedBlocks::Ptr& map) {
   ZoneScoped;
   // Deserialize the map's config
-  VolumetricDataStructureConfig config;
+  MapBaseConfig config;
   config.min_cell_width = msg.min_cell_width;
   config.min_log_odds = msg.min_log_odds;
   config.max_log_odds = msg.max_log_odds;

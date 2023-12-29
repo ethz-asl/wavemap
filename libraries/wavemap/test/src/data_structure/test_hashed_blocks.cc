@@ -13,8 +13,7 @@ class HashedBlocksTest : public FixtureBase, public GeometryGenerator {};
 
 TEST_F(HashedBlocksTest, Initialization) {
   const FloatingPoint random_min_cell_width = getRandomMinCellWidth();
-  HashedBlocks map(
-      VolumetricDataStructureConfig{random_min_cell_width, -2.f, 4.f});
+  HashedBlocks map(MapBaseConfig{random_min_cell_width, -2.f, 4.f});
   EXPECT_EQ(map.getMinCellWidth(), random_min_cell_width);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(map.size(), 0u);

@@ -103,7 +103,7 @@ void HashedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
 
 void HashedWaveletOctreeBlock::forEachLeaf(
     const BlockIndex& block_index,
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn,
+    MapBase::IndexedLeafVisitorFunction visitor_fn,
     IndexElement termination_height) const {
   ZoneScoped;
   if (empty()) {

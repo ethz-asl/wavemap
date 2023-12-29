@@ -5,7 +5,7 @@
 #include "wavemap/map/hashed_blocks.h"
 #include "wavemap/map/hashed_chunked_wavelet_octree.h"
 #include "wavemap/map/hashed_wavelet_octree.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/map/volumetric_octree.h"
 #include "wavemap/map/wavelet_octree.h"
 #include "wavemap/test/config_generator.h"
@@ -30,8 +30,7 @@ TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
 TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
   const auto config =
       ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
-  std::unique_ptr<VolumetricDataStructureBase> map_base_ptr =
-      std::make_unique<TypeParam>(config);
+  std::unique_ptr<MapBase> map_base_ptr = std::make_unique<TypeParam>(config);
 
   // NOTE: Empty data structures are allowed to have size 0 or 1, such that the
   //       tree based data structures can keep their root node allocated even
@@ -56,8 +55,7 @@ TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
 TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   const auto config =
       ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
-  std::unique_ptr<VolumetricDataStructureBase> map_base_ptr =
-      std::make_unique<TypeParam>(config);
+  std::unique_ptr<MapBase> map_base_ptr = std::make_unique<TypeParam>(config);
   const size_t empty_map_memory_usage = map_base_ptr->getMemoryUsage();
 
   // Check that pruning removes all zero cells
@@ -98,8 +96,7 @@ TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
   for (int i = 0; i < kNumRepetitions; ++i) {
     const auto config =
         ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
-    std::unique_ptr<VolumetricDataStructureBase> map_base_ptr =
-        std::make_unique<TypeParam>(config);
+    std::unique_ptr<MapBase> map_base_ptr = std::make_unique<TypeParam>(config);
     {
       const Index3D map_min_index = map_base_ptr->getMinIndex();
       const Index3D map_max_index = map_base_ptr->getMaxIndex();
@@ -132,8 +129,7 @@ TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
     // Create a random map
     const auto config =
         ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
-    std::unique_ptr<VolumetricDataStructureBase> map_base_ptr =
-        std::make_unique<TypeParam>(config);
+    std::unique_ptr<MapBase> map_base_ptr = std::make_unique<TypeParam>(config);
     const std::vector<Index3D> random_indices =
         GeometryGenerator::getRandomIndexVector<3>(
             1000u, 2000u, Index3D::Constant(-5000), Index3D::Constant(5000));

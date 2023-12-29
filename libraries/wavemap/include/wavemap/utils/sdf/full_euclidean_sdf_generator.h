@@ -20,8 +20,7 @@ struct VectorDistance {
   }
 };
 
-using VectorDistanceField =
-    DenseBlockHash<VectorDistance, VolumetricDataStructureBase::kDim, 16>;
+using VectorDistanceField = DenseBlockHash<VectorDistance, MapBase::kDim, 16>;
 
 class FullEuclideanSDFGenerator {
  public:

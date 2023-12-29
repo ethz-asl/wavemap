@@ -27,7 +27,7 @@ class CellSelector : public QObject {
 
   void initializePropertyMenu();
 
-  void setMap(const VolumetricDataStructureBase::ConstPtr& map);
+  void setMap(const MapBase::ConstPtr& map);
 
   bool shouldBeDrawn(const OctreeIndex& cell_index,
                      FloatingPoint cell_log_odds) const;

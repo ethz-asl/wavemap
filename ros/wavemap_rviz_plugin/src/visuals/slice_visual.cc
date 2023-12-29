@@ -68,7 +68,7 @@ void SliceVisual::update() {
 
   // Lock the map mutex, to ensure it doesn't get written to while we read it
   std::scoped_lock lock(map_and_mutex_->mutex);
-  const VolumetricDataStructureBase::ConstPtr map = map_and_mutex_->map;
+  const MapBase::ConstPtr map = map_and_mutex_->map;
   if (!map) {
     ROS_INFO("Map is empty. Nothing to draw.");
     return;

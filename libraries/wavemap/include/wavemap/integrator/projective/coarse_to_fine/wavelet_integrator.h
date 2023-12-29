@@ -6,7 +6,7 @@
 
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/map/wavelet_octree.h"
 
 namespace wavemap {

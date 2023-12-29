@@ -9,7 +9,7 @@
 #include "wavemap/integrator/integrator_base.h"
 #include "wavemap/integrator/measurement_model/measurement_model_base.h"
 #include "wavemap/integrator/projection_model/projector_base.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 
 namespace wavemap {
 /**

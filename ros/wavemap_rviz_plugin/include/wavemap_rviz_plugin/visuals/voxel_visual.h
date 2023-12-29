@@ -19,7 +19,7 @@
 #include <rviz/view_manager.h>
 #include <wavemap/config/type_selector.h>
 #include <wavemap/indexing/index_hashes.h>
-#include <wavemap/map/volumetric_data_structure_base.h>
+#include <wavemap/map/map_base.h>
 #include <wavemap/utils/time/time.h>
 
 #include "wavemap_rviz_plugin/common.h"

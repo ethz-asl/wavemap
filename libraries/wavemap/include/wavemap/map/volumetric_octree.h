@@ -8,7 +8,7 @@
 #include "wavemap/data_structure/ndtree/ndtree.h"
 #include "wavemap/indexing/index_conversions.h"
 #include "wavemap/indexing/ndtree_index.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 
 namespace wavemap {
 /**
@@ -35,14 +35,14 @@ struct VolumetricOctreeConfig : ConfigBase<VolumetricOctreeConfig, 4> {
         tree_height(tree_height) {}
 
   // Conversion to DataStructureBase config
-  operator VolumetricDataStructureConfig() const {  // NOLINT
+  operator MapBaseConfig() const {  // NOLINT
     return {min_cell_width, min_log_odds, max_log_odds};
   }
 
   bool isValid(bool verbose) const override;
 };
 
-class VolumetricOctree : public VolumetricDataStructureBase {
+class VolumetricOctree : public MapBase {
  public:
   using Ptr = std::shared_ptr<VolumetricOctree>;
   using ConstPtr = std::shared_ptr<const VolumetricOctree>;
@@ -53,7 +53,7 @@ class VolumetricOctree : public VolumetricDataStructureBase {
   static constexpr bool kRequiresExplicitThresholding = true;
 
   explicit VolumetricOctree(const VolumetricOctreeConfig& config)
-      : VolumetricDataStructureBase(config), config_(config.checkValid()) {}
+      : MapBase(config), config_(config.checkValid()) {}
 
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
@@ -76,8 +76,7 @@ class VolumetricOctree : public VolumetricDataStructureBase {
   void addToCellValue(const OctreeIndex& index, FloatingPoint update);
 
   void forEachLeaf(
-      typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
-          visitor_fn) const override;
+      typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;
 
   NodeType& getRootNode() { return ndtree_.getRootNode(); }
   const NodeType& getRootNode() const { return ndtree_.getRootNode(); }

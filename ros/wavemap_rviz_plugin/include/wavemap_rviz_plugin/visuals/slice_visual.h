@@ -15,7 +15,7 @@
 #include <rviz/properties/float_property.h>
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/property.h>
-#include <wavemap/map/volumetric_data_structure_base.h>
+#include <wavemap/map/map_base.h>
 
 #include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/visuals/cell_layer.h"

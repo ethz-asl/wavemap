@@ -15,7 +15,7 @@
 #include "wavemap/integrator/ray_tracing/ray_tracing_integrator.h"
 #include "wavemap/map/hashed_blocks.h"
 #include "wavemap/map/hashed_wavelet_octree.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/map/volumetric_octree.h"
 #include "wavemap/map/wavelet_octree.h"
 #include "wavemap/test/config_generator.h"
@@ -92,7 +92,7 @@ TYPED_TEST(PointcloudIntegratorTypedTest,
             *projection_model),
         projection_model, posed_range_image, beam_offset_image);
 
-    VolumetricDataStructureBase::Ptr reference_occupancy_map =
+    MapBase::Ptr reference_occupancy_map =
         std::make_shared<HashedBlocks>(data_structure_config);
     IntegratorBase::Ptr reference_integrator =
         std::make_shared<FixedResolutionIntegrator>(
@@ -149,8 +149,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
   for (int idx = 0; idx < 3; ++idx) {
     const auto ray_tracing_integrator_config =
         getRandomConfig<RayTracingIntegratorConfig>();
-    const auto data_structure_config =
-        getRandomConfig<VolumetricDataStructureConfig>();
+    const auto data_structure_config = getRandomConfig<MapBaseConfig>();
     const auto projection_model =
         SphericalProjector(getRandomConfig<SphericalProjectorConfig>());
     const FloatingPoint min_cell_width_inv =
@@ -183,7 +182,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
     }
 
     // Set up the occupancy map, integrator and integrate the pointcloud
-    VolumetricDataStructureBase::Ptr occupancy_map =
+    MapBase::Ptr occupancy_map =
         std::make_shared<HashedBlocks>(data_structure_config);
     IntegratorBase::Ptr pointcloud_integrator =
         std::make_shared<RayTracingIntegrator>(ray_tracing_integrator_config,

@@ -73,7 +73,7 @@ Index3D HashedChunkedWaveletOctree::getMaxIndex() const {
 }
 
 void HashedChunkedWaveletOctree::forEachLeaf(
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
+    MapBase::IndexedLeafVisitorFunction visitor_fn) const {
   forEachBlock(
       [&visitor_fn](const BlockIndex& block_index, const Block& block) {
         block.forEachLeaf(block_index, visitor_fn);

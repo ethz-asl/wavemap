@@ -26,8 +26,7 @@ HashedBlocks FullEuclideanSDFGenerator::generate(
   propagate(occupancy_map, full_sdf, open);
 
   // Copy into regular data structure
-  const VolumetricDataStructureConfig config{min_cell_width, 0.f,
-                                             max_distance_};
+  const MapBaseConfig config{min_cell_width, 0.f, max_distance_};
   HashedBlocks sdf(config, max_distance_);
   full_sdf.forEachLeaf(
       [&sdf](const Index3D& cell_index, const VectorDistance& cell_value) {

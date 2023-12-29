@@ -12,7 +12,7 @@
 
 namespace wavemap {
 IntegratorBase::Ptr IntegratorFactory::create(
-    const param::Value& params, VolumetricDataStructureBase::Ptr occupancy_map,
+    const param::Value& params, MapBase::Ptr occupancy_map,
     std::shared_ptr<ThreadPool> thread_pool,
     std::optional<IntegratorType> default_integrator_type) {
   if (const auto type = IntegratorType::from(params, "integration_method");
@@ -34,8 +34,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
 
 IntegratorBase::Ptr IntegratorFactory::create(
     IntegratorType integrator_type, const param::Value& params,
-    VolumetricDataStructureBase::Ptr occupancy_map,
-    std::shared_ptr<ThreadPool> thread_pool) {
+    MapBase::Ptr occupancy_map, std::shared_ptr<ThreadPool> thread_pool) {
   // If we're using a ray tracing based integrator, we can build it directly
   if (integrator_type == IntegratorType::kRayTracingIntegrator) {
     if (const auto config =
@@ -98,8 +97,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
                    << " only supports data structures of type "
-                   << VolumetricDataStructureType::toStr(
-                          VolumetricDataStructureType::kOctree)
+                   << MapType::toStr(MapType::kOctree)
                    << ". Returning nullptr.";
       }
       break;
@@ -114,8 +112,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
                    << " only supports data structures of type "
-                   << VolumetricDataStructureType::toStr(
-                          VolumetricDataStructureType::kWaveletOctree)
+                   << MapType::toStr(MapType::kWaveletOctree)
                    << ". Returning nullptr.";
       }
       break;
@@ -131,8 +128,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       } else {
         LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
                    << " only supports data structures of type "
-                   << VolumetricDataStructureType::toStr(
-                          VolumetricDataStructureType::kHashedWaveletOctree)
+                   << MapType::toStr(MapType::kHashedWaveletOctree)
                    << ". Returning nullptr.";
       }
       break;
@@ -146,12 +142,10 @@ IntegratorBase::Ptr IntegratorFactory::create(
             beam_offset_image, measurement_model,
             std::move(hashed_chunked_wavelet_map), std::move(thread_pool));
       } else {
-        LOG(ERROR)
-            << "Integrator of type " << integrator_type.toStr()
-            << " only supports data structures of type "
-            << VolumetricDataStructureType::toStr(
-                   VolumetricDataStructureType::kHashedChunkedWaveletOctree)
-            << ". Returning nullptr.";
+        LOG(ERROR) << "Integrator of type " << integrator_type.toStr()
+                   << " only supports data structures of type "
+                   << MapType::toStr(MapType::kHashedChunkedWaveletOctree)
+                   << ". Returning nullptr.";
       }
       break;
     }

@@ -7,7 +7,7 @@
 
 namespace wavemap {
 TEST(InterpolationUtilsTest, Trilinear) {
-  VolumetricDataStructureConfig config{1.f, -10.f, 10.f};
+  MapBaseConfig config{1.f, -10.f, 10.f};
   HashedBlocks map(config);
   const FloatingPoint cell_width = map.getMinCellWidth();
   // Fill with known pattern

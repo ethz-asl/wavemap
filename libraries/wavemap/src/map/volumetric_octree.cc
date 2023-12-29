@@ -112,7 +112,7 @@ Index3D VolumetricOctree::getMaxIndex() const {
 }
 
 void VolumetricOctree::forEachLeaf(
-    VolumetricDataStructureBase::IndexedLeafVisitorFunction visitor_fn) const {
+    MapBase::IndexedLeafVisitorFunction visitor_fn) const {
   struct StackElement {
     const OctreeIndex node_index;
     const NodeType& node;

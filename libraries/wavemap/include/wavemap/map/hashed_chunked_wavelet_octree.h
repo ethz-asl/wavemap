@@ -9,7 +9,7 @@
 #include "wavemap/data_structure/spatial_hash.h"
 #include "wavemap/indexing/index_hashes.h"
 #include "wavemap/map/hashed_chunked_wavelet_octree_block.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/utils/math/int_math.h"
 
 namespace wavemap {
@@ -53,14 +53,14 @@ struct HashedChunkedWaveletOctreeConfig
         only_prune_blocks_if_unused_for(only_prune_blocks_if_unused_for) {}
 
   // Conversion to DataStructureBase config
-  operator VolumetricDataStructureConfig() const {  // NOLINT
+  operator MapBaseConfig() const {  // NOLINT
     return {min_cell_width, min_log_odds, max_log_odds};
   }
 
   bool isValid(bool verbose) const override;
 };
 
-class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
+class HashedChunkedWaveletOctree : public MapBase {
  public:
   using Ptr = std::shared_ptr<HashedChunkedWaveletOctree>;
   using ConstPtr = std::shared_ptr<const HashedChunkedWaveletOctree>;
@@ -74,7 +74,7 @@ class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
 
   explicit HashedChunkedWaveletOctree(
       const HashedChunkedWaveletOctreeConfig& config)
-      : VolumetricDataStructureBase(config), config_(config.checkValid()) {}
+      : MapBase(config), config_(config.checkValid()) {}
 
   bool empty() const override { return block_map_.empty(); }
   size_t size() const override;
@@ -119,8 +119,7 @@ class HashedChunkedWaveletOctree : public VolumetricDataStructureBase {
   }
 
   void forEachLeaf(
-      typename VolumetricDataStructureBase::IndexedLeafVisitorFunction
-          visitor_fn) const override;
+      typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;
 
  private:
   const HashedChunkedWaveletOctreeConfig config_;

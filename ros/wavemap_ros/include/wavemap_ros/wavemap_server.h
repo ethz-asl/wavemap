@@ -14,7 +14,7 @@
 #include <wavemap/config/config_base.h>
 #include <wavemap/indexing/index_hashes.h>
 #include <wavemap/integrator/integrator_base.h>
-#include <wavemap/map/volumetric_data_structure_base.h>
+#include <wavemap/map/map_base.h>
 #include <wavemap/utils/thread_pool.h>
 #include <wavemap/utils/time/stopwatch.h>
 #include <wavemap/utils/time/time.h>
@@ -71,15 +71,13 @@ class WavemapServer {
   InputHandler* addInput(const param::Value& integrator_params,
                          const ros::NodeHandle& nh, ros::NodeHandle nh_private);
 
-  VolumetricDataStructureBase::Ptr getMap() { return occupancy_map_; }
-  VolumetricDataStructureBase::ConstPtr getMap() const {
-    return occupancy_map_;
-  }
+  MapBase::Ptr getMap() { return occupancy_map_; }
+  MapBase::ConstPtr getMap() const { return occupancy_map_; }
 
  private:
   const WavemapServerConfig config_;
 
-  VolumetricDataStructureBase::Ptr occupancy_map_;
+  MapBase::Ptr occupancy_map_;
 
   std::shared_ptr<TfTransformer> transformer_;
   std::shared_ptr<ThreadPool> thread_pool_;

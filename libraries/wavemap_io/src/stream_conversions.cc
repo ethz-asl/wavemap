@@ -1,8 +1,7 @@
 #include "wavemap_io/stream_conversions.h"
 
 namespace wavemap::io {
-bool mapToStream(const VolumetricDataStructureBase& map,
-                 std::ostream& ostream) {
+bool mapToStream(const MapBase& map, std::ostream& ostream) {
   // Call the appropriate mapToStream converter based on the map's derived type
   if (const auto* hashed_blocks = dynamic_cast<const HashedBlocks*>(&map);
       hashed_blocks) {
@@ -32,7 +31,7 @@ bool mapToStream(const VolumetricDataStructureBase& map,
   return false;
 }
 
-bool streamToMap(std::istream& istream, VolumetricDataStructureBase::Ptr& map) {
+bool streamToMap(std::istream& istream, MapBase::Ptr& map) {
   // Call the appropriate streamToMap converter based on the received map's type
   const auto storage_format = streamable::StorageFormat::peek(istream);
   switch (storage_format) {
@@ -111,7 +110,7 @@ bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map) {
   // Deserialize the map's config and initialize the data structure
   const auto hashed_blocks_header =
       streamable::HashedBlocksHeader::read(istream);
-  VolumetricDataStructureConfig config;
+  MapBaseConfig config;
   config.min_cell_width = hashed_blocks_header.min_cell_width;
   config.min_log_odds = hashed_blocks_header.min_log_odds;
   config.max_log_odds = hashed_blocks_header.max_log_odds;

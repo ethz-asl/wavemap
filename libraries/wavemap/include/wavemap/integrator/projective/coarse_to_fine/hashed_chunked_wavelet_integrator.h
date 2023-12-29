@@ -8,7 +8,7 @@
 #include "wavemap/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/integrator/projective/projective_integrator.h"
 #include "wavemap/map/hashed_chunked_wavelet_octree.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/utils/thread_pool.h"
 
 namespace wavemap {

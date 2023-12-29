@@ -3,8 +3,7 @@
 #include <fstream>
 
 namespace wavemap::io {
-bool mapToFile(const VolumetricDataStructureBase& map,
-               const std::filesystem::path& file_path) {
+bool mapToFile(const MapBase& map, const std::filesystem::path& file_path) {
   if (file_path.empty()) {
     LOG(WARNING)
         << "Could open file for writing. Specified file path is empty.";
@@ -30,8 +29,7 @@ bool mapToFile(const VolumetricDataStructureBase& map,
   return static_cast<bool>(file_ostream);
 }
 
-bool fileToMap(const std::filesystem::path& file_path,
-               VolumetricDataStructureBase::Ptr& map) {
+bool fileToMap(const std::filesystem::path& file_path, MapBase::Ptr& map) {
   if (file_path.empty()) {
     LOG(WARNING)
         << "Could not open file for reading. Specified file path is empty.";

@@ -2,7 +2,7 @@
 #include <wavemap/common.h>
 #include <wavemap/map/hashed_chunked_wavelet_octree.h>
 #include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/map/volumetric_data_structure_base.h>
+#include <wavemap/map/map_base.h>
 #include <wavemap/map/wavelet_octree.h>
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
@@ -46,7 +46,7 @@ TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
   }
 
   // Convert to base pointer
-  VolumetricDataStructureBase::ConstPtr map_base = map;
+  MapBase::ConstPtr map_base = map;
   ASSERT_EQ(map_base->getMinCellWidth(), config.min_cell_width);
   ASSERT_EQ(map_base->getMinLogOdds(), config.min_log_odds);
   ASSERT_EQ(map_base->getMaxLogOdds(), config.max_log_odds);
@@ -55,7 +55,7 @@ TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
   wavemap_msgs::Map map_msg;
   ASSERT_TRUE(convert::mapToRosMsg(*map_base, TestFixture::frame_id,
                                    TestFixture::stamp, map_msg));
-  VolumetricDataStructureBase::Ptr map_base_round_trip;
+  MapBase::Ptr map_base_round_trip;
   ASSERT_TRUE(convert::rosMsgToMap(map_msg, map_base_round_trip));
   ASSERT_TRUE(map_base_round_trip);
 
@@ -111,7 +111,7 @@ TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
     wavemap_msgs::Map map_msg;
     ASSERT_TRUE(convert::mapToRosMsg(map_original, TestFixture::frame_id,
                                      TestFixture::stamp, map_msg));
-    VolumetricDataStructureBase::Ptr map_base_round_trip;
+    MapBase::Ptr map_base_round_trip;
     ASSERT_TRUE(convert::rosMsgToMap(map_msg, map_base_round_trip));
     ASSERT_TRUE(map_base_round_trip);
 

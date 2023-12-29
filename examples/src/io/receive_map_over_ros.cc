@@ -2,7 +2,7 @@
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
 // Create a smart pointer that will own the received map
-wavemap::VolumetricDataStructureBase::Ptr loaded_map;
+wavemap::MapBase::Ptr loaded_map;
 
 // Define the map callback
 void mapCallback(const wavemap_msgs::Map& msg) {

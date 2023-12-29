@@ -16,14 +16,14 @@ class FixedResolutionIntegrator : public ProjectiveIntegrator {
                             PosedImage<>::Ptr posed_range_image,
                             Image<Vector2D>::Ptr beam_offset_image,
                             MeasurementModelBase::ConstPtr measurement_model,
-                            VolumetricDataStructureBase::Ptr occupancy_map)
+                            MapBase::Ptr occupancy_map)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
             std::move(beam_offset_image), std::move(measurement_model)),
         occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
 
  private:
-  const VolumetricDataStructureBase::Ptr occupancy_map_;
+  const MapBase::Ptr occupancy_map_;
   AABB<Point3D> aabb_;
 
   void importPointcloud(const PosedPointcloud<>& pointcloud) override;

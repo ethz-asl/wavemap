@@ -50,7 +50,7 @@ void CellSelector::initializePropertyMenu() {
                                                    CellSelectionMode::kBand);
 }
 
-void CellSelector::setMap(const VolumetricDataStructureBase::ConstPtr& map) {
+void CellSelector::setMap(const MapBase::ConstPtr& map) {
   const auto hashed_map =
       std::dynamic_pointer_cast<const HashedWaveletOctree>(map);
   if (hashed_map) {

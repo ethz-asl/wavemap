@@ -18,11 +18,9 @@
 #include <wavemap_msgs/Map.h>
 
 namespace wavemap::convert {
-bool mapToRosMsg(const VolumetricDataStructureBase& map,
-                 const std::string& frame_id, const ros::Time& stamp,
-                 wavemap_msgs::Map& msg);
-bool rosMsgToMap(const wavemap_msgs::Map& msg,
-                 VolumetricDataStructureBase::Ptr& map);
+bool mapToRosMsg(const MapBase& map, const std::string& frame_id,
+                 const ros::Time& stamp, wavemap_msgs::Map& msg);
+bool rosMsgToMap(const wavemap_msgs::Map& msg, MapBase::Ptr& map);
 
 void mapToRosMsg(const HashedBlocks& map, wavemap_msgs::HashedBlocks& msg);
 void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg, HashedBlocks::Ptr& map);

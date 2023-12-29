@@ -5,21 +5,20 @@
 #include <string>
 
 #include "wavemap/integrator/integrator_base.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/utils/thread_pool.h"
 
 namespace wavemap {
 class IntegratorFactory {
  public:
   static IntegratorBase::Ptr create(
-      const param::Value& params,
-      VolumetricDataStructureBase::Ptr occupancy_map,
+      const param::Value& params, MapBase::Ptr occupancy_map,
       std::shared_ptr<ThreadPool> thread_pool = nullptr,
       std::optional<IntegratorType> default_integrator_type = std::nullopt);
 
   static IntegratorBase::Ptr create(
       IntegratorType integrator_type, const param::Value& params,
-      VolumetricDataStructureBase::Ptr occupancy_map,
+      MapBase::Ptr occupancy_map,
       std::shared_ptr<ThreadPool> thread_pool = nullptr);
 };
 }  // namespace wavemap

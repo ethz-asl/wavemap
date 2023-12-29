@@ -3,11 +3,11 @@
 
 #include "wavemap/common.h"
 #include "wavemap/indexing/index_conversions.h"
-#include "wavemap/map/volumetric_data_structure_base.h"
+#include "wavemap/map/map_base.h"
 #include "wavemap/utils/data/eigen_checks.h"
 
 namespace wavemap::interpolate {
-FloatingPoint trilinear(const wavemap::VolumetricDataStructureBase& map,
+FloatingPoint trilinear(const wavemap::MapBase& map,
                         const wavemap::Point3D& position) {
   const FloatingPoint cell_width = map.getMinCellWidth();
   const FloatingPoint cell_width_inv = 1.f / cell_width;

@@ -3,7 +3,7 @@
 #include <std_srvs/Empty.h>
 #include <std_srvs/Trigger.h>
 #include <tracy/Tracy.hpp>
-#include <wavemap/map/volumetric_data_structure_factory.h>
+#include <wavemap/map/map_factory.h>
 #include <wavemap_io/file_conversions.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/Map.h>
@@ -55,8 +55,8 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // Setup data structure
   const auto data_structure_params =
       param::convert::toParamValue(nh_private, "map/data_structure");
-  occupancy_map_ = VolumetricDataStructureFactory::create(
-      data_structure_params, VolumetricDataStructureType::kHashedBlocks);
+  occupancy_map_ =
+      MapFactory::create(data_structure_params, MapType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
 
   // Setup thread pool
