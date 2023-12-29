@@ -91,13 +91,9 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
       test_${PROJECT_NAME}
       test/src/data_structure/test_aabb.cc
-      test/src/data_structure/test_haar_cell.cc
-      test/src/data_structure/test_hashed_blocks.cc
       test/src/data_structure/test_image.cc
       test/src/data_structure/test_ndtree.cc
       test/src/data_structure/test_pointcloud.cc
-      test/src/data_structure/test_volumetric_data_structure.cc
-      test/src/data_structure/test_volumetric_octree.cc
       test/src/data_structure/test_sparse_vector.cc
       test/src/indexing/test_index_conversions.cc
       test/src/indexing/test_ndtree_index.cc
@@ -111,6 +107,10 @@ if (CATKIN_ENABLE_TESTING)
       test/src/iterator/test_grid_iterator.cc
       test/src/iterator/test_ray_iterator.cc
       test/src/iterator/test_subtree_iterator.cc
+      test/src/map/test_haar_cell.cc
+      test/src/map/test_hashed_blocks.cc
+      test/src/map/test_map.cc
+      test/src/map/test_volumetric_octree.cc
       test/src/utils/test_adjacency.cc
       test/src/utils/test_approximate_trigonometry.cc
       test/src/utils/test_bit_manipulation.cc

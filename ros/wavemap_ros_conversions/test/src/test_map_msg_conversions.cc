@@ -12,7 +12,7 @@
 #include "wavemap_ros_conversions/map_msg_conversions.h"
 
 namespace wavemap {
-template <typename VolumetricDataStructureType>
+template <typename MapType>
 class MapMsgConversionsTest : public FixtureBase,
                               public GeometryGenerator,
                               public ConfigGenerator {
@@ -27,10 +27,10 @@ class MapMsgConversionsTest : public FixtureBase,
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
 };
 
-using VolumetricDataStructureTypes =
+using MapTypes =
     ::testing::Types<HashedBlocks, WaveletOctree, HashedWaveletOctree,
                      HashedChunkedWaveletOctree>;
-TYPED_TEST_SUITE(MapMsgConversionsTest, VolumetricDataStructureTypes, );
+TYPED_TEST_SUITE(MapMsgConversionsTest, MapTypes, );
 
 TYPED_TEST(MapMsgConversionsTest, MetadataPreservation) {
   const auto config =

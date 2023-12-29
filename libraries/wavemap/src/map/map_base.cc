@@ -3,7 +3,7 @@
 #include "wavemap/utils/meta/nameof.h"
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(VolumetricDataStructureConfig,
+DECLARE_CONFIG_MEMBERS(MapBaseConfig,
                       (min_cell_width)
                       (min_log_odds)
                       (max_log_odds));

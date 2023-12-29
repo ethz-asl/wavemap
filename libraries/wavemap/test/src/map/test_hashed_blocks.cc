@@ -9,7 +9,7 @@ namespace wavemap {
 class HashedBlocksTest : public FixtureBase, public GeometryGenerator {};
 
 // NOTE: Insertion tests are performed as part of the test suite for the
-//       VolumetricDataStructure interface.
+//       Map interface.
 
 TEST_F(HashedBlocksTest, Initialization) {
   const FloatingPoint random_min_cell_width = getRandomMinCellWidth();

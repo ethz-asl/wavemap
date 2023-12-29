@@ -14,20 +14,20 @@
 #include "wavemap/test/geometry_generator.h"
 
 namespace wavemap {
-template <typename VolumetricDataStructureType>
-class VolumetricDataStructureTest : public FixtureBase,
-                                    public GeometryGenerator,
-                                    public ConfigGenerator {
+template <typename MapType>
+class MapTest : public FixtureBase,
+                public GeometryGenerator,
+                public ConfigGenerator {
  protected:
   static constexpr FloatingPoint kAcceptableReconstructionError = 5e-2f;
 };
 
-using VolumetricDataStructureTypes =
+using MapTypes =
     ::testing::Types<HashedBlocks, VolumetricOctree, WaveletOctree,
                      HashedWaveletOctree, HashedChunkedWaveletOctree>;
-TYPED_TEST_SUITE(VolumetricDataStructureTest, VolumetricDataStructureTypes, );
+TYPED_TEST_SUITE(MapTest, MapTypes, );
 
-TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
+TYPED_TEST(MapTest, InitializationAndClearing) {
   const auto config =
       ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
   std::unique_ptr<MapBase> map_base_ptr = std::make_unique<TypeParam>(config);
@@ -52,7 +52,7 @@ TYPED_TEST(VolumetricDataStructureTest, InitializationAndClearing) {
   EXPECT_LE(map_base_ptr->getMemoryUsage(), empty_map_memory_usage);
 }
 
-TYPED_TEST(VolumetricDataStructureTest, Pruning) {
+TYPED_TEST(MapTest, Pruning) {
   const auto config =
       ConfigGenerator::getRandomConfig<typename TypeParam::Config>();
   std::unique_ptr<MapBase> map_base_ptr = std::make_unique<TypeParam>(config);
@@ -91,7 +91,7 @@ TYPED_TEST(VolumetricDataStructureTest, Pruning) {
   }
 }
 
-TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
+TYPED_TEST(MapTest, MinMaxIndexGetters) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const auto config =
@@ -123,7 +123,7 @@ TYPED_TEST(VolumetricDataStructureTest, MinMaxIndexGetters) {
   }
 }
 
-TYPED_TEST(VolumetricDataStructureTest, InsertionAndLeafVisitor) {
+TYPED_TEST(MapTest, InsertionAndLeafVisitor) {
   constexpr int kNumRepetitions = 3;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Create a random map

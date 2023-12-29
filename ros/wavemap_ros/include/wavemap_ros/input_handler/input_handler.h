@@ -57,8 +57,7 @@ struct InputHandlerConfig : public ConfigBase<InputHandlerConfig, 5> {
 class InputHandler {
  public:
   InputHandler(const InputHandlerConfig& config, const param::Value& params,
-               std::string world_frame,
-               VolumetricDataStructureBase::Ptr occupancy_map,
+               std::string world_frame, MapBase::Ptr occupancy_map,
                std::shared_ptr<TfTransformer> transformer,
                std::shared_ptr<ThreadPool> thread_pool,
                const ros::NodeHandle& nh, ros::NodeHandle nh_private);

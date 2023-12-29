@@ -12,7 +12,7 @@ class VolumetricOctreeTest : public FixtureBase,
                              public ConfigGenerator {};
 
 // NOTE: Insertion tests are performed as part of the test suite for the
-//       VolumetricDataStructure interface.
+//       Map interface.
 // TODO(victorr): Test whether out of bounds accesses/insertions are handled
 //                correctly (e.g. throw error or do nothing and print error).
 

@@ -29,7 +29,7 @@ struct RayTracingIntegratorConfig : ConfigBase<RayTracingIntegratorConfig, 2> {
 class RayTracingIntegrator : public IntegratorBase {
  public:
   RayTracingIntegrator(const RayTracingIntegratorConfig& config,
-                       VolumetricDataStructureBase::Ptr occupancy_map)
+                       MapBase::Ptr occupancy_map)
       : config_(config.checkValid()),
         occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
 
@@ -39,7 +39,7 @@ class RayTracingIntegrator : public IntegratorBase {
   using MeasurementModelType = ConstantRay;
 
   const RayTracingIntegratorConfig config_;
-  const VolumetricDataStructureBase::Ptr occupancy_map_;
+  const MapBase::Ptr occupancy_map_;
 };
 }  // namespace wavemap
 

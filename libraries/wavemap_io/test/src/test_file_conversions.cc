@@ -11,7 +11,7 @@
 #include "wavemap_io/file_conversions.h"
 
 namespace wavemap {
-template <typename VolumetricDataStructureType>
+template <typename MapType>
 class FileConversionsTest : public FixtureBase,
                             public GeometryGenerator,
                             public ConfigGenerator {
@@ -20,10 +20,10 @@ class FileConversionsTest : public FixtureBase,
   static constexpr auto kTemporaryFilePath = "/tmp/tmp.wvmp";
 };
 
-using VolumetricDataStructureTypes =
+using MapTypes =
     ::testing::Types<HashedBlocks, WaveletOctree, HashedWaveletOctree,
                      HashedChunkedWaveletOctree>;
-TYPED_TEST_SUITE(FileConversionsTest, VolumetricDataStructureTypes, );
+TYPED_TEST_SUITE(FileConversionsTest, MapTypes, );
 
 TYPED_TEST(FileConversionsTest, MetadataPreservation) {
   const auto config =
