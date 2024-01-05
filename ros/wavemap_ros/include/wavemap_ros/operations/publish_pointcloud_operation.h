@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 
+#include <geometry_msgs/Point32.h>
 #include <ros/ros.h>
 #include <wavemap/config/config_base.h>
 #include <wavemap/data_structure/volumetric/volumetric_data_structure_base.h>
@@ -16,12 +17,14 @@ namespace wavemap {
  * Config struct for obstacle pointcloud publishing operations.
  */
 struct PublishPointcloudOperationConfig
-    : public ConfigBase<PublishPointcloudOperationConfig, 3> {
+    : public ConfigBase<PublishPointcloudOperationConfig, 4> {
   //! Time period controlling how often the pointcloud is published.
   Seconds<FloatingPoint> once_every = 1.f;
 
   //! Threshold in log odds above which cells are classified as occupied.
   FloatingPoint occupancy_threshold_log_odds = 1e-3f;
+
+  bool only_publish_changed_blocks = true;
 
   //! Name of the topic the pointcloud will be published on.
   std::string topic = "obstacle_pointcloud";
@@ -62,7 +65,7 @@ class PublishPointcloudOperation : public OperationBase {
   // Pointcloud publishing
   ros::Publisher pointcloud_pub_;
   Timestamp last_run_timestamp_internal_;
-  void publishPointcloud(const ros::Time& cell_index);
+  void publishPointcloud(const ros::Time& current_time);
 };
 }  // namespace wavemap
 
