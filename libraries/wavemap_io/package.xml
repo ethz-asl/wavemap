@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>wavemap_io</name>
-  <version>1.6.1</version>
+  <version>1.6.3</version>
   <description>(De)serialization of wavemap types to files.</description>
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>

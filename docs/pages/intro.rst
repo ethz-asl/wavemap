@@ -11,16 +11,31 @@ The framework is very flexible and supports several data structures, measurement
 Paper
 *****
 
-A technical introduction to the theory behind the wavemap is provided in our open-access `RSS paper <https://www.roboticsproceedings.org/rss19/p065.pdf>`__.
+A technical introduction to the theory behind wavemap is provided in our open-access RSS paper, which can be downloaded `here <https://www.roboticsproceedings.org/rss19/p065.pdf>`__.
 
-Abstract:
+Presentation
+============
+
+.. raw:: html
+
+    <div style="width: 860px; margin: 0px; max-width: 100%; text-align: center;"><div style="position: relative; overflow: hidden; margin: 0 auto; padding-bottom: 56.25%;"><iframe width="860" height="480" src="https://www.youtube.com/embed/ftQhK75Ri1E?si=9txTYyJ78wQuhyN-&amp;start=733&modestbranding=1" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div></div>
+
+
+Abstract
+============
+
     Volumetric maps are widely used in robotics due to their desirable properties in applications such as path planning, exploration, and manipulation. Constant advances in mapping technologies are needed to keep up with the improvements in sensor technology, generating increasingly vast amounts of precise measurements. Handling this data in a computationally and memory-efficient manner is paramount to representing the environment at the desired scales and resolutions. In this work, we express the desirable properties of a volumetric mapping framework through the lens of multi-resolution analysis. This shows that wavelets are a natural foundation for hierarchical and multi-resolution volumetric mapping. Based on this insight we design an efficient mapping system that uses wavelet decomposition. The efficiency of the system enables the use of uncertainty-aware sensor models, improving the quality of the maps. Experiments on both synthetic and real-world data provide mapping accuracy and runtime performance comparisons with state-of-the-art methods on both RGB-D and 3D LiDAR data. The framework is open-sourced to allow the robotics community at large to explore this approach.
 
-Please cite it when using wavemap for research:
+Reference
+=========
+
+Please cite our paper when using wavemap for research.
+
+APA-style:
 
 .. code-block:: text
 
-    Reijgwart, V., Cadena, C., Siegwart, R., & Ott, L. (2023). Efficient volumetric mapping of multi-scale environments using wavelet-based compression. Proceedings of Robotics: Science and System XIX.
+    Reijgwart, V., Cadena, C., Siegwart, R., & Ott, L. (2023). Efficient volumetric mapping of multi-scale environments using wavelet-based compression. Proceedings of Robotics: Science and Systems XIX. https://doi.org/10.15607/RSS.2023.XIX.065
 
 BibTeX:
 
@@ -33,20 +48,33 @@ BibTeX:
         year = {2023-07},
     }
 
+For other citation styles, you can use the `Crosscite's citation formatter <https://citation.crosscite.org/>`__ and enter DOI ``10.15607/RSS.2023.XIX.065``.
 
-Note that the code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.
+.. note::
+
+    Note that the code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.
 
 .. only:: html
 
     .. toctree::
-     :maxdepth: 1
-     :caption: Table of contents
+     :caption: Guide
+     :maxdepth: 2
      :hidden:
 
      pages/installation
      pages/demos
-     pages/configuration
+     pages/configuration/index
      pages/usage_examples
      pages/contributing
-     api/library_root
      pages/faq
+
+    .. toctree::
+     :caption: API
+     :maxdepth: 1
+     :hidden:
+
+     api/class_view_hierarchy
+     api/unabridged_api
+
+..
+   _TODO: Include api/file_view_hierarchy again once the directory structure is documented in Doxygen

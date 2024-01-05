@@ -313,5 +313,5 @@ WavemapMapDisplay::resolveWavemapServerNamespaceFromMapTopic(
 }  // namespace wavemap::rviz_plugin
 
 // Tell pluginlib about this class.
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(wavemap::rviz_plugin::WavemapMapDisplay, rviz::Display)
