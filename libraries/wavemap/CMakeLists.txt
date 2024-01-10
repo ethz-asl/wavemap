@@ -120,6 +120,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/utils/test_grid_neighborhood.cc
       test/src/utils/test_grid_adjacency.cc
       test/src/utils/test_ndtree_adjacency.cc
+      test/src/utils/test_occupancy_classifier.cc
       test/src/utils/test_int_math.cc
       test/src/utils/test_log_odds_converter.cc
       test/src/utils/test_map_interpolator.cpp
