@@ -76,15 +76,15 @@ class NdtreeBlockHash {
   template <typename IndexedLeafVisitorFunction>
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const;
 
- protected:
-  const HeightType max_height_;
-  const CellDataT default_value_;
-  BlockHashMap block_map_;
-
   Index<dim> indexToBlockIndex(const IndexType& index) const;
   IndexType indexToCellIndex(const IndexType& index) const;
   IndexType cellAndBlockIndexToIndex(const Index<dim>& block_index,
                                      const IndexType& cell_index) const;
+
+ protected:
+  const HeightType max_height_;
+  const CellDataT default_value_;
+  BlockHashMap block_map_;
 };
 
 template <typename CellDataT>

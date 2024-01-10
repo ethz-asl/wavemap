@@ -15,6 +15,7 @@ class ClassifiedMap {
     std::bitset<OctreeIndex::kNumChildren> has_unobserved;
   };
   using BlockHashMap = OctreeBlockHash<NodeData>;
+  using Block = BlockHashMap::Block;
   using Node = BlockHashMap::Node;
   static constexpr int kDim = 3;
 
@@ -36,18 +37,33 @@ class ClassifiedMap {
 
   void update(const HashedWaveletOctree& occupancy_map);
 
-  template <typename VisitorFn>
-  void forEachOccupiedLeaf(VisitorFn visitor_fn) const {}
+  bool has(const OctreeIndex& index, Occupancy::Id occupancy_type) const;
+  bool has(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
+
+  bool isFully(const OctreeIndex& index, Occupancy::Id occupancy_type) const;
+  bool isFully(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
+
+  void forEachLeafMatching(Occupancy::Id occupancy_type,
+                           std::function<void(const OctreeIndex&)> visitor_fn,
+                           IndexElement termination_height = 0) const;
+  void forEachLeafMatching(Occupancy::Mask occupancy_mask,
+                           std::function<void(const OctreeIndex&)> visitor_fn,
+                           IndexElement termination_height = 0) const;
 
  private:
   const FloatingPoint min_cell_width_;
   const OccupancyClassifier classifier_;
   BlockHashMap block_map_;
 
+  static Occupancy::Mask childOccupancyMask(const Node& node,
+                                            NdtreeIndexRelativeChild child_idx);
+
   void recursiveClassifier(
       const HashedWaveletOctreeBlock::NodeType& occupancy_node,
       FloatingPoint average_occupancy, Node& classified_node);
 };
 }  // namespace wavemap
+
+#include "wavemap/utils/query/impl/classified_map_inl.h"
 
 #endif  // WAVEMAP_UTILS_QUERY_CLASSIFIED_MAP_H_

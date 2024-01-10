@@ -32,16 +32,26 @@ constexpr bool OccupancyClassifier::is(FloatingPoint log_odds_occupancy,
 
 constexpr bool OccupancyClassifier::has(Occupancy::Mask region_occupancy,
                                         Occupancy::Id occupancy_type) {
+  return has(region_occupancy, Occupancy::toMask(occupancy_type));
+}
+
+constexpr bool OccupancyClassifier::has(Occupancy::Mask region_occupancy,
+                                        Occupancy::Mask occupancy_mask) {
   // Check that at least one bit in the region matches the mask
-  return region_occupancy & Occupancy::toMask(occupancy_type);
+  return region_occupancy & occupancy_mask;
 }
 
 constexpr bool OccupancyClassifier::isFully(Occupancy::Mask region_occupancy,
                                             Occupancy::Id occupancy_type) {
+  return isFully(region_occupancy, Occupancy::toMask(occupancy_type));
+}
+
+constexpr bool OccupancyClassifier::isFully(Occupancy::Mask region_occupancy,
+                                            Occupancy::Mask occupancy_mask) {
   // Set stray bits beyond mask width to 0, as they should not influence result
   const Occupancy::Mask region_occ_trimmed = region_occupancy & 0b111;
   // Check that no bits in the region are set while not being in the mask
-  return !(region_occ_trimmed & ~Occupancy::toMask(occupancy_type));
+  return !(region_occ_trimmed & ~occupancy_mask);
 }
 }  // namespace wavemap
 

@@ -9,6 +9,9 @@ class OccupancyClassifier {
   explicit OccupancyClassifier(FloatingPoint log_odds_occupancy_threshold = 0.f)
       : occupancy_threshold_(log_odds_occupancy_threshold) {}
 
+  static FloatingPoint getUnobservedThreshold() { return kUnobservedThreshold; }
+  FloatingPoint getOccupancyThreshold() const { return occupancy_threshold_; }
+
   static constexpr bool isUnobserved(FloatingPoint log_odds_occupancy);
   static constexpr bool isObserved(FloatingPoint log_odds_occupancy);
 
@@ -17,12 +20,19 @@ class OccupancyClassifier {
 
   static constexpr bool has(Occupancy::Mask region_occupancy,
                             Occupancy::Id occupancy_type);
+  static constexpr bool has(Occupancy::Mask region_occupancy,
+                            Occupancy::Mask occupancy_mask);
 
   static constexpr bool isFully(Occupancy::Mask region_occupancy,
                                 Occupancy::Id occupancy_type);
+  static constexpr bool isFully(Occupancy::Mask region_occupancy,
+                                Occupancy::Mask occupancy_mask);
 
-  static FloatingPoint getUnobservedThreshold() { return kUnobservedThreshold; }
-  FloatingPoint getOccupancyThreshold() const { return occupancy_threshold_; }
+  // Forbid implicit Mask type conversions
+  template <typename A, typename B>
+  static constexpr bool has(A region_occupancy, B occupancy_mask) = delete;
+  template <typename A, typename B>
+  static constexpr bool isFully(A region_occupancy, B occupancy_mask) = delete;
 
  private:
   static constexpr FloatingPoint kUnobservedThreshold = 1e-3f;

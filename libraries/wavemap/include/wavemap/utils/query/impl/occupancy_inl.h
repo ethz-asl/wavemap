@@ -11,6 +11,10 @@ constexpr Occupancy::Mask Occupancy::toMask(Occupancy::Id type_id) {
     return 0b011;
   }
 }
+constexpr Occupancy::Mask Occupancy::toMask(bool free, bool occupied,
+                                            bool unobserved) {
+  return free | occupied << 1 | unobserved << 2;
+}
 }  // namespace wavemap
 
 #endif  // WAVEMAP_UTILS_QUERY_IMPL_OCCUPANCY_INL_H_

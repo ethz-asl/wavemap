@@ -15,6 +15,7 @@ struct Occupancy : TypeSelector<Occupancy> {
 
   // NOTE: For usage examples, please refer to the OccupancyClassifier class.
   static constexpr Mask toMask(Id type_id);
+  static constexpr Mask toMask(bool free, bool occupied, bool unobserved);
   constexpr Mask toMask() const { return toMask(static_cast<Id>(id_)); }
 };
 }  // namespace wavemap
