@@ -7,7 +7,7 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
   const BlockIndex previous_block_index = block_index_;
   const MortonIndex previous_morton_code = morton_code_;
   const IndexElement previous_height = height_;
-  block_index_ = computeBlockIndexFromIndex(index);
+  block_index_ = map_.indexToBlockIndex(index);
   morton_code_ = convert::nodeIndexToMorton(index);
 
   // Check whether we're in the same block as last time
@@ -19,7 +19,7 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
     DCHECK_LE(height_, tree_height_);
   } else {
     // Test if the queried block exists
-    const auto* current_block = block_map_.getBlock(block_index_);
+    const auto* current_block = map_.getBlock(block_index_);
     if (current_block) {
       // If yes, load it
       node_stack_[tree_height_] = &current_block->getRootNode();
@@ -58,8 +58,9 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
     const NdtreeIndexRelativeChild child_idx =
         OctreeIndex::computeRelativeChildIndex(morton_code_, height_);
     --height_;
-    value_stack_[height_] = Transform::backwardSingleChild(
-        {parent_value, parent_node->data()}, child_idx);
+    value_stack_[height_] =
+        HashedWaveletOctree::Block::Transform::backwardSingleChild(
+            {parent_value, parent_node->data()}, child_idx);
     if (height_ == index.height || !parent_node->hasChild(child_idx)) {
       break;
     }

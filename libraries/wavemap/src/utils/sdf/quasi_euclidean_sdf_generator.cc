@@ -42,8 +42,7 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
                                 const OctreeIndex& node_index,
                                 FloatingPoint node_occupancy) {
     // Only process obstacles
-    if (OccupancyClassifier::isUnobserved(node_occupancy) ||
-        classifier_.isFree(node_occupancy)) {
+    if (!classifier_.is(node_occupancy, Occupancy::kOccupied)) {
       return;
     }
 
@@ -69,8 +68,7 @@ void QuasiEuclideanSDFGenerator::seed(const HashedWaveletOctree& occupancy_map,
       // Skip the cell if it is not free
       const FloatingPoint occupancy =
           occupancy_query_accelerator.getCellValue(index);
-      if (OccupancyClassifier::isUnobserved(occupancy) ||
-          classifier_.isOccupied(occupancy)) {
+      if (!classifier_.is(occupancy, Occupancy::kFree)) {
         continue;
       }
 
@@ -136,11 +134,11 @@ void QuasiEuclideanSDFGenerator::propagate(
         const FloatingPoint neighbor_occupancy =
             occupancy_query_accelerator.getCellValue(neighbor_index);
         // Never initialize or update unknown cells
-        if (OccupancyClassifier::isUnobserved(neighbor_occupancy)) {
+        if (classifier_.is(neighbor_occupancy, Occupancy::kUnobserved)) {
           continue;
         }
         // Set the sign
-        if (classifier_.isOccupied(neighbor_occupancy)) {
+        if (classifier_.is(neighbor_occupancy, Occupancy::kOccupied)) {
           neighbor_sdf = -sdf.getDefaultValue();
         }
       }

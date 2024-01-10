@@ -42,7 +42,7 @@ template <typename CellDataT, int dim>
 inline typename NdtreeBlockHash<CellDataT, dim>::Block&
 NdtreeBlockHash<CellDataT, dim>::getOrAllocateBlock(
     const Index<dim>& block_index) {
-  return block_map_.getOrAllocateBlock(block_index, tree_height_,
+  return block_map_.getOrAllocateBlock(block_index, max_height_,
                                        default_value_);
 }
 
@@ -105,7 +105,7 @@ NdtreeBlockHash<CellDataT, dim>::getNodeOrAncestor(
     const NdtreeIndex<dim> cell_index = indexToCellIndex(index);
     return block->getNodeOrAncestor(cell_index);
   }
-  return {nullptr, tree_height_};
+  return {nullptr, max_height_};
 }
 
 template <typename CellDataT, int dim>
@@ -189,7 +189,7 @@ void NdtreeBlockHash<CellDataT, dim>::forEachLeaf(
     Node& node;
   };
 
-  block_map_.forEachBlock([&visitor_fn, tree_height = tree_height_](
+  block_map_.forEachBlock([&visitor_fn, tree_height = max_height_](
                               const Index<dim>& block_index, Block& block) {
     std::stack<StackElement> stack;
     stack.emplace(StackElement{OctreeIndex{tree_height, block_index},
@@ -223,7 +223,7 @@ void NdtreeBlockHash<CellDataT, dim>::forEachLeaf(
     const Node& node;
   };
 
-  block_map_.forEachBlock([&visitor_fn, tree_height = tree_height_](
+  block_map_.forEachBlock([&visitor_fn, tree_height = max_height_](
                               const Index<dim>& block_index,
                               const Block& block) {
     std::stack<StackElement> stack;
@@ -256,8 +256,8 @@ template <typename CellDataT, int dim>
 inline Index<dim> NdtreeBlockHash<CellDataT, dim>::indexToBlockIndex(
     const NdtreeIndex<dim>& index) const {
   DCHECK_GE(index.height, 0);
-  DCHECK_LE(index.height, tree_height_);
-  const IndexElement depth = tree_height_ - index.height;
+  DCHECK_LE(index.height, max_height_);
+  const IndexElement depth = max_height_ - index.height;
   return int_math::div_exp2_floor(index.position, depth);
 }
 
@@ -265,8 +265,8 @@ template <typename CellDataT, int dim>
 inline NdtreeIndex<dim> NdtreeBlockHash<CellDataT, dim>::indexToCellIndex(
     const NdtreeIndex<dim>& index) const {
   DCHECK_GE(index.height, 0);
-  DCHECK_LE(index.height, tree_height_);
-  const IndexElement depth = tree_height_ - index.height;
+  DCHECK_LE(index.height, max_height_);
+  const IndexElement depth = max_height_ - index.height;
   return {index.height,
           int_math::div_exp2_floor_remainder(index.position, depth)};
 }
@@ -276,8 +276,8 @@ inline NdtreeIndex<dim>
 NdtreeBlockHash<CellDataT, dim>::cellAndBlockIndexToIndex(
     const Index<dim>& block_index, const NdtreeIndex<dim>& cell_index) const {
   DCHECK_GE(cell_index.height, 0);
-  DCHECK_LE(cell_index.height, tree_height_);
-  const IndexElement depth = tree_height_ - cell_index.height;
+  DCHECK_LE(cell_index.height, max_height_);
+  const IndexElement depth = max_height_ - cell_index.height;
   const IndexElement cells_per_side_at_height = int_math::exp2(depth);
   return {cell_index.height,
           cell_index.position + cells_per_side_at_height * block_index};

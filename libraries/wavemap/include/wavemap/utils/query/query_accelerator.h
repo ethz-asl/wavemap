@@ -70,8 +70,7 @@ class QueryAccelerator<HashedWaveletOctree> {
  public:
   static constexpr int kDim = HashedWaveletOctree::kDim;
 
-  explicit QueryAccelerator(const HashedWaveletOctree& map)
-      : block_map_(map.getHashMap()), tree_height_(map.getTreeHeight()) {}
+  explicit QueryAccelerator(const HashedWaveletOctree& map) : map_(map) {}
 
   FloatingPoint getCellValue(const Index3D& index) {
     return getCellValue(OctreeIndex{0, index});
@@ -80,13 +79,11 @@ class QueryAccelerator<HashedWaveletOctree> {
   FloatingPoint getCellValue(const OctreeIndex& index);
 
  private:
-  using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
-  using Transform = HaarTransform<FloatingPoint, kDim>;
-  using BlockIndex = typename HashedWaveletOctree::BlockIndex;
-  using NodeType = NdtreeNode<typename Coefficients::Details, kDim>;
+  using BlockIndex = HashedWaveletOctree::BlockIndex;
+  using NodeType = HashedWaveletOctree::Block::NodeType;
 
-  const HashedWaveletOctree::BlockHashMap& block_map_;
-  const IndexElement tree_height_;
+  const HashedWaveletOctree& map_;
+  const IndexElement tree_height_ = map_.getTreeHeight();
 
   std::array<const NodeType*, morton::kMaxTreeHeight<3>> node_stack_{};
   std::array<FloatingPoint, morton::kMaxTreeHeight<3>> value_stack_{};
@@ -95,13 +92,6 @@ class QueryAccelerator<HashedWaveletOctree> {
       BlockIndex ::Constant(std::numeric_limits<IndexElement>::max());
   MortonIndex morton_code_ = std::numeric_limits<MortonIndex>::max();
   IndexElement height_ = tree_height_;
-
-  BlockIndex computeBlockIndexFromIndex(const OctreeIndex& node_index) const {
-    const BlockIndex index = convert::nodeIndexToMinCornerIndex(node_index);
-    return int_math::div_exp2_floor(index, tree_height_);
-  }
-
-  friend class QueryAcceleratorTest_Equivalence_Test;
 };
 }  // namespace wavemap
 

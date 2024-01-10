@@ -23,13 +23,13 @@ class NdtreeBlockHash {
 
   explicit NdtreeBlockHash(HeightType max_tree_height,
                            CellDataT default_value = CellDataT{})
-      : tree_height_(max_tree_height), default_value_(default_value) {}
+      : max_height_(max_tree_height), default_value_(default_value) {}
 
   bool empty() const { return block_map_.empty(); }
   size_t size() const;
   void clear() { block_map_.clear(); }
 
-  HeightType getMaxHeight() const { return tree_height_; }
+  HeightType getMaxHeight() const { return max_height_; }
 
   bool hasBlock(const Index<dim>& block_index) const;
   bool eraseBlock(const Index<dim>& block_index);
@@ -77,7 +77,7 @@ class NdtreeBlockHash {
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const;
 
  protected:
-  const HeightType tree_height_;
+  const HeightType max_height_;
   const CellDataT default_value_;
   BlockHashMap block_map_;
 

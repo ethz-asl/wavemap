@@ -52,16 +52,12 @@ TEST_F(QueryAcceleratorTest, Equivalence) {
         EXPECT_NEAR(query_accelerator.getCellValue(node_index),
                     map.getCellValue(node_index), kEpsilon)
             << "For node_index " << node_index.toString() << " (in block"
-            << print::eigen::oneLine(
-                   query_accelerator.computeBlockIndexFromIndex(node_index))
-            << ")"
+            << print::eigen::oneLine(map.indexToBlockIndex(node_index)) << ")"
             << ", previous index " << previous_index.toString() << " (in block"
-            << print::eigen::oneLine(
-                   query_accelerator.computeBlockIndexFromIndex(previous_index))
+            << print::eigen::oneLine(map.indexToBlockIndex(previous_index))
             << ")"
             << " tree height " << tree_height << " has block"
-            << map.hasBlock(
-                   query_accelerator.computeBlockIndexFromIndex(node_index));
+            << map.hasBlock(map.indexToBlockIndex(node_index));
         previous_index = node_index;
       }
     }

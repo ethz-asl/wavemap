@@ -107,7 +107,7 @@ class WaveletOctree : public MapBase {
  private:
   const WaveletOctreeConfig config_;
 
-  Ndtree<Coefficients::Details, kDim> ndtree_{config_.tree_height - 1};
+  Octree<Coefficients::Details> ndtree_{config_.tree_height - 1};
   Coefficients::Scale root_scale_coefficient_{};
 
   OctreeIndex getInternalRootNodeIndex() const {

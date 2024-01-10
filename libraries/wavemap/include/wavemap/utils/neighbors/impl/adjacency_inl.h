@@ -21,7 +21,7 @@ constexpr Adjacency::Mask Adjacency::toMask(Adjacency::Id type_id) {
 
 template <int dim>
 constexpr Adjacency::Mask Adjacency::toMask() const {
-  return toMask<dim>(id_);
+  return toMask<dim>(static_cast<Id>(id_));
 }
 }  // namespace wavemap
 

@@ -84,7 +84,7 @@ TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
       FloatingPoint sdf_brute_force = sdf.getDefaultValue();
       Index3D parent_brute_force =
           Index3D::Constant(std::numeric_limits<IndexElement>::max());
-      if (classifier.isFree(occupancy_value)) {
+      if (classifier.is(occupancy_value, Occupancy::kFree)) {
         // In free space, the SDF should always be positive
         EXPECT_GT(sdf_value, 0.f);
 
@@ -106,8 +106,7 @@ TYPED_TEST(SdfGenerationTest, BruteForceEquivalence) {
                      node_index.position.array() + padding)) {
           const FloatingPoint neighbor_occupancy_value =
               map.getCellValue(neighbor_index);
-          if (classifier.isFree(neighbor_occupancy_value) &&
-              OccupancyClassifier::isObserved(neighbor_occupancy_value)) {
+          if (classifier.is(neighbor_occupancy_value, Occupancy::kFree)) {
             const auto free_cell_aabb = convert::nodeIndexToAABB(
                 OctreeIndex{0, neighbor_index}, min_cell_width);
             const FloatingPoint min_dist =
