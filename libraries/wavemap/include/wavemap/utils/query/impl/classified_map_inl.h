@@ -22,11 +22,15 @@ inline void ClassifiedMap::forEachLeafMatching(
                       termination_height);
 }
 
-inline Occupancy::Mask ClassifiedMap::childOccupancyMask(
-    const ClassifiedMap::Node& node, NdtreeIndexRelativeChild child_idx) {
-  return Occupancy::toMask(node.data().has_free[child_idx],
-                           node.data().has_occupied[child_idx],
-                           node.data().has_unobserved[child_idx]);
+Occupancy::Mask ClassifiedMap::NodeData::occupancyMask() const {
+  return Occupancy::toMask(has_free.any(), has_occupied.any(),
+                           has_unobserved.any());
+}
+
+inline Occupancy::Mask ClassifiedMap::NodeData::childOccupancyMask(
+    NdtreeIndexRelativeChild child_idx) const {
+  return Occupancy::toMask(has_free[child_idx], has_occupied[child_idx],
+                           has_unobserved[child_idx]);
 }
 }  // namespace wavemap
 

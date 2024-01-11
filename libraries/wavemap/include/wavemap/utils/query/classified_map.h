@@ -13,6 +13,10 @@ class ClassifiedMap {
     std::bitset<OctreeIndex::kNumChildren> has_free;
     std::bitset<OctreeIndex::kNumChildren> has_occupied;
     std::bitset<OctreeIndex::kNumChildren> has_unobserved;
+
+    Occupancy::Mask occupancyMask() const;
+    Occupancy::Mask childOccupancyMask(
+        NdtreeIndexRelativeChild child_idx) const;
   };
   using BlockHashMap = OctreeBlockHash<NodeData>;
   using Block = BlockHashMap::Block;
@@ -43,6 +47,19 @@ class ClassifiedMap {
   bool isFully(const OctreeIndex& index, Occupancy::Id occupancy_type) const;
   bool isFully(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
 
+  bool hasBlock(const Index3D& block_index) const {
+    return block_map_.hasBlock(block_index);
+  }
+  Block* getBlock(const Index3D& block_index) {
+    return block_map_.getBlock(block_index);
+  }
+  const Block* getBlock(const Index3D& block_index) const {
+    return block_map_.getBlock(block_index);
+  }
+  Block& getOrAllocateBlock(const Index3D& block_index) {
+    return block_map_.getOrAllocateBlock(block_index);
+  }
+
   void forEachLeafMatching(Occupancy::Id occupancy_type,
                            std::function<void(const OctreeIndex&)> visitor_fn,
                            IndexElement termination_height = 0) const;
@@ -54,9 +71,6 @@ class ClassifiedMap {
   const FloatingPoint min_cell_width_;
   const OccupancyClassifier classifier_;
   BlockHashMap block_map_;
-
-  static Occupancy::Mask childOccupancyMask(const Node& node,
-                                            NdtreeIndexRelativeChild child_idx);
 
   void recursiveClassifier(
       const HashedWaveletOctreeBlock::NodeType& occupancy_node,

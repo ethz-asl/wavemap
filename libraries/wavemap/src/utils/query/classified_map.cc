@@ -41,7 +41,7 @@ bool ClassifiedMap::has(const OctreeIndex& index,
     }
     const NdtreeIndexRelativeChild child_idx =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    const auto region_occupancy = childOccupancyMask(*node, child_idx);
+    const auto region_occupancy = node->data().childOccupancyMask(child_idx);
     if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask)) {
       return true;
     } else if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
@@ -49,8 +49,6 @@ bool ClassifiedMap::has(const OctreeIndex& index,
     }
     node = node->getChild(child_idx);
   }
-
-  return false;
 }
 
 bool ClassifiedMap::isFully(const OctreeIndex& index,
@@ -83,7 +81,7 @@ bool ClassifiedMap::isFully(const OctreeIndex& index,
     }
     const NdtreeIndexRelativeChild child_idx =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    const auto region_occupancy = childOccupancyMask(*node, child_idx);
+    const auto region_occupancy = node->data().childOccupancyMask(child_idx);
     if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask)) {
       return true;
     } else if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
@@ -91,8 +89,6 @@ bool ClassifiedMap::isFully(const OctreeIndex& index,
     }
     node = node->getChild(child_idx);
   }
-
-  return false;
 }
 
 void ClassifiedMap::forEachLeafMatching(
@@ -115,7 +111,7 @@ void ClassifiedMap::forEachLeafMatching(
 
       for (NdtreeIndexRelativeChild child_idx = 0;
            child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-        const auto region_occupancy = childOccupancyMask(node, child_idx);
+        const auto region_occupancy = node.data().childOccupancyMask(child_idx);
         if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
           continue;
         }
