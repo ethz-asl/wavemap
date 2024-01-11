@@ -45,6 +45,7 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
  public:
   static constexpr int kDim = dim;
   using BlockType = typename NdtreeBlockHash<CellDataT, dim>::Block;
+  using NodeType = typename BlockType::NodeType;
 
   explicit QueryAccelerator(NdtreeBlockHash<CellDataT, dim>& ndtree_block_hash)
       : ndtree_block_hash_(ndtree_block_hash) {}
@@ -54,14 +55,15 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
   BlockType& getOrAllocateBlock(const Index<dim>& block_index,
                                 DefaultArgs&&... args);
 
-  // TODO(victorr): Implement accelerated cell accessors
+  const NodeType* getNode(const OctreeIndex& index);
 
  private:
   NdtreeBlockHash<CellDataT, dim>& ndtree_block_hash_;
+  const IndexElement tree_height_ = ndtree_block_hash_.getMaxHeight();
 
-  Index<dim> last_block_index_ =
-      Index3D::Constant(std::numeric_limits<IndexElement>::max());
-  BlockType* last_block_ = nullptr;
+  Index<dim> block_index_ =
+      Index<dim>::Constant(std::numeric_limits<IndexElement>::max());
+  BlockType* block_ = nullptr;
 };
 
 // Query accelerator for hashed wavelet octrees

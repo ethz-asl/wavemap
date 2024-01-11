@@ -63,7 +63,7 @@ class NdtreeBlockHash {
       const IndexType& index) const;
 
   const CellDataT& getValueOrDefault(const IndexType& index) const;
-  const CellDataT& getDefaultCellValue() const { return default_value_; }
+  const CellDataT& getDefaultValue() const { return default_value_; }
   bool equalsDefaultValue(const CellDataT& value) const;
 
   template <typename IndexedBlockVisitor>
