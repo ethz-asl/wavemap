@@ -14,7 +14,7 @@ HashedBlocks FullEuclideanSDFGenerator::generate(
   const Index3D uninitialized_parent =
       Index3D::Constant(std::numeric_limits<IndexElement>::max());
   VectorDistanceField full_sdf(
-      min_cell_width, VectorDistance{uninitialized_parent, max_distance_});
+      VectorDistance{uninitialized_parent, max_distance_});
 
   // Initialize the bucketed priority queue
   const int num_bins =

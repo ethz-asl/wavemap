@@ -23,8 +23,7 @@ class HashedBlocks : public MapBase,
 
   explicit HashedBlocks(const MapBaseConfig& config,
                         FloatingPoint default_value = 0.f)
-      : MapBase(config.checkValid()),
-        DenseBlockHash(config.min_cell_width, default_value) {}
+      : MapBase(config.checkValid()), DenseBlockHash(default_value) {}
 
   bool empty() const override { return DenseBlockHash::empty(); }
   size_t size() const override { return DenseBlockHash::size(); }

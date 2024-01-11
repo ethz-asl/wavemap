@@ -17,9 +17,8 @@ class DenseBlockHash {
   using Block = DenseGrid<CellDataT, dim, cells_per_side>;
   using BlockHashMap = SpatialHash<Block, kDim>;
 
-  explicit DenseBlockHash(FloatingPoint min_cell_width,
-                          CellDataT default_value = CellDataT{})
-      : min_cell_width_(min_cell_width), default_value_(default_value) {}
+  explicit DenseBlockHash(CellDataT default_value = CellDataT{})
+      : default_value_(default_value) {}
 
   bool empty() const { return block_map_.empty(); }
   size_t size() const { return Block::kCellsPerBlock * block_map_.size(); }
@@ -57,7 +56,6 @@ class DenseBlockHash {
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const;
 
  protected:
-  const FloatingPoint min_cell_width_;
   const CellDataT default_value_;
   BlockHashMap block_map_;
 
