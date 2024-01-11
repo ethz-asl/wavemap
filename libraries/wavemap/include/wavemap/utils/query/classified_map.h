@@ -59,6 +59,8 @@ class ClassifiedMap {
   Block& getOrAllocateBlock(const Index3D& block_index) {
     return block_map_.getOrAllocateBlock(block_index);
   }
+  BlockHashMap& getBlockMap() { return block_map_; }
+  const BlockHashMap& getBlockMap() const { return block_map_; }
 
   void forEachLeafMatching(Occupancy::Id occupancy_type,
                            std::function<void(const OctreeIndex&)> visitor_fn,
