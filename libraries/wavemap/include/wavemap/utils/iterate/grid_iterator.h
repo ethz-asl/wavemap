@@ -22,12 +22,11 @@ class Grid {
 
     explicit Iterator(const Grid& grid)
         : grid_(grid), current_index_(grid_.min_index_) {}
-    Iterator(const Grid& grid, bool end)
-        : grid_(grid),
-          current_index_(
-              end ? Index<dim>::Unit(dim - 1).select(
-                        grid_.max_index_ + Index<dim>::Ones(), grid_.min_index_)
-                  : grid_.min_index_) {}
+    Iterator(const Grid& grid, bool end) : Iterator(grid) {
+      if (end) {
+        current_index_[dim - 1] = grid_.max_index_[dim - 1] + 1;
+      }
+    }
 
     const Index<dim>& operator*() const { return current_index_; }
     Iterator& operator++() {  // prefix ++
