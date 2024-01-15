@@ -3,7 +3,7 @@
 #include "wavemap/utils/data/comparisons.h"
 
 namespace wavemap {
-TEST(DataUtilsTest, IsNonzero) {
+TEST(DataComparisonUtilsTest, IsNonzero) {
   EXPECT_EQ(data::is_nonzero(0), false);
   EXPECT_EQ(data::is_nonzero(-1), true);
   EXPECT_EQ(data::is_nonzero(1), true);

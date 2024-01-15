@@ -6,7 +6,7 @@
 #include "wavemap/utils/query/map_interpolator.h"
 
 namespace wavemap {
-TEST(InterpolationUtilsTest, Trilinear) {
+TEST(MapInterpolatorTest, Trilinear) {
   MapBaseConfig config{1.f, -10.f, 10.f};
   HashedBlocks map(config);
   const FloatingPoint cell_width = map.getMinCellWidth();

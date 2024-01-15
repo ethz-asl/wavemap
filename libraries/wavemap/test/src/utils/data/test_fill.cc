@@ -4,7 +4,7 @@
 #include "wavemap/utils/data/fill.h"
 
 namespace wavemap {
-TEST(FillUtils, Constant) {
+TEST(DataFillUtilsTest, Constant) {
   EXPECT_EQ(data::fill::constant<bool>(false), false);
   EXPECT_EQ(data::fill::constant<bool>(true), true);
 
@@ -21,7 +21,7 @@ TEST(FillUtils, Constant) {
   EXPECT_EQ(data::fill::constant<Point3D>(4.56f), Point3D::Constant(4.56f));
 }
 
-TEST(FillUtils, Zero) {
+TEST(DataFillUtilsTest, Zero) {
   EXPECT_EQ(data::fill::zero<bool>(), false);
   EXPECT_EQ(data::fill::zero<int>(), 0);
   EXPECT_EQ(data::fill::zero<FloatingPoint>(), 0.f);

@@ -105,29 +105,29 @@ if (CATKIN_ENABLE_TESTING)
       test/src/integrator/test_measurement_models.cc
       test/src/integrator/test_pointcloud_integrators.cc
       test/src/integrator/test_range_image_intersector.cc
-      test/src/iterator/test_grid_iterator.cc
-      test/src/iterator/test_ray_iterator.cc
-      test/src/iterator/test_subtree_iterator.cc
       test/src/map/test_haar_cell.cc
       test/src/map/test_hashed_blocks.cc
       test/src/map/test_map.cc
       test/src/map/test_volumetric_octree.cc
-      test/src/utils/test_adjacency.cc
-      test/src/utils/test_approximate_trigonometry.cc
-      test/src/utils/test_bit_manipulation.cc
-      test/src/utils/test_data_utils.cc
-      test/src/utils/test_fill_utils.cc
-      test/src/utils/test_grid_neighborhood.cc
-      test/src/utils/test_grid_adjacency.cc
-      test/src/utils/test_ndtree_adjacency.cc
-      test/src/utils/test_occupancy_classifier.cc
-      test/src/utils/test_int_math.cc
-      test/src/utils/test_log_odds_converter.cc
-      test/src/utils/test_map_interpolator.cpp
-      test/src/utils/test_query_accelerator.cc
-      test/src/utils/test_sdf_generation.cc
-      test/src/utils/test_thread_pool.cc
-      test/src/utils/test_tree_math.cc)
+      test/src/utils/bits/test_bit_operations.cc
+      test/src/utils/data/test_comparisons.cc
+      test/src/utils/data/test_fill.cc
+      test/src/utils/iterate/test_grid_iterator.cc
+      test/src/utils/iterate/test_ray_iterator.cc
+      test/src/utils/iterate/test_subtree_iterator.cc
+      test/src/utils/math/test_approximate_trigonometry.cc
+      test/src/utils/math/test_int_math.cc
+      test/src/utils/math/test_tree_math.cc
+      test/src/utils/neighbors/test_adjacency.cc
+      test/src/utils/neighbors/test_grid_adjacency.cc
+      test/src/utils/neighbors/test_grid_neighborhood.cc
+      test/src/utils/neighbors/test_ndtree_adjacency.cc
+      test/src/utils/query/test_map_interpolator.cpp
+      test/src/utils/query/test_occupancy_classifier.cc
+      test/src/utils/query/test_probability_conversions.cc
+      test/src/utils/query/test_query_accelerator.cc
+      test/src/utils/sdf/test_sdf_generators.cc
+      test/src/utils/test_thread_pool.cc)
   target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
   target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
 endif ()

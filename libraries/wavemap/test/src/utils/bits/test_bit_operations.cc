@@ -6,9 +6,9 @@
 #include "wavemap/utils/bits/bit_operations.h"
 
 namespace wavemap {
-using BitManipulationTest = FixtureBase;
+using BitOperationsTest = FixtureBase;
 
-TEST_F(BitManipulationTest, IsBitSet) {
+TEST_F(BitOperationsTest, IsBitSet) {
   for (int iteration = 0; iteration < 1000; ++iteration) {
     const auto bitstring =
         getRandomInteger<unsigned>(0, std::numeric_limits<unsigned>::max());
@@ -18,7 +18,7 @@ TEST_F(BitManipulationTest, IsBitSet) {
   }
 }
 
-TEST_F(BitManipulationTest, RotateLeft) {
+TEST_F(BitOperationsTest, RotateLeft) {
   // Test default template argument deduction
   EXPECT_EQ(bit_ops::rotate_left(0b1011, 3), 0b1011000);
 
@@ -71,7 +71,7 @@ TEST_F(BitManipulationTest, RotateLeft) {
   EXPECT_EQ(bit_ops::rotate_left(std::numeric_limits<int>::lowest(), 3), 4);
 }
 
-TEST_F(BitManipulationTest, RotateRight) {
+TEST_F(BitOperationsTest, RotateRight) {
   // Test default template argument deduction
   EXPECT_EQ(bit_ops::rotate_right(0b1011000, 3), 0b1011);
 
@@ -125,7 +125,7 @@ TEST_F(BitManipulationTest, RotateRight) {
             static_cast<unsigned>(std::numeric_limits<int>::lowest()) >> 3);
 }
 
-TEST_F(BitManipulationTest, SqueezeIn) {
+TEST_F(BitOperationsTest, SqueezeIn) {
   EXPECT_EQ(bit_ops::squeeze_in(0b1001, false, 0), 0b10010);
   EXPECT_EQ(bit_ops::squeeze_in(0b1001, false, 1), 0b10001);
   EXPECT_EQ(bit_ops::squeeze_in(0b1001, false, 2), 0b10001);
@@ -139,7 +139,7 @@ TEST_F(BitManipulationTest, SqueezeIn) {
   EXPECT_EQ(bit_ops::squeeze_in(0b1001, true, 4), 0b11001);
 }
 
-TEST_F(BitManipulationTest, Popcount) {
+TEST_F(BitOperationsTest, Popcount) {
   // Small numbers
   EXPECT_EQ(bit_ops::popcount(0b0), 0);
   EXPECT_EQ(bit_ops::popcount(0b1), 1);
@@ -169,7 +169,7 @@ TEST_F(BitManipulationTest, Popcount) {
       64);
 }
 
-TEST_F(BitManipulationTest, Parity) {
+TEST_F(BitOperationsTest, Parity) {
   EXPECT_EQ(bit_ops::parity(0b0), 0);
   EXPECT_EQ(bit_ops::parity(0b1), 1);
   EXPECT_EQ(bit_ops::parity(0b10), 1);
@@ -179,7 +179,7 @@ TEST_F(BitManipulationTest, Parity) {
   EXPECT_EQ(bit_ops::parity(0b11101010010111), 1);
 }
 
-TEST_F(BitManipulationTest, CountLeadingZeros) {
+TEST_F(BitOperationsTest, CountLeadingZeros) {
   EXPECT_EQ(bit_ops::clz(static_cast<uint32_t>(1) << 0), 31);
   EXPECT_EQ(bit_ops::clz(static_cast<uint32_t>(1) << 30), 1);
   EXPECT_EQ(bit_ops::clz(static_cast<uint32_t>(1) << 31), 0);
@@ -195,7 +195,7 @@ TEST_F(BitManipulationTest, CountLeadingZeros) {
   EXPECT_EQ(bit_ops::clz(static_cast<int64_t>(1) << 62), 1);
 }
 
-TEST_F(BitManipulationTest, RepeatBlock) {
+TEST_F(BitOperationsTest, RepeatBlock) {
   EXPECT_EQ(bit_ops::repeat_block<uint32_t>(2, 0b01),
             0b01010101010101010101010101010101);
   EXPECT_EQ(bit_ops::repeat_block<uint32_t>(3, 0b001),
@@ -257,7 +257,7 @@ TEST_F(BitManipulationTest, RepeatBlock) {
 }
 
 #if defined(BIT_EXPAND_AVAILABLE) && defined(BIT_COMPRESS_AVAILABLE)
-TEST_F(BitManipulationTest, ExpandCompress) {
+TEST_F(BitOperationsTest, ExpandCompress) {
   for (uint64_t idx = 0u; idx < (1 << 20); ++idx) {
     const uint64_t source =
         getRandomInteger(0ul, std::numeric_limits<uint64_t>::max());
