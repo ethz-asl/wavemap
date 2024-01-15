@@ -34,13 +34,7 @@ void BucketQueue<ValueT>::clear() {
 template <typename ValueT>
 void BucketQueue<ValueT>::push(FloatingPoint key, const ValueT& value) {
   DCHECK_NE(num_buckets_, 0);
-  if (key > max_key_) {
-    key = max_key_;
-  }
-  int bucket_index = std::floor(std::abs(key) / max_key_ * (num_buckets_ - 1));
-  if (bucket_index >= num_buckets_) {
-    bucket_index = num_buckets_ - 1;
-  }
+  const int bucket_index = computeBucketIndex(key);
   if (bucket_index < last_bucket_index_) {
     last_bucket_index_ = bucket_index;
   }

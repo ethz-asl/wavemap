@@ -31,6 +31,15 @@ class BucketQueue {
   void pop();
   ValueT front();
 
+  int computeBucketIndex(FloatingPoint key) const {
+    int bucket_index =
+        std::floor(std::abs(key) / max_key_ * (num_buckets_ - 1));
+    if (num_buckets_ <= bucket_index) {
+      bucket_index = num_buckets_ - 1;
+    }
+    return bucket_index;
+  }
+
  private:
   int num_buckets_;
   FloatingPoint max_key_;

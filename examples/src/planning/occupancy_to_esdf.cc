@@ -41,8 +41,8 @@ int main(int argc, char** argv) {
   const std::filesystem::path esdf_file_path =
       std::filesystem::path(map_file_path).replace_extension(".sdf.wvmp");
   LOG(INFO) << "Generating ESDF";
-  constexpr FloatingPoint kOccupancyThreshold = 0.f;
-  constexpr FloatingPoint kMaxDistance = 2.f;
+  constexpr FloatingPoint kOccupancyThreshold = 0.01f;
+  constexpr FloatingPoint kMaxDistance = 10.f;
   const QuasiEuclideanSDFGenerator sdf_generator{kMaxDistance,
                                                  kOccupancyThreshold};
   const auto esdf = sdf_generator.generate(*hashed_map);

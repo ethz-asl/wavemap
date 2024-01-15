@@ -22,7 +22,7 @@ inline void ClassifiedMap::forEachLeafMatching(
                       termination_height);
 }
 
-Occupancy::Mask ClassifiedMap::NodeData::occupancyMask() const {
+inline Occupancy::Mask ClassifiedMap::NodeData::occupancyMask() const {
   return Occupancy::toMask(has_free.any(), has_occupied.any(),
                            has_unobserved.any());
 }
