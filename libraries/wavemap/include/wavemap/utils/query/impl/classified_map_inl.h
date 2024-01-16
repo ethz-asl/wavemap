@@ -32,6 +32,47 @@ inline Occupancy::Mask ClassifiedMap::NodeData::childOccupancyMask(
   return Occupancy::toMask(has_free[child_idx], has_occupied[child_idx],
                            has_unobserved[child_idx]);
 }
+
+inline bool ClassifiedMap::hasBlock(const Index3D& block_index) const {
+  return block_map_.hasBlock(block_index);
+}
+
+inline ClassifiedMap::Block* ClassifiedMap::getBlock(
+    const Index3D& block_index) {
+  return block_map_.getBlock(block_index);
+}
+
+inline const ClassifiedMap::Block* ClassifiedMap::getBlock(
+    const Index3D& block_index) const {
+  return block_map_.getBlock(block_index);
+}
+
+inline ClassifiedMap::Block& ClassifiedMap::getOrAllocateBlock(
+    const Index3D& block_index) {
+  return block_map_.getOrAllocateBlock(block_index);
+}
+
+inline bool ClassifiedMap::hasValue(const OctreeIndex& index) const {
+  return block_map_.hasValue(index.computeParentIndex());
+}
+
+inline std::optional<Occupancy::Mask> ClassifiedMap::getValue(
+    const OctreeIndex& index) const {
+  return getValueOrAncestor(index).first;
+}
+
+inline std::pair<std::optional<Occupancy::Mask>, ClassifiedMap::HeightType>
+ClassifiedMap::getValueOrAncestor(const OctreeIndex& index) const {
+  const auto [parent, parent_height] =
+      block_map_.getValueOrAncestor(index.computeParentIndex());
+  if (parent) {
+    const MortonIndex morton = convert::nodeIndexToMorton(index);
+    const NdtreeIndexRelativeChild relative_child_idx =
+        OctreeIndex::computeRelativeChildIndex(morton, parent_height);
+    return {parent->childOccupancyMask(relative_child_idx), parent_height - 1};
+  }
+  return {std::nullopt, getTreeHeight()};
+}
 }  // namespace wavemap
 
 #endif  // WAVEMAP_UTILS_QUERY_IMPL_CLASSIFIED_MAP_INL_H_

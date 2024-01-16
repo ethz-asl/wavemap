@@ -1,6 +1,8 @@
 #ifndef WAVEMAP_UTILS_QUERY_CLASSIFIED_MAP_H_
 #define WAVEMAP_UTILS_QUERY_CLASSIFIED_MAP_H_
 
+#include <utility>
+
 #include <wavemap/data_structure/ndtree/ndtree.h>
 #include <wavemap/data_structure/ndtree_block_hash.h>
 #include <wavemap/map/hashed_wavelet_octree.h>
@@ -18,6 +20,7 @@ class ClassifiedMap {
     Occupancy::Mask childOccupancyMask(
         NdtreeIndexRelativeChild child_idx) const;
   };
+  using HeightType = IndexElement;
   using BlockHashMap = OctreeBlockHash<NodeData>;
   using Block = BlockHashMap::Block;
   using Node = BlockHashMap::Node;
@@ -47,20 +50,17 @@ class ClassifiedMap {
   bool isFully(const OctreeIndex& index, Occupancy::Id occupancy_type) const;
   bool isFully(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
 
-  bool hasBlock(const Index3D& block_index) const {
-    return block_map_.hasBlock(block_index);
-  }
-  Block* getBlock(const Index3D& block_index) {
-    return block_map_.getBlock(block_index);
-  }
-  const Block* getBlock(const Index3D& block_index) const {
-    return block_map_.getBlock(block_index);
-  }
-  Block& getOrAllocateBlock(const Index3D& block_index) {
-    return block_map_.getOrAllocateBlock(block_index);
-  }
+  bool hasBlock(const Index3D& block_index) const;
+  Block* getBlock(const Index3D& block_index);
+  const Block* getBlock(const Index3D& block_index) const;
+  Block& getOrAllocateBlock(const Index3D& block_index);
   BlockHashMap& getBlockMap() { return block_map_; }
   const BlockHashMap& getBlockMap() const { return block_map_; }
+
+  bool hasValue(const OctreeIndex& index) const;
+  std::optional<Occupancy::Mask> getValue(const OctreeIndex& index) const;
+  std::pair<std::optional<Occupancy::Mask>, HeightType> getValueOrAncestor(
+      const OctreeIndex& index) const;
 
   void forEachLeafMatching(Occupancy::Id occupancy_type,
                            std::function<void(const OctreeIndex&)> visitor_fn,

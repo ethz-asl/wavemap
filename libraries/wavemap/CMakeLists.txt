@@ -122,6 +122,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/utils/neighbors/test_grid_adjacency.cc
       test/src/utils/neighbors/test_grid_neighborhood.cc
       test/src/utils/neighbors/test_ndtree_adjacency.cc
+      test/src/utils/query/test_classified_map.cc
       test/src/utils/query/test_map_interpolator.cpp
       test/src/utils/query/test_occupancy_classifier.cc
       test/src/utils/query/test_probability_conversions.cc
