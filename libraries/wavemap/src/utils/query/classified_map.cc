@@ -13,17 +13,9 @@ void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
 
 bool ClassifiedMap::has(const OctreeIndex& index,
                         Occupancy::Mask occupancy_mask) const {
-  // Cache the last block index
-  static Index3D block_index =
-      Index3D::Constant(std::numeric_limits<IndexElement>::max());
-  static const Block* block = nullptr;
-
-  // Fetch the current block if not already cached
-  if (const Index3D new_block_index = block_map_.indexToBlockIndex(index);
-      new_block_index != block_index) {
-    block_index = new_block_index;
-    block = block_map_.getBlock(block_index);
-  }
+  // Fetch the current block
+  const Index3D block_index = block_map_.indexToBlockIndex(index);
+  const Block* block = block_map_.getBlock(block_index);
 
   // If the block doesn't exist, we're done
   if (!block) {
@@ -53,17 +45,9 @@ bool ClassifiedMap::has(const OctreeIndex& index,
 
 bool ClassifiedMap::isFully(const OctreeIndex& index,
                             Occupancy::Mask occupancy_mask) const {
-  // Cache the last block index
-  static Index3D block_index =
-      Index3D::Constant(std::numeric_limits<IndexElement>::max());
-  static const Block* block = nullptr;
-
-  // Fetch the current block if not already cached
-  if (const Index3D new_block_index = block_map_.indexToBlockIndex(index);
-      new_block_index != block_index) {
-    block_index = new_block_index;
-    block = block_map_.getBlock(block_index);
-  }
+  // Fetch the current block
+  const Index3D block_index = block_map_.indexToBlockIndex(index);
+  const Block* block = block_map_.getBlock(block_index);
 
   // If the block doesn't exist, we're done
   if (!block) {

@@ -7,7 +7,6 @@
 #include "wavemap/test/geometry_generator.h"
 #include "wavemap/utils/iterate/grid_iterator.h"
 #include "wavemap/utils/query/classified_map.h"
-#include "wavemap/utils/query/query_accelerator.h"
 
 namespace wavemap {
 class ClassifiedMapTest : public FixtureBase,
@@ -48,7 +47,6 @@ TEST_F(ClassifiedMapTest, ClassificationResults) {
         });
 
     // Test subregions
-    QueryAccelerator<HashedWaveletOctree> map_query_accelerator{map};
     for (int test_idx = 0; test_idx < 100; ++test_idx) {
       const IndexElement region_height = getRandomNdtreeIndexHeight(0, 4);
       const auto subregion =
@@ -61,8 +59,7 @@ TEST_F(ClassifiedMapTest, ClassificationResults) {
       for (const auto& index :
            Grid(convert::nodeIndexToMinCornerIndex(subregion),
                 convert::nodeIndexToMaxCornerIndex(subregion))) {
-        const FloatingPoint cell_log_odds =
-            map_query_accelerator.getCellValue(index);
+        const FloatingPoint cell_log_odds = map.getCellValue(index);
         has_free |= classifier.is(cell_log_odds, Occupancy::kFree);
         has_occupied |= classifier.is(cell_log_odds, Occupancy::kOccupied);
         has_unobserved |= classifier.is(cell_log_odds, Occupancy::kUnobserved);
