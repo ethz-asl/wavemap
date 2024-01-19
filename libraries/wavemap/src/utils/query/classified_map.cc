@@ -1,7 +1,10 @@
 #include "wavemap/utils/query/classified_map.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace wavemap {
 void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
+  ZoneScoped;
   occupancy_map.forEachBlock(
       [this](const Index3D& block_index, const auto& occupancy_block) {
         auto& classified_block = block_map_.getOrAllocateBlock(block_index);
@@ -101,10 +104,11 @@ void ClassifiedMap::forEachLeafMatching(
         }
         const OctreeIndex child_node_index =
             node_index.computeChildIndex(child_idx);
-        if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask)) {
+        if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask) ||
+            child_node_index.height <= termination_height) {
           visitor_fn(child_node_index);
         } else if (const Node* child_node = node.getChild(child_idx);
-                   child_node && termination_height < child_node_index.height) {
+                   child_node) {
           stack.emplace(StackElement{child_node_index, *child_node});
         }
       }
