@@ -14,6 +14,13 @@ bool DenseBlockHash<CellDataT, dim, cells_per_side>::eraseBlock(
   return block_map_.eraseBlock(block_index);
 }
 
+template <typename CellDataT, int dim, unsigned int cells_per_side>
+template <typename IndexedBlockVisitor>
+void DenseBlockHash<CellDataT, dim, cells_per_side>::eraseBlockIf(
+    IndexedBlockVisitor indicator_fn) {
+  block_map_.eraseBlockIf(indicator_fn);
+}
+
 template <typename CellDataT, int dim, unsigned cells_per_side>
 inline DenseGrid<CellDataT, dim, cells_per_side>*
 DenseBlockHash<CellDataT, dim, cells_per_side>::getBlock(

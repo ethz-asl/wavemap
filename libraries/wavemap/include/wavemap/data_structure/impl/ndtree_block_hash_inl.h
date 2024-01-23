@@ -27,6 +27,13 @@ bool NdtreeBlockHash<CellDataT, dim>::eraseBlock(
 }
 
 template <typename CellDataT, int dim>
+template <typename IndexedBlockVisitor>
+void NdtreeBlockHash<CellDataT, dim>::eraseBlockIf(
+    IndexedBlockVisitor indicator_fn) {
+  block_map_.eraseBlockIf(indicator_fn);
+}
+
+template <typename CellDataT, int dim>
 inline typename NdtreeBlockHash<CellDataT, dim>::Block*
 NdtreeBlockHash<CellDataT, dim>::getBlock(const Index<dim>& block_index) {
   return block_map_.getBlock(block_index);

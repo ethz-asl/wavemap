@@ -26,6 +26,9 @@ class DenseBlockHash {
 
   bool hasBlock(const Index<dim>& block_index) const;
   bool eraseBlock(const Index<dim>& block_index);
+  template <typename IndexedBlockVisitor>
+  void eraseBlockIf(IndexedBlockVisitor indicator_fn);
+
   Block* getBlock(const Index<dim>& block_index);
   const Block* getBlock(const Index<dim>& block_index) const;
   Block& getOrAllocateBlock(const Index<dim>& block_index);
