@@ -5,7 +5,16 @@
 namespace wavemap {
 void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
   ZoneScoped;
+  // Reset the query cache
   query_cache_.reset();
+
+  // Erase blocks that no longer exist
+  block_map_.eraseBlockIf(
+      [&occupancy_map](const Index3D& block_index, const auto& /*block*/) {
+        return !occupancy_map.hasBlock(block_index);
+      });
+
+  // Update all existing blocks
   occupancy_map.forEachBlock(
       [this](const Index3D& block_index, const auto& occupancy_block) {
         auto& classified_block = block_map_.getOrAllocateBlock(block_index);
@@ -40,7 +49,7 @@ void ClassifiedMap::forEachLeafMatching(
       const OctreeIndex node_index;
       const Node& node;
     };
-    std::stack<StackElement> stack;
+    std::stack<StackElement, std::vector<StackElement>> stack;
     stack.emplace(StackElement{OctreeIndex{block.getMaxHeight(), block_index},
                                block.getRootNode()});
     while (!stack.empty()) {
@@ -58,7 +67,7 @@ void ClassifiedMap::forEachLeafMatching(
             node_index.computeChildIndex(child_idx);
         if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask) ||
             child_node_index.height <= termination_height) {
-          visitor_fn(child_node_index);
+          std::invoke(visitor_fn, child_node_index);
         } else if (const Node* child_node = node.getChild(child_idx);
                    child_node) {
           stack.emplace(StackElement{child_node_index, *child_node});
@@ -247,12 +256,14 @@ void ClassifiedMap::recursiveClassifier(  // NOLINT
         classified_node.eraseChild(child_idx);
       }
     } else {  // Otherwise, the node is a leaf
-      classified_node.data().has_free.set(
-          child_idx, classifier_.is(child_occupancy, Occupancy::kFree));
-      classified_node.data().has_occupied.set(
-          child_idx, classifier_.is(child_occupancy, Occupancy::kOccupied));
-      classified_node.data().has_unobserved.set(
-          child_idx, classifier_.is(child_occupancy, Occupancy::kUnobserved));
+      const bool is_free = classifier_.is(child_occupancy, Occupancy::kFree);
+      const bool is_occupied =
+          classifier_.is(child_occupancy, Occupancy::kOccupied);
+      const bool is_unobserved =
+          classifier_.is(child_occupancy, Occupancy::kUnobserved);
+      classified_node.data().has_free.set(child_idx, is_free);
+      classified_node.data().has_occupied.set(child_idx, is_occupied);
+      classified_node.data().has_unobserved.set(child_idx, is_unobserved);
     }
   }
 }
