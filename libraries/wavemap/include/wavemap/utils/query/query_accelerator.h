@@ -59,7 +59,9 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
   BlockType& getOrAllocateBlock(const Index<dim>& block_index,
                                 DefaultArgs&&... args);
 
-  const NodeType* getNode(const OctreeIndex& index);
+  NodeType* getNode(const OctreeIndex& index);
+  template <typename... DefaultArgs>
+  NodeType& getOrAllocateNode(const OctreeIndex& index, DefaultArgs&&... args);
 
  private:
   NdtreeBlockHash<CellDataT, dim>& ndtree_block_hash_;
@@ -67,7 +69,11 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
 
   Index<dim> block_index_ =
       Index<dim>::Constant(std::numeric_limits<IndexElement>::max());
+  IndexElement height = tree_height_;
+  MortonIndex morton_code = std::numeric_limits<MortonIndex>::max();
+
   BlockType* block_ = nullptr;
+  std::array<NodeType*, morton::kMaxTreeHeight<dim>> node_stack{};
 };
 
 // Query accelerator for hashed wavelet octrees

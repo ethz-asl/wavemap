@@ -37,7 +37,11 @@ BlockDataT& QueryAccelerator<SpatialHash<BlockDataT, dim>>::getOrAllocateBlock(
 template <typename CellDataT, int dim>
 void QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::reset() {
   block_index_ = Index<dim>::Constant(std::numeric_limits<IndexElement>::max());
+  height = tree_height_;
+  morton_code = std::numeric_limits<MortonIndex>::max();
+
   block_ = nullptr;
+  node_stack = std::array<NodeType*, morton::kMaxTreeHeight<dim>>{};
 }
 
 template <typename CellDataT, int dim>
@@ -46,7 +50,11 @@ QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getBlock(
     const Index<dim>& block_index) {
   if (block_index != block_index_) {
     block_index_ = block_index;
+    height = tree_height_;
     block_ = ndtree_block_hash_.getBlock(block_index);
+    if (block_) {
+      node_stack[tree_height_] = &block_->getRootNode();
+    }
   }
   return block_;
 }
@@ -58,28 +66,95 @@ QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getOrAllocateBlock(
     const Index<dim>& block_index, DefaultArgs&&... args) {
   if (block_index != block_index_ || !block_) {
     block_index_ = block_index;
+    height = tree_height_;
     block_ = &ndtree_block_hash_.getOrAllocateBlock(
         block_index, std::forward<DefaultArgs>(args)...);
+    node_stack[tree_height_] = &block_->getRootNode();
   }
   return *block_;
 }
 
 template <typename CellDataT, int dim>
-const typename QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::NodeType*
+typename QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::NodeType*
 QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getNode(
     const OctreeIndex& index) {
-  // TODO(victorr): Finish implementing this for all heights,
-  //                not just block roots
-  CHECK_EQ(index.height, tree_height_)
-      << "Loading non-root nodes is not yet implemented.";
-  if (index.position != block_index_) {
-    block_index_ = index.position;
-    block_ = ndtree_block_hash_.getBlock(index.position);
+  // Remember previous query indices and compute new ones
+  const IndexElement previous_height = height;
+  const MortonIndex previous_morton_code = morton_code;
+  morton_code = convert::nodeIndexToMorton(index);
+
+  // Fetch the block if needed and return null if it doesn't exist
+  if (!getBlock(ndtree_block_hash_.indexToBlockIndex(index))) {
+    return nullptr;
   }
-  if (block_) {
-    return &block_->getRootNode();
+
+  // Compute the last ancestor the current and previous query had in common
+  if (height != tree_height_) {
+    auto last_common_ancestor = OctreeIndex::computeLastCommonAncestorHeight(
+        morton_code, index.height, previous_morton_code, previous_height);
+    height = last_common_ancestor;
   }
-  return nullptr;
+  DCHECK_LE(height, tree_height_);
+
+  if (height == index.height) {
+    DCHECK_NOTNULL(node_stack[height]);
+    return node_stack[height];
+  }
+
+  // Walk down the tree from height to index.height
+  for (; index.height < height;) {
+    DCHECK_NOTNULL(node_stack[height]);
+    const NdtreeIndexRelativeChild child_index =
+        OctreeIndex::computeRelativeChildIndex(morton_code, height);
+    // Check if the child is allocated
+    NodeType* child = node_stack[height]->getChild(child_index);
+    if (!child) {
+      return node_stack[height];
+    }
+    node_stack[--height] = child;
+  }
+
+  return node_stack[height];
+}
+
+template <typename CellDataT, int dim>
+template <typename... DefaultArgs>
+typename QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::NodeType&
+QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getOrAllocateNode(
+    const OctreeIndex& index, DefaultArgs&&... args) {
+  // Remember previous query indices and compute new ones
+  const IndexElement previous_height = height;
+  const MortonIndex previous_morton_code = morton_code;
+  morton_code = convert::nodeIndexToMorton(index);
+
+  // Make sure the block is allocated
+  getOrAllocateBlock(ndtree_block_hash_.indexToBlockIndex(index));
+
+  // Compute the last ancestor the current and previous query had in common
+  if (height != tree_height_) {
+    auto last_common_ancestor = OctreeIndex::computeLastCommonAncestorHeight(
+        morton_code, index.height, previous_morton_code, previous_height);
+    height = last_common_ancestor;
+  }
+  DCHECK_LE(height, tree_height_);
+
+  if (height == index.height) {
+    DCHECK_NOTNULL(node_stack[height]);
+    return *node_stack[height];
+  }
+
+  // Walk down the tree from height to index.height
+  for (; index.height < height;) {
+    DCHECK_NOTNULL(node_stack[height]);
+    const NdtreeIndexRelativeChild child_index =
+        OctreeIndex::computeRelativeChildIndex(morton_code, height);
+    // Get or allocate the child
+    auto& child = node_stack[height]->getOrAllocateChild(
+        child_index, std::forward<DefaultArgs>(args)...);
+    node_stack[--height] = &child;
+  }
+
+  return *node_stack[height];
 }
 }  // namespace wavemap
 
