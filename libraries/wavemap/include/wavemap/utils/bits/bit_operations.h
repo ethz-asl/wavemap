@@ -107,7 +107,22 @@ constexpr std::make_signed_t<T> bit_cast_signed(T bitstring) {
 
 template <typename T>
 constexpr bool is_bit_set(T bitstring, int bit_index) {
-  return (bitstring >> bit_index) & 1;
+  return (bitstring >> bit_index) & static_cast<T>(1);
+}
+
+template <typename T>
+constexpr T set_bit(T bitstring, int bit_index) {
+  return bitstring | (static_cast<T>(1) << bit_index);
+}
+
+template <typename T>
+constexpr T unset_bit(T bitstring, int bit_index) {
+  return bitstring & ~(static_cast<T>(1) << bit_index);
+}
+
+template <typename T>
+constexpr T set_bit(T bitstring, int bit_index, bool value) {
+  return unset_bit(bitstring, bit_index) | (static_cast<T>(value) << bit_index);
 }
 
 template <typename T, T width = 8 * sizeof(T)>

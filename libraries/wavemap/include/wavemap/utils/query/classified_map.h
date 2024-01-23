@@ -13,9 +13,19 @@ namespace wavemap {
 class ClassifiedMap {
  public:
   struct NodeData {
-    std::bitset<OctreeIndex::kNumChildren> has_free;
-    std::bitset<OctreeIndex::kNumChildren> has_occupied;
-    std::bitset<OctreeIndex::kNumChildren> has_unobserved;
+    uint8_t has_free{};
+    uint8_t has_occupied{};
+    uint8_t has_unobserved{};
+
+    void setFree(NdtreeIndexRelativeChild child_idx, bool value = true);
+    void setOccupied(NdtreeIndexRelativeChild child_idx, bool value = true);
+    void setUnobserved(NdtreeIndexRelativeChild child_idx, bool value = true);
+    bool isFree(NdtreeIndexRelativeChild child_idx) const;
+    bool isOccupied(NdtreeIndexRelativeChild child_idx) const;
+    bool isUnobserved(NdtreeIndexRelativeChild child_idx) const;
+    bool hasAnyFree() const;
+    bool hasAnyOccupied() const;
+    bool hasAnyUnobserved() const;
 
     Occupancy::Mask occupancyMask() const;
     Occupancy::Mask childOccupancyMask(

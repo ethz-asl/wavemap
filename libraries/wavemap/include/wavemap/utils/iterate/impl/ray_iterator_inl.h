@@ -38,8 +38,8 @@ Ray<dim>::Ray(const Point<dim>& start_point, const Point<dim>& end_point,
     : start_index_(convert::pointToNearestIndex(start_point, 1.f / cell_width)),
       end_index_(convert::pointToNearestIndex(end_point, 1.f / cell_width)),
       ray_length_in_steps_((end_index_ - start_index_).cwiseAbs().sum() + 1u) {
-  CHECK(!start_point.hasNaN());
-  CHECK(!end_point.hasNaN());
+  DCHECK(!start_point.hasNaN());
+  DCHECK(!end_point.hasNaN());
   if (ray_length_in_steps_ == 0u) {
     return;
   }
