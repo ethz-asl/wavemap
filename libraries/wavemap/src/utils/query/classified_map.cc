@@ -5,6 +5,7 @@
 namespace wavemap {
 void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
   ZoneScoped;
+  query_cache_.reset();
   occupancy_map.forEachBlock(
       [this](const Index3D& block_index, const auto& occupancy_block) {
         auto& classified_block = block_map_.getOrAllocateBlock(block_index);
@@ -14,68 +15,19 @@ void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
       });
 }
 
-bool ClassifiedMap::has(const OctreeIndex& index,
-                        Occupancy::Mask occupancy_mask) const {
-  // Fetch the current block
-  const Index3D block_index = block_map_.indexToBlockIndex(index);
-  const Block* block = block_map_.getBlock(block_index);
-
-  // If the block doesn't exist, we're done
-  if (!block) {
-    return false;
+std::pair<std::optional<Occupancy::Mask>, ClassifiedMap::HeightType>
+ClassifiedMap::getValueOrAncestor(const OctreeIndex& index) const {
+  const OctreeIndex parent_index = index.computeParentIndex();
+  const auto [ancestor, ancestor_height] =
+      query_cache_.getNodeOrAncestor(parent_index, block_map_);
+  if (ancestor) {
+    const MortonIndex morton = convert::nodeIndexToMorton(index);
+    const NdtreeIndexRelativeChild relative_child_idx =
+        OctreeIndex::computeRelativeChildIndex(morton, ancestor_height);
+    return {ancestor->data().childOccupancyMask(relative_child_idx),
+            ancestor_height - 1};
   }
-
-  // Otherwise, descend the tree
-  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  const Node* node = &block->getRootNode();
-  for (int parent_height = block_map_.getMaxHeight();; --parent_height) {
-    if (!node || parent_height <= index.height) {
-      // Return the result of OccupancyClassifier::has(region_occupancy,
-      // occupancy_mask), which is always true if this branch is reached.
-      return true;
-    }
-    const NdtreeIndexRelativeChild child_idx =
-        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    const auto region_occupancy = node->data().childOccupancyMask(child_idx);
-    if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask)) {
-      return true;
-    } else if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
-      return false;
-    }
-    node = node->getChild(child_idx);
-  }
-}
-
-bool ClassifiedMap::isFully(const OctreeIndex& index,
-                            Occupancy::Mask occupancy_mask) const {
-  // Fetch the current block
-  const Index3D block_index = block_map_.indexToBlockIndex(index);
-  const Block* block = block_map_.getBlock(block_index);
-
-  // If the block doesn't exist, we're done
-  if (!block) {
-    return false;
-  }
-
-  // Otherwise, descend the tree
-  const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  const Node* node = &block->getRootNode();
-  for (int parent_height = block_map_.getMaxHeight();; --parent_height) {
-    if (!node || parent_height <= index.height) {
-      // Return the result of OccupancyClassifier::isFully(region_occupancy,
-      // occupancy_mask), which is always false if this branch is reached.
-      return false;
-    }
-    const NdtreeIndexRelativeChild child_idx =
-        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    const auto region_occupancy = node->data().childOccupancyMask(child_idx);
-    if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask)) {
-      return true;
-    } else if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
-      return false;
-    }
-    node = node->getChild(child_idx);
-  }
+  return {std::nullopt, getTreeHeight()};
 }
 
 void ClassifiedMap::forEachLeafMatching(
@@ -114,6 +66,157 @@ void ClassifiedMap::forEachLeafMatching(
       }
     }
   });
+}
+
+std::pair<const ClassifiedMap::Node*, ClassifiedMap::HeightType>
+ClassifiedMap::QueryCache::getNodeOrAncestor(
+    const OctreeIndex& index, const ClassifiedMap::BlockHashMap& block_map) {
+  // Remember previous query indices and compute new ones
+  const IndexElement previous_height = height;
+  const MortonIndex previous_morton_code = morton_code;
+  morton_code = convert::nodeIndexToMorton(index);
+
+  // Fetch the block if needed and return null if it doesn't exist
+  if (!getBlock(block_map.indexToBlockIndex(index), block_map)) {
+    return {nullptr, tree_height};
+  }
+
+  // Compute the last ancestor the current and previous query had in common
+  if (height != tree_height) {
+    auto last_common_ancestor = OctreeIndex::computeLastCommonAncestorHeight(
+        morton_code, index.height, previous_morton_code, previous_height);
+    height = last_common_ancestor;
+  }
+  DCHECK_LE(height, tree_height);
+
+  if (height == index.height) {
+    DCHECK_NOTNULL(node_stack[height]);
+    return {node_stack[height], height};
+  }
+
+  // Walk down the tree from height to index.height
+  for (; index.height < height;) {
+    DCHECK_NOTNULL(node_stack[height]);
+    const NdtreeIndexRelativeChild child_index =
+        OctreeIndex::computeRelativeChildIndex(morton_code, height);
+    // Check if the child is allocated
+    const Node* child = node_stack[height]->getChild(child_index);
+    if (!child) {
+      return {node_stack[height], height};
+    }
+    node_stack[--height] = child;
+  }
+
+  return {node_stack[height], height};
+}
+
+bool ClassifiedMap::QueryCache::has(const OctreeIndex& index,
+                                    Occupancy::Mask occupancy_mask,
+                                    const BlockHashMap& block_map) {
+  // Remember previous query indices and compute new ones
+  const IndexElement previous_height = height;
+  const MortonIndex previous_morton_code = morton_code;
+  morton_code = convert::nodeIndexToMorton(index);
+
+  // Fetch the block if needed and return false if it doesn't exist
+  if (!getBlock(block_map.indexToBlockIndex(index), block_map)) {
+    return false;
+  }
+
+  // Compute the last ancestor the current and previous query had in common
+  if (height != tree_height) {
+    auto last_common_ancestor = OctreeIndex::computeLastCommonAncestorHeight(
+        morton_code, index.height, previous_morton_code, previous_height);
+    height = last_common_ancestor;
+  }
+  DCHECK_LE(height, tree_height);
+
+  if (height == index.height) {
+    DCHECK_NOTNULL(node_stack[height]);
+    const auto region_occupancy = node_stack[height]->data().occupancyMask();
+    return OccupancyClassifier::has(region_occupancy, occupancy_mask);
+  }
+
+  // Walk down the tree from height to index.height
+  while (true) {
+    DCHECK_NOTNULL(node_stack[height]);
+    const Node* parent_node = node_stack[height];
+    const NdtreeIndexRelativeChild child_index =
+        OctreeIndex::computeRelativeChildIndex(morton_code, height);
+    const auto region_occupancy =
+        parent_node->data().childOccupancyMask(child_index);
+    if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask)) {
+      return true;
+    } else if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
+      return false;
+    }
+    // Check if the child is allocated
+    if (height - 1 == index.height || !parent_node->hasChild(child_index)) {
+      // Return the result of OccupancyClassifier::has(region_occupancy,
+      // occupancy_mask), which is always true if this branch is reached.
+      return true;
+    }
+    node_stack[--height] = parent_node->getChild(child_index);
+  }
+}
+
+bool ClassifiedMap::QueryCache::isFully(const OctreeIndex& index,
+                                        Occupancy::Mask occupancy_mask,
+                                        const BlockHashMap& block_map) {
+  // Remember previous query indices and compute new ones
+  const IndexElement previous_height = height;
+  const MortonIndex previous_morton_code = morton_code;
+  morton_code = convert::nodeIndexToMorton(index);
+
+  // Fetch the block if needed and return false if it doesn't exist
+  if (!getBlock(block_map.indexToBlockIndex(index), block_map)) {
+    return false;
+  }
+
+  // Compute the last ancestor the current and previous query had in common
+  if (height != tree_height) {
+    auto last_common_ancestor = OctreeIndex::computeLastCommonAncestorHeight(
+        morton_code, index.height, previous_morton_code, previous_height);
+    height = last_common_ancestor;
+  }
+  DCHECK_LE(height, tree_height);
+
+  if (height == index.height) {
+    DCHECK_NOTNULL(node_stack[height]);
+    const auto region_occupancy = node_stack[height]->data().occupancyMask();
+    return OccupancyClassifier::isFully(region_occupancy, occupancy_mask);
+  }
+
+  // Walk down the tree from height to index.height
+  while (true) {
+    DCHECK_NOTNULL(node_stack[height]);
+    const Node* parent_node = node_stack[height];
+    const NdtreeIndexRelativeChild child_index =
+        OctreeIndex::computeRelativeChildIndex(morton_code, height);
+    const auto region_occupancy =
+        parent_node->data().childOccupancyMask(child_index);
+    if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask)) {
+      return true;
+    } else if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
+      return false;
+    }
+    // Check if the child is allocated
+    if (height - 1 == index.height || !parent_node->hasChild(child_index)) {
+      // Return the result of OccupancyClassifier::isFully(region_occupancy,
+      // occupancy_mask), which is always false if this branch is reached.
+      return false;
+    }
+    node_stack[--height] = parent_node->getChild(child_index);
+  }
+}
+
+void ClassifiedMap::QueryCache::reset() {
+  block_index = Index3D::Constant(std::numeric_limits<IndexElement>::max());
+  height = tree_height;
+  morton_code = std::numeric_limits<MortonIndex>::max();
+
+  block = nullptr;
+  node_stack = std::array<const Node*, morton::kMaxTreeHeight<3>>{};
 }
 
 void ClassifiedMap::recursiveClassifier(  // NOLINT

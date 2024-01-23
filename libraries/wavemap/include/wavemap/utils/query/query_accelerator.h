@@ -26,6 +26,8 @@ class QueryAccelerator<SpatialHash<BlockDataT, dim>> {
   explicit QueryAccelerator(SpatialHash<BlockDataT, dim>& spatial_hash)
       : spatial_hash_(spatial_hash) {}
 
+  void reset();
+
   BlockDataT* getBlock(const Index<dim>& block_index);
   template <typename... DefaultArgs>
   BlockDataT& getOrAllocateBlock(const Index<dim>& block_index,
@@ -50,6 +52,8 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
   explicit QueryAccelerator(NdtreeBlockHash<CellDataT, dim>& ndtree_block_hash)
       : ndtree_block_hash_(ndtree_block_hash) {}
 
+  void reset();
+
   BlockType* getBlock(const Index<dim>& block_index);
   template <typename... DefaultArgs>
   BlockType& getOrAllocateBlock(const Index<dim>& block_index,
@@ -73,6 +77,8 @@ class QueryAccelerator<HashedWaveletOctree> {
   static constexpr int kDim = HashedWaveletOctree::kDim;
 
   explicit QueryAccelerator(const HashedWaveletOctree& map) : map_(map) {}
+
+  void reset();
 
   FloatingPoint getCellValue(const Index3D& index) {
     return getCellValue(OctreeIndex{0, index});

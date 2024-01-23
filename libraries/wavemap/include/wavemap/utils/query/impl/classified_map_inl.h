@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_UTILS_QUERY_IMPL_CLASSIFIED_MAP_INL_H_
 #define WAVEMAP_UTILS_QUERY_IMPL_CLASSIFIED_MAP_INL_H_
 
+#include <limits>
 #include <utility>
 
 namespace wavemap {
@@ -9,9 +10,19 @@ inline bool ClassifiedMap::has(const OctreeIndex& index,
   return has(index, Occupancy::toMask(occupancy_type));
 }
 
+inline bool ClassifiedMap::has(const OctreeIndex& index,
+                               Occupancy::Mask occupancy_mask) const {
+  return query_cache_.has(index, occupancy_mask, block_map_);
+}
+
 inline bool ClassifiedMap::isFully(const OctreeIndex& index,
                                    Occupancy::Id occupancy_type) const {
   return isFully(index, Occupancy::toMask(occupancy_type));
+}
+
+inline bool ClassifiedMap::isFully(const OctreeIndex& index,
+                                   Occupancy::Mask occupancy_mask) const {
+  return query_cache_.isFully(index, occupancy_mask, block_map_);
 }
 
 inline void ClassifiedMap::forEachLeafMatching(
@@ -34,26 +45,26 @@ inline Occupancy::Mask ClassifiedMap::NodeData::childOccupancyMask(
 }
 
 inline bool ClassifiedMap::hasBlock(const Index3D& block_index) const {
-  return block_map_.hasBlock(block_index);
-}
-
-inline ClassifiedMap::Block* ClassifiedMap::getBlock(
-    const Index3D& block_index) {
-  return block_map_.getBlock(block_index);
+  return getBlock(block_index);
 }
 
 inline const ClassifiedMap::Block* ClassifiedMap::getBlock(
     const Index3D& block_index) const {
-  return block_map_.getBlock(block_index);
+  return query_cache_.getBlock(block_index, block_map_);
 }
 
-inline ClassifiedMap::Block& ClassifiedMap::getOrAllocateBlock(
-    const Index3D& block_index) {
-  return block_map_.getOrAllocateBlock(block_index);
+inline std::pair<const ClassifiedMap::Node*, ClassifiedMap::HeightType>
+ClassifiedMap::getNodeOrAncestor(const OctreeIndex& index) const {
+  return query_cache_.getNodeOrAncestor(index, block_map_);
+}
+
+inline const ClassifiedMap::Node* ClassifiedMap::getNode(
+    const OctreeIndex& index) const {
+  return getNodeOrAncestor(index).first;
 }
 
 inline bool ClassifiedMap::hasValue(const OctreeIndex& index) const {
-  return block_map_.hasValue(index.computeParentIndex());
+  return getValue(index).has_value();
 }
 
 inline std::optional<Occupancy::Mask> ClassifiedMap::getValue(
@@ -61,17 +72,18 @@ inline std::optional<Occupancy::Mask> ClassifiedMap::getValue(
   return getValueOrAncestor(index).first;
 }
 
-inline std::pair<std::optional<Occupancy::Mask>, ClassifiedMap::HeightType>
-ClassifiedMap::getValueOrAncestor(const OctreeIndex& index) const {
-  const auto [parent, parent_height] =
-      block_map_.getValueOrAncestor(index.computeParentIndex());
-  if (parent) {
-    const MortonIndex morton = convert::nodeIndexToMorton(index);
-    const NdtreeIndexRelativeChild relative_child_idx =
-        OctreeIndex::computeRelativeChildIndex(morton, parent_height);
-    return {parent->childOccupancyMask(relative_child_idx), parent_height - 1};
+inline const ClassifiedMap::Block* ClassifiedMap::QueryCache::getBlock(
+    const Index3D& new_block_index,
+    const ClassifiedMap::BlockHashMap& block_map) {
+  if (new_block_index != block_index) {
+    block_index = new_block_index;
+    height = tree_height;
+    block = block_map.getBlock(new_block_index);
+    if (block) {
+      node_stack[tree_height] = &block->getRootNode();
+    }
   }
-  return {std::nullopt, getTreeHeight()};
+  return block;
 }
 }  // namespace wavemap
 

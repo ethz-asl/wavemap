@@ -1,6 +1,15 @@
 #include "wavemap/utils/query/query_accelerator.h"
 
 namespace wavemap {
+void QueryAccelerator<HashedWaveletOctree>::reset() {
+  node_stack_ = std::array<const NodeType*, morton::kMaxTreeHeight<3>>{};
+  value_stack_ = std::array<FloatingPoint, morton::kMaxTreeHeight<3>>{};
+
+  block_index_ = BlockIndex::Constant(std::numeric_limits<IndexElement>::max());
+  morton_code_ = std::numeric_limits<MortonIndex>::max();
+  height_ = tree_height_;
+}
+
 FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
     const OctreeIndex& index) {
   // Remember previous query indices and compute new ones
@@ -12,6 +21,10 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
 
   // Check whether we're in the same block as last time
   if (block_index_ == previous_block_index) {
+    // If the block is the same, but it doesn't exist, return 'unknown'
+    if (!node_stack_[tree_height_]) {
+      return 0.f;
+    }
     // Compute the last ancestor the current and previous query had in common
     auto last_common_ancestor = OctreeIndex::computeLastCommonAncestorHeight(
         morton_code_, index.height, previous_morton_code, previous_height);
@@ -26,9 +39,10 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
       value_stack_[tree_height_] = current_block->getRootScale();
       height_ = tree_height_;
     } else {
-      // Otherwise return ignore this query and return 'unknown'
-      block_index_ = previous_block_index;
-      morton_code_ = previous_morton_code;
+      // Otherwise remember that it doesn't exist and return 'unknown'
+      node_stack_[tree_height_] = nullptr;
+      value_stack_[tree_height_] = 0.f;
+      height_ = tree_height_;
       return 0.f;
     }
   }

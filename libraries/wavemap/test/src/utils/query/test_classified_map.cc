@@ -33,16 +33,28 @@ TEST_F(ClassifiedMapTest, ClassificationResults) {
     const OccupancyClassifier classifier;
     const ClassifiedMap classified_map{map, classifier};
 
+    auto perturb_classified_map_cache = [this, &classified_map]() {
+      const auto random_index = getRandomNdtreeIndex<OctreeIndex>(
+          Index3D::Constant(-1000), Index3D::Constant(1000), 0,
+          classified_map.getTreeHeight());
+      classified_map.getNodeOrAncestor(random_index);
+    };
+
     // Test all leaves
     map.forEachLeaf(
-        [&map, &classifier, &classified_map](const OctreeIndex& cell_index,
-                                             FloatingPoint cell_log_odds) {
+        [&map, &classifier, &classified_map, &perturb_classified_map_cache](
+            const OctreeIndex& cell_index, FloatingPoint cell_log_odds) {
+          perturb_classified_map_cache();
           const auto cell_occupancy_type = classifier.classify(cell_log_odds);
-          EXPECT_TRUE(classified_map.isFully(cell_index, cell_occupancy_type));
+          EXPECT_TRUE(classified_map.isFully(cell_index, cell_occupancy_type))
+              << "For cell_index: " << cell_index.toString();
           for (IndexElement height = cell_index.height;
                height < map.getTreeHeight(); ++height) {
+            perturb_classified_map_cache();
             EXPECT_TRUE(classified_map.has(
-                cell_index.computeParentIndex(height), cell_occupancy_type));
+                cell_index.computeParentIndex(height), cell_occupancy_type))
+                << "For cell_index.computeParentIndex(height): "
+                << cell_index.computeParentIndex(height).toString();
           }
         });
 

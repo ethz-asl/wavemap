@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_UTILS_QUERY_CLASSIFIED_MAP_H_
 #define WAVEMAP_UTILS_QUERY_CLASSIFIED_MAP_H_
 
+#include <limits>
 #include <utility>
 
 #include <wavemap/data_structure/ndtree/ndtree.h>
@@ -30,7 +31,8 @@ class ClassifiedMap {
                 const OccupancyClassifier& classifier)
       : min_cell_width_(min_cell_width),
         classifier_(classifier),
-        block_map_(tree_height) {}
+        block_map_(tree_height),
+        query_cache_(tree_height) {}
 
   ClassifiedMap(const HashedWaveletOctree& occupancy_map,
                 const OccupancyClassifier& classifier)
@@ -51,11 +53,13 @@ class ClassifiedMap {
   bool isFully(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
 
   bool hasBlock(const Index3D& block_index) const;
-  Block* getBlock(const Index3D& block_index);
   const Block* getBlock(const Index3D& block_index) const;
-  Block& getOrAllocateBlock(const Index3D& block_index);
-  BlockHashMap& getBlockMap() { return block_map_; }
   const BlockHashMap& getBlockMap() const { return block_map_; }
+
+  bool hasNode(const OctreeIndex& index) const { return getNode(index); }
+  const Node* getNode(const OctreeIndex& index) const;
+  std::pair<const Node*, HeightType> getNodeOrAncestor(
+      const OctreeIndex& index) const;
 
   bool hasValue(const OctreeIndex& index) const;
   std::optional<Occupancy::Mask> getValue(const OctreeIndex& index) const;
@@ -73,6 +77,35 @@ class ClassifiedMap {
   const FloatingPoint min_cell_width_;
   const OccupancyClassifier classifier_;
   BlockHashMap block_map_;
+
+  // Cache previous queries
+  struct QueryCache {
+    explicit QueryCache(IndexElement tree_height) : tree_height(tree_height) {}
+
+    const IndexElement tree_height;
+
+    Index3D block_index =
+        Index3D::Constant(std::numeric_limits<IndexElement>::max());
+    IndexElement height = tree_height;
+    MortonIndex morton_code = std::numeric_limits<MortonIndex>::max();
+
+    const Block* block = nullptr;
+    std::array<const Node*, morton::kMaxTreeHeight<3>> node_stack{};
+
+    const Block* getBlock(const Index3D& block_index,
+                          const BlockHashMap& block_map);
+    std::pair<const Node*, HeightType> getNodeOrAncestor(
+        const OctreeIndex& index, const BlockHashMap& block_map);
+    // TODO(victorr): Write more unit tests for these accelerated accessors
+
+    bool has(const OctreeIndex& index, Occupancy::Mask occupancy_mask,
+             const BlockHashMap& block_map);
+    bool isFully(const OctreeIndex& index, Occupancy::Mask occupancy_mask,
+                 const BlockHashMap& block_map);
+
+    void reset();
+  };
+  mutable QueryCache query_cache_;
 
   void recursiveClassifier(
       const HashedWaveletOctreeBlock::NodeType& occupancy_node,

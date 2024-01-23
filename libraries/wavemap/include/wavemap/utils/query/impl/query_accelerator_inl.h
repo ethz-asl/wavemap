@@ -1,9 +1,17 @@
 #ifndef WAVEMAP_UTILS_QUERY_IMPL_QUERY_ACCELERATOR_INL_H_
 #define WAVEMAP_UTILS_QUERY_IMPL_QUERY_ACCELERATOR_INL_H_
 
+#include <limits>
 #include <utility>
 
 namespace wavemap {
+template <typename BlockDataT, int dim>
+void QueryAccelerator<SpatialHash<BlockDataT, dim>>::reset() {
+  last_block_index_ =
+      Index3D::Constant(std::numeric_limits<IndexElement>::max());
+  last_block_ = nullptr;
+}
+
 template <typename BlockDataT, int dim>
 BlockDataT* QueryAccelerator<SpatialHash<BlockDataT, dim>>::getBlock(
     const Index<dim>& block_index) {
@@ -24,6 +32,12 @@ BlockDataT& QueryAccelerator<SpatialHash<BlockDataT, dim>>::getOrAllocateBlock(
         block_index, std::forward<DefaultArgs>(args)...);
   }
   return *last_block_;
+}
+
+template <typename CellDataT, int dim>
+void QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::reset() {
+  block_index_ = Index<dim>::Constant(std::numeric_limits<IndexElement>::max());
+  block_ = nullptr;
 }
 
 template <typename CellDataT, int dim>
