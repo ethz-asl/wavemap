@@ -243,14 +243,15 @@ void ClassifiedMap::recursiveClassifier(  // NOLINT
           classified_node.getOrAllocateChild(child_idx);
       recursiveClassifier(*occupancy_child_node, child_occupancy,
                           classified_child_node);
-      const bool child_has_free = classified_child_node.data().hasAnyFree();
+      const bool child_has_free = classified_child_node.data().has_free.any();
       const bool child_has_occupied =
-          classified_child_node.data().hasAnyOccupied();
+          classified_child_node.data().has_occupied.any();
       const bool child_has_unobserved =
-          classified_child_node.data().hasAnyUnobserved();
-      classified_node.data().setFree(child_idx, child_has_free);
-      classified_node.data().setOccupied(child_idx, child_has_occupied);
-      classified_node.data().setUnobserved(child_idx, child_has_unobserved);
+          classified_child_node.data().has_unobserved.any();
+      classified_node.data().has_free.set(child_idx, child_has_free);
+      classified_node.data().has_occupied.set(child_idx, child_has_occupied);
+      classified_node.data().has_unobserved.set(child_idx,
+                                                child_has_unobserved);
       if (child_has_free + child_has_occupied + child_has_unobserved == 1) {
         classified_node.eraseChild(child_idx);
       }
@@ -260,9 +261,9 @@ void ClassifiedMap::recursiveClassifier(  // NOLINT
           classifier_.is(child_occupancy, Occupancy::kOccupied);
       const bool is_unobserved =
           classifier_.is(child_occupancy, Occupancy::kUnobserved);
-      classified_node.data().setFree(child_idx, is_free);
-      classified_node.data().setOccupied(child_idx, is_occupied);
-      classified_node.data().setUnobserved(child_idx, is_unobserved);
+      classified_node.data().has_free.set(child_idx, is_free);
+      classified_node.data().has_occupied.set(child_idx, is_occupied);
+      classified_node.data().has_unobserved.set(child_idx, is_unobserved);
     }
   }
 }

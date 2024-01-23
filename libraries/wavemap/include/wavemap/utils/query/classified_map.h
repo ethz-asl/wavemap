@@ -10,22 +10,20 @@
 #include <wavemap/utils/query/occupancy_classifier.h>
 
 namespace wavemap {
+struct ChildBitset {
+  uint8_t bitset{};
+
+  void set(NdtreeIndexRelativeChild child_idx, bool value = true);
+  bool operator[](NdtreeIndexRelativeChild child_idx) const;
+  bool any() const;
+};
+
 class ClassifiedMap {
  public:
   struct NodeData {
-    uint8_t has_free{};
-    uint8_t has_occupied{};
-    uint8_t has_unobserved{};
-
-    void setFree(NdtreeIndexRelativeChild child_idx, bool value = true);
-    void setOccupied(NdtreeIndexRelativeChild child_idx, bool value = true);
-    void setUnobserved(NdtreeIndexRelativeChild child_idx, bool value = true);
-    bool isFree(NdtreeIndexRelativeChild child_idx) const;
-    bool isOccupied(NdtreeIndexRelativeChild child_idx) const;
-    bool isUnobserved(NdtreeIndexRelativeChild child_idx) const;
-    bool hasAnyFree() const;
-    bool hasAnyOccupied() const;
-    bool hasAnyUnobserved() const;
+    ChildBitset has_free;
+    ChildBitset has_occupied;
+    ChildBitset has_unobserved;
 
     Occupancy::Mask occupancyMask() const;
     Occupancy::Mask childOccupancyMask(
