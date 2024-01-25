@@ -102,21 +102,21 @@ class HashedChunkedWaveletOctree : public MapBase {
   void addToCellValue(const Index3D& index, FloatingPoint update) override;
 
   bool hasBlock(const Index3D& block_index) const;
+  bool eraseBlock(const BlockIndex& block_index);
+  template <typename IndexedBlockVisitor>
+  void eraseBlockIf(IndexedBlockVisitor indicator_fn);
+
   Block* getBlock(const Index3D& block_index);
   const Block* getBlock(const Index3D& block_index) const;
   Block& getOrAllocateBlock(const Index3D& block_index);
 
-  auto& getHashMap() { return block_map_; }
-  const auto& getHashMap() const { return block_map_; }
+  auto& getHashMap() { return block_map_.getHashMap(); }
+  const auto& getHashMap() const { return block_map_.getHashMap(); }
 
   template <typename IndexedBlockVisitor>
-  void forEachBlock(IndexedBlockVisitor visitor_fn) {
-    block_map_.forEachBlock(visitor_fn);
-  }
+  void forEachBlock(IndexedBlockVisitor visitor_fn);
   template <typename IndexedBlockVisitor>
-  void forEachBlock(IndexedBlockVisitor visitor_fn) const {
-    block_map_.forEachBlock(visitor_fn);
-  }
+  void forEachBlock(IndexedBlockVisitor visitor_fn) const;
 
   void forEachLeaf(
       typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;

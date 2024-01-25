@@ -57,6 +57,16 @@ inline bool HashedWaveletOctree::hasBlock(const Index3D& block_index) const {
   return block_map_.hasBlock(block_index);
 }
 
+inline bool HashedWaveletOctree::eraseBlock(
+    const HashedWaveletOctree::BlockIndex& block_index) {
+  return block_map_.eraseBlock(block_index);
+}
+
+template <typename IndexedBlockVisitor>
+void HashedWaveletOctree::eraseBlockIf(IndexedBlockVisitor indicator_fn) {
+  block_map_.eraseBlockIf(indicator_fn);
+}
+
 inline HashedWaveletOctree::Block* HashedWaveletOctree::getBlock(
     const Index3D& block_index) {
   return block_map_.getBlock(block_index);
@@ -72,6 +82,16 @@ inline HashedWaveletOctree::Block& HashedWaveletOctree::getOrAllocateBlock(
   return block_map_.getOrAllocateBlock(block_index, config_.tree_height,
                                        config_.min_log_odds,
                                        config_.max_log_odds);
+}
+
+template <typename IndexedBlockVisitor>
+void HashedWaveletOctree::forEachBlock(IndexedBlockVisitor visitor_fn) {
+  block_map_.forEachBlock(visitor_fn);
+}
+
+template <typename IndexedBlockVisitor>
+void HashedWaveletOctree::forEachBlock(IndexedBlockVisitor visitor_fn) const {
+  block_map_.forEachBlock(visitor_fn);
 }
 
 inline HashedWaveletOctree::BlockIndex HashedWaveletOctree::indexToBlockIndex(

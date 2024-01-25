@@ -48,6 +48,9 @@ class DenseBlockHash {
   const CellDataT& getDefaultValue() const { return default_value_; }
   bool equalsDefaultValue(const CellDataT& value) const;
 
+  auto& getHashMap() { return block_map_.getHashMap(); }
+  const auto& getHashMap() const { return block_map_.getHashMap(); }
+
   template <typename IndexedBlockVisitor>
   void forEachBlock(IndexedBlockVisitor visitor_fn);
   template <typename IndexedBlockVisitor>
@@ -58,14 +61,14 @@ class DenseBlockHash {
   template <typename IndexedLeafVisitorFunction>
   void forEachLeaf(IndexedLeafVisitorFunction visitor_fn) const;
 
- protected:
-  const CellDataT default_value_;
-  BlockHashMap block_map_;
-
   static Index<dim> indexToBlockIndex(const Index<dim>& index);
   static Index<dim> indexToCellIndex(const Index<dim>& index);
   static Index<dim> cellAndBlockIndexToIndex(const Index<dim>& block_index,
                                              const Index<dim>& cell_index);
+
+ protected:
+  const CellDataT default_value_;
+  BlockHashMap block_map_;
 };
 }  // namespace wavemap
 

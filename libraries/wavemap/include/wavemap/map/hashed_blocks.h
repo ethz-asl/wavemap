@@ -48,9 +48,6 @@ class HashedBlocks : public MapBase,
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
   void addToCellValue(const Index3D& index, FloatingPoint update) override;
 
-  auto& getHashMap() { return block_map_; }
-  const auto& getHashMap() const { return block_map_; }
-
   void forEachLeaf(
       typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;
 };

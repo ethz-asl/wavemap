@@ -69,6 +69,9 @@ class NdtreeBlockHash {
   const CellDataT& getDefaultValue() const { return default_value_; }
   bool equalsDefaultValue(const CellDataT& value) const;
 
+  auto& getHashMap() { return block_map_.getHashMap(); }
+  const auto& getHashMap() const { return block_map_.getHashMap(); }
+
   template <typename IndexedBlockVisitor>
   void forEachBlock(IndexedBlockVisitor visitor_fn);
   template <typename IndexedBlockVisitor>

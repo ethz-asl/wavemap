@@ -150,7 +150,7 @@ void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg,
       allocated_blocks.emplace(block_index.x, block_index.y, block_index.z);
     }
     // Remove local blocks that should no longer exist according to the map msg
-    map->getHashMap().eraseBlockIf(
+    map->eraseBlockIf(
         [&allocated_blocks](const Index3D& block_index, const auto& /*block*/) {
           return !allocated_blocks.count(block_index);
         });
@@ -394,7 +394,7 @@ void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
       allocated_blocks.emplace(block_index.x, block_index.y, block_index.z);
     }
     // Remove local blocks that should no longer exist according to the map msg
-    map->getHashMap().eraseBlockIf(
+    map->eraseBlockIf(
         [&allocated_blocks](const Index3D& block_index, const auto& /*block*/) {
           return !allocated_blocks.count(block_index);
         });
