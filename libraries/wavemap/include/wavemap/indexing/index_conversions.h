@@ -15,26 +15,17 @@
 namespace wavemap::convert {
 template <int dim>
 inline Index<dim> scaledPointToNearestIndex(const Point<dim>& point) {
-  return (point - Vector<dim>::Constant(0.5f))
-      .array()
-      .round()
-      .template cast<IndexElement>();
+  return (point.array() - 0.5f).round().template cast<IndexElement>();
 }
 
 template <int dim>
 inline Index<dim> scaledPointToFloorIndex(const Point<dim>& point) {
-  return (point - Vector<dim>::Constant(0.5f))
-      .array()
-      .floor()
-      .template cast<IndexElement>();
+  return (point.array() - 0.5f).floor().template cast<IndexElement>();
 }
 
 template <int dim>
 inline Index<dim> scaledPointToCeilIndex(const Point<dim>& point) {
-  return (point - Vector<dim>::Constant(0.5f))
-      .array()
-      .ceil()
-      .template cast<IndexElement>();
+  return (point.array() - 0.5f).ceil().template cast<IndexElement>();
 }
 
 template <int dim>
@@ -62,10 +53,15 @@ inline Point<dim> indexToMinCorner(const Index<dim>& index,
 }
 
 template <int dim>
+inline Point<dim> indexToMaxCorner(const Index<dim>& index,
+                                   FloatingPoint cell_width) {
+  return (index.template cast<FloatingPoint>().array() + 1.f) * cell_width;
+}
+
+template <int dim>
 inline Point<dim> indexToCenterPoint(const Index<dim>& index,
                                      FloatingPoint cell_width) {
-  return (index.template cast<FloatingPoint>() + Vector<dim>::Constant(0.5f)) *
-         cell_width;
+  return (index.template cast<FloatingPoint>().array() + 0.5f) * cell_width;
 }
 
 template <int dim>
@@ -140,8 +136,7 @@ inline Point<dim> nodeIndexToMaxCorner(const NdtreeIndex<dim>& node_index,
                                        FloatingPoint min_cell_width) {
   const FloatingPoint node_width =
       heightToCellWidth(min_cell_width, node_index.height);
-  return node_index.position.template cast<FloatingPoint>() * node_width +
-         Vector<dim>::Constant(node_width);
+  return indexToMaxCorner(node_index.position, node_width);
 }
 
 template <int dim>
@@ -151,7 +146,8 @@ inline AABB<Point<dim>> nodeIndexToAABB(const NdtreeIndex<dim>& node_index,
       heightToCellWidth(min_cell_width, node_index.height);
   const Point<dim> min_corner =
       indexToMinCorner(node_index.position, node_width);
-  const Point<dim> max_corner = min_corner + Vector<dim>::Constant(node_width);
+  const Point<dim> max_corner =
+      indexToMaxCorner(node_index.position, node_width);
   return {min_corner, max_corner};
 }
 
