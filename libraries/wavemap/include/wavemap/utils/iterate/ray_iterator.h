@@ -15,6 +15,8 @@ class Ray {
   Ray(const Point<dim>& start_point, const Point<dim>& end_point,
       FloatingPoint cell_width);
 
+  size_t size() const { return ray_length_in_steps_; }
+
   class Iterator {
    public:
     explicit Iterator(const Ray& ray)
