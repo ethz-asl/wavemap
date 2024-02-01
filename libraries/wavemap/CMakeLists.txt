@@ -67,8 +67,8 @@ add_library(${PROJECT_NAME}
     src/map/map_base.cc
     src/map/map_factory.cc
     src/utils/query/classified_map.cc
-    src/utils/query/collision_utils.cc
     src/utils/query/query_accelerator.cc
+    src/utils/query/point_sampler.cc
     src/utils/sdf/full_euclidean_sdf_generator.cc
     src/utils/sdf/quasi_euclidean_sdf_generator.cc
     src/utils/stopwatch.cc

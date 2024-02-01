@@ -7,8 +7,10 @@ constexpr Occupancy::Mask Occupancy::toMask(Occupancy::Id type_id) {
   DCHECK(type_id < static_cast<TypeId>(names.size()));
   if (type_id < 3) {
     return 1 << type_id;
-  } else {
+  } else if (type_id == 3) {
     return 0b011;
+  } else {
+    return 0b111;
   }
 }
 constexpr Occupancy::Mask Occupancy::toMask(bool free, bool occupied,

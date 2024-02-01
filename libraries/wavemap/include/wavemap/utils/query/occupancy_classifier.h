@@ -13,9 +13,12 @@ class OccupancyClassifier {
   FloatingPoint getOccupancyThreshold() const { return occupancy_threshold_; }
 
   constexpr Occupancy::Id classify(FloatingPoint log_odds_occupancy) const;
+  constexpr Occupancy::Mask toMask(FloatingPoint log_odds_occupancy) const;
 
   constexpr bool is(FloatingPoint log_odds_occupancy,
                     Occupancy::Id occupancy_type) const;
+  constexpr bool is(FloatingPoint log_odds_occupancy,
+                    Occupancy::Mask occupancy_mask) const;
 
   static constexpr bool has(Occupancy::Mask region_occupancy,
                             Occupancy::Id occupancy_type);

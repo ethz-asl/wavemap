@@ -7,29 +7,28 @@ inline constexpr Occupancy::Id OccupancyClassifier::classify(
   if (isUnobserved(log_odds_occupancy)) {
     return Occupancy::kUnobserved;
   }
-  if (log_odds_occupancy < occupancy_threshold_) {
-    return Occupancy::kFree;
-  } else {
-    return Occupancy::kOccupied;
+  const bool is_free = log_odds_occupancy < occupancy_threshold_;
+  return is_free ? Occupancy::kFree : Occupancy::kOccupied;
+}
+
+inline constexpr Occupancy::Mask OccupancyClassifier::toMask(
+    FloatingPoint log_odds_occupancy) const {
+  if (isUnobserved(log_odds_occupancy)) {
+    return Occupancy::toMask(Occupancy::kUnobserved);
   }
+  const bool is_free = log_odds_occupancy < occupancy_threshold_;
+  return is_free ? Occupancy::toMask(Occupancy::kFree)
+                 : Occupancy::toMask(Occupancy::kOccupied);
 }
 
 inline constexpr bool OccupancyClassifier::is(
     FloatingPoint log_odds_occupancy, Occupancy::Id occupancy_type) const {
-  switch (occupancy_type) {
-    case Occupancy::kFree:
-      return isObserved(log_odds_occupancy) &&
-             log_odds_occupancy < occupancy_threshold_;
-    case Occupancy::kOccupied:
-      return isObserved(log_odds_occupancy) &&
-             occupancy_threshold_ < log_odds_occupancy;
-    case Occupancy::kUnobserved:
-      return isUnobserved(log_odds_occupancy);
-    case Occupancy::kObserved:
-      return isObserved(log_odds_occupancy);
-    default:
-      return false;
-  }
+  return is(log_odds_occupancy, Occupancy::toMask(occupancy_type));
+}
+
+inline constexpr bool OccupancyClassifier::is(
+    FloatingPoint log_odds_occupancy, Occupancy::Mask occupancy_mask) const {
+  return has(toMask(log_odds_occupancy), occupancy_mask);
 }
 
 inline constexpr bool OccupancyClassifier::has(Occupancy::Mask region_occupancy,

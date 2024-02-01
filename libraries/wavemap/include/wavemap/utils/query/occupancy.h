@@ -9,9 +9,9 @@ struct Occupancy : TypeSelector<Occupancy> {
   using TypeSelector<Occupancy>::TypeSelector;
   using Mask = uint8_t;
 
-  enum Id : TypeId { kFree, kOccupied, kUnobserved, kObserved };
+  enum Id : TypeId { kFree, kOccupied, kUnobserved, kObserved, kAny };
   static constexpr std::array names = {"free", "occupied", "unobserved",
-                                       "observed"};
+                                       "observed", "any"};
 
   // NOTE: For usage examples, please refer to the OccupancyClassifier class.
   static constexpr Mask toMask(Id type_id);
