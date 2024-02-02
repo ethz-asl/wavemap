@@ -6,8 +6,10 @@
 
 #include <wavemap/data_structure/ndtree/ndtree.h>
 #include <wavemap/data_structure/ndtree_block_hash.h>
+#include <wavemap/map/hashed_blocks.h>
 #include <wavemap/map/hashed_wavelet_octree.h>
 #include <wavemap/utils/query/occupancy_classifier.h>
+#include <wavemap/utils/query/query_accelerator.h>
 
 namespace wavemap {
 struct ChildBitset {
@@ -36,23 +38,21 @@ class ClassifiedMap {
   static constexpr int kDim = 3;
 
   ClassifiedMap(FloatingPoint min_cell_width, IndexElement tree_height,
-                const OccupancyClassifier& classifier)
-      : min_cell_width_(min_cell_width),
-        classifier_(classifier),
-        block_map_(tree_height),
-        query_cache_(tree_height) {}
+                const OccupancyClassifier& classifier);
 
   ClassifiedMap(const HashedWaveletOctree& occupancy_map,
-                const OccupancyClassifier& classifier)
-      : ClassifiedMap(occupancy_map.getMinCellWidth(),
-                      occupancy_map.getTreeHeight(), classifier) {
-    update(occupancy_map);
-  }
+                const OccupancyClassifier& classifier);
+
+  ClassifiedMap(const HashedWaveletOctree& occupancy_map,
+                const OccupancyClassifier& classifier,
+                const HashedBlocks& esdf_map, FloatingPoint robot_radius);
 
   FloatingPoint getMinCellWidth() const { return min_cell_width_; }
   IndexElement getTreeHeight() const { return block_map_.getMaxHeight(); }
 
   void update(const HashedWaveletOctree& occupancy_map);
+  void update(const HashedWaveletOctree& occupancy_map,
+              const HashedBlocks& esdf_map, FloatingPoint robot_radius);
 
   bool has(const OctreeIndex& index, Occupancy::Id occupancy_type) const;
   bool has(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
@@ -82,6 +82,10 @@ class ClassifiedMap {
                            IndexElement termination_height = 0) const;
 
  private:
+  using HaarTransform = HashedWaveletOctree::Block::Transform;
+  using ChildAverages =
+      HashedWaveletOctree::Block::Coefficients::CoefficientsArray;
+
   const FloatingPoint min_cell_width_;
   const OccupancyClassifier classifier_;
   BlockHashMap block_map_;
@@ -118,6 +122,13 @@ class ClassifiedMap {
   void recursiveClassifier(
       const HashedWaveletOctreeBlock::NodeType& occupancy_node,
       FloatingPoint average_occupancy, Node& classified_node);
+
+  void recursiveClassifier(
+      const OctreeIndex& node_index,
+      const HashedWaveletOctreeBlock::NodeType* occupancy_node,
+      FloatingPoint occupancy_average,
+      QueryAccelerator<HashedBlocks::DenseBlockHash>& esdf_map,
+      FloatingPoint robot_radius, Node& classified_node);
 };
 }  // namespace wavemap
 

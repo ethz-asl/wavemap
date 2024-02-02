@@ -3,6 +3,7 @@
 
 #include <limits>
 
+#include "wavemap/data_structure/dense_block_hash.h"
 #include "wavemap/data_structure/ndtree_block_hash.h"
 #include "wavemap/data_structure/spatial_hash.h"
 #include "wavemap/indexing/index_hashes.h"
@@ -39,6 +40,33 @@ class QueryAccelerator<SpatialHash<BlockDataT, dim>> {
   Index<dim> last_block_index_ =
       Index3D::Constant(std::numeric_limits<IndexElement>::max());
   BlockDataT* last_block_ = nullptr;
+};
+
+// Query accelerator for dense block hashes
+template <typename CellDataT, int dim, unsigned int cells_per_side>
+class QueryAccelerator<DenseBlockHash<CellDataT, dim, cells_per_side>> {
+ public:
+  static constexpr int kDim = dim;
+  using BlockType =
+      typename DenseBlockHash<CellDataT, dim, cells_per_side>::Block;
+  using CellType =
+      typename DenseBlockHash<CellDataT, dim, cells_per_side>::Cell;
+
+  explicit QueryAccelerator(
+      const DenseBlockHash<CellDataT, dim, cells_per_side>& dense_block_hash)
+      : dense_block_hash_(dense_block_hash) {}
+
+  void reset();
+
+  const BlockType* getBlock(const Index<dim>& block_index);
+  const CellDataT* getValue(const Index<dim>& index);
+
+ private:
+  const DenseBlockHash<CellDataT, dim, cells_per_side>& dense_block_hash_;
+
+  Index<dim> block_index_ =
+      Index<dim>::Constant(std::numeric_limits<IndexElement>::max());
+  const BlockType* block_ = nullptr;
 };
 
 // Query accelerator for ndtree block hashes

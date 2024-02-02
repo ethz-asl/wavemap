@@ -16,6 +16,7 @@ class DenseBlockHash {
 
   using Block = DenseGrid<CellDataT, dim, cells_per_side>;
   using BlockHashMap = SpatialHash<Block, kDim>;
+  using Cell = CellDataT;
 
   explicit DenseBlockHash(CellDataT default_value = CellDataT{})
       : default_value_(default_value) {}

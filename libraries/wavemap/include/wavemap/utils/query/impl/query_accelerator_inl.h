@@ -34,6 +34,36 @@ BlockDataT& QueryAccelerator<SpatialHash<BlockDataT, dim>>::getOrAllocateBlock(
   return *last_block_;
 }
 
+template <typename CellDataT, int dim, unsigned int cells_per_side>
+void QueryAccelerator<DenseBlockHash<CellDataT, dim, cells_per_side>>::reset() {
+  block_index_ = Index<dim>::Constant(std::numeric_limits<IndexElement>::max());
+  block_ = nullptr;
+}
+
+template <typename CellDataT, int dim, unsigned int cells_per_side>
+const typename QueryAccelerator<
+    DenseBlockHash<CellDataT, dim, cells_per_side>>::BlockType*
+QueryAccelerator<DenseBlockHash<CellDataT, dim, cells_per_side>>::getBlock(
+    const Index<dim>& block_index) {
+  if (block_index != block_index_) {
+    block_index_ = block_index;
+    block_ = dense_block_hash_.getBlock(block_index);
+  }
+  return block_;
+}
+
+template <typename CellDataT, int dim, unsigned int cells_per_side>
+const CellDataT*
+QueryAccelerator<DenseBlockHash<CellDataT, dim, cells_per_side>>::getValue(
+    const Index<dim>& index) {
+  const Index<dim> block_index = dense_block_hash_.indexToBlockIndex(index);
+  if (const BlockType* block = getBlock(block_index); block) {
+    const Index<dim> cell_index = dense_block_hash_.indexToCellIndex(index);
+    return &block->at(cell_index);
+  }
+  return nullptr;
+}
+
 template <typename CellDataT, int dim>
 void QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::reset() {
   block_index_ = Index<dim>::Constant(std::numeric_limits<IndexElement>::max());

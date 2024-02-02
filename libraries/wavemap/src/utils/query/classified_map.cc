@@ -3,6 +3,30 @@
 #include <tracy/Tracy.hpp>
 
 namespace wavemap {
+ClassifiedMap::ClassifiedMap(FloatingPoint min_cell_width,
+                             IndexElement tree_height,
+                             const OccupancyClassifier& classifier)
+    : min_cell_width_(min_cell_width),
+      classifier_(classifier),
+      block_map_(tree_height),
+      query_cache_(tree_height) {}
+
+ClassifiedMap::ClassifiedMap(const HashedWaveletOctree& occupancy_map,
+                             const OccupancyClassifier& classifier)
+    : ClassifiedMap(occupancy_map.getMinCellWidth(),
+                    occupancy_map.getTreeHeight(), classifier) {
+  update(occupancy_map);
+}
+
+ClassifiedMap::ClassifiedMap(const HashedWaveletOctree& occupancy_map,
+                             const OccupancyClassifier& classifier,
+                             const HashedBlocks& esdf_map,
+                             FloatingPoint robot_radius)
+    : ClassifiedMap(occupancy_map.getMinCellWidth(),
+                    occupancy_map.getTreeHeight(), classifier) {
+  update(occupancy_map, esdf_map, robot_radius);
+}
+
 void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
   ZoneScoped;
   // Reset the query cache
@@ -21,6 +45,39 @@ void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
         recursiveClassifier(occupancy_block.getRootNode(),
                             occupancy_block.getRootScale(),
                             classified_block.getRootNode());
+      });
+}
+
+void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map,
+                           const HashedBlocks& esdf_map,
+                           FloatingPoint robot_radius) {
+  ZoneScoped;
+  // Reset the query cache
+  query_cache_.reset();
+
+  // Check that the ESDF is valid for our query and compatible with the occ map
+  CHECK_GE(esdf_map.getDefaultValue(), robot_radius);
+  CHECK_GE(esdf_map.getMaxLogOdds(), robot_radius);
+  CHECK_NEAR(esdf_map.getMinCellWidth(), occupancy_map.getMinCellWidth(),
+             kEpsilon);
+
+  // Erase blocks that no longer exist
+  block_map_.eraseBlockIf(
+      [&occupancy_map](const Index3D& block_index, const auto& /*block*/) {
+        return !occupancy_map.hasBlock(block_index);
+      });
+
+  // Update all existing blocks
+  QueryAccelerator esdf_accelerator{
+      dynamic_cast<const HashedBlocks::DenseBlockHash&>(esdf_map)};
+  occupancy_map.forEachBlock(
+      [this, &esdf_accelerator, block_height = occupancy_map.getTreeHeight(),
+       robot_radius](const Index3D& block_index, const auto& occupancy_block) {
+        const OctreeIndex block_node_index{block_height, block_index};
+        auto& classified_block = block_map_.getOrAllocateBlock(block_index);
+        recursiveClassifier(block_node_index, &occupancy_block.getRootNode(),
+                            occupancy_block.getRootScale(), esdf_accelerator,
+                            robot_radius, classified_block.getRootNode());
       });
 }
 
@@ -232,8 +289,7 @@ void ClassifiedMap::recursiveClassifier(  // NOLINT
     const HashedWaveletOctreeBlock::NodeType& occupancy_node,
     FloatingPoint average_occupancy, ClassifiedMap::Node& classified_node) {
   const auto child_occupancies =
-      HashedWaveletOctree::Block::Transform::backward(
-          {average_occupancy, occupancy_node.data()});
+      HaarTransform::backward({average_occupancy, occupancy_node.data()});
   for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
     const FloatingPoint child_occupancy = child_occupancies[child_idx];
     // If the node has children, recurse
@@ -264,6 +320,81 @@ void ClassifiedMap::recursiveClassifier(  // NOLINT
       classified_node.data().has_free.set(child_idx, is_free);
       classified_node.data().has_occupied.set(child_idx, is_occupied);
       classified_node.data().has_unobserved.set(child_idx, is_unobserved);
+    }
+  }
+}
+
+void ClassifiedMap::recursiveClassifier(  // NOLINT
+    const OctreeIndex& node_index,
+    const HashedWaveletOctreeBlock::NodeType* occupancy_node,
+    FloatingPoint occupancy_average,
+    QueryAccelerator<HashedBlocks::DenseBlockHash>& esdf_map,
+    FloatingPoint robot_radius, ClassifiedMap::Node& classified_node) {
+  // Compute the child occupancies, if appropriate
+  ChildAverages child_occupancies{};
+  if (occupancy_node) {
+    child_occupancies =
+        HaarTransform::backward({occupancy_average, occupancy_node->data()});
+  }
+
+  // Iterate over all children
+  for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    // Get the child's index, occupancy node pointer and occupancy
+    const OctreeIndex child_index = node_index.computeChildIndex(child_idx);
+    const auto* child_occupancy_node =
+        occupancy_node ? occupancy_node->getChild(child_idx) : nullptr;
+    const FloatingPoint child_occupancy =
+        occupancy_node ? child_occupancies[child_idx] : occupancy_average;
+
+    // If the ESDF resolution has been reached,
+    // or we're in a region that's fully occupied or unobserved, classify
+    const bool esdf_resolution_reached = child_index.height == 0;
+    const bool is_free = classifier_.is(child_occupancy, Occupancy::kFree);
+    const bool is_non_free_leaf = !is_free && !child_occupancy_node;
+    if (esdf_resolution_reached || is_non_free_leaf) {
+      // If the child's occupancy is free, check if it's also free in the ESDF
+      if (is_free) {
+        DCHECK_EQ(child_index.height, 0);
+        if (auto* distance = esdf_map.getValue(child_index.position);
+            distance && *distance < robot_radius) {
+          // The child is not free in the ESDF (robot would be in collision)
+          classified_node.data().has_free.set(child_idx, false);
+          classified_node.data().has_occupied.set(child_idx, true);
+          classified_node.data().has_unobserved.set(child_idx, false);
+          continue;
+        }
+        // NOTE: The ESDF is defined up to ESDF.max_distance which we asserted
+        //       to be larger than the robot_radius. So if a cell's ESDF
+        //       distance is undefined, it must be safe to traverse.
+      }
+      // Otherwise, the classification result only depends on the occupancy
+      const bool is_occupied =
+          classifier_.is(child_occupancy, Occupancy::kOccupied);
+      const bool is_unobserved =
+          classifier_.is(child_occupancy, Occupancy::kUnobserved);
+      classified_node.data().has_free.set(child_idx, is_free);
+      classified_node.data().has_occupied.set(child_idx, is_occupied);
+      classified_node.data().has_unobserved.set(child_idx, is_unobserved);
+      continue;
+    }
+
+    // Otherwise, recursively evaluate the child's descendants
+    auto& classified_child_node = classified_node.getOrAllocateChild(child_idx);
+    recursiveClassifier(child_index, child_occupancy_node, child_occupancy,
+                        esdf_map, robot_radius, classified_child_node);
+    // Collect the results
+    const bool child_has_free = classified_child_node.data().has_free.any();
+    const bool child_has_occupied =
+        classified_child_node.data().has_occupied.any();
+    const bool child_has_unobserved =
+        classified_child_node.data().has_unobserved.any();
+    // Store the results
+    classified_node.data().has_free.set(child_idx, child_has_free);
+    classified_node.data().has_occupied.set(child_idx, child_has_occupied);
+    classified_node.data().has_unobserved.set(child_idx, child_has_unobserved);
+    // Prune away homogeneous children
+    if (child_has_free + child_has_occupied + child_has_unobserved == 1) {
+      classified_node.eraseChild(child_idx);
     }
   }
 }
