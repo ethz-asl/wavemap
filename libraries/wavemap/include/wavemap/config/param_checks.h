@@ -6,28 +6,25 @@
 
 #include "wavemap/utils/meta/nameof.h"
 
-#define IS_PARAM_EQ(value, threshold, verbose)                                 \
-  wavemap::is_param<std::equal_to<>>(value, threshold, verbose, NAMEOF(value), \
-                                     "==")
+#define IS_PARAM_EQ(value, threshold, verbose) \
+  wavemap::is_param<std::equal_to<>>(value, threshold, verbose, #value, "==")
 
-#define IS_PARAM_NE(value, threshold, verbose)                      \
-  wavemap::is_param<std::not_equal_to<>>(value, threshold, verbose, \
-                                         NAMEOF(value), "!=")
+#define IS_PARAM_NE(value, threshold, verbose)                              \
+  wavemap::is_param<std::not_equal_to<>>(value, threshold, verbose, #value, \
+                                         "!=")
 
 #define IS_PARAM_LT(value, threshold, verbose) \
-  wavemap::is_param<std::less<>>(value, threshold, verbose, NAMEOF(value), "<")
+  wavemap::is_param<std::less<>>(value, threshold, verbose, #value, "<")
 
-#define IS_PARAM_LE(value, threshold, verbose)                    \
-  wavemap::is_param<std::less_equal<>>(value, threshold, verbose, \
-                                       NAMEOF(value), "<=")
+#define IS_PARAM_LE(value, threshold, verbose) \
+  wavemap::is_param<std::less_equal<>>(value, threshold, verbose, #value, "<=")
 
-#define IS_PARAM_GT(value, threshold, verbose)                                \
-  wavemap::is_param<std::greater<>>(value, threshold, verbose, NAMEOF(value), \
-                                    ">")
+#define IS_PARAM_GT(value, threshold, verbose) \
+  wavemap::is_param<std::greater<>>(value, threshold, verbose, #value, ">")
 
-#define IS_PARAM_GE(value, threshold, verbose)                       \
-  wavemap::is_param<std::greater_equal<>>(value, threshold, verbose, \
-                                          NAMEOF(value), ">=")
+#define IS_PARAM_GE(value, threshold, verbose)                               \
+  wavemap::is_param<std::greater_equal<>>(value, threshold, verbose, #value, \
+                                          ">=")
 
 namespace wavemap {
 template <typename ComparisonOp, typename A, typename B>
