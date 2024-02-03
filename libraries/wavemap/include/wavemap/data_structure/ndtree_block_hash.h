@@ -29,6 +29,9 @@ class NdtreeBlockHash {
   size_t size() const;
   void clear() { block_map_.clear(); }
 
+  Index<dim> getMinBlockIndex() const { return block_map_.getMinBlockIndex(); }
+  Index<dim> getMaxBlockIndex() const { return block_map_.getMaxBlockIndex(); }
+
   HeightType getMaxHeight() const { return max_height_; }
 
   bool hasBlock(const Index<dim>& block_index) const;

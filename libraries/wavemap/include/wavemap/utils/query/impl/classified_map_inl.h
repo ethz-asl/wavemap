@@ -17,9 +17,19 @@ inline bool ChildBitset::any() const {
   return bitset != static_cast<uint8_t>(0);
 }
 
+inline bool ClassifiedMap::has(const Index3D& index,
+                               Occupancy::Id occupancy_type) const {
+  return has(OctreeIndex{0, index}, occupancy_type);
+}
+
 inline bool ClassifiedMap::has(const OctreeIndex& index,
                                Occupancy::Id occupancy_type) const {
   return has(index, Occupancy::toMask(occupancy_type));
+}
+
+inline bool ClassifiedMap::has(const Index3D& index,
+                               Occupancy::Mask occupancy_mask) const {
+  return has(OctreeIndex{0, index}, occupancy_mask);
 }
 
 inline bool ClassifiedMap::has(const OctreeIndex& index,
@@ -27,9 +37,19 @@ inline bool ClassifiedMap::has(const OctreeIndex& index,
   return query_cache_.has(index, occupancy_mask, block_map_);
 }
 
+inline bool ClassifiedMap::isFully(const Index3D& index,
+                                   Occupancy::Id occupancy_type) const {
+  return isFully(OctreeIndex{0, index}, occupancy_type);
+}
+
 inline bool ClassifiedMap::isFully(const OctreeIndex& index,
                                    Occupancy::Id occupancy_type) const {
   return isFully(index, Occupancy::toMask(occupancy_type));
+}
+
+inline bool ClassifiedMap::isFully(const Index3D& index,
+                                   Occupancy::Mask occupancy_mask) const {
+  return isFully(OctreeIndex{0, index}, occupancy_mask);
 }
 
 inline bool ClassifiedMap::isFully(const OctreeIndex& index,
@@ -38,8 +58,7 @@ inline bool ClassifiedMap::isFully(const OctreeIndex& index,
 }
 
 inline void ClassifiedMap::forEachLeafMatching(
-    Occupancy::Id occupancy_type,
-    std::function<void(const OctreeIndex&)> visitor_fn,
+    Occupancy::Id occupancy_type, IndexedLeafVisitorFunction visitor_fn,
     IndexElement termination_height) const {
   forEachLeafMatching(Occupancy::toMask(occupancy_type), std::move(visitor_fn),
                       termination_height);
@@ -82,6 +101,11 @@ inline bool ClassifiedMap::hasValue(const OctreeIndex& index) const {
 inline std::optional<Occupancy::Mask> ClassifiedMap::getValue(
     const OctreeIndex& index) const {
   return getValueOrAncestor(index).first;
+}
+
+template <typename IndexedBlockVisitor>
+void ClassifiedMap::forEachBlock(IndexedBlockVisitor visitor_fn) const {
+  block_map_.forEachBlock(visitor_fn);
 }
 
 inline const ClassifiedMap::Block* ClassifiedMap::QueryCache::getBlock(

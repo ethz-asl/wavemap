@@ -24,7 +24,7 @@ void RosbagProcessor::addCallback(
   auto rosbag_callback = [function_ptr,
                           object_ptr](const rosbag::MessageInstance& msg) {
     auto msg_instance = msg.instantiate<MessageAdaptor>();
-    ((*object_ptr).*function_ptr)(*msg_instance);
+    std::invoke(function_ptr, *object_ptr, *msg_instance);
   };
   callbacks_.try_emplace(ros_topic_name, rosbag_callback);
 }

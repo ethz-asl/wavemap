@@ -2,6 +2,7 @@
 #define WAVEMAP_UTILS_QUERY_CLASSIFIED_MAP_H_
 
 #include <limits>
+#include <memory>
 #include <utility>
 
 #include <wavemap/data_structure/ndtree/ndtree.h>
@@ -37,6 +38,9 @@ class ClassifiedMap {
   using Node = BlockHashMap::Node;
   static constexpr int kDim = 3;
 
+  using Ptr = std::shared_ptr<ClassifiedMap>;
+  using ConstPtr = std::shared_ptr<const ClassifiedMap>;
+
   ClassifiedMap(FloatingPoint min_cell_width, IndexElement tree_height,
                 const OccupancyClassifier& classifier);
 
@@ -47,17 +51,28 @@ class ClassifiedMap {
                 const OccupancyClassifier& classifier,
                 const HashedBlocks& esdf_map, FloatingPoint robot_radius);
 
+  bool empty() const { return block_map_.empty(); }
+
   FloatingPoint getMinCellWidth() const { return min_cell_width_; }
   IndexElement getTreeHeight() const { return block_map_.getMaxHeight(); }
+
+  Index3D getMinIndex() const;
+  Index3D getMaxIndex() const;
+  Index3D getMinBlockIndex() const { return block_map_.getMinBlockIndex(); }
+  Index3D getMaxBlockIndex() const { return block_map_.getMaxBlockIndex(); }
 
   void update(const HashedWaveletOctree& occupancy_map);
   void update(const HashedWaveletOctree& occupancy_map,
               const HashedBlocks& esdf_map, FloatingPoint robot_radius);
 
+  bool has(const Index3D& index, Occupancy::Id occupancy_type) const;
   bool has(const OctreeIndex& index, Occupancy::Id occupancy_type) const;
+  bool has(const Index3D& index, Occupancy::Mask occupancy_mask) const;
   bool has(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
 
+  bool isFully(const Index3D& index, Occupancy::Id occupancy_type) const;
   bool isFully(const OctreeIndex& index, Occupancy::Id occupancy_type) const;
+  bool isFully(const Index3D& index, Occupancy::Mask occupancy_mask) const;
   bool isFully(const OctreeIndex& index, Occupancy::Mask occupancy_mask) const;
 
   bool hasBlock(const Index3D& block_index) const;
@@ -74,11 +89,21 @@ class ClassifiedMap {
   std::pair<std::optional<Occupancy::Mask>, HeightType> getValueOrAncestor(
       const OctreeIndex& index) const;
 
+  auto& getHashMap() { return block_map_.getHashMap(); }
+  const auto& getHashMap() const { return block_map_.getHashMap(); }
+
+  template <typename IndexedBlockVisitor>
+  void forEachBlock(IndexedBlockVisitor visitor_fn) const;
+
+  using IndexedLeafVisitorFunction =
+      std::function<void(const OctreeIndex& index, Occupancy::Mask occupancy)>;
+  void forEachLeaf(IndexedLeafVisitorFunction visitor_fn,
+                   IndexElement termination_height = 0) const;
   void forEachLeafMatching(Occupancy::Id occupancy_type,
-                           std::function<void(const OctreeIndex&)> visitor_fn,
+                           IndexedLeafVisitorFunction visitor_fn,
                            IndexElement termination_height = 0) const;
   void forEachLeafMatching(Occupancy::Mask occupancy_mask,
-                           std::function<void(const OctreeIndex&)> visitor_fn,
+                           IndexedLeafVisitorFunction visitor_fn,
                            IndexElement termination_height = 0) const;
 
  private:
@@ -86,9 +111,11 @@ class ClassifiedMap {
   using ChildAverages =
       HashedWaveletOctree::Block::Coefficients::CoefficientsArray;
 
+  const IndexElement tree_height_;
   const FloatingPoint min_cell_width_;
+  const IndexElement cells_per_block_side_ = int_math::exp2(tree_height_);
   const OccupancyClassifier classifier_;
-  BlockHashMap block_map_;
+  BlockHashMap block_map_{tree_height_};
 
   // Cache previous queries
   struct QueryCache {
@@ -117,7 +144,7 @@ class ClassifiedMap {
 
     void reset();
   };
-  mutable QueryCache query_cache_;
+  mutable QueryCache query_cache_{tree_height_};
 
   void recursiveClassifier(
       const HashedWaveletOctreeBlock::NodeType& occupancy_node,

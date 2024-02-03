@@ -25,6 +25,9 @@ class DenseBlockHash {
   size_t size() const { return Block::kCellsPerBlock * block_map_.size(); }
   void clear() { block_map_.clear(); }
 
+  Index<dim> getMinBlockIndex() const { return block_map_.getMinBlockIndex(); }
+  Index<dim> getMaxBlockIndex() const { return block_map_.getMaxBlockIndex(); }
+
   bool hasBlock(const Index<dim>& block_index) const;
   bool eraseBlock(const Index<dim>& block_index);
   template <typename IndexedBlockVisitor>

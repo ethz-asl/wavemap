@@ -6,10 +6,9 @@ namespace wavemap {
 ClassifiedMap::ClassifiedMap(FloatingPoint min_cell_width,
                              IndexElement tree_height,
                              const OccupancyClassifier& classifier)
-    : min_cell_width_(min_cell_width),
-      classifier_(classifier),
-      block_map_(tree_height),
-      query_cache_(tree_height) {}
+    : tree_height_(tree_height),
+      min_cell_width_(min_cell_width),
+      classifier_(classifier) {}
 
 ClassifiedMap::ClassifiedMap(const HashedWaveletOctree& occupancy_map,
                              const OccupancyClassifier& classifier)
@@ -25,6 +24,17 @@ ClassifiedMap::ClassifiedMap(const HashedWaveletOctree& occupancy_map,
     : ClassifiedMap(occupancy_map.getMinCellWidth(),
                     occupancy_map.getTreeHeight(), classifier) {
   update(occupancy_map, esdf_map, robot_radius);
+}
+
+Index3D ClassifiedMap::getMinIndex() const {
+  return cells_per_block_side_ * getMinBlockIndex();
+}
+
+Index3D ClassifiedMap::getMaxIndex() const {
+  if (empty()) {
+    return Index3D::Zero();
+  }
+  return cells_per_block_side_ * (getMaxBlockIndex().array() + 1) - 1;
 }
 
 void ClassifiedMap::update(const HashedWaveletOctree& occupancy_map) {
@@ -96,10 +106,43 @@ ClassifiedMap::getValueOrAncestor(const OctreeIndex& index) const {
   return {std::nullopt, getTreeHeight()};
 }
 
-void ClassifiedMap::forEachLeafMatching(
-    Occupancy::Mask occupancy_mask,
-    std::function<void(const OctreeIndex&)> visitor_fn,
-    IndexElement termination_height) const {
+void ClassifiedMap::forEachLeaf(IndexedLeafVisitorFunction visitor_fn,
+                                IndexElement termination_height) const {
+  forEachBlock([&visitor_fn, termination_height](const Index3D& block_index,
+                                                 const Block& block) {
+    struct StackElement {
+      const OctreeIndex node_index;
+      const Node& node;
+    };
+    std::stack<StackElement> stack;
+    stack.emplace(StackElement{OctreeIndex{block.getMaxHeight(), block_index},
+                               block.getRootNode()});
+    while (!stack.empty()) {
+      const OctreeIndex node_index = stack.top().node_index;
+      const Node& node = stack.top().node;
+      stack.pop();
+
+      for (NdtreeIndexRelativeChild child_idx = 0;
+           child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+        const OctreeIndex child_node_index =
+            node_index.computeChildIndex(child_idx);
+        if (node.hasChild(child_idx) &&
+            termination_height < child_node_index.height) {
+          const Node& child_node = *node.getChild(child_idx);
+          stack.emplace(StackElement{child_node_index, child_node});
+        } else {
+          const Occupancy::Mask child_occupancy =
+              node.data().childOccupancyMask(child_idx);
+          std::invoke(visitor_fn, child_node_index, child_occupancy);
+        }
+      }
+    }
+  });
+}
+
+void ClassifiedMap::forEachLeafMatching(Occupancy::Mask occupancy_mask,
+                                        IndexedLeafVisitorFunction visitor_fn,
+                                        IndexElement termination_height) const {
   block_map_.forEachBlock([occupancy_mask, termination_height, &visitor_fn](
                               const Index3D& block_index, const Block& block) {
     struct StackElement {
@@ -116,15 +159,15 @@ void ClassifiedMap::forEachLeafMatching(
 
       for (NdtreeIndexRelativeChild child_idx = 0;
            child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-        const auto region_occupancy = node.data().childOccupancyMask(child_idx);
-        if (!OccupancyClassifier::has(region_occupancy, occupancy_mask)) {
+        const auto child_occupancy = node.data().childOccupancyMask(child_idx);
+        if (!OccupancyClassifier::has(child_occupancy, occupancy_mask)) {
           continue;
         }
         const OctreeIndex child_node_index =
             node_index.computeChildIndex(child_idx);
-        if (OccupancyClassifier::isFully(region_occupancy, occupancy_mask) ||
+        if (OccupancyClassifier::isFully(child_occupancy, occupancy_mask) ||
             child_node_index.height <= termination_height) {
-          std::invoke(visitor_fn, child_node_index);
+          std::invoke(visitor_fn, child_node_index, child_occupancy);
         } else if (const Node* child_node = node.getChild(child_idx);
                    child_node) {
           stack.emplace(StackElement{child_node_index, *child_node});
