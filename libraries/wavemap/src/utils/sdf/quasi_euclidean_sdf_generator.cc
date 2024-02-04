@@ -144,7 +144,9 @@ void QuasiEuclideanSDFGenerator::propagate(
       }
 
       // Handle sign changes when propagating across the surface
-      if (std::signbit(neighbor_sdf) != std::signbit(sdf_value)) {
+      const bool crossed_surface =
+          std::signbit(neighbor_sdf) != std::signbit(sdf_value);
+      if (crossed_surface) {
         if (neighbor_sdf < 0.f) {
           // NOTE: When the opened cell and the neighbor cell have the same
           //       sign, the distance field value and offset are summed to

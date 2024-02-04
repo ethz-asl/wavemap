@@ -58,11 +58,18 @@ TYPED_TEST(SdfGeneratorTest, BruteForceEquivalence) {
 
     // Set obstacles to occupied
     for (const Index3D& index : obstacle_cells) {
-      map.setCellValue(index, config.max_log_odds);
+      map.addToCellValue(index, config.max_log_odds);
+    }
+
+    // Check if all obstacles were set correctly
+    for (const Index3D& index : obstacle_cells) {
+      ASSERT_TRUE(classifier.is(map.getCellValue(index), Occupancy::kOccupied))
+          << "For node " << print::eigen::oneLine(index);
     }
 
     // Generate the SDF
-    TypeParam sdf_generator{kMaxSdfDistance};
+    TypeParam sdf_generator{kMaxSdfDistance,
+                            classifier.getOccupancyThreshold()};
     const auto sdf = sdf_generator.generate(map);
 
     // Compare the SDF distances to the brute force min distance
@@ -107,6 +114,7 @@ TYPED_TEST(SdfGeneratorTest, BruteForceEquivalence) {
               const FloatingPoint neighbor_occupancy_value =
                   map.getCellValue(neighbor_index);
               if (classifier.is(neighbor_occupancy_value, Occupancy::kFree)) {
+                ASSERT_TRUE(neighbor_index != node_index.position);
                 const auto free_cell_aabb = convert::nodeIndexToAABB(
                     OctreeIndex{0, neighbor_index}, min_cell_width);
                 const FloatingPoint min_dist =
@@ -137,7 +145,7 @@ TYPED_TEST(SdfGeneratorTest, BruteForceEquivalence) {
           constexpr FloatingPoint kMaxRelativeOverEstimate =
               TypeParam::kMaxRelativeOverEstimate;
           if (std::abs(sdf_brute_force) < sdf.getDefaultValue()) {
-            if (0.f < sdf_brute_force) {
+            if (classifier.is(occupancy_value, Occupancy::kFree)) {
               EXPECT_LT(sdf_value,
                         sdf_brute_force * (1.f + kMaxRelativeOverEstimate))
                   << "At index " << print::eigen::oneLine(node_index.position)
