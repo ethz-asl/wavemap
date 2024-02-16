@@ -60,6 +60,7 @@ class ClassifiedMap {
   Index3D getMaxIndex() const;
   Index3D getMinBlockIndex() const { return block_map_.getMinBlockIndex(); }
   Index3D getMaxBlockIndex() const { return block_map_.getMaxBlockIndex(); }
+  IndexElement getLastResultHeight() const { return query_cache_.height; }
 
   void update(const HashedWaveletOctree& occupancy_map);
   void update(const HashedWaveletOctree& occupancy_map,
