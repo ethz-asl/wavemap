@@ -12,7 +12,7 @@ std::string ValueWithUnit<unit, T>::toStr() const {
 template <SiUnit::Id unit, typename T>
 std::optional<ValueWithUnit<unit, T>> ValueWithUnit<unit, T>::from(
     const param::Value& params) {
-  const auto param_map = params.get<param::Map>();
+  const auto param_map = params.as<param::Map>();
   if (!param_map) {
     LOG(WARNING) << "Tried to load a value with annotated units from a param "
                     "that is not of type Map (dictionary). Cannot perform "
@@ -46,11 +46,11 @@ std::optional<ValueWithUnit<unit, T>> ValueWithUnit<unit, T>::from(
     return std::nullopt;
   }
 
-  if (const auto param_float = param_value.get<FloatingPoint>(); param_float) {
+  if (const auto param_float = param_value.as<FloatingPoint>(); param_float) {
     return param_float.value() * conversion_factor;
   }
 
-  if (const auto param_int = param_value.get<int>(); param_int) {
+  if (const auto param_int = param_value.as<int>(); param_int) {
     return static_cast<FloatingPoint>(param_int.value()) * conversion_factor;
   }
 

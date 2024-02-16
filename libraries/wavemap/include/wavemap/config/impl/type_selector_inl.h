@@ -74,7 +74,7 @@ std::optional<DerivedNamedTypeSetT> TypeSelector<DerivedNamedTypeSetT>::from(
   std::string type_name;
   if (params.holds<std::string>()) {
     // If the param is of type string, read the name directly
-    type_name = params.get<std::string>().value();
+    type_name = params.as<std::string>().value();
   } else if (params.holds<param::Map>()) {
     // If the param is of type Map, try to read the name from its "type" subkey
     const auto type_param = params.getChild(param::kTypeSelectorKey);
@@ -90,7 +90,7 @@ std::optional<DerivedNamedTypeSetT> TypeSelector<DerivedNamedTypeSetT>::from(
       return std::nullopt;
     }
 
-    type_name = type_param->get<std::string>().value();
+    type_name = type_param->as<std::string>().value();
   } else {
     LOG(WARNING) << "Type names can only be read from params of type string, "
                     "or from param maps (dictionary) with a subkey named \""

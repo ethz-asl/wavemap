@@ -68,10 +68,10 @@ void loadParam(const param::Name& param_name, const param::Value& param_value,
                ConfigDerivedT& config, MemberPtrT config_member_ptr) {
   ConfigValueT& config_value = config.*config_member_ptr;
   if (param_value.holds<ConfigValueT>()) {
-    config_value = ConfigValueT{param_value.get<ConfigValueT>().value()};
+    config_value = ConfigValueT{param_value.as<ConfigValueT>().value()};
     return;
   } else if constexpr (std::is_same_v<ConfigValueT, FloatingPoint>) {
-    if (const auto param_int = param_value.get<int>(); param_int) {
+    if (const auto param_int = param_value.as<int>(); param_int) {
       // If the param_value and config_value's types do not match exactly, we
       // still allow automatic conversions from ints to floats
       // NOTE: This is avoids pesky, potentially confusing errors when setting
@@ -120,7 +120,7 @@ template <typename ConfigDerivedT, size_t num_members,
 std::optional<ConfigDerivedT>
 ConfigBase<ConfigDerivedT, num_members, CustomMemberTypes...>::from(
     const param::Value& params) {
-  const auto param_map = params.get<param::Map>();
+  const auto param_map = params.as<param::Map>();
   if (!param_map) {
     LOG(WARNING) << "Tried to load config from a param that is not of type Map "
                     "(dictionary). Will be ignored.";

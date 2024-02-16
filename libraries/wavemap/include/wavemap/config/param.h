@@ -32,7 +32,7 @@ class ValueT {
 
   // Try to read the value using type T. Returns an empty optional if it fails.
   template <typename T>
-  std::optional<T> get() const {
+  std::optional<T> as() const {
     if (holds<T>()) {
       return std::get<T>(data_);
     } else {
@@ -42,14 +42,23 @@ class ValueT {
 
   // Methods to work with nested configs
   inline bool hasChild(const Name& key) const {
-    if (const auto map = get<Map>(); map) {
+    if (const auto map = as<Map>(); map) {
       return map.value().count(key);
     }
     return false;
   }
   std::optional<ValueT> getChild(const Name& key) const {
-    if (const auto map = get<Map>(); map) {
-      return map.value().at(key);
+    if (const auto map = as<Map>(); map) {
+      if (const auto it = map.value().find(key); it != map.value().end()) {
+        return it->second;
+      }
+    }
+    return std::nullopt;
+  }
+  template <typename T>
+  std::optional<T> getChildAs(const Name& key) const {
+    if (const auto child = getChild(key); child) {
+      return child.value().template as<T>();
     }
     return std::nullopt;
   }

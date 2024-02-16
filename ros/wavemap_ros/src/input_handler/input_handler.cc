@@ -45,7 +45,7 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
         "params. Input handler will be disabled.");
     return;
   }
-  const auto integrators_array = integrators_param->get<param::Array>();
+  const auto integrators_array = integrators_param->as<param::Array>();
   if (!integrators_array) {
     ROS_WARN(
         "Key named \"integrators\" in input handler params is not "
