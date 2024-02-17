@@ -8,25 +8,24 @@
 namespace wavemap {
 class RandomNumberGenerator {
  public:
-  RandomNumberGenerator() : random_number_generator_(std::random_device()()) {}
-  explicit RandomNumberGenerator(const size_t random_seed)
+  explicit RandomNumberGenerator(size_t random_seed = std::random_device()())
       : random_number_generator_(random_seed) {}
 
-  void setRandomSeed(const size_t random_seed) {
+  void setRandomSeed(size_t random_seed) {
     random_number_generator_.seed(random_seed);
   }
 
   template <typename IntegerType>
-  IntegerType getRandomInteger(const IntegerType lower_bound,
-                               const IntegerType upper_bound) {
+  IntegerType getRandomInteger(IntegerType lower_bound,
+                               IntegerType upper_bound) {
     std::uniform_int_distribution<IntegerType> uniform_distribution(
         lower_bound, upper_bound);
     return uniform_distribution(random_number_generator_);
   }
 
   template <typename RealNumberType>
-  FloatingPoint getRandomRealNumber(const RealNumberType lower_bound,
-                                    const RealNumberType upper_bound) {
+  FloatingPoint getRandomRealNumber(RealNumberType lower_bound,
+                                    RealNumberType upper_bound) {
     std::uniform_real_distribution<RealNumberType> uniform_distribution(
         lower_bound, upper_bound);
     return uniform_distribution(random_number_generator_);

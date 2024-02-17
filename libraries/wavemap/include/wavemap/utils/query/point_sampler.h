@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_UTILS_QUERY_POINT_SAMPLER_H_
 #define WAVEMAP_UTILS_QUERY_POINT_SAMPLER_H_
 
+#include <random>
 #include <utility>
 
 #include "wavemap/common.h"
@@ -12,8 +13,9 @@
 namespace wavemap {
 class PointSampler {
  public:
-  explicit PointSampler(ClassifiedMap::ConstPtr classified_map)
-      : classified_map_(std::move(classified_map)) {}
+  explicit PointSampler(ClassifiedMap::ConstPtr classified_map,
+                        size_t random_seed = std::random_device()())
+      : classified_map_(std::move(classified_map)), rng_(random_seed) {}
 
   std::optional<Index3D> getRandomBlock();
 
