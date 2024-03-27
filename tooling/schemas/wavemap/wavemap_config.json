@@ -4,28 +4,29 @@
   "description": "Schema to provide code completion and validation for wavemap configuration files.",
   "type": "object",
   "properties": {
+    "general": {
+      "$ref": "general.json"
+    },
     "map": {
-      "description": "The properties of the server's map instance.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "general": {
-          "$ref": "wavemap_server.json"
-        },
-        "data_structure": {
-          "$ref": "data_structure.json"
-        }
-      }
+      "$ref": "map.json"
     },
     "inputs": {
       "description": "A list of measurement inputs.",
       "type": "array",
       "items": {
-        "$ref": "measurement_input/measurement_input.json"
+        "$ref": "inputs/input.json"
+      }
+    },
+    "operations_pipeline": {
+      "description": "A list of operations to perform after map updates.",
+      "type": "array",
+      "items": {
+        "$ref": "operations/operations_pipeline.json"
       }
     }
   },
   "required": [
+    "general",
     "map",
     "inputs"
   ]

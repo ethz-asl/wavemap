@@ -17,7 +17,7 @@ Selected by setting ``inputs[i]/type: "pointcloud"``.
 
 The settings are available under ``inputs[i]/general`` are:
 
-.. doxygenstruct:: wavemap::PointcloudInputHandlerConfig
+.. doxygenstruct:: wavemap::PointcloudInputConfig
     :project: wavemap
     :members:
 
@@ -27,7 +27,7 @@ Selected by setting ``inputs[i]/type: "depth_image"``.
 
 The settings are available under ``inputs[i]/general`` are:
 
-.. doxygenstruct:: wavemap::DepthImageInputHandlerConfig
+.. doxygenstruct:: wavemap::DepthImageInputConfig
     :project: wavemap
     :members:
 

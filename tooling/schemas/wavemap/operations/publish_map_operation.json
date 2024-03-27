@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Properties of a single map publishing operation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "publish_map"
+    },
+    "once_every": {
+      "description": "Time period controlling how often the map is published.",
+      "$ref": "../value_with_unit/convertible_to_seconds.json"
+    },
+    "max_num_blocks_per_msg": {
+      "description": "Maximum number of blocks to transmit per wavemap map message. Used to control the maximum message size. Only works in combination with hash-based map data structures.",
+      "type": "integer",
+      "exclusiveMinimum": 0
+    },
+    "topic": {
+      "description": "Name of the topic the map will be published on. Note that the name of the service to request full map retransmissions will be the name of this topic suffixed with \"_request_full\".",
+      "type": "string",
+      "examples": [
+        "map"
+      ]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Properties of a single obstacle pointcloud publishing operation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "publish_pointcloud"
+    },
+    "once_every": {
+      "description": "Time period controlling how often the pointcloud is published.",
+      "$ref": "../value_with_unit/convertible_to_seconds.json"
+    },
+    "occupancy_threshold_log_odds": {
+      "description": "Threshold in log odds above which cells are classified as occupied.",
+      "type": "number"
+    },
+    "topic": {
+      "description": "Name of the topic the pointcloud will be published on.",
+      "type": "string",
+      "examples": [
+        "obstacle_pointcloud"
+      ]
+    }
+  }
+}

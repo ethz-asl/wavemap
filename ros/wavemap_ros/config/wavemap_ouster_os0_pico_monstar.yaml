@@ -1,15 +1,20 @@
+general:
+  world_frame: "gravity_init"
+  logging_level: debug
+  allow_reset_map_service: true
+
 map:
-  general:
-    world_frame: "gravity_init"
-    thresholding_period: { seconds: 2.0 }
-    pruning_period: { seconds: 10.0 }
-    publication_period: { seconds: 2.0 }
-    logging_level: debug
-    allow_reset_map_service: true
-  data_structure:
-    type: hashed_chunked_wavelet_octree
-    min_cell_width: { meters: 0.01 }
-    tree_height: 9
+  type: hashed_chunked_wavelet_octree
+  min_cell_width: { meters: 0.01 }
+  tree_height: 9
+
+operations_pipeline:
+  - type: threshold_map
+    once_every: { seconds: 2.0 }
+  - type: prune_map
+    once_every: { seconds: 10.0 }
+  - type: publish_map
+    once_every: { seconds: 2.0 }
 
 inputs:
   - type: depth_image
