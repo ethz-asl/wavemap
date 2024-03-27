@@ -6,12 +6,11 @@
 
   <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
   <license>BSD</license>
-  <url>https://github.com/victorreijgwart/wavemap</url>
+  <url>https://github.com/ethz-asl/wavemap</url>
 
   <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>wavemap</depend>
 
