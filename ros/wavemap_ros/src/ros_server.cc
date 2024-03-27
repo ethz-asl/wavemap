@@ -1,4 +1,4 @@
-#include "wavemap_ros/wavemap_server.h"
+#include "wavemap_ros/ros_server.h"
 
 #include <std_srvs/Trigger.h>
 #include <tracy/Tracy.hpp>
@@ -11,13 +11,13 @@
 #include "wavemap_ros/operations/operation_factory.h"
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(WavemapServerConfig,
+DECLARE_CONFIG_MEMBERS(RosServerConfig,
                       (world_frame)
                       (num_threads)
                       (logging_level)
                       (allow_reset_map_service));
 
-bool WavemapServerConfig::isValid(bool verbose) const {
+bool RosServerConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(world_frame, std::string(""), verbose);
@@ -28,14 +28,14 @@ bool WavemapServerConfig::isValid(bool verbose) const {
 
 // NOTE: If WavemapServerConfig::from(...) fails, accessing its value will throw
 //       an exception and end the program.
-WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
-    : WavemapServer(nh, nh_private,
-                    WavemapServerConfig::from(
-                        param::convert::toParamValue(nh_private, "general"))
-                        .value()) {}
+RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
+    : RosServer(nh, nh_private,
+                RosServerConfig::from(
+                    param::convert::toParamValue(nh_private, "general"))
+                    .value()) {}
 
-WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                             const WavemapServerConfig& config)
+RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
+                     const RosServerConfig& config)
     : config_(config.checkValid()),
       transformer_(std::make_shared<TfTransformer>()) {
   // Set the ROS logging level
@@ -76,9 +76,9 @@ WavemapServer::WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   advertiseServices(nh_private);
 }
 
-InputBase* WavemapServer::addInput(const param::Value& integrator_params,
-                                   const ros::NodeHandle& nh,
-                                   ros::NodeHandle nh_private) {
+InputBase* RosServer::addInput(const param::Value& integrator_params,
+                               const ros::NodeHandle& nh,
+                               ros::NodeHandle nh_private) {
   auto input_handler = InputFactory::create(
       integrator_params, config_.world_frame, occupancy_map_, transformer_,
       thread_pool_, nh, nh_private, std::nullopt,
@@ -89,8 +89,8 @@ InputBase* WavemapServer::addInput(const param::Value& integrator_params,
   return nullptr;
 }
 
-OperationBase* WavemapServer::addOperation(const param::Value& operation_params,
-                                           ros::NodeHandle nh_private) {
+OperationBase* RosServer::addOperation(const param::Value& operation_params,
+                                       ros::NodeHandle nh_private) {
   auto operation_handler = OperationFactory::create(
       operation_params, config_.world_frame, occupancy_map_, transformer_,
       thread_pool_, nh_private);
@@ -100,14 +100,14 @@ OperationBase* WavemapServer::addOperation(const param::Value& operation_params,
   return nullptr;
 }
 
-void WavemapServer::runOperations(const ros::Time& current_time,
-                                  bool force_run_all) {
+void RosServer::runOperations(const ros::Time& current_time,
+                              bool force_run_all) {
   for (auto& operation : operations_) {
     operation->run(current_time, force_run_all);
   }
 }
 
-bool WavemapServer::saveMap(const std::filesystem::path& file_path) const {
+bool RosServer::saveMap(const std::filesystem::path& file_path) const {
   if (occupancy_map_) {
     occupancy_map_->threshold();
     return io::mapToFile(*occupancy_map_, file_path);
@@ -117,11 +117,11 @@ bool WavemapServer::saveMap(const std::filesystem::path& file_path) const {
   return false;
 }
 
-bool WavemapServer::loadMap(const std::filesystem::path& file_path) {
+bool RosServer::loadMap(const std::filesystem::path& file_path) {
   return io::fileToMap(file_path, occupancy_map_);
 }
 
-void WavemapServer::advertiseServices(ros::NodeHandle& nh_private) {
+void RosServer::advertiseServices(ros::NodeHandle& nh_private) {
   reset_map_srv_ = nh_private.advertiseService<std_srvs::Trigger::Request,
                                                std_srvs::Trigger::Response>(
       "reset_map", [this](auto& /*request*/, auto& response) {

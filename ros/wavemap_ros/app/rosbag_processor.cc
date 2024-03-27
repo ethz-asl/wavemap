@@ -6,7 +6,7 @@
 
 #include "wavemap_ros/inputs/depth_image_input.h"
 #include "wavemap_ros/inputs/pointcloud_input.h"
-#include "wavemap_ros/wavemap_server.h"
+#include "wavemap_ros/ros_server.h"
 
 using namespace wavemap;  // NOLINT
 int main(int argc, char** argv) {
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   // Setup the wavemap server node
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  WavemapServer wavemap_server(nh, nh_private);
+  RosServer wavemap_server(nh, nh_private);
 
   // Read the required ROS params
   std::string rosbag_paths_str;

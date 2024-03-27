@@ -32,16 +32,16 @@ cs_add_library(${PROJECT_NAME}
     src/utils/pointcloud_undistortion/pointcloud_undistorter.cc
     src/utils/rosbag_processor.cc
     src/utils/tf_transformer.cc
-    src/wavemap_server.cc)
+    src/ros_server.cc)
 # Link OpenCV explicitly to avoid issues on Jetson
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 
 # Binaries
-cs_add_executable(wavemap_server_node app/server_node.cc)
-target_link_libraries(wavemap_server_node ${PROJECT_NAME})
+cs_add_executable(ros_server app/ros_server.cc)
+target_link_libraries(ros_server ${PROJECT_NAME})
 
-cs_add_executable(wavemap_rosbag_processor app/rosbag_processor.cc)
-target_link_libraries(wavemap_rosbag_processor ${PROJECT_NAME})
+cs_add_executable(rosbag_processor app/rosbag_processor.cc)
+target_link_libraries(rosbag_processor ${PROJECT_NAME})
 
 # Export
 cs_install()

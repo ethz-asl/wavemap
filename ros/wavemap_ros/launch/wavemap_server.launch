@@ -35,7 +35,7 @@
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
     <node name="wavemap" pkg="wavemap_ros"
-          type="wavemap_server_node"
+          type="ros_server"
           output="screen"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>

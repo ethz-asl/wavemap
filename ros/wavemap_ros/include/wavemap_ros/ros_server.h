@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_WAVEMAP_SERVER_H_
-#define WAVEMAP_ROS_WAVEMAP_SERVER_H_
+#ifndef WAVEMAP_ROS_ROS_SERVER_H_
+#define WAVEMAP_ROS_ROS_SERVER_H_
 
 #include <algorithm>
 #include <filesystem>
@@ -25,7 +25,7 @@ namespace wavemap {
 /**
  * Config struct for wavemap's ROS server.
  */
-struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 4, LoggingLevel> {
+struct RosServerConfig : ConfigBase<RosServerConfig, 4, LoggingLevel> {
   //! Name of the coordinate frame in which to store the map.
   //! Will be used as the frame_id for ROS TF lookups.
   std::string world_frame = "odom";
@@ -43,11 +43,11 @@ struct WavemapServerConfig : ConfigBase<WavemapServerConfig, 4, LoggingLevel> {
   bool isValid(bool verbose) const override;
 };
 
-class WavemapServer {
+class RosServer {
  public:
-  WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private);
-  WavemapServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
-                const WavemapServerConfig& config);
+  RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private);
+  RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
+            const RosServerConfig& config);
 
   InputBase* addInput(const param::Value& integrator_params,
                       const ros::NodeHandle& nh, ros::NodeHandle nh_private);
@@ -63,7 +63,7 @@ class WavemapServer {
   bool loadMap(const std::filesystem::path& file_path);
 
  private:
-  const WavemapServerConfig config_;
+  const RosServerConfig config_;
 
   // Map data structure
   MapBase::Ptr occupancy_map_;
@@ -86,4 +86,4 @@ class WavemapServer {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_WAVEMAP_SERVER_H_
+#endif  // WAVEMAP_ROS_ROS_SERVER_H_

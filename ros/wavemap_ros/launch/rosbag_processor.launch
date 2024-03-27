@@ -27,7 +27,7 @@
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
     <node name="wavemap" pkg="wavemap_ros"
-          type="wavemap_rosbag_processor"
+          type="rosbag_processor"
           output="screen"
           required="$(arg exit_when_done)"
           launch-prefix="$(arg launch_prefix)">
