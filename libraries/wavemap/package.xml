@@ -12,10 +12,12 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>glog_catkin</depend>
-  <depend>eigen_catkin</depend>
-  <depend>tracy_catkin</depend>
+  <depend>libgoogle-glog-dev</depend>
+  <depend>eigen</depend>
+
   <depend>minkindr</depend>
+
+  <depend>tracy_catkin</depend>
 
   <test_depend>gtest</test_depend>
 </package>

@@ -49,5 +49,5 @@ cs_export()
 
 # Export config files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config/
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
 )

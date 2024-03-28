@@ -2,16 +2,20 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap)
 
 # Dependencies
-find_package(catkin
-    REQUIRED COMPONENTS glog_catkin eigen_catkin tracy_catkin minkindr)
+find_package(catkin REQUIRED COMPONENTS tracy_catkin minkindr)
 
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
 endif ()
 
+
 # Compiler definitions and options
 include(cmake/wavemap-extras.cmake)
 add_wavemap_compile_definitions_and_options()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules")
+find_package(Glog REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
 
 # Setup catkin package
 catkin_package(
@@ -20,9 +24,8 @@ catkin_package(
     test/include
     LIBRARIES
     ${PROJECT_NAME}
+    glog::glog  # TODO(victorr): See if there's a better way.
     CATKIN_DEPENDS
-    glog_catkin
-    eigen_catkin
     tracy_catkin
     minkindr
     CFG_EXTRAS
@@ -75,19 +78,20 @@ add_library(${PROJECT_NAME}
     src/utils/sdf/quasi_euclidean_sdf_generator.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}
+    ${catkin_LIBRARIES} glog::glog Eigen3::Eigen)
 
 # Install targets
 install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+    FILES_MATCHING PATTERN "*.h"
 )
 
 # Tests

@@ -14,7 +14,6 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>wavemap</depend>
-  <depend>wavemap_io</depend>
   <depend>wavemap_msgs</depend>
   <depend>wavemap_ros_conversions</depend>
 </package>

@@ -14,18 +14,16 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>wavemap</depend>
+  <depend>wavemap_msgs</depend>
+  <depend>wavemap_ros_conversions</depend>
 
   <depend>roscpp</depend>
   <depend>rosbag</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
   <depend>tf2_ros</depend>
-  <depend>tracy_catkin</depend>
 
-  <depend>wavemap_msgs</depend>
   <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>
   <depend>visualization_msgs</depend>
-
-  <depend>wavemap_ros_conversions</depend>
 </package>

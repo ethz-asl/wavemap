@@ -1,5 +1,6 @@
 #include "wavemap_ros/utils/rosbag_processor.h"
 
+#include <glog/logging.h>
 #include <rosgraph_msgs/Clock.h>
 #include <tf/tfMessage.h>
 #include <wavemap_ros_conversions/config_conversions.h>
@@ -13,7 +14,6 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "wavemap_rosbag_processor");
 
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
   FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;

@@ -11,7 +11,6 @@ using namespace wavemap;  // NOLINT
 int main(int argc, char** argv) {
   // Initialize GLOG
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, false);
   google::InstallFailureSignalHandler();
   FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
