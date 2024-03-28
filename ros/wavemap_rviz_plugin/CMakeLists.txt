@@ -10,7 +10,6 @@ find_package(catkin
     REQUIRED COMPONENTS
         rviz
         wavemap
-        wavemap_io
         wavemap_msgs
         wavemap_ros_conversions
         tracy_catkin)
@@ -22,7 +21,7 @@ add_compile_options(-Wno-pedantic -Wno-register)
 
 # Setup catkin package
 catkin_package(CATKIN_DEPENDS
-        wavemap wavemap_io wavemap_msgs wavemap_ros_conversions tracy_catkin)
+        wavemap wavemap_msgs wavemap_ros_conversions tracy_catkin)
 
 # For all targets
 include_directories(include SYSTEM ${catkin_INCLUDE_DIRS})

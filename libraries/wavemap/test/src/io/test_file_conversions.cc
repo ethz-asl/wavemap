@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include <wavemap/common.h>
-#include <wavemap/map/hashed_chunked_wavelet_octree.h>
-#include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/map/map_base.h>
-#include <wavemap/map/wavelet_octree.h>
-#include <wavemap/test/config_generator.h>
-#include <wavemap/test/fixture_base.h>
-#include <wavemap/test/geometry_generator.h>
 
-#include "wavemap_io/file_conversions.h"
+#include "wavemap/common.h"
+#include "wavemap/io/file_conversions.h"
+#include "wavemap/map/hashed_chunked_wavelet_octree.h"
+#include "wavemap/map/hashed_wavelet_octree.h"
+#include "wavemap/map/map_base.h"
+#include "wavemap/map/wavelet_octree.h"
+#include "wavemap/test/config_generator.h"
+#include "wavemap/test/fixture_base.h"
+#include "wavemap/test/geometry_generator.h"
 
 namespace wavemap {
 template <typename MapType>

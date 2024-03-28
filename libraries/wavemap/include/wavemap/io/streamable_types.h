@@ -4,6 +4,8 @@
 #include <istream>
 #include <ostream>
 
+#include "wavemap/config/type_selector.h"
+
 namespace wavemap::io::streamable {
 // NOTE: This file defines the serialization format for all types that might be
 //       used in wavemap map files. The idea is that these are used as common
@@ -97,6 +99,6 @@ struct StorageFormat : TypeSelector<StorageFormat> {
 };
 }  // namespace wavemap::io::streamable
 
-#include "wavemap_io/impl/streamable_types_impl.h"
+#include "wavemap/io/impl/streamable_types_impl.h"
 
 #endif  // WAVEMAP_IO_STREAMABLE_TYPES_H_

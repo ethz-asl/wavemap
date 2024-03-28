@@ -1,4 +1,4 @@
-#include <wavemap_io/file_conversions.h>
+#include <wavemap/io/file_conversions.h>
 
 int main(int, char**) {
   // Create an empty map for illustration purposes

@@ -7,7 +7,7 @@
 #include <std_srvs/Trigger.h>
 #include <tf/transform_listener.h>
 #include <tracy/Tracy.hpp>
-#include <wavemap_io/file_conversions.h>
+#include <wavemap/io/file_conversions.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
 #include "wavemap_rviz_plugin/utils/alert_dialog.h"

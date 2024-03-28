@@ -2,10 +2,10 @@
 
 #include <glog/logging.h>
 #include <wavemap/common.h>
+#include <wavemap/io/file_conversions.h>
 #include <wavemap/map/hashed_wavelet_octree.h>
 #include <wavemap/map/map_base.h>
 #include <wavemap/utils/sdf/quasi_euclidean_sdf_generator.h>
-#include <wavemap_io/file_conversions.h>
 
 using namespace wavemap;  // NOLINT
 int main(int argc, char** argv) {

@@ -1,4 +1,4 @@
-#include "wavemap_io/stream_conversions.h"
+#include "wavemap/io/stream_conversions.h"
 
 namespace wavemap::io {
 bool mapToStream(const MapBase& map, std::ostream& ostream) {

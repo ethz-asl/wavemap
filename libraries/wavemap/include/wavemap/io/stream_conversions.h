@@ -4,14 +4,13 @@
 #include <istream>
 #include <ostream>
 
-#include <wavemap/common.h>
-#include <wavemap/map/cell_types/haar_coefficients.h>
-#include <wavemap/map/hashed_blocks.h>
-#include <wavemap/map/hashed_chunked_wavelet_octree.h>
-#include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/map/wavelet_octree.h>
-
-#include "wavemap_io/streamable_types.h"
+#include "wavemap/common.h"
+#include "wavemap/io/streamable_types.h"
+#include "wavemap/map/cell_types/haar_coefficients.h"
+#include "wavemap/map/hashed_blocks.h"
+#include "wavemap/map/hashed_chunked_wavelet_octree.h"
+#include "wavemap/map/hashed_wavelet_octree.h"
+#include "wavemap/map/wavelet_octree.h"
 
 namespace wavemap::io {
 bool mapToStream(const MapBase& map, std::ostream& ostream);

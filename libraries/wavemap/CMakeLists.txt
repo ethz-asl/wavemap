@@ -57,6 +57,8 @@ add_library(${PROJECT_NAME}
     src/integrator/ray_tracing/ray_tracing_integrator.cc
     src/integrator/integrator_base.cc
     src/integrator/integrator_factory.cc
+    src/io/file_conversions.cc
+    src/io/stream_conversions.cc
     src/map/hashed_blocks.cc
     src/map/hashed_chunked_wavelet_octree.cc
     src/map/hashed_chunked_wavelet_octree_block.cc
@@ -106,6 +108,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/integrator/test_measurement_models.cc
       test/src/integrator/test_pointcloud_integrators.cc
       test/src/integrator/test_range_image_intersector.cc
+      test/src/io/test_file_conversions.cc
       test/src/map/test_haar_cell.cc
       test/src/map/test_hashed_blocks.cc
       test/src/map/test_map.cc

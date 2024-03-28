@@ -3,9 +3,8 @@
 
 #include <filesystem>
 
-#include <wavemap/map/map_base.h>
-
-#include "wavemap_io/stream_conversions.h"
+#include "wavemap/io/stream_conversions.h"
+#include "wavemap/map/map_base.h"
 
 namespace wavemap::io {
 bool mapToFile(const MapBase& map, const std::filesystem::path& file_path);
