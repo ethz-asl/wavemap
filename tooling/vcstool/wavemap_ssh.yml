@@ -3,10 +3,6 @@ repositories:
     type: git
     url: git@github.com:catkin/catkin_simple.git
     version: master
-  eigen_checks:
-    type: git
-    url: git@github.com:ethz-asl/eigen_checks.git
-    version: master
   tracy_catkin:
     type: git
     url: git@github.com:ethz-asl/tracy_catkin.git

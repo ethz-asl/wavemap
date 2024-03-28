@@ -3,19 +3,17 @@ project(wavemap)
 
 # Dependencies
 find_package(catkin REQUIRED COMPONENTS tracy_catkin minkindr)
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(glog REQUIRED libglog)
 
 if (ENABLE_BENCHMARKING)
   find_package(benchmark REQUIRED)
 endif ()
 
-
 # Compiler definitions and options
 include(cmake/wavemap-extras.cmake)
 add_wavemap_compile_definitions_and_options()
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules")
-find_package(Glog REQUIRED)
-find_package(Eigen3 REQUIRED NO_MODULE)
 
 # Setup catkin package
 catkin_package(
@@ -24,7 +22,8 @@ catkin_package(
     test/include
     LIBRARIES
     ${PROJECT_NAME}
-    glog::glog  # TODO(victorr): See if there's a better way.
+    DEPENDS
+    glog
     CATKIN_DEPENDS
     tracy_catkin
     minkindr
@@ -78,8 +77,8 @@ add_library(${PROJECT_NAME}
     src/utils/sdf/quasi_euclidean_sdf_generator.cc
     src/utils/stopwatch.cc
     src/utils/thread_pool.cc)
-target_link_libraries(${PROJECT_NAME}
-    ${catkin_LIBRARIES} glog::glog Eigen3::Eigen)
+target_include_directories(${PROJECT_NAME} PUBLIC ${glog_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen ${glog_LIBRARIES})
 
 # Install targets
 install(TARGETS ${PROJECT_NAME}
