@@ -1,0 +1,6 @@
+add_library(io)
+add_library(wavemap::io ALIAS io)
+target_sources(io PRIVATE file_conversions.cc stream_conversions.cc)
+target_include_directories(io PUBLIC ${glog_INCLUDE_DIRS})
+target_link_libraries(io PUBLIC Eigen3::Eigen ${glog_LIBRARIES})
+set_wavemap_target_properties(io)
