@@ -67,13 +67,8 @@ class InputHandler {
 
   const std::string& getTopicName() { return config_.topic_name; }
 
-  bool shouldPublishReprojectedPointcloud() const {
-    return !config_.reprojected_pointcloud_topic_name.empty() &&
-           0 < reprojected_pointcloud_pub_.getNumSubscribers();
-  }
-  bool shouldPublishProjectedRangeImage() const {
-    return !config_.projected_range_image_topic_name.empty() &&
-           0 < projected_range_image_pub_.getNumSubscribers();
+  void setMapUpdateCallback(std::function<void()> callback) {
+    map_update_callback_ = std::move(callback);
   }
 
  protected:
@@ -88,10 +83,14 @@ class InputHandler {
   virtual void processQueue() = 0;
   ros::Timer queue_processing_retry_timer_;
 
+  std::function<void()> map_update_callback_;
+
+  bool shouldPublishReprojectedPointcloud() const;
   void publishReprojectedPointcloud(const ros::Time& stamp,
                                     const PosedPointcloud<>& posed_pointcloud);
   ros::Publisher reprojected_pointcloud_pub_;
 
+  bool shouldPublishProjectedRangeImage() const;
   void publishProjectedRangeImage(const ros::Time& stamp,
                                   const Image<>& range_image);
   image_transport::Publisher projected_range_image_pub_;

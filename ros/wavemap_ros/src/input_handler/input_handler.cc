@@ -79,6 +79,11 @@ InputHandler::InputHandler(const InputHandlerConfig& config,
   }
 }
 
+bool InputHandler::shouldPublishReprojectedPointcloud() const {
+  return !config_.reprojected_pointcloud_topic_name.empty() &&
+         0 < reprojected_pointcloud_pub_.getNumSubscribers();
+}
+
 void InputHandler::publishReprojectedPointcloud(
     const ros::Time& stamp, const PosedPointcloud<>& posed_pointcloud) {
   ZoneScoped;
@@ -97,6 +102,11 @@ void InputHandler::publishReprojectedPointcloud(
   sensor_msgs::PointCloud2 pointcloud2_msg;
   sensor_msgs::convertPointCloudToPointCloud2(pointcloud_msg, pointcloud2_msg);
   reprojected_pointcloud_pub_.publish(pointcloud2_msg);
+}
+
+bool InputHandler::shouldPublishProjectedRangeImage() const {
+  return !config_.projected_range_image_topic_name.empty() &&
+         0 < projected_range_image_pub_.getNumSubscribers();
 }
 
 void InputHandler::publishProjectedRangeImage(const ros::Time& stamp,

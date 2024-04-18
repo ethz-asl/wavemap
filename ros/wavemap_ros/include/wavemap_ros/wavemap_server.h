@@ -74,6 +74,8 @@ class WavemapServer {
   MapBase::Ptr getMap() { return occupancy_map_; }
   MapBase::ConstPtr getMap() const { return occupancy_map_; }
 
+  void setMapUpdatedCallback(std::function<void(const MapBase&)> callback);
+
  private:
   const WavemapServerConfig config_;
 
