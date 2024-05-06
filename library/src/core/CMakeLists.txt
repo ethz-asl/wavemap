@@ -36,8 +36,7 @@ target_sources(core PRIVATE
     utils/sdf/quasi_euclidean_sdf_generator.cc
     utils/time/stopwatch.cc
     utils/thread_pool.cc)
-target_include_directories(core PUBLIC ${glog_INCLUDE_DIRS})
-target_link_libraries(core PUBLIC Eigen3::Eigen ${glog_LIBRARIES} minkindr)
+target_link_libraries(core PUBLIC Eigen3::Eigen glog)
 if (tracy_FOUND)
   target_link_libraries(core PUBLIC TracyClient)
 endif ()

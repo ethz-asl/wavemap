@@ -1,13 +1,13 @@
 #include "wavemap_ros/utils/pointcloud_undistortion/pointcloud_undistorter.h"
 
-#include <tracy/Tracy.hpp>
+#include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap_ros_conversions/time_conversions.h>
 
 namespace wavemap {
 PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
     StampedPointcloud& stamped_pointcloud,
     PosedPointcloud<>& undistorted_pointcloud, const std::string& fixed_frame) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Get the time interval
   const uint64_t start_time = stamped_pointcloud.getStartTime();
   const uint64_t end_time = stamped_pointcloud.getEndTime();

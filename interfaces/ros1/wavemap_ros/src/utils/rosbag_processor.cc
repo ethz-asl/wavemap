@@ -1,6 +1,6 @@
 #include "wavemap_ros/utils/rosbag_processor.h"
 
-#include <tracy/Tracy.hpp>
+#include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {
 RosbagProcessor::~RosbagProcessor() {
@@ -37,7 +37,7 @@ bool RosbagProcessor::bagsContainTopic(const std::string& topic_name) {
 }
 
 bool RosbagProcessor::processAll() {
-  ZoneScoped;
+  ProfilerZoneScoped;
   ros::Time side_tasks_last_timestamp(0);
   const ros::Duration kSideTasksDt(0.01);
 
@@ -55,14 +55,14 @@ bool RosbagProcessor::processAll() {
 
     // Handle callbacks
     if (auto it = callbacks_.find(msg.getTopic()); it != callbacks_.end()) {
-      ZoneScopedN("rosbagMsgHandleCallbacks");
+      ProfilerZoneScopedN("rosbagMsgHandleCallbacks");
       it->second(msg);
     }
 
     // Handle republishing
     if (auto it = republishers_.find(msg.getTopic());
         it != republishers_.end()) {
-      ZoneScopedN("rosbagMsgPublishToTopic");
+      ProfilerZoneScopedN("rosbagMsgPublishToTopic");
       it->second.publish(msg);
     }
 
@@ -80,7 +80,7 @@ bool RosbagProcessor::processAll() {
 
       // Process node callbacks (publishers, timers,...)
       {
-        ZoneScopedN("rosbagSpinOnce");
+        ProfilerZoneScopedN("rosbagSpinOnce");
         ros::spinOnce();
       }
     }

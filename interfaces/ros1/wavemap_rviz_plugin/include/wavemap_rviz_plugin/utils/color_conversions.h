@@ -2,7 +2,7 @@
 #define WAVEMAP_RVIZ_PLUGIN_UTILS_COLOR_CONVERSIONS_H_
 
 #include <OGRE/OgreColourValue.h>
-#include <wavemap/common.h>
+#include <wavemap/core/common.h>
 
 namespace wavemap::rviz_plugin {
 // Map a voxel's log-odds value to a color (grey value)

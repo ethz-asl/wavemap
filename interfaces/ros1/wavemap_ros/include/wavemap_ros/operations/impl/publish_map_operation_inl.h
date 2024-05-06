@@ -3,8 +3,8 @@
 
 #include <unordered_set>
 
-#include <tracy/Tracy.hpp>
-#include <wavemap/indexing/index_hashes.h>
+#include <wavemap/core/indexing/index_hashes.h>
+#include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
@@ -48,7 +48,7 @@ void PublishMapOperation::publishHashedMap(const ros::Time& current_time,
                          map_msg.hashed_wavelet_octree.emplace_back(),
                          blocks_to_publish, thread_pool_);
     {
-      ZoneScopedN("publishMapRosMsg");
+      ProfilerZoneScopedN("publishMapRosMsg");
       map_pub_.publish(map_msg);
     }
 

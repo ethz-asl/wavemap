@@ -1,8 +1,8 @@
 #include "wavemap_ros/inputs/pointcloud_input.h"
 
 #include <sensor_msgs/point_cloud2_iterator.h>
-#include <tracy/Tracy.hpp>
-#include <wavemap/integrator/projective/projective_integrator.h>
+#include <wavemap/core/integrator/projective/projective_integrator.h>
+#include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap_ros_conversions/time_conversions.h>
 
 namespace wavemap {
@@ -52,7 +52,7 @@ PointcloudInput::PointcloudInput(
 }
 
 void PointcloudInput::callback(const sensor_msgs::PointCloud2& pointcloud_msg) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Skip empty clouds
   const size_t num_points = pointcloud_msg.height * pointcloud_msg.width;
   if (num_points == 0) {
@@ -128,7 +128,7 @@ void PointcloudInput::callback(const sensor_msgs::PointCloud2& pointcloud_msg) {
 #ifdef LIVOX_AVAILABLE
 void PointcloudInput::callback(
     const livox_ros_driver2::CustomMsg& pointcloud_msg) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Skip empty clouds
   if (pointcloud_msg.points.empty()) {
     ROS_WARN_STREAM("Skipping empty pointcloud with timestamp "
@@ -155,7 +155,7 @@ void PointcloudInput::callback(
 #endif
 
 void PointcloudInput::processQueue() {
-  ZoneScoped;
+  ProfilerZoneScoped;
   while (!pointcloud_queue_.empty()) {
     auto& oldest_msg = pointcloud_queue_.front();
 
@@ -267,7 +267,7 @@ void PointcloudInput::processQueue() {
         }
       }
     }
-    FrameMarkNamed("Pointcloud");
+    ProfilerFrameMarkNamed("Pointcloud");
 
     // Remove the pointcloud from the queue
     pointcloud_queue_.pop();

@@ -1,7 +1,7 @@
 #include "wavemap_ros_conversions/map_msg_conversions.h"
 
 #include <ros/console.h>
-#include <tracy/Tracy.hpp>
+#include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap::convert {
 bool mapToRosMsg(const MapBase& map, const std::string& frame_id,
@@ -43,7 +43,7 @@ bool mapToRosMsg(const MapBase& map, const std::string& frame_id,
 }
 
 bool rosMsgToMap(const wavemap_msgs::Map& msg, MapBase::Ptr& map) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Check validity
   bool is_valid = true;
   std::string error_msg =
@@ -101,7 +101,7 @@ bool rosMsgToMap(const wavemap_msgs::Map& msg, MapBase::Ptr& map) {
 }
 
 void mapToRosMsg(const HashedBlocks& map, wavemap_msgs::HashedBlocks& msg) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Serialize the map and data structure's metadata
   msg.min_cell_width = map.getMinCellWidth();
   msg.min_log_odds = map.getMinLogOdds();
@@ -135,7 +135,7 @@ void mapToRosMsg(const HashedBlocks& map, wavemap_msgs::HashedBlocks& msg) {
 
 void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg,
                  HashedBlocks::Ptr& map) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Deserialize the map's config
   MapBaseConfig config;
   config.min_cell_width = msg.min_cell_width;
@@ -176,7 +176,7 @@ void rosMsgToMap(const wavemap_msgs::HashedBlocks& msg,
 }
 
 void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Serialize the map and data structure's metadata
   msg.min_cell_width = map.getMinCellWidth();
   msg.min_log_odds = map.getMinLogOdds();
@@ -204,7 +204,7 @@ void mapToRosMsg(const WaveletOctree& map, wavemap_msgs::WaveletOctree& msg) {
 
 void rosMsgToMap(const wavemap_msgs::WaveletOctree& msg,
                  WaveletOctree::Ptr& map) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Deserialize the map's config
   WaveletOctreeConfig config;
   config.min_cell_width = msg.min_cell_width;
@@ -253,7 +253,7 @@ void mapToRosMsg(
     const HashedWaveletOctree& map, wavemap_msgs::HashedWaveletOctree& msg,
     std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks,
     std::shared_ptr<ThreadPool> thread_pool) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Constants
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
@@ -325,7 +325,7 @@ void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
                    const HashedWaveletOctree::Block& block,
                    FloatingPoint min_log_odds, FloatingPoint max_log_odds,
                    wavemap_msgs::HashedWaveletOctreeBlock& msg) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Convenience type for elements on the stack used to iterate over the map
   struct StackElement {
     const FloatingPoint scale;
@@ -378,7 +378,7 @@ void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
 
 void rosMsgToMap(const wavemap_msgs::HashedWaveletOctree& msg,
                  HashedWaveletOctree::Ptr& map) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Deserialize the map's config and initialize the data structure
   HashedWaveletOctreeConfig config;
   config.min_cell_width = msg.min_cell_width;
@@ -451,7 +451,7 @@ void mapToRosMsg(
     wavemap_msgs::HashedWaveletOctree& msg,
     std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks,
     std::shared_ptr<ThreadPool> thread_pool) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Constants
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
@@ -524,7 +524,7 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
                    const HashedChunkedWaveletOctree::Block& block,
                    FloatingPoint min_log_odds, FloatingPoint max_log_odds,
                    wavemap_msgs::HashedWaveletOctreeBlock& msg) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;

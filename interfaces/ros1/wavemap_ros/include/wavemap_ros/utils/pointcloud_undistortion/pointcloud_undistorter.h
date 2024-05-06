@@ -7,8 +7,8 @@
 #include <utility>
 #include <vector>
 
-#include <wavemap/common.h>
-#include <wavemap/data_structure/pointcloud.h>
+#include <wavemap/core/common.h>
+#include <wavemap/core/data_structure/pointcloud.h>
 
 #include "wavemap_ros/utils/pointcloud_undistortion/stamped_pointcloud.h"
 #include "wavemap_ros/utils/tf_transformer.h"

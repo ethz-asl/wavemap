@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "wavemap/utils/thread_pool.h"
+#include "wavemap/core/utils/thread_pool.h"
 #include "wavemap_ros/inputs/input_base.h"
 
 namespace wavemap {

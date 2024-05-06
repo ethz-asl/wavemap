@@ -2,7 +2,7 @@
 #define WAVEMAP_ROS_UTILS_LOGGING_LEVEL_H_
 
 #include <ros/console.h>
-#include <wavemap/config/type_selector.h>
+#include <wavemap/core/config/type_selector.h>
 
 namespace wavemap {
 struct LoggingLevel : public TypeSelector<LoggingLevel> {

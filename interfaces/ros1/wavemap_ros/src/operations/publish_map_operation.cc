@@ -1,7 +1,7 @@
 #include "wavemap_ros/operations/publish_map_operation.h"
 
 #include <std_srvs/Empty.h>
-#include <tracy/Tracy.hpp>
+#include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
@@ -42,7 +42,7 @@ PublishMapOperation::PublishMapOperation(
 
 void PublishMapOperation::publishMap(const ros::Time& current_time,
                                      bool republish_whole_map) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // If the map is empty, there's no work to do
   if (occupancy_map_->empty()) {
     return;

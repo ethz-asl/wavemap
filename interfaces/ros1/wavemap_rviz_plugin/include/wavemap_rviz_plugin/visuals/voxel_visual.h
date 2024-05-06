@@ -17,10 +17,10 @@
 #include <rviz/properties/int_property.h>
 #include <rviz/properties/property.h>
 #include <rviz/view_manager.h>
-#include <wavemap/config/type_selector.h>
-#include <wavemap/indexing/index_hashes.h>
-#include <wavemap/map/map_base.h>
-#include <wavemap/utils/time/time.h>
+#include <wavemap/core/config/type_selector.h>
+#include <wavemap/core/indexing/index_hashes.h>
+#include <wavemap/core/map/map_base.h>
+#include <wavemap/core/utils/time/time.h>
 
 #include "wavemap_rviz_plugin/common.h"
 #include "wavemap_rviz_plugin/utils/color_conversions.h"

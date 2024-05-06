@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include <wavemap/common.h>
+#include <wavemap/core/common.h>
 
 namespace wavemap {
 struct StampedPoint {

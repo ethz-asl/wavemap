@@ -9,12 +9,12 @@
 
 #include <glog/logging.h>
 #include <ros/ros.h>
-#include <wavemap/common.h>
-#include <wavemap/config/config_base.h>
-#include <wavemap/indexing/index_hashes.h>
-#include <wavemap/integrator/integrator_base.h>
-#include <wavemap/map/map_base.h>
-#include <wavemap/utils/thread_pool.h>
+#include <wavemap/core/common.h>
+#include <wavemap/core/config/config_base.h>
+#include <wavemap/core/indexing/index_hashes.h>
+#include <wavemap/core/integrator/integrator_base.h>
+#include <wavemap/core/map/map_base.h>
+#include <wavemap/core/utils/thread_pool.h>
 
 #include "wavemap_ros/inputs/input_base.h"
 #include "wavemap_ros/operations/operation_base.h"

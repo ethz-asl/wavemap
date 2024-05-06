@@ -1,6 +1,6 @@
 #include "wavemap_rviz_plugin/visuals/cell_selector.h"
 
-#include <wavemap/utils/neighbors/grid_neighborhood.h>
+#include <wavemap/core/utils/neighbors/grid_neighborhood.h>
 
 namespace wavemap::rviz_plugin {
 static const auto kNeighborOffsets =

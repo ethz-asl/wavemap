@@ -1,4 +1,4 @@
-#include <wavemap/utils/query/probability_conversions.h>
+#include <wavemap/core/utils/query/probability_conversions.h>
 
 #include "wavemap_examples/common.h"
 

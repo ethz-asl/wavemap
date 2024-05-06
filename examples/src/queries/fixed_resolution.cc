@@ -1,4 +1,4 @@
-#include <wavemap/map/map_base.h>
+#include <wavemap/core/map/map_base.h>
 
 #include "wavemap_examples/common.h"
 

@@ -5,8 +5,8 @@
 #include <string>
 
 #include <ros/ros.h>
-#include <wavemap/map/map_base.h>
-#include <wavemap/utils/thread_pool.h>
+#include <wavemap/core/map/map_base.h>
+#include <wavemap/core/utils/thread_pool.h>
 
 #include "wavemap_ros/operations/operation_base.h"
 #include "wavemap_ros/utils/tf_transformer.h"

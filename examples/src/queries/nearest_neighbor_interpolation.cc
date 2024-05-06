@@ -1,5 +1,5 @@
-#include <wavemap/map/map_base.h>
-#include <wavemap/utils/query/map_interpolator.h>
+#include <wavemap/core/map/map_base.h>
+#include <wavemap/core/utils/query/map_interpolator.h>
 
 #include "wavemap_examples/common.h"
 

@@ -1,6 +1,6 @@
-#include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/utils/iterate/grid_iterator.h>
-#include <wavemap/utils/query/query_accelerator.h>
+#include <wavemap/core/map/hashed_wavelet_octree.h>
+#include <wavemap/core/utils/iterate/grid_iterator.h>
+#include <wavemap/core/utils/query/query_accelerator.h>
 
 #include "wavemap_examples/common.h"
 

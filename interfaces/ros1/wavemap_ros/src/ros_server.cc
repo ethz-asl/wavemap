@@ -1,9 +1,8 @@
 #include "wavemap_ros/ros_server.h"
 
 #include <std_srvs/Trigger.h>
-#include <tracy/Tracy.hpp>
+#include <wavemap/core/map/map_factory.h>
 #include <wavemap/io/file_conversions.h>
-#include <wavemap/map/map_factory.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 

@@ -5,9 +5,9 @@
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
-#include <tracy/Tracy.hpp>
-#include <wavemap/integrator/integrator_factory.h>
-#include <wavemap/integrator/projective/projective_integrator.h>
+#include <wavemap/core/integrator/integrator_factory.h>
+#include <wavemap/core/integrator/projective/projective_integrator.h>
+#include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(InputBaseConfig,
@@ -86,7 +86,7 @@ bool InputBase::shouldPublishReprojectedPointcloud() const {
 
 void InputBase::publishReprojectedPointcloud(
     const ros::Time& stamp, const PosedPointcloud<>& posed_pointcloud) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   sensor_msgs::PointCloud pointcloud_msg;
   pointcloud_msg.header.stamp = stamp;
   pointcloud_msg.header.frame_id = world_frame_;
@@ -111,7 +111,7 @@ bool InputBase::shouldPublishProjectedRangeImage() const {
 
 void InputBase::publishProjectedRangeImage(const ros::Time& stamp,
                                            const Image<>& range_image) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   cv_bridge::CvImage cv_image;
   cv_image.header.stamp = stamp;
   cv_image.encoding = "32FC1";

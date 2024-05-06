@@ -3,7 +3,7 @@
 
 #include <mutex>
 
-#include <wavemap/map/map_base.h>
+#include <wavemap/core/map/map_base.h>
 
 namespace wavemap::rviz_plugin {
 struct MapAndMutex {

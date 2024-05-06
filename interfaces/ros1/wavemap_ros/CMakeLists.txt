@@ -14,9 +14,6 @@ if (livox_ros_driver2_FOUND)
   add_compile_definitions(LIVOX_AVAILABLE)
 endif ()
 
-# Compiler definitions and options
-add_wavemap_compile_definitions_and_options()
-
 # Libraries
 cs_add_library(${PROJECT_NAME}
     src/inputs/depth_image_input.cc
@@ -33,14 +30,16 @@ cs_add_library(${PROJECT_NAME}
     src/utils/rosbag_processor.cc
     src/utils/tf_transformer.cc
     src/ros_server.cc)
-# Link OpenCV explicitly to avoid issues on Jetson
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+set_wavemap_target_properties(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} glog)
 
 # Binaries
 cs_add_executable(ros_server app/ros_server.cc)
+set_wavemap_target_properties(ros_server)
 target_link_libraries(ros_server ${PROJECT_NAME})
 
 cs_add_executable(rosbag_processor app/rosbag_processor.cc)
+set_wavemap_target_properties(rosbag_processor)
 target_link_libraries(rosbag_processor ${PROJECT_NAME})
 
 # Export
@@ -49,5 +48,4 @@ cs_export()
 
 # Export config files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/config/
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
-)
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)

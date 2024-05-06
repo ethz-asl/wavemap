@@ -8,8 +8,9 @@
 
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
-#include <wavemap/data_structure/image.h>
-#include <wavemap/integrator/projective/projective_integrator.h>
+#include <wavemap/core/data_structure/image.h>
+#include <wavemap/core/integrator/projective/projective_integrator.h>
+#include <wavemap/core/utils/thread_pool.h>
 
 #include "wavemap_ros/inputs/input_base.h"
 

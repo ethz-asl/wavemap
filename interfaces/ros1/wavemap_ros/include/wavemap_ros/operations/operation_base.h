@@ -2,7 +2,7 @@
 #define WAVEMAP_ROS_OPERATIONS_OPERATION_BASE_H_
 
 #include <ros/ros.h>
-#include <wavemap/config/type_selector.h>
+#include <wavemap/core/config/type_selector.h>
 
 namespace wavemap {
 struct OperationType : public TypeSelector<OperationType> {

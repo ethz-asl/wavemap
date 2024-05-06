@@ -15,9 +15,5 @@
   <depend>libgoogle-glog-dev</depend>
   <depend>eigen</depend>
 
-  <depend>minkindr</depend>
-
-  <depend>tracy_catkin</depend>
-
   <test_depend>gtest</test_depend>
 </package>

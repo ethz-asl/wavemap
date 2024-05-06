@@ -13,9 +13,8 @@ find_package(catkin
     wavemap_msgs
     wavemap_ros_conversions)
 
-# Compiler definitions and options
-add_wavemap_compile_definitions_and_options()
 # Disable some warnings coming from Qt code in combination with C++17
+# TODO(victorr): Only add to relevant target, not globally
 add_compile_options(-Wno-pedantic -Wno-register)
 
 # Setup catkin package
@@ -55,6 +54,7 @@ endif ()
 
 # Avoid Qt signals and slots defining "emit", "slots", etc.
 # because they can conflict with boost signals.
+# TODO(victorr): Only add to relevant target, not globally
 add_definitions(-DQT_NO_KEYWORDS)
 
 # Libraries
@@ -67,6 +67,7 @@ add_library(${PROJECT_NAME}
     src/visuals/cell_selector.cc
     src/wavemap_map_display.cc
     ${QT_MOC})
+set_wavemap_target_properties(${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 # Install

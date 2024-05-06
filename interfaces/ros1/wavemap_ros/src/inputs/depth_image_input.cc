@@ -2,9 +2,9 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
-#include <tracy/Tracy.hpp>
-#include <wavemap/utils/iterate/grid_iterator.h>
-#include <wavemap/utils/print/eigen.h>
+#include <wavemap/core/utils/iterate/grid_iterator.h>
+#include <wavemap/core/utils/print/eigen.h>
+#include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(DepthImageInputConfig,
@@ -61,7 +61,7 @@ DepthImageInput::DepthImageInput(
 }
 
 void DepthImageInput::processQueue() {
-  ZoneScoped;
+  ProfilerZoneScoped;
   while (!depth_image_queue_.empty()) {
     const sensor_msgs::Image& oldest_msg = depth_image_queue_.front();
     const std::string sensor_frame_id = config_.sensor_frame_id.empty()
@@ -140,7 +140,7 @@ void DepthImageInput::processQueue() {
         }
       }
     }
-    FrameMarkNamed("DepthImage");
+    ProfilerFrameMarkNamed("DepthImage");
 
     // Remove the depth image from the queue
     depth_image_queue_.pop();
@@ -149,7 +149,7 @@ void DepthImageInput::processQueue() {
 
 PosedPointcloud<> DepthImageInput::reproject(
     const PosedImage<>& posed_range_image) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   auto projective_integrator =
       std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
   if (!projective_integrator) {

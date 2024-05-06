@@ -3,11 +3,11 @@
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
-#include <tracy/Tracy.hpp>
-#include <wavemap/indexing/index_conversions.h>
-#include <wavemap/map/hashed_chunked_wavelet_octree.h>
-#include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/utils/iterate/grid_iterator.h>
+#include <wavemap/core/indexing/index_conversions.h>
+#include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
+#include <wavemap/core/map/hashed_wavelet_octree.h>
+#include <wavemap/core/utils/iterate/grid_iterator.h>
+#include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap_ros_conversions/geometry_msg_conversions.h>
 
 namespace wavemap {
@@ -38,7 +38,7 @@ PublishPointcloudOperation::PublishPointcloudOperation(
 
 void PublishPointcloudOperation::publishPointcloud(
     const ros::Time& current_time) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // If the map is empty, there's no work to do
   if (occupancy_map_->empty()) {
     return;

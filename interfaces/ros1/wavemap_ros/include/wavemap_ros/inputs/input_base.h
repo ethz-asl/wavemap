@@ -7,13 +7,13 @@
 #include <vector>
 
 #include <image_transport/image_transport.h>
-#include <wavemap/config/config_base.h>
-#include <wavemap/data_structure/image.h>
-#include <wavemap/data_structure/pointcloud.h>
-#include <wavemap/integrator/integrator_base.h>
-#include <wavemap/map/map_base.h>
-#include <wavemap/utils/thread_pool.h>
-#include <wavemap/utils/time/stopwatch.h>
+#include <wavemap/core/config/config_base.h>
+#include <wavemap/core/data_structure/image.h>
+#include <wavemap/core/data_structure/pointcloud.h>
+#include <wavemap/core/integrator/integrator_base.h>
+#include <wavemap/core/map/map_base.h>
+#include <wavemap/core/utils/thread_pool.h>
+#include <wavemap/core/utils/time/stopwatch.h>
 
 #include "wavemap_ros/utils/tf_transformer.h"
 

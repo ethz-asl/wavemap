@@ -5,9 +5,9 @@
 #include <ros/console.h>
 #include <rviz/properties/enum_property.h>
 #include <rviz/properties/float_property.h>
-#include <wavemap/config/type_selector.h>
-#include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/utils/query/query_accelerator.h>
+#include <wavemap/core/config/type_selector.h>
+#include <wavemap/core/map/hashed_wavelet_octree.h>
+#include <wavemap/core/utils/query/query_accelerator.h>
 #endif
 
 namespace wavemap::rviz_plugin {

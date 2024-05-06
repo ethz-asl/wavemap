@@ -6,9 +6,9 @@
 
 #include <geometry_msgs/Point32.h>
 #include <ros/ros.h>
-#include <wavemap/config/config_base.h>
-#include <wavemap/map/map_base.h>
-#include <wavemap/utils/time/time.h>
+#include <wavemap/core/config/config_base.h>
+#include <wavemap/core/map/map_base.h>
+#include <wavemap/core/utils/time/time.h>
 
 #include "wavemap_ros/operations/operation_base.h"
 

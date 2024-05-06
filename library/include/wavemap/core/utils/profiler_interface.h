@@ -5,9 +5,13 @@
 
 #include <tracy/Tracy.hpp>
 
-#define ProfilerZoneScoped
-#define ProfilerZoneScopedN(x)
-#define ProfilerPlot(x, y)
+#define ProfilerZoneScoped ZoneScoped
+#define ProfilerZoneScopedN(x) ZoneScopedN(x)
+
+#define ProfilerFrameMark FrameMark
+#define ProfilerFrameMarkNamed(x) FrameMarkNamed(x)
+
+#define ProfilerPlot(x, y) TracyPlot(x, y)
 
 #define ProfilerSetThreadName(x) tracy::SetThreadName(x)
 
@@ -15,6 +19,10 @@
 
 #define ProfilerZoneScoped
 #define ProfilerZoneScopedN(x)
+
+#define ProfilerFrameMark
+#define ProfilerFrameMarkNamed(x)
+
 #define ProfilerPlot(x, y)
 
 #define ProfilerSetThreadName(x)

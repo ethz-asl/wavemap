@@ -2,9 +2,9 @@
 
 #include <rviz/properties/parse_color.h>
 #include <rviz/render_panel.h>
-#include <tracy/Tracy.hpp>
-#include <wavemap/indexing/index_conversions.h>
-#include <wavemap/map/hashed_wavelet_octree.h>
+#include <wavemap/core/indexing/index_conversions.h>
+#include <wavemap/core/map/hashed_wavelet_octree.h>
+#include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap::rviz_plugin {
 VoxelVisual::VoxelVisual(Ogre::SceneManager* scene_manager,
@@ -93,7 +93,7 @@ VoxelVisual::~VoxelVisual() {
 }
 
 void VoxelVisual::updateMap(bool redraw_all) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -181,7 +181,7 @@ void VoxelVisual::updateMap(bool redraw_all) {
 }
 
 void VoxelVisual::updateLOD(const Ogre::Camera& active_camera) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -237,7 +237,7 @@ IndexElement VoxelVisual::computeRecommendedBlockLodHeight(
     const Ogre::Camera& active_camera, const OctreeIndex& block_index,
     FloatingPoint min_cell_width, IndexElement min_height,
     IndexElement max_height) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // TODO(victorr): Compute the LoD level using the camera's projection matrix
   //                and the screen's pixel density, to better generalize across
   //                displays (high/low DPI) and alternative projection modes
@@ -263,7 +263,7 @@ IndexElement VoxelVisual::computeRecommendedBlockLodHeight(
 
 std::optional<IndexElement> VoxelVisual::getCurrentBlockLodHeight(
     IndexElement map_tree_height, const Index3D& block_idx) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   if (block_voxel_layers_map_.count(block_idx)) {
     return map_tree_height -
            (static_cast<int>(block_voxel_layers_map_[block_idx].size()) - 1);
@@ -274,17 +274,17 @@ std::optional<IndexElement> VoxelVisual::getCurrentBlockLodHeight(
 
 // Position and orientation are passed through to the SceneNode
 void VoxelVisual::setFramePosition(const Ogre::Vector3& position) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   frame_node_->setPosition(position);
 }
 
 void VoxelVisual::setFrameOrientation(const Ogre::Quaternion& orientation) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   frame_node_->setOrientation(orientation);
 }
 
 void VoxelVisual::visibilityUpdateCallback() {
-  ZoneScoped;
+  ProfilerZoneScoped;
   if (visibility_property_.getBool()) {
     updateMap(true);
   } else {
@@ -293,13 +293,13 @@ void VoxelVisual::visibilityUpdateCallback() {
 }
 
 void VoxelVisual::opacityUpdateCallback() {
-  ZoneScoped;
+  ProfilerZoneScoped;
   FloatingPoint alpha = opacity_property_.getFloat();
   setAlpha(alpha);
 }
 
 void VoxelVisual::colorModeUpdateCallback() {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Update the cached color mode value
   const VoxelColorMode old_color_mode = voxel_color_mode_;
   voxel_color_mode_ = VoxelColorMode(color_mode_property_.getStdString());
@@ -314,7 +314,7 @@ void VoxelVisual::colorModeUpdateCallback() {
 }
 
 void VoxelVisual::flatColorUpdateCallback() {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Update the cached color value
   const Ogre::ColourValue old_flat_color = voxel_flat_color_;
   voxel_flat_color_ = flat_color_property_.getOgreColor();
@@ -369,7 +369,7 @@ void VoxelVisual::drawMultiResolutionVoxels(IndexElement tree_height,
                                             FloatingPoint alpha,
                                             VoxelsPerLevel& voxels_per_level,
                                             VoxelLayers& voxel_layer_visuals) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   // Add a voxel layer for each scale level
   const std::string prefix =
       "voxel_layer_" + std::to_string(Index3DHash()(block_index)) + "_";
@@ -401,7 +401,7 @@ void VoxelVisual::drawMultiResolutionVoxels(IndexElement tree_height,
 }
 
 void VoxelVisual::processBlockUpdateQueue(const Point3D& camera_position) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   if (!visibility_property_.getBool()) {
     return;
   }
@@ -523,7 +523,7 @@ void VoxelVisual::setAlpha(FloatingPoint alpha) {
 }
 
 void VoxelVisual::prerenderCallback(Ogre::Camera* active_camera) {
-  ZoneScoped;
+  ProfilerZoneScoped;
   CHECK_NOTNULL(active_camera);
   // Recompute the desired LOD level for each block in the map if
   // the camera moved significantly or an update was requested explicitly

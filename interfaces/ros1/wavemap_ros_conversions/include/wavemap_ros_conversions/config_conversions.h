@@ -4,7 +4,7 @@
 #include <string>
 
 #include <ros/node_handle.h>
-#include <wavemap/config/config_base.h>
+#include <wavemap/core/config/config_base.h>
 #include <xmlrpcpp/XmlRpcValue.h>
 
 namespace wavemap::param::convert {

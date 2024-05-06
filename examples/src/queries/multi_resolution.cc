@@ -1,5 +1,5 @@
-#include <wavemap/indexing/index_conversions.h>
-#include <wavemap/map/hashed_wavelet_octree.h>
+#include <wavemap/core/indexing/index_conversions.h>
+#include <wavemap/core/map/hashed_wavelet_octree.h>
 
 #include "wavemap_examples/common.h"
 

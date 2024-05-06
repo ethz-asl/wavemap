@@ -1,7 +1,7 @@
 #include "wavemap_rviz_plugin/visuals/slice_visual.h"
 
 #include <ros/console.h>
-#include <wavemap/indexing/index_conversions.h>
+#include <wavemap/core/indexing/index_conversions.h>
 
 #include "wavemap_rviz_plugin/utils/color_conversions.h"
 

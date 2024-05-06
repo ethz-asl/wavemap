@@ -5,7 +5,7 @@
 #include <string>
 
 #include <tf2_ros/transform_listener.h>
-#include <wavemap/common.h>
+#include <wavemap/core/common.h>
 
 namespace wavemap {
 class TfTransformer {
