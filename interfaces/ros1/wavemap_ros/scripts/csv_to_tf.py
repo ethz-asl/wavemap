@@ -6,6 +6,7 @@ import tf
 
 
 class StampedTransform:
+
     def __init__(self, csv_row):
         self.stamp = rospy.Time(secs=int(csv_row['#sec']),
                                 nsecs=int(csv_row['nsec']))

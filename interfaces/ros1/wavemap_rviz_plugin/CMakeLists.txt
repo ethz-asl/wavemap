@@ -13,10 +13,6 @@ find_package(catkin
     wavemap_msgs
     wavemap_ros_conversions)
 
-# Disable some warnings coming from Qt code in combination with C++17
-# TODO(victorr): Only add to relevant target, not globally
-add_compile_options(-Wno-pedantic -Wno-register)
-
 # Setup catkin package
 catkin_package(CATKIN_DEPENDS
     wavemap wavemap_msgs wavemap_ros_conversions)
@@ -52,11 +48,6 @@ else ()
   QT5_WRAP_CPP(QT_MOC ${HEADERS_TO_MOC})
 endif ()
 
-# Avoid Qt signals and slots defining "emit", "slots", etc.
-# because they can conflict with boost signals.
-# TODO(victorr): Only add to relevant target, not globally
-add_definitions(-DQT_NO_KEYWORDS)
-
 # Libraries
 add_library(${PROJECT_NAME}
     src/utils/color_conversions.cc
@@ -68,7 +59,15 @@ add_library(${PROJECT_NAME}
     src/wavemap_map_display.cc
     ${QT_MOC})
 set_wavemap_target_properties(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+# Avoid Qt signals and slots defining "emit", "slots", etc.
+# because they can conflict with boost signals.
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DQT_NO_KEYWORDS)
+
+# Disable some warnings coming from Qt code in combination with C++17
+target_compile_options(${PROJECT_NAME} PRIVATE -Wno-pedantic -Wno-register)
 
 # Install
 install(TARGETS

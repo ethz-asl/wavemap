@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <wavemap/common.h>
-#include <wavemap/map/hashed_chunked_wavelet_octree.h>
-#include <wavemap/map/hashed_wavelet_octree.h>
-#include <wavemap/map/map_base.h>
-#include <wavemap/map/wavelet_octree.h>
+#include <wavemap/core/common.h>
+#include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
+#include <wavemap/core/map/hashed_wavelet_octree.h>
+#include <wavemap/core/map/map_base.h>
+#include <wavemap/core/map/wavelet_octree.h>
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
 #include <wavemap/test/geometry_generator.h>

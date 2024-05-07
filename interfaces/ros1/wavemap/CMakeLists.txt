@@ -8,8 +8,7 @@ catkin_package(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include
     LIBRARIES wavemap_core wavemap_io
     CFG_EXTRAS
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cmake/wavemap-extras.cmake
-)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cmake/wavemap-extras.cmake)
 
 # Load the library
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../library
