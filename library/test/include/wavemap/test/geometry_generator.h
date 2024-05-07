@@ -59,9 +59,8 @@ class GeometryGenerator {
     return random_number_generator_.getRandomRealNumber(min_angle, max_angle);
   }
 
-  template <int dim>
-  Transformation<dim> getRandomTransformation() const {
-    Transformation<dim> random_transformation;
+  static Transformation3D getRandomTransformation() {
+    Transformation3D random_transformation;
     random_transformation.setRandom();
     return random_transformation;
   }

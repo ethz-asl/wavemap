@@ -118,7 +118,7 @@ class Image2DProjectorTest : public FixtureBase, public GeometryGenerator {
                                               aabb.max + t_random};
           const AABB<Point3D> aabb_scaled_translated{
               aabb_scaled.min + t_random, aabb_scaled.max + t_random};
-          const Transformation3D T_W_C_random = getRandomTransformation<3>();
+          const Transformation3D T_W_C_random = getRandomTransformation();
           aabbs_and_poses.emplace_back(aabb_scaled, Transformation3D());
           aabbs_and_poses.emplace_back(aabb_translated, Transformation3D());
           aabbs_and_poses.emplace_back(aabb_scaled_translated,

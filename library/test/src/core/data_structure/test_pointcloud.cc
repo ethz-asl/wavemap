@@ -167,12 +167,12 @@ TYPED_TEST_SUITE(PosedPointcloudTest, PointTypes, );
 TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
   constexpr int kDim = dim_v<TypeParam>;
   using PointType = TypeParam;
-  using PoseType = Transformation<kDim>;
+  using PoseType = Transformation3D;
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     // Initialize
     const PoseType random_transformation =
-        GeometryGenerator::getRandomTransformation<kDim>();
+        GeometryGenerator::getRandomTransformation();
     const Pointcloud<PointType> random_pointcloud(
         GeometryGenerator::getRandomPointVector<kDim>());
     PosedPointcloud<PointType> random_posed_pointcloud(random_transformation,
@@ -200,13 +200,12 @@ TYPED_TEST(PosedPointcloudTest, InitializationAndCopying) {
 TYPED_TEST(PosedPointcloudTest, Transformations) {
   constexpr int kDim = dim_v<TypeParam>;
   using PointType = TypeParam;
-  using PoseType = Transformation<kDim>;
+  using PoseType = Transformation3D;
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
     const std::vector<PointType> random_points_C =
         GeometryGenerator::getRandomPointVector<kDim>();
-    const PoseType random_T_W_C =
-        GeometryGenerator::getRandomTransformation<kDim>();
+    const PoseType random_T_W_C = GeometryGenerator::getRandomTransformation();
     const PosedPointcloud<PointType> random_posed_pointcloud(
         random_T_W_C, Pointcloud<PointType>(random_points_C));
 

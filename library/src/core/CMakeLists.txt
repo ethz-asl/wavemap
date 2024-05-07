@@ -1,6 +1,8 @@
-add_library(core)
-add_library(wavemap::core ALIAS core)
-target_sources(core PRIVATE
+add_library(wavemap_core)
+add_library(wavemap::wavemap_core ALIAS wavemap_core)
+
+add_wavemap_include_directories(wavemap_core)
+target_sources(wavemap_core PRIVATE
     config/value_with_unit.cc
     integrator/measurement_model/continuous_beam.cc
     integrator/measurement_model/constant_ray.cc
@@ -36,8 +38,9 @@ target_sources(core PRIVATE
     utils/sdf/quasi_euclidean_sdf_generator.cc
     utils/time/stopwatch.cc
     utils/thread_pool.cc)
-target_link_libraries(core PUBLIC Eigen3::Eigen glog)
+
+set_wavemap_target_properties(wavemap_core)
+target_link_libraries(wavemap_core PUBLIC Eigen3::Eigen glog)
 if (tracy_FOUND)
-  target_link_libraries(core PUBLIC TracyClient)
+  target_link_libraries(wavemap_core PUBLIC TracyClient)
 endif ()
-set_wavemap_target_properties(core)

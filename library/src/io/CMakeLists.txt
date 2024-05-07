@@ -1,5 +1,8 @@
-add_library(io)
-add_library(wavemap::io ALIAS io)
-target_sources(io PRIVATE file_conversions.cc stream_conversions.cc)
-target_link_libraries(io PUBLIC Eigen3::Eigen glog)
-set_wavemap_target_properties(io)
+add_library(wavemap_io)
+add_library(wavemap::wavemap_io ALIAS wavemap_io)
+
+add_wavemap_include_directories(wavemap_io)
+target_sources(wavemap_io PRIVATE file_conversions.cc stream_conversions.cc)
+
+set_wavemap_target_properties(wavemap_io)
+target_link_libraries(wavemap_io PUBLIC Eigen3::Eigen glog)

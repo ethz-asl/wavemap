@@ -51,7 +51,7 @@ class PointcloudIntegratorTest : public FixtureBase,
                       {projection_model.indexToImage(image_index), 1.f});
     }
 
-    return PosedPointcloud<>(getRandomTransformation<3>(), pointcloud);
+    return PosedPointcloud<>(getRandomTransformation(), pointcloud);
   }
 };
 

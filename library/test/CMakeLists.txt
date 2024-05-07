@@ -1,43 +1,5 @@
-catkin_add_gtest(
-    test_${PROJECT_NAME}
-    test/src/data_structure/test_aabb.cc
-    test/src/data_structure/test_image.cc
-    test/src/data_structure/test_ndtree.cc
-    test/src/data_structure/test_pointcloud.cc
-    test/src/data_structure/test_sparse_vector.cc
-    test/src/indexing/test_index_conversions.cc
-    test/src/indexing/test_ndtree_index.cc
-    test/src/integrator/projection_model/test_circular_projector.cc
-    test/src/integrator/projection_model/test_image_projectors.cc
-    test/src/integrator/projection_model/test_spherical_projector.cc
-    test/src/integrator/test_hierarchical_range_image.cc
-    test/src/integrator/test_measurement_models.cc
-    test/src/integrator/test_pointcloud_integrators.cc
-    test/src/integrator/test_range_image_intersector.cc
-    test/src/io/test_file_conversions.cc
-    test/src/map/test_haar_cell.cc
-    test/src/map/test_hashed_blocks.cc
-    test/src/map/test_map.cc
-    test/src/map/test_volumetric_octree.cc
-    test/src/utils/bits/test_bit_operations.cc
-    test/src/utils/data/test_comparisons.cc
-    test/src/utils/data/test_fill.cc
-    test/src/utils/iterate/test_grid_iterator.cc
-    test/src/utils/iterate/test_ray_iterator.cc
-    test/src/utils/iterate/test_subtree_iterator.cc
-    test/src/utils/math/test_approximate_trigonometry.cc
-    test/src/utils/math/test_int_math.cc
-    test/src/utils/math/test_tree_math.cc
-    test/src/utils/neighbors/test_adjacency.cc
-    test/src/utils/neighbors/test_grid_adjacency.cc
-    test/src/utils/neighbors/test_grid_neighborhood.cc
-    test/src/utils/neighbors/test_ndtree_adjacency.cc
-    test/src/utils/query/test_classified_map.cc
-    test/src/utils/query/test_map_interpolator.cpp
-    test/src/utils/query/test_occupancy_classifier.cc
-    test/src/utils/query/test_probability_conversions.cc
-    test/src/utils/query/test_query_accelerator.cc
-    test/src/utils/sdf/test_sdf_generators.cc
-    test/src/utils/test_thread_pool.cc)
-target_include_directories(test_${PROJECT_NAME} PRIVATE test/include)
-target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME} gtest_main)
+find_package(GTest REQUIRED)
+include(GoogleTest)
+
+add_subdirectory(src/core)
+add_subdirectory(src/io)

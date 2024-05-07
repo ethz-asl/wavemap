@@ -58,7 +58,7 @@ class RangeImage2DIntersectorTest : public FixtureBase,
       const FloatingPoint range = getRandomSignedDistance(min_range, max_range);
       posed_range_image.at(index) = range;
     }
-    posed_range_image.setPose(getRandomTransformation<3>());
+    posed_range_image.setPose(getRandomTransformation());
 
     return posed_range_image;
   }
