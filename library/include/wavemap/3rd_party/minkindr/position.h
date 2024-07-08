@@ -27,15 +27,11 @@
 
 #include <Eigen/Dense>
 
-namespace kindr {
-namespace minimal {
-
+namespace kindr::minimal {
 template <typename Scalar>
 using PositionTemplate = Eigen::Matrix<Scalar, 3, 1>;
 
 typedef PositionTemplate<double> Position;
-
-}  // namespace minimal
-}  // namespace kindr
+}  // namespace kindr::minimal
 
 #endif  // WAVEMAP_3RD_PARTY_MINKINDR_POSITION_H_

@@ -29,9 +29,7 @@
 
 #include <Eigen/Dense>
 
-namespace kindr {
-namespace minimal {
-
+namespace kindr::minimal {
 template <typename Scalar>
 class AngleAxisTemplate;
 
@@ -233,9 +231,8 @@ template <typename Scalar>
 std::ostream& operator<<(std::ostream& out,
                          const RotationQuaternionTemplate<Scalar>& rhs);
 
-}  // namespace minimal
-}  // namespace kindr
+}  // namespace kindr::minimal
 
-#include <wavemap/3rd_party/minkindr/impl/rotation-quaternion-inl.h>
+#include "wavemap/3rd_party/minkindr/impl/rotation-quaternion-inl.h"
 
 #endif  // WAVEMAP_3RD_PARTY_MINKINDR_ROTATION_QUATERNION_H_

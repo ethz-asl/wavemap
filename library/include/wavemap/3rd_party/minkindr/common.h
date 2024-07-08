@@ -28,9 +28,7 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 
-namespace kindr {
-namespace minimal {
-
+namespace kindr::minimal {
 inline void skewMatrix(const Eigen::Vector3d& v, Eigen::Matrix3d* skew) {
   CHECK_NOTNULL(skew);
   skew->setZero();
@@ -59,8 +57,6 @@ inline Eigen::Matrix3d skewMatrix(const Eigen::Vector3d& v) {
   skewMatrix(v, &skew);
   return skew;
 }
-
-}  // namespace minimal
-}  // namespace kindr
+}  // namespace kindr::minimal
 
 #endif  // WAVEMAP_3RD_PARTY_MINKINDR_COMMON_H_

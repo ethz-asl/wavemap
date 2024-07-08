@@ -28,12 +28,11 @@
 #include <limits>
 
 #include <glog/logging.h>
-#include <wavemap/3rd_party/minkindr/angle-axis.h>
-#include <wavemap/3rd_party/minkindr/rotation-quaternion.h>
 
-namespace kindr {
-namespace minimal {
+#include "wavemap/3rd_party/minkindr/angle-axis.h"
+#include "wavemap/3rd_party/minkindr/rotation-quaternion.h"
 
+namespace kindr::minimal {
 template <typename Scalar>
 AngleAxisTemplate<Scalar>::AngleAxisTemplate()
     : C_A_B_(Implementation::Identity()) {}
@@ -83,7 +82,7 @@ AngleAxisTemplate<Scalar>::AngleAxisTemplate(
     : C_A_B_(quat.toImplementation()) {}
 
 template <typename Scalar>
-AngleAxisTemplate<Scalar>::~AngleAxisTemplate() {}
+AngleAxisTemplate<Scalar>::~AngleAxisTemplate() = default;
 
 template <typename Scalar>
 AngleAxisTemplate<Scalar>& AngleAxisTemplate<Scalar>::operator=(
@@ -263,7 +262,6 @@ typename AngleAxisTemplate<Scalar>::RotationMatrix
 AngleAxisTemplate<Scalar>::getRotationMatrix() const {
   return C_A_B_.matrix();
 }
+}  // namespace kindr::minimal
 
-}  // namespace minimal
-}  // namespace kindr
 #endif  // WAVEMAP_3RD_PARTY_MINKINDR_IMPL_ANGLE_AXIS_INL_H_

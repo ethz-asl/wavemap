@@ -28,11 +28,10 @@
 #include <algorithm>
 
 #include <glog/logging.h>
-#include <wavemap/3rd_party/minkindr/quat-transformation.h>
 
-namespace kindr {
-namespace minimal {
+#include "wavemap/3rd_party/minkindr/quat-transformation.h"
 
+namespace kindr::minimal {
 template <typename Scalar>
 QuatTransformationTemplate<Scalar>::QuatTransformationTemplate() {
   setIdentity();
@@ -71,7 +70,7 @@ QuatTransformationTemplate<Scalar>::QuatTransformationTemplate(
       A_t_A_B_(x_t_r.template head<3>().eval()) {}
 
 template <typename Scalar>
-QuatTransformationTemplate<Scalar>::~QuatTransformationTemplate() {}
+QuatTransformationTemplate<Scalar>::~QuatTransformationTemplate() = default;
 
 template <typename Scalar>
 void QuatTransformationTemplate<Scalar>::setIdentity() {
@@ -296,7 +295,6 @@ QuatTransformationTemplate<Scalar> interpolateComponentwise(
       T_a.getEigenQuaternion().slerp(lambda, T_b.getEigenQuaternion());
   return QuatTransformationTemplate<Scalar>(q_int, p_int);
 }
+}  // namespace kindr::minimal
 
-}  // namespace minimal
-}  // namespace kindr
 #endif  // WAVEMAP_3RD_PARTY_MINKINDR_IMPL_QUAT_TRANSFORMATION_INL_H_

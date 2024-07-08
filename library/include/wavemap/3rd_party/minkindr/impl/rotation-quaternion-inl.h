@@ -28,12 +28,11 @@
 #include <limits>
 
 #include <glog/logging.h>
-#include <wavemap/3rd_party/minkindr/angle-axis.h>
-#include <wavemap/3rd_party/minkindr/rotation-quaternion.h>
 
-namespace kindr {
-namespace minimal {
+#include "wavemap/3rd_party/minkindr/angle-axis.h"
+#include "wavemap/3rd_party/minkindr/rotation-quaternion.h"
 
+namespace kindr::minimal {
 template <typename Scalar>
 struct EPS {
   static constexpr Scalar value() { return static_cast<Scalar>(1.0e-5); }
@@ -151,7 +150,7 @@ RotationQuaternionTemplate<Scalar>::RotationQuaternionTemplate(
     : q_A_B_(angleAxis.toImplementation()) {}
 
 template <typename Scalar>
-RotationQuaternionTemplate<Scalar>::~RotationQuaternionTemplate() {}
+RotationQuaternionTemplate<Scalar>::~RotationQuaternionTemplate() = default;
 
 /// \brief the real component of the quaternion
 template <typename Scalar>
@@ -585,7 +584,6 @@ void RotationQuaternionTemplate<Scalar>::normalizationHelper(
     quaternion->normalize();
   }
 }
+}  // namespace kindr::minimal
 
-}  // namespace minimal
-}  // namespace kindr
 #endif  // WAVEMAP_3RD_PARTY_MINKINDR_IMPL_ROTATION_QUATERNION_INL_H_

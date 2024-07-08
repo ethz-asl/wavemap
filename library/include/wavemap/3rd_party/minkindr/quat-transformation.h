@@ -28,11 +28,10 @@
 #include <algorithm>
 #include <ostream>
 
-#include <wavemap/3rd_party/minkindr/position.h>
-#include <wavemap/3rd_party/minkindr/rotation-quaternion.h>
+#include "wavemap/3rd_party/minkindr/position.h"
+#include "wavemap/3rd_party/minkindr/rotation-quaternion.h"
 
-namespace kindr {
-namespace minimal {
+namespace kindr::minimal {
 
 /// \class QuatTransformation
 /// \brief A frame transformation built from a quaternion and a point
@@ -163,7 +162,7 @@ class QuatTransformationTemplate {
   /// note: this is the log map of SO(3)xR(3) and not SE(3)
   /// \return vector form of log map with first 3 components the translational
   ///         part and the last three the rotational part.
-  static Vector6 log(const QuatTransformationTemplate<Scalar>& vec);
+  static Vector6 log(const QuatTransformationTemplate<Scalar>& T);
 
   /// \brief return a copy of the transformation inverted.
   QuatTransformationTemplate<Scalar> inverse() const;
@@ -208,9 +207,8 @@ template <typename Scalar>
 inline QuatTransformationTemplate<Scalar> interpolateComponentwise(
     const QuatTransformationTemplate<Scalar>& T_a,
     const QuatTransformationTemplate<Scalar>& T_b, const double lambda);
-}  // namespace minimal
-}  // namespace kindr
+}  // namespace kindr::minimal
 
-#include <wavemap/3rd_party/minkindr/impl/quat-transformation-inl.h>
+#include "wavemap/3rd_party/minkindr/impl/quat-transformation-inl.h"
 
 #endif  // WAVEMAP_3RD_PARTY_MINKINDR_QUAT_TRANSFORMATION_H_
