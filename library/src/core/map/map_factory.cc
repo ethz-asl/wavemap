@@ -7,8 +7,8 @@
 #include "wavemap/core/map/wavelet_octree.h"
 
 namespace wavemap {
-MapBase::Ptr MapFactory::create(const param::Value& params,
-                                std::optional<MapType> default_map_type) {
+std::unique_ptr<MapBase> MapFactory::create(
+    const param::Value& params, std::optional<MapType> default_map_type) {
   if (const auto type = MapType::from(params); type) {
     return create(type.value(), params);
   }
@@ -23,11 +23,12 @@ MapBase::Ptr MapFactory::create(const param::Value& params,
   return nullptr;
 }
 
-MapBase::Ptr MapFactory::create(MapType map_type, const param::Value& params) {
+std::unique_ptr<MapBase> MapFactory::create(MapType map_type,
+                                            const param::Value& params) {
   switch (map_type) {
     case MapType::kHashedBlocks: {
       if (const auto config = MapBaseConfig::from(params); config) {
-        return std::make_shared<HashedBlocks>(config.value());
+        return std::make_unique<HashedBlocks>(config.value());
       } else {
         LOG(ERROR) << "Hashed blocks volumetric data structure config could "
                       "not be loaded.";
@@ -36,7 +37,7 @@ MapBase::Ptr MapFactory::create(MapType map_type, const param::Value& params) {
     }
     case MapType::kOctree: {
       if (const auto config = VolumetricOctreeConfig::from(params); config) {
-        return std::make_shared<VolumetricOctree>(config.value());
+        return std::make_unique<VolumetricOctree>(config.value());
       } else {
         LOG(ERROR)
             << "Octree volumetric data structure config could not be loaded.";
@@ -45,7 +46,7 @@ MapBase::Ptr MapFactory::create(MapType map_type, const param::Value& params) {
     }
     case MapType::kWaveletOctree: {
       if (const auto config = WaveletOctreeConfig::from(params); config) {
-        return std::make_shared<WaveletOctree>(config.value());
+        return std::make_unique<WaveletOctree>(config.value());
       } else {
         LOG(ERROR) << "Wavelet octree volumetric data structure config could "
                       "not be loaded.";
@@ -54,7 +55,7 @@ MapBase::Ptr MapFactory::create(MapType map_type, const param::Value& params) {
     }
     case MapType::kHashedWaveletOctree: {
       if (const auto config = HashedWaveletOctreeConfig::from(params); config) {
-        return std::make_shared<HashedWaveletOctree>(config.value());
+        return std::make_unique<HashedWaveletOctree>(config.value());
       } else {
         LOG(ERROR) << "Hashed wavelet octree volumetric data structure config "
                       "could not be loaded.";
@@ -64,7 +65,7 @@ MapBase::Ptr MapFactory::create(MapType map_type, const param::Value& params) {
     case MapType::kHashedChunkedWaveletOctree: {
       if (const auto config = HashedChunkedWaveletOctreeConfig::from(params);
           config) {
-        return std::make_shared<HashedChunkedWaveletOctree>(config.value());
+        return std::make_unique<HashedChunkedWaveletOctree>(config.value());
       } else {
         LOG(ERROR) << "Hashed chunked wavelet octree volumetric data structure "
                       "config could not be loaded.";

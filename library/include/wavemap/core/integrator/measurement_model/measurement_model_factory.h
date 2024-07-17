@@ -8,14 +8,14 @@
 namespace wavemap {
 class MeasurementModelFactory {
  public:
-  static MeasurementModelBase::Ptr create(
+  static std::unique_ptr<MeasurementModelBase> create(
       const param::Value& params, ProjectorBase::ConstPtr projection_model,
       Image<>::ConstPtr range_image,
       Image<Vector2D>::ConstPtr beam_offset_image = nullptr,
       std::optional<MeasurementModelType> default_measurement_model_type =
           std::nullopt);
 
-  static MeasurementModelBase::Ptr create(
+  static std::unique_ptr<MeasurementModelBase> create(
       MeasurementModelType measurement_model_type,
       ProjectorBase::ConstPtr projection_model, Image<>::ConstPtr range_image,
       Image<Vector2D>::ConstPtr beam_offset_image, const param::Value& params);

@@ -4,7 +4,7 @@
 #include "wavemap/core/integrator/measurement_model/continuous_ray.h"
 
 namespace wavemap {
-MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
+std::unique_ptr<MeasurementModelBase> wavemap::MeasurementModelFactory::create(
     const param::Value& params, ProjectorBase::ConstPtr projection_model,
     Image<>::ConstPtr range_image, Image<Vector2D>::ConstPtr beam_offset_image,
     std::optional<MeasurementModelType> default_measurement_model_type) {
@@ -27,7 +27,7 @@ MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
   return nullptr;
 }
 
-MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
+std::unique_ptr<MeasurementModelBase> wavemap::MeasurementModelFactory::create(
     MeasurementModelType measurement_model_type,
     ProjectorBase::ConstPtr projection_model, Image<>::ConstPtr range_image,
     Image<Vector2D>::ConstPtr beam_offset_image, const param::Value& params) {
@@ -36,7 +36,7 @@ MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
       if (const auto config =
               ContinuousRayConfig::from(params, "measurement_model");
           config) {
-        return std::make_shared<ContinuousRay>(config.value(),
+        return std::make_unique<ContinuousRay>(config.value(),
                                                std::move(projection_model),
                                                std::move(range_image));
       } else {
@@ -49,7 +49,7 @@ MeasurementModelBase::Ptr wavemap::MeasurementModelFactory::create(
       if (const auto config =
               ContinuousBeamConfig::from(params, "measurement_model");
           config) {
-        return std::make_shared<ContinuousBeam>(
+        return std::make_unique<ContinuousBeam>(
             config.value(), std::move(projection_model), std::move(range_image),
             std::move(beam_offset_image));
       } else {

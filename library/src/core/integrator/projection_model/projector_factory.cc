@@ -5,7 +5,7 @@
 #include "wavemap/core/integrator/projection_model/spherical_projector.h"
 
 namespace wavemap {
-ProjectorBase::Ptr wavemap::ProjectorFactory::create(
+std::unique_ptr<ProjectorBase> wavemap::ProjectorFactory::create(
     const param::Value& params,
     std::optional<ProjectorType> default_projector_type) {
   if (const auto type = ProjectorType::from(params, "projection_model"); type) {
@@ -22,14 +22,14 @@ ProjectorBase::Ptr wavemap::ProjectorFactory::create(
   return nullptr;
 }
 
-ProjectorBase::Ptr wavemap::ProjectorFactory::create(
+std::unique_ptr<ProjectorBase> wavemap::ProjectorFactory::create(
     ProjectorType projector_type, const param::Value& params) {
   switch (projector_type) {
     case ProjectorType::kSphericalProjector: {
       if (const auto config =
               SphericalProjectorConfig::from(params, "projection_model");
           config) {
-        return std::make_shared<SphericalProjector>(config.value());
+        return std::make_unique<SphericalProjector>(config.value());
       } else {
         LOG(ERROR) << "Spherical projector config could not be loaded.";
         return nullptr;
@@ -39,7 +39,7 @@ ProjectorBase::Ptr wavemap::ProjectorFactory::create(
       if (const auto config =
               OusterProjectorConfig::from(params, "projection_model");
           config) {
-        return std::make_shared<OusterProjector>(config.value());
+        return std::make_unique<OusterProjector>(config.value());
       } else {
         LOG(ERROR) << "Ouster projector config could not be loaded.";
         return nullptr;
@@ -49,7 +49,7 @@ ProjectorBase::Ptr wavemap::ProjectorFactory::create(
       if (const auto config =
               PinholeCameraProjectorConfig::from(params, "projection_model");
           config) {
-        return std::make_shared<PinholeCameraProjector>(config.value());
+        return std::make_unique<PinholeCameraProjector>(config.value());
       } else {
         LOG(ERROR) << "Pinhole projector config could not be loaded.";
         return nullptr;
