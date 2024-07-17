@@ -11,7 +11,7 @@
 #include <wavemap/core/utils/time/stopwatch.h>
 
 #include "wavemap_ros/inputs/input_base.h"
-#include "wavemap_ros/utils/pointcloud_undistortion/pointcloud_undistorter.h"
+#include "wavemap_ros/utils/pointcloud_undistorter.h"
 
 #ifdef LIVOX_AVAILABLE
 #include <livox_ros_driver2/CustomMsg.h>
@@ -109,7 +109,7 @@ class PointcloudInput : public InputBase {
   PointcloudUndistorter pointcloud_undistorter_;
 
   ros::Subscriber pointcloud_sub_;
-  std::queue<StampedPointcloud> pointcloud_queue_;
+  std::queue<undistortion::StampedPointcloud> pointcloud_queue_;
   void processQueue() override;
 
   static bool hasField(const sensor_msgs::PointCloud2& msg,

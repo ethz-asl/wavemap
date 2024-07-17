@@ -99,8 +99,8 @@ void PointcloudInput::callback(const sensor_msgs::PointCloud2& pointcloud_msg) {
   std::string sensor_frame_id = config_.sensor_frame_id.empty()
                                     ? pointcloud_msg.header.frame_id
                                     : config_.sensor_frame_id;
-  StampedPointcloud stamped_pointcloud{stamp_nsec, std::move(sensor_frame_id),
-                                       num_points};
+  undistortion::StampedPointcloud stamped_pointcloud{
+      stamp_nsec, std::move(sensor_frame_id), num_points};
 
   // Load the points with time information if undistortion is enabled
   bool loaded = false;
