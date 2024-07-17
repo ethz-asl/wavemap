@@ -62,9 +62,8 @@ class ProjectiveIntegrator : public IntegratorBase {
         measurement_model_(std::move(CHECK_NOTNULL(measurement_model))) {}
 
   // Methods to integrate new pointclouds / depth images into the map
-  void integratePointcloud(
-      const PosedPointcloud<Point<3>>& pointcloud) override;
-  void integrateRangeImage(const PosedImage<>& range_image);
+  void integrate(const PosedPointcloud<>& pointcloud) override;
+  void integrate(const PosedImage<>& range_image) override;
 
   // Accessors for debugging and visualization
   // NOTE: These accessors are for introspection only, not for modifying the

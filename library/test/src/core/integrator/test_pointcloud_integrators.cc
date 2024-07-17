@@ -110,8 +110,8 @@ TYPED_TEST(PointcloudIntegratorTypedTest,
     for (int cloud_idx = 0; cloud_idx < kNumPointclouds; ++cloud_idx) {
       const PosedPointcloud<> random_pointcloud =
           TestFixture::getRandomPointcloud(*projection_model);
-      reference_integrator->integratePointcloud(random_pointcloud);
-      evaluated_integrator->integratePointcloud(random_pointcloud);
+      reference_integrator->integrate(random_pointcloud);
+      evaluated_integrator->integrate(random_pointcloud);
       evaluated_occupancy_map->prune();
     }
 
@@ -187,7 +187,7 @@ TEST_F(PointcloudIntegratorTest, RayTracingIntegrator) {
     IntegratorBase::Ptr pointcloud_integrator =
         std::make_shared<RayTracingIntegrator>(ray_tracing_integrator_config,
                                                occupancy_map);
-    pointcloud_integrator->integratePointcloud(random_pointcloud);
+    pointcloud_integrator->integrate(random_pointcloud);
 
     // Check the map
     // NOTE: This test may generate false positives if the pointcloud contains

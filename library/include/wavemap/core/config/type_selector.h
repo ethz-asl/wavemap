@@ -8,7 +8,8 @@
 namespace wavemap {
 namespace param {
 static constexpr auto kTypeSelectorKey = "type";
-}
+std::optional<std::string> getTypeStr(const param::Value& params);
+}  // namespace param
 
 template <typename DerivedTypeSelectorT>
 struct TypeSelector {

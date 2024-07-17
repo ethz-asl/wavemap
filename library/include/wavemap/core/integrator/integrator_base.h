@@ -7,6 +7,7 @@
 #include "wavemap/core/common.h"
 #include "wavemap/core/config/config_base.h"
 #include "wavemap/core/config/type_selector.h"
+#include "wavemap/core/data_structure/image.h"
 #include "wavemap/core/data_structure/pointcloud.h"
 
 namespace wavemap {
@@ -35,7 +36,8 @@ class IntegratorBase {
   IntegratorBase() = default;
   virtual ~IntegratorBase() = default;
 
-  virtual void integratePointcloud(const PosedPointcloud<>& pointcloud) = 0;
+  virtual void integrate(const PosedPointcloud<>& pointcloud) = 0;
+  virtual void integrate(const PosedImage<>& range_image) = 0;
 
  protected:
   static bool isPointcloudValid(const PosedPointcloud<>& pointcloud);

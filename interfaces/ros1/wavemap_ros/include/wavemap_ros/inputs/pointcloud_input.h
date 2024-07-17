@@ -4,8 +4,11 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <vector>
 
+#include <image_transport/image_transport.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <wavemap/core/utils/time/stopwatch.h>
 
 #include "wavemap_ros/inputs/input_base.h"
 #include "wavemap_ros/utils/pointcloud_undistortion/pointcloud_undistorter.h"
@@ -59,22 +62,20 @@ struct PointcloudInputConfig
   //! undistortion.
   int num_undistortion_interpolation_intervals_per_cloud = 100;
 
-  //! Name of the topic on which to republish the motion-undistorted
-  //! pointclouds. Useful to share the undistorted pointclouds with other ROS
-  //! nodes and for debugging. Disabled if not set.
-  std::string reprojected_pointcloud_topic_name;
-  //! Name of the topic on which to republish the range image computed from the
+  //! Name of the topic on which to publish the range image generated from the
   //! pointclouds. Useful for debugging, to see how well the projection model
   //! matches the LiDAR. Disabled if not set.
   std::string projected_range_image_topic_name;
+  //! Name of the topic on which to republish the motion-undistorted
+  //! pointclouds. Useful to share the undistorted pointclouds with other ROS
+  //! nodes and for debugging. Disabled if not set.
+  std::string undistorted_pointcloud_topic_name;
 
   static MemberMap memberMap;
 
   // Conversion to InputHandler base config
   operator InputBaseConfig() const {  // NOLINT
-    return {topic_name, topic_queue_length, processing_retry_period,
-            reprojected_pointcloud_topic_name,
-            projected_range_image_topic_name};
+    return {topic_name, topic_queue_length, processing_retry_period};
   }
 
   bool isValid(bool verbose) const override;
@@ -82,13 +83,12 @@ struct PointcloudInputConfig
 
 class PointcloudInput : public InputBase {
  public:
-  PointcloudInput(
-      const PointcloudInputConfig& config, const param::Value& params,
-      std::string world_frame, MapBase::Ptr occupancy_map,
-      std::shared_ptr<TfTransformer> transformer,
-      std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-      ros::NodeHandle nh_private,
-      std::function<void(const ros::Time&)> map_update_callback = {});
+  PointcloudInput(const PointcloudInputConfig& config,
+                  std::shared_ptr<Pipeline> pipeline,
+                  std::vector<std::string> integrator_names,
+                  std::shared_ptr<TfTransformer> transformer,
+                  std::string world_frame, ros::NodeHandle nh,
+                  ros::NodeHandle nh_private);
 
   InputType getType() const override { return InputType::kPointcloud; }
   PointcloudTopicType getTopicType() const { return config_.topic_type; }
@@ -104,13 +104,24 @@ class PointcloudInput : public InputBase {
  private:
   const PointcloudInputConfig config_;
 
+  Stopwatch integration_timer_;
+
   PointcloudUndistorter pointcloud_undistorter_;
+
   ros::Subscriber pointcloud_sub_;
   std::queue<StampedPointcloud> pointcloud_queue_;
   void processQueue() override;
 
   static bool hasField(const sensor_msgs::PointCloud2& msg,
                        const std::string& field_name);
+
+  void publishProjectedRangeImageIfEnabled(
+      const ros::Time& stamp, const PosedPointcloud<>& posed_pointcloud);
+  image_transport::Publisher projected_range_image_pub_;
+
+  void publishUndistortedPointcloudIfEnabled(
+      const ros::Time& stamp, const PosedPointcloud<>& undistorted_pointcloud);
+  ros::Publisher undistorted_pointcloud_pub_;
 };
 }  // namespace wavemap
 

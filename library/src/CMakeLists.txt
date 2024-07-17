@@ -10,3 +10,4 @@ find_package(tracy QUIET)
 
 add_subdirectory(core)
 add_subdirectory(io)
+add_subdirectory(pipeline)

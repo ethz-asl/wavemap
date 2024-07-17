@@ -15,9 +15,9 @@
 #include <wavemap/core/integrator/integrator_base.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/utils/thread_pool.h>
+#include <wavemap/pipeline/pipeline.h>
 
 #include "wavemap_ros/inputs/input_base.h"
-#include "wavemap_ros/operations/operation_base.h"
 #include "wavemap_ros/utils/logging_level.h"
 #include "wavemap_ros/utils/tf_transformer.h"
 
@@ -49,15 +49,22 @@ class RosServer {
   RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
             const RosServerConfig& config);
 
-  InputBase* addInput(const param::Value& integrator_params,
-                      const ros::NodeHandle& nh, ros::NodeHandle nh_private);
-  OperationBase* addOperation(const param::Value& operation_params,
-                              ros::NodeHandle nh_private);
-
-  void runOperations(const ros::Time& current_time, bool force_run_all = false);
+  void clear();
 
   MapBase::Ptr getMap() { return occupancy_map_; }
   MapBase::ConstPtr getMap() const { return occupancy_map_; }
+
+  Pipeline& getPipeline() { return *pipeline_; }
+  const Pipeline& getPipeline() const { return *pipeline_; }
+
+  MapOperationBase* addOperation(const param::Value& operation_params,
+                                 ros::NodeHandle nh_private);
+
+  InputBase* addInput(const param::Value& integrator_params,
+                      const ros::NodeHandle& nh, ros::NodeHandle nh_private);
+  InputBase* addInput(std::unique_ptr<InputBase> input);
+  const std::vector<std::unique_ptr<InputBase>>& getInputs() { return inputs_; }
+  void clearInputs() { inputs_.clear(); }
 
   bool saveMap(const std::filesystem::path& file_path) const;
   bool loadMap(const std::filesystem::path& file_path);
@@ -71,12 +78,12 @@ class RosServer {
   // Threadpool shared among all input handlers and operations
   std::shared_ptr<ThreadPool> thread_pool_;
 
-  // Transform and depth inputs
-  std::shared_ptr<TfTransformer> transformer_;
-  std::vector<std::unique_ptr<InputBase>> input_handlers_;
+  // Map management pipeline
+  std::shared_ptr<Pipeline> pipeline_;
 
-  // Operations to perform after map updates
-  std::vector<std::unique_ptr<OperationBase>> operations_;
+  // Measurement and pose inputs
+  std::vector<std::unique_ptr<InputBase>> inputs_;
+  std::shared_ptr<TfTransformer> transformer_;
 
   // ROS services
   void advertiseServices(ros::NodeHandle& nh_private);

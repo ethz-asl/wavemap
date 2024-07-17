@@ -1,6 +1,12 @@
 #include "wavemap_ros/inputs/pointcloud_input.h"
 
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/core/eigen.hpp>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <sensor_msgs/point_cloud_conversion.h>
+#include <wavemap/core/data_structure/image.h>
 #include <wavemap/core/integrator/projective/projective_integrator.h>
 #include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap_ros_conversions/time_conversions.h>
@@ -16,8 +22,8 @@ DECLARE_CONFIG_MEMBERS(PointcloudInputConfig,
                       (time_offset)
                       (undistort_motion)
                       (num_undistortion_interpolation_intervals_per_cloud)
-                      (reprojected_pointcloud_topic_name)
-                      (projected_range_image_topic_name));
+                      (projected_range_image_topic_name)
+                      (undistorted_pointcloud_topic_name));
 
 bool PointcloudInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
@@ -30,16 +36,14 @@ bool PointcloudInputConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-PointcloudInput::PointcloudInput(
-    const PointcloudInputConfig& config, const param::Value& params,
-    std::string world_frame, MapBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer,
-    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-    ros::NodeHandle nh_private,
-    std::function<void(const ros::Time&)> map_update_callback)
-    : InputBase(config, params, std::move(world_frame),
-                std::move(occupancy_map), transformer, std::move(thread_pool),
-                nh, nh_private, std::move(map_update_callback)),
+PointcloudInput::PointcloudInput(const PointcloudInputConfig& config,
+                                 std::shared_ptr<Pipeline> pipeline,
+                                 std::vector<std::string> integrator_names,
+                                 std::shared_ptr<TfTransformer> transformer,
+                                 std::string world_frame, ros::NodeHandle nh,
+                                 ros::NodeHandle nh_private)
+    : InputBase(config, std::move(pipeline), std::move(integrator_names),
+                transformer, std::move(world_frame), nh, nh_private),
       config_(config.checkValid()),
       pointcloud_undistorter_(
           transformer,
@@ -49,6 +53,19 @@ PointcloudInput::PointcloudInput(
     pointcloud_sub_ = nh.subscribe(
         config_.topic_name, config_.topic_queue_length, callback_ptr, this);
   });
+
+  // Advertise the range image and undistorted pointcloud publishers if enabled
+  if (!config_.projected_range_image_topic_name.empty()) {
+    image_transport::ImageTransport it_private(nh_private);
+    projected_range_image_pub_ = it_private.advertise(
+        config_.projected_range_image_topic_name, config_.topic_queue_length);
+  }
+  if (!config_.undistorted_pointcloud_topic_name.empty()) {
+    undistorted_pointcloud_pub_ =
+        nh_private.advertise<sensor_msgs::PointCloud2>(
+            config_.undistorted_pointcloud_topic_name,
+            config_.topic_queue_length);
+  }
 }
 
 void PointcloudInput::callback(const sensor_msgs::PointCloud2& pointcloud_msg) {
@@ -234,39 +251,20 @@ void PointcloudInput::processQueue() {
                      << " points. Remaining pointclouds in queue: "
                      << pointcloud_queue_.size() - 1 << ".");
     integration_timer_.start();
-    for (const auto& integrator : integrators_) {
-      integrator->integratePointcloud(posed_pointcloud);
-    }
+    pipeline_->runPipeline(integrator_names_, posed_pointcloud);
     integration_timer_.stop();
     ROS_DEBUG_STREAM("Integrated new pointcloud in "
                      << integration_timer_.getLastEpisodeDuration()
                      << "s. Total integration time: "
                      << integration_timer_.getTotalDuration() << "s.");
 
-    // Notify subscribers that the map was updated
-    if (map_update_callback_) {
-      std::invoke(map_update_callback_,
-                  convert::nanoSecondsToRosTime(oldest_msg.getEndTime()));
-    }
-
     // Publish debugging visualizations
-    if (shouldPublishReprojectedPointcloud()) {
-      publishReprojectedPointcloud(
-          convert::nanoSecondsToRosTime(oldest_msg.getMedianTime()),
-          posed_pointcloud);
-    }
-    if (shouldPublishProjectedRangeImage()) {
-      auto projective_integrator =
-          std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
-      if (projective_integrator) {
-        const auto& range_image = projective_integrator->getPosedRangeImage();
-        if (range_image) {
-          publishProjectedRangeImage(
-              convert::nanoSecondsToRosTime(oldest_msg.getMedianTime()),
-              *range_image);
-        }
-      }
-    }
+    publishProjectedRangeImageIfEnabled(
+        convert::nanoSecondsToRosTime(oldest_msg.getMedianTime()),
+        posed_pointcloud);
+    publishUndistortedPointcloudIfEnabled(
+        convert::nanoSecondsToRosTime(oldest_msg.getMedianTime()),
+        posed_pointcloud);
     ProfilerFrameMarkNamed("Pointcloud");
 
     // Remove the pointcloud from the queue
@@ -281,5 +279,54 @@ bool PointcloudInput::hasField(const sensor_msgs::PointCloud2& msg,
                          const sensor_msgs::PointField& field) {
                        return field.name == field_name;
                      });
+}
+
+void PointcloudInput::publishProjectedRangeImageIfEnabled(
+    const ros::Time& /*stamp*/, const PosedPointcloud<>& /*posed_pointcloud*/) {
+  ProfilerZoneScoped;
+  if (config_.projected_range_image_topic_name.empty() ||
+      projected_range_image_pub_.getNumSubscribers() <= 0) {
+    return;
+  }
+
+  // TODO(victorr): Reimplement this
+  //  auto projective_integrator =
+  //      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
+  //  if (projective_integrator) {
+  //    const auto& range_image = projective_integrator->getPosedRangeImage();
+  //    if (range_image) {
+  //    }
+  //  }
+  //
+  //  cv_bridge::CvImage cv_image;
+  //  cv_image.header.stamp = stamp;
+  //  cv_image.encoding = "32FC1";
+  //  cv::eigen2cv(range_image.getData(), cv_image.image);
+  //  projected_range_image_pub_.publish(cv_image.toImageMsg());
+}
+
+void PointcloudInput::publishUndistortedPointcloudIfEnabled(
+    const ros::Time& stamp, const PosedPointcloud<>& undistorted_pointcloud) {
+  ProfilerZoneScoped;
+  if (config_.undistorted_pointcloud_topic_name.empty() ||
+      undistorted_pointcloud_pub_.getNumSubscribers() <= 0) {
+    return;
+  }
+
+  sensor_msgs::PointCloud pointcloud_msg;
+  pointcloud_msg.header.stamp = stamp;
+  pointcloud_msg.header.frame_id = world_frame_;
+
+  pointcloud_msg.points.reserve(undistorted_pointcloud.size());
+  for (const auto& point : undistorted_pointcloud.getPointsGlobal()) {
+    auto& point_msg = pointcloud_msg.points.emplace_back();
+    point_msg.x = point.x();
+    point_msg.y = point.y();
+    point_msg.z = point.z();
+  }
+
+  sensor_msgs::PointCloud2 pointcloud2_msg;
+  sensor_msgs::convertPointCloudToPointCloud2(pointcloud_msg, pointcloud2_msg);
+  undistorted_pointcloud_pub_.publish(pointcloud2_msg);
 }
 }  // namespace wavemap

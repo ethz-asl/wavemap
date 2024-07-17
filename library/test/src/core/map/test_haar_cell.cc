@@ -133,9 +133,9 @@ TYPED_TEST(HaarCellTest, ParallelAndLiftedBackwardTransformEquivalence) {
     }
     EXPECT_TRUE(results_are_equal)
         << "The parallel implementation's child scales are\n["
-        << print::container(parallel_child_scale_coefficients)
+        << print::sequence(parallel_child_scale_coefficients)
         << "] and the lifted child scales are\n["
-        << print::container(lifted_child_scale_coefficients) << "]";
+        << print::sequence(lifted_child_scale_coefficients) << "]";
   }
 }
 
@@ -189,9 +189,9 @@ TYPED_TEST(HaarCellTest, LosslessReconstruction) {
     }
     EXPECT_TRUE(round_trip_equals_original)
         << "The full original array was\n["
-        << print::container(child_scale_coefficients)
+        << print::sequence(child_scale_coefficients)
         << "] and after the roundtrip\n["
-        << print::container(roundtrip_child_scale_coefficients) << "]";
+        << print::sequence(roundtrip_child_scale_coefficients) << "]";
   }
 }
 
@@ -229,9 +229,9 @@ TYPED_TEST(HaarCellTest, SingleChildForwardTransforms) {
       }
       EXPECT_TRUE(single_child_transform_equals_regular)
           << "The single child transform returned parent coefficients\n["
-          << print::container(parent_from_single_child)
+          << print::sequence(parent_from_single_child)
           << "] while the regular transform returns\n["
-          << print::container(parent_from_sparse_array) << "]";
+          << print::sequence(parent_from_sparse_array) << "]";
     }
   }
 }

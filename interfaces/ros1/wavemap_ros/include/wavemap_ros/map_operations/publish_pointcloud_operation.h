@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_OPERATIONS_PUBLISH_POINTCLOUD_OPERATION_H_
-#define WAVEMAP_ROS_OPERATIONS_PUBLISH_POINTCLOUD_OPERATION_H_
+#ifndef WAVEMAP_ROS_MAP_OPERATIONS_PUBLISH_POINTCLOUD_OPERATION_H_
+#define WAVEMAP_ROS_MAP_OPERATIONS_PUBLISH_POINTCLOUD_OPERATION_H_
 
 #include <memory>
 #include <string>
@@ -9,8 +9,7 @@
 #include <wavemap/core/config/config_base.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/utils/time/time.h>
-
-#include "wavemap_ros/operations/operation_base.h"
+#include <wavemap/pipeline/map_operations/map_operation_base.h>
 
 namespace wavemap {
 /**
@@ -34,32 +33,20 @@ struct PublishPointcloudOperationConfig
   bool isValid(bool verbose) const override;
 };
 
-class PublishPointcloudOperation : public OperationBase {
+class PublishPointcloudOperation : public MapOperationBase {
  public:
   PublishPointcloudOperation(const PublishPointcloudOperationConfig& config,
-                             std::string world_frame,
                              MapBase::Ptr occupancy_map,
+                             std::string world_frame,
                              ros::NodeHandle nh_private);
 
-  OperationType getType() const override {
-    return OperationType::kPublishPointcloud;
-  }
+  bool shouldRun(const ros::Time& current_time);
 
-  bool shouldRun(const ros::Time& current_time) {
-    return config_.once_every < (current_time - last_run_timestamp_).toSec();
-  }
-
-  void run(const ros::Time& current_time, bool force_run) override {
-    if (force_run || shouldRun(current_time)) {
-      publishPointcloud(current_time);
-      last_run_timestamp_ = current_time;
-    }
-  }
+  void run(bool force_run) override;
 
  private:
   const PublishPointcloudOperationConfig config_;
   const std::string world_frame_;
-  const MapBase::Ptr occupancy_map_;
   ros::Time last_run_timestamp_;
 
   // Pointcloud publishing
@@ -69,4 +56,4 @@ class PublishPointcloudOperation : public OperationBase {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_OPERATIONS_PUBLISH_POINTCLOUD_OPERATION_H_
+#endif  // WAVEMAP_ROS_MAP_OPERATIONS_PUBLISH_POINTCLOUD_OPERATION_H_

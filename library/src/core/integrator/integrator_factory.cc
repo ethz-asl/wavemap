@@ -11,7 +11,7 @@
 #include "wavemap/core/integrator/ray_tracing/ray_tracing_integrator.h"
 
 namespace wavemap {
-IntegratorBase::Ptr IntegratorFactory::create(
+std::unique_ptr<IntegratorBase> IntegratorFactory::create(
     const param::Value& params, MapBase::Ptr occupancy_map,
     std::shared_ptr<ThreadPool> thread_pool,
     std::optional<IntegratorType> default_integrator_type) {
@@ -32,7 +32,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
   return nullptr;
 }
 
-IntegratorBase::Ptr IntegratorFactory::create(
+std::unique_ptr<IntegratorBase> IntegratorFactory::create(
     IntegratorType integrator_type, const param::Value& params,
     MapBase::Ptr occupancy_map, std::shared_ptr<ThreadPool> thread_pool) {
   // If we're using a ray tracing based integrator, we can build it directly
@@ -40,7 +40,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
     if (const auto config =
             RayTracingIntegratorConfig::from(params, "integration_method");
         config) {
-      return std::make_shared<RayTracingIntegrator>(config.value(),
+      return std::make_unique<RayTracingIntegrator>(config.value(),
                                                     std::move(occupancy_map));
     } else {
       LOG(ERROR) << "Ray tracing integrator config could not be loaded.";
@@ -83,7 +83,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
   // Assemble the projective integrator
   switch (integrator_type) {
     case IntegratorType::kFixedResolutionIntegrator: {
-      return std::make_shared<FixedResolutionIntegrator>(
+      return std::make_unique<FixedResolutionIntegrator>(
           integrator_config.value(), projection_model, posed_range_image,
           beam_offset_image, measurement_model, std::move(occupancy_map));
     }
@@ -91,7 +91,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       auto octree_map =
           std::dynamic_pointer_cast<VolumetricOctree>(occupancy_map);
       if (octree_map) {
-        return std::make_shared<CoarseToFineIntegrator>(
+        return std::make_unique<CoarseToFineIntegrator>(
             integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model, std::move(octree_map));
       } else {
@@ -106,7 +106,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       auto wavelet_map =
           std::dynamic_pointer_cast<WaveletOctree>(occupancy_map);
       if (wavelet_map) {
-        return std::make_shared<WaveletIntegrator>(
+        return std::make_unique<WaveletIntegrator>(
             integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model, std::move(wavelet_map));
       } else {
@@ -121,7 +121,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       auto hashed_wavelet_map =
           std::dynamic_pointer_cast<HashedWaveletOctree>(occupancy_map);
       if (hashed_wavelet_map) {
-        return std::make_shared<HashedWaveletIntegrator>(
+        return std::make_unique<HashedWaveletIntegrator>(
             integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model, std::move(hashed_wavelet_map),
             std::move(thread_pool));
@@ -137,7 +137,7 @@ IntegratorBase::Ptr IntegratorFactory::create(
       auto hashed_chunked_wavelet_map =
           std::dynamic_pointer_cast<HashedChunkedWaveletOctree>(occupancy_map);
       if (hashed_chunked_wavelet_map) {
-        return std::make_shared<HashedChunkedWaveletIntegrator>(
+        return std::make_unique<HashedChunkedWaveletIntegrator>(
             integrator_config.value(), projection_model, posed_range_image,
             beam_offset_image, measurement_model,
             std::move(hashed_chunked_wavelet_map), std::move(thread_pool));

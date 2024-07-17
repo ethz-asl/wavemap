@@ -15,8 +15,7 @@ bool RayTracingIntegratorConfig::isValid(bool verbose) const {
   return is_valid;
 }
 
-void RayTracingIntegrator::integratePointcloud(
-    const PosedPointcloud<>& pointcloud) {
+void RayTracingIntegrator::integrate(const PosedPointcloud<>& pointcloud) {
   if (!isPointcloudValid(pointcloud)) {
     return;
   }

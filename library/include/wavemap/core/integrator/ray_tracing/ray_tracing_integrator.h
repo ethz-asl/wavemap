@@ -33,7 +33,13 @@ class RayTracingIntegrator : public IntegratorBase {
       : config_(config.checkValid()),
         occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
 
-  void integratePointcloud(const PosedPointcloud<>& pointcloud) override;
+  void integrate(const PosedPointcloud<>& pointcloud) override;
+
+  // TODO(victorr): Remove the RayTracingIntegrator and move
+  //                ProjectiveIntegrator interface directly into IntegratorBase
+  void integrate(const PosedImage<>& /*range_image*/) override {
+    LOG(FATAL) << "Not implemented";
+  }
 
  private:
   using MeasurementModelType = ConstantRay;

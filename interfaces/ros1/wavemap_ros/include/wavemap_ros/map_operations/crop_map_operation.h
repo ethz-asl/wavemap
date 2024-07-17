@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_OPERATIONS_CROP_MAP_OPERATION_H_
-#define WAVEMAP_ROS_OPERATIONS_CROP_MAP_OPERATION_H_
+#ifndef WAVEMAP_ROS_MAP_OPERATIONS_CROP_MAP_OPERATION_H_
+#define WAVEMAP_ROS_MAP_OPERATIONS_CROP_MAP_OPERATION_H_
 
 #include <memory>
 #include <string>
@@ -7,8 +7,8 @@
 
 #include <wavemap/core/config/config_base.h>
 #include <wavemap/core/map/map_base.h>
+#include <wavemap/pipeline/map_operations/map_operation_base.h>
 
-#include "wavemap_ros/operations/operation_base.h"
 #include "wavemap_ros/utils/tf_transformer.h"
 
 namespace wavemap {
@@ -32,32 +32,23 @@ struct CropMapOperationConfig : public ConfigBase<CropMapOperationConfig, 3> {
   bool isValid(bool verbose) const override;
 };
 
-class CropMapOperation : public OperationBase {
+class CropMapOperation : public MapOperationBase {
  public:
   CropMapOperation(const CropMapOperationConfig& config,
-                   std::string world_frame,
+                   MapBase::Ptr occupancy_map,
                    std::shared_ptr<TfTransformer> transformer,
-                   MapBase::Ptr occupancy_map)
-      : config_(config.checkValid()),
-        world_frame_(std::move(world_frame)),
-        transformer_(std::move(transformer)),
-        occupancy_map_(std::move(occupancy_map)) {}
+                   std::string world_frame);
 
-  OperationType getType() const override { return OperationType::kCropMap; }
+  bool shouldRun(const ros::Time& current_time);
 
-  bool shouldRun(const ros::Time& current_time) {
-    return config_.once_every < (current_time - last_run_timestamp_).toSec();
-  }
-
-  void run(const ros::Time& current_time, bool force_run) override;
+  void run(bool force_run) override;
 
  private:
   const CropMapOperationConfig config_;
-  const std::string world_frame_;
   const std::shared_ptr<TfTransformer> transformer_;
-  const MapBase::Ptr occupancy_map_;
+  const std::string world_frame_;
   ros::Time last_run_timestamp_;
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_OPERATIONS_CROP_MAP_OPERATION_H_
+#endif  // WAVEMAP_ROS_MAP_OPERATIONS_CROP_MAP_OPERATION_H_

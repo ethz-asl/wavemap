@@ -5,63 +5,79 @@
 
 namespace wavemap {
 std::unique_ptr<InputBase> InputFactory::create(
-    const param::Value& params, std::string world_frame,
-    MapBase::Ptr occupancy_map, std::shared_ptr<TfTransformer> transformer,
-    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-    ros::NodeHandle nh_private, std::optional<InputType> default_input_type,
-    std::function<void(const ros::Time&)> map_update_callback) {
+    const param::Value& params, std::shared_ptr<Pipeline> pipeline,
+    std::shared_ptr<TfTransformer> transformer, std::string world_frame,
+    ros::NodeHandle nh, ros::NodeHandle nh_private) {
   if (const auto type = InputType::from(params); type) {
-    return create(type.value(), params, world_frame, occupancy_map,
-                  std::move(transformer), std::move(thread_pool), nh,
-                  nh_private, std::move(map_update_callback));
+    return create(type.value(), params, std::move(pipeline),
+                  std::move(transformer), std::move(world_frame), nh,
+                  nh_private);
   }
 
-  if (default_input_type.has_value()) {
-    ROS_WARN_STREAM("Default type \"" << default_input_type.value().toStr()
-                                      << "\" will be created instead.");
-    return create(default_input_type.value(), params, std::move(world_frame),
-                  std::move(occupancy_map), std::move(transformer),
-                  std::move(thread_pool), nh, nh_private,
-                  std::move(map_update_callback));
-  }
-
-  ROS_ERROR("No default was set. Returning nullptr.");
+  LOG(ERROR) << "Could not create input handler. Returning nullptr.";
   return nullptr;
 }
 
 std::unique_ptr<InputBase> InputFactory::create(
-    InputType input_type, const param::Value& params, std::string world_frame,
-    MapBase::Ptr occupancy_map, std::shared_ptr<TfTransformer> transformer,
-    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-    ros::NodeHandle nh_private,
-    std::function<void(const ros::Time&)> map_update_callback) {
+    InputType input_type, const param::Value& params,
+    std::shared_ptr<Pipeline> pipeline,
+    std::shared_ptr<TfTransformer> transformer, std::string world_frame,
+    ros::NodeHandle nh, ros::NodeHandle nh_private) {
   if (!input_type.isValid()) {
     ROS_ERROR("Received request to create input handler with invalid type.");
+    return nullptr;
+  }
+
+  // Get the integrator names
+  std::vector<std::string> integrator_names;
+  if (const auto names_param = params.getChild("measurement_integrator");
+      names_param) {
+    if (const auto name_str = names_param->as<std::string>(); name_str) {
+      integrator_names.emplace_back(name_str.value());
+    } else if (const auto name_arr = names_param->as<param::Array>();
+               name_arr) {
+      size_t name_idx = 0u;
+      for (const auto& name_el : name_arr.value()) {
+        if (const auto name_el_str = name_el.as<std::string>(); name_el_str) {
+          integrator_names.emplace_back(name_el_str.value());
+        } else {
+          ROS_WARN_STREAM(
+              "Skipping \"measurement_integrator\" element at index "
+              << name_idx << ". Could not be parsed as string.");
+        }
+        ++name_idx;
+      }
+    } else {
+      ROS_ERROR(
+          "Param \"measurement_integrator\" should be a string "
+          "or list of strings.");
+    }
+  } else {
+    ROS_ERROR(
+        "No integrator name(s) specified. Provide them by setting param  "
+        "\"measurement_integrator\" to a string or list of strings.");
+  }
+  if (integrator_names.empty()) {
+    ROS_ERROR("Could not create input. Returning nullptr.");
     return nullptr;
   }
 
   // Create the input handler
   switch (input_type) {
     case InputType::kPointcloud:
-      if (const auto config = PointcloudInputConfig::from(params, "general");
-          config) {
+      if (const auto config = PointcloudInputConfig::from(params); config) {
         return std::make_unique<PointcloudInput>(
-            config.value(), params, std::move(world_frame),
-            std::move(occupancy_map), std::move(transformer),
-            std::move(thread_pool), nh, nh_private,
-            std::move(map_update_callback));
+            config.value(), std::move(pipeline), std::move(integrator_names),
+            std::move(transformer), std::move(world_frame), nh, nh_private);
       } else {
         ROS_ERROR("Pointcloud input handler config could not be loaded.");
         return nullptr;
       }
     case InputType::kDepthImage:
-      if (const auto config = DepthImageInputConfig::from(params, "general");
-          config) {
+      if (const auto config = DepthImageInputConfig::from(params); config) {
         return std::make_unique<DepthImageInput>(
-            config.value(), params, std::move(world_frame),
-            std::move(occupancy_map), std::move(transformer),
-            std::move(thread_pool), nh, nh_private,
-            std::move(map_update_callback));
+            config.value(), std::move(pipeline), std::move(integrator_names),
+            std::move(transformer), std::move(world_frame), nh, nh_private);
       } else {
         ROS_ERROR("Depth image input handler config could not be loaded.");
         return nullptr;

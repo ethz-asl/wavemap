@@ -20,12 +20,10 @@ cs_add_library(${PROJECT_NAME}
     src/inputs/input_base.cc
     src/inputs/input_factory.cc
     src/inputs/pointcloud_input.cc
-    src/operations/crop_map_operation.cc
-    src/operations/operation_factory.cc
-    src/operations/prune_map_operation.cc
-    src/operations/publish_map_operation.cc
-    src/operations/publish_pointcloud_operation.cc
-    src/operations/threshold_map_operation.cc
+    src/map_operations/crop_map_operation.cc
+    src/map_operations/map_ros_operation_factory.cc
+    src/map_operations/publish_map_operation.cc
+    src/map_operations/publish_pointcloud_operation.cc
     src/utils/pointcloud_undistortion/pointcloud_undistorter.cc
     src/utils/rosbag_processor.cc
     src/utils/tf_transformer.cc

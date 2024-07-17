@@ -10,7 +10,7 @@
 #include <sensor_msgs/Image.h>
 #include <wavemap/core/data_structure/image.h>
 #include <wavemap/core/integrator/projective/projective_integrator.h>
-#include <wavemap/core/utils/thread_pool.h>
+#include <wavemap/core/utils/time/stopwatch.h>
 
 #include "wavemap_ros/inputs/input_base.h"
 
@@ -18,7 +18,7 @@ namespace wavemap {
 /**
  * Config struct for the depth image input handler.
  */
-struct DepthImageInputConfig : public ConfigBase<DepthImageInputConfig, 10> {
+struct DepthImageInputConfig : public ConfigBase<DepthImageInputConfig, 9> {
   //! Name of the ROS topic to subscribe to.
   std::string topic_name = "scan";
   //! Queue length to use when subscribing to the ROS topic.
@@ -46,21 +46,16 @@ struct DepthImageInputConfig : public ConfigBase<DepthImageInputConfig, 10> {
   //! known (e.g. through calibration) but not corrected by the sensor's driver.
   Seconds<FloatingPoint> time_offset = 0.f;
 
-  //! Name of the topic on which to republish the depth images as pointclouds.
+  //! Name of the topic on which to publish the depth images as pointclouds.
   //! Useful to share the pointclouds with other ROS nodes and for debugging.
   //! Disabled if not set.
-  std::string reprojected_pointcloud_topic_name;
-  //! Name of the topic on which to republish the range image computed from
-  //! the pointclouds. Useful for debugging. Disabled if not set.
-  std::string projected_range_image_topic_name;
+  std::string projected_pointcloud_topic_name;
 
   static MemberMap memberMap;
 
   // Conversion to InputHandler base config
   operator InputBaseConfig() const {  // NOLINT
-    return {topic_name, topic_queue_length, processing_retry_period,
-            reprojected_pointcloud_topic_name,
-            projected_range_image_topic_name};
+    return {topic_name, topic_queue_length, processing_retry_period};
   }
 
   bool isValid(bool verbose) const override;
@@ -68,13 +63,12 @@ struct DepthImageInputConfig : public ConfigBase<DepthImageInputConfig, 10> {
 
 class DepthImageInput : public InputBase {
  public:
-  DepthImageInput(
-      const DepthImageInputConfig& config, const param::Value& params,
-      std::string world_frame, MapBase::Ptr occupancy_map,
-      std::shared_ptr<TfTransformer> transformer,
-      std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-      ros::NodeHandle nh_private,
-      std::function<void(const ros::Time&)> map_update_callback = {});
+  DepthImageInput(const DepthImageInputConfig& config,
+                  std::shared_ptr<Pipeline> pipeline,
+                  std::vector<std::string> integrator_names,
+                  std::shared_ptr<TfTransformer> transformer,
+                  std::string world_frame, ros::NodeHandle nh,
+                  ros::NodeHandle nh_private);
 
   InputType getType() const override { return InputType::kDepthImage; }
 
@@ -87,13 +81,20 @@ class DepthImageInput : public InputBase {
 
  private:
   const DepthImageInputConfig config_;
-  std::vector<ProjectiveIntegrator::Ptr> scanwise_integrators_;
+
+  Stopwatch integration_timer_;
 
   image_transport::Subscriber depth_image_sub_;
   std::queue<sensor_msgs::Image> depth_image_queue_;
   void processQueue() override;
 
-  PosedPointcloud<> reproject(const PosedImage<>& posed_range_image);
+  void publishProjectedPointcloudIfEnabled(
+      const ros::Time& stamp,
+      const PosedImage<FloatingPoint>& posed_depth_image);
+  static PosedPointcloud<Point3D> project(
+      const PosedImage<>& posed_depth_image,
+      const ProjectorBase& projection_model);
+  ros::Publisher projected_pointcloud_pub_;
 };
 }  // namespace wavemap
 

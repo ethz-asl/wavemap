@@ -5,7 +5,40 @@
 #include <string>
 #include <utility>
 
+#include "wavemap/core/utils/print/container.h"
+
 namespace wavemap {
+inline std::optional<std::string> param::getTypeStr(
+    const param::Value& params) {
+  // If the param is of type string, read the name directly
+  if (params.holds<std::string>()) {
+    return params.as<std::string>().value();
+  }
+
+  // If the param is of type Map, try to read the name from its "type" subkey
+  if (params.holds<param::Map>()) {
+    const auto type_param = params.getChild(param::kTypeSelectorKey);
+    if (!type_param) {
+      LOG(WARNING) << "Nested type name (\"" << param::kTypeSelectorKey
+                   << "\") is not set.";
+      return std::nullopt;
+    }
+
+    if (!type_param->holds<std::string>()) {
+      LOG(WARNING) << "Nested type name (\"" << param::kTypeSelectorKey
+                   << "\") is not a string.";
+      return std::nullopt;
+    }
+
+    return type_param->as<std::string>().value();
+  }
+
+  LOG(WARNING) << "Type names can only be read from params of type string, "
+                  "or from param maps (dictionary) with a subkey named \""
+               << param::kTypeSelectorKey << "\".";
+  return std::nullopt;
+}
+
 template <typename DerivedTypeSelectorT>
 TypeSelector<DerivedTypeSelectorT>::TypeSelector(
     const TypeSelector::TypeName& type_name) {
@@ -71,47 +104,21 @@ template <typename DerivedNamedTypeSetT>
 std::optional<DerivedNamedTypeSetT> TypeSelector<DerivedNamedTypeSetT>::from(
     const param::Value& params) {
   // Read the type name from params
-  std::string type_name;
-  if (params.holds<std::string>()) {
-    // If the param is of type string, read the name directly
-    type_name = params.as<std::string>().value();
-  } else if (params.holds<param::Map>()) {
-    // If the param is of type Map, try to read the name from its "type" subkey
-    const auto type_param = params.getChild(param::kTypeSelectorKey);
-    if (!type_param) {
-      LOG(WARNING) << "Nested type name (\"" << param::kTypeSelectorKey
-                   << "\") is not set.";
-      return std::nullopt;
-    }
-
-    if (!type_param->holds<std::string>()) {
-      LOG(WARNING) << "Nested type name (\"" << param::kTypeSelectorKey
-                   << "\") is not a string.";
-      return std::nullopt;
-    }
-
-    type_name = type_param->as<std::string>().value();
-  } else {
-    LOG(WARNING) << "Type names can only be read from params of type string, "
-                    "or from param maps (dictionary) with a subkey named \""
-                 << param::kTypeSelectorKey << "\".";
+  const auto type_name = param::getTypeStr(params);
+  if (!type_name) {
+    // No type name was defined
+    // NOTE: A message explaining the failure is already printed by getTypeStr.
     return std::nullopt;
   }
 
   // Match the type name to a type id
-  DerivedNamedTypeSetT type_id(type_name);
+  DerivedNamedTypeSetT type_id(type_name.value());
   if (!type_id.isValid()) {
     LOG(WARNING)
         << "Value of type name param \"" << param::kTypeSelectorKey << "\": \""
-        << type_name
+        << type_name.value()
         << "\" does not match a known type name. Supported type names are ["
-        << std::accumulate(std::next(DerivedNamedTypeSetT::names.cbegin()),
-                           DerivedNamedTypeSetT::names.cend(),
-                           std::string(DerivedNamedTypeSetT::names[0]),
-                           [](auto str, const auto& el) -> std::string {
-                             return std::move(str) + ", " + std::string(el);
-                           })
-        << "].";
+        << print::sequence(DerivedNamedTypeSetT::names) << "].";
     return std::nullopt;
   }
 

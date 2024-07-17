@@ -36,30 +36,28 @@ int main(int argc, char** argv) {
   }
 
   // Setup input handlers
-  const param::Array integrator_params_array =
-      param::convert::toParamArray(nh_private, "inputs");
-  for (const auto& integrator_params : integrator_params_array) {
-    InputBase* input_handler =
-        wavemap_server.addInput(integrator_params, nh, nh_private);
-    if (input_handler) {
-      switch (input_handler->getType()) {
-        case InputType::kPointcloud: {
-          auto pointcloud_handler =
-              dynamic_cast<PointcloudInput*>(input_handler);
-          PointcloudInput::registerCallback(
-              pointcloud_handler->getTopicType(), [&](auto callback_ptr) {
-                rosbag_processor.addCallback(input_handler->getTopicName(),
-                                             callback_ptr, pointcloud_handler);
-              });
-        }
-          continue;
-        case InputType::kDepthImage:
-          rosbag_processor.addCallback<const sensor_msgs::Image&>(
-              input_handler->getTopicName(), &DepthImageInput::callback,
-              dynamic_cast<DepthImageInput*>(input_handler));
-          continue;
-      }
+  size_t input_idx = 0u;
+  for (const auto& input : wavemap_server.getInputs()) {
+    if (auto pointcloud_input = dynamic_cast<PointcloudInput*>(input.get());
+        pointcloud_input) {
+      PointcloudInput::registerCallback(
+          pointcloud_input->getTopicType(), [&](auto callback_ptr) {
+            rosbag_processor.addCallback(input->getTopicName(), callback_ptr,
+                                         pointcloud_input);
+          });
+    } else if (auto depth_image_input =
+                   dynamic_cast<DepthImageInput*>(input.get());
+               depth_image_input) {
+      rosbag_processor.addCallback<const sensor_msgs::Image&>(
+          input->getTopicName(), &DepthImageInput::callback, depth_image_input);
+    } else {
+      ROS_WARN_STREAM(
+          "Failed to register callback for input number "
+          << input_idx << ", with topic \"" << input->getTopicName()
+          << "\". Support for inputs of type \"" << input->getType().toStr()
+          << "\" is not yet implemented in the rosbag processing script.");
     }
+    ++input_idx;
   }
 
   // Republish TFs
@@ -79,7 +77,7 @@ int main(int argc, char** argv) {
   }
 
   wavemap_server.getMap()->prune();
-  wavemap_server.runOperations(ros::Time::now(), /*force_run_all*/ true);
+  wavemap_server.getPipeline().runOperations(/*force_run_all*/ true);
 
   if (nh_private.param("keep_alive", false)) {
     ros::spin();

@@ -11,12 +11,12 @@
 namespace wavemap {
 class IntegratorFactory {
  public:
-  static IntegratorBase::Ptr create(
+  static std::unique_ptr<IntegratorBase> create(
       const param::Value& params, MapBase::Ptr occupancy_map,
       std::shared_ptr<ThreadPool> thread_pool = nullptr,
       std::optional<IntegratorType> default_integrator_type = std::nullopt);
 
-  static IntegratorBase::Ptr create(
+  static std::unique_ptr<IntegratorBase> create(
       IntegratorType integrator_type, const param::Value& params,
       MapBase::Ptr occupancy_map,
       std::shared_ptr<ThreadPool> thread_pool = nullptr);

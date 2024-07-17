@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_OPERATIONS_PUBLISH_MAP_OPERATION_H_
-#define WAVEMAP_ROS_OPERATIONS_PUBLISH_MAP_OPERATION_H_
+#ifndef WAVEMAP_ROS_MAP_OPERATIONS_PUBLISH_MAP_OPERATION_H_
+#define WAVEMAP_ROS_MAP_OPERATIONS_PUBLISH_MAP_OPERATION_H_
 
 #include <memory>
 #include <string>
@@ -9,8 +9,7 @@
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/utils/thread_pool.h>
 #include <wavemap/core/utils/time/time.h>
-
-#include "wavemap_ros/operations/operation_base.h"
+#include <wavemap/pipeline/map_operations/map_operation_base.h>
 
 namespace wavemap {
 /**
@@ -36,31 +35,21 @@ struct PublishMapOperationConfig
   bool isValid(bool verbose) const override;
 };
 
-class PublishMapOperation : public OperationBase {
+class PublishMapOperation : public MapOperationBase {
  public:
   PublishMapOperation(const PublishMapOperationConfig& config,
-                      std::string world_frame, MapBase::Ptr occupancy_map,
+                      MapBase::Ptr occupancy_map,
                       std::shared_ptr<ThreadPool> thread_pool,
-                      ros::NodeHandle nh_private);
+                      std::string world_frame, ros::NodeHandle nh_private);
 
-  OperationType getType() const override { return OperationType::kPublishMap; }
+  bool shouldRun(const ros::Time& current_time);
 
-  bool shouldRun(const ros::Time& current_time) {
-    return config_.once_every < (current_time - last_run_timestamp_).toSec();
-  }
-
-  void run(const ros::Time& current_time, bool force_run) override {
-    if (force_run || shouldRun(current_time)) {
-      publishMap(current_time, false);
-      last_run_timestamp_ = current_time;
-    }
-  }
+  void run(bool force_run) override;
 
  private:
   const PublishMapOperationConfig config_;
-  const std::string world_frame_;
-  const MapBase::Ptr occupancy_map_;
   const std::shared_ptr<ThreadPool> thread_pool_;
+  const std::string world_frame_;
   ros::Time last_run_timestamp_;
 
   // Map publishing
@@ -87,6 +76,6 @@ class PublishMapOperation : public OperationBase {
 };
 }  // namespace wavemap
 
-#include "wavemap_ros/operations/impl/publish_map_operation_inl.h"
+#include "wavemap_ros/map_operations/impl/publish_map_operation_inl.h"
 
-#endif  // WAVEMAP_ROS_OPERATIONS_PUBLISH_MAP_OPERATION_H_
+#endif  // WAVEMAP_ROS_MAP_OPERATIONS_PUBLISH_MAP_OPERATION_H_

@@ -366,10 +366,10 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
         std::cerr << "For\n-W_aabb: " << test.W_aabb.toString() << "\n-T_W_C:\n"
                   << test.T_W_C << "\nWith C_cell_corners:\n"
                   << C_t_C_corners << "\nsensor X-coordinates:\n"
-                  << print::container(corners_x) << "\nsensor Y-coordinates:\n"
-                  << print::container(corners_y) << print::container(corners_x)
+                  << print::sequence(corners_x) << "\nsensor Y-coordinates:\n"
+                  << print::sequence(corners_y) << print::sequence(corners_x)
                   << "\nsensor Z-coordinates:\n"
-                  << print::container(corners_z)
+                  << print::sequence(corners_z)
                   << "\nand reference min/max sensor coordinates: "
                   << print::eigen::oneLine(reference_aabb.min) << ", "
                   << print::eigen::oneLine(reference_aabb.max)

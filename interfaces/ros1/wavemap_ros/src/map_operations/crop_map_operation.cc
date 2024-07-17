@@ -1,4 +1,4 @@
-#include "wavemap_ros/operations/crop_map_operation.h"
+#include "wavemap_ros/map_operations/crop_map_operation.h"
 
 #include <wavemap/core/map/hashed_blocks.h>
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
@@ -20,7 +20,21 @@ bool CropMapOperationConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-void CropMapOperation::run(const ros::Time& current_time, bool force_run) {
+CropMapOperation::CropMapOperation(const CropMapOperationConfig& config,
+                                   MapBase::Ptr occupancy_map,
+                                   std::shared_ptr<TfTransformer> transformer,
+                                   std::string world_frame)
+    : MapOperationBase(std::move(occupancy_map)),
+      config_(config.checkValid()),
+      transformer_(std::move(transformer)),
+      world_frame_(std::move(world_frame)) {}
+
+bool CropMapOperation::shouldRun(const ros::Time& current_time) {
+  return config_.once_every < (current_time - last_run_timestamp_).toSec();
+}
+
+void CropMapOperation::run(bool force_run) {
+  const ros::Time current_time = ros::Time::now();
   if (!force_run && !shouldRun(current_time)) {
     return;
   }

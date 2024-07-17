@@ -3,11 +3,12 @@
 #include <std_srvs/Trigger.h>
 #include <wavemap/core/map/map_factory.h>
 #include <wavemap/io/file_conversions.h>
+#include <wavemap/pipeline/map_operations/map_operation_factory.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
 #include "wavemap_ros/inputs/input_factory.h"
-#include "wavemap_ros/operations/operation_factory.h"
+#include "wavemap_ros/map_operations/map_ros_operation_factory.h"
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(RosServerConfig,
@@ -57,53 +58,98 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   thread_pool_ = std::make_shared<ThreadPool>(config_.num_threads);
   CHECK_NOTNULL(thread_pool_);
 
-  // Setup input handlers
-  const param::Array integrator_params_array =
-      param::convert::toParamArray(nh_private, "inputs");
-  for (const auto& integrator_params : integrator_params_array) {
-    addInput(integrator_params, nh, nh_private);
+  // Setup the pipeline
+  pipeline_ = std::make_shared<Pipeline>(occupancy_map_, thread_pool_);
+  CHECK_NOTNULL(pipeline_);
+
+  // Add map operations to pipeline
+  const param::Array map_operation_param_array =
+      param::convert::toParamArray(nh_private, "map_operations_pipeline");
+  for (const auto& operation_params : map_operation_param_array) {
+    addOperation(operation_params, nh_private);
   }
 
-  // Setup operation handlers
-  const param::Array operation_params_array =
-      param::convert::toParamArray(nh_private, "operations_pipeline");
-  for (const auto& operation_params : operation_params_array) {
-    addOperation(operation_params, nh_private);
+  // Add measurement integrators to pipeline
+  const param::Map measurement_integrator_param_map =
+      param::convert::toParamMap(nh_private, "measurement_integrators");
+  for (const auto& [integrator_name, integrator_params] :
+       measurement_integrator_param_map) {
+    pipeline_->addIntegrator(integrator_name, integrator_params);
+  }
+
+  // Setup measurement inputs
+  const param::Array input_param_array =
+      param::convert::toParamArray(nh_private, "inputs");
+  for (const auto& integrator_params : input_param_array) {
+    addInput(integrator_params, nh, nh_private);
   }
 
   // Connect to ROS
   advertiseServices(nh_private);
 }
 
+void RosServer::clear() {
+  clearInputs();
+  if (pipeline_) {
+    pipeline_->clear();
+  }
+  if (occupancy_map_) {
+    occupancy_map_->clear();
+  }
+}
+
 InputBase* RosServer::addInput(const param::Value& integrator_params,
                                const ros::NodeHandle& nh,
                                ros::NodeHandle nh_private) {
-  auto input_handler = InputFactory::create(
-      integrator_params, config_.world_frame, occupancy_map_, transformer_,
-      thread_pool_, nh, nh_private, std::nullopt,
-      [this](const ros::Time& current_time) { runOperations(current_time); });
-  if (input_handler) {
-    return input_handlers_.emplace_back(std::move(input_handler)).get();
+  auto input = InputFactory::create(integrator_params, pipeline_, transformer_,
+                                    config_.world_frame, nh, nh_private);
+  return addInput(std::move(input));
+}
+
+InputBase* RosServer::addInput(std::unique_ptr<InputBase> input) {
+  if (input) {
+    return inputs_.emplace_back(std::move(input)).get();
   }
+
+  ROS_WARN("Ignoring request to add input. Input is null pointer.");
   return nullptr;
 }
 
-OperationBase* RosServer::addOperation(const param::Value& operation_params,
-                                       ros::NodeHandle nh_private) {
-  auto operation_handler = OperationFactory::create(
-      operation_params, config_.world_frame, occupancy_map_, transformer_,
-      thread_pool_, nh_private);
-  if (operation_handler) {
-    return operations_.emplace_back(std::move(operation_handler)).get();
+MapOperationBase* RosServer::addOperation(const param::Value& operation_params,
+                                          ros::NodeHandle nh_private) {
+  // Read the operation type name from params
+  const auto type_name = param::getTypeStr(operation_params);
+  if (!type_name) {
+    // No type name was defined
+    // NOTE: A message explaining the failure is already printed by getTypeStr.
+    ROS_WARN_STREAM(
+        "Could not add operation. No operation type specified. "
+        "Please set it by adding a param with key \""
+        << param::kTypeSelectorKey << "\".");
+    return nullptr;
   }
-  return nullptr;
-}
 
-void RosServer::runOperations(const ros::Time& current_time,
-                              bool force_run_all) {
-  for (auto& operation : operations_) {
-    operation->run(current_time, force_run_all);
+  if (const auto type = MapRosOperationType{type_name.value()};
+      type.isValid()) {
+    auto operation = MapRosOperationFactory::create(
+        type, operation_params, occupancy_map_, thread_pool_, transformer_,
+        config_.world_frame, nh_private);
+    return pipeline_->addOperation(std::move(operation));
   }
+
+  if (const auto type = MapOperationType{type_name.value()}; type.isValid()) {
+    auto operation =
+        MapOperationFactory::create(type, operation_params, occupancy_map_);
+    return pipeline_->addOperation(std::move(operation));
+  }
+
+  LOG(WARNING) << "Value of type name param \"" << param::kTypeSelectorKey
+               << "\": \"" << type_name.value()
+               << "\" does not match a known operation type name. Supported "
+                  "type names are ["
+               << print::sequence(MapRosOperationType::names) << ", "
+               << print::sequence(MapOperationType::names) << "].";
+  return nullptr;
 }
 
 bool RosServer::saveMap(const std::filesystem::path& file_path) const {

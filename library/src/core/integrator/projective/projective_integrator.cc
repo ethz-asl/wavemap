@@ -21,8 +21,7 @@ bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
   return is_valid;
 }
 
-void ProjectiveIntegrator::integratePointcloud(
-    const PosedPointcloud<Point<3>>& pointcloud) {
+void ProjectiveIntegrator::integrate(const PosedPointcloud<>& pointcloud) {
   ProfilerZoneScoped;
   if (!isPointcloudValid(pointcloud)) {
     return;
@@ -31,8 +30,7 @@ void ProjectiveIntegrator::integratePointcloud(
   updateMap();
 }
 
-void ProjectiveIntegrator::integrateRangeImage(
-    const PosedImage<>& range_image) {
+void ProjectiveIntegrator::integrate(const PosedImage<>& range_image) {
   ProfilerZoneScoped;
   importRangeImage(range_image);
   updateMap();

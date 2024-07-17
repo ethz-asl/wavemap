@@ -1,4 +1,4 @@
-#include "wavemap_ros/operations/publish_map_operation.h"
+#include "wavemap_ros/map_operations/publish_map_operation.h"
 
 #include <std_srvs/Empty.h>
 #include <wavemap/core/utils/profiler_interface.h>
@@ -22,13 +22,13 @@ bool PublishMapOperationConfig::isValid(bool verbose) const {
 }
 
 PublishMapOperation::PublishMapOperation(
-    const PublishMapOperationConfig& config, std::string world_frame,
-    MapBase::Ptr occupancy_map, std::shared_ptr<ThreadPool> thread_pool,
+    const PublishMapOperationConfig& config, MapBase::Ptr occupancy_map,
+    std::shared_ptr<ThreadPool> thread_pool, std::string world_frame,
     ros::NodeHandle nh_private)
-    : config_(config.checkValid()),
-      world_frame_(std::move(world_frame)),
-      occupancy_map_(std::move(occupancy_map)),
-      thread_pool_(std::move(thread_pool)) {
+    : MapOperationBase(std::move(occupancy_map)),
+      config_(config.checkValid()),
+      thread_pool_(std::move(thread_pool)),
+      world_frame_(std::move(world_frame)) {
   map_pub_ = nh_private.advertise<wavemap_msgs::Map>(config_.topic, 10);
   republish_whole_map_srv_ =
       nh_private.advertiseService<std_srvs::Empty::Request,
@@ -38,6 +38,18 @@ PublishMapOperation::PublishMapOperation(
             publishMap(ros::Time::now(), true);
             return true;
           });
+}
+
+bool PublishMapOperation::shouldRun(const ros::Time& current_time) {
+  return config_.once_every < (current_time - last_run_timestamp_).toSec();
+}
+
+void PublishMapOperation::run(bool force_run) {
+  const ros::Time current_time = ros::Time::now();
+  if (force_run || shouldRun(current_time)) {
+    publishMap(current_time, false);
+    last_run_timestamp_ = current_time;
+  }
 }
 
 void PublishMapOperation::publishMap(const ros::Time& current_time,

@@ -2,6 +2,10 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
+#include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/point_cloud_conversion.h>
+#include <wavemap/core/integrator/projective/projective_integrator.h>
 #include <wavemap/core/utils/iterate/grid_iterator.h>
 #include <wavemap/core/utils/print/eigen.h>
 #include <wavemap/core/utils/profiler_interface.h>
@@ -16,8 +20,7 @@ DECLARE_CONFIG_MEMBERS(DepthImageInputConfig,
                       (image_transport_hints)
                       (depth_scale_factor)
                       (time_offset)
-                      (reprojected_pointcloud_topic_name)
-                      (projected_range_image_topic_name));
+                      (projected_pointcloud_topic_name));
 
 bool DepthImageInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
@@ -30,34 +33,27 @@ bool DepthImageInputConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-DepthImageInput::DepthImageInput(
-    const DepthImageInputConfig& config, const param::Value& params,
-    std::string world_frame, MapBase::Ptr occupancy_map,
-    std::shared_ptr<TfTransformer> transformer,
-    std::shared_ptr<ThreadPool> thread_pool, ros::NodeHandle nh,
-    ros::NodeHandle nh_private,
-    std::function<void(const ros::Time&)> map_update_callback)
-    : InputBase(config, params, std::move(world_frame),
-                std::move(occupancy_map), std::move(transformer),
-                std::move(thread_pool), nh, nh_private,
-                std::move(map_update_callback)),
+DepthImageInput::DepthImageInput(const DepthImageInputConfig& config,
+                                 std::shared_ptr<Pipeline> pipeline,
+                                 std::vector<std::string> integrator_names,
+                                 std::shared_ptr<TfTransformer> transformer,
+                                 std::string world_frame, ros::NodeHandle nh,
+                                 ros::NodeHandle nh_private)
+    : InputBase(config, std::move(pipeline), std::move(integrator_names),
+                std::move(transformer), std::move(world_frame), nh, nh_private),
       config_(config.checkValid()) {
-  // Get pointers to the underlying scanwise integrators
-  for (const auto& integrator : integrators_) {
-    auto scanwise_integrator =
-        std::dynamic_pointer_cast<ProjectiveIntegrator>(integrator);
-    CHECK(scanwise_integrator)
-        << "Depth image inputs are currently only supported in "
-           "combination with projective integrators.";
-    scanwise_integrators_.emplace_back(std::move(scanwise_integrator));
-  }
-
   // Subscribe to the depth image input
   image_transport::ImageTransport it(nh);
   depth_image_sub_ = it.subscribe(
       config_.topic_name, config_.topic_queue_length,
       &DepthImageInput::callback, this,
       image_transport::TransportHints(config_.image_transport_hints));
+
+  // Advertise the projected pointcloud publisher if enabled
+  if (!config_.projected_pointcloud_topic_name.empty()) {
+    projected_pointcloud_pub_ = nh_private.advertise<sensor_msgs::PointCloud2>(
+        config_.projected_pointcloud_topic_name, config_.topic_queue_length);
+  }
 }
 
 void DepthImageInput::processQueue() {
@@ -100,46 +96,26 @@ void DepthImageInput::processQueue() {
     cv_image->image.convertTo(cv_image->image, CV_32FC1,
                               config_.depth_scale_factor);
 
-    // Create the posed range image input
-    PosedImage<> posed_range_image(cv_image->image.rows, cv_image->image.cols);
-    cv::cv2eigen<FloatingPoint>(cv_image->image, posed_range_image.getData());
-    posed_range_image.setPose(T_W_C);
+    // Create the posed depth image input
+    PosedImage<> posed_depth_image(cv_image->image.rows, cv_image->image.cols);
+    cv::cv2eigen<FloatingPoint>(cv_image->image, posed_depth_image.getData());
+    posed_depth_image.setPose(T_W_C);
 
     // Integrate the depth image
     ROS_DEBUG_STREAM("Inserting depth image with "
-                     << print::eigen::oneLine(posed_range_image.getDimensions())
+                     << print::eigen::oneLine(posed_depth_image.getDimensions())
                      << " points. Remaining pointclouds in queue: "
                      << depth_image_queue_.size() - 1 << ".");
     integration_timer_.start();
-    for (const auto& integrator : scanwise_integrators_) {
-      integrator->integrateRangeImage(posed_range_image);
-    }
+    pipeline_->runPipeline(integrator_names_, posed_depth_image);
     integration_timer_.stop();
     ROS_DEBUG_STREAM("Integrated new depth image in "
                      << integration_timer_.getLastEpisodeDuration()
                      << "s. Total integration time: "
                      << integration_timer_.getTotalDuration() << "s.");
 
-    // Notify subscribers that the map was updated
-    if (map_update_callback_) {
-      std::invoke(map_update_callback_, stamp);
-    }
-
     // Publish debugging visualizations
-    if (shouldPublishReprojectedPointcloud()) {
-      const auto posed_pointcloud = reproject(posed_range_image);
-      publishReprojectedPointcloud(stamp, posed_pointcloud);
-    }
-    if (shouldPublishProjectedRangeImage()) {
-      auto projective_integrator =
-          std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
-      if (projective_integrator) {
-        const auto& range_image = projective_integrator->getPosedRangeImage();
-        if (range_image) {
-          publishProjectedRangeImage(stamp, *range_image);
-        }
-      }
-    }
+    publishProjectedPointcloudIfEnabled(stamp, posed_depth_image);
     ProfilerFrameMarkNamed("DepthImage");
 
     // Remove the depth image from the queue
@@ -147,28 +123,58 @@ void DepthImageInput::processQueue() {
   }
 }
 
-PosedPointcloud<> DepthImageInput::reproject(
-    const PosedImage<>& posed_range_image) {
+void DepthImageInput::publishProjectedPointcloudIfEnabled(
+    const ros::Time& stamp,
+    const PosedImage<FloatingPoint>& /*posed_depth_image*/) {
   ProfilerZoneScoped;
-  auto projective_integrator =
-      std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
-  if (!projective_integrator) {
-    return {};
+  if (config_.projected_pointcloud_topic_name.empty() ||
+      projected_pointcloud_pub_.getNumSubscribers() <= 0) {
+    return;
   }
-  const auto& projection_model = projective_integrator->getProjectionModel();
 
+  sensor_msgs::PointCloud pointcloud_msg;
+  pointcloud_msg.header.stamp = stamp;
+  pointcloud_msg.header.frame_id = world_frame_;
+
+  // TODO(victorr): Reimplement this
+  // auto projective_integrator =
+  //     std::dynamic_pointer_cast<ProjectiveIntegrator>(integrators_.front());
+  // if (!projective_integrator) {
+  //   return {};
+  // }
+  // const auto& projection_model =
+  //     projective_integrator->getProjectionModel();
+
+  // const auto posed_pointcloud = project(posed_depth_image,
+  // projection_model); pointcloud_msg.points.reserve(posed_pointcloud.size());
+  // for (const auto& point : posed_pointcloud.getPointsGlobal()) {
+  //   auto& point_msg = pointcloud_msg.points.emplace_back();
+  //   point_msg.x = point.x();
+  //   point_msg.y = point.y();
+  //   point_msg.z = point.z();
+  // }
+  //
+  // sensor_msgs::PointCloud2 pointcloud2_msg;
+  // sensor_msgs::convertPointCloudToPointCloud2(pointcloud_msg,
+  // pointcloud2_msg); projected_pointcloud_pub_.publish(pointcloud2_msg);
+}
+
+PosedPointcloud<Point3D> DepthImageInput::project(
+    const PosedImage<>& posed_depth_image,
+    const ProjectorBase& projection_model) {
+  ProfilerZoneScoped;
   std::vector<Point3D> pointcloud;
-  pointcloud.reserve(posed_range_image.size());
+  pointcloud.reserve(posed_depth_image.size());
   for (const Index2D& index :
        Grid<2>(Index2D::Zero(),
-               posed_range_image.getDimensions() - Index2D::Ones())) {
-    const Vector2D image_xy = projection_model->indexToImage(index);
-    const FloatingPoint image_z = posed_range_image.at(index);
+               posed_depth_image.getDimensions() - Index2D::Ones())) {
+    const Vector2D image_xy = projection_model.indexToImage(index);
+    const FloatingPoint image_z = posed_depth_image.at(index);
     const Point3D C_point =
-        projection_model->sensorToCartesian(image_xy, image_z);
+        projection_model.sensorToCartesian(image_xy, image_z);
     pointcloud.emplace_back(C_point);
   }
 
-  return PosedPointcloud<>(posed_range_image.getPose(), pointcloud);
+  return PosedPointcloud<Point3D>{posed_depth_image.getPose(), pointcloud};
 }
 }  // namespace wavemap

@@ -6,12 +6,26 @@
 #include <utility>
 
 namespace wavemap::print {
-template <typename SequenceContainerT>
-inline std::string container(const SequenceContainerT& container) {
-  return std::accumulate(std::next(container.cbegin()), container.cend(),
-                         std::to_string(container[0]),
-                         [](auto str, const auto& el) -> std::string {
-                           return std::move(str) + ", " + std::to_string(el);
+template <typename ElementT>
+inline auto element(const ElementT& element)
+    -> std::enable_if_t<std::is_arithmetic_v<ElementT>, std::string> {
+  return std::to_string(element);
+}
+
+template <typename ElementT>
+inline auto element(const ElementT& element)
+    -> std::enable_if_t<!std::is_arithmetic_v<ElementT>, std::string> {
+  return std::string(element);
+}
+
+template <typename SequenceT>
+inline std::string sequence(const SequenceT& sequence,
+                            const std::string& separator = ", ") {
+  return std::accumulate(std::next(sequence.cbegin()), sequence.cend(),
+                         print::element(sequence[0]),
+                         [separator](auto str, const auto& el) -> std::string {
+                           return std::move(str) + separator +
+                                  print::element(el);
                          });
 }
 }  // namespace wavemap::print
