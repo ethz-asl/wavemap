@@ -39,7 +39,6 @@ measurement_integrators:
       type: wavelet_integrator
       min_range: { meters: 1.0 }
       max_range: { meters: 20.0 }
-      termination_update_error: 0.1
 
 inputs:
   - type: pointcloud

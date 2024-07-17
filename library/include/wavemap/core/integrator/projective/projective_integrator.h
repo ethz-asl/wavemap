@@ -24,12 +24,11 @@ struct ProjectiveIntegratorConfig : ConfigBase<ProjectiveIntegratorConfig, 4> {
   //! up to the maximum range.
   Meters<FloatingPoint> max_range = 20.f;
 
-  //! Maximum resolution to use for this integrator, set as the height at which
-  //! to terminate the coarse-to-fine measurement updates. Defaults to 0 (max
-  //! res). Can be set to 1 for 1/2 of the max resolution, to 2 for 1/4 of the
-  //! max resolution, etc.This can be used to fuse multiple inputs with
-  //! different maximum resolutions into a single map.
-  IndexElement termination_height = 0;
+  //! Maximum resolution at which to update the map. Can be used to fuse
+  //! multiple inputs with different maximum resolutions into a single map.
+  //! Set to zero to match the map's maximum resolution.
+  Meters<FloatingPoint> max_update_resolution = 0.f;
+
   //! The update error threshold at which the coarse-to-fine measurement
   //! integrator is allowed to terminate, in log-odds. For more information,
   //! please refer to: https://www.roboticsproceedings.org/rss19/p065.pdf.

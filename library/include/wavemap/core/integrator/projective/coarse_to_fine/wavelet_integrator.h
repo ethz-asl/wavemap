@@ -26,9 +26,15 @@ class WaveletIntegrator : public ProjectiveIntegrator {
 
  private:
   const WaveletOctree::Ptr occupancy_map_;
-  const FloatingPoint min_cell_width_;
-
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
+
+  // Cache/pre-computed commonly used values
+  const FloatingPoint min_cell_width_;
+  const IndexElement termination_height_ =
+      min_cell_width_ < config_.max_update_resolution
+          ? static_cast<IndexElement>(std::round(
+                std::log2(config_.max_update_resolution / min_cell_width_)))
+          : 0;
   static constexpr auto kUnitCubeHalfDiagonal =
       constants<FloatingPoint>::kSqrt3 / 2.f;
 

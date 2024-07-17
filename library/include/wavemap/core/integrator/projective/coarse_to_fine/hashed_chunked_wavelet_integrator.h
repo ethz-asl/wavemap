@@ -36,7 +36,7 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   std::shared_ptr<ThreadPool> thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
-  // Cache/pre-computed commonly used values
+  // Cache/pre-compute commonly used values
   static constexpr FloatingPoint kNoiseThreshold = 1e-3f;
   static constexpr auto kUnitCubeHalfDiagonal =
       constants<FloatingPoint>::kSqrt3 / 2.f;
@@ -49,6 +49,11 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   const FloatingPoint max_log_odds_padded_ = max_log_odds_ + kNoiseThreshold;
   const IndexElement tree_height_ = occupancy_map_->getTreeHeight();
   const IndexElement chunk_height_ = occupancy_map_->getChunkHeight();
+  const IndexElement termination_height_ =
+      min_cell_width_ < config_.max_update_resolution
+          ? static_cast<IndexElement>(std::round(
+                std::log2(config_.max_update_resolution / min_cell_width_)))
+          : 0;
 
   std::pair<OctreeIndex, OctreeIndex> getFovMinMaxIndices(
       const Point3D& sensor_origin) const;

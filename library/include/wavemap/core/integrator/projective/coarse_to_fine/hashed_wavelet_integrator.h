@@ -30,16 +30,21 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
 
  private:
   const HashedWaveletOctree::Ptr occupancy_map_;
+  std::shared_ptr<ThreadPool> thread_pool_;
+  std::shared_ptr<RangeImageIntersector> range_image_intersector_;
+
+  // Cache/pre-compute commonly used values
   const FloatingPoint min_cell_width_ = occupancy_map_->getMinCellWidth();
   const FloatingPoint min_cell_width_inv_ = 1.f / min_cell_width_;
-  std::shared_ptr<ThreadPool> thread_pool_;
-
   static constexpr FloatingPoint kNoiseThreshold = 1e-4f;
   const FloatingPoint min_log_odds_ = occupancy_map_->getMinLogOdds();
   const FloatingPoint max_log_odds_ = occupancy_map_->getMaxLogOdds();
   const IndexElement tree_height_ = occupancy_map_->getTreeHeight();
-
-  std::shared_ptr<RangeImageIntersector> range_image_intersector_;
+  const IndexElement termination_height_ =
+      min_cell_width_ < config_.max_update_resolution
+          ? static_cast<IndexElement>(std::round(
+                std::log2(config_.max_update_resolution / min_cell_width_)))
+          : 0;
   static constexpr auto kUnitCubeHalfDiagonal =
       constants<FloatingPoint>::kSqrt3 / 2.f;
 

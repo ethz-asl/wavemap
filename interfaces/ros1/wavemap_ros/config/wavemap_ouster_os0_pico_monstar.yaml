@@ -42,8 +42,7 @@ measurement_integrators:
       type: hashed_chunked_wavelet_integrator
       min_range: { meters: 1.5 }
       max_range: { meters: 15.0 }
-      termination_update_error: 0.1
-      termination_height: 3
+      max_update_resolution: { meters: 0.08 }
 
   monstar_short_range:
     projection_model:
@@ -63,8 +62,7 @@ measurement_integrators:
       type: hashed_chunked_wavelet_integrator
       min_range: { meters: 0.3 }
       max_range: { meters: 1.0 }
-      termination_update_error: 0.1
-      termination_height: 0
+      max_update_resolution: { meters: 0.01 }
 
   monstar_medium_range:
     projection_model:
@@ -84,8 +82,7 @@ measurement_integrators:
       type: hashed_chunked_wavelet_integrator
       min_range: { meters: 1.0 }
       max_range: { meters: 2.0 }
-      termination_update_error: 0.1
-      termination_height: 1
+      max_update_resolution: { meters: 0.02 }
 
 inputs:
   - type: depth_image

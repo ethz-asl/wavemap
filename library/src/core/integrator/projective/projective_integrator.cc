@@ -6,7 +6,7 @@ namespace wavemap {
 DECLARE_CONFIG_MEMBERS(ProjectiveIntegratorConfig,
                       (min_range)
                       (max_range)
-                      (termination_height)
+                      (max_update_resolution)
                       (termination_update_error));
 
 bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
@@ -15,7 +15,7 @@ bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
   is_valid &= IS_PARAM_GT(min_range, 0.f, verbose);
   is_valid &= IS_PARAM_GT(max_range, 0.f, verbose);
   is_valid &= IS_PARAM_LT(min_range, max_range, verbose);
-  is_valid &= IS_PARAM_GE(termination_height, 0, verbose);
+  is_valid &= IS_PARAM_GE(max_update_resolution, 0.f, verbose);
   is_valid &= IS_PARAM_GT(termination_update_error, 0.f, verbose);
 
   return is_valid;
@@ -23,7 +23,7 @@ bool ProjectiveIntegratorConfig::isValid(bool verbose) const {
 
 void ProjectiveIntegrator::integrate(const PosedPointcloud<>& pointcloud) {
   ProfilerZoneScoped;
-  if (!isPointcloudValid(pointcloud)) {
+  if (!isPoseValid(pointcloud.getPose())) {
     return;
   }
   importPointcloud(pointcloud);
@@ -32,6 +32,9 @@ void ProjectiveIntegrator::integrate(const PosedPointcloud<>& pointcloud) {
 
 void ProjectiveIntegrator::integrate(const PosedImage<>& range_image) {
   ProfilerZoneScoped;
+  if (!isPoseValid(range_image.getPose())) {
+    return;
+  }
   importRangeImage(range_image);
   updateMap();
 }

@@ -172,7 +172,7 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
         child_node_in_chunk_index);
 
     // If we're at the leaf level, directly compute the update
-    if (child_height == config_.termination_height + 1) {
+    if (child_height <= termination_height_ + 1) {
       updateLeavesBatch(child_index, child_value, child_details);
     } else {
       // Otherwise, recurse

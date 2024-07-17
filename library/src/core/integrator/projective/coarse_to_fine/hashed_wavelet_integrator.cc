@@ -121,7 +121,7 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
     DCHECK_GE(node_index.height, 0);
 
     // If we're at the leaf level, directly update the node
-    if (node_index.height == config_.termination_height) {
+    if (node_index.height <= termination_height_) {
       const Point3D W_node_center =
           convert::nodeIndexToCenterPoint(node_index, min_cell_width_);
       const Point3D C_node_center =

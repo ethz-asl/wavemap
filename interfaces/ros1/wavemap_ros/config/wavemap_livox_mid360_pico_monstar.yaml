@@ -17,48 +17,6 @@ map_operations_pipeline:
     once_every: { seconds: 2.0 }
 
 measurement_integrators:
-  monstar_short_range:
-    projection_model:
-      type: pinhole_camera_projector
-      width: 352
-      height: 287
-      fx: 208.751708984375
-      fy: 208.751708984375
-      cx: 172.19403076171875
-      cy: 146.1179962158203
-    measurement_model:
-      type: continuous_ray
-      range_sigma: { meters: 0.005 }
-      scaling_free: 0.4
-      scaling_occupied: 0.8
-    integration_method:
-      type: hashed_chunked_wavelet_integrator
-      min_range: { meters: 0.3 }
-      max_range: { meters: 1.0 }
-      termination_update_error: 0.1
-      termination_height: 0
-
-  monstar_medium_range:
-    projection_model:
-      type: pinhole_camera_projector
-      width: 352
-      height: 287
-      fx: 208.751708984375
-      fy: 208.751708984375
-      cx: 172.19403076171875
-      cy: 146.1179962158203
-    measurement_model:
-      type: continuous_ray
-      range_sigma: { meters: 0.01 }
-      scaling_free: 0.4
-      scaling_occupied: 0.8
-    integration_method:
-      type: hashed_chunked_wavelet_integrator
-      min_range: { meters: 1.0 }
-      max_range: { meters: 2.0 }
-      termination_update_error: 0.1
-      termination_height: 1
-
   livox_mid360:
     projection_model:
       type: spherical_projector
@@ -82,8 +40,47 @@ measurement_integrators:
       type: hashed_chunked_wavelet_integrator
       min_range: { meters: 2.0 }
       max_range: { meters: 8.0 }
-      termination_update_error: 0.1
-      termination_height: 3
+      max_update_resolution: { meters: 0.08 }
+
+  monstar_short_range:
+    projection_model:
+      type: pinhole_camera_projector
+      width: 352
+      height: 287
+      fx: 208.751708984375
+      fy: 208.751708984375
+      cx: 172.19403076171875
+      cy: 146.1179962158203
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.005 }
+      scaling_free: 0.4
+      scaling_occupied: 0.8
+    integration_method:
+      type: hashed_chunked_wavelet_integrator
+      min_range: { meters: 0.3 }
+      max_range: { meters: 1.0 }
+      max_update_resolution: { meters: 0.01 }
+
+  monstar_medium_range:
+    projection_model:
+      type: pinhole_camera_projector
+      width: 352
+      height: 287
+      fx: 208.751708984375
+      fy: 208.751708984375
+      cx: 172.19403076171875
+      cy: 146.1179962158203
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.01 }
+      scaling_free: 0.4
+      scaling_occupied: 0.8
+    integration_method:
+      type: hashed_chunked_wavelet_integrator
+      min_range: { meters: 1.0 }
+      max_range: { meters: 2.0 }
+      max_update_resolution: { meters: 0.02 }
 
 inputs:
   - type: depth_image

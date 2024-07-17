@@ -1,11 +1,11 @@
 #include "wavemap/core/integrator/integrator_base.h"
 
 namespace wavemap {
-bool IntegratorBase::isPointcloudValid(const PosedPointcloud<>& pointcloud) {
-  if (const Point3D& origin = pointcloud.getOrigin(); origin.hasNaN()) {
+bool IntegratorBase::isPoseValid(const Transformation3D& T_W_C) {
+  if (T_W_C.getPosition().hasNaN()) {
     LOG(WARNING) << "Ignoring request to integrate pointcloud whose origin "
                     "contains NaNs:\n"
-                 << origin;
+                 << T_W_C.getPosition();
     return false;
   }
 

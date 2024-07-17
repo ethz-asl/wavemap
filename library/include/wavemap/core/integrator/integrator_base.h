@@ -40,7 +40,7 @@ class IntegratorBase {
   virtual void integrate(const PosedImage<>& range_image) = 0;
 
  protected:
-  static bool isPointcloudValid(const PosedPointcloud<>& pointcloud);
+  static bool isPoseValid(const Transformation3D& T_W_C);
   static bool isMeasurementValid(const Point3D& C_end_point);
 
   static Point3D getEndPointOrMaxRange(const Point3D& W_start_point,

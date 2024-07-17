@@ -9,11 +9,11 @@
       "properties": {
         "min_angle": {
           "description": "Minimum angle along this axis.",
-          "$ref": "../../value_with_unit/convertible_to_radians.json"
+          "$ref": "../value_with_unit/convertible_to_radians.json"
         },
         "max_angle": {
           "description": "Maximum angle along this axis.",
-          "$ref": "../../value_with_unit/convertible_to_radians.json"
+          "$ref": "../value_with_unit/convertible_to_radians.json"
         },
         "num_cells": {
           "description": "Resolution of the image along this axis, set as the number of cells along the axis.",
@@ -55,11 +55,11 @@
         },
         "lidar_origin_to_beam_origin": {
           "description": "Offset between the Ouster LiDAR frame's origin and the laser beam's start point (radial direction). For illustrations and more information, please see the Ouster sensor's manual.",
-          "$ref": "../../value_with_unit/convertible_to_meters.json"
+          "$ref": "../value_with_unit/convertible_to_meters.json"
         },
         "lidar_origin_to_sensor_origin_z_offset": {
           "description": "Offset between the Ouster sensor and LiDAR frame's origins (z-direction). For illustrations and more information, please see the Ouster sensor's manual.",
-          "$ref": "../../value_with_unit/convertible_to_meters.json"
+          "$ref": "../value_with_unit/convertible_to_meters.json"
         }
       }
     },
