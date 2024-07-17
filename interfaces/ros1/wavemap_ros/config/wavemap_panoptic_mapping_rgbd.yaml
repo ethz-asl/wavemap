@@ -7,7 +7,7 @@ map:
   type: hashed_chunked_wavelet_octree
   min_cell_width: { meters: 0.02 }
 
-operations_pipeline:
+map_operations_pipeline:
   - type: threshold_map
     once_every: { seconds: 2.0 }
   - type: prune_map
@@ -15,28 +15,30 @@ operations_pipeline:
   - type: publish_map
     once_every: { seconds: 2.0 }
 
+measurement_integrators:
+  panoptic_mapping_camera:
+    projection_model:
+      type: pinhole_camera_projector
+      width: 640
+      height: 480
+      fx: 320.0
+      fy: 320.0
+      cx: 320.0
+      cy: 240.0
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.01 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+    integration_method:
+      type: hashed_chunked_wavelet_integrator
+      min_range: { meters: 0.1 }
+      max_range: { meters: 5.0 }
+      termination_update_error: 0.1
+
 inputs:
   - type: depth_image
-    general:
-      topic_name: "/data/depth_image"
-      topic_queue_length: 10
-      max_wait_for_pose: { seconds: 1.0 }
-    integrators:
-      - integration_method:
-          type: hashed_chunked_wavelet_integrator
-          min_range: { meters: 0.1 }
-          max_range: { meters: 5.0 }
-          termination_update_error: 0.1
-        projection_model:
-          type: pinhole_camera_projector
-          width: 640
-          height: 480
-          fx: 320.0
-          fy: 320.0
-          cx: 320.0
-          cy: 240.0
-        measurement_model:
-          type: continuous_ray
-          range_sigma: { meters: 0.01 }
-          scaling_free: 0.2
-          scaling_occupied: 0.4
+    topic_name: "/data/depth_image"
+    measurement_integrator: panoptic_mapping_camera
+    topic_queue_length: 10
+    max_wait_for_pose: { seconds: 1.0 }

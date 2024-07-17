@@ -7,7 +7,7 @@ map:
   type: hashed_chunked_wavelet_octree
   min_cell_width: { meters: 0.1 }
 
-operations_pipeline:
+map_operations_pipeline:
   - type: threshold_map
     once_every: { seconds: 2.0 }
   - type: prune_map
@@ -15,36 +15,38 @@ operations_pipeline:
   - type: publish_map
     once_every: { seconds: 2.0 }
 
+measurement_integrators:
+  livox_mid360:
+    projection_model:
+      type: spherical_projector
+      elevation:
+        num_cells: 32
+        min_angle: { degrees: -7.0 }
+        max_angle: { degrees: 52.0 }
+      azimuth:
+        num_cells: 512
+        min_angle: { degrees: -180.0 }
+        max_angle: { degrees: 180.0 }
+    measurement_model:
+      type: continuous_beam
+      angle_sigma: { degrees: 0.05 }
+      # NOTE: For best results, we recommend setting range_sigma to
+      #       max(min_cell_width / 2, ouster_noise) where ouster_noise = 0.05
+      range_sigma: { meters: 0.08 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+    integration_method:
+      type: hashed_chunked_wavelet_integrator
+      min_range: { meters: 0.5 }
+      max_range: { meters: 12.0 }
+      termination_update_error: 0.1
+
 inputs:
   - type: pointcloud
-    general:
-      topic_name: "/livox/lidar"
-      topic_type: livox
-      undistort_motion: true
-      reprojected_pointcloud_topic_name: "/wavemap/input"
-      topic_queue_length: 10
-      max_wait_for_pose: { seconds: 1.0 }
-    integrators:
-      - integration_method:
-          type: hashed_chunked_wavelet_integrator
-          min_range: { meters: 0.5 }
-          max_range: { meters: 12.0 }
-          termination_update_error: 0.1
-        projection_model:
-          type: spherical_projector
-          elevation:
-            num_cells: 32
-            min_angle: { degrees: -7.0 }
-            max_angle: { degrees: 52.0 }
-          azimuth:
-            num_cells: 512
-            min_angle: { degrees: -180.0 }
-            max_angle: { degrees: 180.0 }
-        measurement_model:
-          type: continuous_beam
-          angle_sigma: { degrees: 0.05 }
-          # NOTE: For best results, we recommend setting range_sigma to
-          #       max(min_cell_width / 2, ouster_noise) where ouster_noise = 0.05
-          range_sigma: { meters: 0.08 }
-          scaling_free: 0.2
-          scaling_occupied: 0.4
+    topic_name: "/livox/lidar"
+    topic_type: livox
+    measurement_integrator: livox_mid360
+    undistort_motion: true
+    reprojected_pointcloud_topic_name: "/wavemap/input"
+    topic_queue_length: 10
+    max_wait_for_pose: { seconds: 1.0 }

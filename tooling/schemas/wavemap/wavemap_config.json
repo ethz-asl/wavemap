@@ -3,31 +3,40 @@
   "title": "Wavemap config",
   "description": "Schema to provide code completion and validation for wavemap configuration files.",
   "type": "object",
+  "required": [
+    "general",
+    "map",
+    "map_operations_pipeline",
+    "measurement_integrators",
+    "inputs"
+  ],
   "properties": {
     "general": {
       "$ref": "general.json"
     },
     "map": {
-      "$ref": "map.json"
+      "$ref": "map/map_base.json"
+    },
+    "map_operations_pipeline": {
+      "description": "A list of operations to perform after map updates.",
+      "type": "array",
+      "items": {
+        "$ref": "map_operations_pipeline/map_operation_base.json"
+      }
+    },
+    "measurement_integrators": {
+      "description": "A dictionary of measurement integrators.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "measurement_integrators/measurement_integrator_base.json"
+      }
     },
     "inputs": {
       "description": "A list of measurement inputs.",
       "type": "array",
       "items": {
-        "$ref": "inputs/input.json"
-      }
-    },
-    "operations_pipeline": {
-      "description": "A list of operations to perform after map updates.",
-      "type": "array",
-      "items": {
-        "$ref": "operations/operations_pipeline.json"
+        "$ref": "inputs/input_base.json"
       }
     }
-  },
-  "required": [
-    "general",
-    "map",
-    "inputs"
-  ]
+  }
 }
