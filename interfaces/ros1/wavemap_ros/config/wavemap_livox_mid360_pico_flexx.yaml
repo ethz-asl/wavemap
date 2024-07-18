@@ -105,7 +105,7 @@ measurement_integrators:
 inputs:
   - type: depth_image
     topic_name: "/pico_flexx/image_rect"
-    measurement_integrator: [ monstar_short_range, monstar_medium_range, monstar_long_range ]
+    measurement_integrator_names: [ monstar_short_range, monstar_medium_range, monstar_long_range ]
     topic_queue_length: 1
     max_wait_for_pose: { seconds: 1.0 }
     time_offset: { seconds: -0.00727598 }
@@ -115,7 +115,7 @@ inputs:
   - type: pointcloud
     topic_name: "/livox/lidar"
     topic_type: livox
-    measurement_integrator: livox_mid360
+    measurement_integrator_names: livox_mid360
     topic_queue_length: 1
     max_wait_for_pose: { seconds: 1.0 }
     #    reprojected_topic_name: "/wavemap/lidar_input"

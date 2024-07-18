@@ -6,7 +6,7 @@
   "required": [
     "topic_name",
     "topic_type",
-    "measurement_integrator"
+    "measurement_integrator_names"
   ],
   "properties": {
     "type": {
@@ -25,8 +25,8 @@
         "livox"
       ]
     },
-    "measurement_integrator": {
-      "description": "Name of the measurement integrator(s) used to integrate the measurements into the map.",
+    "measurement_integrator_names": {
+      "description": "Name(s) of the measurement integrator(s) used to integrate the measurements into the map.",
       "oneOf": [
         {
           "type": "string"

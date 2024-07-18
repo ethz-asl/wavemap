@@ -4,6 +4,7 @@ namespace wavemap {
 DECLARE_CONFIG_MEMBERS(InputBaseConfig,
                       (topic_name)
                       (topic_queue_length)
+                      (measurement_integrator_names)
                       (processing_retry_period));
 
 bool InputBaseConfig::isValid(bool verbose) const {
@@ -18,13 +19,11 @@ bool InputBaseConfig::isValid(bool verbose) const {
 
 InputBase::InputBase(const InputBaseConfig& config,
                      std::shared_ptr<Pipeline> pipeline,
-                     std::vector<std::string> integrator_names,
                      std::shared_ptr<TfTransformer> transformer,
                      std::string world_frame, const ros::NodeHandle& nh,
                      ros::NodeHandle /*nh_private*/)
     : config_(config.checkValid()),
       pipeline_(std::move(pipeline)),
-      integrator_names_(std::move(integrator_names)),
       transformer_(std::move(transformer)),
       world_frame_(std::move(world_frame)) {
   // Start the queue processing retry timer

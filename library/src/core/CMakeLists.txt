@@ -3,6 +3,7 @@ add_library(wavemap::wavemap_core ALIAS wavemap_core)
 
 add_wavemap_include_directories(wavemap_core)
 target_sources(wavemap_core PRIVATE
+    config/string_list.cc
     config/value_with_unit.cc
     integrator/measurement_model/continuous_beam.cc
     integrator/measurement_model/constant_ray.cc

@@ -8,6 +8,7 @@
 
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
+#include <wavemap/core/config/string_list.h>
 #include <wavemap/core/data_structure/image.h>
 #include <wavemap/core/integrator/projective/projective_integrator.h>
 #include <wavemap/core/utils/time/stopwatch.h>
@@ -18,11 +19,16 @@ namespace wavemap {
 /**
  * Config struct for the depth image input handler.
  */
-struct DepthImageInputConfig : public ConfigBase<DepthImageInputConfig, 9> {
+struct DepthImageInputConfig
+    : public ConfigBase<DepthImageInputConfig, 10, StringList> {
   //! Name of the ROS topic to subscribe to.
   std::string topic_name = "scan";
   //! Queue length to use when subscribing to the ROS topic.
   int topic_queue_length = 10;
+
+  //! Name(s) of the measurement integrator(s) used to integrate the
+  //! measurements into the map.
+  StringList measurement_integrator_names;
 
   //! Time period used to control the rate at which to retry getting the sensor
   //! pose when ROS TF lookups fail.
@@ -55,7 +61,8 @@ struct DepthImageInputConfig : public ConfigBase<DepthImageInputConfig, 9> {
 
   // Conversion to InputHandler base config
   operator InputBaseConfig() const {  // NOLINT
-    return {topic_name, topic_queue_length, processing_retry_period};
+    return {topic_name, topic_queue_length, measurement_integrator_names,
+            processing_retry_period};
   }
 
   bool isValid(bool verbose) const override;
@@ -65,7 +72,6 @@ class DepthImageInput : public InputBase {
  public:
   DepthImageInput(const DepthImageInputConfig& config,
                   std::shared_ptr<Pipeline> pipeline,
-                  std::vector<std::string> integrator_names,
                   std::shared_ptr<TfTransformer> transformer,
                   std::string world_frame, ros::NodeHandle nh,
                   ros::NodeHandle nh_private);

@@ -44,7 +44,7 @@ inputs:
   - type: pointcloud
     topic_name: "/livox/lidar"
     topic_type: livox
-    measurement_integrator: livox_mid360
+    measurement_integrator_names: livox_mid360
     undistort_motion: true
     reprojected_pointcloud_topic_name: "/wavemap/input"
     topic_queue_length: 10

@@ -84,7 +84,7 @@ measurement_integrators:
 inputs:
   - type: depth_image
     topic_name: "/depth/image_rect"
-    measurement_integrator: [ kinect_short_range, kinect_medium_range ]
+    measurement_integrator_names: [ kinect_short_range, kinect_medium_range ]
     depth_scale_factor: 0.001
     topic_queue_length: 1
     max_wait_for_pose: { seconds: 1.0 }
@@ -94,7 +94,7 @@ inputs:
   - type: pointcloud
     topic_name: "/livox/lidar"
     topic_type: livox
-    measurement_integrator: livox_mid360
+    measurement_integrator_names: livox_mid360
     undistort_motion: true
     topic_queue_length: 1
     max_wait_for_pose: { seconds: 1.0 }

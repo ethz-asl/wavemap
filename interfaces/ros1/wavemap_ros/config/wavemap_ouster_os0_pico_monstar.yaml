@@ -87,7 +87,7 @@ measurement_integrators:
 inputs:
   - type: depth_image
     topic_name: "/pico_monstar/image_rect"
-    measurement_integrator: [ monstar_short_range, monstar_medium_range ]
+    measurement_integrator_names: [ monstar_short_range, monstar_medium_range ]
     topic_queue_length: 1
     max_wait_for_pose: { seconds: 1.0 }
     time_offset: { seconds: 0.0118462 }
@@ -97,7 +97,7 @@ inputs:
   - type: pointcloud
     topic_name: "/os_cloud_node/points"
     topic_type: ouster
-    measurement_integrator: ouster_os0
+    measurement_integrator_names: ouster_os0
     undistort_motion: true
     topic_queue_length: 10
     max_wait_for_pose: { seconds: 1.0 }

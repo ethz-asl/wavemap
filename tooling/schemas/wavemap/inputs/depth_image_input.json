@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": [
     "topic_name",
-    "measurement_integrator"
+    "measurement_integrator_names"
   ],
   "properties": {
     "type": {
@@ -15,8 +15,8 @@
       "description": "Name of the ROS topic to subscribe to.",
       "type": "string"
     },
-    "measurement_integrator": {
-      "description": "Name of the measurement integrator(s) used to integrate the measurements into the map.",
+    "measurement_integrator_names": {
+      "description": "Name(s) of the measurement integrator(s) used to integrate the measurements into the map.",
       "oneOf": [
         {
           "type": "string"

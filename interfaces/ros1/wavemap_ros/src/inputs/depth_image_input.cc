@@ -14,6 +14,7 @@ namespace wavemap {
 DECLARE_CONFIG_MEMBERS(DepthImageInputConfig,
                       (topic_name)
                       (topic_queue_length)
+                      (measurement_integrator_names)
                       (processing_retry_period)
                       (max_wait_for_pose)
                       (sensor_frame_id)
@@ -35,12 +36,11 @@ bool DepthImageInputConfig::isValid(bool verbose) const {
 
 DepthImageInput::DepthImageInput(const DepthImageInputConfig& config,
                                  std::shared_ptr<Pipeline> pipeline,
-                                 std::vector<std::string> integrator_names,
                                  std::shared_ptr<TfTransformer> transformer,
                                  std::string world_frame, ros::NodeHandle nh,
                                  ros::NodeHandle nh_private)
-    : InputBase(config, std::move(pipeline), std::move(integrator_names),
-                std::move(transformer), std::move(world_frame), nh, nh_private),
+    : InputBase(config, std::move(pipeline), std::move(transformer),
+                std::move(world_frame), nh, nh_private),
       config_(config.checkValid()) {
   // Subscribe to the depth image input
   image_transport::ImageTransport it(nh);
@@ -107,7 +107,8 @@ void DepthImageInput::processQueue() {
                      << " points. Remaining pointclouds in queue: "
                      << depth_image_queue_.size() - 1 << ".");
     integration_timer_.start();
-    pipeline_->runPipeline(integrator_names_, posed_depth_image);
+    pipeline_->runPipeline(config_.measurement_integrator_names,
+                           posed_depth_image);
     integration_timer_.stop();
     ROS_DEBUG_STREAM("Integrated new depth image in "
                      << integration_timer_.getLastEpisodeDuration()

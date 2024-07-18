@@ -38,6 +38,6 @@ measurement_integrators:
 inputs:
   - type: depth_image
     topic_name: "/data/depth_image"
-    measurement_integrator: panoptic_mapping_camera
+    measurement_integrator_names: panoptic_mapping_camera
     topic_queue_length: 10
     max_wait_for_pose: { seconds: 1.0 }

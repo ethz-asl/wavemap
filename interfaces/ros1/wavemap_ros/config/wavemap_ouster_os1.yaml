@@ -44,7 +44,7 @@ inputs:
   - type: pointcloud
     topic_name: "/os1_cloud_node/points"
     topic_type: ouster
-    measurement_integrator: ouster_os1
+    measurement_integrator_names: ouster_os1
     undistort_motion: true
     topic_queue_length: 10
     max_wait_for_pose: { seconds: 1.0 }

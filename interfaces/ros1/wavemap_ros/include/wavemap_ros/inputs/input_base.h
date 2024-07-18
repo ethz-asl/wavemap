@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <wavemap/core/config/config_base.h>
+#include <wavemap/core/config/string_list.h>
 #include <wavemap/pipeline/pipeline.h>
 
 #include "wavemap_ros/utils/tf_transformer.h"
@@ -20,9 +21,11 @@ struct InputType : public TypeSelector<InputType> {
   static constexpr std::array names = {"pointcloud", "depth_image"};
 };
 
-struct InputBaseConfig : public ConfigBase<InputBaseConfig, 3> {
+struct InputBaseConfig : public ConfigBase<InputBaseConfig, 4, StringList> {
   std::string topic_name = "scan";
   int topic_queue_length = 10;
+
+  StringList measurement_integrator_names;
 
   Seconds<FloatingPoint> processing_retry_period = 0.05f;
 
@@ -31,9 +34,11 @@ struct InputBaseConfig : public ConfigBase<InputBaseConfig, 3> {
   // Constructors
   InputBaseConfig() = default;
   InputBaseConfig(std::string topic_name, int topic_queue_length,
+                  StringList measurement_integrator_names,
                   FloatingPoint processing_retry_period)
       : topic_name(std::move(topic_name)),
         topic_queue_length(topic_queue_length),
+        measurement_integrator_names(std::move(measurement_integrator_names)),
         processing_retry_period(processing_retry_period) {}
 
   bool isValid(bool verbose) const override;
@@ -42,7 +47,6 @@ struct InputBaseConfig : public ConfigBase<InputBaseConfig, 3> {
 class InputBase {
  public:
   InputBase(const InputBaseConfig& config, std::shared_ptr<Pipeline> pipeline,
-            std::vector<std::string> integrator_names,
             std::shared_ptr<TfTransformer> transformer, std::string world_frame,
             const ros::NodeHandle& nh, ros::NodeHandle nh_private);
   virtual ~InputBase() = default;
@@ -54,7 +58,6 @@ class InputBase {
   const InputBaseConfig config_;
 
   std::shared_ptr<Pipeline> pipeline_;
-  const std::vector<std::string> integrator_names_;
 
   const std::shared_ptr<TfTransformer> transformer_;
   const std::string world_frame_;
