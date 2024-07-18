@@ -23,6 +23,11 @@ struct StringList {
     return *this;
   }
 
+  // Comparison operators
+  bool empty() const { return value.empty(); }
+  bool operator==(const StringList& rhs) const { return value == rhs.value; }
+  bool operator!=(const StringList& rhs) const { return value != rhs.value; }
+
   // Allow implicit conversions to the underlying type
   operator ValueType&() { return value; }
   operator const ValueType&() const { return value; }

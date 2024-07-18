@@ -12,6 +12,7 @@ bool InputBaseConfig::isValid(bool verbose) const {
 
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
   all_valid &= IS_PARAM_GT(topic_queue_length, 0, verbose);
+  all_valid &= IS_PARAM_FALSE(measurement_integrator_names.empty(), verbose);
   all_valid &= IS_PARAM_GT(processing_retry_period, 0.f, verbose);
 
   return all_valid;
