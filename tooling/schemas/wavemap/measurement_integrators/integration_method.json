@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft-07/schema",
   "description": "Method used to integrate the measurements into the map.",
   "type": "object",
   "$defs": {

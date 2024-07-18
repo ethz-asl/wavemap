@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft-07/schema",
   "description": "Projection model used to convert sensor coordinates to/from cartesian coordinates.",
   "type": "object",
   "$defs": {
