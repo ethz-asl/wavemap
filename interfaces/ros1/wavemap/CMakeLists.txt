@@ -21,6 +21,6 @@ install(TARGETS wavemap_core wavemap_io wavemap_pipeline
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # Mark cpp header files for installation
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include/wavemap/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
     FILES_MATCHING PATTERN "*.h")
