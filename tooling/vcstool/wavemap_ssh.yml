@@ -3,11 +3,3 @@ repositories:
     type: git
     url: git@github.com:catkin/catkin_simple.git
     version: master
-  tracy_catkin:
-    type: git
-    url: git@github.com:ethz-asl/tracy_catkin.git
-    version: main
-  minkindr:
-    type: git
-    url: git@github.com:ethz-asl/minkindr.git
-    version: master
