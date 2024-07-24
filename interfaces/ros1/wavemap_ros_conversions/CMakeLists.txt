@@ -1,15 +1,25 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_ros_conversions)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
+# Find dependencies
+find_package(catkin REQUIRED
+    COMPONENTS roscpp eigen_conversions wavemap wavemap_msgs)
+
+# Register catkin package
+catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES ${PROJECT_NAME}
+    CATKIN_DEPENDS roscpp eigen_conversions wavemap wavemap_msgs)
 
 # Libraries
-cs_add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME}
     src/config_conversions.cc
     src/map_msg_conversions.cc
     src/time_conversions.cc)
 set_wavemap_target_properties(${PROJECT_NAME})
+target_include_directories(${PROJECT_NAME}
+    PUBLIC include ${catkin_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
 
 # Tests
 if (CATKIN_ENABLE_TESTING)
@@ -22,7 +32,3 @@ if (CATKIN_ENABLE_TESTING)
   target_link_libraries(test_${PROJECT_NAME}
       ${PROJECT_NAME} glog GTest::gtest_main)
 endif ()
-
-# Export
-cs_install()
-cs_export()
