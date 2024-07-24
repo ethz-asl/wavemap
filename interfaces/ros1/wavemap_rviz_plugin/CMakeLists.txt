@@ -6,12 +6,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_rviz_plugin)
 
 # Dependencies
-find_package(catkin
-    REQUIRED COMPONENTS
-    rviz
-    wavemap
-    wavemap_msgs
-    wavemap_ros_conversions)
+find_package(catkin REQUIRED
+    COMPONENTS rviz wavemap wavemap_msgs wavemap_ros_conversions)
 
 # Setup catkin package
 catkin_package(CATKIN_DEPENDS
@@ -70,14 +66,12 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DQT_NO_KEYWORDS)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wno-pedantic -Wno-register)
 
 # Install
-install(TARGETS
-    ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-install(FILES
-    plugin_description.xml
+install(FILES plugin_description.xml
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 install(DIRECTORY icons/
