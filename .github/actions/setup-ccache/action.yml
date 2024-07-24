@@ -17,7 +17,7 @@ runs:
       run: echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
 
     - name: Setup ccache cache sharing
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ inputs.cache-version }}-${{ inputs.cache-group }}-${{ github.sha }}-${{ steps.get-date.outputs.date }}

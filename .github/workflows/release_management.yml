@@ -67,7 +67,7 @@ jobs:
           apt-get update
           apt-get install -q -y --no-install-recommends git python3-catkin-tools gh
       - name: Fetch the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # To everything, instead of only the last commit
           token: ${{ secrets.PAT }}
@@ -103,7 +103,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout the current branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Compare local and main version numbers
         shell: bash
         run: |
@@ -122,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the current branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT }}

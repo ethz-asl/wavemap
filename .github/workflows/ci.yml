@@ -46,17 +46,17 @@ jobs:
       LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_ci_image_name }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.REPOSITORY_NAME }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
       - name: Install dependencies
-        # NOTE: Installing tar is required for actions/cache@v3 to work properly
+        # NOTE: Installing tar is required for actions/cache@v4 to work properly
         #       on docker:20.10.9-dind.
         run: apk add --no-cache tar git
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build the ${{ env.DOCKER_CI_TARGET }} image
         uses: docker/build-push-action@v3
@@ -120,7 +120,7 @@ jobs:
           chmod +x /bin/hadolint
 
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: This has to be done after installing pre-commit, s.t. the
         #       pre-commit hooks are automatically initialized.
 
@@ -128,7 +128,7 @@ jobs:
         run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
 
       - name: Setup pre-commit cache sharing
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.PRE_COMMIT_DIR }}
           key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
@@ -149,7 +149,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
         run: |
@@ -203,7 +203,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -233,7 +233,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -271,7 +271,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -314,7 +314,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -365,7 +365,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -467,7 +467,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
@@ -520,7 +520,7 @@ jobs:
       image: ${{ needs.workspace-container.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # NOTE: Even though the repo is already present in the container, we
         #       also need to check it out at GitHub Actions' preferred location
         #       for private actions and problem matchers to work.
