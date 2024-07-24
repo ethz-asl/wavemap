@@ -76,33 +76,7 @@ ARG CCACHE_DIR
 ENV PATH="/usr/lib/ccache:${PATH}" CCACHE_DIR=$CCACHE_DIR
 
 
-FROM system-deps-installer AS workspace-deps-builder
-
-# Load the dependencies source code and our package's manifest
-# to resolve which dependencies should be built
-ARG CATKIN_WS_PATH
-ARG REPOSITORY_NAME
-WORKDIR $CATKIN_WS_PATH
-COPY --from=cacher /tmp/filtered_sources/src/dependencies src/dependencies
-COPY --from=cacher /tmp/manifests/src/$REPOSITORY_NAME src/$REPOSITORY_NAME
-
-# Pull in ccache's cache
-ARG CCACHE_DIR
-COPY ccache $CCACHE_DIR
-
-# Setup the catkin workspace and build the dependencies
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# hadolint ignore=SC2046
-RUN . /opt/ros/noetic/setup.sh && \
-    catkin init && \
-    catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-    dependencies=$(catkin list --deps --directory src/$REPOSITORY_NAME -u | grep -oP '(?<= - ).*?(?=$)' | grep -v $REPOSITORY_NAME | sort -u) && \
-    catkin_packages=$(catkin list -u | sort -u) && \
-    dependencies_to_catkin_build=$(comm -12 <(echo "$dependencies") <(echo "$catkin_packages")) && \
-    catkin build --no-status --force-color $(echo "$dependencies_to_catkin_build")
-
-
-FROM workspace-deps-builder AS workspace-full-builder
+FROM system-deps-installer AS workspace-full-builder
 
 # Load package source code
 ARG CATKIN_WS_PATH
@@ -152,7 +126,7 @@ FROM workspace-underlay AS workspace-built-deps
 # Pull in the compiled workspace
 ARG CATKIN_WS_PATH
 WORKDIR $CATKIN_WS_PATH
-COPY --from=workspace-deps-builder $CATKIN_WS_PATH .
+COPY --from=system-deps-installer $CATKIN_WS_PATH .
 
 
 FROM workspace-underlay AS workspace-built-full
@@ -163,11 +137,11 @@ WORKDIR $CATKIN_WS_PATH
 COPY --from=workspace-full-builder $CATKIN_WS_PATH .
 
 
-FROM scratch AS workspace-deps-builder-ccache-extractor
+FROM scratch AS system-deps-installer-ccache-extractor
 
 ARG CCACHE_DIR
 WORKDIR /
-COPY --from=workspace-deps-builder $CCACHE_DIR .
+COPY --from=system-deps-installer $CCACHE_DIR .
 
 
 FROM scratch AS workspace-full-builder-ccache-extractor
