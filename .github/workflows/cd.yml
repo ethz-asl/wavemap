@@ -15,7 +15,7 @@ env:
   DOCKER_TARGET_ROS_PKG: wavemap_all
   DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_RELEASE_REGISTRY: ghcr.io
-  DOCKER_RELEASE_TARGET: workspace-built-deps
+  DOCKER_RELEASE_TARGET: workspace
   ROS_HOME: /home/ci/.ros
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
@@ -74,30 +74,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Prepare ccache to accelerate the build
-        id: get-date
-        # NOTE: Installing tar is required for actions/cache@v3 to work properly
-        #       on docker:20.10.9-dind.
-        run: |
-          apk add --no-cache tar
-          mkdir -p ccache
-          echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
-
-      - name: Pull in ccache's cache
-        uses: actions/cache@v3
-        with:
-          path: ccache
-          key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-
-            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-
-
-      - name: Start measuring the build time
-        id: start-time
-        run: |
-          stamp=$(date +%s)
-          echo "stamp=${stamp}" >> $GITHUB_OUTPUT
-
       - name: Build the ${{ env.DOCKER_RELEASE_TARGET }} image
         uses: docker/build-push-action@v3
         with:
@@ -115,18 +91,6 @@ jobs:
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
           tags: ${{ env.LOCAL_IMAGE_NAME }}
-
-      - name: Determine whether the ccache cache should be updated
-        id: should-writeback-ccache
-        run: |
-          runtime=$(( $(date +%s) - ${{ steps.start-time.outputs.stamp }} ))
-          threshold=300  # seconds
-          echo $runtime
-          answer=false
-          if [ $threshold -le $runtime ]; then
-            answer=true
-          fi
-          echo "answer=${answer}" >> $GITHUB_OUTPUT
 
       - name: Test the ${{ env.DOCKER_RELEASE_TARGET }} image
         run: docker run --rm ${{ env.LOCAL_IMAGE_NAME }}
@@ -147,24 +111,6 @@ jobs:
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}
-
-      - name: Write back the build's ccache cache
-        if: steps.should-writeback-ccache.outputs.answer == 'true'
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
-          target: workspace-deps-builder-ccache-extractor
-          build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
-            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
-            CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
-          cache-from: ${{ env.CACHE_IMAGE_NAME }}
-          tags: ${{ env.LOCAL_IMAGE_NAME }}
-          outputs: type=local,dest=ccache
 
       - name: Extract metadata to annotate the image
         id: meta
