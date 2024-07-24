@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(wavemap VERSION 1.6.3 LANGUAGES CXX)
 
-# User options
-option(USE_CLANG_TIDY "Generate necessary files to run clang-tidy" OFF)
-
 # CMake helpers
 include(cmake/wavemap-extras.cmake)
+
+# Enable general wavemap tooling (e.g. to run clang-tidy CI)
+enable_wavemap_general_tooling()
 
 # Libraries
 add_subdirectory(src)
@@ -18,9 +18,4 @@ endif ()
 # Benchmarks
 if (ENABLE_BENCHMARKING)
   add_subdirectory(benchmark)
-endif ()
-
-# Tooling
-if (USE_CLANG_TIDY)
-  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif ()
