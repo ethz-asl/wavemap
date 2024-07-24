@@ -61,20 +61,20 @@ For other citation styles, you can use the `Crosscite's citation formatter <http
      :maxdepth: 2
      :hidden:
 
-     pages/installation
-     pages/demos
-     pages/configuration/index
-     pages/usage_examples
-     pages/contributing
-     pages/faq
+     ../pages/installation
+     ../pages/demos
+     ../pages/configuration/index
+     ../pages/usage_examples
+     ../pages/contributing
+     ../pages/faq
 
     .. toctree::
      :caption: API
      :maxdepth: 1
      :hidden:
 
-     api/class_view_hierarchy
-     api/unabridged_api
+     ../api/class_view_hierarchy
+     ../api/unabridged_api
 
 ..
    _TODO: Include api/file_view_hierarchy again once the directory structure is documented in Doxygen

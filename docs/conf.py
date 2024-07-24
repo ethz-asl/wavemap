@@ -10,7 +10,7 @@ author = 'Victor Reijgwart'
 copyright = 'Victor Reijgwart, ASL ETHZ.'  # pylint: disable=redefined-builtin
 
 # The full version, including alpha/beta/rc tags
-release = lxml.etree.parse('../libraries/wavemap/package.xml').find(
+release = lxml.etree.parse('../interfaces/ros1/wavemap/package.xml').find(
     'version').text
 # The short X.Y version
 version = release
