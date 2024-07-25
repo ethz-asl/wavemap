@@ -24,9 +24,7 @@ class DenseGrid {
   using DataArrayType = std::array<CellDataT, kCellsPerBlock>;
 
   explicit DenseGrid(const CellDataT& default_value) {
-    if (default_value != CellDataT{}) {
-      data_.fill(default_value);
-    }
+    data_.fill(default_value);
   }
 
   CellDataT& operator[](size_t linear_index) {
@@ -55,7 +53,7 @@ class DenseGrid {
   const DataArrayType& data() const { return data_; }
 
  private:
-  DataArrayType data_{};
+  DataArrayType data_;
 };
 }  // namespace wavemap
 
