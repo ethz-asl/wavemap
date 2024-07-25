@@ -6,7 +6,7 @@
   "required": [
     "general",
     "map",
-    "map_operations_pipeline",
+    "map_operations",
     "measurement_integrators",
     "inputs"
   ],
@@ -17,11 +17,11 @@
     "map": {
       "$ref": "map/map_base.json"
     },
-    "map_operations_pipeline": {
+    "map_operations": {
       "description": "A list of operations to perform after map updates.",
       "type": "array",
       "items": {
-        "$ref": "map_operations_pipeline/map_operation_base.json"
+        "$ref": "map_operations/map_operation_base.json"
       }
     },
     "measurement_integrators": {

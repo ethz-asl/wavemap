@@ -64,7 +64,7 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Add map operations to pipeline
   const param::Array map_operation_param_array =
-      param::convert::toParamArray(nh_private, "map_operations_pipeline");
+      param::convert::toParamArray(nh_private, "map_operations");
   for (const auto& operation_params : map_operation_param_array) {
     addOperation(operation_params, nh_private);
   }
