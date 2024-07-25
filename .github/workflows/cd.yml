@@ -75,7 +75,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build the ${{ env.DOCKER_RELEASE_TARGET }} image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
@@ -96,7 +96,7 @@ jobs:
         run: docker run --rm ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image locally
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
@@ -120,7 +120,7 @@ jobs:
 
       - name: Publish the ${{ env.DOCKER_RELEASE_TARGET }} image
         if: startsWith(github.event.ref, 'refs/tags/v')
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
