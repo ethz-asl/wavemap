@@ -1,6 +1,6 @@
 #include <wavemap/core/map/map_base.h>
 
-#include "wavemap_examples/common.h"
+#include "../common.h"
 
 using namespace wavemap;
 int main(int, char**) {

@@ -4,8 +4,7 @@ project(wavemap)
 # Setup catkin package
 find_package(catkin REQUIRED)
 catkin_package(
-    INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include
     LIBRARIES wavemap_core wavemap_io wavemap_pipeline
     CFG_EXTRAS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cmake/wavemap-extras.cmake)

@@ -9,4 +9,4 @@ target_sources(wavemap_pipeline PRIVATE
   pipeline.cc)
 
 set_wavemap_target_properties(wavemap_pipeline)
-target_link_libraries(wavemap_pipeline PUBLIC Eigen3::Eigen glog)
+target_link_libraries(wavemap_pipeline PUBLIC Eigen3::Eigen glog wavemap_core)

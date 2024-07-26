@@ -22,8 +22,8 @@ if ("$ENV{ROS_VERSION}" STREQUAL "1")
   add_subdirectory(interfaces/ros1/wavemap_ros)
   add_subdirectory(interfaces/ros1/wavemap_rviz_plugin)
 
-  ## Usage examples
-  add_subdirectory(examples)
+  # Usage examples
+  add_subdirectory(examples/ros1)
 
 elseif ("$ENV{ROS_VERSION}" STREQUAL "2")
   # Load as a ROS2 project
@@ -36,5 +36,6 @@ else ()
   # NOTE: In this mode, introspection is available
   #       only for the wavemap library.
   add_subdirectory(library)
+  add_subdirectory(examples/cpp)
 
 endif ()

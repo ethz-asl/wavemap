@@ -18,7 +18,7 @@
   <exec_depend>wavemap_ros</exec_depend>
   <exec_depend>wavemap_rviz_plugin</exec_depend>
   <exec_depend>wavemap_utils</exec_depend>
-  <exec_depend>wavemap_examples</exec_depend>
+  <exec_depend>wavemap_examples_ros1</exec_depend>
 
   <export>
     <metapackage/>

@@ -1,6 +1,6 @@
 #include <wavemap/core/utils/query/probability_conversions.h>
 
-#include "wavemap_examples/common.h"
+#include "../common.h"
 
 using namespace wavemap;
 int main(int, char**) {
