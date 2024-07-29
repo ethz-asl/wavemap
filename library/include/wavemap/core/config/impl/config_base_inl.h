@@ -3,54 +3,38 @@
 
 #include <string>
 
-#include <boost/preprocessor/comma_if.hpp>
-#include <boost/preprocessor/comparison/greater.hpp>
-#include <boost/preprocessor/control/expr_iif.hpp>
-#include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/seq/size.hpp>
-#include <boost/preprocessor/seq/variadic_seq_to_seq.hpp>
 #include <boost/preprocessor/stringize.hpp>
-#include <boost/preprocessor/tuple/elem.hpp>
-#include <boost/preprocessor/tuple/rem.hpp>
-#include <boost/preprocessor/tuple/size.hpp>
 
 namespace wavemap {
-#define MEMBER_NAME_FROM_TUPLE(member_name_tuple) \
-  BOOST_PP_TUPLE_ELEM(0, member_name_tuple)
-
-#define ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED(r, class_name,      \
-                                               member_name_tuple)  \
-  static_assert(                                                   \
-      class_name::MemberTypes::contains_t<decltype(                \
-          class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple))>, \
+#define ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED(r, class_name, member_name)    \
+  static_assert(                                                              \
+      class_name::MemberTypes::contains_t<decltype(class_name::member_name)>, \
       BOOST_PP_STRINGIZE(                                                   \
-          The type of class_name::MEMBER_NAME_FROM_TUPLE(member_name_tuple) \
+          The type of class_name::member_name \
           is not supported by default and has not been announced as a       \
           CustomMemberType. Make sure to include this custom type in the    \
           CustomMemberTypes parameter pack passed to ConfigBase.));
 
 #define ASSERT_ALL_CONFIG_MEMBERS_DECLARED(class_name, member_sequence)       \
   static_assert(                                                              \
-      class_name::kNumMembers ==                                              \
-          BOOST_PP_SEQ_SIZE(BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence)),   \
+      class_name::kNumMembers == BOOST_PP_SEQ_SIZE(member_sequence),          \
       "The number of config members declared through DECLARE_CONFIG_MEMBERS " \
       "must match the number of members announced through the num_members "   \
       "template argument passed to ConfigBase.");
 
 #define ASSERT_ALL_CONFIG_MEMBER_TYPES_SUPPORTED(class_name, member_sequence) \
   BOOST_PP_SEQ_FOR_EACH(ASSERT_CONFIG_MEMBER_TYPE_IS_SUPPORTED, class_name,   \
-                        BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence))
+                        member_sequence)
 
-#define APPEND_CONFIG_MEMBER_METADATA(r, class_name, member_name_tuple) \
-  MemberMetadata{                                                       \
-      BOOST_PP_STRINGIZE(MEMBER_NAME_FROM_TUPLE(member_name_tuple)),    \
-                         &class_name::BOOST_PP_TUPLE_REM() member_name_tuple},
+#define APPEND_CONFIG_MEMBER_METADATA(r, class_name, member_name) \
+  MemberMetadata{BOOST_PP_STRINGIZE(member_name), &class_name::member_name},
 
-#define GENERATE_CONFIG_MEMBER_MAP(class_name, member_sequence)          \
-  class_name::MemberMap class_name::memberMap {                          \
-    BOOST_PP_SEQ_FOR_EACH(APPEND_CONFIG_MEMBER_METADATA, class_name,     \
-                          BOOST_PP_VARIADIC_SEQ_TO_SEQ(member_sequence)) \
+#define GENERATE_CONFIG_MEMBER_MAP(class_name, member_sequence)      \
+  class_name::MemberMap class_name::memberMap {                      \
+    BOOST_PP_SEQ_FOR_EACH(APPEND_CONFIG_MEMBER_METADATA, class_name, \
+                          member_sequence)                           \
   }
 
 #define DECLARE_CONFIG_MEMBERS(class_name, member_sequence)             \
