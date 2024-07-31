@@ -43,7 +43,8 @@ target_sources(wavemap_core PRIVATE
     utils/thread_pool.cc)
 
 set_wavemap_target_properties(wavemap_core)
-target_link_libraries(wavemap_core PUBLIC Eigen3::Eigen glog)
+target_link_libraries(wavemap_core
+    PUBLIC Eigen3::Eigen glog Boost::preprocessor)
 if (tracy_FOUND)
   target_link_libraries(wavemap_core PUBLIC TracyClient)
 endif ()
