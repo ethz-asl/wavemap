@@ -1,25 +1,31 @@
 cmake_minimum_required(VERSION 3.10)
 project(wavemap VERSION 2.0.0 LANGUAGES CXX)
 
+# General options
+cmake_policy(SET CMP0077 NEW)
+option(GENERATE_WAVEMAP_INSTALL_RULES
+    "Whether to generate install rules for the wavemap library" ON)
+option(USE_SYSTEM_EIGEN "Use system pre-installed Eigen" ON)
+option(USE_SYSTEM_GLOG "Use system pre-installed glog" ON)
+option(USE_SYSTEM_BOOST "Use system pre-installed Boost" ON)
+
 # CMake helpers and general wavemap tooling (e.g. to run clang-tidy CI)
 include(GNUInstallDirs)
 include(cmake/wavemap-extras.cmake)
 enable_wavemap_general_tooling()
 
 # Dependencies
-option(USE_SYSTEM_EIGEN "Use system pre-installed Eigen" ON)
-option(USE_SYSTEM_GLOG "Use system pre-installed glog" ON)
-option(USE_SYSTEM_BOOST "Use system pre-installed Boost" ON)
 include(cmake/find-wavemap-deps.cmake)
 
 # Only allow installation if all dependencies are available as system libs
 # NOTE: We automatically load missing dependencies with FetchContent, but since
 #       these libraries are not installed they are not guaranteed to remain
 #       available for the entire lifetime of an installed wavemap library.
-if (NOT (USE_SYSTEM_EIGEN AND USE_SYSTEM_GLOG AND USE_SYSTEM_BOOST))
+if (GENERATE_WAVEMAP_INSTALL_RULES
+    AND NOT (USE_SYSTEM_EIGEN AND USE_SYSTEM_GLOG AND USE_SYSTEM_BOOST))
   message(STATUS
       "Disabling option to install. Not all dependencies are system libraries.")
-  set(CMAKE_SKIP_INSTALL_RULES YES)
+  set(GENERATE_WAVEMAP_INSTALL_RULES OFF)
 endif ()
 
 # Libraries
@@ -38,7 +44,7 @@ if (ENABLE_BENCHMARKING)
 endif ()
 
 # Support installs
-if (NOT CMAKE_SKIP_INSTALL_RULES)
+if (GENERATE_WAVEMAP_INSTALL_RULES)
   # Mark embedded 3rd party header-only libraries for installation
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/3rd_party/
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/3rd_party

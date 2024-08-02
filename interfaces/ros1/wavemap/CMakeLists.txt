@@ -10,9 +10,9 @@ catkin_package(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cmake/wavemap-extras.cmake)
 
 # Load the library
+set(GENERATE_WAVEMAP_INSTALL_RULES OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../library
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}
-    EXCLUDE_FROM_ALL)
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME})
 
 # Include the library's tests in catkin's run_tests target
 include(cmake/append_to_catkin_tests.cmake)
@@ -25,7 +25,7 @@ install(TARGETS wavemap_core wavemap_io wavemap_pipeline
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-# Mark cpp header files for installation
+# Mark header files for installation
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include/wavemap/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
     FILES_MATCHING PATTERN "*.h")

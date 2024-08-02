@@ -53,7 +53,7 @@ target_sources(wavemap_core PRIVATE
     utils/thread_pool.cc)
 
 # Support installs
-if (NOT CMAKE_SKIP_INSTALL_RULES)
+if (GENERATE_WAVEMAP_INSTALL_RULES)
   # Mark headers for installation
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/core/
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/core

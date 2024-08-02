@@ -11,7 +11,7 @@ target_link_libraries(wavemap_io PUBLIC Eigen3::Eigen glog wavemap_core)
 target_sources(wavemap_io PRIVATE file_conversions.cc stream_conversions.cc)
 
 # Support installs
-if (NOT CMAKE_SKIP_INSTALL_RULES)
+if (GENERATE_WAVEMAP_INSTALL_RULES)
   # Mark headers for installation
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/io/
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/io

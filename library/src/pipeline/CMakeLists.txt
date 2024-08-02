@@ -15,7 +15,7 @@ target_sources(wavemap_pipeline PRIVATE
     pipeline.cc)
 
 # Support installs
-if (NOT CMAKE_SKIP_INSTALL_RULES)
+if (GENERATE_WAVEMAP_INSTALL_RULES)
   # Mark headers for installation
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/pipeline/
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/pipeline
