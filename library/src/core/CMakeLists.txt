@@ -52,14 +52,17 @@ target_sources(wavemap_core PRIVATE
     utils/undistortion/stamped_pointcloud.cc
     utils/thread_pool.cc)
 
-# Mark headers for installation
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/core/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/core
-    FILES_MATCHING PATTERN "*.h")
+# Support installs
+if (NOT CMAKE_SKIP_INSTALL_RULES)
+  # Mark headers for installation
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/core/
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/core
+      FILES_MATCHING PATTERN "*.h")
 
-# Mark target for installation and add it to the CMake exports file
-install(TARGETS wavemap_core
-    EXPORT wavemap-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  # Mark target for installation and add it to the CMake exports file
+  install(TARGETS wavemap_core
+      EXPORT wavemap-targets
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif ()

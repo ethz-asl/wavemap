@@ -10,14 +10,17 @@ target_link_libraries(wavemap_io PUBLIC Eigen3::Eigen glog wavemap_core)
 # Set sources
 target_sources(wavemap_io PRIVATE file_conversions.cc stream_conversions.cc)
 
-# Mark headers for installation
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/io/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/io
-    FILES_MATCHING PATTERN "*.h")
+# Support installs
+if (NOT CMAKE_SKIP_INSTALL_RULES)
+  # Mark headers for installation
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/io/
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/io
+      FILES_MATCHING PATTERN "*.h")
 
-# Mark target for installation and add it to the CMake exports file
-install(TARGETS wavemap_io
-    EXPORT wavemap-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  # Mark target for installation and add it to the CMake exports file
+  install(TARGETS wavemap_io
+      EXPORT wavemap-targets
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif ()

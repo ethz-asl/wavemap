@@ -12,6 +12,16 @@ option(USE_SYSTEM_GLOG "Use system pre-installed glog" ON)
 option(USE_SYSTEM_BOOST "Use system pre-installed Boost" ON)
 include(cmake/find-wavemap-deps.cmake)
 
+# Only allow installation if all dependencies are available as system libs
+# NOTE: We automatically load missing dependencies with FetchContent, but since
+#       these libraries are not installed they are not guaranteed to remain
+#       available for the entire lifetime of an installed wavemap library.
+if (NOT (USE_SYSTEM_EIGEN AND USE_SYSTEM_GLOG AND USE_SYSTEM_BOOST))
+  message(STATUS
+      "Disabling option to install. Not all dependencies are system libraries.")
+  set(CMAKE_SKIP_INSTALL_RULES YES)
+endif ()
+
 # Libraries
 add_subdirectory(src/core)
 add_subdirectory(src/io)
@@ -27,31 +37,33 @@ if (ENABLE_BENCHMARKING)
   add_subdirectory(benchmark)
 endif ()
 
-# Install
-# Mark embedded 3rd party header-only libraries for installation
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/3rd_party/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/3rd_party
-    FILES_MATCHING PATTERN "*.h")
-# Install the CMake exports file
-install(EXPORT wavemap-targets
-    FILE wavemap-targets.cmake
-    NAMESPACE wavemap::
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
-# Generate and install a version file
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(wavemap-config-version.cmake
-    VERSION ${PACKAGE_VERSION}
-    COMPATIBILITY AnyNewerVersion)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/wavemap-config-version.cmake"
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
-# Install our CMake helper functions
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/wavemap-extras.cmake"
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
-# Generate and install a package config file
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/wavemap-config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/wavemap-config.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/wavemap-config.cmake"
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
+# Support installs
+if (NOT CMAKE_SKIP_INSTALL_RULES)
+  # Mark embedded 3rd party header-only libraries for installation
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/3rd_party/
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/3rd_party
+      FILES_MATCHING PATTERN "*.h")
+  # Install the CMake exports file
+  install(EXPORT wavemap-targets
+      FILE wavemap-targets.cmake
+      NAMESPACE wavemap::
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
+  # Generate and install a version file
+  include(CMakePackageConfigHelpers)
+  write_basic_package_version_file(wavemap-config-version.cmake
+      VERSION ${PACKAGE_VERSION}
+      COMPATIBILITY AnyNewerVersion)
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/wavemap-config-version.cmake"
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
+  # Install our CMake helper functions
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/wavemap-extras.cmake"
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
+  # Generate and install a package config file
+  configure_package_config_file(
+      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/wavemap-config.cmake.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/wavemap-config.cmake"
+      INSTALL_DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake
+      NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/wavemap-config.cmake"
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/wavemap/cmake)
+endif ()
