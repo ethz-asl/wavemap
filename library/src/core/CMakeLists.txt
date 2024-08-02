@@ -1,7 +1,17 @@
+# Declare the wavemap core library
 add_library(wavemap_core)
 add_library(wavemap::wavemap_core ALIAS wavemap_core)
 
+# Configure target properties, include directories and linking
+set_wavemap_target_properties(wavemap_core)
 add_wavemap_include_directories(wavemap_core)
+target_link_libraries(wavemap_core
+    PUBLIC Eigen3::Eigen glog Boost::preprocessor)
+if (tracy_FOUND)
+  target_link_libraries(wavemap_core PUBLIC TracyClient)
+endif ()
+
+# Set sources
 target_sources(wavemap_core PRIVATE
     config/string_list.cc
     config/value_with_unit.cc
@@ -42,9 +52,14 @@ target_sources(wavemap_core PRIVATE
     utils/undistortion/stamped_pointcloud.cc
     utils/thread_pool.cc)
 
-set_wavemap_target_properties(wavemap_core)
-target_link_libraries(wavemap_core
-    PUBLIC Eigen3::Eigen glog Boost::preprocessor)
-if (tracy_FOUND)
-  target_link_libraries(wavemap_core PUBLIC TracyClient)
-endif ()
+# Mark headers for installation
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/core/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/core
+    FILES_MATCHING PATTERN "*.h")
+
+# Mark target for installation and add it to the CMake exports file
+install(TARGETS wavemap_core
+    EXPORT wavemap-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

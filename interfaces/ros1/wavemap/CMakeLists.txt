@@ -11,7 +11,8 @@ catkin_package(
 
 # Load the library
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../library
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME})
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}
+    EXCLUDE_FROM_ALL)
 
 # Include the library's tests in catkin's run_tests target
 include(cmake/append_to_catkin_tests.cmake)
