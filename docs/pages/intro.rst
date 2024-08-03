@@ -61,15 +61,15 @@ For other citation styles, you can use the `Crosscite's citation formatter <http
      :maxdepth: 2
      :hidden:
 
-     pages/installation
+     pages/installation/index
      pages/demos
      pages/configuration/index
-     pages/usage_examples
+     pages/usage_examples/index
      pages/contributing
      pages/faq
 
     .. toctree::
-     :caption: API
+     :caption: C++ API
      :maxdepth: 1
      :hidden:
 

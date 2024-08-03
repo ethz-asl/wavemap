@@ -18,7 +18,8 @@ version = release
 # General configuration
 extensions = [
     'sphinx.ext.mathjax', "sphinx.ext.extlinks", 'sphinx.ext.githubpages',
-    "sphinx_sitemap", 'breathe', 'exhale', "sphinxawesome_theme.highlighting"
+    'sphinx_design', 'sphinx_sitemap', 'breathe', 'exhale',
+    'sphinxawesome_theme.highlighting'
 ]
 templates_path = ['_templates']
 source_suffix = ['.rst', '.md']

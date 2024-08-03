@@ -4,6 +4,8 @@ Demos
 .. include:: <isonum.txt>
 .. rstcheck: ignore-roles=gh_file
 
+All of the demos currently use wavemap's ROS1 interface. In case they interest you but you do not use ROS1, we recommend trying them through a :ref:`temporary Docker container <installation-ros1-docker>`.
+
 Quick start
 ***********
 To get an impression of the maps wavemap can generate, you can download the maps of our `RSS paper <https://www.roboticsproceedings.org/rss19/p065.pdf>`__ and directly view them in Rviz. To do so,
@@ -39,18 +41,6 @@ To process it with wavemap, run::
     roslaunch wavemap_ros panoptic_mapping_rgbd_flat.launch base_path:="${FLAT_DATA_DIR}"/flat_dataset/run1
 
 To experiment with different wavemap settings, modify :gh_file:`this config file <ros/wavemap_ros/config/panoptic_mapping_rgbd.yaml>`.
-
-Your own data
-*************
-The only requirements for running wavemap are:
-
-1. a source of depth measurements,
-2. sensor pose (estimates) for each measurement.
-
-We usually use depth measurements from depth cameras or 3D LiDARs, but any source would work as long as a sufficiently good :ref:`projection <configuration_projection_models>` and :ref:`measurement <configuration_measurement_models>` model is available. Wavemap's ROS interface natively supports depth image and pointcloud inputs, and automatically queries the sensor poses from the TF tree.
-
-To help you get started quickly, we provide various example :gh_file:`config <ros/wavemap_ros/config>` and ROS :gh_file:`launch <ros/wavemap_ros/launch>` files.
-For a brief introduction on how to edit wavemap configs and an overview of all the available settings, see the :doc:`configuration page <configuration/index>`.
 
 Multi-sensor live demo
 **********************

@@ -1,14 +1,16 @@
-Installation
-############
+ROS1 (catkin)
+#############
 .. highlight:: bash
+.. rstcheck: ignore-directives=tab-set-code
 .. rstcheck: ignore-roles=gh_file
 
 If you would like to quickly try out wavemap or if you're not already using Ubuntu Noetic and ROS1, we recommend running wavemap in Docker.
 For active wavemap development, it is probably easiest to install wavemap directly on your system.
 
-
 Docker
 ******
+.. _installation-ros1-docker:
+
 If you have not yet installed Docker on your computer, please follow `these instructions <https://docs.docker.com/engine/install/>`_. We also recommend executing the `post-installation steps for Linux <https://docs.docker.com/engine/install/linux-postinstall/>`_, to make Docker available without ``sudo`` priviliges.
 
 To build wavemap's Docker image, simply run::
@@ -19,10 +21,10 @@ This will create a local image on your machine containing the latest version of 
 
 There are many ways to work with Docker containers, with different pros and cons depending on the application.
 
-One documented example of how to run wavemap containers with GUI (e.g. Rviz) support is provided in this :gh_file:`run_in_docker.sh <tooling/packages/wavemap_utils/scripts/run_in_docker.sh>` script. This example should suffice to run all the :doc:`demos`.
+One documented example of how to run wavemap containers with GUI (e.g. Rviz) support is provided in this :gh_file:`run_in_docker.sh <tooling/packages/wavemap_utils/scripts/run_in_docker.sh>` script. This example should suffice to run all the :doc:`demos <../demos>`.
 
-System install with ROS
-***********************
+Native install
+**************
 We recommend using `ROS Noetic <http://wiki.ros.org/noetic/Installation>`_, as installed following the `standard instructions <http://wiki.ros.org/noetic/Installation>`_.
 
 Make sure these required dependencies are installed::
@@ -64,8 +66,3 @@ Build all of wavemap's packages, including its ROS interface and the Rviz plugin
 
     cd ~/catkin_ws/
     catkin build wavemap_all
-
-
-System install without ROS
-**************************
-Wavemap's core libraries (in the `library` folder) are ROS agnostic and only have a few lightweight dependencies. They can be built and integrated into your project using CMake.

@@ -27,5 +27,8 @@ For reference, an overview of all available config options is provided below.
     :caption: Full options
     :maxdepth: 2
 
+    general
     map
+    map_operations
+    measurement_integrators
     inputs
