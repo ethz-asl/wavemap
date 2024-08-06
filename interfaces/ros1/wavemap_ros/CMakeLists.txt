@@ -32,7 +32,7 @@ cs_add_library(${PROJECT_NAME}
     src/utils/tf_transformer.cc
     src/ros_server.cc)
 set_wavemap_target_properties(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} glog)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
 
 # Binaries
 cs_add_executable(ros_server app/ros_server.cc)

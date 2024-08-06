@@ -1,11 +1,22 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap)
 
-# Setup catkin package
+# Find dependencies
 find_package(catkin REQUIRED)
+find_package(Eigen3 QUIET NO_MODULE)
+# Manually set the lib name for glog and remap the include dir var for Eigen3
+# cmake-lint: disable=C0103
+set(glog_LIBRARIES glog)
+set(Eigen3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+# NOTE: These are workarounds to handle wavemap's dependencies in catkin despite
+#       glog not yet supporting CMake's find_package on Ubuntu 20.04 and Eigen3
+#       naming its variables differently from what catkin expects.
+
+# Register catkin package
 catkin_package(
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include
     LIBRARIES wavemap_core wavemap_io wavemap_pipeline
+    DEPENDS Eigen3 glog
     CFG_EXTRAS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cmake/wavemap-extras.cmake)
 

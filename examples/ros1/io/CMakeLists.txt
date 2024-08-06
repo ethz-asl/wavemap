@@ -2,9 +2,9 @@
 add_executable(receive_map_over_ros receive_map_over_ros.cc)
 set_wavemap_target_properties(receive_map_over_ros)
 target_include_directories(receive_map_over_ros PUBLIC ${catkin_INCLUDE_DIRS})
-target_link_libraries(receive_map_over_ros PUBLIC glog ${catkin_LIBRARIES})
+target_link_libraries(receive_map_over_ros PUBLIC ${catkin_LIBRARIES})
 
 add_executable(send_map_over_ros send_map_over_ros.cc)
 set_wavemap_target_properties(send_map_over_ros)
 target_include_directories(send_map_over_ros PUBLIC ${catkin_INCLUDE_DIRS})
-target_link_libraries(send_map_over_ros PUBLIC glog ${catkin_LIBRARIES})
+target_link_libraries(send_map_over_ros PUBLIC ${catkin_LIBRARIES})
