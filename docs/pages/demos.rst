@@ -27,7 +27,7 @@ To run wavemap on the Cloister sequence used in the paper, run::
     roslaunch wavemap_ros newer_college_os0_cloister.launch rosbag_dir:=<path_to_downloaded_dataset_directory>
 
 For additional options, please refer to the launch file's documented arguments
-:gh_file:`here <ros/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch>`. To experiment with wavemap's configuration, modify :gh_file:`this config file <ros/wavemap_ros/config/ouster_os0.yaml>`.
+:gh_file:`here <interfaces/ros1/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch>`. To experiment with wavemap's configuration, modify :gh_file:`this config file <interfaces/ros1/wavemap_ros/config/ouster_os0.yaml>`.
 
 Panoptic mapping dataset
 ************************
@@ -40,7 +40,7 @@ To process it with wavemap, run::
 
     roslaunch wavemap_ros panoptic_mapping_rgbd_flat.launch base_path:="${FLAT_DATA_DIR}"/flat_dataset/run1
 
-To experiment with different wavemap settings, modify :gh_file:`this config file <ros/wavemap_ros/config/panoptic_mapping_rgbd.yaml>`.
+To experiment with different wavemap settings, modify :gh_file:`this config file <interfaces/ros1/wavemap_ros/config/panoptic_mapping_rgbd.yaml>`.
 
 Multi-sensor live demo
 **********************
@@ -48,7 +48,7 @@ This section provides instructions to reproduce the interactive multi-sensor, mu
 
 Hardware
 ========
-Wavemap can be :doc:`configured <configuration/index>` to work with almost any depth input. In case you want to replicate our exact setup, we used a Livox MID-360 LiDAR at RSS and an Ouster OS0-128 at the Swiss Robotics Day. We chose the PMD Pico Monstar depth camera for both demos, but the Azure Kinect also works well. Although any recent laptop will suffice, we recommend using a laptop with a discrete GPU as it will help Rviz run much smoother.
+Wavemap can be :doc:`configured <parameters/index>` to work with almost any depth input. In case you want to replicate our exact setup, we used a Livox MID-360 LiDAR at RSS and an Ouster OS0-128 at the Swiss Robotics Day. We chose the PMD Pico Monstar depth camera for both demos, but the Azure Kinect also works well. Although any recent laptop will suffice, we recommend using a laptop with a discrete GPU as it will help Rviz run much smoother.
 
 Docker
 ======
@@ -65,7 +65,7 @@ Configure
 =========
 Start by configuring the laptop's network interface to receive the LiDAR data. By default, the Livox we used required the laptop's IP to be set to ``192.168.1.50``, while the Ouster required the laptop's IP to be set to ``192.168.10.50``. In case you're using another LiDAR, the expected receiver IP is usually mentioned in the LiDARs manual or driver documentation.
 
-Next, update the sensor calibrations to match your sensor setup. If you're using the exact sensors we used, you mainly need to update the extrinsics. These are defined through static TFs, at the bottom of the launch file for your sensor setup (e.g. :gh_file:`here <ros/wavemap_ros/launch/online/livox_mid360_pico_monstar.launch#L76>` or :gh_file:`here <ros/wavemap_ros/launch/online/ouster_os0_pico_monstar.launch#L78>`). If you're using different sensors, you will also need to update the wavemap, FastLIO and sensor driver config files. To help you get started quickly, we provide examples for many different sensor setups for :gh_file:`wavemap <ros/wavemap_ros/config>` and :gh_file:`FastLIO <ros/wavemap_ros/config/other_packages/fast_lio>`. In case we do not yet have an example FastLIO config for your LiDAR, you might find one in the `official the FastLIO repository <https://github.com/hku-mars/FAST_LIO>`__.
+Next, update the sensor calibrations to match your sensor setup. If you're using the exact sensors we used, you mainly need to update the extrinsics. These are defined through static TFs, at the bottom of the launch file for your sensor setup (e.g. :gh_file:`here <interfaces/ros1/wavemap_ros/launch/online/livox_mid360_pico_monstar.launch#L76>` or :gh_file:`here <interfaces/ros1/wavemap_ros/launch/online/ouster_os0_pico_monstar.launch#L78>`). If you're using different sensors, you will also need to update the wavemap, FastLIO and sensor driver config files. To help you get started quickly, we provide examples for many different sensor setups for :gh_file:`wavemap <interfaces/ros1/wavemap_ros/config>` and :gh_file:`FastLIO <interfaces/ros1/wavemap_ros/config/other_packages/fast_lio>`. In case we do not yet have an example FastLIO config for your LiDAR, you might find one in the `official the FastLIO repository <https://github.com/hku-mars/FAST_LIO>`__.
 
 Note that the ``demo_in_docker.sh`` script saves and restores the `ros/wavemap_ros` folder across runs (explained :gh_file:`here <tooling/packages/wavemap_utils/scripts/demo_in_docker.sh#L9>`), so you can configure wavemap by simply running ``demo_in_docker.sh`` and editing the launch and config files through the resulting interactive shell.
 

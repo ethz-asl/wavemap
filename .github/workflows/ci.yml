@@ -160,6 +160,16 @@ jobs:
           pip3 install sphinxawesome-theme --pre
           pip3 install "sphinx<7,>6"
 
+      - name: Parse C++ library with Doxygen
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: doxygen Doxyfile_cpp
+
+      - name: Parse ROS1 interface with Doxygen
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: doxygen Doxyfile_ros1
+
       - name: Build documentation site
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
         shell: bash

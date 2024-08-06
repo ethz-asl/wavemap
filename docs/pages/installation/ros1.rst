@@ -31,7 +31,7 @@ Make sure these required dependencies are installed::
 
     sudo apt update
     sudo apt install git build-essential  # General
-    sudo apt install python3-catkin-tools python3-vcstool python3-rosdep  #ROS
+    sudo apt install python3-catkin-tools python3-vcstool python3-rosdep  # ROS
 
 Then create a catkin workspace with::
 
@@ -40,17 +40,23 @@ Then create a catkin workspace with::
     catkin init
     catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-Next, clone the code for wavemap and its catkin dependencies. If you're using `SSH keys for github <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_ (recommended)::
+Next, clone the code for wavemap and its catkin dependencies. We recommend using `SSH <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_. Alternatively, HTTPS can be used without requiring keys to be set up.
 
-    cd ~/catkin_ws/src
-    git clone git@github.com:ethz-asl/wavemap.git
-    vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_ssh.yml
+.. tab-set-code::
 
-If **not using SSH** keys, but https instead::
+    .. code-block:: SSH
+      :class: no-header
 
-    cd ~/catkin_ws/src
-    git clone https://github.com/ethz-asl/wavemap.git
-    vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_https.yml
+      cd ~/catkin_ws/src
+      git clone git@github.com:ethz-asl/wavemap.git
+      vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_ssh.yml
+
+    .. code-block:: HTTPS
+      :class: no-header
+
+      cd ~/catkin_ws/src
+      git clone https://github.com/ethz-asl/wavemap.git
+      vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_https.yml
 
 Make sure rosdep is initialized::
 

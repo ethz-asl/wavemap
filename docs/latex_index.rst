@@ -8,8 +8,8 @@ Wavemap documentation
    pages/latex_intro
    pages/installation/index
    pages/demos
-   pages/configuration/index
-   pages/usage_examples/index
+   pages/tutorials/index
+   pages/parameters/index
    pages/contributing
    pages/faq
 
