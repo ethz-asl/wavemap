@@ -36,7 +36,7 @@ measurement_integrators:
       max_range: { meters: 5.0 }
 
 inputs:
-  - type: depth_image
+  - type: depth_image_topic
     topic_name: "/data/depth_image"
     measurement_integrator_names: panoptic_mapping_camera
     topic_queue_length: 10

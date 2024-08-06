@@ -17,7 +17,7 @@
 #include <wavemap/core/utils/thread_pool.h>
 #include <wavemap/pipeline/pipeline.h>
 
-#include "wavemap_ros/inputs/input_base.h"
+#include "wavemap_ros/inputs/ros_input_base.h"
 #include "wavemap_ros/utils/logging_level.h"
 #include "wavemap_ros/utils/tf_transformer.h"
 
@@ -60,10 +60,12 @@ class RosServer {
   MapOperationBase* addOperation(const param::Value& operation_params,
                                  ros::NodeHandle nh_private);
 
-  InputBase* addInput(const param::Value& integrator_params,
-                      const ros::NodeHandle& nh, ros::NodeHandle nh_private);
-  InputBase* addInput(std::unique_ptr<InputBase> input);
-  const std::vector<std::unique_ptr<InputBase>>& getInputs() { return inputs_; }
+  RosInputBase* addInput(const param::Value& integrator_params,
+                         const ros::NodeHandle& nh, ros::NodeHandle nh_private);
+  RosInputBase* addInput(std::unique_ptr<RosInputBase> input);
+  const std::vector<std::unique_ptr<RosInputBase>>& getInputs() {
+    return inputs_;
+  }
   void clearInputs() { inputs_.clear(); }
 
   bool saveMap(const std::filesystem::path& file_path) const;
@@ -82,7 +84,7 @@ class RosServer {
   std::shared_ptr<Pipeline> pipeline_;
 
   // Measurement and pose inputs
-  std::vector<std::unique_ptr<InputBase>> inputs_;
+  std::vector<std::unique_ptr<RosInputBase>> inputs_;
   std::shared_ptr<TfTransformer> transformer_;
 
   // ROS services

@@ -7,7 +7,7 @@
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
-#include "wavemap_ros/inputs/input_factory.h"
+#include "wavemap_ros/inputs/ros_input_factory.h"
 #include "wavemap_ros/map_operations/map_ros_operation_factory.h"
 
 namespace wavemap {
@@ -98,15 +98,16 @@ void RosServer::clear() {
   }
 }
 
-InputBase* RosServer::addInput(const param::Value& integrator_params,
-                               const ros::NodeHandle& nh,
-                               ros::NodeHandle nh_private) {
-  auto input = InputFactory::create(integrator_params, pipeline_, transformer_,
-                                    config_.world_frame, nh, nh_private);
+RosInputBase* RosServer::addInput(const param::Value& integrator_params,
+                                  const ros::NodeHandle& nh,
+                                  ros::NodeHandle nh_private) {
+  auto input =
+      RosInputFactory::create(integrator_params, pipeline_, transformer_,
+                              config_.world_frame, nh, nh_private);
   return addInput(std::move(input));
 }
 
-InputBase* RosServer::addInput(std::unique_ptr<InputBase> input) {
+RosInputBase* RosServer::addInput(std::unique_ptr<RosInputBase> input) {
   if (input) {
     return inputs_.emplace_back(std::move(input)).get();
   }

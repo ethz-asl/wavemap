@@ -85,7 +85,7 @@ measurement_integrators:
       max_update_resolution: { meters: 0.02 }
 
 inputs:
-  - type: depth_image
+  - type: depth_image_topic
     topic_name: "/pico_monstar/image_rect"
     measurement_integrator_names: [ monstar_short_range, monstar_medium_range ]
     topic_queue_length: 1
@@ -94,7 +94,7 @@ inputs:
     # depth_scale_factor: 0.001
     # reprojected_pointcloud_topic_name: "/wavemap/reprojected_pointcloud"
 
-  - type: pointcloud
+  - type: pointcloud_topic
     topic_name: "/os_cloud_node/points"
     topic_type: ouster
     measurement_integrator_names: ouster_os0

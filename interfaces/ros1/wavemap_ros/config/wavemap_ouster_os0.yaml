@@ -43,7 +43,7 @@ measurement_integrators:
       max_range: { meters: 15.0 }
 
 inputs:
-  - type: pointcloud
+  - type: pointcloud_topic
     topic_name: "/os_cloud_node/points"
     topic_type: ouster
     measurement_integrator_names: ouster_os0

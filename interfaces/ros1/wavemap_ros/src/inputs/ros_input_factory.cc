@@ -1,14 +1,14 @@
-#include "wavemap_ros/inputs/input_factory.h"
+#include "wavemap_ros/inputs/ros_input_factory.h"
 
-#include "wavemap_ros/inputs/depth_image_input.h"
-#include "wavemap_ros/inputs/pointcloud_input.h"
+#include "wavemap_ros/inputs/depth_image_topic_input.h"
+#include "wavemap_ros/inputs/pointcloud_topic_input.h"
 
 namespace wavemap {
-std::unique_ptr<InputBase> InputFactory::create(
+std::unique_ptr<RosInputBase> RosInputFactory::create(
     const param::Value& params, std::shared_ptr<Pipeline> pipeline,
     std::shared_ptr<TfTransformer> transformer, std::string world_frame,
     ros::NodeHandle nh, ros::NodeHandle nh_private) {
-  if (const auto type = InputType::from(params); type) {
+  if (const auto type = RosInputType::from(params); type) {
     return create(type.value(), params, std::move(pipeline),
                   std::move(transformer), std::move(world_frame), nh,
                   nh_private);
@@ -18,8 +18,8 @@ std::unique_ptr<InputBase> InputFactory::create(
   return nullptr;
 }
 
-std::unique_ptr<InputBase> InputFactory::create(
-    InputType input_type, const param::Value& params,
+std::unique_ptr<RosInputBase> RosInputFactory::create(
+    RosInputType input_type, const param::Value& params,
     std::shared_ptr<Pipeline> pipeline,
     std::shared_ptr<TfTransformer> transformer, std::string world_frame,
     ros::NodeHandle nh, ros::NodeHandle nh_private) {
@@ -30,18 +30,20 @@ std::unique_ptr<InputBase> InputFactory::create(
 
   // Create the input handler
   switch (input_type) {
-    case InputType::kPointcloud:
-      if (const auto config = PointcloudInputConfig::from(params); config) {
-        return std::make_unique<PointcloudInput>(
+    case RosInputType::kPointcloudTopic:
+      if (const auto config = PointcloudTopicInputConfig::from(params);
+          config) {
+        return std::make_unique<PointcloudTopicInput>(
             config.value(), std::move(pipeline), std::move(transformer),
             std::move(world_frame), nh, nh_private);
       } else {
         ROS_ERROR("Pointcloud input handler config could not be loaded.");
         return nullptr;
       }
-    case InputType::kDepthImage:
-      if (const auto config = DepthImageInputConfig::from(params); config) {
-        return std::make_unique<DepthImageInput>(
+    case RosInputType::kDepthImageTopic:
+      if (const auto config = DepthImageTopicInputConfig::from(params);
+          config) {
+        return std::make_unique<DepthImageTopicInput>(
             config.value(), std::move(pipeline), std::move(transformer),
             std::move(world_frame), nh, nh_private);
       } else {

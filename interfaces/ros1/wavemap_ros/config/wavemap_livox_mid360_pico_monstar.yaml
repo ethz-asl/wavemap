@@ -83,7 +83,7 @@ measurement_integrators:
       max_update_resolution: { meters: 0.02 }
 
 inputs:
-  - type: depth_image
+  - type: depth_image_topic
     topic_name: "/pico_monstar/image_rect"
     measurement_integrator_names: [monstar_short_range, monstar_medium_range]
     topic_queue_length: 1
@@ -92,7 +92,7 @@ inputs:
     # depth_scale_factor: 0.001
     # reprojected_pointcloud_topic_name: "/wavemap/depth_cam_input"
 
-  - type: pointcloud
+  - type: pointcloud_topic
     topic_name: "/livox/lidar"
     topic_type: livox
     measurement_integrator_names: livox_mid360

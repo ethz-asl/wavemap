@@ -41,7 +41,7 @@ measurement_integrators:
       max_range: { meters: 12.0 }
 
 inputs:
-  - type: pointcloud
+  - type: pointcloud_topic
     topic_name: "/livox/lidar"
     topic_type: livox
     measurement_integrator_names: livox_mid360

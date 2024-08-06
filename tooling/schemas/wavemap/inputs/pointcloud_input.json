@@ -10,7 +10,7 @@
   ],
   "properties": {
     "type": {
-      "const": "pointcloud"
+      "const": "pointcloud_topic"
     },
     "topic_name": {
       "description": "Name of the ROS topic to subscribe to.",

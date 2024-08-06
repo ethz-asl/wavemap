@@ -1,4 +1,4 @@
-#include "wavemap_ros/inputs/depth_image_input.h"
+#include "wavemap_ros/inputs/depth_image_topic_input.h"
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
@@ -11,7 +11,7 @@
 #include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(DepthImageInputConfig,
+DECLARE_CONFIG_MEMBERS(DepthImageTopicInputConfig,
                       (topic_name)
                       (topic_queue_length)
                       (measurement_integrator_names)
@@ -23,7 +23,7 @@ DECLARE_CONFIG_MEMBERS(DepthImageInputConfig,
                       (time_offset)
                       (projected_pointcloud_topic_name));
 
-bool DepthImageInputConfig::isValid(bool verbose) const {
+bool DepthImageTopicInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
@@ -35,19 +35,19 @@ bool DepthImageInputConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-DepthImageInput::DepthImageInput(const DepthImageInputConfig& config,
-                                 std::shared_ptr<Pipeline> pipeline,
-                                 std::shared_ptr<TfTransformer> transformer,
-                                 std::string world_frame, ros::NodeHandle nh,
-                                 ros::NodeHandle nh_private)
-    : InputBase(config, std::move(pipeline), std::move(transformer),
-                std::move(world_frame), nh, nh_private),
+DepthImageTopicInput::DepthImageTopicInput(
+    const DepthImageTopicInputConfig& config,
+    std::shared_ptr<Pipeline> pipeline,
+    std::shared_ptr<TfTransformer> transformer, std::string world_frame,
+    ros::NodeHandle nh, ros::NodeHandle nh_private)
+    : RosInputBase(config, std::move(pipeline), std::move(transformer),
+                   std::move(world_frame), nh, nh_private),
       config_(config.checkValid()) {
   // Subscribe to the depth image input
   image_transport::ImageTransport it(nh);
   depth_image_sub_ = it.subscribe(
       config_.topic_name, config_.topic_queue_length,
-      &DepthImageInput::callback, this,
+      &DepthImageTopicInput::callback, this,
       image_transport::TransportHints(config_.image_transport_hints));
 
   // Advertise the projected pointcloud publisher if enabled
@@ -57,7 +57,7 @@ DepthImageInput::DepthImageInput(const DepthImageInputConfig& config,
   }
 }
 
-void DepthImageInput::processQueue() {
+void DepthImageTopicInput::processQueue() {
   ProfilerZoneScoped;
   while (!depth_image_queue_.empty()) {
     const sensor_msgs::Image& oldest_msg = depth_image_queue_.front();
@@ -125,7 +125,7 @@ void DepthImageInput::processQueue() {
   }
 }
 
-void DepthImageInput::publishProjectedPointcloudIfEnabled(
+void DepthImageTopicInput::publishProjectedPointcloudIfEnabled(
     const ros::Time& stamp,
     const PosedImage<FloatingPoint>& /*posed_depth_image*/) {
   ProfilerZoneScoped;
@@ -161,7 +161,7 @@ void DepthImageInput::publishProjectedPointcloudIfEnabled(
   // pointcloud2_msg); projected_pointcloud_pub_.publish(pointcloud2_msg);
 }
 
-PosedPointcloud<Point3D> DepthImageInput::project(
+PosedPointcloud<Point3D> DepthImageTopicInput::project(
     const PosedImage<>& posed_depth_image,
     const ProjectorBase& projection_model) {
   ProfilerZoneScoped;

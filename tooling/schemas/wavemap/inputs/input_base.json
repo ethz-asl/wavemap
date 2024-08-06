@@ -10,8 +10,8 @@
       "description": "Type of the measurement input handler that should be used.",
       "type": "string",
       "enum": [
-        "pointcloud",
-        "depth_image"
+        "pointcloud_topic",
+        "depth_image_topic"
       ]
     }
   },

@@ -1,13 +1,13 @@
-#include "wavemap_ros/inputs/input_base.h"
+#include "wavemap_ros/inputs/ros_input_base.h"
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(InputBaseConfig,
+DECLARE_CONFIG_MEMBERS(RosInputBaseConfig,
                       (topic_name)
                       (topic_queue_length)
                       (measurement_integrator_names)
                       (processing_retry_period));
 
-bool InputBaseConfig::isValid(bool verbose) const {
+bool RosInputBaseConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
@@ -18,11 +18,11 @@ bool InputBaseConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-InputBase::InputBase(const InputBaseConfig& config,
-                     std::shared_ptr<Pipeline> pipeline,
-                     std::shared_ptr<TfTransformer> transformer,
-                     std::string world_frame, const ros::NodeHandle& nh,
-                     ros::NodeHandle /*nh_private*/)
+RosInputBase::RosInputBase(const RosInputBaseConfig& config,
+                           std::shared_ptr<Pipeline> pipeline,
+                           std::shared_ptr<TfTransformer> transformer,
+                           std::string world_frame, const ros::NodeHandle& nh,
+                           ros::NodeHandle /*nh_private*/)
     : config_(config.checkValid()),
       pipeline_(std::move(pipeline)),
       transformer_(std::move(transformer)),

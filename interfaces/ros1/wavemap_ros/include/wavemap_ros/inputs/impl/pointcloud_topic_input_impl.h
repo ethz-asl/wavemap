@@ -1,17 +1,17 @@
-#ifndef WAVEMAP_ROS_INPUTS_IMPL_POINTCLOUD_INPUT_IMPL_H_
-#define WAVEMAP_ROS_INPUTS_IMPL_POINTCLOUD_INPUT_IMPL_H_
+#ifndef WAVEMAP_ROS_INPUTS_IMPL_POINTCLOUD_TOPIC_INPUT_IMPL_H_
+#define WAVEMAP_ROS_INPUTS_IMPL_POINTCLOUD_TOPIC_INPUT_IMPL_H_
 
 namespace wavemap {
 template <typename RegistrarT>
-bool PointcloudInput::registerCallback(PointcloudTopicType type,
-                                       RegistrarT registrar) {
+bool PointcloudTopicInput::registerCallback(PointcloudTopicType type,
+                                            RegistrarT registrar) {
   switch (type) {
     case PointcloudTopicType::kPointCloud2:
     case PointcloudTopicType::kOuster:
       // clang-format off
-      registrar(static_cast<void(PointcloudInput::*)(
+      registrar(static_cast<void(PointcloudTopicInput::*)(
                     const sensor_msgs::PointCloud2&)>(
-          &PointcloudInput::callback));
+          &PointcloudTopicInput::callback));
       // clang-format on
       return true;
     case PointcloudTopicType::kLivox:
@@ -37,4 +37,4 @@ bool PointcloudInput::registerCallback(PointcloudTopicType type,
 }
 }  // namespace wavemap
 
-#endif  // WAVEMAP_ROS_INPUTS_IMPL_POINTCLOUD_INPUT_IMPL_H_
+#endif  // WAVEMAP_ROS_INPUTS_IMPL_POINTCLOUD_TOPIC_INPUT_IMPL_H_

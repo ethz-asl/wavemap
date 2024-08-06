@@ -1,4 +1,4 @@
-#include "wavemap_ros/inputs/pointcloud_input.h"
+#include "wavemap_ros/inputs/pointcloud_topic_input.h"
 
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
@@ -12,7 +12,7 @@
 #include <wavemap_ros_conversions/time_conversions.h>
 
 namespace wavemap {
-DECLARE_CONFIG_MEMBERS(PointcloudInputConfig,
+DECLARE_CONFIG_MEMBERS(PointcloudTopicInputConfig,
                       (topic_name)
                       (topic_type)
                       (topic_queue_length)
@@ -26,7 +26,7 @@ DECLARE_CONFIG_MEMBERS(PointcloudInputConfig,
                       (projected_range_image_topic_name)
                       (undistorted_pointcloud_topic_name));
 
-bool PointcloudInputConfig::isValid(bool verbose) const {
+bool PointcloudTopicInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
@@ -38,13 +38,13 @@ bool PointcloudInputConfig::isValid(bool verbose) const {
   return all_valid;
 }
 
-PointcloudInput::PointcloudInput(const PointcloudInputConfig& config,
-                                 std::shared_ptr<Pipeline> pipeline,
-                                 std::shared_ptr<TfTransformer> transformer,
-                                 std::string world_frame, ros::NodeHandle nh,
-                                 ros::NodeHandle nh_private)
-    : InputBase(config, std::move(pipeline), transformer,
-                std::move(world_frame), nh, nh_private),
+PointcloudTopicInput::PointcloudTopicInput(
+    const PointcloudTopicInputConfig& config,
+    std::shared_ptr<Pipeline> pipeline,
+    std::shared_ptr<TfTransformer> transformer, std::string world_frame,
+    ros::NodeHandle nh, ros::NodeHandle nh_private)
+    : RosInputBase(config, std::move(pipeline), transformer,
+                   std::move(world_frame), nh, nh_private),
       config_(config.checkValid()),
       pointcloud_undistorter_(
           transformer,
@@ -69,7 +69,8 @@ PointcloudInput::PointcloudInput(const PointcloudInputConfig& config,
   }
 }
 
-void PointcloudInput::callback(const sensor_msgs::PointCloud2& pointcloud_msg) {
+void PointcloudTopicInput::callback(
+    const sensor_msgs::PointCloud2& pointcloud_msg) {
   ProfilerZoneScoped;
   // Skip empty clouds
   const size_t num_points = pointcloud_msg.height * pointcloud_msg.width;
@@ -172,7 +173,7 @@ void PointcloudInput::callback(
 }
 #endif
 
-void PointcloudInput::processQueue() {
+void PointcloudTopicInput::processQueue() {
   ProfilerZoneScoped;
   while (!pointcloud_queue_.empty()) {
     auto& oldest_msg = pointcloud_queue_.front();
@@ -274,8 +275,8 @@ void PointcloudInput::processQueue() {
   }
 }
 
-bool PointcloudInput::hasField(const sensor_msgs::PointCloud2& msg,
-                               const std::string& field_name) {
+bool PointcloudTopicInput::hasField(const sensor_msgs::PointCloud2& msg,
+                                    const std::string& field_name) {
   return std::any_of(msg.fields.cbegin(), msg.fields.cend(),
                      [&field_name = std::as_const(field_name)](
                          const sensor_msgs::PointField& field) {
@@ -283,7 +284,7 @@ bool PointcloudInput::hasField(const sensor_msgs::PointCloud2& msg,
                      });
 }
 
-void PointcloudInput::publishProjectedRangeImageIfEnabled(
+void PointcloudTopicInput::publishProjectedRangeImageIfEnabled(
     const ros::Time& /*stamp*/, const PosedPointcloud<>& /*posed_pointcloud*/) {
   ProfilerZoneScoped;
   if (config_.projected_range_image_topic_name.empty() ||
@@ -307,7 +308,7 @@ void PointcloudInput::publishProjectedRangeImageIfEnabled(
   //  projected_range_image_pub_.publish(cv_image.toImageMsg());
 }
 
-void PointcloudInput::publishUndistortedPointcloudIfEnabled(
+void PointcloudTopicInput::publishUndistortedPointcloudIfEnabled(
     const ros::Time& stamp, const PosedPointcloud<>& undistorted_pointcloud) {
   ProfilerZoneScoped;
   if (config_.undistorted_pointcloud_topic_name.empty() ||

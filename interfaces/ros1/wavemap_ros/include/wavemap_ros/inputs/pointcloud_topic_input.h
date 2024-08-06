@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_ROS_INPUTS_POINTCLOUD_INPUT_H_
-#define WAVEMAP_ROS_INPUTS_POINTCLOUD_INPUT_H_
+#ifndef WAVEMAP_ROS_INPUTS_POINTCLOUD_TOPIC_INPUT_H_
+#define WAVEMAP_ROS_INPUTS_POINTCLOUD_TOPIC_INPUT_H_
 
 #include <memory>
 #include <queue>
@@ -11,7 +11,7 @@
 #include <wavemap/core/config/string_list.h>
 #include <wavemap/core/utils/time/stopwatch.h>
 
-#include "wavemap_ros/inputs/input_base.h"
+#include "wavemap_ros/inputs/ros_input_base.h"
 #include "wavemap_ros/utils/pointcloud_undistorter.h"
 
 #ifdef LIVOX_AVAILABLE
@@ -30,8 +30,8 @@ struct PointcloudTopicType : public TypeSelector<PointcloudTopicType> {
 /**
  * Config struct for the pointcloud input handler.
  */
-struct PointcloudInputConfig
-    : public ConfigBase<PointcloudInputConfig, 12, PointcloudTopicType,
+struct PointcloudTopicInputConfig
+    : public ConfigBase<PointcloudTopicInputConfig, 12, PointcloudTopicType,
                         StringList> {
   //! Name of the ROS topic to subscribe to.
   std::string topic_name = "scan";
@@ -80,7 +80,7 @@ struct PointcloudInputConfig
   static MemberMap memberMap;
 
   // Conversion to InputHandler base config
-  operator InputBaseConfig() const {  // NOLINT
+  operator RosInputBaseConfig() const {  // NOLINT
     return {topic_name, topic_queue_length, measurement_integrator_names,
             processing_retry_period};
   }
@@ -88,15 +88,17 @@ struct PointcloudInputConfig
   bool isValid(bool verbose) const override;
 };
 
-class PointcloudInput : public InputBase {
+class PointcloudTopicInput : public RosInputBase {
  public:
-  PointcloudInput(const PointcloudInputConfig& config,
-                  std::shared_ptr<Pipeline> pipeline,
-                  std::shared_ptr<TfTransformer> transformer,
-                  std::string world_frame, ros::NodeHandle nh,
-                  ros::NodeHandle nh_private);
+  PointcloudTopicInput(const PointcloudTopicInputConfig& config,
+                       std::shared_ptr<Pipeline> pipeline,
+                       std::shared_ptr<TfTransformer> transformer,
+                       std::string world_frame, ros::NodeHandle nh,
+                       ros::NodeHandle nh_private);
 
-  InputType getType() const override { return InputType::kPointcloud; }
+  RosInputType getType() const override {
+    return RosInputType::kPointcloudTopic;
+  }
   PointcloudTopicType getTopicType() const { return config_.topic_type; }
 
   void callback(const sensor_msgs::PointCloud2& pointcloud_msg);
@@ -108,7 +110,7 @@ class PointcloudInput : public InputBase {
   static bool registerCallback(PointcloudTopicType type, RegistrarT registrar);
 
  private:
-  const PointcloudInputConfig config_;
+  const PointcloudTopicInputConfig config_;
 
   Stopwatch integration_timer_;
 
@@ -131,6 +133,6 @@ class PointcloudInput : public InputBase {
 };
 }  // namespace wavemap
 
-#include "wavemap_ros/inputs/impl/pointcloud_input_impl.h"
+#include "wavemap_ros/inputs/impl/pointcloud_topic_input_impl.h"
 
-#endif  // WAVEMAP_ROS_INPUTS_POINTCLOUD_INPUT_H_
+#endif  // WAVEMAP_ROS_INPUTS_POINTCLOUD_TOPIC_INPUT_H_

@@ -5,8 +5,8 @@
 #include <tf/tfMessage.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
-#include "wavemap_ros/inputs/depth_image_input.h"
-#include "wavemap_ros/inputs/pointcloud_input.h"
+#include "wavemap_ros/inputs/depth_image_topic_input.h"
+#include "wavemap_ros/inputs/pointcloud_topic_input.h"
 #include "wavemap_ros/ros_server.h"
 
 using namespace wavemap;  // NOLINT
@@ -38,18 +38,20 @@ int main(int argc, char** argv) {
   // Setup input handlers
   size_t input_idx = 0u;
   for (const auto& input : wavemap_server.getInputs()) {
-    if (auto pointcloud_input = dynamic_cast<PointcloudInput*>(input.get());
+    if (auto pointcloud_input =
+            dynamic_cast<PointcloudTopicInput*>(input.get());
         pointcloud_input) {
-      PointcloudInput::registerCallback(
+      PointcloudTopicInput::registerCallback(
           pointcloud_input->getTopicType(), [&](auto callback_ptr) {
             rosbag_processor.addCallback(input->getTopicName(), callback_ptr,
                                          pointcloud_input);
           });
     } else if (auto depth_image_input =
-                   dynamic_cast<DepthImageInput*>(input.get());
+                   dynamic_cast<DepthImageTopicInput*>(input.get());
                depth_image_input) {
       rosbag_processor.addCallback<const sensor_msgs::Image&>(
-          input->getTopicName(), &DepthImageInput::callback, depth_image_input);
+          input->getTopicName(), &DepthImageTopicInput::callback,
+          depth_image_input);
     } else {
       ROS_WARN_STREAM(
           "Failed to register callback for input number "

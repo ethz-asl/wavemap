@@ -19,10 +19,10 @@ enable_wavemap_general_tooling()
 
 # Libraries
 cs_add_library(${PROJECT_NAME}
-    src/inputs/depth_image_input.cc
-    src/inputs/input_base.cc
-    src/inputs/input_factory.cc
-    src/inputs/pointcloud_input.cc
+    src/inputs/depth_image_topic_input.cc
+    src/inputs/pointcloud_topic_input.cc
+    src/inputs/ros_input_base.cc
+    src/inputs/ros_input_factory.cc
     src/map_operations/crop_map_operation.cc
     src/map_operations/map_ros_operation_factory.cc
     src/map_operations/publish_map_operation.cc
