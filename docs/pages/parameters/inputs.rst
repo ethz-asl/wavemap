@@ -3,21 +3,19 @@ Inputs
 .. highlight:: YAML
 .. rstcheck: ignore-directives=doxygenstruct
 
-These settings control the measurement input handlers.
-They are nested in the top level config under ``inputs``. The ``inputs`` key takes a YAML list, and one input handler will be created for each item in the list.
+The settings in the config's ``inputs`` section are used to add measurement inputs to wavemap, similar to dataloaders in a machine learning framework. The expected format is a YAML list, where each item corresponds to a separate measurement input handler.
 
-Note that wavemap currently only provides input handlers for ROS1. Input handlers for additional interfaces are likely to be added in the future.
-
-..
-   _TODO: Explain how this can be used as a plugin system.
+C++ Library
+***********
+We believe that input handlers for standard datasets like KITTI, Redwood, 3DMatch, Replica, and others would be valuable additions to wavemap's C++ library. However, these have not been implemented yet. If you're interested in contributing, please reach out to us `here <https://github.com/ethz-asl/wavemap/issues>`_.
 
 ROS1 Interface
 **************
-Each input subscribes to a measurement ROS topic, looks up the pose for each measurement, and then calls the integrators whose names are specified under `measurement_integrator_names` to integrate the measurement into the map.
+Each input subscribes to a measurement ROS topic, retrieves the pose for each received measurement using `TF2`, and then calls the integrators specified under `measurement_integrator_names` to add the measurement to the map.
 
 Pointcloud input handler
 ========================
-Selected by setting ``inputs[i]/type: "pointcloud"``.
+Selected by setting ``inputs[i]/type`` to ``"pointcloud_topic"``.
 
 The remaining settings are available under ``inputs[i]`` will then be:
 
@@ -27,7 +25,7 @@ The remaining settings are available under ``inputs[i]`` will then be:
 
 Depth image input handler
 =========================
-Selected by setting ``inputs[i]/type: "depth_image"``.
+Selected by setting ``inputs[i]/type`` to ``"depth_image_topic"``.
 
 The remaining settings are available under ``inputs[i]`` will then be:
 

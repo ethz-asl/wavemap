@@ -7,9 +7,10 @@ ROS1 (catkin)
 If you would like to quickly try out wavemap or if you're not already using Ubuntu Noetic and ROS1, we recommend running wavemap in Docker.
 For active wavemap development, it is probably easiest to install wavemap directly on your system.
 
+.. _installation-ros1-docker:
+
 Docker
 ******
-.. _installation-ros1-docker:
 
 If you have not yet installed Docker on your computer, please follow `these instructions <https://docs.docker.com/engine/install/>`_. We also recommend executing the `post-installation steps for Linux <https://docs.docker.com/engine/install/linux-postinstall/>`_, to make Docker available without ``sudo`` priviliges.
 

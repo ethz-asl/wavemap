@@ -30,9 +30,10 @@ We **strongly recommend** to also call the ``set_wavemap_target_properties`` fun
 
       set_wavemap_target_properties(your_executable)
 
+.. _cpp-code-examples:
+
 Code examples
 *************
-.. _cpp-code-examples:
 
 In the following sections, you'll find sample code for common tasks. If you'd like to request examples for additional tasks or contribute new examples, please don't hesitate to `contact us <https://github.com/ethz-asl/wavemap/issues>`_.
 
@@ -69,9 +70,10 @@ Accelerators
 .. literalinclude:: ../../../examples/cpp/queries/accelerated_queries.cc
     :language: c++
 
+.. _cpp-code-examples-interpolation:
+
 Interpolation
 -------------
-.. _cpp-code-examples-interpolation:
 
 Nearest neighbor interpolation:
 
@@ -83,9 +85,10 @@ Trilinear interpolation:
 .. literalinclude:: ../../../examples/cpp/queries/trilinear_interpolation.cc
     :language: c++
 
+.. _cpp-code-examples-classification:
+
 Classification
 --------------
-.. _cpp-code-examples-classification:
 
 .. literalinclude:: ../../../examples/cpp/queries/classification.cc
     :language: c++
