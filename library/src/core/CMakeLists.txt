@@ -50,6 +50,7 @@ target_sources(wavemap_core PRIVATE
     utils/time/stopwatch.cc
     utils/undistortion/pointcloud_undistortion.cc
     utils/undistortion/stamped_pointcloud.cc
+    utils/logging_level.cc
     utils/thread_pool.cc)
 
 # Support installs

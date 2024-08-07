@@ -18,19 +18,19 @@
 #include <wavemap/pipeline/pipeline.h>
 
 #include "wavemap_ros/inputs/ros_input_base.h"
-#include "wavemap_ros/utils/logging_level.h"
+#include "wavemap_ros/utils/ros_logging_level.h"
 #include "wavemap_ros/utils/tf_transformer.h"
 
 namespace wavemap {
 /**
  * Config struct for wavemap's ROS server.
  */
-struct RosServerConfig : ConfigBase<RosServerConfig, 4, LoggingLevel> {
+struct RosServerConfig : ConfigBase<RosServerConfig, 4, RosLoggingLevel> {
   //! Name of the coordinate frame in which to store the map.
   //! Will be used as the frame_id for ROS TF lookups.
   std::string world_frame = "odom";
-  //! Minimum severity level for ROS logging messages to be logged.
-  LoggingLevel logging_level = LoggingLevel::kInfo;
+  //! Minimum severity level for messages to be logged.
+  RosLoggingLevel logging_level = RosLoggingLevel::kInfo;
   //! Maximum number of threads to use.
   //! Defaults to the number of threads supported by the CPU.
   int num_threads =

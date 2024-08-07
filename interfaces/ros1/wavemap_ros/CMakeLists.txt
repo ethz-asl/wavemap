@@ -28,6 +28,7 @@ cs_add_library(${PROJECT_NAME}
     src/map_operations/publish_map_operation.cc
     src/map_operations/publish_pointcloud_operation.cc
     src/utils/pointcloud_undistorter.cc
+    src/utils/ros_logging_level.cc
     src/utils/rosbag_processor.cc
     src/utils/tf_transformer.cc
     src/ros_server.cc)

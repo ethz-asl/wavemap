@@ -38,12 +38,9 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                      const RosServerConfig& config)
     : config_(config.checkValid()),
       transformer_(std::make_shared<TfTransformer>()) {
-  // Set the ROS logging level
-  if (ros::console::set_logger_level(
-          ROSCONSOLE_DEFAULT_NAME,
-          LoggingLevel::ros_levels[config_.logging_level.toTypeId()])) {
-    ros::console::notifyLoggerLevelsChanged();
-  }
+  // Set the logging level for wavemap's C++ library (uses glog) and ROS
+  config_.logging_level.applyToGlog();
+  config_.logging_level.applyToRosConsole();
 
   // Setup data structure
   const auto data_structure_params =
