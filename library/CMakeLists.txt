@@ -3,6 +3,7 @@ project(wavemap VERSION 2.0.0 LANGUAGES CXX)
 
 # General options
 cmake_policy(SET CMP0077 NEW)
+cmake_policy(SET CMP0079 NEW)
 option(GENERATE_WAVEMAP_INSTALL_RULES
     "Whether to generate install rules for the wavemap library" ON)
 option(USE_SYSTEM_EIGEN "Use system pre-installed Eigen" ON)

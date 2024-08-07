@@ -26,8 +26,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
 
 # Tests
 if (CATKIN_ENABLE_TESTING)
-  catkin_add_gtest(
-      test_${PROJECT_NAME}
+  catkin_add_gtest(test_${PROJECT_NAME}
       test/src/test_map_msg_conversions.cc)
   set_wavemap_target_properties(test_${PROJECT_NAME})
   target_include_directories(test_${PROJECT_NAME} PRIVATE

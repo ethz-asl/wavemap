@@ -1,20 +1,22 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.10)
 project(wavemap_examples_cpp VERSION 2.0.0 LANGUAGES CXX)
 
 # Load the wavemap library
 # First, try to load it from sources
-if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../library)
-  message(STATUS "Using wavemap library from local sources")
+if (TARGET wavemap::wavemap_core)
+  message(STATUS "Wavemap library already loaded. No need to load it again.")
+elseif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../library)
+  message(STATUS "Loading wavemap library from local sources")
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../library
       ${CMAKE_CURRENT_BINARY_DIR}/wavemap)
 else ()
   # If sources are not available, see if wavemap is installed as a system lib
   find_package(wavemap QUIET)
   if (wavemap_FOUND)
-    message(STATUS "Using wavemap library installed on system")
+    message(STATUS "Loading wavemap library installed on system")
   else () # Otherwise, fetch wavemap's code from GitHub
     set(WAVEMAP_TAG develop/v2.0)
-    message(STATUS "Fetching wavemap library from GitHub (tag ${WAVEMAP_TAG})")
+    message(STATUS "Loading wavemap library from GitHub (tag ${WAVEMAP_TAG})")
     cmake_minimum_required(VERSION 3.18)
     include(FetchContent)
     FetchContent_Declare(
