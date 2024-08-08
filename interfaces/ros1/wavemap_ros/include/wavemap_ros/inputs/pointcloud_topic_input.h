@@ -34,7 +34,7 @@ struct PointcloudTopicInputConfig
     : public ConfigBase<PointcloudTopicInputConfig, 12, PointcloudTopicType,
                         StringList> {
   //! Name of the ROS topic to subscribe to.
-  std::string topic_name = "scan";
+  std::string topic_name;
   //! Message type of the ROS topic to subscribe to.
   PointcloudTopicType topic_type = PointcloudTopicType::kPointCloud2;
   //! Queue length to use when subscribing to the ROS topic.
@@ -79,7 +79,7 @@ struct PointcloudTopicInputConfig
 
   static MemberMap memberMap;
 
-  // Conversion to InputHandler base config
+  // Conversion to InputBase config
   operator RosInputBaseConfig() const {  // NOLINT
     return {topic_name, topic_queue_length, measurement_integrator_names,
             processing_retry_period};

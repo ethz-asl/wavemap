@@ -22,7 +22,7 @@ namespace wavemap {
 struct DepthImageTopicInputConfig
     : public ConfigBase<DepthImageTopicInputConfig, 10, StringList> {
   //! Name of the ROS topic to subscribe to.
-  std::string topic_name = "scan";
+  std::string topic_name;
   //! Queue length to use when subscribing to the ROS topic.
   int topic_queue_length = 10;
 
@@ -59,7 +59,7 @@ struct DepthImageTopicInputConfig
 
   static MemberMap memberMap;
 
-  // Conversion to InputHandler base config
+  // Conversion to InputBase config
   operator RosInputBaseConfig() const {  // NOLINT
     return {topic_name, topic_queue_length, measurement_integrator_names,
             processing_retry_period};

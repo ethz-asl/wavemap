@@ -14,7 +14,7 @@ bool CropMapOperationConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_GT(once_every, 0.f, verbose);
-  all_valid &= IS_PARAM_NE(body_frame, std::string(), verbose);
+  all_valid &= IS_PARAM_NE(body_frame, "", verbose);
   all_valid &= IS_PARAM_GT(remove_blocks_beyond_distance, 0.f, verbose);
 
   return all_valid;
@@ -69,13 +69,9 @@ void CropMapOperation::run(bool force_run) {
     return config.remove_blocks_beyond_distance < d_B_block;
   };
 
-  if (auto* hashed_blocks =
+  if (auto* hashed_wavelet_octree =
           dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
-      hashed_blocks) {
-    hashed_blocks->eraseBlockIf(indicator_fn);
-  } else if (auto* hashed_wavelet_octree =
-                 dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
-             hashed_wavelet_octree) {
+      hashed_wavelet_octree) {
     hashed_wavelet_octree->eraseBlockIf(indicator_fn);
   } else if (auto* hashed_chunked_wavelet_octree =
                  dynamic_cast<HashedChunkedWaveletOctree*>(

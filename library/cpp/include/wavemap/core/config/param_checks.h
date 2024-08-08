@@ -34,6 +34,33 @@
   wavemap::is_param<std::equal_to<>>(value, false, verbose, #value)
 
 namespace wavemap {
+namespace print {
+template <typename ValueT>
+constexpr bool is_stringlike = std::is_constructible_v<std::string, ValueT>;
+
+template <typename ValueT>
+constexpr bool is_boolean = std::is_same_v<std::decay_t<ValueT>, bool>;
+
+template <typename ValueT>
+inline auto param_value(const ValueT& value)
+    -> std::enable_if_t<is_boolean<ValueT>, std::string> {
+  return value ? "true" : "false";
+}
+
+template <typename ValueT>
+inline auto param_value(const ValueT& value)
+    -> std::enable_if_t<is_stringlike<ValueT>, std::string> {
+  return "\"" + std::string(value) + "\"";
+}
+
+template <typename ValueT>
+inline auto param_value(const ValueT& value)
+    -> std::enable_if_t<!is_boolean<ValueT> && !is_stringlike<ValueT>,
+                        const ValueT&> {
+  return value;
+}
+}  // namespace print
+
 template <typename ComparisonOp, typename A, typename B>
 bool is_param(A value, B threshold) {
   return ComparisonOp{}(value, threshold);
@@ -47,7 +74,7 @@ bool is_param(A value, B threshold, bool verbose, const std::string& value_name,
   } else {
     LOG_IF(WARNING, verbose)
         << "Param \"" << value_name << "\" is not" << comparison_op_string
-        << std::boolalpha << threshold;
+        << print::param_value(threshold);
     return false;
   }
 }

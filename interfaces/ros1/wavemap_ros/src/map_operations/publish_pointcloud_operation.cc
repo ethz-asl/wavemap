@@ -21,7 +21,9 @@ bool PublishPointcloudOperationConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
   all_valid &= IS_PARAM_GT(once_every, 0.f, verbose);
-  all_valid &= IS_PARAM_NE(topic, std::string(), verbose);
+  all_valid &=
+      IS_PARAM_FALSE(std::isnan(occupancy_threshold_log_odds), verbose);
+  all_valid &= IS_PARAM_NE(topic, "", verbose);
 
   return all_valid;
 }
@@ -88,37 +90,29 @@ void PublishPointcloudOperation::publishPointcloud(
         }
       };
 
-  // Call the functor for each leaf
+  // Define a functor that allows us to skip unchanged map blocks
+  auto process_block_if_changed = [this, &add_points_for_leaf_node](
+                                      const Index3D& block_index,
+                                      const auto& block) {
+    const bool block_changed =
+        last_run_timestamp_internal_ < block.getLastUpdatedStamp();
+    if (!config_.only_publish_changed_blocks || block_changed) {
+      block.forEachLeaf(block_index, add_points_for_leaf_node);
+    }
+  };
+
+  // Iterate over the map
   const Timestamp start_time_internal = Time::now();
   if (const auto* hashed_wavelet_octree =
           dynamic_cast<const HashedWaveletOctree*>(occupancy_map_.get());
       hashed_wavelet_octree) {
-    // For hashed maps, we only process blocks that change
-    hashed_wavelet_octree->forEachBlock(
-        [this, &add_points_for_leaf_node](const Index3D& block_index,
-                                          const auto& block) {
-          const bool block_changed =
-              last_run_timestamp_internal_ < block.getLastUpdatedStamp();
-          if (!config_.only_publish_changed_blocks || block_changed) {
-            block.forEachLeaf(block_index, add_points_for_leaf_node);
-          }
-        });
+    hashed_wavelet_octree->forEachBlock(process_block_if_changed);
   } else if (const auto* hashed_chunked_wavelet_octree =
                  dynamic_cast<const HashedChunkedWaveletOctree*>(
                      occupancy_map_.get());
              hashed_chunked_wavelet_octree) {
-    // For hashed maps, we only process blocks that change
-    hashed_chunked_wavelet_octree->forEachBlock(
-        [this, &add_points_for_leaf_node](const Index3D& block_index,
-                                          const auto& block) {
-          const bool block_changed =
-              last_run_timestamp_internal_ < block.getLastUpdatedStamp();
-          if (!config_.only_publish_changed_blocks || block_changed) {
-            block.forEachLeaf(block_index, add_points_for_leaf_node);
-          }
-        });
-  } else {
-    // For all other map types, simply process all leaves (fallback)
+    hashed_chunked_wavelet_octree->forEachBlock(process_block_if_changed);
+  } else {  // Fallback for non-hashed map types: simply process all leaves
     occupancy_map_->forEachLeaf(add_points_for_leaf_node);
   }
   last_run_timestamp_internal_ = start_time_internal;

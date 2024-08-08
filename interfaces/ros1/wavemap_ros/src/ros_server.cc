@@ -20,13 +20,14 @@ DECLARE_CONFIG_MEMBERS(RosServerConfig,
 bool RosServerConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
-  all_valid &= IS_PARAM_NE(world_frame, std::string(""), verbose);
+  all_valid &= IS_PARAM_NE(world_frame, "", verbose);
   all_valid &= IS_PARAM_GT(num_threads, 0, verbose);
+  all_valid &= IS_PARAM_TRUE(logging_level.isValid(), verbose);
 
   return all_valid;
 }
 
-// NOTE: If WavemapServerConfig::from(...) fails, accessing its value will throw
+// NOTE: If RosServerConfig::from(...) fails, accessing its value will throw
 //       an exception and end the program.
 RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
     : RosServer(nh, nh_private,

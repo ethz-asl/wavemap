@@ -16,7 +16,7 @@ bool PublishMapOperationConfig::isValid(bool verbose) const {
 
   all_valid &= IS_PARAM_GT(once_every, 0.f, verbose);
   all_valid &= IS_PARAM_GT(max_num_blocks_per_msg, 0, verbose);
-  all_valid &= IS_PARAM_NE(topic, std::string(), verbose);
+  all_valid &= IS_PARAM_NE(topic, "", verbose);
 
   return all_valid;
 }

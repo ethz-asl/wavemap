@@ -29,11 +29,14 @@ DECLARE_CONFIG_MEMBERS(PointcloudTopicInputConfig,
 bool PointcloudTopicInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
 
-  all_valid &= IS_PARAM_NE(topic_name, std::string(""), verbose);
+  all_valid &= IS_PARAM_NE(topic_name, "", verbose);
+  all_valid &= IS_PARAM_TRUE(topic_type.isValid(), verbose);
   all_valid &= IS_PARAM_GT(topic_queue_length, 0, verbose);
   all_valid &= IS_PARAM_FALSE(measurement_integrator_names.empty(), verbose);
   all_valid &= IS_PARAM_GT(processing_retry_period, 0.f, verbose);
   all_valid &= IS_PARAM_GE(max_wait_for_pose, 0.f, verbose);
+  all_valid &= IS_PARAM_GT(num_undistortion_interpolation_intervals_per_cloud,
+                           0, verbose);
 
   return all_valid;
 }
