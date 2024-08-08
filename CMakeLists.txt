@@ -18,12 +18,15 @@ if ("$ENV{ROS_VERSION}" STREQUAL "1")
   include_directories(${CATKIN_WS_DEVEL_PATH}/include)
 
   # ROS interfaces and tooling
-  # NOTE: Wavemap's C++ library gets included through interfaces/ros1/wavemap.
   add_subdirectory(interfaces/ros1/wavemap)
   add_subdirectory(interfaces/ros1/wavemap_msgs)
   add_subdirectory(interfaces/ros1/wavemap_ros_conversions)
   add_subdirectory(interfaces/ros1/wavemap_ros)
   add_subdirectory(interfaces/ros1/wavemap_rviz_plugin)
+
+  # Libraries
+  # NOTE: Wavemap's C++ lib is already included through interfaces/ros1/wavemap.
+  add_subdirectory(library/python)
 
   # Usage examples
   add_subdirectory(examples/cpp)
@@ -36,8 +39,13 @@ elseif ("$ENV{ROS_VERSION}" STREQUAL "2")
 
 else ()
   # Load in pure CMake mode
-  # In this mode, introspection is available only for the C++ library
+  # In this mode, introspection is available only for the C++ and python libs
+
+  # Libraries
   add_subdirectory(library/cpp)
+  add_subdirectory(library/python)
+
+  # Usage examples
   add_subdirectory(examples/cpp)
 
 endif ()
