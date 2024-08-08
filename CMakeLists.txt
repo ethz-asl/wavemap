@@ -37,7 +37,7 @@ else ()
   # Load in pure CMake mode
   # NOTE: In this mode, introspection is available
   #       only for wavemap's C++ library.
-  add_subdirectory(library)
+  add_subdirectory(library/cpp)
   add_subdirectory(examples/cpp)
 
 endif ()

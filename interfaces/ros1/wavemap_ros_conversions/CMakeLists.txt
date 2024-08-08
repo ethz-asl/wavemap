@@ -30,7 +30,7 @@ if (CATKIN_ENABLE_TESTING)
       test/src/test_map_msg_conversions.cc)
   set_wavemap_target_properties(test_${PROJECT_NAME})
   target_include_directories(test_${PROJECT_NAME} PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/test/include)
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp/test/include)
   target_link_libraries(test_${PROJECT_NAME}
       ${PROJECT_NAME} GTest::gtest_main)
 endif ()

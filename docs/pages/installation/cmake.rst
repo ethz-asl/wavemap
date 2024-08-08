@@ -27,7 +27,7 @@ The fastest way to include wavemap in an existing CMake project is to use FetchC
       GIT_REPOSITORY https://github.com/ethz-asl/wavemap.git
       GIT_TAG ${WAVEMAP_TAG}
       GIT_SHALLOW 1
-      SOURCE_SUBDIR library)
+      SOURCE_SUBDIR library/cpp)
   FetchContent_MakeAvailable(wavemap)
 
 Subdirectory
@@ -58,7 +58,7 @@ You can then include it into your CMake project by adding the following lines to
 
 .. code-block:: cmake
 
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/wavemap/library
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/wavemap/library/cpp
                    ${CMAKE_CURRENT_BINARY_DIR}/wavemap
 
 System install
@@ -85,7 +85,7 @@ Next, download the code:
 
 Build it by running::
 
-    cd wavemap/library
+    cd wavemap/library/cpp
     cmake -S . -B build
     cmake --build build -j $(nproc)
 

@@ -5,9 +5,9 @@ project(wavemap_examples_cpp VERSION 2.0.0 LANGUAGES CXX)
 # First, try to load it from sources
 if (TARGET wavemap::wavemap_core)
   message(STATUS "Wavemap library already loaded. No need to load it again.")
-elseif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../library)
+elseif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../library/cpp)
   message(STATUS "Loading wavemap library from local sources")
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../library
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../library/cpp
       ${CMAKE_CURRENT_BINARY_DIR}/wavemap)
 else ()
   # If sources are not available, see if wavemap is installed as a system lib
@@ -24,7 +24,7 @@ else ()
         GIT_REPOSITORY https://github.com/ethz-asl/wavemap.git
         GIT_TAG ${WAVEMAP_TAG}
         GIT_SHALLOW 1
-        SOURCE_SUBDIR library)
+        SOURCE_SUBDIR library/cpp)
     FetchContent_MakeAvailable(ext_wavemap)
   endif ()
 endif ()

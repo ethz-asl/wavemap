@@ -14,15 +14,15 @@ set(Eigen3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 
 # Register catkin package
 catkin_package(
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp/include
     LIBRARIES wavemap_core wavemap_io wavemap_pipeline
     DEPENDS Eigen3 glog
     CFG_EXTRAS
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cmake/wavemap-extras.cmake)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp/cmake/wavemap-extras.cmake)
 
 # Load the library
 set(GENERATE_WAVEMAP_INSTALL_RULES OFF)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../library
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME})
 
 # Include the library's tests in catkin's run_tests target
@@ -37,6 +37,7 @@ install(TARGETS wavemap_core wavemap_io wavemap_pipeline
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # Mark header files for installation
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/include/wavemap/
+install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp/include/wavemap/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
     FILES_MATCHING PATTERN "*.h")
