@@ -58,7 +58,7 @@ For convenience, the entire demo can be run in Docker using :gh_file:`this Docke
 
 We provide a convenience script that you can use to run the Docker image. To download it, run::
 
-    curl -o demo_in_docker.sh https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/packages/wavemap_utils/scripts/demo_in_docker.sh
+    curl -o demo_in_docker.sh https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/scripts/demo_in_docker.sh
     sudo chmod +x demo_in_docker.sh
 
 Configure
@@ -67,7 +67,7 @@ Start by configuring the laptop's network interface to receive the LiDAR data. B
 
 Next, update the sensor calibrations to match your sensor setup. If you're using the exact sensors we used, you mainly need to update the extrinsics. These are defined through static TFs, at the bottom of the launch file for your sensor setup (e.g. :gh_file:`here <interfaces/ros1/wavemap_ros/launch/online/livox_mid360_pico_monstar.launch#L76>` or :gh_file:`here <interfaces/ros1/wavemap_ros/launch/online/ouster_os0_pico_monstar.launch#L78>`). If you're using different sensors, you will also need to update the wavemap, FastLIO and sensor driver config files. To help you get started quickly, we provide examples for many different sensor setups for :gh_file:`wavemap <interfaces/ros1/wavemap_ros/config>` and :gh_file:`FastLIO <interfaces/ros1/wavemap_ros/config/other_packages/fast_lio>`. In case we do not yet have an example FastLIO config for your LiDAR, you might find one in the `official the FastLIO repository <https://github.com/hku-mars/FAST_LIO>`__.
 
-Note that the ``demo_in_docker.sh`` script saves and restores the `ros/wavemap_ros` folder across runs (explained :gh_file:`here <tooling/packages/wavemap_utils/scripts/demo_in_docker.sh#L9>`), so you can configure wavemap by simply running ``demo_in_docker.sh`` and editing the launch and config files through the resulting interactive shell.
+Note that the ``demo_in_docker.sh`` script saves and restores the `ros/wavemap_ros` folder across runs (explained :gh_file:`here <tooling/scripts/demo_in_docker.sh#L9>`), so you can configure wavemap by simply running ``demo_in_docker.sh`` and editing the launch and config files through the resulting interactive shell.
 
 Run
 ===

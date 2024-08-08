@@ -37,7 +37,7 @@ install_if_missing "hadolint" \
 install_if_missing "xmllint" "sudo apt-get install libxml2-utils"
 
 # Enable pre-commit for wavemap
-pushd "$(dirname "$0")" >>/dev/null || exit 1 # Enter wavemap's home directory
+pushd "$(dirname "$0")/../../" >> /dev/null || exit 1 # Enter wavemap's home directory
 echo "Enabling pre-commit for wavemap"
 pre-commit install --install-hooks
-popd >>/dev/null || exit 1
+popd >> /dev/null || exit 1

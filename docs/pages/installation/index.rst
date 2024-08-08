@@ -7,7 +7,7 @@ For roboticists working with ROS, we provide packages that tightly integrate wav
 
 .. note::
 
-    If you're interested in using wavemap with ROS2 and willing to contribute, please get in touch `here <https://github.com/ethz-asl/wavemap/discussions/41>`_.
+    If you're interested in using wavemap with ROS2 and willing to contribute, please get in touch `here <https://github.com/ethz-asl/wavemap/issues/43>`_.
 
 .. toctree::
     :caption: Installation types

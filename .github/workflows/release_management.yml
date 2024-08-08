@@ -82,7 +82,7 @@ jobs:
           git merge origin/main
       - name: Bump catkin package version numbers
         shell: bash
-        run: python3 tooling/packages/wavemap_utils/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare-release-command.outputs.command }}
+        run: python3 tooling/scripts/ci_prepare_release.py --non-interactive ${{ needs.prepare-release-command.outputs.command }}
       - name: Push to GitHub
         run: git push
   #  - name: Post release note preview as PR comment

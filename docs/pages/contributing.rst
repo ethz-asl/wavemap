@@ -26,7 +26,8 @@ This project follows the `Google Style Guide <https://google.github.io/styleguid
 
 To maintain code quality, we use the `pre-commit <https://pre-commit.com/>`_ framework to automatically format, lint, and perform basic code checks. You can install pre-commit together with the dependencies required to run all of wavemap's checks with::
 
-    rosrun wavemap_utils install_pre_commit.sh
+    cd <path_to_wavemap_repo>
+    ./tooling/scripts/install_pre_commit.sh
 
 After running the above script, pre-commit will automatically check changed code when it is committed to git. All the checks can also be run manually at any time by calling::
 
@@ -41,7 +42,8 @@ Testing
 *******
 Wavemap's codebase includes a broad suite of tests. These are run in our Continuous Integration pipeline for active merge requests, `see here <https://github.com/ethz-asl/wavemap/actions/workflows/ci.yml>`_. You can also run the tests locally with::
 
-    rosrun wavemap_utils build_and_test_all.sh
+    cd <path_to_wavemap_repo>
+    ./tooling/scripts/build_and_test_all.sh
 
 The tests are located in the `test` subfolders of each package and implemented using the `GoogleTest <http://google.github.io/googletest/>`_ framework.
 
@@ -63,6 +65,7 @@ Local version
 =============
 In a terminal, run::
 
-    rosrun wavemap_utils preview_docs.sh
+    cd <path_to_wavemap_repo>
+    ./tooling/scripts/preview_docs.sh
 
 This will build a preview of the documentation based on your local wavemap version and changes and open the result in a web browser.
