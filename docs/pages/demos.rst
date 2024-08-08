@@ -27,7 +27,7 @@ To run wavemap on the Cloister sequence used in the paper, run::
     roslaunch wavemap_ros newer_college_os0_cloister.launch rosbag_dir:=<path_to_downloaded_dataset_directory>
 
 For additional options, please refer to the launch file's documented arguments
-:gh_file:`here <interfaces/ros1/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch>`. To experiment with wavemap's configuration, modify :gh_file:`this config file <interfaces/ros1/wavemap_ros/config/ouster_os0.yaml>`.
+:gh_file:`here <interfaces/ros1/wavemap_ros/launch/datasets/newer_college/newer_college_os0_cloister.launch>`. To experiment with wavemap's configuration, modify :gh_file:`this config file <interfaces/ros1/wavemap_ros/config/wavemap_ouster_os0.yaml>`.
 
 Panoptic mapping dataset
 ************************
@@ -40,11 +40,11 @@ To process it with wavemap, run::
 
     roslaunch wavemap_ros panoptic_mapping_rgbd_flat.launch base_path:="${FLAT_DATA_DIR}"/flat_dataset/run1
 
-To experiment with different wavemap settings, modify :gh_file:`this config file <interfaces/ros1/wavemap_ros/config/panoptic_mapping_rgbd.yaml>`.
+To experiment with different wavemap settings, modify :gh_file:`this config file <interfaces/ros1/wavemap_ros/config/wavemap_panoptic_mapping_rgbd.yaml>`.
 
 Multi-sensor live demo
 **********************
-This section provides instructions to reproduce the interactive multi-sensor, multi-resolution mapping demo we performed at several events, including `RSS 2023 <https://roboticsconference.org/program/papers/065/>`__ and the `Swiss Robotics Day 2023 <https://swissroboticsday.ch/>`__. In this demo, wavemap fuses measurements from a depth camera up to a resolution of 1cm and a LiDAR up to a range of 15m in real-time on a laptop. The odometry is obtained by running FastLIO2 using the LiDAR's pointclouds and built-in IMU.
+This section provides instructions to reproduce the interactive multi-sensor, multi-resolution mapping demo we performed at several events, including `RSS 2023 <https://roboticsconference.org/2023/program/papers/065/>`__ and the `Swiss Robotics Day 2023 <https://swissroboticsday.ch/>`__. In this demo, wavemap fuses measurements from a depth camera up to a resolution of 1cm and a LiDAR up to a range of 15m in real-time on a laptop. The odometry is obtained by running FastLIO2 using the LiDAR's pointclouds and built-in IMU.
 
 Hardware
 ========
