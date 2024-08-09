@@ -52,9 +52,9 @@ Wavemap can be :doc:`configured <parameters/index>` to work with almost any dept
 
 Docker
 ======
-For convenience, the entire demo can be run in Docker using :gh_file:`this Docker image <tooling/docker/live_demo.Dockerfile>`, which includes the sensor drivers, FastLIO and wavemap. You can build it by running::
+For convenience, the entire demo can be run in Docker using :gh_file:`this Docker image <tooling/docker/ros1/live_demo.Dockerfile>`, which includes the sensor drivers, FastLIO and wavemap. You can build it by running::
 
-    docker build --tag=wavemap_demo --pull - <<< $(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/docker/live_demo.Dockerfile)
+    docker build --tag=wavemap_demo --pull - <<< $(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/docker/ros1/live_demo.Dockerfile)
 
 We provide a convenience script that you can use to run the Docker image. To download it, run::
 

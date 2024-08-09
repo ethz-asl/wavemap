@@ -9,13 +9,11 @@ on:
 #       (/github/home is a docker volume mapped to the container's host).
 env:
   REPOSITORY_NAME: wavemap
-  DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
-  DOCKER_TARGET_ROS_PKG: wavemap_all
   DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_CI_TARGET: workspace
-  ROS_HOME: /home/ci/.ros
-  CATKIN_WS_PATH: /home/ci/catkin_ws
-  CCACHE_DIR: /home/ci/ccache
+  USER_HOME: /home/ci
+  CATKIN_WS_PATH: ${{env.USER_HOME}}/catkin_ws
+  CCACHE_DIR: ${{env.USER_HOME}}/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
 jobs:
@@ -62,15 +60,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           load: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
@@ -83,15 +79,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}

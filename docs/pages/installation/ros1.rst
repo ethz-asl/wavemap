@@ -16,7 +16,7 @@ If you have not yet installed Docker on your computer, please follow `these inst
 
 To build wavemap's Docker image, simply run::
 
-    docker build --tag=wavemap --pull - <<< $(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/docker/incremental.Dockerfile)
+    docker build --tag=wavemap --pull - <<< $(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/docker/ros1/incremental.Dockerfile)
 
 This will create a local image on your machine containing the latest version of wavemap. You can give the local image a different name by modifying the ``--tag=wavemap`` argument. By default, the image will be built using the latest wavemap release. To specify a specific release, such as v1.0.0, add the ``--build-arg="VERSION=v1.0.0"`` argument.
 
