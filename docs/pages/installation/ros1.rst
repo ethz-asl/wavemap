@@ -65,7 +65,7 @@ Then install the remaining system dependencies using::
 
     cd ~/catkin_ws/src
     rosdep update
-    rosdep install -y --from-paths . --ignore-src --skip-keys="numpy_eigen catkin_boost_python_buildtool"
+    rosdep install -y --from-paths . --ignore-src
 
 Build all of wavemap's packages, including its ROS interface and the Rviz plugin used to visualize its maps, with::
 
