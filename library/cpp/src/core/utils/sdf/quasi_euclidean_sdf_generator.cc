@@ -102,10 +102,8 @@ void QuasiEuclideanSDFGenerator::propagate(
   const auto neighbor_distance_offsets =
       GridNeighborhood<3>::computeOffsetLengths(kNeighborIndexOffsets,
                                                 min_cell_width);
-#if DCHECK_IS_ON()
   const FloatingPoint half_max_neighbor_distance_offset =
       0.5f * std::sqrt(3.f) * min_cell_width + 1e-3f;
-#endif
 
   // Propagate the distance
   while (!open_queue.empty()) {
