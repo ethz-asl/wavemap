@@ -44,7 +44,7 @@ if docker info | grep "Runtimes.*nvidia.*" &>/dev/null; then
     -v "$host_data_dir_path":/home/ci/data:ro \
     -e NVIDIA_VISIBLE_DEVICES=all \
     -e NVIDIA_DRIVER_CAPABILITIES=graphics \
-    wavemap "$@"
+    wavemap_ros1 "$@"
 else
 # If the Nvidia container toolkit is not available, we launch the container with
 # access to the host display but without GPU acceleration.
@@ -56,5 +56,5 @@ else
     -e QT_X11_NO_MITSHM=1 \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v "$host_data_dir_path":/home/ci/data:ro \
-    wavemap "$@"
+    wavemap_ros1 "$@"
 fi
