@@ -13,7 +13,7 @@ FROM $FROM_IMAGE AS source-filter
 ARG CATKIN_WS_PATH
 ARG REPOSITORY_NAME
 WORKDIR $CATKIN_WS_PATH
-COPY $REPOSITORY_NAME src/$REPOSITORY_NAME/
+COPY . src/$REPOSITORY_NAME/
 
 # Cache the manifests of all packages for use in subsequent stages
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

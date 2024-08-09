@@ -12,8 +12,8 @@ env:
   DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_CI_TARGET: workspace
   USER_HOME: /home/ci
-  CATKIN_WS_PATH: ${{env.USER_HOME}}/catkin_ws
-  CCACHE_DIR: ${{env.USER_HOME}}/ccache
+  CATKIN_WS_PATH: /home/ci/catkin_ws
+  CCACHE_DIR: /home/ci/ccache
   PRE_COMMIT_DIR: /home/ci/pre-commit
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
       - name: Build the ${{ env.DOCKER_CI_TARGET }} image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ env.REPOSITORY_NAME }}
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |
@@ -78,7 +78,7 @@ jobs:
       - name: Push the ${{ env.DOCKER_CI_TARGET }} image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ env.REPOSITORY_NAME }}
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_CI_TARGET }}
           build-args: |

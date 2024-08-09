@@ -15,8 +15,8 @@ env:
   DOCKER_RELEASE_REGISTRY: ghcr.io
   DOCKER_RELEASE_TARGET: workspace
   USER_HOME: /home/ci
-  CATKIN_WS_PATH: ${{env.USER_HOME}}/catkin_ws
-  CCACHE_DIR: ${{env.USER_HOME}}/ccache
+  CATKIN_WS_PATH: /home/ci/catkin_ws
+  CCACHE_DIR: /home/ci/ccache
 
 jobs:
   common-variables:
@@ -75,7 +75,7 @@ jobs:
       - name: Build the ${{ env.DOCKER_RELEASE_TARGET }} image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ env.REPOSITORY_NAME }}
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
@@ -94,7 +94,7 @@ jobs:
       - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image locally
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ env.REPOSITORY_NAME }}
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
@@ -116,7 +116,7 @@ jobs:
         if: startsWith(github.event.ref, 'refs/tags/v')
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ env.REPOSITORY_NAME }}
           file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
