@@ -65,14 +65,15 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DQT_NO_KEYWORDS)
 # Disable some warnings coming from Qt code in combination with C++17
 target_compile_options(${PROJECT_NAME} PRIVATE -Wno-pedantic -Wno-register)
 
-# Install
+# Support installs
+# Mark targets for installation
 install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
+# Mark plugin description for installation
 install(FILES plugin_description.xml
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-
+# Mark icons for installation
 install(DIRECTORY icons/
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/icons)

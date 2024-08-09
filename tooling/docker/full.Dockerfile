@@ -8,23 +8,11 @@ ARG PACKAGE_NAME
 # hadolint ignore=DL3006
 FROM $FROM_IMAGE AS source-filter
 
-# Install vcstool
-ARG DEBIAN_FRONTEND=noninteractive
-# hadolint ignore=DL3008
-RUN apt-get update && \
-    apt-get install -q -y --no-install-recommends git python3-vcstool && \
-    rm -rf /var/lib/apt/lists/*
-
 # Copy in the project's source
 ARG CATKIN_WS_PATH
 ARG REPOSITORY_NAME
 WORKDIR $CATKIN_WS_PATH
 COPY $REPOSITORY_NAME src/$REPOSITORY_NAME/
-
-# Import from-source dependencies with vcstool
-RUN mkdir src/dependencies && \
-    vcs import --recursive --input src/$REPOSITORY_NAME/tooling/vcstool/wavemap_https.yml \
-      src/dependencies
 
 # Cache the manifests of all packages for use in subsequent stages
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -36,17 +24,6 @@ RUN mkdir -p /tmp/manifests && \
     echo "Manifests hash:" && \
     find /tmp/manifests -type f -print0 | sort -z | \
       xargs -0 sha1sum | sha1sum
-
-# Cache the dependencies source code for use in subsequent stages
-# NOTE: We filter out the git histories since these change even if the code
-#       didn't, which causes unnecessary Docker build cache misses.
-RUN mkdir -p /tmp/filtered_sources && \
-    find ./src/dependencies -type d -name .git -prune -o -type f -exec \
-      cp --parents -t /tmp/filtered_sources {} \; && \
-    echo "Filtered dependencies sources hash:" && \
-    find /tmp/filtered_sources -type f -print0 | sort -z | \
-      xargs -0 sha1sum | sha1sum
-
 
 # hadolint ignore=DL3006
 FROM $FROM_IMAGE AS dependency-installer

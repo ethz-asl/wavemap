@@ -1,11 +1,24 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wavemap_ros)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
-
-# Find OpenCV explicitly to avoid issues on Jetson
+# Find dependencies
+# NOTE: OpenCV is normally included through cv_bridge, but we still explicitly
+#       include it to avoid issues on Jetson.
 find_package(OpenCV REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+    wavemap wavemap_msgs wavemap_ros_conversions
+    roscpp rosbag cv_bridge image_transport tf2_ros
+    std_srvs sensor_msgs visualization_msgs)
+
+# Register catkin package
+catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES ${PROJECT_NAME}
+    CATKIN_DEPENDS
+    wavemap wavemap_msgs wavemap_ros_conversions
+    roscpp rosbag cv_bridge image_transport tf2_ros
+    std_srvs sensor_msgs visualization_msgs)
+
 
 # Optional dependencies
 find_package(livox_ros_driver2 QUIET)
@@ -18,7 +31,7 @@ endif ()
 enable_wavemap_general_tooling()
 
 # Libraries
-cs_add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME}
     src/inputs/depth_image_topic_input.cc
     src/inputs/pointcloud_topic_input.cc
     src/inputs/ros_input_base.cc
@@ -33,21 +46,30 @@ cs_add_library(${PROJECT_NAME}
     src/utils/tf_transformer.cc
     src/ros_server.cc)
 set_wavemap_target_properties(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+target_include_directories(${PROJECT_NAME}
+    PUBLIC include ${catkin_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Binaries
-cs_add_executable(ros_server app/ros_server.cc)
+add_executable(ros_server app/ros_server.cc)
 set_wavemap_target_properties(ros_server)
 target_link_libraries(ros_server ${PROJECT_NAME})
 
-cs_add_executable(rosbag_processor app/rosbag_processor.cc)
+add_executable(rosbag_processor app/rosbag_processor.cc)
 set_wavemap_target_properties(rosbag_processor)
 target_link_libraries(rosbag_processor ${PROJECT_NAME})
 
-# Export
-cs_install()
-cs_export()
-
-# Export config files
+# Support installs
+# Mark targets for installation
+install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+# Mark headers for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+    FILES_MATCHING PATTERN "*.h")
+# Mark config files for installation
 install(DIRECTORY config/
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)

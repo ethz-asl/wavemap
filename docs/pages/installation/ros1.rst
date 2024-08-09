@@ -32,7 +32,7 @@ Make sure these required dependencies are installed::
 
     sudo apt update
     sudo apt install git build-essential  # General
-    sudo apt install python3-catkin-tools python3-vcstool python3-rosdep  # ROS
+    sudo apt install python3-rosdep python3-catkin-tools  # ROS
 
 Then create a catkin workspace with::
 
@@ -50,14 +50,12 @@ Next, clone the code for wavemap and its catkin dependencies. We recommend using
 
       cd ~/catkin_ws/src
       git clone git@github.com:ethz-asl/wavemap.git
-      vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_ssh.yml
 
     .. code-block:: HTTPS
       :class: no-header
 
       cd ~/catkin_ws/src
       git clone https://github.com/ethz-asl/wavemap.git
-      vcs import --recursive . --input wavemap/tooling/vcstool/wavemap_https.yml
 
 Make sure rosdep is initialized::
 

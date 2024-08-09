@@ -11,7 +11,6 @@
   <author email="victorr@ethz.ch">Victor Reijgwart</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <buildtool_depend>catkin_simple</buildtool_depend>
 
   <depend>wavemap</depend>
   <depend>wavemap_msgs</depend>
