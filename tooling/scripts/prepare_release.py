@@ -159,8 +159,8 @@ for pkg in pkgs:
                 cmake_content = file.read()
 
             # Replace the old version number with the new version number
-            pattern = re.compile(
-                r'(project\(wavemap\s+VERSION)(\s+\d+\.\d+\.\d+\s+)')
+            pattern = re.compile(r'(project\(' + pkg.name +
+                                 r'\s+VERSION)(\s+\d+\.\d+\.\d+\s+)')
             substitution = r'\1 ' + new_version_str + r' '
             new_content, count = pattern.subn(substitution, cmake_content)
 
