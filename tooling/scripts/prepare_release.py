@@ -86,6 +86,7 @@ def determine_package_path(repository_path, package):
 # Parameters
 bump_level = 'major'
 repo_path = '/home/victor/catkin_ws/src/wavemap'
+# TODO(victorr): Add catkin_setup and ROS1 examples packages
 pkgs = [
     Pkg('wavemap', PkgType.CMake),
     Pkg('wavemap', PkgType.ROS1),
@@ -136,19 +137,24 @@ for pkg in pkgs:
         section_title = f'{new_version_str} ({date_str})'
         section_title_underline = "-" * len(section_title)
 
-        # Generate an overview of the current changes
+        # Generate an overview of the current changes and contributors
         pkg_commits = repo.iter_commits(rev=f'{most_recent_release}..HEAD',
                                         paths=pkg_all_paths)
         commit_msgs = []
+        authors = set()
         for commit in pkg_commits:
             commit_msg = commit.message.partition(os.linesep)[0].strip()
             commit_msgs.append(f'* {commit_msg}')
-        section_content = os.linesep.join(commit_msgs)
+            author = commit.author.name
+            authors.add(author)
+        section_changelog = os.linesep.join(commit_msgs)
+        section_contributors = f'* Contributors: {", ".join(authors)}'
 
         # Append the new section, below the changelog title
         changelog.insert(4, section_title + os.linesep)
         changelog.insert(5, section_title_underline + os.linesep)
-        changelog.insert(6, section_content + 2 * os.linesep)
+        changelog.insert(6, section_changelog + os.linesep)
+        changelog.insert(7, section_contributors + 2 * os.linesep)
 
         # Write the updated content back to the file
         with open(pkg_changelog_path, "w") as f:
