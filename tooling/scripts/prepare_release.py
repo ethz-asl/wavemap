@@ -67,11 +67,18 @@ class Pkg:
 
 
 # Determine the relative path to a package given its name and type
-def determine_package_path(package):
+def determine_package_path(repository_path, package):
     if package.type is PkgType.CMake:
-        return 'library/cpp'
+        sub_paths = ['library/cpp', 'library', 'libraries']
+        return [
+            os.path.join(repository_path, sub_path) for sub_path in sub_paths
+        ]
     if package.type is PkgType.ROS1:
-        return os.path.join(repo_path, 'interfaces/ros1', pkg.name)
+        sub_paths = ['interfaces/ros1', 'ros']
+        return [
+            os.path.join(repository_path, sub_path, pkg.name)
+            for sub_path in sub_paths
+        ]
 
     raise SystemExit
 
@@ -105,12 +112,11 @@ new_version_str = '.'.join([str(x) for x in new_version])
 for pkg in pkgs:
     # Package variables
     pkg_debug_name = f'{pkg.type.name} package {pkg.name}'
-    pkg_path = determine_package_path(pkg)
-    pkg_commits = repo.iter_commits(rev=f'{most_recent_release}..HEAD',
-                                    paths=pkg_path)
+    pkg_all_paths = determine_package_path(repo_path, pkg)
+    pkg_current_path = pkg_all_paths[0]
     print(f'Processing {pkg_debug_name}')
 
-    pkg_changelog_path = os.path.join(repo_path, pkg_path, "CHANGELOG.rst")
+    pkg_changelog_path = os.path.join(pkg_current_path, "CHANGELOG.rst")
     if os.path.exists(pkg_changelog_path):
         # Read the package's changelog
         with open(pkg_changelog_path, "r") as f:
@@ -131,6 +137,8 @@ for pkg in pkgs:
         section_title_underline = "-" * len(section_title)
 
         # Generate an overview of the current changes
+        pkg_commits = repo.iter_commits(rev=f'{most_recent_release}..HEAD',
+                                        paths=pkg_all_paths)
         commit_msgs = []
         for commit in pkg_commits:
             commit_msg = commit.message.partition(os.linesep)[0].strip()
@@ -152,7 +160,7 @@ for pkg in pkgs:
         raise SystemExit
 
     if pkg.type == PkgType.CMake:
-        pkg_cmake_path = os.path.join(repo_path, pkg_path, "CMakeLists.txt")
+        pkg_cmake_path = os.path.join(pkg_current_path, "CMakeLists.txt")
         if os.path.exists(pkg_cmake_path):
             # Read the existing content of the CMakeLists.txt file
             with open(pkg_cmake_path, 'r', encoding='utf-8') as file:
@@ -179,7 +187,7 @@ for pkg in pkgs:
             raise SystemExit
 
     if pkg.type == PkgType.ROS1:
-        pkg_xml_path = os.path.join(repo_path, pkg_path, "package.xml")
+        pkg_xml_path = os.path.join(pkg_current_path, "package.xml")
         if os.path.exists(pkg_xml_path):
             # Parse the XML file
             tree = et.parse(pkg_xml_path)
