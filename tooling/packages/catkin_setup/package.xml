@@ -1,7 +1,7 @@
-<?xml version="1.0"?>
+<?xml version='1.0' encoding='utf-8'?>
 <package format="2">
     <name>catkin_setup</name>
-    <version>1.6.3</version>
+    <version>2.0.0</version>
     <description>Dummy package to make it easy to setup the workspace and generate the setup.[sh|bash|zsh] scripts in CI.</description>
 
     <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>

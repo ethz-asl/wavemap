@@ -2,6 +2,29 @@
 Changelog for package wavemap_ros_conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (2024-08-12)
+------------------
+* New features
+
+  * Implement (de)serialization of HashedBlocks maps, to transmit ESDFs
+  * Extend methods to convert geometry (points, transforms)
+
+* Improvements
+
+  * Improve unit tests
+  * Use new features of wavemap's C++ library
+
+    * Redesigned tree data structure interfaces
+    * 'Simulated ptrs' for chunked octree nodes (better readability)
+
+  * Tidy up CMake files
+
+    * Switch from catkin_simple to vanilla catkin
+    * Remove dependencies on catkinized gflags, glog and Eigen
+    * Make wavemap_ros_conversions library and headers installable
+
+* Contributors: Victor Reijgwart
+
 1.6.3 (2023-12-21)
 ------------------
 

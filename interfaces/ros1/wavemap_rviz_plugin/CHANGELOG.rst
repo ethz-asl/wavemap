@@ -2,6 +2,25 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (2024-08-12)
+------------------
+* New features
+
+  * Extend Rviz plugin to support rendering ESDFs
+
+* Improvements
+
+  * Use new features of wavemap's C++ library
+
+    * Use classified map to speed up voxel visibility culling
+
+  * Tidy up CMake files
+
+    * Switch from catkin_simple to vanilla catkin
+    * Remove dependencies on catkinized gflags, glog and Eigen
+
+* Contributors: Victor Reijgwart
+
 1.6.3 (2023-12-21)
 ------------------
 * Fix a bug in LoD level selection when using Rviz's TopDownOrtho ViewController
@@ -19,11 +38,13 @@ Changelog for package wavemap_rviz_plugin
 1.6.0 (2023-10-17)
 ------------------
 * New features
+
   * Add service and button to reset the wavemap_server's map
   * Add option to load maps directly from disk
   * Add option to only draw surface voxels
 
 * Improvements
+
   * General Rviz plugin UI improvements
   * Improve Rviz plugin block drawing scheduling
   * Update incremental transmission and Rviz to remove deleted blocks
@@ -34,6 +55,7 @@ Changelog for package wavemap_rviz_plugin
   * Refactor wavemap utils
 
 * Bug fixes
+
   * Fix bug causing delays when drawing blocks with identical timestamps
   * Fix bug causing segfaults upon Rviz plugin instance destruction
 
@@ -63,8 +85,6 @@ Changelog for package wavemap_rviz_plugin
 
 1.3.0 (2023-08-17)
 ------------------
-New features:
-
 * Major refactoring of Rviz plugin architecture and UI
 
   * Support different render modes (slice; grid) in a single WavemapDisplay instance

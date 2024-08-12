@@ -2,6 +2,12 @@
 Changelog for package wavemap_all
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (2024-08-12)
+------------------
+* Make utility scripts ROS agnostic and remove wavemap_utils ROS pkg
+* Restructure examples into generic cpp and ros1-specific examples
+* Contributors: Victor Reijgwart
+
 1.6.3 (2023-12-21)
 ------------------
 

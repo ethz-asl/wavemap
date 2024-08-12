@@ -2,6 +2,21 @@
 Changelog for package wavemap_examples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (2024-08-12)
+------------------
+* New features
+
+  * Restructure into generic cpp and ros1-specific examples
+
+* Improvements
+
+  * Tidy up CMake files
+
+    * Switch from catkin_simple to vanilla catkin
+    * Remove dependencies on catkinized gflags, glog and Eigen
+
+* Contributors: Victor Reijgwart
+
 1.6.3 (2023-12-21)
 ------------------
 
