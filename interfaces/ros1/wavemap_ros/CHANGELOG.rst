@@ -2,6 +2,51 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.0 (2024-08-12)
+------------------
+* New features
+
+  * Implement a plugin system for map operations, including plugins to
+
+    * Crop the map for local mapping
+    * Publish obstacles as a fixed-resolution pointcloud
+
+  * Separate configuration of inputs and measurement integrators
+
+    * Allows one set of integrator settings to be used by multiple inputs (e.g. on a robot with 6 identical depth cameras)
+    * Cleaner coupling between ROS interface and ROS-agnostic integration pipeline
+
+* Improvements
+
+  * Migrate functional code from ROS packages to C++ library
+
+    * Why?
+
+      * Goal is to keep the interfaces thin
+      * Simplifies adding new interfaces in future (e.g. ROS2, Zenoh,...)
+      * Reduces code duplication
+
+    * Make measurement integration and map operation pipeline ROS-agnostic
+    * Move pointcloud undistortion code into ROS-agnostic library
+    * Make the C++ library's logging level (verbosity) configurable through ROS params
+    * Rename wavemap server to ros_server to make room for ROS agnostic server
+
+  * Use new feature of wavemap's C++ library
+
+    * Improved parameter handling and TypeSelector syntax and methods
+
+  * Tidy up CMake files
+
+    * Switch from catkin_simple to vanilla catkin
+    * Remove dependencies on catkinized gflags, glog and Eigen
+
+  * Improve user friendliness
+
+    * Make it easier to configure an integrator's max update resolution, by allowing it to set it explicitly instead of through `termination_height`
+    * Print clear error msgs when measurement_integrator_names fail to parse
+
+* Contributors: Victor Reijgwart
+
 1.6.3 (2023-12-21)
 ------------------
 

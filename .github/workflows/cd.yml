@@ -11,12 +11,10 @@ on:
 #       (/github/home is a docker volume mapped to the container's host).
 env:
   REPOSITORY_NAME: wavemap
-  DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
-  DOCKER_TARGET_ROS_PKG: wavemap_all
   DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_RELEASE_REGISTRY: ghcr.io
   DOCKER_RELEASE_TARGET: workspace
-  ROS_HOME: /home/ci/.ros
+  USER_HOME: /home/ci
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
 
@@ -77,16 +75,14 @@ jobs:
       - name: Build the ${{ env.DOCKER_RELEASE_TARGET }} image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           load: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
@@ -98,16 +94,14 @@ jobs:
       - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image locally
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}
@@ -122,16 +116,14 @@ jobs:
         if: startsWith(github.event.ref, 'refs/tags/v')
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ steps.meta.outputs.tags }}

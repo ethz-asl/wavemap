@@ -30,13 +30,13 @@ include(cmake/append_to_catkin_tests.cmake)
 append_to_catkin_tests(test_wavemap_io)
 append_to_catkin_tests(test_wavemap_core)
 
-# Install targets
+# Support installs
+# Mark targets for installation
 install(TARGETS wavemap_core wavemap_io wavemap_pipeline
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
-# Mark header files for installation
+# Mark headers for installation
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp/include/wavemap/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

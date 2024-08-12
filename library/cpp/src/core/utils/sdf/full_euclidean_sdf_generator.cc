@@ -119,8 +119,7 @@ void FullEuclideanSDFGenerator::propagate(
     ProfilerPlot("QueueLength", static_cast<int64_t>(open_queue.size()));
     const Index3D index = open_queue.front();
     const auto& [sdf_parent, sdf_value] = sdf.getValueOrDefault(index);
-    const FloatingPoint df_value = std::abs(sdf_value);
-    ProfilerPlot("Distance", df_value);
+    ProfilerPlot("Distance", std::abs(sdf_value));
     open_queue.pop();
 
     for (const Index3D& index_offset : kNeighborIndexOffsets) {
@@ -157,7 +156,7 @@ void FullEuclideanSDFGenerator::propagate(
           std::signbit(neighbor_sdf_value) != std::signbit(sdf_value);
       if (crossed_surface) {
         if (neighbor_sdf_value < 0.f) {
-          DCHECK_LE(df_value, half_max_neighbor_distance_offset);
+          DCHECK_LE(std::abs(sdf_value), half_max_neighbor_distance_offset);
           neighbor_df_candidate =
               minDistanceTo(neighbor_index, index, min_cell_width);
         } else {

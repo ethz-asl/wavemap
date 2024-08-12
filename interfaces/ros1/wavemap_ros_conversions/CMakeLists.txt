@@ -35,13 +35,13 @@ if (CATKIN_ENABLE_TESTING)
       ${PROJECT_NAME} GTest::gtest_main)
 endif ()
 
-# Install targets
+# Support installs
+# Mark targets for installation
 install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
-# Mark cpp header files for installation
+# Mark headers for installation
 install(DIRECTORY include/${PROJECT_NAME}/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
     FILES_MATCHING PATTERN "*.h")
