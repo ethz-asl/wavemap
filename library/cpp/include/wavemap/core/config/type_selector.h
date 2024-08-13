@@ -38,7 +38,8 @@ struct TypeSelector {
   constexpr TypeId toTypeId() const { return id_; }
   static TypeId toTypeId(const std::string& name);
 
-  // Convenience method to read the type from params
+  // Convenience method to read the type from strings or params
+  static std::optional<DerivedTypeSelectorT> from(const std::string& type_name);
   static std::optional<DerivedTypeSelectorT> from(const param::Value& params);
   static std::optional<DerivedTypeSelectorT> from(
       const param::Value& params, const std::string& subconfig_name);

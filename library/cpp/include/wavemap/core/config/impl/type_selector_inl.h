@@ -88,20 +88,36 @@ TypeSelector<DerivedTypeSelectorT>::toStr(TypeId type_id) {
   }
 }
 
-template <typename DerivedNamedTypeSetT>
-typename TypeSelector<DerivedNamedTypeSetT>::TypeId
-TypeSelector<DerivedNamedTypeSetT>::toTypeId(const std::string& name) {
-  for (size_t type_idx = 0; type_idx < DerivedNamedTypeSetT::names.size();
+template <typename DerivedTypeSelectorT>
+typename TypeSelector<DerivedTypeSelectorT>::TypeId
+TypeSelector<DerivedTypeSelectorT>::toTypeId(const std::string& name) {
+  for (size_t type_idx = 0; type_idx < DerivedTypeSelectorT::names.size();
        ++type_idx) {
-    if (name == DerivedNamedTypeSetT::names[type_idx]) {
+    if (name == DerivedTypeSelectorT::names[type_idx]) {
       return static_cast<TypeId>(type_idx);
     }
   }
   return kInvalidTypeId;
 }
 
-template <typename DerivedNamedTypeSetT>
-std::optional<DerivedNamedTypeSetT> TypeSelector<DerivedNamedTypeSetT>::from(
+template <typename DerivedTypeSelectorT>
+std::optional<DerivedTypeSelectorT> TypeSelector<DerivedTypeSelectorT>::from(
+    const std::string& type_name) {
+  DerivedTypeSelectorT type_id(type_name);
+  if (!type_id.isValid()) {
+    LOG(WARNING)
+        << "Value of type name param \"" << param::kTypeSelectorKey << "\": \""
+        << type_name
+        << "\" does not match a known type name. Supported type names are ["
+        << print::sequence(DerivedTypeSelectorT::names) << "].";
+    return std::nullopt;
+  }
+
+  return type_id;
+}
+
+template <typename DerivedTypeSelectorT>
+std::optional<DerivedTypeSelectorT> TypeSelector<DerivedTypeSelectorT>::from(
     const param::Value& params) {
   // Read the type name from params
   const auto type_name = param::getTypeStr(params);
@@ -112,21 +128,11 @@ std::optional<DerivedNamedTypeSetT> TypeSelector<DerivedNamedTypeSetT>::from(
   }
 
   // Match the type name to a type id
-  DerivedNamedTypeSetT type_id(type_name.value());
-  if (!type_id.isValid()) {
-    LOG(WARNING)
-        << "Value of type name param \"" << param::kTypeSelectorKey << "\": \""
-        << type_name.value()
-        << "\" does not match a known type name. Supported type names are ["
-        << print::sequence(DerivedNamedTypeSetT::names) << "].";
-    return std::nullopt;
-  }
-
-  return type_id;
+  return from(type_name.value());
 }
 
-template <typename DerivedNamedTypeSetT>
-std::optional<DerivedNamedTypeSetT> TypeSelector<DerivedNamedTypeSetT>::from(
+template <typename DerivedTypeSelectorT>
+std::optional<DerivedTypeSelectorT> TypeSelector<DerivedTypeSelectorT>::from(
     const param::Value& params, const std::string& subconfig_name) {
   if (const auto subconfig_params = params.getChild(subconfig_name);
       subconfig_params) {
