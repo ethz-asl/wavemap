@@ -4,6 +4,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -11,8 +12,14 @@
 #include "wavemap/core/utils/meta/type_utils.h"
 
 namespace wavemap::param {
+// Type alias for param::Map keys
 using Name = std::string;
 
+// Template for a param value that can hold either
+// * one of the primitive types specified through PrimitiveValueTs
+// * an array (list) of param values
+// * a map (dictionary) of param values, indexed by keys of type param::Name
+// NOTE: This recursion allows one param value to hold a tree of parameters.
 template <typename... PrimitiveValueTs>
 class ValueT {
  public:
@@ -23,6 +30,12 @@ class ValueT {
   template <typename T>
   explicit ValueT(T value) : data_(value) {}
   explicit ValueT(double value) : data_(static_cast<FloatingPoint>(value)) {}
+
+  // Method to change the value's current type, possibly emplacing a new value
+  template <class T, class... Args>
+  T& emplace(Args&&... args) {
+    return data_.template emplace<T>(std::forward<Args>(args)...);
+  }
 
   // Methods to check the Value's current type
   template <typename ValueT>
@@ -67,9 +80,14 @@ class ValueT {
   std::variant<PrimitiveValueTs..., Array, Map> data_;
 };
 
+// Default primitive types that a param value can hold
 using PrimitiveValueTypes =
     meta::TypeList<bool, int, FloatingPoint, std::string>;
+
+// Instantiate a param::Value type that can hold our default primitive types
 using Value = meta::inject_type_list_t<ValueT, PrimitiveValueTypes>;
+
+// Lift value Array and Map types into param:: namespace
 using Array = Value::Array;
 using Map = Value::Map;
 }  // namespace wavemap::param
