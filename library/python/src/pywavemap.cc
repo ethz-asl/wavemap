@@ -1,9 +1,12 @@
+#include <glog/logging.h>
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/io/file_conversions.h>
+
+#include "pywavemap/param_conversions.h"
 
 using namespace wavemap;  // NOLINT
 namespace nb = nanobind;
@@ -13,6 +16,11 @@ NB_MODULE(pywavemap, m) {
   m.doc() =
       "A fast, efficient and accurate multi-resolution, multi-sensor 3D "
       "occupancy mapping framework.";
+
+  google::InitGoogleLogging("pywavemap");
+  google::InstallFailureSignalHandler();
+  FLAGS_alsologtostderr = true;
+  FLAGS_colorlogtostderr = true;
 
   nb::class_<MapBase>(m, "Map")
       .def_prop_ro("empty", &MapBase::empty)
@@ -30,16 +38,19 @@ NB_MODULE(pywavemap, m) {
       .def_prop_ro("max_index", &MapBase::getMaxIndex)
       .def("getCellValue", &MapBase::getCellValue)
       .def("setCellValue", &MapBase::setCellValue)
-      .def("addToCellValue", &MapBase::addToCellValue);
+      .def("addToCellValue", &MapBase::addToCellValue)
+      .def_static(
+          "load",
+          [](const std::filesystem::path& file_path)
+              -> std::shared_ptr<MapBase> {
+            wavemap::MapBase::Ptr map;
+            if (wavemap::io::fileToMap(file_path, map)) {
+              return map;
+            }
+            return nullptr;
+          },
+          "file_path"_a, "Load a wavemap map from a .wvmp file.");
 
-  m.def(
-      "load_map",
-      [](const std::filesystem::path& file_path) -> std::shared_ptr<MapBase> {
-        wavemap::MapBase::Ptr map;
-        if (wavemap::io::fileToMap(file_path, map)) {
-          return map;
-        }
-        return nullptr;
-      },
-      "file_path"_a, "Load a wavemap map from a .wvmp file.");
+  m.def("parse_params",
+        [](nb::handle params) { convert::toParamValue(params); });
 }

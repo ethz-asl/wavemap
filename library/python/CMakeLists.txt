@@ -29,7 +29,8 @@ list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
 find_package(nanobind CONFIG REQUIRED)
 
 # Generate the bindings
-nanobind_add_module(pywavemap pywavemap.cc)
+nanobind_add_module(pywavemap src/pywavemap.cc src/param_conversions.cc)
 set_wavemap_target_properties(pywavemap)
+target_include_directories(pywavemap PUBLIC include)
 target_link_libraries(pywavemap
     PUBLIC wavemap::wavemap_core wavemap::wavemap_io)
