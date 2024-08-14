@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15...3.27)
 project(pywavemap LANGUAGES CXX)
 
 # Warn if the user invokes CMake directly
-if (NOT SKBUILD)
+if (NOT SKBUILD AND NOT $ENV{CLION_IDE})
   message(WARNING "\
   This CMake file is meant to be executed using 'scikit-build-core'.
   Running it directly will almost certainly not produce the desired
@@ -52,6 +52,11 @@ find_package(Python 3.8
     OPTIONAL_COMPONENTS Development.SABIModule)
 
 # Import nanobind through CMake's find_package mechanism
+if (NOT SKBUILD AND NOT $ENV{CLION_IDE})
+  execute_process(COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+      OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR)
+  list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
+endif ()
 find_package(nanobind CONFIG REQUIRED)
 
 # Compile our extension
@@ -59,6 +64,7 @@ nanobind_add_module(pywavemap STABLE_ABI
     src/pywavemap.cc
     src/logging.cc
     src/map.cc
+    src/measurements.cc
     src/param.cc
     src/pipeline.cc)
 set_wavemap_target_properties(pywavemap)
