@@ -1,6 +1,7 @@
 #include "pywavemap/map.h"
 
 #include <nanobind/eigen/dense.h>
+#include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/map/map_factory.h>
@@ -10,7 +11,7 @@ using namespace nb::literals;  // NOLINT
 
 namespace wavemap {
 void add_map_bindings(nb::module_& m) {
-  nb::class_<MapBase>(m, "Map")
+  nb::class_<MapBase>(m, "Map", "Base class for wavemap maps.")
       .def_prop_ro("empty", &MapBase::empty, "Whether the map is empty.")
       .def_prop_ro("size", &MapBase::size,
                    "The number of cells or nodes in the map, for fixed or "

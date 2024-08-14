@@ -2,7 +2,6 @@
 #define PYWAVEMAP_MAP_H_
 
 #include <nanobind/nanobind.h>
-#include <nanobind/stl/filesystem.h>
 
 namespace nb = nanobind;
 

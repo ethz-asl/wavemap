@@ -69,10 +69,16 @@ param::Value toParamValue(const nb::handle& py_value) {  // NOLINT
 }  // namespace convert
 
 void add_param_module(nb::module_& m_param) {
-  nb::class_<param::Value>(m_param, "Value")
+  nb::class_<param::Value>(
+      m_param, "Value",
+      "A class that holds parameter values. Note that one Value can hold a "
+      "primitive type, a list of Values, or a dictionary of Values. One Value "
+      "can therefore hold the information needed to initialize an entire "
+      "config, or even a hierarchy of nested configs.")
       .def("__init__", [](param::Value* t, nb::handle py_value) {
         new (t) param::Value{convert::toParamValue(py_value)};
       });
+
   nb::implicitly_convertible<nb::handle, param::Value>();
 }
 }  // namespace wavemap

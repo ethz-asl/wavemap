@@ -2,7 +2,6 @@
 #define PYWAVEMAP_PIPELINE_H_
 
 #include <nanobind/nanobind.h>
-#include <wavemap/pipeline/pipeline.h>
 
 namespace nb = nanobind;
 

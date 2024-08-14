@@ -7,11 +7,14 @@ using namespace nb::literals;  // NOLINT
 
 namespace wavemap {
 void add_logging_module(nb::module_& m_logging) {
+  // Initialize GLOG
   google::InitGoogleLogging("pywavemap");
   google::InstallFailureSignalHandler();
   FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
   FLAGS_log_prefix = false;
+
+  // Methods to configure GLOG
   m_logging.def(
       "set_level",
       [](const std::string& level) {
@@ -19,7 +22,7 @@ void add_logging_module(nb::module_& m_logging) {
           glog_level->applyToGlog();
         }
       },
-      "level"_a = "info", "Set the module's logging level.");
+      "level"_a = "info", "Set pywavemap's logging level.");
   m_logging.def(
       "enable_prefix", [](bool enable) { FLAGS_log_prefix = enable; },
       "enable"_a = false,
