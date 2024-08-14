@@ -2,6 +2,7 @@
 
 #include "pywavemap/logging.h"
 #include "pywavemap/map.h"
+#include "pywavemap/measurements.h"
 #include "pywavemap/param.h"
 #include "pywavemap/pipeline.h"
 
@@ -22,6 +23,9 @@ NB_MODULE(pywavemap, m) {
   nb::module_ m_param =
       m.def_submodule("param", "Submodule for wavemap's config system.");
   add_param_module(m_param);
+
+  // Bindings for measurement types
+  add_measurement_bindings(m);
 
   // Bindings for wavemap maps
   add_map_bindings(m);
