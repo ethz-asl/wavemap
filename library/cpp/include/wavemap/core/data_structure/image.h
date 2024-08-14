@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/data_structure/posed_object.h"
@@ -14,6 +15,7 @@ class Image {
  public:
   using Ptr = std::shared_ptr<Image<PixelT>>;
   using ConstPtr = std::shared_ptr<const Image<PixelT>>;
+  using PixelType = PixelT;
   using Data = Eigen::Matrix<PixelT, Eigen::Dynamic, Eigen::Dynamic>;
 
   explicit Image(const Index2D& dimensions,
@@ -23,9 +25,8 @@ class Image {
         PixelT initial_value = data::fill::zero<PixelT>())
       : initial_value_(initial_value),
         data_(Data::Constant(num_rows, num_columns, initial_value)) {}
-  explicit Image(const Data& data,
-                 PixelT initial_value = data::fill::zero<PixelT>())
-      : initial_value_(initial_value), data_(data) {}
+  explicit Image(Data data, PixelT initial_value = data::fill::zero<PixelT>())
+      : initial_value_(initial_value), data_(std::move(data)) {}
 
   bool empty() const { return !size(); }
   size_t size() const { return data_.size(); }
