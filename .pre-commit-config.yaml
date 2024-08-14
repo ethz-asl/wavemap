@@ -67,7 +67,8 @@ repos:
                 --library=googletest, --library=tooling/cppcheck/gazebo,
                 "--enable=warning,performance,portability",
                 "--suppress=constStatement",
-                "--suppress=syntaxError:*test/*/test_*.cc" ]
+                "--suppress=syntaxError:*test/*/test_*.cc",
+                "--suppress=assignBoolToPointer:library/python/*"]
 
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13

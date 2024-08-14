@@ -1,6 +1,7 @@
-#include "pywavemap/param_conversions.h"
+#include "pywavemap/param.h"
 
-namespace wavemap::convert {
+namespace wavemap {
+namespace convert {
 param::Map toParamMap(const nb::handle& py_value) {  // NOLINT
   nb::dict py_dict;
   if (!nb::try_cast(py_value, py_dict)) {
@@ -51,7 +52,7 @@ param::Value toParamValue(const nb::handle& py_value) {  // NOLINT
     return param::Value{static_cast<double>(py_float)};
   }
   if (nb::str py_str; nb::try_cast(py_value, py_str)) {
-    return param::Value(py_str.c_str());
+    return param::Value{std::string{py_str.c_str()}};
   }
   if (nb::isinstance<nb::list>(py_value)) {
     return param::Value(toParamArray(py_value));
@@ -65,4 +66,13 @@ param::Value toParamValue(const nb::handle& py_value) {  // NOLINT
              << nb::repr(py_value).c_str() << ".";
   return param::Value{param::Array{}};
 }
-}  // namespace wavemap::convert
+}  // namespace convert
+
+void add_param_module(nb::module_& m_param) {
+  nb::class_<param::Value>(m_param, "Value")
+      .def("__init__", [](param::Value* t, nb::handle py_value) {
+        new (t) param::Value{convert::toParamValue(py_value)};
+      });
+  nb::implicitly_convertible<nb::handle, param::Value>();
+}
+}  // namespace wavemap

@@ -26,6 +26,10 @@ class Pipeline {
         thread_pool_(thread_pool ? std::move(thread_pool)
                                  : std::make_shared<ThreadPool>()) {}
 
+  // Indicate that copy or move-construction are not supported
+  Pipeline(const Pipeline&) = delete;
+  Pipeline(Pipeline&&) = delete;
+
   void clear();
 
   bool hasIntegrator(const std::string& integrator_name) const;
