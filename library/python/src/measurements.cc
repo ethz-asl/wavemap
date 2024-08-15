@@ -11,11 +11,14 @@ namespace wavemap {
 void add_measurement_bindings(nb::module_& m) {
   // Poses
   nb::class_<Rotation3D>(m, "Rotation")
-      .def(nb::init<Rotation3D::RotationMatrix>(), "rotation_matrix"_a);
+      .def(nb::init<Rotation3D::RotationMatrix>(), "rotation_matrix"_a)
+      .def("inverse", &Rotation3D::inverse, "Compute the rotation's inverse.");
   nb::class_<Transformation3D>(m, "Pose")
       .def(nb::init<Rotation3D, Vector3D>(), "rotation"_a, "translation"_a)
       .def(nb::init<Transformation3D::TransformationMatrix>(),
-           "transformation_matrix");
+           "transformation_matrix")
+      .def("inverse", &Transformation3D::inverse,
+           "Compute the transformation's inverse.");
 
   // Pointclouds
   nb::class_<Pointcloud<>>(m, "Pointcloud")

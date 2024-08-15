@@ -1,6 +1,7 @@
 #include "pywavemap/logging.h"
 
 #include <glog/logging.h>
+#include <nanobind/stl/string.h>
 #include <wavemap/core/utils/logging_level.h>
 
 using namespace nb::literals;  // NOLINT
