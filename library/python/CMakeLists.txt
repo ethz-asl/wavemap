@@ -74,3 +74,9 @@ target_link_libraries(pywavemap PUBLIC
 
 # Install directive for scikit-build-core
 install(TARGETS pywavemap LIBRARY DESTINATION pywavemap)
+
+# Generate stubs
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pywavemap-extras.cmake)
+pywavemap_add_stub(pywavemap pywavemap)
+pywavemap_add_stub(pywavemap pywavemap.logging)
+pywavemap_add_stub(pywavemap pywavemap.param)
