@@ -64,12 +64,9 @@ For other citation styles, you can use the `Crosscite's citation formatter <http
      pages/faq
 
     .. toctree::
-     :caption: C++ API
+     :caption: APIs
      :maxdepth: 1
      :hidden:
 
-     cpp_api/class_view_hierarchy
      cpp_api/unabridged_api
-
-..
-   _TODO: Include cpp_api/file_view_hierarchy again once the directory structure is documented in Doxygen
+     python_api/index

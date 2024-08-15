@@ -18,13 +18,15 @@ version = release
 # General configuration
 extensions = [
     'sphinx.ext.mathjax', "sphinx.ext.extlinks", 'sphinx.ext.githubpages',
-    'sphinx_design', 'sphinx_sitemap', 'breathe', 'exhale'
+    'sphinx.ext.autodoc', 'sphinx_design', 'sphinx_sitemap', 'breathe',
+    'exhale'
 ]
 templates_path = ['_templates']
 source_suffix = ['.rst', '.md']
 master_doc = 'index'
 language = 'en'
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+add_module_names = False
 
 # The name of the Pygments (syntax highlighting) style to use
 pygments_style = 'sas'
@@ -110,6 +112,7 @@ exhale_args = {
     "doxygenStripFromPath": "..",
     # Heavily encouraged optional argument (see docs)
     # "rootFileTitle": "API",
+    "fullApiSubSectionTitle": "C++ API",
     # Suggested optional arguments
     "createTreeView": False,
     # TIP: if using the sphinx-bootstrap-theme, you need
