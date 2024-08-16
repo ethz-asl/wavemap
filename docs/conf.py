@@ -3,6 +3,7 @@ from dataclasses import asdict
 from sphinxawesome_theme import ThemeOptions
 from sphinxawesome_theme.postprocess import Icons
 import lxml.etree
+import git
 
 # Project information
 project = 'wavemap'
@@ -126,8 +127,10 @@ primary_domain = 'cpp'
 highlight_language = 'cpp'
 
 # Provide a short syntax to link to files in the repository
+repo = git.Repo(search_parent_directories=True)
+sha = repo.head.object.hexsha
 extlinks = {
-    "gh_file": ("https://github.com/ethz-asl/wavemap/tree/main/%s", "%s"),
+    "gh_file": (f"https://github.com/ethz-asl/wavemap/tree/{sha}/%s", "%s"),
 }
 
 # Configure the link checker (invoked with `make linkcheck`)
