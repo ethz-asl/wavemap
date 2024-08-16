@@ -60,23 +60,34 @@ endif ()
 find_package(nanobind CONFIG REQUIRED)
 
 # Compile our extension
-nanobind_add_module(pywavemap STABLE_ABI
+nanobind_add_module(_cpp_bindings STABLE_ABI
     src/pywavemap.cc
     src/logging.cc
     src/map.cc
     src/measurements.cc
     src/param.cc
     src/pipeline.cc)
-set_wavemap_target_properties(pywavemap)
-target_include_directories(pywavemap PUBLIC include)
-target_link_libraries(pywavemap PUBLIC
+set_wavemap_target_properties(_cpp_bindings)
+target_include_directories(_cpp_bindings PUBLIC include)
+target_link_libraries(_cpp_bindings PUBLIC
     wavemap::wavemap_core wavemap::wavemap_io wavemap::wavemap_pipeline)
 
 # Install directive for scikit-build-core
-install(TARGETS pywavemap LIBRARY DESTINATION pywavemap)
+install(TARGETS _cpp_bindings LIBRARY DESTINATION pywavemap)
 
 # Generate stubs
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pywavemap-extras.cmake)
-pywavemap_add_stub(pywavemap pywavemap)
-pywavemap_add_stub(pywavemap pywavemap.logging)
-pywavemap_add_stub(pywavemap pywavemap.param)
+nanobind_add_stub(pywavemap_stub
+    MODULE _cpp_bindings
+    OUTPUT "${CMAKE_SOURCE_DIR}/src/pywavemap/__init__.pyi"
+    PYTHON_PATH $<TARGET_FILE_DIR:_cpp_bindings>
+    DEPENDS _cpp_bindings)
+nanobind_add_stub(pywavemap_logging_stub
+    MODULE _cpp_bindings.logging
+    OUTPUT "${CMAKE_SOURCE_DIR}/src/pywavemap/logging.pyi"
+    PYTHON_PATH $<TARGET_FILE_DIR:_cpp_bindings>
+    DEPENDS _cpp_bindings)
+nanobind_add_stub(pywavemap_param_stub
+    MODULE _cpp_bindings.param
+    OUTPUT "${CMAKE_SOURCE_DIR}/src/pywavemap/param.pyi"
+    PYTHON_PATH $<TARGET_FILE_DIR:_cpp_bindings>
+    DEPENDS _cpp_bindings)

@@ -26,7 +26,6 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 language = 'en'
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-add_module_names = False
 
 # The name of the Pygments (syntax highlighting) style to use
 pygments_style = 'sas'
