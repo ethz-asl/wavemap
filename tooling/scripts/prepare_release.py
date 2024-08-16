@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, AnyStr
 import os
 import re
 import argparse
@@ -57,70 +57,77 @@ def bump_version(version, level='patch'):
 
 # Types of packages we support
 class PkgType(Enum):
-    CMake = 1
+
+    def __str__(self):
+        return {PkgType.CPP: "C++", PkgType.ROS1: "ROS1"}[self]
+
+    CPP = 1
     ROS1 = 2
 
 
 # Class used to specify a package in our repository
 @dataclass
 class Pkg:
-    name: str
+    name: AnyStr
     type: PkgType
-    current_path: str
-    old_paths: List[str]
+    current_path: AnyStr
+    old_paths: List[AnyStr]
 
 
-# Parameters
-pkgs = [
-    # C++
-    # - library
-    Pkg('wavemap', PkgType.CMake, 'library/cpp', []),
-    # - examples
-    Pkg('wavemap_examples_cpp', PkgType.CMake, 'examples/cpp', []),
-    # ROS1
-    # - interface
-    Pkg('wavemap', PkgType.ROS1, 'interfaces/ros1/wavemap', []),
-    Pkg('wavemap_msgs', PkgType.ROS1, 'interfaces/ros1/wavemap_msgs', []),
-    Pkg('wavemap_ros_conversions', PkgType.ROS1,
-        'interfaces/ros1/wavemap_ros_conversions', []),
-    Pkg('wavemap_ros', PkgType.ROS1, 'interfaces/ros1/wavemap_ros', []),
-    Pkg('wavemap_rviz_plugin', PkgType.ROS1,
-        'interfaces/ros1/wavemap_rviz_plugin', []),
-    Pkg('wavemap_all', PkgType.ROS1, 'interfaces/ros1/wavemap_all', []),
-    # - helpers
-    Pkg('catkin_setup', PkgType.ROS1, 'tooling/packages/catkin_setup', []),
-    # - examples
-    Pkg('wavemap_examples_ros1', PkgType.ROS1, 'examples/ros1', [])
-]
+def draft_release_notes():
+    out = "# Summary\n"
+    out += "...\n"
+    out += "\n"
+    out += "### Detailed description\n"
+    out += "...\n"
+    out += "\n"
+    out += "# Package changelogs\n"
+    out += "\n"
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        prog='PrepareRelease',
-        description='Prepares wavemap\'s release files.')
-    parser.add_argument('bump_level', choices=['major', 'minor', 'path'])
-    args = parser.parse_args()
+    out += "### Libraries\n"
+    pkg = pkgs["libraries"][0]
+    out += f"* [{pkg.type}](https://github.com/ethz-asl/wavemap/blob/"
+    out += "v{new_version_str}/{pkg.current_path}/CHANGELOG.rst)\n"
+    out += "\n"
 
-    # Load our git repo
-    repo = git.Repo(os.path.abspath(__file__), search_parent_directories=True)
+    out += "### Interfaces\n"
+    out += "* ROS1\n"
+    for pkg in pkgs["interfaces"]:
+        out += f"  * [{pkg.name}](https://github.com/ethz-asl/wavemap/blob/"
+        out += f"v{new_version_str}/{pkg.current_path}/CHANGELOG.rst)\n"
+    out += "\n"
 
-    # Run the rest of the script from the repo's root
-    os.chdir(repo.git.rev_parse("--show-toplevel"))
+    out += "### Examples\n"
+    for pkg in pkgs["examples"]:
+        out += f"* [{pkg.type}](https://github.com/ethz-asl/wavemap/blob/"
+        out += f"v{new_version_str}/{pkg.current_path}/CHANGELOG.rst)\n"
+    out += "\n"
 
-    # Find the most recent release
-    tags = repo.tags
-    most_recent_release = extract_highest_version(tags)
-    if most_recent_release is None:
-        raise SystemExit
-    most_recent_release = most_recent_release.name
+    out += "# Upgrade notes\n"
+    out += "Upgrade instructions for\n"
+    out += "* Catkin\n"
+    out += "  * Go to your catkin workspace src directory: "
+    out += "`cd ~/catkin_ws/src`\n"
+    out += "  * Pull the newest wavemap code:"
+    out += "`cd wavemap && git checkout main && git pull`\n"
+    out += "  * Rebuild wavemap: `catkin build wavemap_all`\n"
+    out += "* Docker\n"
+    out += "  * `docker build --tag=wavemap --build-arg=\"VERSION=v1.6.3\" -"
+    out += "<<< $(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/"
+    out += "main/tooling/docker/incremental.Dockerfile)`\n"
+    out += "For more info, see the [installation page](https://"
+    out += "ethz-asl.github.io/wavemap/pages/installation) in the docs.)"
+    out += "\n"
 
-    # Determine the new release number
-    new_version = bump_version(most_recent_release, args.bump_level)
-    new_version_str = '.'.join([str(x) for x in new_version])
+    print(out)
 
+
+def prepare_release_files():
     # Generate the changelogs for each package in our repo
-    for pkg in pkgs:
+    packages = [pk for key, value in pkgs.items() for pk in value]
+    for pkg in packages:
         # Package variables
-        pkg_debug_name = f'{pkg.type.name} package {pkg.name}'
+        pkg_debug_name = f'{pkg.type} package {pkg.name}'
         pkg_all_paths = pkg.old_paths.append(pkg.current_path)
         print(f'Processing {pkg_debug_name}')
 
@@ -172,7 +179,7 @@ if __name__ == '__main__':
             print(f'Could NOT find changelog for {pkg_debug_name}')
             raise SystemExit
 
-        if pkg.type == PkgType.CMake:
+        if pkg.type == PkgType.CPP:
             pkg_cmake_path = os.path.join(pkg.current_path, "CMakeLists.txt")
             if os.path.exists(pkg_cmake_path):
                 # Read the existing content of the CMakeLists.txt file
@@ -224,3 +231,66 @@ if __name__ == '__main__':
             else:
                 print(f'Could NOT find package.xml for {pkg_debug_name}')
                 raise SystemExit
+
+
+# Parameters
+pkgs = {
+    "libraries": [Pkg('wavemap', PkgType.CPP, 'library/cpp', [])],
+    "interfaces": [
+        Pkg('wavemap', PkgType.ROS1, 'interfaces/ros1/wavemap', []),
+        Pkg('wavemap_msgs', PkgType.ROS1, 'interfaces/ros1/wavemap_msgs', []),
+        Pkg('wavemap_ros_conversions', PkgType.ROS1,
+            'interfaces/ros1/wavemap_ros_conversions', []),
+        Pkg('wavemap_ros', PkgType.ROS1, 'interfaces/ros1/wavemap_ros', []),
+        Pkg('wavemap_rviz_plugin', PkgType.ROS1,
+            'interfaces/ros1/wavemap_rviz_plugin', []),
+        Pkg('wavemap_all', PkgType.ROS1, 'interfaces/ros1/wavemap_all', [])
+    ],
+    "helpers": [
+        Pkg('catkin_setup', PkgType.ROS1, 'tooling/packages/catkin_setup', []),
+    ],
+    "examples": [
+        Pkg('wavemap_examples_cpp', PkgType.CPP, 'examples/cpp', []),
+        Pkg('wavemap_examples_ros1', PkgType.ROS1, 'examples/ros1', [])
+    ]
+}
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog='PrepareRelease',
+        description='Prepares wavemap\'s release files.')
+    parser.add_argument('--bump_level', required=False)
+    parser.add_argument('--new_version', required=False)
+    parser.add_argument('--draft_release_notes',
+                        action='store_true',
+                        default=False)
+    args = parser.parse_args()
+
+    if (args.bump_level == '') != (args.new_version == ''):
+        print("Specify either the bump level or new version number, not both.")
+        raise SystemExit
+
+    # Load our git repo
+    repo = git.Repo(os.path.abspath(__file__), search_parent_directories=True)
+
+    # Run the rest of the script from the repo's root
+    os.chdir(repo.git.rev_parse("--show-toplevel"))
+
+    # Find the most recent release
+    tags = repo.tags
+    most_recent_release = extract_highest_version(tags)
+    if most_recent_release is None:
+        raise SystemExit
+    most_recent_release = most_recent_release.name
+
+    # Determine the new release number
+    if args.new_version:
+        new_version_str = args.new_version
+    else:
+        new_version = bump_version(most_recent_release, args.bump_level)
+        new_version_str = '.'.join([str(x) for x in new_version])
+
+    if args.draft_release_notes:
+        draft_release_notes()
+    else:
+        prepare_release_files()
