@@ -2,8 +2,10 @@
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import List
 import os
 import re
+import argparse
 import xml.etree.ElementTree as et
 from datetime import datetime
 import git
@@ -64,154 +66,161 @@ class PkgType(Enum):
 class Pkg:
     name: str
     type: PkgType
-
-
-# Determine the relative path to a package given its name and type
-def determine_package_path(repository_path, package):
-    if package.type is PkgType.CMake:
-        sub_paths = ['library/cpp', 'library', 'libraries']
-        return [
-            os.path.join(repository_path, sub_path) for sub_path in sub_paths
-        ]
-    if package.type is PkgType.ROS1:
-        sub_paths = ['interfaces/ros1', 'ros']
-        return [
-            os.path.join(repository_path, sub_path, pkg.name)
-            for sub_path in sub_paths
-        ]
-
-    raise SystemExit
+    current_path: str
+    old_paths: List[str]
 
 
 # Parameters
-bump_level = 'major'
-repo_path = '/home/victor/catkin_ws/src/wavemap'
-# TODO(victorr): Add catkin_setup and ROS1 examples packages
 pkgs = [
-    Pkg('wavemap', PkgType.CMake),
-    Pkg('wavemap', PkgType.ROS1),
-    Pkg('wavemap_msgs', PkgType.ROS1),
-    Pkg('wavemap_ros_conversions', PkgType.ROS1),
-    Pkg('wavemap_ros', PkgType.ROS1),
-    Pkg('wavemap_rviz_plugin', PkgType.ROS1),
-    Pkg('wavemap_all', PkgType.ROS1)
+    # C++
+    # - library
+    Pkg('wavemap', PkgType.CMake, 'library/cpp', []),
+    # - examples
+    Pkg('wavemap_examples_cpp', PkgType.CMake, 'examples/cpp', []),
+    # ROS1
+    # - interface
+    Pkg('wavemap', PkgType.ROS1, 'interfaces/ros1/wavemap', []),
+    Pkg('wavemap_msgs', PkgType.ROS1, 'interfaces/ros1/wavemap_msgs', []),
+    Pkg('wavemap_ros_conversions', PkgType.ROS1,
+        'interfaces/ros1/wavemap_ros_conversions', []),
+    Pkg('wavemap_ros', PkgType.ROS1, 'interfaces/ros1/wavemap_ros', []),
+    Pkg('wavemap_rviz_plugin', PkgType.ROS1,
+        'interfaces/ros1/wavemap_rviz_plugin', []),
+    Pkg('wavemap_all', PkgType.ROS1, 'interfaces/ros1/wavemap_all', []),
+    # - helpers
+    Pkg('catkin_setup', PkgType.ROS1, 'tooling/packages/catkin_setup', []),
+    # - examples
+    Pkg('wavemap_examples_ros1', PkgType.ROS1, 'examples/ros1', [])
 ]
 
-# Find the most recent release
-repo = git.Repo(repo_path)
-tags = repo.tags
-most_recent_release = extract_highest_version(tags)
-if most_recent_release is None:
-    raise SystemExit
-most_recent_release = most_recent_release.name
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog='PrepareRelease',
+        description='Prepares wavemap\'s release files.')
+    parser.add_argument('bump_level', choices=['major', 'minor', 'path'])
+    args = parser.parse_args()
 
-# Determine the new release number
-new_version = bump_version(most_recent_release, bump_level)
-new_version_str = '.'.join([str(x) for x in new_version])
+    # Load our git repo
+    repo = git.Repo(os.path.abspath(__file__), search_parent_directories=True)
 
-# Generate the changelogs for each package in our repo
-for pkg in pkgs:
-    # Package variables
-    pkg_debug_name = f'{pkg.type.name} package {pkg.name}'
-    pkg_all_paths = determine_package_path(repo_path, pkg)
-    pkg_current_path = pkg_all_paths[0]
-    print(f'Processing {pkg_debug_name}')
+    # Run the rest of the script from the repo's root
+    os.chdir(repo.git.rev_parse("--show-toplevel"))
 
-    pkg_changelog_path = os.path.join(pkg_current_path, "CHANGELOG.rst")
-    if os.path.exists(pkg_changelog_path):
-        # Read the package's changelog
-        with open(pkg_changelog_path, "r") as f:
-            changelog = f.readlines()
-
-        # Check the title to ensure we're editing the right file
-        changelog_title = changelog[1][:-1]
-        changelog_title_expected = f'Changelog for package {pkg.name}'
-        if changelog_title != changelog_title_expected:
-            print(
-                f'Changelog title for {pkg_debug_name} is "{changelog_title}"'
-                f' does not match expected "{changelog_title_expected}"')
-            raise SystemExit
-
-        #  Generate the title for the new section
-        date_str = datetime.now().strftime("%Y-%m-%d")
-        section_title = f'{new_version_str} ({date_str})'
-        section_title_underline = "-" * len(section_title)
-
-        # Generate an overview of the current changes and contributors
-        pkg_commits = repo.iter_commits(rev=f'{most_recent_release}..HEAD',
-                                        paths=pkg_all_paths)
-        commit_msgs = []
-        authors = set()
-        for commit in pkg_commits:
-            commit_msg = commit.message.partition(os.linesep)[0].strip()
-            commit_msgs.append(f'* {commit_msg}')
-            author = commit.author.name
-            authors.add(author)
-        section_changelog = os.linesep.join(commit_msgs)
-        section_contributors = f'* Contributors: {", ".join(authors)}'
-
-        # Append the new section, below the changelog title
-        changelog.insert(4, section_title + os.linesep)
-        changelog.insert(5, section_title_underline + os.linesep)
-        changelog.insert(6, section_changelog + os.linesep)
-        changelog.insert(7, section_contributors + 2 * os.linesep)
-
-        # Write the updated content back to the file
-        with open(pkg_changelog_path, "w") as f:
-            changelog = "".join(changelog)
-            f.write(changelog)
-
-    else:
-        print(f'Could NOT find changelog for {pkg_debug_name}')
+    # Find the most recent release
+    tags = repo.tags
+    most_recent_release = extract_highest_version(tags)
+    if most_recent_release is None:
         raise SystemExit
+    most_recent_release = most_recent_release.name
 
-    if pkg.type == PkgType.CMake:
-        pkg_cmake_path = os.path.join(pkg_current_path, "CMakeLists.txt")
-        if os.path.exists(pkg_cmake_path):
-            # Read the existing content of the CMakeLists.txt file
-            with open(pkg_cmake_path, 'r', encoding='utf-8') as file:
-                cmake_content = file.read()
+    # Determine the new release number
+    new_version = bump_version(most_recent_release, args.bump_level)
+    new_version_str = '.'.join([str(x) for x in new_version])
 
-            # Replace the old version number with the new version number
-            pattern = re.compile(r'(project\(' + pkg.name +
-                                 r'\s+VERSION)(\s+\d+\.\d+\.\d+\s+)')
-            substitution = r'\1 ' + new_version_str + r' '
-            new_content, count = pattern.subn(substitution, cmake_content)
+    # Generate the changelogs for each package in our repo
+    for pkg in pkgs:
+        # Package variables
+        pkg_debug_name = f'{pkg.type.name} package {pkg.name}'
+        pkg_all_paths = pkg.old_paths.append(pkg.current_path)
+        print(f'Processing {pkg_debug_name}')
 
-            # Make the replacement was successful and unique
-            if count == 0:
+        pkg_changelog_path = os.path.join(pkg.current_path, "CHANGELOG.rst")
+        if os.path.exists(pkg_changelog_path):
+            # Read the package's changelog
+            with open(pkg_changelog_path, "r") as f:
+                changelog = f.readlines()
+
+            # Check the title to ensure we're editing the right file
+            changelog_title = changelog[1][:-1]
+            changelog_title_expected = f'Changelog for package {pkg.name}'
+            if changelog_title != changelog_title_expected:
+                print(
+                    f'Changelog title for {pkg_debug_name} is "{changelog_title}"'
+                    f' does not match expected "{changelog_title_expected}"')
                 raise SystemExit
-            if 1 < count:
-                raise SystemExit
+
+            #  Generate the title for the new section
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            section_title = f'{new_version_str} ({date_str})'
+            section_title_underline = "-" * len(section_title)
+
+            # Generate an overview of the current changes and contributors
+            pkg_commits = repo.iter_commits(rev=f'{most_recent_release}..HEAD',
+                                            paths=pkg_all_paths)
+            commit_msgs = []
+            authors = set()
+            for commit in pkg_commits:
+                commit_msg = commit.message.partition(os.linesep)[0].strip()
+                commit_msgs.append(f'* {commit_msg}')
+                author = commit.author.name
+                authors.add(author)
+            section_changelog = os.linesep.join(commit_msgs)
+            section_contributors = f'* Contributors: {", ".join(authors)}'
+
+            # Append the new section, below the changelog title
+            changelog.insert(4, section_title + os.linesep)
+            changelog.insert(5, section_title_underline + os.linesep)
+            changelog.insert(6, section_changelog + os.linesep)
+            changelog.insert(7, section_contributors + 2 * os.linesep)
 
             # Write the updated content back to the file
-            with open(pkg_cmake_path, 'w', encoding='utf-8') as file:
-                file.write(new_content)
+            with open(pkg_changelog_path, "w") as f:
+                changelog = "".join(changelog)
+                f.write(changelog)
 
         else:
-            print(f'Could NOT find CMakeLists.txt for {pkg_debug_name}')
+            print(f'Could NOT find changelog for {pkg_debug_name}')
             raise SystemExit
 
-    if pkg.type == PkgType.ROS1:
-        pkg_xml_path = os.path.join(pkg_current_path, "package.xml")
-        if os.path.exists(pkg_xml_path):
-            # Parse the XML file
-            tree = et.parse(pkg_xml_path)
-            root = tree.getroot()
+        if pkg.type == PkgType.CMake:
+            pkg_cmake_path = os.path.join(pkg.current_path, "CMakeLists.txt")
+            if os.path.exists(pkg_cmake_path):
+                # Read the existing content of the CMakeLists.txt file
+                with open(pkg_cmake_path, 'r', encoding='utf-8') as file:
+                    cmake_content = file.read()
 
-            # Find all 'version' elements
-            version_tags = root.findall('version')
+                # Replace the old version number with the new version number
+                pattern = re.compile(r'(project\(' + pkg.name +
+                                     r'\s+VERSION)(\s+\d+\.\d+\.\d+\s+)')
+                substitution = r'\1 ' + new_version_str + r' '
+                new_content, count = pattern.subn(substitution, cmake_content)
 
-            # Make sure the tag is unique
-            if len(version_tags) == 0:
+                # Make the replacement was successful and unique
+                if count == 0:
+                    raise SystemExit
+                if 1 < count:
+                    raise SystemExit
+
+                # Write the updated content back to the file
+                with open(pkg_cmake_path, 'w', encoding='utf-8') as file:
+                    file.write(new_content)
+
+            else:
+                print(f'Could NOT find CMakeLists.txt for {pkg_debug_name}')
                 raise SystemExit
-            if 1 < len(version_tags):
-                raise SystemExit
-            version_tag = version_tags[0]
 
-            # Update the version tag and save the changes
-            version_tag.text = new_version_str
-            tree.write(pkg_xml_path, encoding='utf-8', xml_declaration=True)
-        else:
-            print(f'Could NOT find package.xml for {pkg_debug_name}')
-            raise SystemExit
+        if pkg.type == PkgType.ROS1:
+            pkg_xml_path = os.path.join(pkg.current_path, "package.xml")
+            if os.path.exists(pkg_xml_path):
+                # Parse the XML file
+                tree = et.parse(pkg_xml_path)
+                root = tree.getroot()
+
+                # Find all 'version' elements
+                version_tags = root.findall('version')
+
+                # Make sure the tag is unique
+                if len(version_tags) == 0:
+                    raise SystemExit
+                if 1 < len(version_tags):
+                    raise SystemExit
+                version_tag = version_tags[0]
+
+                # Update the version tag and save the changes
+                version_tag.text = new_version_str
+                tree.write(pkg_xml_path,
+                           encoding='utf-8',
+                           xml_declaration=True)
+            else:
+                print(f'Could NOT find package.xml for {pkg_debug_name}')
+                raise SystemExit
