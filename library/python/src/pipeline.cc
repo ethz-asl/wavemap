@@ -28,6 +28,8 @@ void add_pipeline_bindings(nb::module_& m) {
              const param::Value& params) -> void {
             self.addIntegrator(integrator_name, params);
           },
+          nb::sig("def addIntegrator(self, integrator_name: str, "
+                  "integrator_params: dict) -> None"),
           "integrator_name"_a, "integrator_params"_a,
           "Create and register a new integrator")
       .def("clearIntegrators", &Pipeline::clearIntegrators,
@@ -37,6 +39,7 @@ void add_pipeline_bindings(nb::module_& m) {
           [](Pipeline& self, const param::Value& params) -> void {
             self.addOperation(params);
           },
+          nb::sig("def addOperation(self, operation_params: dict) -> None"),
           "operation_params"_a, "Create and register a new map operation.")
       .def("clearOperations", &Pipeline::clearOperations,
            "Deregister all map operations")

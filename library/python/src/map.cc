@@ -59,7 +59,8 @@ void add_map_bindings(nb::module_& m) {
           [](const param::Value& params) -> std::shared_ptr<MapBase> {
             return MapFactory::create(params);
           },
-          "parameters"_a, "Create a new map based on the given settings.")
+          nb::sig("def create(parameters: dict) -> Map"), "parameters"_a,
+          "Create a new map based on the given settings.")
       .def_static(
           "load",
           [](const std::filesystem::path& file_path)
