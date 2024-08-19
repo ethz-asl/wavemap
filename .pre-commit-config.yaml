@@ -6,7 +6,7 @@ default_language_version:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.6.0
     hooks:
       - name: Trim trailing whitespaces
         id: trailing-whitespace
@@ -31,13 +31,13 @@ repos:
         id: check-merge-conflict
 
   - repo: https://github.com/google/yapf
-    rev: v0.31.0
+    rev: v0.40.2
     hooks:
       - name: Format python files with yapf
         id: yapf
 
   - repo: https://github.com/PyCQA/pylint
-    rev: v2.12.2
+    rev: v3.1.0
     hooks:
       - name: Lint python files with pylint
         id: pylint
@@ -81,20 +81,20 @@ repos:
         additional_dependencies: [ pyyaml>=5.1 ]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.8.0.3
+    rev: v0.10.0.1
     hooks:
       - name: Check shell scripts with shellcheck
         id: shellcheck
 
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.8.0
+    rev: v2.12.0
     hooks:
       - name: Lint dockerfiles with hadolint
         id: hadolint
         args: [ --config=tooling/git_hook_configs/.hadolint.yaml ]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.24.1
+    rev: 0.28.2
     hooks:
       - name: Check GitHub workflow file schema conformance
         id: check-github-workflows
@@ -109,14 +109,14 @@ repos:
         args: [ --schemafile=tooling/schemas/wavemap/wavemap_config.json ]
 
   - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.11.0
+    rev: v0.12.0
     hooks:
       - name: Lint markdown files with markdownlint
         id: markdownlint
         args: [ --rules="~MD013" ]
 
   - repo: https://github.com/rstcheck/rstcheck
-    rev: v6.1.2
+    rev: v6.2.0
     hooks:
       - name: Check syntax of reStructuredText
         id: rstcheck

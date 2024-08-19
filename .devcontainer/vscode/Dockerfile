@@ -1,6 +1,6 @@
 ARG VERSION=latest
 
-FROM ghcr.io/ethz-asl/wavemap:${VERSION}
+FROM ghcr.io/ethz-asl/wavemap_ros1:${VERSION}
 
 # Create a non-root user and make it the default user
 ARG USERNAME=ci

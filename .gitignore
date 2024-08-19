@@ -55,6 +55,7 @@ CATKIN_IGNORE
 **cmake-build-*
 
 # Docs
-docs/api
-docs/_doxygen
+docs/cpp_api
+docs/_doxygen_cpp
+docs/_doxygen_ros1
 docs/_build

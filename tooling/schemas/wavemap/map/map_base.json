@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "Properties of the data structure used to store the map.",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "description": "Type of the data structure that should be used.",
+      "type": "string",
+      "enum": [
+        "hashed_blocks",
+        "octree",
+        "wavelet_octree",
+        "hashed_wavelet_octree",
+        "hashed_chunked_wavelet_octree"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "hashed_blocks.json"
+    },
+    {
+      "$ref": "octree.json"
+    },
+    {
+      "$ref": "wavelet_octree.json"
+    },
+    {
+      "$ref": "hashed_wavelet_octree.json"
+    },
+    {
+      "$ref": "hashed_chunked_wavelet_octree.json"
+    }
+  ]
+}

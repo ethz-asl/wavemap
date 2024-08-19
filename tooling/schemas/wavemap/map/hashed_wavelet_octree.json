@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "Properties of the hashed wavelet octree map data structure.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "hashed_wavelet_octree"
+    },
+    "min_cell_width": {
+      "description": "Maximum resolution of the map, set as the width of the smallest cell that it can represent.",
+      "$ref": "../value_with_unit/convertible_to_meters.json"
+    },
+    "min_log_odds": {
+      "description": "Lower threshold for the occupancy values stored in the map, in log-odds.",
+      "type": "number"
+    },
+    "max_log_odds": {
+      "description": "Upper threshold for the occupancy values stored in the map, in log-odds.",
+      "type": "number"
+    },
+    "tree_height": {
+      "description": "Height of the octree in each hashed block.",
+      "type": "integer"
+    },
+    "only_prune_blocks_if_unused_for": {
+      "description": "Only prune blocks if they have not been updated for at least this amount of time. Useful to avoid pruning blocks that are still being updated, whose nodes would most likely directly be reallocated if pruned.",
+      "$ref": "../value_with_unit/convertible_to_seconds.json"
+    }
+  }
+}

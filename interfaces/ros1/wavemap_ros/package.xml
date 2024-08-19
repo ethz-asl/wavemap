@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="2">
+  <name>wavemap_ros</name>
+  <version>2.0.0</version>
+  <description>ROS interface for wavemap.</description>
+
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/ethz-asl/wavemap</url>
+
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>wavemap</depend>
+  <depend>wavemap_msgs</depend>
+  <depend>wavemap_ros_conversions</depend>
+
+  <depend>roscpp</depend>
+  <depend>rosbag</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>tf2_ros</depend>
+
+  <depend>std_srvs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
+</package>

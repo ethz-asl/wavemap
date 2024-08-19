@@ -11,12 +11,10 @@ on:
 #       (/github/home is a docker volume mapped to the container's host).
 env:
   REPOSITORY_NAME: wavemap
-  DOCKER_FROM_IMAGE: ros:noetic-ros-base-focal
-  DOCKER_TARGET_ROS_PKG: wavemap_all
   DOCKER_CI_REGISTRY: hub.wavemap.vwire.ch
   DOCKER_RELEASE_REGISTRY: ghcr.io
-  DOCKER_RELEASE_TARGET: workspace-built-deps
-  ROS_HOME: /home/ci/.ros
+  DOCKER_RELEASE_TARGET: workspace
+  USER_HOME: /home/ci
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
 
@@ -39,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -60,7 +58,7 @@ jobs:
       LOCAL_IMAGE_NAME: ${{ needs.common-variables.outputs.local_ci_image_name }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.REPOSITORY_NAME }}
 
@@ -72,120 +70,60 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Prepare ccache to accelerate the build
-        id: get-date
-        # NOTE: Installing tar is required for actions/cache@v3 to work properly
-        #       on docker:20.10.9-dind.
-        run: |
-          apk add --no-cache tar
-          mkdir -p ccache
-          echo "date=$(date -u "+%Y-%m-%d_%H-%M-%S")" >> $GITHUB_OUTPUT
-
-      - name: Pull in ccache's cache
-        uses: actions/cache@v3
-        with:
-          path: ccache
-          key: ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-${{ github.sha }}-
-            ccache-${{ secrets.CCACHE_CACHE_VERSION }}-noetic-gcc-docker-
-
-      - name: Start measuring the build time
-        id: start-time
-        run: |
-          stamp=$(date +%s)
-          echo "stamp=${stamp}" >> $GITHUB_OUTPUT
+        uses: docker/setup-buildx-action@v3
 
       - name: Build the ${{ env.DOCKER_RELEASE_TARGET }} image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           load: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           cache-to: ${{ env.CACHE_IMAGE_NAME }},mode=max
           tags: ${{ env.LOCAL_IMAGE_NAME }}
 
-      - name: Determine whether the ccache cache should be updated
-        id: should-writeback-ccache
-        run: |
-          runtime=$(( $(date +%s) - ${{ steps.start-time.outputs.stamp }} ))
-          threshold=300  # seconds
-          echo $runtime
-          answer=false
-          if [ $threshold -le $runtime ]; then
-            answer=true
-          fi
-          echo "answer=${answer}" >> $GITHUB_OUTPUT
-
       - name: Test the ${{ env.DOCKER_RELEASE_TARGET }} image
         run: docker run --rm ${{ env.LOCAL_IMAGE_NAME }}
 
       - name: Push the ${{ env.DOCKER_RELEASE_TARGET }} image locally
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}
-
-      - name: Write back the build's ccache cache
-        if: steps.should-writeback-ccache.outputs.answer == 'true'
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
-          target: workspace-deps-builder-ccache-extractor
-          build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
-            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
-            CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
-          cache-from: ${{ env.CACHE_IMAGE_NAME }}
-          tags: ${{ env.LOCAL_IMAGE_NAME }}
-          outputs: type=local,dest=ccache
 
       - name: Extract metadata to annotate the image
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ github.repository }}
+          images: ${{ env.DOCKER_RELEASE_REGISTRY }}/${{ github.repository }}_ros1
 
       - name: Publish the ${{ env.DOCKER_RELEASE_TARGET }} image
         if: startsWith(github.event.ref, 'refs/tags/v')
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: ${{ env.DOCKER_RELEASE_TARGET }}
           build-args: |
-            FROM_IMAGE=${{ env.DOCKER_FROM_IMAGE }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
+            USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
-            ROS_HOME=${{ env.ROS_HOME }}
-            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
-            PACKAGE_NAME=${{ env.DOCKER_TARGET_ROS_PKG }}
           push: true
           cache-from: ${{ env.CACHE_IMAGE_NAME }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -199,16 +137,26 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
     steps:
       - name: Fetch the package's repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies (doxygen+sphinx+breathe+exhale toolchain)
         run: |
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
           apt-get install -q -y --no-install-recommends latexmk texlive-latex-extra tex-gyre texlive-fonts-recommended texlive-latex-recommended
-          pip3 install exhale sphinx-sitemap
+          pip3 install exhale sphinx-sitemap sphinx-design
           pip3 install sphinxawesome-theme --pre
           pip3 install "sphinx<7,>6"
+
+      - name: Parse C++ library with Doxygen
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: doxygen Doxyfile_cpp
+
+      - name: Parse ROS1 interface with Doxygen
+        working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs
+        shell: bash
+        run: doxygen Doxyfile_ros1
 
       - name: Build documentation site
         working-directory: ${{ env.CATKIN_WS_PATH }}/src/${{ env.REPOSITORY_NAME }}/docs

@@ -1,0 +1,101 @@
+general:
+  world_frame: "odom"
+  logging_level: debug
+  allow_reset_map_service: true
+
+map:
+  type: hashed_chunked_wavelet_octree
+  min_cell_width: { meters: 0.01 }
+
+map_operations:
+  - type: threshold_map
+    once_every: { seconds: 2.0 }
+  - type: prune_map
+    once_every: { seconds: 10.0 }
+  - type: publish_map
+    once_every: { seconds: 2.0 }
+
+measurement_integrators:
+  livox_mid360:
+    projection_model:
+      type: spherical_projector
+      elevation:
+        num_cells: 32
+        min_angle: { degrees: -7.0 }
+        max_angle: { degrees: 52.0 }
+      azimuth:
+        num_cells: 512
+        min_angle: { degrees: -180.0 }
+        max_angle: { degrees: 180.0 }
+    measurement_model:
+      type: continuous_beam
+      angle_sigma: { degrees: 0.05 }
+      # NOTE: For best results, we recommend setting range_sigma to
+      #       max(min_cell_width / 2, ouster_noise) where ouster_noise = 0.05
+      range_sigma: { meters: 0.08 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+    integration_method:
+      type: hashed_chunked_wavelet_integrator
+      min_range: { meters: 1.5 }
+      max_range: { meters: 10.0 }
+      max_update_resolution: { meters: 0.08 }
+
+  kinect_short_range:
+    projection_model:
+      type: pinhole_camera_projector
+      width: 640
+      height: 576
+      fx: 504.7727966308594
+      fy: 504.8245544433594
+      cx: 324.58349609375
+      cy: 333.283447265625
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.005 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+    integration_method:
+      type: hashed_chunked_wavelet_integrator
+      min_range: { meters: 0.05 }
+      max_range: { meters: 1.0 }
+      max_update_resolution: { meters: 0.01 }
+
+  kinect_medium_range:
+    projection_model:
+      type: pinhole_camera_projector
+      width: 640
+      height: 576
+      fx: 504.7727966308594
+      fy: 504.8245544433594
+      cx: 324.58349609375
+      cy: 333.283447265625
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.01 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+    integration_method:
+      type: hashed_chunked_wavelet_integrator
+      min_range: { meters: 1.0 }
+      max_range: { meters: 2.0 }
+      max_update_resolution: { meters: 0.02 }
+
+inputs:
+  - type: depth_image_topic
+    topic_name: "/depth/image_rect"
+    measurement_integrator_names: [ kinect_short_range, kinect_medium_range ]
+    depth_scale_factor: 0.001
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    time_offset: { seconds: -0.025 }
+    #      reprojected_topic_name: "/wavemap/kinect_input"
+
+  - type: pointcloud_topic
+    topic_name: "/livox/lidar"
+    topic_type: livox
+    measurement_integrator_names: livox_mid360
+    undistort_motion: true
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    #      reprojected_topic_name: "/wavemap/livox_input"

@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="2">
+  <name>wavemap_examples_ros1</name>
+  <version>2.0.0</version>
+  <description>Usages examples for wavemap's ROS1 interface.</description>
+
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/ethz-asl/wavemap</url>
+
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>wavemap</depend>
+  <depend>wavemap_msgs</depend>
+  <depend>wavemap_ros_conversions</depend>
+</package>

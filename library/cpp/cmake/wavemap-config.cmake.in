@@ -1,0 +1,20 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Find dependencies
+find_dependency(Eigen3 REQUIRED)
+find_dependency(Boost 1.71 QUIET COMPONENTS headers)
+# Boost's system package exposes all headers through a single Boost::headers
+# target. However, wavemap only needs Boost's Preprocessor component which we
+# selectively pull in as Boost::preprocessor when using FetchContent. To allow
+# targets to link against Boost::preprocessor regardless of which install mode
+# is used, we define an alias from Boost::preprocessor to Boost::headers.
+set_target_properties(Boost::headers PROPERTIES IMPORTED_GLOBAL TRUE)
+add_library(Boost::preprocessor ALIAS Boost::headers)
+
+# Include the file specifying wavemap's CMake targets
+include("${CMAKE_CURRENT_LIST_DIR}/wavemap-targets.cmake")
+
+# Include our CMake helper functions
+include("${CMAKE_CURRENT_LIST_DIR}/wavemap-extras.cmake")

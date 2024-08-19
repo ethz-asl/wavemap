@@ -30,8 +30,8 @@ The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.githu
 ### Table of contents
 * [Installation](https://ethz-asl.github.io/wavemap/pages/installation)
 * [Demos](https://ethz-asl.github.io/wavemap/pages/demos)
-* [Configuration](https://ethz-asl.github.io/wavemap/pages/configuration)
-* [Usage examples](https://ethz-asl.github.io/wavemap/pages/usage_examples)
+* [Tutorials](https://ethz-asl.github.io/wavemap/pages/tutorials)
+* [Parameters](https://ethz-asl.github.io/wavemap/pages/parameters)
 * [Contributing](https://ethz-asl.github.io/wavemap/pages/contributing)
 * [Library API](https://ethz-asl.github.io/wavemap/api/unabridged_api)
 * [FAQ](https://ethz-asl.github.io/wavemap/pages/faq)

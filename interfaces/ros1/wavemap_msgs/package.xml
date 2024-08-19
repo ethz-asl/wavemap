@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="2">
+  <name>wavemap_msgs</name>
+  <version>2.0.0</version>
+  <description>Message definitions for wavemap's ROS interfaces.</description>
+
+  <maintainer email="victorr@ethz.ch">Victor Reijgwart</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/ethz-asl/wavemap</url>
+
+  <author email="victorr@ethz.ch">Victor Reijgwart</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>message_generation</depend>
+  <depend>message_runtime</depend>
+  <depend>std_msgs</depend>
+</package>

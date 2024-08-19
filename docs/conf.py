@@ -1,3 +1,4 @@
+import os
 from sys import argv
 from dataclasses import asdict
 from sphinxawesome_theme import ThemeOptions
@@ -10,7 +11,7 @@ author = 'Victor Reijgwart'
 copyright = 'Victor Reijgwart, ASL ETHZ.'  # pylint: disable=redefined-builtin
 
 # The full version, including alpha/beta/rc tags
-release = lxml.etree.parse('../libraries/wavemap/package.xml').find(
+release = lxml.etree.parse('../interfaces/ros1/wavemap/package.xml').find(
     'version').text
 # The short X.Y version
 version = release
@@ -18,7 +19,7 @@ version = release
 # General configuration
 extensions = [
     'sphinx.ext.mathjax', "sphinx.ext.extlinks", 'sphinx.ext.githubpages',
-    "sphinx_sitemap", 'breathe', 'exhale', "sphinxawesome_theme.highlighting"
+    'sphinx_design', 'sphinx_sitemap', 'breathe', 'exhale'
 ]
 templates_path = ['_templates']
 source_suffix = ['.rst', '.md']
@@ -90,14 +91,17 @@ texinfo_documents = [
 # Extension configuration
 
 # Setup the breathe extension
-breathe_projects = {"wavemap": "./_doxygen/xml"}
-breathe_default_project = "wavemap"
+breathe_projects = {
+    "wavemap_cpp": "./_doxygen_cpp/xml",
+    "wavemap_ros1": "./_doxygen_ros1/xml"
+}
+breathe_default_project = "wavemap_cpp"
 
 # Setup the exhale extension
 exhale_args = {
     "verboseBuild": False,
     # These arguments are required
-    "containmentFolder": "./api",
+    "containmentFolder": "./cpp_api",
     # Tell exhale we'll build our TOC tree and pin the file names
     "rootFileName": "EXCLUDE",
     "classHierarchyFilename": 'class_view_hierarchy.rst',
@@ -111,7 +115,7 @@ exhale_args = {
     "createTreeView": False,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
-    "exhaleExecutesDoxygen": True,
+    "exhaleExecutesDoxygen": False,
     "exhaleUseDoxyfile": True,
     "pageLevelConfigMeta": ":github_url: https://github.com/ethz-asl/wavemap"
 }
@@ -123,8 +127,15 @@ primary_domain = 'cpp'
 highlight_language = 'cpp'
 
 # Provide a short syntax to link to files in the repository
+sha = os.environ.get('GITHUB_SHA')  # Attempt to read it from CI env variables
+if sha is None:
+    import git
+
+    repo = git.Repo(os.path.dirname(__file__), search_parent_directories=True)
+    sha = repo.head.object.hexsha
+
 extlinks = {
-    "gh_file": ("https://github.com/ethz-asl/wavemap/tree/main/%s", "%s"),
+    "gh_file": (f"https://github.com/ethz-asl/wavemap/tree/{sha}/%s", "%s"),
 }
 
 # Configure the link checker (invoked with `make linkcheck`)

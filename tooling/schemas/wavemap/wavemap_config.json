@@ -1,32 +1,42 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Wavemap config",
   "description": "Schema to provide code completion and validation for wavemap configuration files.",
   "type": "object",
+  "required": [
+    "general",
+    "map",
+    "map_operations",
+    "measurement_integrators",
+    "inputs"
+  ],
   "properties": {
+    "general": {
+      "$ref": "general.json"
+    },
     "map": {
-      "description": "The properties of the server's map instance.",
+      "$ref": "map/map_base.json"
+    },
+    "map_operations": {
+      "description": "A list of operations to perform after map updates.",
+      "type": "array",
+      "items": {
+        "$ref": "map_operations/map_operation_base.json"
+      }
+    },
+    "measurement_integrators": {
+      "description": "A dictionary of measurement integrators.",
       "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "general": {
-          "$ref": "wavemap_server.json"
-        },
-        "data_structure": {
-          "$ref": "data_structure.json"
-        }
+      "additionalProperties": {
+        "$ref": "measurement_integrators/measurement_integrator_base.json"
       }
     },
     "inputs": {
       "description": "A list of measurement inputs.",
       "type": "array",
       "items": {
-        "$ref": "measurement_input/measurement_input.json"
+        "$ref": "inputs/input_base.json"
       }
     }
-  },
-  "required": [
-    "map",
-    "inputs"
-  ]
+  }
 }

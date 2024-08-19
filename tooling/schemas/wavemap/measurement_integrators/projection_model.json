@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "Projection model used to convert sensor coordinates to/from cartesian coordinates.",
+  "type": "object",
+  "$defs": {
+    "circular_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_angle": {
+          "description": "Minimum angle along this axis.",
+          "$ref": "../value_with_unit/convertible_to_radians.json"
+        },
+        "max_angle": {
+          "description": "Maximum angle along this axis.",
+          "$ref": "../value_with_unit/convertible_to_radians.json"
+        },
+        "num_cells": {
+          "description": "Resolution of the image along this axis, set as the number of cells along the axis.",
+          "type": "integer"
+        }
+      }
+    },
+    "spherical_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "spherical_projector"
+        },
+        "elevation": {
+          "description": "Properties of the projection model along the elevation axis.",
+          "$ref": "#/$defs/circular_projector"
+        },
+        "azimuth": {
+          "description": "Properties of the projection model along the azimuth axis.",
+          "$ref": "#/$defs/circular_projector"
+        }
+      }
+    },
+    "ouster_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ouster_projector"
+        },
+        "elevation": {
+          "description": "Properties of the projection model along the elevation axis.",
+          "$ref": "#/$defs/circular_projector"
+        },
+        "azimuth": {
+          "description": "Properties of the projection model along the azimuth axis.",
+          "$ref": "#/$defs/circular_projector"
+        },
+        "lidar_origin_to_beam_origin": {
+          "description": "Offset between the Ouster LiDAR frame's origin and the laser beam's start point (radial direction). For illustrations and more information, please see the Ouster sensor's manual.",
+          "$ref": "../value_with_unit/convertible_to_meters.json"
+        },
+        "lidar_origin_to_sensor_origin_z_offset": {
+          "description": "Offset between the Ouster sensor and LiDAR frame's origins (z-direction). For illustrations and more information, please see the Ouster sensor's manual.",
+          "$ref": "../value_with_unit/convertible_to_meters.json"
+        }
+      }
+    },
+    "pinhole_camera_projector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "pinhole_camera_projector"
+        },
+        "width": {
+          "description": "The image's width in pixels.",
+          "type": "integer"
+        },
+        "height": {
+          "description": "The image's height in pixels.",
+          "type": "integer"
+        },
+        "fx": {
+          "description": "Fx according to ROS' CameraInfo convention: http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.",
+          "type": "number"
+        },
+        "fy": {
+          "description": "Fy according to ROS' CameraInfo convention: http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.",
+          "type": "number"
+        },
+        "cx": {
+          "description": "Cx according to ROS' CameraInfo convention: http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.",
+          "type": "number"
+        },
+        "cy": {
+          "description": "Cy according to ROS' CameraInfo convention: http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/CameraInfo.html.",
+          "type": "number"
+        }
+      }
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "description": "Type of the projection model that should be used.",
+      "type": "string",
+      "enum": [
+        "spherical_projector",
+        "ouster_projector",
+        "pinhole_camera_projector"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/spherical_projector"
+    },
+    {
+      "$ref": "#/$defs/ouster_projector"
+    },
+    {
+      "$ref": "#/$defs/pinhole_camera_projector"
+    }
+  ]
+}

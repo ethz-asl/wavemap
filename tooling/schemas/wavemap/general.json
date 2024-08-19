@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "General properties of the wavemap server.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "world_frame": {
+      "description": "Name of the coordinate frame in which to store the map. Will be used as the frame_id for ROS TF lookups.",
+      "examples": [
+        "world",
+        "odom"
+      ],
+      "type": "string"
+    },
+    "num_threads": {
+      "description": "Maximum number of threads to use. Defaults to the number of threads supported by the CPU.",
+      "type": "integer",
+      "exclusiveMinimum": 0
+    },
+    "logging_level": {
+      "description": "Minimum severity level for ROS logging messages to be logged. Defaults to \"info\".",
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "fatal"
+      ]
+    },
+    "allow_reset_map_service": {
+      "description": "Whether or not to allow resetting the map through the reset_map service.",
+      "type": "boolean"
+    }
+  }
+}

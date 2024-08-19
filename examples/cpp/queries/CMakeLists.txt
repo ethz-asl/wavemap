@@ -1,0 +1,26 @@
+# Binaries
+add_executable(fixed_resolution fixed_resolution.cc)
+set_wavemap_target_properties(fixed_resolution)
+target_link_libraries(fixed_resolution PUBLIC wavemap::wavemap_core)
+
+add_executable(multi_resolution multi_resolution.cc)
+set_wavemap_target_properties(multi_resolution)
+target_link_libraries(multi_resolution PUBLIC wavemap::wavemap_core)
+
+add_executable(accelerated_queries accelerated_queries.cc)
+set_wavemap_target_properties(accelerated_queries)
+target_link_libraries(accelerated_queries PUBLIC wavemap::wavemap_core)
+
+add_executable(nearest_neighbor_interpolation nearest_neighbor_interpolation.cc)
+set_wavemap_target_properties(nearest_neighbor_interpolation)
+target_link_libraries(nearest_neighbor_interpolation PUBLIC
+    wavemap::wavemap_core)
+
+add_executable(trilinear_interpolation trilinear_interpolation.cc)
+set_wavemap_target_properties(trilinear_interpolation)
+target_link_libraries(trilinear_interpolation PUBLIC wavemap::wavemap_core)
+
+add_executable(classification classification.cc)
+set_wavemap_target_properties(classification)
+target_link_libraries(classification PUBLIC wavemap::wavemap_core)
+target_compile_options(classification PRIVATE -Wno-suggest-attribute=const)

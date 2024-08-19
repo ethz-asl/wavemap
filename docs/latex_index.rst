@@ -6,10 +6,10 @@ Wavemap documentation
    :maxdepth: 2
 
    pages/latex_intro
-   pages/installation
+   pages/installation/index
    pages/demos
-   pages/configuration/index
-   pages/usage_examples
+   pages/tutorials/index
+   pages/parameters/index
    pages/contributing
    pages/faq
 
