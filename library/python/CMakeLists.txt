@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...3.27)
+cmake_minimum_required(VERSION 3.18...3.27)
 project(pywavemap LANGUAGES CXX)
 
 # Warn if the user invokes CMake directly
@@ -73,7 +73,7 @@ target_link_libraries(_cpp_bindings PUBLIC
     wavemap::wavemap_core wavemap::wavemap_io wavemap::wavemap_pipeline)
 # Disable some default wavemap warnings that trigger on nanobind
 target_compile_options(_cpp_bindings PRIVATE
-    -Wno-pedantic -Wno-suggest-attribute=const)
+    -Wno-pedantic -Wno-unused-result -Wno-suggest-attribute=const)
 
 # Install directive for scikit-build-core
 install(TARGETS _cpp_bindings LIBRARY DESTINATION pywavemap)
