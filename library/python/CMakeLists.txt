@@ -71,6 +71,9 @@ set_wavemap_target_properties(_cpp_bindings)
 target_include_directories(_cpp_bindings PUBLIC include)
 target_link_libraries(_cpp_bindings PUBLIC
     wavemap::wavemap_core wavemap::wavemap_io wavemap::wavemap_pipeline)
+# Disable some default wavemap warnings that trigger on nanobind
+target_compile_options(_cpp_bindings PRIVATE
+    -Wno-pedantic -Wno-suggest-attribute=const)
 
 # Install directive for scikit-build-core
 install(TARGETS _cpp_bindings LIBRARY DESTINATION pywavemap)
