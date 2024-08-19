@@ -33,7 +33,7 @@ The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.githu
 * [Tutorials](https://ethz-asl.github.io/wavemap/pages/tutorials)
 * [Parameters](https://ethz-asl.github.io/wavemap/pages/parameters)
 * [Contributing](https://ethz-asl.github.io/wavemap/pages/contributing)
-* [Library API](https://ethz-asl.github.io/wavemap/api/unabridged_api)
+* [Library API](https://ethz-asl.github.io/wavemap/cpp_api/unabridged_api)
 * [FAQ](https://ethz-asl.github.io/wavemap/pages/faq)
 
 ## Paper
