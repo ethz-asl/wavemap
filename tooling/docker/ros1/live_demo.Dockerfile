@@ -11,7 +11,7 @@ RUN git clone -b ${WAVEMAP_BRANCH} https://github.com/ethz-asl/wavemap wavemap &
     cp wavemap/${DEMO_DEPENDENCIES_FILE} /demo_dependencies.yml
 
 
-FROM ghcr.io/ethz-asl/wavemap:${WAVEMAP_BASE_RELEASE}
+FROM ghcr.io/ethz-asl/wavemap_ros1:${WAVEMAP_BASE_RELEASE}
 
 # Load the cached dependency spec file
 COPY --from=cacher /demo_dependencies.yml /tmp/demo_dependencies.yml

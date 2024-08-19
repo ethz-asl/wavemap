@@ -1,6 +1,6 @@
 ARG VERSION=latest
 
-FROM ghcr.io/ethz-asl/wavemap:${VERSION}
+FROM ghcr.io/ethz-asl/wavemap_ros1:${VERSION}
 
 # Install dependencies
 # hadolint ignore=DL3008
