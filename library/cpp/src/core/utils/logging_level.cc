@@ -3,8 +3,5 @@
 #include <glog/logging.h>
 
 namespace wavemap {
-void LoggingLevel::applyToGlog() const {
-  google::SetCommandLineOption("minloglevel",
-                               std::to_string(toTypeId()).c_str());
-}
+void LoggingLevel::applyToGlog() const { FLAGS_minloglevel = toTypeId(); }
 }  // namespace wavemap
