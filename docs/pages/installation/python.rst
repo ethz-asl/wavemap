@@ -85,12 +85,12 @@ Since editable installs are no longer built in an isolated environment, all buil
 You can then install pywavemap with incremental rebuilds using::
 
       cd ~/wavemap/library/python
-      pip install --no-build-isolation -ve .
+      pip3 install --no-build-isolation -ve .
 
 When you change wavemap's code, the command above must manually be rerun to reinstall the updated package. For a more interactive experience, you can use::
 
       cd ~/wavemap/library/python
       rm -rf build  # Only needed if you previously built pywavemap differently
-      pip install --no-build-isolation -Ceditable.rebuild=true -ve .
+      pip3 install --no-build-isolation -Ceditable.rebuild=true -ve .
 
 In this mode, code changes are automatically rebuilt whenever pywavemap is imported into a Python session.

@@ -4,67 +4,34 @@ import os
 import csv
 from PIL import Image as PilImage
 import numpy as np
+import yaml
 import pywavemap as pw
+from tqdm import tqdm
 
 
 class DataLoader():
     # pylint: disable=R0902
-    def __init__(self, data_path):
+    def __init__(self, params, data_path):
         self.data_path = data_path
 
-        self.map = pw.Map.create({
-            "type": "hashed_chunked_wavelet_octree",
-            "min_cell_width": {
-                "meters": 0.05
-            }
-        })
+        self.map = pw.Map.create(params["map"])
 
         self.pipeline = pw.Pipeline(self.map)
 
-        self.pipeline.addOperation({
-            "type": "threshold_map",
-            "once_every": {
-                "seconds": 5.0
-            }
-        })
-        self.pipeline.addOperation({
-            "type": "prune_map",
-            "once_every": {
-                "seconds": 10.0
-            }
-        })
+        for operation in params["map_operations"]:
+            self.pipeline.addOperation(operation)
 
-        self.pipeline.addIntegrator(
-            "dummy_integrator", {
-                "projection_model": {
-                    "type": "pinhole_camera_projector",
-                    "width": 640,
-                    "height": 480,
-                    "fx": 320.0,
-                    "fy": 320.0,
-                    "cx": 320.0,
-                    "cy": 240.0
-                },
-                "measurement_model": {
-                    "type": "continuous_ray",
-                    "range_sigma": {
-                        "meters": 0.01
-                    },
-                    "scaling_free": 0.2,
-                    "scaling_occupied": 0.4
-                },
-                "integration_method": {
-                    "type": "hashed_chunked_wavelet_integrator",
-                    "min_range": {
-                        "meters": 0.1
-                    },
-                    "max_range": {
-                        "meters": 5.0
-                    }
-                },
-            })
+        measurement_integrators = params["measurement_integrators"]
+        if len(measurement_integrators) != 1:
+            print("Expected 1 integrator to be specified. "
+                  f"Got {len(measurement_integrators)}.")
+            raise SystemExit
+        self.integrator_name, integrator_params = \
+            next(iter(measurement_integrators.items()))
 
-        # setup
+        self.pipeline.addIntegrator(self.integrator_name, integrator_params)
+
+        # Load list of measurements
         stamps_file = os.path.join(self.data_path, 'timestamps.csv')
         self.times = []
         self.ids = []
@@ -83,14 +50,14 @@ class DataLoader():
         self.times = sorted(self.times)
 
     def run(self):
-        while self.integrate_frame():
-            pass
+        for _ in tqdm(range(len(self.times)), desc="Integrating..."):
+            if not self.integrate_frame():
+                break
 
     def integrate_frame(self):
         # Check we're not done.
         if self.current_index >= len(self.times):
             return False
-        print(f"Integrating frame {self.current_index} of {len(self.times)}")
 
         # Get all data and publish.
         file_id = os.path.join(self.data_path, self.ids[self.current_index])
@@ -119,7 +86,7 @@ class DataLoader():
                         transform[row, col] = pose_data[row * 4 + col]
         pose = pw.Pose(transform)
 
-        self.pipeline.runPipeline(["dummy_integrator"],
+        self.pipeline.runPipeline([self.integrator_name],
                                   pw.PosedImage(pose, image))
 
         self.current_index += 1
@@ -132,14 +99,25 @@ class DataLoader():
 
 
 if __name__ == '__main__':
+    config_dir = os.path.abspath(
+        os.path.join(__file__, "../../../interfaces/ros1/wavemap_ros/config"))
+    config_file = os.path.join(config_dir,
+                               "wavemap_panoptic_mapping_rgbd.yaml")
+    with open(config_file) as stream:
+        try:
+            config = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
     user_home = os.path.expanduser('~')
     panoptic_mapping_dir = os.path.join(user_home,
                                         "data/panoptic_mapping/flat_dataset")
     panoptic_mapping_seq = "run2"
     output_map_path = os.path.join(
         user_home, f"panoptic_mapping_{panoptic_mapping_seq}.wvmp")
+
     data_loader = DataLoader(
-        os.path.join(panoptic_mapping_dir, panoptic_mapping_seq))
+        config, os.path.join(panoptic_mapping_dir, panoptic_mapping_seq))
     data_loader.run()
     data_loader.save_map(output_map_path)
     del data_loader  # To avoid mem leak warnings on older Python versions
