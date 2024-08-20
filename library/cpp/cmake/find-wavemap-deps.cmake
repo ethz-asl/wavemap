@@ -1,3 +1,7 @@
+if (CMAKE_VERSION VERSION_GREATER 3.24)
+  cmake_policy(SET CMP0135 OLD)
+endif ()
+
 # Eigen
 if (USE_SYSTEM_EIGEN)
   find_package(Eigen3 QUIET NO_MODULE)
