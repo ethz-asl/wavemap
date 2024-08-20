@@ -39,7 +39,6 @@ qtcreator-*
 
 # Python
 *.pyc
-*.pyi
 
 /planning/cfg
 /planning/docs

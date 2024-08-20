@@ -79,18 +79,15 @@ target_compile_options(_cpp_bindings PRIVATE
 install(TARGETS _cpp_bindings LIBRARY DESTINATION pywavemap)
 
 # Generate stubs
-nanobind_add_stub(pywavemap_stub
+nanobind_add_stub(pywavemap_stub INSTALL_TIME
     MODULE _cpp_bindings
-    OUTPUT "${CMAKE_SOURCE_DIR}/src/pywavemap/__init__.pyi"
-    PYTHON_PATH $<TARGET_FILE_DIR:_cpp_bindings>
-    DEPENDS _cpp_bindings)
-nanobind_add_stub(pywavemap_logging_stub
+    OUTPUT "pywavemap/__init__.pyi"
+    PYTHON_PATH "pywavemap")
+nanobind_add_stub(pywavemap_logging_stub INSTALL_TIME
     MODULE _cpp_bindings.logging
-    OUTPUT "${CMAKE_SOURCE_DIR}/src/pywavemap/logging.pyi"
-    PYTHON_PATH $<TARGET_FILE_DIR:_cpp_bindings>
-    DEPENDS _cpp_bindings)
-nanobind_add_stub(pywavemap_param_stub
+    OUTPUT "pywavemap/logging.pyi"
+    PYTHON_PATH "pywavemap")
+nanobind_add_stub(pywavemap_param_stub INSTALL_TIME
     MODULE _cpp_bindings.param
-    OUTPUT "${CMAKE_SOURCE_DIR}/src/pywavemap/param.pyi"
-    PYTHON_PATH $<TARGET_FILE_DIR:_cpp_bindings>
-    DEPENDS _cpp_bindings)
+    OUTPUT "pywavemap/param.pyi"
+    PYTHON_PATH "pywavemap")

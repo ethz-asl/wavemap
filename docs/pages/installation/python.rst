@@ -93,4 +93,4 @@ When you change wavemap's code, the command above must manually be rerun to rein
       rm -rf build  # Only needed if you previously built pywavemap differently
       pip3 install --no-build-isolation -Ceditable.rebuild=true -ve .
 
-In this mode, code changes are automatically rebuilt whenever pywavemap is imported into a Python session.
+In this mode, code changes are automatically rebuilt whenever pywavemap is imported into a Python session. Note that the rebuild message is quite verbose. You can suppress it by passing ``-Ceditable.verbose=false`` as an additional argument to ``pip3 install``.
