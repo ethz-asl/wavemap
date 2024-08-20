@@ -2,7 +2,11 @@ C++ API
 #######
 .. rstcheck: ignore-roles=gh_file
 
-In this tutorial, we illustrate how you can use wavemap's C++ API in your own project. Note that an example CMake package that contains all of the examples that follow can be found :gh_file:`here <examples/cpp>`.
+In this tutorial, we illustrate how you can use wavemap's C++ API in your own projects.
+
+.. note::
+
+    An example package that combines the setup steps and code examples that follow can be found :gh_file:`here <examples/cpp>`.
 
 CMake target setup
 ******************

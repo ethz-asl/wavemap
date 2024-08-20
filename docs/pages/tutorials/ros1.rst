@@ -30,7 +30,9 @@ Your own code
 *************
 We now briefly discuss how to set up your own ROS1 package to use wavemap, before proceeding to code examples.
 
-Note that a working example package that combines this tutorial's setup steps and code examples can be found :gh_file:`here <examples/ros1>`.
+.. note::
+
+    An example package that combines the setup steps and code examples that follow can be found :gh_file:`here <examples/ros1>`.
 
 Build configuration
 ===================
