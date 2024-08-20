@@ -8,9 +8,15 @@ Wavemap's C++ library can be used as standard CMake package. In the following se
 
 Note that if you intend to use wavemap with ROS1, you can skip this guide and proceed directly to the :doc:`ROS1 installation page <ros1>`.
 
+Prerequisites
+*************
 Before you start, make sure you have the necessary tools installed to build C++ projects with CMake. On Ubuntu, we recommend installing::
 
     sudo apt install cmake build-essential git
+
+.. note::
+
+      If you are working in Docker, these dependencies are only required inside your container. Not on your host machine.
 
 FetchContent
 ************
