@@ -53,7 +53,7 @@ html_context = {
     "mode": "production",
 }
 html_static_path = ["_static"]
-html_css_files = []
+html_css_files = ["custom.css"]
 html_js_files = []
 
 # Theme specific options

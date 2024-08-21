@@ -1,21 +1,9 @@
 import numpy as np
-
-
-def logOddsToProbability(log_odds):
-    odds = np.exp(log_odds)
-    prob = odds / (1.0 + odds)
-    return prob
-
-
-def probabilityToLogOdds(probability):
-    odds = probability / (1.0 - probability)
-    return np.log(odds)
-
+import _dummy_objects
 
 # Declare a floating point value representing the occupancy posterior in log
 # odds as queried from the map in one of the previous examples
-# pylint: disable=wrong-import-position
-from queries_trilinear_interpolation import occupancy_log_odds
+occupancy_log_odds = _dummy_objects.example_occupancy_log_odds()
 
 # A point is considered unobserved if its occupancy posterior is equal to the
 # prior. Wavemap assumes that an unobserved point is equally likely to be
@@ -26,10 +14,27 @@ kUnobservedThreshold = 1e-3
 is_unobserved = np.abs(occupancy_log_odds) < kUnobservedThreshold
 print(is_unobserved)
 
+
 # In case you would like to convert log odds into probabilities, we provide
 # the following convenience function:
+def logOddsToProbability(log_odds):
+    odds = np.exp(log_odds)
+    prob = odds / (1.0 + odds)
+    return prob
+
+
 occupancy_probability = logOddsToProbability(occupancy_log_odds)
 print(occupancy_probability)
+
+
+# To do the opposite
+def probabilityToLogOdds(probability):
+    odds = probability / (1.0 - probability)
+    return np.log(odds)
+
+
+occupancy_log_odds = probabilityToLogOdds(occupancy_probability)
+print(occupancy_log_odds)
 
 # To classify whether a point is estimated to be occupied or free, you need
 # to choose a discrimination threshold. A reasonable default threshold is 0.5

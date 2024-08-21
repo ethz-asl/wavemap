@@ -58,41 +58,62 @@ Loading maps from files:
 
 Queries
 =======
+In this section, we illustrate how you can query the map and classify whether a point or region of interest is occupied.
+
+Node indices
+------------
+The map models the environment by filling it with cubes of variable sizes, arranged as the nodes of an octree. Node indices are defined as integer [X, Y, Z, height] coordinates, whose XYZ values correspond to the node's position in the octree's grid at the given *height*, or level in the tree. Height 0 corresponds to the map's maximum resolution, and the grid resolution is halved for each subsequent height level.
 
 Fixed resolution
-----------------
+^^^^^^^^^^^^^^^^
+Querying the value of a single node in the highest resolution grid (*height=0*) can be done as follows.
+
 .. literalinclude:: ../../../examples/cpp/queries/fixed_resolution.cc
     :language: c++
 
 Multi-res averages
-------------------
+^^^^^^^^^^^^^^^^^^
+It is also possible to query lower resolution nodes, whose values correspond to the average estimated occupancy of the volume they cover.
+
 .. literalinclude:: ../../../examples/cpp/queries/multi_resolution.cc
     :language: c++
 
 Accelerators
-------------
+^^^^^^^^^^^^
+In case you intend to look up multiple node values, we recommend using wavemap's query accelerator which traverses the octree significantly faster by caching parent nodes.
+
 .. literalinclude:: ../../../examples/cpp/queries/accelerated_queries.cc
     :language: c++
 
 .. _cpp-code-examples-interpolation:
 
-Interpolation
--------------
+Real coordinates
+----------------
+Many applications require occupancy estimates at arbitrary 3D points, with real-valued coordinates. Such estimates are computed by interpolating the map.
 
-Nearest neighbor interpolation:
+.. note::
+
+    In case the query points are expressed in a different coordinate frame than the map, do not forget to transform them into the map frame before you continue.
+
+Nearest neighbor interpolation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The simplest form of interpolation simply looks up the value of the map node that is closest to the query point.
 
 .. literalinclude:: ../../../examples/cpp/queries/nearest_neighbor_interpolation.cc
     :language: c++
 
-Trilinear interpolation:
+Trilinear interpolation
+^^^^^^^^^^^^^^^^^^^^^^^
+Another option is to linearly interpolate the map along the x, y, and z axes. This method produces cleaner, more accurate results at the cost of being slightly slower, since it needs to query 8 neighboring map nodes.
 
 .. literalinclude:: ../../../examples/cpp/queries/trilinear_interpolation.cc
     :language: c++
 
 .. _cpp-code-examples-classification:
 
-Classification
---------------
+Occupancy classification
+------------------------
+Once the estimated occupancy at a node or point has been retrieved, it can be classified as follows.
 
 .. literalinclude:: ../../../examples/cpp/queries/classification.cc
     :language: c++

@@ -33,49 +33,70 @@ Files
 -----
 Saving maps to files:
 
-.. literalinclude:: ../../../examples/python/io_save_map_to_file.py
+.. literalinclude:: ../../../examples/python/io/save_map_to_file.py
     :language: python
 
 Loading maps from files:
 
-.. literalinclude:: ../../../examples/python/io_load_map_from_file.py
+.. literalinclude:: ../../../examples/python/io/load_map_from_file.py
     :language: python
 
 Queries
 =======
+In this section, we illustrate how you can query the map and classify whether a point or region of interest is occupied.
+
+Node indices
+------------
+The map models the environment by filling it with cubes of variable sizes, arranged as the nodes of an octree. Node indices are defined as integer [X, Y, Z, height] coordinates, whose XYZ values correspond to the node's position in the octree's grid at the given *height*, or level in the tree. Height 0 corresponds to the map's maximum resolution, and the grid resolution is halved for each subsequent height level.
 
 Fixed resolution
-----------------
-.. literalinclude:: ../../../examples/python/queries_fixed_resolution.py
+^^^^^^^^^^^^^^^^
+Querying the value of a single node in the highest resolution grid (*height=0*) can be done as follows.
+
+.. literalinclude:: ../../../examples/python/queries/fixed_resolution.py
     :language: python
 
 Multi-res averages
-------------------
-.. literalinclude:: ../../../examples/python/queries_multi_resolution.py
+^^^^^^^^^^^^^^^^^^
+It is also possible to query lower resolution nodes, whose values correspond to the average estimated occupancy of the volume they cover.
+
+.. literalinclude:: ../../../examples/python/queries/multi_resolution.py
     :language: python
 
 Accelerators
-------------
-.. literalinclude:: ../../../examples/python/queries_accelerated_queries.py
+^^^^^^^^^^^^
+In case you intend to look up multiple node values, we recommend using wavemap's query accelerator which traverses the octree significantly faster by caching parent nodes.
+
+.. literalinclude:: ../../../examples/python/queries/accelerated_queries.py
     :language: python
 
-Interpolation
--------------
+Real coordinates
+----------------
+Many applications require occupancy estimates at arbitrary 3D points, with real-valued coordinates. Such estimates are computed by interpolating the map.
 
-Nearest neighbor interpolation:
+.. note::
 
-.. literalinclude:: ../../../examples/python/queries_nearest_neighbor_interpolation.py
+    In case the query points are expressed in a different coordinate frame than the map, do not forget to transform them into the map frame before you continue.
+
+Nearest neighbor interpolation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The simplest form of interpolation simply looks up the value of the map node that is closest to the query point.
+
+.. literalinclude:: ../../../examples/python/queries/nearest_neighbor_interpolation.py
     :language: python
 
-Trilinear interpolation:
+Trilinear interpolation
+^^^^^^^^^^^^^^^^^^^^^^^
+Another option is to linearly interpolate the map along the x, y, and z axes. This method produces cleaner, more accurate results at the cost of being slightly slower, since it needs to query 8 neighboring map nodes.
 
-.. literalinclude:: ../../../examples/python/queries_trilinear_interpolation.py
+.. literalinclude:: ../../../examples/python/queries/trilinear_interpolation.py
     :language: python
 
-Classification
---------------
+Occupancy classification
+------------------------
+Once the estimated occupancy at a node or point has been retrieved, it can be classified as follows.
 
-.. literalinclude:: ../../../examples/python/queries_classification.py
+.. literalinclude:: ../../../examples/python/queries/classification.py
     :language: python
 
 Mapping
@@ -84,5 +105,5 @@ Mapping
 Full pipeline
 -------------
 
-.. literalinclude:: ../../../examples/python/mapping_pipeline.py
+.. literalinclude:: ../../../examples/python/mapping/full_pipeline.py
     :language: python
