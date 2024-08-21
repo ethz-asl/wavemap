@@ -12,7 +12,7 @@ void add_pipeline_bindings(nb::module_& m) {
   nb::class_<Pipeline>(m, "Pipeline",
                        "A class to build pipelines of measurement integrators "
                        "and map operations.")
-      .def(nb::init<std::shared_ptr<MapBase>>())
+      .def(nb::init<std::shared_ptr<MapBase>>(), "map"_a)
       .def("clear", &Pipeline::clear,
            "Deregister all the pipeline's measurement integrators and map "
            "operations.")

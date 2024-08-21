@@ -62,8 +62,9 @@ find_package(nanobind CONFIG REQUIRED)
 # Compile our extension
 nanobind_add_module(_cpp_bindings STABLE_ABI
     src/pywavemap.cc
+    src/indices.cc
     src/logging.cc
-    src/map.cc
+    src/maps.cc
     src/measurements.cc
     src/param.cc
     src/pipeline.cc)

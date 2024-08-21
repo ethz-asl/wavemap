@@ -1,7 +1,8 @@
 #include <nanobind/nanobind.h>
 
+#include "pywavemap/indices.h"
 #include "pywavemap/logging.h"
-#include "pywavemap/map.h"
+#include "pywavemap/maps.h"
 #include "pywavemap/measurements.h"
 #include "pywavemap/param.h"
 #include "pywavemap/pipeline.h"
@@ -32,10 +33,13 @@ NB_MODULE(_cpp_bindings, m) {
                       "Submodule for wavemap's config system.");
   add_param_module(m_param);
 
+  // Bindings for index types
+  add_index_bindings(m);
+
   // Bindings for measurement types
   add_measurement_bindings(m);
 
-  // Bindings for wavemap maps
+  // Bindings for map types
   add_map_bindings(m);
 
   // Bindings for measurement integration and map update pipelines

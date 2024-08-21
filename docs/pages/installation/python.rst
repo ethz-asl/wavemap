@@ -1,5 +1,6 @@
 Python (pip)
 ############
+.. highlight:: bash
 .. rstcheck: ignore-directives=tab-set-code
 
 We will make pywavemap available through PyPI soon. In the meantime, you can install it directly from source using pip.

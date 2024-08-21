@@ -36,7 +36,7 @@ param::Array toParamArray(const nb::handle& py_value) {  // NOLINT
   param::Array array;
   array.reserve(nb::len(py_list));
   for (const auto& py_element : py_list) {  // NOLINT
-    array.template emplace_back(toParamValue(py_element));
+    array.emplace_back(toParamValue(py_element));
   }
   return array;
 }

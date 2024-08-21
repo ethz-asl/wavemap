@@ -1,5 +1,5 @@
-#ifndef PYWAVEMAP_MAP_H_
-#define PYWAVEMAP_MAP_H_
+#ifndef PYWAVEMAP_MAPS_H_
+#define PYWAVEMAP_MAPS_H_
 
 #include <nanobind/nanobind.h>
 
@@ -9,4 +9,4 @@ namespace wavemap {
 void add_map_bindings(nb::module_& m);
 }  // namespace wavemap
 
-#endif  // PYWAVEMAP_MAP_H_
+#endif  // PYWAVEMAP_MAPS_H_
