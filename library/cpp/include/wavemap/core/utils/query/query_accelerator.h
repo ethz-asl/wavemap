@@ -16,7 +16,9 @@ class QueryAccelerator {};
 
 // Template deduction guide
 template <typename T>
-QueryAccelerator(T type) -> QueryAccelerator<T>;
+QueryAccelerator(T& type) -> QueryAccelerator<T>;
+template <typename T>
+QueryAccelerator(const T& type) -> QueryAccelerator<T>;
 
 // Query accelerator for vanilla spatial hashes
 template <typename BlockDataT, int dim>

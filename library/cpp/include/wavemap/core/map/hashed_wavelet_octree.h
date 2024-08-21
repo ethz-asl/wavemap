@@ -71,6 +71,9 @@ class HashedWaveletOctree : public MapBase {
   explicit HashedWaveletOctree(const HashedWaveletOctreeConfig& config)
       : MapBase(config), config_(config.checkValid()) {}
 
+  // Copy construction is not supported
+  HashedWaveletOctree(const HashedWaveletOctree&) = delete;
+
   bool empty() const override { return block_map_.empty(); }
   size_t size() const override;
   void threshold() override;

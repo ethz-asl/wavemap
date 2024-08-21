@@ -29,9 +29,8 @@ class Pipeline {
         thread_pool_(thread_pool ? std::move(thread_pool)
                                  : std::make_shared<ThreadPool>()) {}
 
-  // Indicate that copy or move-construction are not supported
+  // Copy construction is not supported
   Pipeline(const Pipeline&) = delete;
-  Pipeline(Pipeline&&) = delete;
 
   //! Deregister all measurement integrators and map operations
   void clear();
