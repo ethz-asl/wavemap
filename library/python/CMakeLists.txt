@@ -60,7 +60,7 @@ endif ()
 find_package(nanobind CONFIG REQUIRED)
 
 # Compile our extension
-nanobind_add_module(_cpp_bindings STABLE_ABI
+nanobind_add_module(_pywavemap_bindings STABLE_ABI
     src/pywavemap.cc
     src/indices.cc
     src/logging.cc
@@ -68,27 +68,27 @@ nanobind_add_module(_cpp_bindings STABLE_ABI
     src/measurements.cc
     src/param.cc
     src/pipeline.cc)
-set_wavemap_target_properties(_cpp_bindings)
-target_include_directories(_cpp_bindings PUBLIC include)
-target_link_libraries(_cpp_bindings PUBLIC
+set_wavemap_target_properties(_pywavemap_bindings)
+target_include_directories(_pywavemap_bindings PUBLIC include)
+target_link_libraries(_pywavemap_bindings PUBLIC
     wavemap::wavemap_core wavemap::wavemap_io wavemap::wavemap_pipeline)
 # Disable some default wavemap warnings that trigger on nanobind
-target_compile_options(_cpp_bindings PRIVATE
+target_compile_options(_pywavemap_bindings PRIVATE
     -Wno-pedantic -Wno-unused-result -Wno-suggest-attribute=const)
 
 # Install directive for scikit-build-core
-install(TARGETS _cpp_bindings LIBRARY DESTINATION pywavemap)
+install(TARGETS _pywavemap_bindings LIBRARY DESTINATION pywavemap)
 
 # Generate stubs
 nanobind_add_stub(pywavemap_stub INSTALL_TIME
-    MODULE _cpp_bindings
+    MODULE _pywavemap_bindings
     OUTPUT "pywavemap/__init__.pyi"
     PYTHON_PATH "pywavemap")
 nanobind_add_stub(pywavemap_logging_stub INSTALL_TIME
-    MODULE _cpp_bindings.logging
+    MODULE _pywavemap_bindings.logging
     OUTPUT "pywavemap/logging.pyi"
     PYTHON_PATH "pywavemap")
 nanobind_add_stub(pywavemap_param_stub INSTALL_TIME
-    MODULE _cpp_bindings.param
+    MODULE _pywavemap_bindings.param
     OUTPUT "pywavemap/param.pyi"
     PYTHON_PATH "pywavemap")

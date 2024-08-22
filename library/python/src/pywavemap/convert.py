@@ -5,7 +5,7 @@ Submodule with common conversion functions for wavemap index types.
 """
 
 import numpy as _np
-from ._cpp_bindings import OctreeIndex
+from ._pywavemap_bindings import OctreeIndex
 
 
 def cell_width_to_height(cell_width, min_cell_width):

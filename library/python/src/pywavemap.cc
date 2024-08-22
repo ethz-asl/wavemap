@@ -10,7 +10,7 @@
 using namespace wavemap;  // NOLINT
 namespace nb = nanobind;
 
-NB_MODULE(_cpp_bindings, m) {
+NB_MODULE(_pywavemap_bindings, m) {
   m.doc() =
       "pywavemap\n"
       "*********\n"
