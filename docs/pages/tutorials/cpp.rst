@@ -38,23 +38,38 @@ We **strongly recommend** to also call the ``set_wavemap_target_properties`` fun
 
 Code examples
 *************
-
 In the following sections, you'll find sample code for common tasks. If you'd like to request examples for additional tasks or contribute new examples, please don't hesitate to `contact us <https://github.com/ethz-asl/wavemap/issues>`_.
 
-Serialization
-=============
+Serializing maps
+================
+In this section, we'll demonstrate how to serialize and deserialize maps using wavemap's lightweight and efficient binary format. This format is consistent across wavemap's C++, Python, and ROS interfaces. For instance, you can create maps on a robot with ROS and later load them into a rendering engine plugin that only depends on wavemap's C++ library.
 
-Files
------
-Saving maps to files:
+Binary files
+------------
+Maps can be saved to disk with
 
 .. literalinclude:: ../../../examples/cpp/io/save_map_to_file.cc
     :language: c++
 
-Loading maps from files:
+.. _cpp-code-examples-read-map:
+
+and read using
 
 .. literalinclude:: ../../../examples/cpp/io/load_map_from_file.cc
     :language: c++
+
+Byte streams
+------------
+We also provide an alternative, lower-level interface to convert maps to (byte) streams
+
+.. literalinclude:: ../../../examples/cpp/io/save_map_to_stream.cc
+    :language: c++
+
+and read them with
+
+.. literalinclude:: ../../../examples/cpp/io/load_map_from_stream.cc
+    :language: c++
+
 
 Queries
 =======

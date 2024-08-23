@@ -1,8 +1,8 @@
 import os
-import pywavemap as pw
+import pywavemap as wave
 
 # Create an empty map for illustration purposes
-your_map = pw.Map.create({
+your_map = wave.Map.create({
     "type": "hashed_chunked_wavelet_octree",
     "min_cell_width": {
         "meters": 0.1

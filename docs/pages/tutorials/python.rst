@@ -15,7 +15,7 @@ Before you start, make sure you :doc:`installed pywavemap <../installation/pytho
 
 In your python files, you can then load the API by simply calling::
 
-    import pywavemap
+    import pywavemap as wave
 
 Code examples
 *************
@@ -26,24 +26,58 @@ In the following sections, we provide sample code for common tasks. If you'd lik
 
     All of the examples scripts that follow can be found :gh_file:`here <examples/python>`.
 
+Mapping
+=======
+The only requirements to build wavemap maps are that you have a set of
+
+1. depth measurements,
+2. sensor pose (estimates) for each measurement.
+
+We usually use depth measurements from depth cameras or 3D LiDARs, but any source would work as long as a corresponding :ref:`projection <configuration_projection_models>` and :ref:`measurement <configuration_measurement_models>` model is available. To help you get started quickly, we provide example configs for various sensor setups :gh_file:`here <interfaces/ros1/wavemap_ros/config>`. An overview of all the available settings is provided on the :doc:`parameters page <../parameters/index>`.
+
+Example pipeline
+----------------
+
+.. literalinclude:: ../../../examples/python/mapping/full_pipeline.py
+    :language: python
+
 Serialization
 =============
+Next, we show how you can serialize and deserialize common wavemap objects, for example to save and load them from files.
 
-Files
------
-Saving maps to files:
+Maps
+----
+Wavemap uses a lightweight, efficient binary format to serialize its maps. The same format is used across wavemap's C++, Python and ROS interfaces. You could therefore, for example, create maps on a robot with ROS and subsequently analyze them in Python.
+
+Binary files
+^^^^^^^^^^^^
+Maps can be saved to disk using
 
 .. literalinclude:: ../../../examples/python/io/save_map_to_file.py
     :language: python
 
-Loading maps from files:
+.. _python-code-examples-read-map:
+
+and read with
 
 .. literalinclude:: ../../../examples/python/io/load_map_from_file.py
     :language: python
 
+Configs
+-------
+In the previous mapping pipeline example, the configuration parameters for the map and the measurement integration components were hard-coded. To make your setup more flexible, you can use configuration files. We will demonstrate how to work with YAML files, which is the format we use for wavemap's :gh_file:`example configs <interfaces/ros1/wavemap_ros/config>`. However, pywavemap is flexible and can support any parameter format that can be read into a Python `dict`.
+
+
+YAML files
+^^^^^^^^^^
+
+.. literalinclude:: ../../../examples/python/io/load_params_from_file.py
+    :language: python
+
+
 Queries
 =======
-In this section, we illustrate how you can query the map and classify whether a point or region of interest is occupied.
+In this section, we show how you can query wavemap maps and classify whether a point or region of interest is occupied.
 
 Node indices
 ------------
@@ -97,13 +131,4 @@ Occupancy classification
 Once the estimated occupancy at a node or point has been retrieved, it can be classified as follows.
 
 .. literalinclude:: ../../../examples/python/queries/classification.py
-    :language: python
-
-Mapping
-=======
-
-Full pipeline
--------------
-
-.. literalinclude:: ../../../examples/python/mapping/full_pipeline.py
     :language: python

@@ -2,7 +2,7 @@ import os
 import csv
 from PIL import Image as PilImage
 import numpy as np
-import pywavemap as pw
+import pywavemap as wave
 
 # Parameters
 home_dir = os.path.expanduser('~')
@@ -11,7 +11,7 @@ measurement_dir = os.path.join(home_dir,
 output_map_path = os.path.join(home_dir, "your_map.wvmp")
 
 # Create a map
-your_map = pw.Map.create({
+your_map = wave.Map.create({
     "type": "hashed_chunked_wavelet_octree",
     "min_cell_width": {
         "meters": 0.05
@@ -19,7 +19,7 @@ your_map = pw.Map.create({
 })
 
 # Create a measurement integration pipeline
-pipeline = pw.Pipeline(your_map)
+pipeline = wave.Pipeline(your_map)
 # Add map operations
 pipeline.addOperation({
     "type": "threshold_map",
@@ -27,7 +27,6 @@ pipeline.addOperation({
         "seconds": 5.0
     }
 })
-pipeline.addOperation({"type": "prune_map", "once_every": {"seconds": 10.0}})
 # Add a measurement integrator
 pipeline.addIntegrator(
     "my_integrator", {
@@ -89,7 +88,7 @@ while True:
         current_index += 1
         raise SystemExit
     cv_img = PilImage.open(depth_file)
-    image = pw.Image(np.array(cv_img).transpose())
+    image = wave.Image(np.array(cv_img).transpose())
 
     # Load transform
     pose_file = file_path_prefix + "_pose.txt"
@@ -104,16 +103,19 @@ while True:
             for row in range(4):
                 for col in range(4):
                     transform[row, col] = pose_data[row * 4 + col]
-    pose = pw.Pose(transform)
+    pose = wave.Pose(transform)
 
     # Integrate the depth image
     print(f"Integrating measurement {ids[current_index]}")
-    pipeline.runPipeline(["my_integrator"], pw.PosedImage(pose, image))
+    pipeline.runPipeline(["my_integrator"], wave.PosedImage(pose, image))
 
     current_index += 1
 
+# Remove map nodes that are no longer needed
+your_map.prune()
+
 # Save the map
-print(f"Saving map of size {your_map.memory_usage}")
+print(f"Saving map of size {your_map.memory_usage} bytes")
 your_map.store(output_map_path)
 
 # Avoids leak warnings on old Python versions with lazy garbage collectors

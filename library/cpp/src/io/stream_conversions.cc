@@ -5,25 +5,21 @@ bool mapToStream(const MapBase& map, std::ostream& ostream) {
   // Call the appropriate mapToStream converter based on the map's derived type
   if (const auto* hashed_blocks = dynamic_cast<const HashedBlocks*>(&map);
       hashed_blocks) {
-    io::mapToStream(*hashed_blocks, ostream);
-    return true;
+    return io::mapToStream(*hashed_blocks, ostream);
   }
   if (const auto* wavelet_octree = dynamic_cast<const WaveletOctree*>(&map);
       wavelet_octree) {
-    io::mapToStream(*wavelet_octree, ostream);
-    return true;
+    return io::mapToStream(*wavelet_octree, ostream);
   }
   if (const auto* hashed_wavelet_octree =
           dynamic_cast<const HashedWaveletOctree*>(&map);
       hashed_wavelet_octree) {
-    io::mapToStream(*hashed_wavelet_octree, ostream);
-    return true;
+    return io::mapToStream(*hashed_wavelet_octree, ostream);
   }
   if (const auto* hashed_chunked_wavelet_octree =
           dynamic_cast<const HashedChunkedWaveletOctree*>(&map);
       hashed_chunked_wavelet_octree) {
-    io::mapToStream(*hashed_chunked_wavelet_octree, ostream);
-    return true;
+    return io::mapToStream(*hashed_chunked_wavelet_octree, ostream);
   }
 
   LOG(WARNING) << "Could not serialize requested map to stream. "
@@ -32,6 +28,11 @@ bool mapToStream(const MapBase& map, std::ostream& ostream) {
 }
 
 bool streamToMap(std::istream& istream, MapBase::Ptr& map) {
+  // Check if the input stream can be read from
+  if (!istream.good()) {
+    return false;
+  }
+
   // Call the appropriate streamToMap converter based on the received map's type
   const auto storage_format = streamable::StorageFormat::peek(istream);
   switch (storage_format) {
@@ -68,7 +69,12 @@ bool streamToMap(std::istream& istream, MapBase::Ptr& map) {
   }
 }
 
-void mapToStream(const HashedBlocks& map, std::ostream& ostream) {
+bool mapToStream(const HashedBlocks& map, std::ostream& ostream) {
+  // Check if the output stream can be written to
+  if (!ostream.good()) {
+    return false;
+  }
+
   // Serialize the map's data structure type
   streamable::StorageFormat storage_format =
       streamable::StorageFormat::kHashedBlocks;
@@ -85,6 +91,11 @@ void mapToStream(const HashedBlocks& map, std::ostream& ostream) {
   // Iterate over all the map's blocks
   map.forEachBlock(
       [&ostream](const Index3D& block_index, const HashedBlocks::Block& block) {
+        // Stop if any writing errors occurred
+        if (!ostream.good()) {
+          return;
+        }
+
         // Serialize the block's metadata
         streamable::HashedBlockHeader block_header;
         block_header.block_offset = {block_index.x(), block_index.y(),
@@ -98,9 +109,17 @@ void mapToStream(const HashedBlocks& map, std::ostream& ostream) {
                         sizeof(value_serialized));
         }
       });
+
+  // Return true if no write errors occurred
+  return ostream.good();
 }
 
 bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map) {
+  // Check if the input stream can be read from
+  if (!istream.good()) {
+    return false;
+  }
+
   // Make sure the map in the input stream is of the correct type
   if (streamable::StorageFormat::read(istream) !=
       streamable::StorageFormat::kHashedBlocks) {
@@ -119,6 +138,11 @@ bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map) {
   // Deserialize all the blocks
   for (size_t block_idx = 0; block_idx < hashed_blocks_header.num_blocks;
        ++block_idx) {
+    // Stop if any reading errors occurred
+    if (!istream.good()) {
+      return false;
+    }
+
     // Deserialize the block header, containing its position
     const auto block_header = streamable::HashedBlockHeader::read(istream);
     const Index3D block_index{block_header.block_offset.x,
@@ -136,10 +160,16 @@ bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map) {
     }
   }
 
-  return true;
+  // Return true if no read errors occurred
+  return istream.good();
 }
 
-void mapToStream(const WaveletOctree& map, std::ostream& ostream) {
+bool mapToStream(const WaveletOctree& map, std::ostream& ostream) {
+  // Check if the output stream can be written to
+  if (!ostream.good()) {
+    return false;
+  }
+
   // Serialize the map's data structure type
   streamable::StorageFormat storage_format =
       streamable::StorageFormat::kWaveletOctree;
@@ -171,9 +201,17 @@ void mapToStream(const WaveletOctree& map, std::ostream& ostream) {
     }
     streamable_node.write(ostream);
   }
+
+  // Return true if no write errors occurred
+  return ostream.good();
 }
 
 bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map) {
+  // Check if the input stream can be read from
+  if (!istream.good()) {
+    return false;
+  }
+
   // Make sure the map in the input stream is of the correct type
   if (streamable::StorageFormat::read(istream) !=
       streamable::StorageFormat::kWaveletOctree) {
@@ -220,10 +258,16 @@ bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map) {
     }
   }
 
-  return true;
+  // Return true if no read errors occurred
+  return istream.good();
 }
 
-void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
+bool mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
+  // Check if the output stream can be written to
+  if (!ostream.good()) {
+    return false;
+  }
+
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
@@ -250,6 +294,11 @@ void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
   // Iterate over all the map's blocks
   map.forEachBlock([&ostream, min_log_odds, max_log_odds](
                        const Index3D& block_index, const auto& block) {
+    // Stop if any writing errors occurred
+    if (!ostream.good()) {
+      return;
+    }
+
     // Serialize the block's metadata
     streamable::HashedWaveletOctreeBlockHeader block_header;
     block_header.root_node_offset = {block_index.x(), block_index.y(),
@@ -295,9 +344,17 @@ void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
       streamable_node.write(ostream);
     }
   });
+
+  // Return true if no write errors occurred
+  return ostream.good();
 }
 
 bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
+  // Check if the input stream can be read from
+  if (!istream.good()) {
+    return false;
+  }
+
   // Make sure the map in the input stream is of the correct type
   if (streamable::StorageFormat::read(istream) !=
       streamable::StorageFormat::kHashedWaveletOctree) {
@@ -317,6 +374,11 @@ bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
   // Deserialize all the blocks
   for (size_t block_idx = 0;
        block_idx < hashed_wavelet_octree_header.num_blocks; ++block_idx) {
+    // Stop if any reading errors occurred
+    if (!istream.good()) {
+      return false;
+    }
+
     // Deserialize the block header, containing its position and scale coeff.
     const auto block_header =
         streamable::HashedWaveletOctreeBlockHeader::read(istream);
@@ -353,10 +415,16 @@ bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map) {
     }
   }
 
-  return true;
+  // Return true if no read errors occurred
+  return istream.good();
 }
 
-void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
+bool mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
+  // Check if the output stream can be written to
+  if (!ostream.good()) {
+    return false;
+  }
+
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
@@ -383,6 +451,11 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
   // Iterate over all the map's blocks
   map.forEachBlock([&ostream, min_log_odds, max_log_odds](
                        const Index3D& block_index, const auto& block) {
+    // Stop if any writing errors occurred
+    if (!ostream.good()) {
+      return;
+    }
+
     // Serialize the block's metadata
     streamable::HashedWaveletOctreeBlockHeader block_header;
     block_header.root_node_offset = {block_index.x(), block_index.y(),
@@ -427,5 +500,8 @@ void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
       streamable_node.write(ostream);
     }
   });
+
+  // Return true if no write errors occurred
+  return ostream.good();
 }
 }  // namespace wavemap::io

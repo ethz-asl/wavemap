@@ -16,16 +16,16 @@ namespace wavemap::io {
 bool mapToStream(const MapBase& map, std::ostream& ostream);
 bool streamToMap(std::istream& istream, MapBase::Ptr& map);
 
-void mapToStream(const HashedBlocks& map, std::ostream& ostream);
+bool mapToStream(const HashedBlocks& map, std::ostream& ostream);
 bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map);
 
-void mapToStream(const WaveletOctree& map, std::ostream& ostream);
+bool mapToStream(const WaveletOctree& map, std::ostream& ostream);
 bool streamToMap(std::istream& istream, WaveletOctree::Ptr& map);
 
-void mapToStream(const HashedWaveletOctree& map, std::ostream& ostream);
+bool mapToStream(const HashedWaveletOctree& map, std::ostream& ostream);
 bool streamToMap(std::istream& istream, HashedWaveletOctree::Ptr& map);
 
-void mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream);
+bool mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream);
 }  // namespace wavemap::io
 
 #endif  // WAVEMAP_IO_STREAM_CONVERSIONS_H_

@@ -28,6 +28,8 @@ This operation frees up memory by pruning octree nodes that are no longer needed
     :project: wavemap_cpp
     :members:
 
+.. _configuration_map_operations_ros1:
+
 ROS1 Interface
 **************
 In addition to the map operations provided by the C++ library, wavemap's ROS1 interface offers several ROS-specific operations.

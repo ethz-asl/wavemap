@@ -5,7 +5,7 @@ import csv
 from PIL import Image as PilImage
 import numpy as np
 import yaml
-import pywavemap as pw
+import pywavemap as wave
 from tqdm import tqdm
 
 
@@ -14,9 +14,9 @@ class DataLoader():
     def __init__(self, params, data_path):
         self.data_path = data_path
 
-        self.map = pw.Map.create(params["map"])
+        self.map = wave.Map.create(params["map"])
 
-        self.pipeline = pw.Pipeline(self.map)
+        self.pipeline = wave.Pipeline(self.map)
 
         for operation in params["map_operations"]:
             self.pipeline.addOperation(operation)
@@ -74,7 +74,7 @@ class DataLoader():
 
         # Load depth image
         cv_img = PilImage.open(depth_file)
-        image = pw.Image(np.array(cv_img).transpose())
+        image = wave.Image(np.array(cv_img).transpose())
 
         # Load transform
         if os.path.isfile(pose_file):
@@ -84,10 +84,10 @@ class DataLoader():
                 for row in range(4):
                     for col in range(4):
                         transform[row, col] = pose_data[row * 4 + col]
-        pose = pw.Pose(transform)
+        pose = wave.Pose(transform)
 
         self.pipeline.runPipeline([self.integrator_name],
-                                  pw.PosedImage(pose, image))
+                                  wave.PosedImage(pose, image))
 
         self.current_index += 1
 
