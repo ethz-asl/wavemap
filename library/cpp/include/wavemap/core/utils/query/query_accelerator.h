@@ -106,7 +106,11 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
   std::array<NodeType*, morton::kMaxTreeHeight<dim>> node_stack{};
 };
 
-// Query accelerator for hashed wavelet octrees
+/**
+ * A class that accelerates queries by caching block and parent node  addresses
+ * to speed up data structure traversals, and intermediate wavelet decompression
+ * results to reduce redundant computation.
+ */
 template <>
 class QueryAccelerator<HashedWaveletOctree> {
  public:
@@ -114,12 +118,19 @@ class QueryAccelerator<HashedWaveletOctree> {
 
   explicit QueryAccelerator(const HashedWaveletOctree& map) : map_(map) {}
 
+  //! Reset the cache
+  //! @note This method must be called whenever the map changes, not only to
+  //!       guarantee correct values (after node value changes) but also to
+  //!       avoid segmentation fault after map topology changes (e.g. after
+  //!       pruning).
   void reset();
 
+  //! Query the value of the map at a given index
   FloatingPoint getCellValue(const Index3D& index) {
     return getCellValue(OctreeIndex{0, index});
   }
 
+  //! Query the value of the map at a given octree node index
   FloatingPoint getCellValue(const OctreeIndex& index);
 
  private:

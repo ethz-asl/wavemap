@@ -7,6 +7,7 @@
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/map/map_factory.h>
+#include <wavemap/core/utils/query/query_accelerator.h>
 #include <wavemap/io/file_conversions.h>
 
 using namespace nb::literals;  // NOLINT
@@ -107,5 +108,51 @@ void add_map_bindings(nb::module_& m) {
                &HashedChunkedWaveletOctree::getCellValue, nb::const_),
            "node_index"_a,
            "Query the value of the map at a given octree node index.");
+
+  nb::class_<QueryAccelerator<HashedWaveletOctree>>(
+      m, "HashedWaveletOctreeQueryAccelerator",
+      "A class that accelerates queries by caching block and parent node "
+      "addresses to speed up data structure traversals, and intermediate "
+      "wavelet decompression results to reduce redundant computation.")
+      .def(nb::init<const HashedWaveletOctree&>(), "map"_a)
+      .def("getCellValue",
+           nb::overload_cast<const Index3D&>(
+               &QueryAccelerator<HashedWaveletOctree>::getCellValue),
+           "index"_a, "Query the value of the map at a given index.")
+      .def("getCellValue",
+           nb::overload_cast<const OctreeIndex&>(
+               &QueryAccelerator<HashedWaveletOctree>::getCellValue),
+           "node_index"_a,
+           "Query the value of the map at a given octree node index.")
+      .def(
+          "getCellValues",
+          [](QueryAccelerator<HashedWaveletOctree>& self,
+             const Eigen::Matrix<IndexElement, Eigen::Dynamic, 3>& indices) {
+            const auto num_queries = static_cast<int>(indices.rows());
+            Eigen::VectorXf results{num_queries};
+            for (int query_idx = 0; query_idx < num_queries; ++query_idx) {
+              results[query_idx] = self.getCellValue(indices.row(query_idx));
+            }
+            return results;
+          },
+          "index_list"_a,
+          "Query the map at the given indices, provided as a matrix with one "
+          "(x, y, z) index per row.")
+      .def(
+          "getCellValues",
+          [](QueryAccelerator<HashedWaveletOctree>& self,
+             const Eigen::Matrix<IndexElement, Eigen::Dynamic, 4>& indices) {
+            const auto num_queries = static_cast<int>(indices.rows());
+            Eigen::VectorXf results{num_queries};
+            for (int query_idx = 0; query_idx < num_queries; ++query_idx) {
+              const auto& row = indices.row(query_idx);
+              OctreeIndex node_index{row[0], row.tail<3>()};
+              results[query_idx] = self.getCellValue(node_index);
+            }
+            return results;
+          },
+          "node_index_list"_a,
+          "Query the map at the given node indices, provided as a matrix with "
+          "one (height, x, y, z) node index per row.");
 }
 }  // namespace wavemap

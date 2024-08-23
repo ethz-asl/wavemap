@@ -9,7 +9,7 @@ def example_occupancy_log_odds():
 def example_map():
     """Function that returns a dummy map to be used in examples."""
     return wave.Map.create({
-        "type": "hashed_chunked_wavelet_octree",
+        "type": "hashed_wavelet_octree",
         "min_cell_width": {
             "meters": 0.1
         }

@@ -1,7 +1,8 @@
 import numpy as np
+import _dummy_objects
 
 # Load a map
-# from io_load_map_from_file import your_map
+your_map = _dummy_objects.example_map()
 
 # Declare the point to query [in map frame]
 query_point = np.array([0.4, .5, 0.6])
