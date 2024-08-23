@@ -127,13 +127,26 @@ void add_map_bindings(nb::module_& m) {
       .def(
           "getCellValues",
           [](QueryAccelerator<HashedWaveletOctree>& self,
-             const Eigen::Matrix<IndexElement, Eigen::Dynamic, 3>& indices) {
-            const auto num_queries = static_cast<int>(indices.rows());
-            Eigen::VectorXf results{num_queries};
-            for (int query_idx = 0; query_idx < num_queries; ++query_idx) {
-              results[query_idx] = self.getCellValue(indices.row(query_idx));
+             const nb::ndarray<IndexElement, nb::shape<-1, 3>, nb::device::cpu>&
+                 indices) {
+            // Create nb::ndarray view for efficient access
+            const auto index_view = indices.view();
+            const auto num_queries = index_view.shape(0);
+            // Allocate and populate raw results array
+            auto* results = new float[num_queries];
+            for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
+              results[query_idx] = self.getCellValue(
+                  {index_view(query_idx, 0), index_view(query_idx, 1),
+                   index_view(query_idx, 2)});
             }
-            return results;
+            // Create Python capsule that deallocates the results array when
+            // all references to it expire
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+            // Return results as numpy array
+            return nb::ndarray<nb::numpy, float>{
+                results, {num_queries, 1u}, owner};
           },
           "index_list"_a,
           "Query the map at the given indices, provided as a matrix with one "
@@ -141,15 +154,28 @@ void add_map_bindings(nb::module_& m) {
       .def(
           "getCellValues",
           [](QueryAccelerator<HashedWaveletOctree>& self,
-             const Eigen::Matrix<IndexElement, Eigen::Dynamic, 4>& indices) {
-            const auto num_queries = static_cast<int>(indices.rows());
-            Eigen::VectorXf results{num_queries};
-            for (int query_idx = 0; query_idx < num_queries; ++query_idx) {
-              const auto& row = indices.row(query_idx);
-              OctreeIndex node_index{row[0], row.tail<3>()};
+             const nb::ndarray<IndexElement, nb::shape<-1, 4>, nb::device::cpu>&
+                 indices) {
+            // Create nb::ndarray view for efficient access
+            auto index_view = indices.view();
+            const auto num_queries = index_view.shape(0);
+            // Allocate and populate raw results array
+            auto* results = new float[num_queries];
+            for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
+              const OctreeIndex node_index{
+                  index_view(query_idx, 0),
+                  {index_view(query_idx, 1), index_view(query_idx, 2),
+                   index_view(query_idx, 3)}};
               results[query_idx] = self.getCellValue(node_index);
             }
-            return results;
+            // Create Python capsule that deallocates the results array when
+            // all references to it expire
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+            // Return results as numpy array
+            return nb::ndarray<nb::numpy, float>{
+                results, {num_queries, 1u}, owner};
           },
           "node_index_list"_a,
           "Query the map at the given node indices, provided as a matrix with "
