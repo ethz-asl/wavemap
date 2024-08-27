@@ -30,6 +30,7 @@ class HashedChunkedWaveletOctreeBlock {
   size_t size() const { return chunked_ndtree_.size(); }
   void threshold();
   void prune();
+  void clear();
 
   FloatingPoint getCellValue(const OctreeIndex& index) const;
   void setCellValue(const OctreeIndex& index, FloatingPoint new_value);
