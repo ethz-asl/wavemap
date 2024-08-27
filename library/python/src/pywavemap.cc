@@ -1,5 +1,6 @@
 #include <nanobind/nanobind.h>
 
+#include "pywavemap/convert.h"
 #include "pywavemap/indices.h"
 #include "pywavemap/logging.h"
 #include "pywavemap/maps.h"
@@ -32,6 +33,14 @@ NB_MODULE(_pywavemap_bindings, m) {
                       "=====\n"
                       "Submodule for wavemap's config system.");
   add_param_module(m_param);
+
+  // Bindings for wavemap's index conversion functions
+  nb::module_ m_convert = m.def_submodule(
+      "convert",
+      "convert\n"
+      "=====\n"
+      "Submodule with common conversion functions for wavemap index types.");
+  add_convert_module(m_convert);
 
   // Bindings for index types
   add_index_bindings(m);

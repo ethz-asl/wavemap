@@ -11,7 +11,4 @@ from ._pywavemap_bindings import HashedWaveletOctreeQueryAccelerator
 from ._pywavemap_bindings import Pipeline
 
 # Binding submodules
-from ._pywavemap_bindings import logging, param
-
-# Regular modules
-from . import convert
+from ._pywavemap_bindings import logging, param, convert
