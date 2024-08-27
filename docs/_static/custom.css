@@ -3,3 +3,7 @@
     line-height: 1.75rem;
     margin-top: 1.5rem
 }
+
+#content span {
+    scroll-margin: 5rem;
+}

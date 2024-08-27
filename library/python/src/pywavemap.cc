@@ -38,7 +38,7 @@ NB_MODULE(_pywavemap_bindings, m) {
   nb::module_ m_convert = m.def_submodule(
       "convert",
       "convert\n"
-      "=====\n"
+      "=======\n"
       "Submodule with common conversion functions for wavemap index types.");
   add_convert_module(m_convert);
 
