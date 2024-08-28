@@ -7,7 +7,6 @@ from ._pywavemap_bindings import (Rotation, Pose, Pointcloud, PosedPointcloud,
                                   Image, PosedImage)
 from ._pywavemap_bindings import (Map, HashedWaveletOctree,
                                   HashedChunkedWaveletOctree)
-from ._pywavemap_bindings import HashedWaveletOctreeQueryAccelerator
 from ._pywavemap_bindings import Pipeline
 
 # Binding submodules

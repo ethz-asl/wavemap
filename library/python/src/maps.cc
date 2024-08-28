@@ -96,46 +96,21 @@ void add_map_bindings(nb::module_& m) {
            nb::overload_cast<const OctreeIndex&>(
                &HashedWaveletOctree::getCellValue, nb::const_),
            "node_index"_a,
-           "Query the value of the map at a given octree node index.");
-
-  nb::class_<HashedChunkedWaveletOctree>(
-      m, "HashedChunkedWaveletOctree", map_base,
-      "A class that stores maps using hashed chunked wavelet octrees.")
-      .def("getCellValue", &MapBase::getCellValue, "index"_a,
-           "Query the value of the map at a given index.")
-      .def("getCellValue",
-           nb::overload_cast<const OctreeIndex&>(
-               &HashedChunkedWaveletOctree::getCellValue, nb::const_),
-           "node_index"_a,
-           "Query the value of the map at a given octree node index.");
-
-  nb::class_<QueryAccelerator<HashedWaveletOctree>>(
-      m, "HashedWaveletOctreeQueryAccelerator",
-      "A class that accelerates queries by caching block and parent node "
-      "addresses to speed up data structure traversals, and intermediate "
-      "wavelet decompression results to reduce redundant computation.")
-      .def(nb::init<const HashedWaveletOctree&>(), "map"_a)
-      .def("getCellValue",
-           nb::overload_cast<const Index3D&>(
-               &QueryAccelerator<HashedWaveletOctree>::getCellValue),
-           "index"_a, "Query the value of the map at a given index.")
-      .def("getCellValue",
-           nb::overload_cast<const OctreeIndex&>(
-               &QueryAccelerator<HashedWaveletOctree>::getCellValue),
-           "node_index"_a,
            "Query the value of the map at a given octree node index.")
       .def(
           "getCellValues",
-          [](QueryAccelerator<HashedWaveletOctree>& self,
+          [](const HashedWaveletOctree& self,
              const nb::ndarray<IndexElement, nb::shape<-1, 3>, nb::device::cpu>&
                  indices) {
+            // Create a query accelerator
+            QueryAccelerator<HashedWaveletOctree> query_accelerator{self};
             // Create nb::ndarray view for efficient access
             const auto index_view = indices.view();
             const auto num_queries = index_view.shape(0);
             // Allocate and populate raw results array
             auto* results = new float[num_queries];
             for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
-              results[query_idx] = self.getCellValue(
+              results[query_idx] = query_accelerator.getCellValue(
                   {index_view(query_idx, 0), index_view(query_idx, 1),
                    index_view(query_idx, 2)});
             }
@@ -153,9 +128,11 @@ void add_map_bindings(nb::module_& m) {
           "(x, y, z) index per row.")
       .def(
           "getCellValues",
-          [](QueryAccelerator<HashedWaveletOctree>& self,
+          [](const HashedWaveletOctree& self,
              const nb::ndarray<IndexElement, nb::shape<-1, 4>, nb::device::cpu>&
                  indices) {
+            // Create a query accelerator
+            QueryAccelerator<HashedWaveletOctree> query_accelerator{self};
             // Create nb::ndarray view for efficient access
             auto index_view = indices.view();
             const auto num_queries = index_view.shape(0);
@@ -166,7 +143,7 @@ void add_map_bindings(nb::module_& m) {
                   index_view(query_idx, 0),
                   {index_view(query_idx, 1), index_view(query_idx, 2),
                    index_view(query_idx, 3)}};
-              results[query_idx] = self.getCellValue(node_index);
+              results[query_idx] = query_accelerator.getCellValue(node_index);
             }
             // Create Python capsule that deallocates the results array when
             // all references to it expire
@@ -180,5 +157,16 @@ void add_map_bindings(nb::module_& m) {
           "node_index_list"_a,
           "Query the map at the given node indices, provided as a matrix with "
           "one (height, x, y, z) node index per row.");
+
+  nb::class_<HashedChunkedWaveletOctree>(
+      m, "HashedChunkedWaveletOctree", map_base,
+      "A class that stores maps using hashed chunked wavelet octrees.")
+      .def("getCellValue", &MapBase::getCellValue, "index"_a,
+           "Query the value of the map at a given index.")
+      .def("getCellValue",
+           nb::overload_cast<const OctreeIndex&>(
+               &HashedChunkedWaveletOctree::getCellValue, nb::const_),
+           "node_index"_a,
+           "Query the value of the map at a given octree node index.");
 }
 }  // namespace wavemap
