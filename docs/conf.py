@@ -19,8 +19,8 @@ version = release
 # General configuration
 extensions = [
     'sphinx.ext.mathjax', "sphinx.ext.extlinks", 'sphinx.ext.githubpages',
-    'sphinx.ext.autodoc', 'sphinx_design', 'sphinx_sitemap', 'breathe',
-    'exhale'
+    'sphinx.ext.autodoc', 'sphinx_design', 'sphinx_sitemap',
+    'notfound.extension', 'breathe', 'exhale'
 ]
 templates_path = ['_templates']
 source_suffix = ['.rst', '.md']
@@ -70,6 +70,9 @@ html_theme_options = asdict(theme_options)
 
 # Sitemap specific options
 sitemap_url_scheme = "{link}"
+
+# Options for the 404 page
+notfound_urls_prefix = "/wavemap/"
 
 # Options for LaTeX output
 latex_elements = {}

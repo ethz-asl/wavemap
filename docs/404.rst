@@ -1,0 +1,14 @@
+---
+permalink: /404.html
+---
+
+:orphan:
+
+404 - Page Not Found
+####################
+
+Oops! The page you're looking for doesn't exist.
+
+It might have been moved, or the URL could be incorrect. Try using the sidebar or search function to find what you need.
+
+Need help? Feel free to `contact us <https://github.com/ethz-asl/wavemap/issues/new/choose>`_ for questions or to report an issue.

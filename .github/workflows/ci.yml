@@ -150,7 +150,7 @@ jobs:
           apt-get update
           apt-get install -q -y --no-install-recommends python3-pip doxygen
           apt-get install -q -y --no-install-recommends latexmk texlive-latex-extra tex-gyre texlive-fonts-recommended texlive-latex-recommended
-          pip3 install exhale sphinx-sitemap sphinx-design
+          pip3 install exhale sphinx-sitemap sphinx-design sphinx-notfound-page
           pip3 install sphinxawesome-theme --pre
           pip3 install "sphinx<7,>6"
 
