@@ -4,7 +4,7 @@ C++ API
 
 In this tutorial, we illustrate how you can use wavemap's C++ API in your own projects.
 
-.. note::
+.. tip::
 
     An example package that combines the setup steps and code examples that follow can be found :gh_file:`here <examples/cpp>`.
 
@@ -106,9 +106,9 @@ Real coordinates
 ----------------
 Many applications require occupancy estimates at arbitrary 3D points, with real-valued coordinates. Such estimates are computed by interpolating the map.
 
-.. note::
+.. caution::
 
-    In case the query points are expressed in a different coordinate frame than the map, do not forget to transform them into the map frame before you continue.
+    If your query points are expressed in a different coordinate frame than the map, do not forget to transform them into the map frame before you continue.
 
 Nearest neighbor interpolation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

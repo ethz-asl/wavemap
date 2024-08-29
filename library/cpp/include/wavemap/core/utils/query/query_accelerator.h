@@ -107,9 +107,14 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
 };
 
 /**
- * A class that accelerates queries by caching block and parent node  addresses
+ * A class that accelerates queries by caching block and parent node addresses
  * to speed up data structure traversals, and intermediate wavelet decompression
  * results to reduce redundant computation.
+ * @note This class is safe to use in a multi-threaded environment. However,
+ *       concurrent calls to a single instance from multiple threads are not.
+ *       Since the accelerator is lightweight and cheap to construct, we
+ *       recommend using a separate instance per thread for the best performance
+ *       and simplicity.
  */
 template <>
 class QueryAccelerator<HashedWaveletOctree> {
@@ -132,6 +137,9 @@ class QueryAccelerator<HashedWaveletOctree> {
 
   //! Query the value of the map at a given octree node index
   FloatingPoint getCellValue(const OctreeIndex& index);
+
+  //! Convenience function to get the map's minimum cell width
+  FloatingPoint getMinCellWidth() const { return map_.getMinCellWidth(); }
 
  private:
   using BlockIndex = HashedWaveletOctree::BlockIndex;

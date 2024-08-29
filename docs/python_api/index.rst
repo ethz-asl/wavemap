@@ -15,9 +15,6 @@ Python API
     :show-inheritance:
     :members:
 
-.. autoclass:: pywavemap.HashedWaveletOctreeQueryAccelerator
-    :members:
-
 .. autoclass:: pywavemap.OctreeIndex
     :members:
 

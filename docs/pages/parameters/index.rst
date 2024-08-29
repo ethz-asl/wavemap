@@ -20,7 +20,7 @@ You might have noticed two peculiarities in wavemap's configs.
 The first is that subsections often contain a **type** tag. This tag determines the type of the object that should be created for the corresponding element. For example, setting ``map/type: hashed_chunked_wavelet_octree`` tells wavemap to create a *HashedChunkedWaveletOctree* data structure to store the map.
 The second is that **units** are specified explicitly. This eliminates misunderstandings and enables automatic conversions from derived units, such as ``{ millimeters: 27.67 }`` or ``{ degrees: 180.0 }``, to SI base units, such as ``{ meters: 0.02767 }`` or ``{ radians: 3.14159 }``. Wavemap's code internally always operates in SI base units.
 
-.. note::
+.. tip::
 
     Wavemap's ROS server prints warnings for all unrecognized params at startup. This can be helpful for debugging and to quickly find typos in config param names.
 

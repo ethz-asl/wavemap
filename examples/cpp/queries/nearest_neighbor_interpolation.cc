@@ -13,13 +13,8 @@ int main(int, char**) {
   // Declare the point to query [in map frame]
   const Point3D query_point = Point3D::Zero();
 
-  // Compute the index that's nearest to the query point
-  const FloatingPoint min_cell_width_inv = 1.f / map->getMinCellWidth();
-  const Index3D nearest_neighbor_index =
-      convert::pointToNearestIndex(query_point, min_cell_width_inv);
-
-  // Query the map
+  // Query the value of the nearest cell in the map
   const FloatingPoint occupancy_log_odds =
-      map->getCellValue(nearest_neighbor_index);
+      interpolate::nearestNeighbor(*map, query_point);
   examples::doSomething(occupancy_log_odds);
 }

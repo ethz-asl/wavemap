@@ -22,7 +22,7 @@ Code examples
 
 In the following sections, we provide sample code for common tasks. If you'd like to request examples for additional tasks or contribute new examples, please don't hesitate to `contact us <https://github.com/ethz-asl/wavemap/issues>`_.
 
-.. note::
+.. tip::
 
     All of the examples scripts that follow can be found :gh_file:`here <examples/python>`.
 
@@ -99,18 +99,22 @@ It is also possible to query lower resolution nodes, whose values correspond to 
 
 Accelerators
 ^^^^^^^^^^^^
-In case you intend to look up multiple node values, we recommend using wavemap's query accelerator which traverses the octree significantly faster by caching parent nodes.
+If you need to look up multiple node values, we recommend using our batched query functions. These functions deliver significant speedups by utilizing wavemap's QueryAccelerator.
 
 .. literalinclude:: ../../../examples/python/queries/accelerated_queries.py
     :language: python
+
+.. note::
+
+    So far batched queries are only implemented for HashedWaveletOctree maps. We will add support for HashedChunkedWaveletOctree maps in the near future.
 
 Real coordinates
 ----------------
 Many applications require occupancy estimates at arbitrary 3D points, with real-valued coordinates. Such estimates are computed by interpolating the map.
 
-.. note::
+.. caution::
 
-    In case the query points are expressed in a different coordinate frame than the map, do not forget to transform them into the map frame before you continue.
+    If your query points are expressed in a different coordinate frame than the map, do not forget to transform them into the map frame before you continue.
 
 Nearest neighbor interpolation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

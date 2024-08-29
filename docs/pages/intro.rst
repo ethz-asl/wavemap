@@ -47,7 +47,7 @@ For other citation styles, you can use the `Crosscite's citation formatter <http
 
 .. note::
 
-    Note that the code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.
+    The code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.
 
 .. only:: html
 
