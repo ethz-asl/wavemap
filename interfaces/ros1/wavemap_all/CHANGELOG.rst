@@ -2,6 +2,9 @@
 Changelog for package wavemap_all
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.1 (2024-08-30)
+------------------
+
 2.0.0 (2024-08-12)
 ------------------
 * Make utility scripts ROS agnostic and remove wavemap_utils ROS pkg
