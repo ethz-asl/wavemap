@@ -32,14 +32,15 @@ if (NOT TARGET wavemap::wavemap_core)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../library/cpp
         ${CMAKE_CURRENT_BINARY_DIR}/wavemap)
   else ()
-    set(WAVEMAP_TAG feature/pywavemap)
-    message(STATUS "Loading wavemap library from GitHub (tag ${WAVEMAP_TAG})")
+    set(WAVEMAP_VERSION main)
+    message(STATUS
+        "Loading wavemap library from GitHub (ref ${WAVEMAP_VERSION})")
     cmake_minimum_required(VERSION 3.18)
     include(FetchContent)
     FetchContent_Declare(
         ext_wavemap PREFIX wavemap
         GIT_REPOSITORY https://github.com/ethz-asl/wavemap.git
-        GIT_TAG ${WAVEMAP_TAG}
+        GIT_TAG ${WAVEMAP_VERSION}
         GIT_SHALLOW 1
         SOURCE_SUBDIR library/cpp)
     FetchContent_MakeAvailable(ext_wavemap)

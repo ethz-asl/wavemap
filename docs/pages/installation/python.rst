@@ -3,9 +3,9 @@ Python (pip)
 .. highlight:: bash
 .. rstcheck: ignore-directives=tab-set-code
 
-We will make pywavemap available through PyPI soon. In the meantime, you can install it directly from source using pip.
+We're still working on making pywavemap available through PyPI. In the meantime, you can build and install it locally with pip, which takes less than two minutes and optimizes the build for your specific computer.
 
-If you only plan to use pywavemap without modifying its code, a regular install is easiest. However, if you are actively working on wavemap's C++ or Python libraries, we recommend using the editable installation method for fast, incremental rebuilds.
+If you plan to use pywavemap without changing its code, a regular installation is easiest. However, if you're modifying wavemap's C++ or Python libraries, we recommend using the editable installation method for fast, incremental rebuilds.
 
 Regular install
 ***************
@@ -29,24 +29,6 @@ First, make sure the necessary dependencies to build C++ and Python packages are
       apk add git build-base python3-dev py3-pip
       apk add python3-venv  # If you use virtual environments
 
-.. _python-install-clone-repo:
-
-Next, clone wavemap's code to your machine:
-
-.. tab-set-code::
-
-    .. code-block:: SSH
-      :class: no-header
-
-      cd ~/
-      git clone git@github.com:ethz-asl/wavemap.git
-
-    .. code-block:: HTTPS
-      :class: no-header
-
-      cd ~/
-      git clone https://github.com/ethz-asl/wavemap.git
-
 .. _python-install-setup-venv:
 
 *Optional:* We recommend using a virtual environment to isolate your Python dependencies. Create and activate it with the following commands:
@@ -67,16 +49,43 @@ Next, clone wavemap's code to your machine:
       python3 -m venv <path_to_new_virtual_env>
       source <path_to_new_virtual_env>/bin/activate
 
-You can then install pywavemap by running::
+You can then build and install the latest version or a specific version of pywavemap by running:
 
-    cd ~/wavemap/library/python
-    pip3 install .
+.. tab-set-code::
+
+    .. code-block:: Latest
+      :class: no-header
+
+      pip3 install git+https://github.com/ethz-asl/wavemap#subdirectory=library/python
+
+    .. code-block:: Specific
+      :class: no-header
+
+      # Select a specific git branch, tag or commit using @...
+      # For example, to install version v2.1.0, run
+      pip3 install git+https://github.com/ethz-asl/wavemap@v2.1.0#subdirectory=library/python
 
 Editable install
 ****************
-If you're interested in modifying wavemap's code, you can save time by enabling incremental builds.
+If you're interested in modifying wavemap's code, you can save time by enabling incremental rebuilds.
 
-The general steps are similar to those for a regular installation. Ensure your machine is :ref:`ready to build C++ and Python packages <python-install-build-deps>` and that you've :ref:`cloned the code <python-install-clone-repo>`. Optionally, you can :ref:`set up a virtual environment <python-install-setup-venv>`.
+The general steps are similar to those for a regular installation. Ensure your machine is :ref:`ready to build C++ and Python packages <python-install-build-deps>` and, optionally, :ref:`set up a virtual environment <python-install-setup-venv>`.
+
+Next, clone wavemap's code to your machine:
+
+.. tab-set-code::
+
+    .. code-block:: SSH
+      :class: no-header
+
+      cd ~/
+      git clone git@github.com:ethz-asl/wavemap.git
+
+    .. code-block:: HTTPS
+      :class: no-header
+
+      cd ~/
+      git clone https://github.com/ethz-asl/wavemap.git
 
 Since editable installs are no longer built in an isolated environment, all build dependencies must be available on your system::
 
