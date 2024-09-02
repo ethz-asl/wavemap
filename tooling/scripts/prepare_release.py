@@ -134,7 +134,7 @@ def prepare_release_files():
     for pkg in packages:
         # Package variables
         pkg_debug_name = f'{pkg.type} package {pkg.name}'
-        pkg_all_paths = pkg.old_paths.append(pkg.current_path)
+        pkg_all_paths = pkg.old_paths + [pkg.current_path]
         print(f'Processing {pkg_debug_name}')
 
         pkg_changelog_path = os.path.join(pkg.current_path, "CHANGELOG.rst")
@@ -173,8 +173,11 @@ def prepare_release_files():
             # Append the new section, below the changelog title
             changelog.insert(4, section_title + os.linesep)
             changelog.insert(5, section_title_underline + os.linesep)
-            changelog.insert(6, section_changelog + os.linesep)
-            changelog.insert(7, section_contributors + 2 * os.linesep)
+            if len(commit_msgs) == 0:
+                changelog.insert(6, os.linesep)
+            else:
+                changelog.insert(6, section_changelog + os.linesep)
+                changelog.insert(7, section_contributors + 2 * os.linesep)
 
             # Write the updated content back to the file
             with open(pkg_changelog_path, "w") as f:

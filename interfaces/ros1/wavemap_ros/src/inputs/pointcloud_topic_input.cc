@@ -148,7 +148,7 @@ void PointcloudTopicInput::callback(
 }
 
 #ifdef LIVOX_AVAILABLE
-void PointcloudInput::callback(
+void PointcloudTopicInput::callback(
     const livox_ros_driver2::CustomMsg& pointcloud_msg) {
   ProfilerZoneScoped;
   // Skip empty clouds
@@ -165,8 +165,8 @@ void PointcloudInput::callback(
   std::string sensor_frame_id = config_.sensor_frame_id.empty()
                                     ? pointcloud_msg.header.frame_id
                                     : config_.sensor_frame_id;
-  StampedPointcloud stamped_pointcloud{stamp_nsec, std::move(sensor_frame_id),
-                                       pointcloud_msg.points.size()};
+  undistortion::StampedPointcloud stamped_pointcloud{
+      stamp_nsec, std::move(sensor_frame_id), pointcloud_msg.points.size()};
   for (const auto& point : pointcloud_msg.points) {
     stamped_pointcloud.emplace(point.x, point.y, point.z, point.offset_time);
   }
