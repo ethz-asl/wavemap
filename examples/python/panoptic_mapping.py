@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 
 class DataLoader():
-    # pylint: disable=R0902
+
     def __init__(self, params, data_path):
         self.data_path = data_path
 

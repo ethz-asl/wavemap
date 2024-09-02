@@ -16,6 +16,9 @@ classifiers = ["License :: BSD3"]
 [project.urls]
 Homepage = "https://github.com/ethz-asl/wavemap"
 
+[project.optional-dependencies]
+test = ["pytest"]
+
 [tool.scikit-build]
 build-dir = "build/{wheel_tag}"
 minimum-version = "0.4"
@@ -30,3 +33,6 @@ skip = ["cp38-*", "pp38-*"]
 [tool.cibuildwheel.macos]
 environment = "MACOSX_DEPLOYMENT_TARGET=10.14"
 archs = ["auto64", "arm64"]
+
+[tool.pytest.ini_options]
+testpaths = ['test']

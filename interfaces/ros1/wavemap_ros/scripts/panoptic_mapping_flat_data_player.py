@@ -21,7 +21,7 @@ from std_srvs.srv import Empty, EmptyResponse
 
 
 class FlatDataPlayer():
-    # pylint: disable=R0902
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         """  Initialize ros node and read params """
         # params
