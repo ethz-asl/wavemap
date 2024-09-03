@@ -1,0 +1,226 @@
+general:
+  world_frame: "map"
+  logging_level: debug
+  allow_reset_map_service: true
+
+map:
+  type: hashed_wavelet_octree
+  min_cell_width: { meters: 0.03 }
+
+map_operations:
+  - type: threshold_map
+    once_every: { seconds: 2.0 }
+  - type: prune_map
+    once_every: { seconds: 10.0 }
+  - type: publish_map
+    once_every: { seconds: 2.0 }
+
+measurement_integrators:
+  depth_camera_front_upper_short_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 0.3 }
+      max_range: { meters: 1.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.03 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.005 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+  depth_camera_front_upper_medium_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 1.0 }
+      max_range: { meters: 8.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.06 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.03 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+  depth_camera_rear_upper_short_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 0.3 }
+      max_range: { meters: 1.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.03 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.005 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+  depth_camera_rear_upper_medium_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 1.0 }
+      max_range: { meters: 8.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.06 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.03 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+  depth_camera_left_short_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 0.5 }
+      max_range: { meters: 1.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.03 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.005 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+  depth_camera_left_medium_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 1.0 }
+      max_range: { meters: 3.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.06 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.03 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+  depth_camera_right_short_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 0.5 }
+      max_range: { meters: 1.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.03 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.005 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+  depth_camera_right_medium_range:
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 1.0 }
+      max_range: { meters: 3.0 }
+      termination_update_error: 0.1
+      max_update_resolution: { meters: 0.06 }
+    projection_model:
+      type: pinhole_camera_projector
+      width: 424
+      height: 240
+      fx: 227.34288593334466
+      fy: 227.34288593334466
+      cx: 212.5
+      cy: 120.5
+    measurement_model:
+      type: continuous_ray
+      range_sigma: { meters: 0.03 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+
+inputs:
+  - type: depth_image_topic
+    topic_name: "/depth_camera_front_upper/depth/image_rect_raw"
+    depth_scale_factor: 0.001
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    time_offset: { seconds: -0.025 }
+    measurement_integrator_names:
+      - depth_camera_front_upper_short_range
+      - depth_camera_front_upper_medium_range
+
+  - type: depth_image_topic
+    topic_name: "/depth_camera_rear_upper/depth/image_rect_raw"
+    depth_scale_factor: 0.001
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    time_offset: { seconds: -0.025 }
+    measurement_integrator_names:
+      - depth_camera_rear_upper_short_range
+      - depth_camera_rear_upper_medium_range
+
+  - type: depth_image_topic
+    topic_name: "/depth_camera_left/depth/image_rect_raw"
+    depth_scale_factor: 0.001
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    time_offset: { seconds: -0.025 }
+    measurement_integrator_names:
+      - depth_camera_left_short_range
+      - depth_camera_left_medium_range
+
+  - type: depth_image_topic
+    topic_name: "/depth_camera_right/depth/image_rect_raw"
+    depth_scale_factor: 0.001
+    topic_queue_length: 1
+    max_wait_for_pose: { seconds: 1.0 }
+    time_offset: { seconds: -0.025 }
+    measurement_integrator_names:
+      - depth_camera_right_short_range
+      - depth_camera_right_medium_range
