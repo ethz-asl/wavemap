@@ -1,0 +1,35 @@
+name: C++ API
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.18'
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-release
+          create-symlink: true
+
+      - name: Configure CMake
+        working-directory: ${{github.workspace}}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release library/cpp
+
+      - name: Build
+        working-directory: ${{github.workspace}}
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          cmake --build build --config Release
+          echo "::remove-matcher owner=problem-matcher-gcc::"
