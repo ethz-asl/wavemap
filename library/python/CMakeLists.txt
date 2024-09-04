@@ -28,22 +28,16 @@ endif ()
 # Load the wavemap library (if not already loaded)
 if (NOT TARGET wavemap::wavemap_core)
   if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/)
-    message(STATUS "Loading wavemap library installed on system")
+    message(STATUS "Loading wavemap C++ library sources")
+    set(GENERATE_WAVEMAP_INSTALL_RULES OFF)
+    set(BUILD_SHARED_LIBS OFF)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../cpp
         ${CMAKE_CURRENT_BINARY_DIR}/wavemap)
   else ()
-    set(WAVEMAP_VERSION main)
-    message(STATUS
-        "Loading wavemap library from GitHub (ref ${WAVEMAP_VERSION})")
-    cmake_minimum_required(VERSION 3.18)
-    include(FetchContent)
-    FetchContent_Declare(
-        ext_wavemap PREFIX wavemap
-        GIT_REPOSITORY https://github.com/ethz-asl/wavemap.git
-        GIT_TAG ${WAVEMAP_VERSION}
-        GIT_SHALLOW 1
-        SOURCE_SUBDIR library/cpp)
-    FetchContent_MakeAvailable(ext_wavemap)
+    message(ERROR
+        "Can not load wavemap C++ library sources. Are you using an old "
+        "version of pip? If so, retry after upgrading with "
+        "\"python3 -m pip install --upgrade pip\".")
   endif ()
 endif ()
 
@@ -71,8 +65,8 @@ nanobind_add_module(_pywavemap_bindings STABLE_ABI
     src/param.cc
     src/pipeline.cc)
 set_wavemap_target_properties(_pywavemap_bindings)
-target_include_directories(_pywavemap_bindings PUBLIC include)
-target_link_libraries(_pywavemap_bindings PUBLIC
+target_include_directories(_pywavemap_bindings PRIVATE include)
+target_link_libraries(_pywavemap_bindings PRIVATE
     wavemap::wavemap_core wavemap::wavemap_io wavemap::wavemap_pipeline)
 # Disable some default wavemap warnings that trigger on nanobind
 target_compile_options(_pywavemap_bindings PRIVATE
