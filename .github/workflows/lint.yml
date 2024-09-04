@@ -1,34 +1,21 @@
-name: C++ Library
+name: Lint
 
 on:
   pull_request:
     branches: [ main ]
 
-env:
-  PRE_COMMIT_DIR: /home/ci/pre-commit
-
 jobs:
   pre-commit:
     name: Pre-commit
     runs-on: ubuntu-20.04
-    container:
-      # NOTE: Pylint checks if all modules that are marked for import are
-      #       available. At the time of writing, the python scripts in this repo
-      #       only depend on modules that are present on noetic-ros-base-focal
-      #       out of the box. If scripts are added later that depend on custom
-      #       package (e.g. installed through rosdep or pulled in through
-      #       vcstool), it'd make sense to run pre-commit in a full workspace
-      #       container (such as ${{ needs.workspace-container.outputs.image }})
-      #       at the cost of a longer loading time on the CI actions runner.
-      image: ros:noetic-ros-base-focal
     steps:
       - name: Install pre-commit's dependencies
         run: |
-          apt-get update
-          apt-get install -q -y --no-install-recommends git python3-pip clang-format-11 cppcheck libxml2-utils wget
+          sudo apt-get update
+          sudo apt-get install -q -y --no-install-recommends git python3-pip clang-format-11 cppcheck libxml2-utils wget
           pip3 install pre-commit cpplint
-          wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
-          chmod +x /bin/hadolint
+          sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
+          sudo chmod +x /bin/hadolint
 
       - name: Fetch the package's repository
         uses: actions/checkout@v4
@@ -41,13 +28,12 @@ jobs:
       - name: Setup pre-commit cache sharing
         uses: actions/cache@v4
         with:
-          path: ${{ env.PRE_COMMIT_DIR }}
+          path: ~/.cache/pre-commit
           key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run the pre-commit hooks
         shell: bash
         run: |
           echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
-          source /opt/ros/noetic/setup.bash
-          PRE_COMMIT_HOME=${{ env.PRE_COMMIT_DIR }} SKIP=no-commit-to-branch pre-commit run --all-files
+          PRE_COMMIT_HOME=~/.cache/pre-commit SKIP=no-commit-to-branch pre-commit run --all-files
           echo "::remove-matcher owner=problem-matcher-pre-commit::"
