@@ -31,5 +31,52 @@ jobs:
         working-directory: ${{github.workspace}}
         run: |
           echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          cmake --build build --config Release
+          cmake --build build --parallel --config Release
           echo "::remove-matcher owner=problem-matcher-gcc::"
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.18'
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-release
+          create-symlink: true
+
+      - name: Setup GTest
+        run: |
+          sudo apt-get update
+          sudo apt-get install -q -y --no-install-recommends libgtest-dev
+
+      - name: Configure CMake
+        working-directory: ${{github.workspace}}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=ON library/cpp
+
+      - name: Build tests
+        working-directory: ${{github.workspace}}
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          cmake --build build --parallel --config Release
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Run tests
+        working-directory: ${{github.workspace}}
+        run: |
+          all_tests_passed=1
+          for f in `find build/test/src/*/test_* -executable`; do
+            $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
+          fi
