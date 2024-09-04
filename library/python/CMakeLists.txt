@@ -27,9 +27,9 @@ endif ()
 
 # Load the wavemap library (if not already loaded)
 if (NOT TARGET wavemap::wavemap_core)
-  if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../library/cpp)
+  if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/)
     message(STATUS "Loading wavemap library installed on system")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../library/cpp
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../cpp
         ${CMAKE_CURRENT_BINARY_DIR}/wavemap)
   else ()
     set(WAVEMAP_VERSION main)

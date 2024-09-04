@@ -17,7 +17,7 @@ classifiers = ["License :: BSD3"]
 Homepage = "https://github.com/ethz-asl/wavemap"
 
 [project.optional-dependencies]
-test = ["pytest"]
+test = ["pytest", "numpy"]
 
 [tool.scikit-build]
 build-dir = "build/{wheel_tag}"
