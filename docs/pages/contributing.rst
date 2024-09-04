@@ -3,11 +3,20 @@ Contributing
 .. highlight:: bash
 .. rstcheck: ignore-roles=gh_file
 
-Thank you for investing time in contributing to wavemap!
+Thank you for your interest in contributing to wavemap!
+
+Questions
+*********
+If you have any questions, feel free to ask them in the `Q&A section <https://github.com/ethz-asl/wavemap/discussions/categories/q-a>`_ of our GitHub Discussions.
+
+Before posting, please check if your question has already been addressed in our :doc:`installation <installation/index>` or :doc:`usage <tutorials/index>` tutorials. We're happy to answer any remaining theoretical or code-related questions, and help you optimize wavemap for your specific sensor setup.
 
 Bug reports & Feature requests
 ******************************
-We welcome bug reports, feature requests, and general questions. Please submit them through `GitHub Issues <https://github.com/ethz-asl/wavemap/issues>`_ and use the corresponding `bug report <https://github.com/ethz-asl/wavemap/issues/new?template=bug_report.md>`_, `feature request <https://github.com/ethz-asl/wavemap/issues/new?template=feature_request.md>`_, and `question <https://github.com/ethz-asl/wavemap/issues/new?template=question.md>`_ templates.
+We encourage you to submit bug reports and feature requests. You can do so using the relevant GitHub Issue templates:
+
+* `Bug report <https://github.com/ethz-asl/wavemap/issues/new?template=bug_report.md>`_
+* `Feature request <https://github.com/ethz-asl/wavemap/issues/new?template=feature_request.md>`_
 
 In addition to requests for new functionality, do not hesitate to open feature requests for:
 

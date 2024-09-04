@@ -108,6 +108,8 @@ If you need to look up multiple node values, we recommend using our batched quer
 
     So far batched queries are only implemented for HashedWaveletOctree maps. We will add support for HashedChunkedWaveletOctree maps in the near future.
 
+.. _python-code-examples-interpolation:
+
 Real coordinates
 ----------------
 Many applications require occupancy estimates at arbitrary 3D points, with real-valued coordinates. Such estimates are computed by interpolating the map.
@@ -129,6 +131,8 @@ Another option is to linearly interpolate the map along the x, y, and z axes. Th
 
 .. literalinclude:: ../../../examples/python/queries/trilinear_interpolation.py
     :language: python
+
+.. _python-code-examples-classification:
 
 Occupancy classification
 ------------------------
