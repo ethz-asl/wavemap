@@ -32,8 +32,7 @@ function(set_wavemap_target_properties target)
   set_target_properties(${target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_compile_options(${target} PUBLIC -march=native)
   target_compile_options(${target} PRIVATE
-      -Wall -Wextra -Wpedantic -Wsuggest-attribute=const
-      -Wno-deprecated-copy -Wno-class-memaccess)
+      -Wall -Wextra -Wpedantic -Wno-deprecated-copy -Wno-class-memaccess)
 
   # General C++ defines
   target_compile_definitions(${target} PUBLIC EIGEN_INITIALIZE_MATRICES_BY_NAN)
