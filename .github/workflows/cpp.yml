@@ -109,3 +109,53 @@ jobs:
           echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
           run-clang-tidy -header-filter="*include/wavemap/*" -quiet
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
+
+  valgrind:
+    name: Valgrind memcheck
+    needs: test
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.18'
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-release
+          create-symlink: true
+
+      - name: Setup GTest and Valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq --no-install-recommends libgtest-dev valgrind
+
+      - name: Configure CMake
+        working-directory: ${{github.workspace}}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=ON library/cpp
+
+      - name: Build tests
+        working-directory: ${{github.workspace}}
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          cmake --build build --parallel --config Release
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Check unit tests with Valgrind memcheck
+        working-directory: ${{github.workspace}}
+        run: |
+          all_tests_passed=1
+          echo "::add-matcher::./.github/problem-matchers/valgrind.json"
+          for f in `find build/test/src/*/test_* -executable`; do
+            valgrind --tool=memcheck --leak-check=full --leak-resolution=high --num-callers=20 --track-origins=yes --show-possibly-lost=no --errors-for-leak-kinds=definite,indirect --error-exitcode=1 --xml=yes --xml-file=valgrind-log.xml $f --gtest_color=yes || all_tests_passed=0
+            grep -Poz '(?<=<error>)(.*\n)*.*(?=</error>)' valgrind-log.xml || true
+          done
+          echo "::remove-matcher owner=problem-matcher-valgrind::"
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
+          fi
