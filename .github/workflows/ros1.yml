@@ -1,0 +1,183 @@
+name: ROS1 Interface
+
+on:
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+  DOCKER_CI_IMAGE_NAME: ci_wavemap_ros1
+  USER_HOME: /home/ci
+  CATKIN_WS_PATH: /home/ci/catkin_ws
+  CCACHE_DIR: /home/ci/ccache
+  PRE_COMMIT_DIR: /home/ci/pre-commit
+
+jobs:
+  workspace-container:
+    name: Build ROS1 container
+    runs-on: ubuntu-20.04
+    outputs:
+      image: ${{ steps.ref-names.outputs.ci_image }}
+    steps:
+      - name: Common variables
+        id: ref-names
+        run: |
+          echo "cache=${{ env.DOCKER_REGISTRY }}/ethz-asl/${{ env.DOCKER_CI_IMAGE_NAME }}:buildcache" >> $GITHUB_OUTPUT
+          echo "ci_image=${{ env.DOCKER_REGISTRY }}/ethz-asl/${{ env.DOCKER_CI_IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.repository }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ${{ env.DOCKER_REGISTRY }} registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ github.repository }}
+          file: ${{ github.repository }}/tooling/docker/ros1/full.Dockerfile
+          target: workspace
+          build-args: |
+            REPOSITORY_NAME=${{ github.repository }}
+            USER_HOME=${{ env.USER_HOME }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+          load: true
+          cache-from: type=registry,ref=${{ steps.ref-names.outputs.cache }}
+          cache-to: type=registry,mode=max,ref=${{ steps.ref-names.outputs.cache }}
+          tags: ${{ steps.ref-names.outputs.ci_image }}
+
+      - name: Test the image
+        run: docker run --rm ${{ steps.ref-names.outputs.ci_image }}
+
+      - name: Push the image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ github.repository }}
+          file: ${{ github.repository }}/tooling/docker/ros1/full.Dockerfile
+          target: workspace
+          build-args: |
+            REPOSITORY_NAME=${{ github.repository }}
+            USER_HOME=${{ env.USER_HOME }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+          push: true
+          cache-from: type=registry,ref=${{ steps.ref-names.outputs.cache }}
+          tags: ${{ steps.ref-names.outputs.ci_image }}
+
+  build:
+    name: Build
+    needs: workspace-container
+    runs-on: ubuntu-20.04
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-ros1
+          create-symlink: true
+
+      - name: Build all wavemap packages
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_all --no-status --force-color
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+  test:
+    name: Test
+    needs: [ workspace-container, build ]
+    runs-on: ubuntu-20.04
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-ros1
+          create-symlink: true
+
+      - name: Build regular code
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: catkin build wavemap_all --no-status --force-color --cmake-args -DDCHECK_ALWAYS_ON=ON
+
+      - name: Build unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_all --no-status --force-color --no-deps --cmake-args -DDCHECK_ALWAYS_ON=ON --catkin-make-args tests
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
+      - name: Run unit tests
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          all_tests_passed=1
+          source devel/setup.bash
+          for f in devel/lib/wavemap*/test_*
+            do $f --gtest_color=yes || all_tests_passed=0
+          done
+          if [ $all_tests_passed -ne 1 ]; then
+            echo "Not all tests passed!"
+            exit 1
+          fi
+
+  install:
+    name: Install
+    needs: [ workspace-container, build ]
+    runs-on: ubuntu-20.04
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-ros1
+          create-symlink: true
+
+      - name: Enable catkin install mode
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          catkin config --install
+          catkin clean -bdi -y
+
+      - name: Build all wavemap packages
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          . /opt/ros/noetic/setup.sh
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_all --no-status --force-color
+          echo "::remove-matcher owner=problem-matcher-gcc::"
