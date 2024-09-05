@@ -27,9 +27,6 @@ if (livox_ros_driver2_FOUND)
   add_compile_definitions(LIVOX_AVAILABLE)
 endif ()
 
-# Enable general wavemap tooling (e.g. to run clang-tidy CI)
-enable_wavemap_general_tooling()
-
 # Libraries
 add_library(${PROJECT_NAME}
     src/inputs/depth_image_topic_input.cc

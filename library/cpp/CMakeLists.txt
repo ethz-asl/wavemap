@@ -15,7 +15,9 @@ option(USE_SYSTEM_BOOST "Use system pre-installed Boost" ON)
 # CMake helpers and general wavemap tooling (e.g. to run clang-tidy CI)
 include(GNUInstallDirs)
 include(cmake/wavemap-extras.cmake)
-enable_wavemap_general_tooling()
+
+# Export compilation database for compatibility with clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
 include(cmake/find-wavemap-deps.cmake)

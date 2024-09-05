@@ -80,3 +80,32 @@ jobs:
             echo "Not all tests passed!"
             exit 1
           fi
+
+  clang-tidy:
+    name: Clang tidy
+    needs: [ build ]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.18'
+
+      - name: Setup clang-tidy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -q -y --no-install-recommends clang-tidy
+
+      - name: Configure CMake
+        working-directory: ${{github.workspace}}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release library/cpp
+
+      - name: Run clang-tidy
+        working-directory: ${{github.workspace}}/build
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
+          run-clang-tidy -header-filter="*include/wavemap/*" -quiet
+          echo "::remove-matcher owner=problem-matcher-clang-tidy::"

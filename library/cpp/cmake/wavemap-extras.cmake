@@ -8,14 +8,6 @@ option(ENABLE_COVERAGE_TESTING
     "Compile with necessary flags for coverage testing" OFF)
 option(USE_CLANG_TIDY "Generate necessary files to run clang-tidy" OFF)
 
-# Enable general wavemap tooling for the calling CMake project
-function(enable_wavemap_general_tooling)
-  # Export compilation database for compatibility with clang-tidy
-  if (USE_CLANG_TIDY)
-    set(CMAKE_EXPORT_COMPILE_COMMANDS ON PARENT_SCOPE)
-  endif ()
-endfunction()
-
 # Adds the include paths of the wavemap library to the given target.
 function(add_wavemap_include_directories target)
   # Configure the include dirs
