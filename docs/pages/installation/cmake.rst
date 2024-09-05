@@ -1,5 +1,5 @@
-C++ Library (CMake)
-###################
+C++ (CMake)
+###########
 .. highlight:: bash
 .. rstcheck: ignore-directives=tab-set-code
 .. rstcheck: ignore-roles=gh_file
