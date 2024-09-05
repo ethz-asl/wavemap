@@ -1,8 +1,11 @@
 # pylint: disable=import-outside-toplevel
 def load_test_map():
+    from os.path import dirname, abspath, join
     import pywavemap
-    return pywavemap.Map.load(
-        "/home/victor/data/wavemaps/newer_college_mine_10cm.wvmp")
+    test_data_dir = join(dirname(abspath(__file__)), "data")
+    map_name = "dummy_map.wvmp"
+    map_path = join(test_data_dir, map_name)
+    return pywavemap.Map.load(map_path)
 
 
 def test_import():
