@@ -94,10 +94,12 @@ jobs:
         with:
           cmake-version: '3.18'
 
-      - name: Setup clang-tidy
+      - name: Setup clang-tidy and system deps
         run: |
           sudo apt-get update
           sudo apt-get install -q -y --no-install-recommends clang-tidy
+          # NOTE: The following deps are installed s.t. clang-tidy correctly treats them as system deps
+          sudo apt-get install -q -y --no-install-recommends libeigen3-dev libgoogle-glog-dev libboost-dev
 
       - name: Configure CMake
         working-directory: ${{github.workspace}}
@@ -107,7 +109,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: |
           echo "::add-matcher::./.github/problem-matchers/clang-tidy.json"
-          run-clang-tidy -header-filter="*include/wavemap/*" -quiet
+          run-clang-tidy -quiet -header-filter="*include/wavemap/*"
           echo "::remove-matcher owner=problem-matcher-clang-tidy::"
 
   valgrind:
