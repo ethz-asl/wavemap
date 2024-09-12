@@ -51,6 +51,8 @@ class RosServer {
 
   void clear();
 
+  const RosServerConfig& getConfig() const { return config_; }
+
   MapBase::Ptr getMap() { return occupancy_map_; }
   MapBase::ConstPtr getMap() const { return occupancy_map_; }
 
