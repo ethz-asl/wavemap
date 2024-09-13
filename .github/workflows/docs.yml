@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-docs:
-    name: Build docs
+    name: Build
     runs-on: ubuntu-20.04
     steps:
       - name: Fetch the package's repository

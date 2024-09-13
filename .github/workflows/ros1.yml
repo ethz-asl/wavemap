@@ -101,6 +101,41 @@ jobs:
           catkin build wavemap_all --no-status --force-color
           echo "::remove-matcher owner=problem-matcher-gcc::"
 
+  install:
+    name: Install
+    needs: [ workspace-container, build ]
+    runs-on: ubuntu-20.04
+    container:
+      image: ${{ needs.workspace-container.outputs.image }}
+    steps:
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+        # NOTE: Even though the repo is already present in the container, we
+        #       also need to check it out at GitHub Actions' preferred location
+        #       for private actions and problem matchers to work.
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-ros1
+          create-symlink: true
+
+      - name: Enable catkin install mode
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          catkin config --install
+          catkin clean -bdi -y
+
+      - name: Build all wavemap packages
+        working-directory: ${{ env.CATKIN_WS_PATH }}
+        shell: bash
+        run: |
+          . /opt/ros/noetic/setup.sh
+          echo "::add-matcher::./.github/problem-matchers/gcc.json"
+          catkin build wavemap_all --no-status --force-color
+          echo "::remove-matcher owner=problem-matcher-gcc::"
+
   test:
     name: Test
     needs: [ workspace-container, build ]
@@ -146,38 +181,3 @@ jobs:
             echo "Not all tests passed!"
             exit 1
           fi
-
-  install:
-    name: Install
-    needs: [ workspace-container, build ]
-    runs-on: ubuntu-20.04
-    container:
-      image: ${{ needs.workspace-container.outputs.image }}
-    steps:
-      - name: Fetch the package's repository
-        uses: actions/checkout@v4
-        # NOTE: Even though the repo is already present in the container, we
-        #       also need to check it out at GitHub Actions' preferred location
-        #       for private actions and problem matchers to work.
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-ros1
-          create-symlink: true
-
-      - name: Enable catkin install mode
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: |
-          catkin config --install
-          catkin clean -bdi -y
-
-      - name: Build all wavemap packages
-        working-directory: ${{ env.CATKIN_WS_PATH }}
-        shell: bash
-        run: |
-          . /opt/ros/noetic/setup.sh
-          echo "::add-matcher::./.github/problem-matchers/gcc.json"
-          catkin build wavemap_all --no-status --force-color
-          echo "::remove-matcher owner=problem-matcher-gcc::"
