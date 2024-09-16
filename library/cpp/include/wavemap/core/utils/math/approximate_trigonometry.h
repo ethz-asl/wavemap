@@ -7,7 +7,7 @@
 #include "wavemap/core/common.h"
 
 namespace wavemap::approximate {
-struct atan : public std::unary_function<FloatingPoint, FloatingPoint> {
+struct atan {
   FloatingPoint operator()(FloatingPoint x) const {
     // Copyright (c) 2021 Francesco Mazzoli <f@mazzo.li>
     //
@@ -40,8 +40,7 @@ struct atan : public std::unary_function<FloatingPoint, FloatingPoint> {
   }
 };
 
-struct atan2
-    : public std::binary_function<FloatingPoint, FloatingPoint, FloatingPoint> {
+struct atan2 {
   static constexpr FloatingPoint kWorstCaseError = 1.908e-6f;
 
   FloatingPoint operator()(FloatingPoint y, FloatingPoint x) const {
