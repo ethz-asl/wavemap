@@ -56,8 +56,6 @@ struct HaarCoefficients {
       return *this;
     }
     std::string toString() const {
-      // TODO(victorr): Check if the order of the labels matches the transform's
-      //                implementation
       std::stringstream ss;
       ss << "[";
       for (int coeff_idx = 1; coeff_idx <= kNumDetailCoefficients;
@@ -65,7 +63,7 @@ struct HaarCoefficients {
         for (int dim_idx = 0; dim_idx < kDim; ++dim_idx) {
           ss << (bit_ops::is_bit_set(coeff_idx, dim_idx) ? "H" : "L");
         }
-        ss << " = " << this->operator[](coeff_idx) << ", ";
+        ss << " = " << this->operator[](coeff_idx - 1) << ", ";
       }
       ss << "\b\b]";
       return ss.str();
@@ -104,14 +102,14 @@ struct HaarCoefficients {
       return {lhs.scale + rhs.scale, lhs.details + rhs.details};
     }
     Parent& operator+=(const Parent& rhs) {
-      *this = *this + rhs.coefficients;
+      *this = *this + rhs;
       return *this;
     }
     friend Parent operator-(const Parent& lhs, const Parent& rhs) {
       return {lhs.scale - rhs.scale, lhs.details - rhs.details};
     }
     Parent& operator-=(const Parent& rhs) {
-      *this = *this - rhs.coefficients;
+      *this = *this - rhs;
       return *this;
     }
     friend Parent operator*(ValueType lhs, const Parent& rhs) {
