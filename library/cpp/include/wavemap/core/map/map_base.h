@@ -74,11 +74,11 @@ class MapBase {
   //! range specified by its min_log_odds and max_log_odds
   virtual void threshold() = 0;
   //! Free up memory by pruning nodes that are no longer needed
-  //! @note This pruning operation is lossless and does not alter the estimated
-  //!       occupancy posterior.
+  //! @note Implementations of this pruning operation should be lossless and
+  //!       does not alter the estimated occupancy posterior.
   virtual void prune() = 0;
-  //! Similar to prune(), but avoids de-allocating nodes that were recently
-  //! updated and will likely be used again in the near future
+  //! Similar to prune(), but avoids de-allocating nodes that will likely be
+  //! used again in the near future
   virtual void pruneSmart() {
     // NOTE: This method can be overriden by derived classes to provide more
     //       efficient selective pruning strategies. Otherwise, just prune all.

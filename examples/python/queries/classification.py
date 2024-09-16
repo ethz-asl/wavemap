@@ -17,23 +17,23 @@ print(is_unobserved)
 
 # In case you would like to convert log odds into probabilities, we provide
 # the following convenience function:
-def logOddsToProbability(log_odds):
+def log_odds_to_probability(log_odds):
     odds = np.exp(log_odds)
     prob = odds / (1.0 + odds)
     return prob
 
 
-occupancy_probability = logOddsToProbability(occupancy_log_odds)
+occupancy_probability = log_odds_to_probability(occupancy_log_odds)
 print(occupancy_probability)
 
 
 # To do the opposite
-def probabilityToLogOdds(probability):
+def probability_to_log_odds(probability):
     odds = probability / (1.0 - probability)
     return np.log(odds)
 
 
-occupancy_log_odds = probabilityToLogOdds(occupancy_probability)
+occupancy_log_odds = probability_to_log_odds(occupancy_probability)
 print(occupancy_log_odds)
 
 # To classify whether a point is estimated to be occupied or free, you need
@@ -47,13 +47,13 @@ kOccupancyThresholdLogOdds = 0.0
 #       Operating Characteristic curve.
 
 # Once a threshold has been chosen, you can either classify in log space
-is_occupied = kOccupancyThresholdLogOdds < occupancy_log_odds
+is_occupied = kOccupancyThresholdLogOdds <= occupancy_log_odds
 is_free = occupancy_log_odds < kOccupancyThresholdLogOdds
 print(is_occupied)
 print(is_free)
 
 # Or in probability space
-is_occupied = kOccupancyThresholdProb < occupancy_probability
+is_occupied = kOccupancyThresholdProb <= occupancy_probability
 is_free = occupancy_probability < kOccupancyThresholdProb
 print(is_occupied)
 print(is_free)

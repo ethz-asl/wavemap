@@ -8,5 +8,5 @@ your_map = _dummy_objects.example_map()
 query_index = np.array([0, 0, 0])
 
 # Query the map's value at the given index
-occupancy_log_odds = your_map.getCellValue(query_index)
+occupancy_log_odds = your_map.get_cell_value(query_index)
 print(occupancy_log_odds)

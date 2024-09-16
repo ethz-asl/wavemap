@@ -5,7 +5,7 @@ import _dummy_objects
 your_map = _dummy_objects.example_map()
 
 # Declare the point to query [in map frame]
-query_point = np.array([0.4, .5, 0.6])
+query_point = np.array([0.4, 0.5, 0.6])
 
 # Query a single point
 occupancy_log_odds = your_map.interpolateNearest(query_point)

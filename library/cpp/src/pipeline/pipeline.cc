@@ -12,7 +12,7 @@ bool Pipeline::hasIntegrator(const std::string& integrator_name) const {
   return integrators_.count(integrator_name);
 }
 
-bool Pipeline::eraseIntegrator(const std::string& integrator_name) {
+bool Pipeline::removeIntegrator(const std::string& integrator_name) {
   return integrators_.erase(integrator_name);
 }
 

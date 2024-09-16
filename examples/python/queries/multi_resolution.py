@@ -17,5 +17,5 @@ query_index = wave.convert.point_to_node_index(query_point,
                                                query_height)
 
 # Query the node's average occupancy
-occupancy_log_odds = your_map.getCellValue(query_index)
+occupancy_log_odds = your_map.get_cell_value(query_index)
 print(occupancy_log_odds)

@@ -19,7 +19,7 @@ class DataLoader():
         self.pipeline = wave.Pipeline(self.map)
 
         for operation in params["map_operations"]:
-            self.pipeline.addOperation(operation)
+            self.pipeline.add_operation(operation)
 
         measurement_integrators = params["measurement_integrators"]
         if len(measurement_integrators) != 1:
@@ -27,9 +27,9 @@ class DataLoader():
                   f"Got {len(measurement_integrators)}.")
             raise SystemExit
         self.integrator_name, integrator_params = \
-            next(iter(measurement_integrators.items()))
+            measurement_integrators.popitem()
 
-        self.pipeline.addIntegrator(self.integrator_name, integrator_params)
+        self.pipeline.add_integrator(self.integrator_name, integrator_params)
 
         # Load list of measurements
         stamps_file = os.path.join(self.data_path, 'timestamps.csv')
@@ -38,7 +38,7 @@ class DataLoader():
         self.current_index = 0  # Used to iterate through
         if not os.path.isfile(stamps_file):
             print(f"No timestamp file '{stamps_file}' found.")
-        with open(stamps_file, 'r') as read_obj:
+        with open(stamps_file) as read_obj:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
                 if row[0] == "ImageID":
@@ -78,7 +78,7 @@ class DataLoader():
 
         # Load transform
         if os.path.isfile(pose_file):
-            with open(pose_file, 'r') as f:
+            with open(pose_file) as f:
                 pose_data = [float(x) for x in f.read().split()]
                 transform = np.eye(4)
                 for row in range(4):
@@ -86,8 +86,8 @@ class DataLoader():
                         transform[row, col] = pose_data[row * 4 + col]
         pose = wave.Pose(transform)
 
-        self.pipeline.runPipeline([self.integrator_name],
-                                  wave.PosedImage(pose, image))
+        self.pipeline.run_pipeline([self.integrator_name],
+                                   wave.PosedImage(pose, image))
 
         self.current_index += 1
 

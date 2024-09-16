@@ -38,7 +38,7 @@ class Pipeline {
   //! Returns true if an integrator with the given name has been registered
   bool hasIntegrator(const std::string& integrator_name) const;
   //! Deregister the integrator with the given name. Returns true if it existed.
-  bool eraseIntegrator(const std::string& integrator_name);
+  bool removeIntegrator(const std::string& integrator_name);
   //! Create and register a new integrator
   IntegratorBase* addIntegrator(const std::string& integrator_name,
                                 const param::Value& integrator_params);

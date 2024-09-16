@@ -16,45 +16,46 @@ void add_pipeline_bindings(nb::module_& m) {
       .def("clear", &Pipeline::clear,
            "Deregister all the pipeline's measurement integrators and map "
            "operations.")
-      .def("hasIntegrator", &Pipeline::hasIntegrator, "integrator_name"_a,
+      .def("has_integrator", &Pipeline::hasIntegrator, "integrator_name"_a,
            "Returns true if an integrator with the given name has been "
            "registered.")
-      .def("eraseIntegrator", &Pipeline::eraseIntegrator, "integrator_name"_a,
+      .def("remove_integrator", &Pipeline::removeIntegrator,
+           "integrator_name"_a,
            "Deregister the integrator with the given name. Returns true if it "
            "existed.")
       .def(
-          "addIntegrator",
+          "add_integrator",
           [](Pipeline& self, const std::string& integrator_name,
              const param::Value& params) -> bool {
             return self.addIntegrator(integrator_name, params);
           },
-          nb::sig("def addIntegrator(self, integrator_name: str, "
+          nb::sig("def add_integrator(self, integrator_name: str, "
                   "integrator_params: dict) -> bool"),
           "integrator_name"_a, "integrator_params"_a,
           "Create and register a new integrator")
-      .def("clearIntegrators", &Pipeline::clearIntegrators,
+      .def("clear_integrators", &Pipeline::clearIntegrators,
            "Deregister all integrators.")
       .def(
-          "addOperation",
+          "add_operation",
           [](Pipeline& self, const param::Value& params) -> bool {
             return self.addOperation(params);
           },
-          nb::sig("def addOperation(self, operation_params: dict) -> bool"),
+          nb::sig("def add_operation(self, operation_params: dict) -> bool"),
           "operation_params"_a, "Create and register a new map operation.")
-      .def("clearOperations", &Pipeline::clearOperations,
+      .def("clear_operations", &Pipeline::clearOperations,
            "Deregister all map operations")
-      .def("runIntegrators", &Pipeline::runIntegrators<PosedPointcloud<>>,
+      .def("run_integrators", &Pipeline::runIntegrators<PosedPointcloud<>>,
            "integrator_names"_a, "posed_pointcloud"_a,
            "Integrate a given pointcloud.")
-      .def("runIntegrators", &Pipeline::runIntegrators<PosedImage<>>,
+      .def("run_integrators", &Pipeline::runIntegrators<PosedImage<>>,
            "integrator_names"_a, "posed_image"_a,
            "Integrate a given depth image.")
-      .def("runOperations", &Pipeline::runOperations, "force_run_all"_a,
+      .def("run_operations", &Pipeline::runOperations, "force_run_all"_a,
            "Run the map operations.")
-      .def("runPipeline", &Pipeline::runPipeline<PosedPointcloud<>>,
+      .def("run_pipeline", &Pipeline::runPipeline<PosedPointcloud<>>,
            "integrator_names"_a, "posed_pointcloud"_a,
            "Integrate a given pointcloud, then run the map operations.")
-      .def("runPipeline", &Pipeline::runPipeline<PosedImage<>>,
+      .def("run_pipeline", &Pipeline::runPipeline<PosedImage<>>,
            "integrator_names"_a, "posed_image"_a,
            "Integrate a given depth image, then run the map operations.");
 }

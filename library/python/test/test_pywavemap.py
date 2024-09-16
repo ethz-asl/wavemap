@@ -20,10 +20,10 @@ def test_batched_fixed_resolution_queries():
     test_map = load_test_map()
 
     cell_indices = np.random.randint(-100, 100, size=(64 * 64 * 32, 3))
-    cell_values = test_map.getCellValues(cell_indices)
+    cell_values = test_map.get_cell_values(cell_indices)
     for cell_idx in range(cell_indices.shape[0]):
         cell_index = cell_indices[cell_idx, :]
-        cell_value = test_map.getCellValue(cell_index)
+        cell_value = test_map.get_cell_value(cell_index)
         assert cell_values[cell_idx] == cell_value
 
 
@@ -36,11 +36,11 @@ def test_batched_multi_resolution_queries():
     cell_positions = np.random.randint(-100, 100, size=(64 * 64 * 32, 3))
     cell_heights = np.random.randint(0, 6, size=(64 * 64 * 32, 1))
     cell_indices = np.concatenate((cell_heights, cell_positions), axis=1)
-    cell_values = test_map.getCellValues(cell_indices)
+    cell_values = test_map.get_cell_values(cell_indices)
     for cell_idx in range(cell_positions.shape[0]):
         cell_index = pywavemap.OctreeIndex(cell_heights[cell_idx],
                                            cell_positions[cell_idx, :])
-        cell_value = test_map.getCellValue(cell_index)
+        cell_value = test_map.get_cell_value(cell_index)
         assert cell_values[cell_idx] == cell_value
 
 

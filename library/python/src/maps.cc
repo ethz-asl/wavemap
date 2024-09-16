@@ -27,7 +27,7 @@ void add_map_bindings(nb::module_& m) {
            "Free up memory by pruning nodes that are no longer needed. Note "
            "that this pruning operation is lossless and does not alter the "
            "estimated occupancy posterior.")
-      .def("pruneSmart", &MapBase::pruneSmart,
+      .def("prune_smart", &MapBase::pruneSmart,
            "Similar to prune(), but avoids de-allocating nodes that were "
            "recently updated and will likely be used again in the near future.")
       .def("clear", &MapBase::clear, "Erase all cells in the map.")
@@ -51,12 +51,12 @@ void add_map_bindings(nb::module_& m) {
       .def_prop_ro("max_index", &MapBase::getMaxIndex,
                    "Index of the maximum corner of the map's Axis Aligned "
                    "Bounding Box.")
-      .def("getCellValue", &MapBase::getCellValue, "index"_a,
+      .def("get_cell_value", &MapBase::getCellValue, "index"_a,
            "Query the value of the map at a given index.")
-      .def("setCellValue", &MapBase::setCellValue, "index"_a,
+      .def("set_cell_value", &MapBase::setCellValue, "index"_a,
            "new_value"_a
            "Set the value of the map at a given index.")
-      .def("addToCellValue", &MapBase::addToCellValue, "index"_a, "update"_a,
+      .def("add_to_cell_value", &MapBase::addToCellValue, "index"_a, "update"_a,
            "Increment the value of the map at a given index.")
       .def(
           "interpolateNearest",
@@ -100,15 +100,15 @@ void add_map_bindings(nb::module_& m) {
   nb::class_<HashedWaveletOctree, MapBase>(
       m, "HashedWaveletOctree",
       "A class that stores maps using hashed wavelet octrees.")
-      .def("getCellValue", &MapBase::getCellValue, "index"_a,
+      .def("get_cell_value", &MapBase::getCellValue, "index"_a,
            "Query the value of the map at a given index.")
-      .def("getCellValue",
+      .def("get_cell_value",
            nb::overload_cast<const OctreeIndex&>(
                &HashedWaveletOctree::getCellValue, nb::const_),
            "node_index"_a,
            "Query the value of the map at a given octree node index.")
       .def(
-          "getCellValues",
+          "get_cell_values",
           [](const HashedWaveletOctree& self,
              const nb::ndarray<IndexElement, nb::shape<-1, 3>, nb::device::cpu>&
                  indices) {
@@ -137,7 +137,7 @@ void add_map_bindings(nb::module_& m) {
           "Query the map at the given indices, provided as a matrix with one "
           "(x, y, z) index per row.")
       .def(
-          "getCellValues",
+          "get_cell_values",
           [](const HashedWaveletOctree& self,
              const nb::ndarray<IndexElement, nb::shape<-1, 4>, nb::device::cpu>&
                  indices) {
@@ -246,9 +246,9 @@ void add_map_bindings(nb::module_& m) {
   nb::class_<HashedChunkedWaveletOctree, MapBase>(
       m, "HashedChunkedWaveletOctree",
       "A class that stores maps using hashed chunked wavelet octrees.")
-      .def("getCellValue", &MapBase::getCellValue, "index"_a,
+      .def("get_cell_value", &MapBase::getCellValue, "index"_a,
            "Query the value of the map at a given index.")
-      .def("getCellValue",
+      .def("get_cell_value",
            nb::overload_cast<const OctreeIndex&>(
                &HashedChunkedWaveletOctree::getCellValue, nb::const_),
            "node_index"_a,

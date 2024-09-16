@@ -18,7 +18,7 @@ void add_measurement_bindings(nb::module_& m) {
                                "A class representing poses in 3D space.")
       .def(nb::init<Rotation3D, Vector3D>(), "rotation"_a, "translation"_a)
       .def(nb::init<Transformation3D::TransformationMatrix>(),
-           "transformation_matrix")
+           "transformation_matrix"_a)
       .def("inverse", &Transformation3D::inverse,
            "Compute the pose's inverse.");
 

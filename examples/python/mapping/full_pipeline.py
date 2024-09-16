@@ -21,14 +21,14 @@ your_map = wave.Map.create({
 # Create a measurement integration pipeline
 pipeline = wave.Pipeline(your_map)
 # Add map operations
-pipeline.addOperation({
+pipeline.add_operation({
     "type": "threshold_map",
     "once_every": {
         "seconds": 5.0
     }
 })
 # Add a measurement integrator
-pipeline.addIntegrator(
+pipeline.add_integrator(
     "my_integrator", {
         "projection_model": {
             "type": "pinhole_camera_projector",
@@ -64,7 +64,7 @@ times = []
 stamps_file = os.path.join(measurement_dir, 'timestamps.csv')
 if not os.path.isfile(stamps_file):
     print(f"Could not find timestamp file '{stamps_file}'.")
-with open(stamps_file, 'r') as read_obj:
+with open(stamps_file) as read_obj:
     csv_reader = csv.reader(read_obj)
     for row in csv_reader:
         if row[0] == "ImageID":
@@ -97,7 +97,7 @@ while True:
         current_index += 1
         raise SystemExit
     if os.path.isfile(pose_file):
-        with open(pose_file, 'r') as f:
+        with open(pose_file) as f:
             pose_data = [float(x) for x in f.read().split()]
             transform = np.eye(4)
             for row in range(4):
@@ -107,7 +107,7 @@ while True:
 
     # Integrate the depth image
     print(f"Integrating measurement {ids[current_index]}")
-    pipeline.runPipeline(["my_integrator"], wave.PosedImage(pose, image))
+    pipeline.run_pipeline(["my_integrator"], wave.PosedImage(pose, image))
 
     current_index += 1
 

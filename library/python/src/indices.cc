@@ -14,21 +14,24 @@ void add_index_bindings(nb::module_& m) {
            "position"_a)
       .def_rw("height", &OctreeIndex::height, "height"_a = 0,
               "The node's resolution level in the octree. A height of 0 "
-              "corresponds to the map’s maximum resolution. The node's size is "
-              "doubled each time the height is increased by 1.")
+              "corresponds to the map’s maximum resolution. In a fully "
+              "allocated tree, all leaf nodes are at height 0. Increasing the "
+              "height by 1 doubles the node size along each dimension. The "
+              "root node corresponds to the map's lowest resolution, and the "
+              "root node's height matches the configured tree height.")
       .def_rw("position", &OctreeIndex::position, "position"_a,
               "The node's XYZ position in the octree’s grid at the resolution "
               "level set by *height*.")
-      .def("computeParentIndex",
+      .def("compute_parent_index",
            nb::overload_cast<>(&OctreeIndex::computeParentIndex, nb::const_),
            "Compute the index of the node's direct parent.")
-      .def("computeParentIndex",
+      .def("compute_parent_index",
            nb::overload_cast<OctreeIndex::Element>(
                &OctreeIndex::computeParentIndex, nb::const_),
            "parent_height"_a,
            "Compute the index of the node's parent (or ancestor) at "
            "*parent_height*.")
-      .def("computeChildIndex", &OctreeIndex::computeChildIndex,
+      .def("compute_child_index", &OctreeIndex::computeChildIndex,
            "relative_child_index"_a,
            "Compute the index of the node's n-th child, where n ranges from 0 "
            "to 7.");
