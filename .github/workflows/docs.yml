@@ -52,7 +52,7 @@ jobs:
             .
 
       - name: Upload tarball as GH Pages artifact
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v3.2.1
         with:
           name: github-pages
           path: ${{github.workspace}}/docs/artifact.tar
@@ -64,8 +64,50 @@ jobs:
         run: sphinx-build -M latexpdf . _build/latex
 
       - name: Upload PDF
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v3.2.1
         with:
           name: documentation-pdf
           path: ${{github.workspace}}/docs/_build/latex/latex/wavemap.pdf
           retention-days: 3
+
+  draft-release:
+    name: Draft Release
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    needs: [ build-docs ]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4.1.8
+        with:
+          name: documentation-pdf
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2.0.8
+        with:
+          files: "wavemap.pdf"
+
+  publish-docs:
+    name: Publish docs
+    if: github.ref == 'refs/heads/main'
+    needs: [ build-docs ]
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Deploy uploaded docs to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3
