@@ -7,6 +7,7 @@ on:
 env:
   DOCKER_REGISTRY: ghcr.io
   DOCKER_CI_IMAGE_NAME: ci_wavemap_ros1
+  DOCKER_RELEASE_IMAGE_NAME: wavemap_ros1
   USER_HOME: /home/ci
   CATKIN_WS_PATH: /home/ci/catkin_ws
   CCACHE_DIR: /home/ci/ccache
@@ -62,7 +63,7 @@ jobs:
       - name: Test the image
         run: docker run --rm ${{ steps.ref-names.outputs.ci_image }}
 
-      - name: Push the image
+      - name: Push the CI image
         uses: docker/build-push-action@v6
         env:
           DOCKER_BUILD_SUMMARY: false
@@ -79,6 +80,33 @@ jobs:
           push: true
           cache-from: type=registry,ref=${{ steps.ref-names.outputs.cache }}
           tags: ${{ steps.ref-names.outputs.ci_image }}
+
+      - name: Generate release image metadata
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+
+      - name: Publish the release image
+        if: startsWith(github.event.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          context: ${{ github.repository }}
+          file: ${{ github.repository }}/tooling/docker/ros1/full.Dockerfile
+          target: workspace
+          build-args: |
+            REPOSITORY_NAME=${{ github.repository }}
+            USER_HOME=${{ env.USER_HOME }}
+            CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
+            CCACHE_DIR=${{ env.CCACHE_DIR }}
+          push: true
+          cache-from: type=registry,ref=${{ steps.ref-names.outputs.cache }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   build:
     name: Build

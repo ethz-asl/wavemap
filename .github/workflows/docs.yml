@@ -52,7 +52,7 @@ jobs:
             .
 
       - name: Upload tarball as GH Pages artifact
-        uses: actions/upload-artifact@v3.2.1
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: github-pages
           path: ${{github.workspace}}/docs/artifact.tar
@@ -64,7 +64,7 @@ jobs:
         run: sphinx-build -M latexpdf . _build/latex
 
       - name: Upload PDF
-        uses: actions/upload-artifact@v3.2.1
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: documentation-pdf
           path: ${{github.workspace}}/docs/_build/latex/latex/wavemap.pdf
@@ -90,7 +90,7 @@ jobs:
           files: "wavemap.pdf"
 
   publish-docs:
-    name: Publish docs
+    name: Publish to GH Pages
     if: github.ref == 'refs/heads/main'
     needs: [ build-docs ]
     runs-on: ubuntu-20.04
