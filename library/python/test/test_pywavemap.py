@@ -29,7 +29,7 @@ def test_batched_fixed_resolution_queries():
 
 def test_batched_multi_resolution_queries():
     import numpy as np
-    import pywavemap
+    import pywavemap as wave
 
     test_map = load_test_map()
 
@@ -38,33 +38,36 @@ def test_batched_multi_resolution_queries():
     cell_indices = np.concatenate((cell_heights, cell_positions), axis=1)
     cell_values = test_map.get_cell_values(cell_indices)
     for cell_idx in range(cell_positions.shape[0]):
-        cell_index = pywavemap.OctreeIndex(cell_heights[cell_idx],
-                                           cell_positions[cell_idx, :])
+        cell_index = wave.OctreeIndex(cell_heights[cell_idx],
+                                      cell_positions[cell_idx, :])
         cell_value = test_map.get_cell_value(cell_index)
         assert cell_values[cell_idx] == cell_value
 
 
 def test_batched_nearest_neighbor_interpolation():
     import numpy as np
+    from pywavemap import InterpolationMode
 
     test_map = load_test_map()
 
     points = np.random.random(size=(64 * 64 * 32, 3))
-    points_log_odds = test_map.interpolateNearest(points)
+    points_log_odds = test_map.interpolate(points, InterpolationMode.NEAREST)
     for point_idx in range(points.shape[0]):
         point = points[point_idx, :]
-        point_log_odds = test_map.interpolateNearest(point)
+        point_log_odds = test_map.interpolate(point, InterpolationMode.NEAREST)
         assert points_log_odds[point_idx] == point_log_odds
 
 
 def test_batched_trilinear_interpolation():
     import numpy as np
+    from pywavemap import InterpolationMode
 
     test_map = load_test_map()
 
     points = np.random.random(size=(64 * 64 * 32, 3))
-    points_log_odds = test_map.interpolateTrilinear(points)
+    points_log_odds = test_map.interpolate(points, InterpolationMode.TRILINEAR)
     for point_idx in range(points.shape[0]):
         point = points[point_idx, :]
-        point_log_odds = test_map.interpolateTrilinear(point)
+        point_log_odds = test_map.interpolate(point,
+                                              InterpolationMode.TRILINEAR)
         assert points_log_odds[point_idx] == point_log_odds

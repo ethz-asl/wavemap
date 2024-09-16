@@ -14,6 +14,8 @@ Python API
 .. autoclass:: pywavemap.HashedChunkedWaveletOctree
     :show-inheritance:
     :members:
+.. autoclass:: pywavemap.InterpolationMode
+    :members:
 
 .. autoclass:: pywavemap.OctreeIndex
     :members:

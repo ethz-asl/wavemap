@@ -15,6 +15,14 @@ using namespace nb::literals;  // NOLINT
 
 namespace wavemap {
 void add_map_bindings(nb::module_& m) {
+  enum class InterpolationMode { kNearest, kTrilinear };
+
+  nb::enum_<InterpolationMode>(m, "InterpolationMode")
+      .value("NEAREST", InterpolationMode::kNearest,
+             "Look up the value of the nearest map cell.")
+      .value("TRILINEAR", InterpolationMode::kTrilinear,
+             "Interpolate linearly along each map axis.");
+
   nb::class_<MapBase>(m, "Map", "Base class for wavemap maps.")
       .def_prop_ro("empty", &MapBase::empty, "Whether the map is empty.")
       .def_prop_ro("size", &MapBase::size,
@@ -59,20 +67,21 @@ void add_map_bindings(nb::module_& m) {
       .def("add_to_cell_value", &MapBase::addToCellValue, "index"_a, "update"_a,
            "Increment the value of the map at a given index.")
       .def(
-          "interpolateNearest",
-          [](const MapBase& self, const Point3D& position) {
-            return interpolate::nearestNeighbor(self, position);
+          "interpolate",
+          [](const MapBase& self, const Point3D& position,
+             InterpolationMode mode) {
+            switch (mode) {
+              case InterpolationMode::kNearest:
+                return interpolate::nearestNeighbor(self, position);
+              case InterpolationMode::kTrilinear:
+                return interpolate::trilinear(self, position);
+              default:
+                throw nb::type_error("Unknown interpolation mode.");
+            }
           },
-          "position"_a,
-          "Query the map's value at a point using nearest neighbor "
-          "interpolation.")
-      .def(
-          "interpolateTrilinear",
-          [](const MapBase& self, const Point3D& position) {
-            return interpolate::trilinear(self, position);
-          },
-          "position"_a,
-          "Query the map's value at a point using trilinear interpolation.")
+          "position"_a, "mode"_a = InterpolationMode::kTrilinear,
+          "Query the map's value at a point, using the specified interpolation "
+          "mode.")
       .def_static(
           "create",
           [](const param::Value& params) -> std::shared_ptr<MapBase> {
@@ -117,18 +126,18 @@ void add_map_bindings(nb::module_& m) {
             // Create nb::ndarray view for efficient access to the query indices
             const auto index_view = indices.view();
             const auto num_queries = index_view.shape(0);
-            // Allocate and populate raw results array
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
             auto* results = new float[num_queries];
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+            // Compute the interpolated values
             for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
               results[query_idx] = query_accelerator.getCellValue(
                   {index_view(query_idx, 0), index_view(query_idx, 1),
                    index_view(query_idx, 2)});
             }
-            // Create Python capsule that deallocates the results array when
-            // all references to it expire
-            nb::capsule owner(results, [](void* p) noexcept {
-              delete[] reinterpret_cast<float*>(p);
-            });
             // Return results as numpy array
             return nb::ndarray<nb::numpy, float>{
                 results, {num_queries, 1u}, owner};
@@ -146,8 +155,13 @@ void add_map_bindings(nb::module_& m) {
             // Create nb::ndarray view for efficient access to the query indices
             auto index_view = indices.view();
             const auto num_queries = index_view.shape(0);
-            // Allocate and populate raw results array
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
             auto* results = new float[num_queries];
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+            // Compute the interpolated values
             for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
               const OctreeIndex node_index{
                   index_view(query_idx, 0),
@@ -155,11 +169,6 @@ void add_map_bindings(nb::module_& m) {
                    index_view(query_idx, 3)}};
               results[query_idx] = query_accelerator.getCellValue(node_index);
             }
-            // Create Python capsule that deallocates the results array when
-            // all references to it expire
-            nb::capsule owner(results, [](void* p) noexcept {
-              delete[] reinterpret_cast<float*>(p);
-            });
             // Return results as numpy array
             return nb::ndarray<nb::numpy, float>{
                 results, {num_queries, 1u}, owner};
@@ -168,80 +177,68 @@ void add_map_bindings(nb::module_& m) {
           "Query the map at the given node indices, provided as a matrix with "
           "one (height, x, y, z) node index per row.")
       .def(
-          "interpolateNearest",
-          [](const MapBase& self, const Point3D& position) {
-            return interpolate::nearestNeighbor(self, position);
+          "interpolate",
+          [](const MapBase& self, const Point3D& position,
+             InterpolationMode mode) {
+            switch (mode) {
+              case InterpolationMode::kNearest:
+                return interpolate::nearestNeighbor(self, position);
+              case InterpolationMode::kTrilinear:
+                return interpolate::trilinear(self, position);
+              default:
+                throw nb::type_error("Unknown interpolation mode.");
+            }
           },
-          "position"_a,
-          "Query the map's value at a point using nearest neighbor "
-          "interpolation.")
+          "position"_a, "mode"_a = InterpolationMode::kTrilinear,
+          "Query the map's value at a point, using the specified interpolation "
+          "mode.")
       .def(
-          "interpolateTrilinear",
-          [](const MapBase& self, const Point3D& position) {
-            return interpolate::trilinear(self, position);
-          },
-          "position"_a,
-          "Query the map's value at a point using trilinear interpolation.")
-      .def(
-          "interpolateNearest",
+          "interpolate",
           [](const HashedWaveletOctree& self,
              const nb::ndarray<FloatingPoint, nb::shape<-1, 3>,
-                               nb::device::cpu>& positions) {
+                               nb::device::cpu>& positions,
+             InterpolationMode mode) {
             // Create a query accelerator
             QueryAccelerator<HashedWaveletOctree> query_accelerator{self};
             // Create nb::ndarray view for efficient access to the query points
             const auto positions_view = positions.view();
             const auto num_queries = positions_view.shape(0);
-            // Allocate and populate raw results array
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
             auto* results = new float[num_queries];
-            for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
-              results[query_idx] = interpolate::nearestNeighbor(
-                  query_accelerator,
-                  {positions_view(query_idx, 0), positions_view(query_idx, 1),
-                   positions_view(query_idx, 2)});
-            }
-            // Create Python capsule that deallocates the results array when
-            // all references to it expire
             nb::capsule owner(results, [](void* p) noexcept {
               delete[] reinterpret_cast<float*>(p);
             });
+            // Compute the interpolated values
+            switch (mode) {
+              case InterpolationMode::kNearest:
+                for (size_t query_idx = 0; query_idx < num_queries;
+                     ++query_idx) {
+                  results[query_idx] = interpolate::nearestNeighbor(
+                      query_accelerator, {positions_view(query_idx, 0),
+                                          positions_view(query_idx, 1),
+                                          positions_view(query_idx, 2)});
+                }
+                break;
+              case InterpolationMode::kTrilinear:
+                for (size_t query_idx = 0; query_idx < num_queries;
+                     ++query_idx) {
+                  results[query_idx] = interpolate::trilinear(
+                      query_accelerator, {positions_view(query_idx, 0),
+                                          positions_view(query_idx, 1),
+                                          positions_view(query_idx, 2)});
+                }
+                break;
+              default:
+                throw nb::type_error("Unknown interpolation mode.");
+            }
             // Return results as numpy array
             return nb::ndarray<nb::numpy, float>{
                 results, {num_queries, 1u}, owner};
           },
-          "position_list"_a,
-          "Query the map's value at the given points using nearest neighbor "
-          "interpolation.")
-      .def(
-          "interpolateTrilinear",
-          [](const HashedWaveletOctree& self,
-             const nb::ndarray<FloatingPoint, nb::shape<-1, 3>,
-                               nb::device::cpu>& positions) {
-            // Create a query accelerator
-            QueryAccelerator<HashedWaveletOctree> query_accelerator{self};
-            // Create nb::ndarray view for efficient access to the query points
-            const auto positions_view = positions.view();
-            const auto num_queries = positions_view.shape(0);
-            // Allocate and populate raw results array
-            auto* results = new float[num_queries];
-            for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
-              results[query_idx] = interpolate::trilinear(
-                  query_accelerator,
-                  {positions_view(query_idx, 0), positions_view(query_idx, 1),
-                   positions_view(query_idx, 2)});
-            }
-            // Create Python capsule that deallocates the results array when
-            // all references to it expire
-            nb::capsule owner(results, [](void* p) noexcept {
-              delete[] reinterpret_cast<float*>(p);
-            });
-            // Return results as numpy array
-            return nb::ndarray<nb::numpy, float>{
-                results, {num_queries, 1u}, owner};
-          },
-          "position_list"_a,
-          "Query the map's value at the given points using trilinear "
-          "interpolation.");
+          "position_list"_a, "mode"_a = InterpolationMode::kTrilinear,
+          "Query the map's value at the given points, using the specified "
+          "interpolation mode.");
 
   nb::class_<HashedChunkedWaveletOctree, MapBase>(
       m, "HashedChunkedWaveletOctree",
@@ -254,19 +251,20 @@ void add_map_bindings(nb::module_& m) {
            "node_index"_a,
            "Query the value of the map at a given octree node index.")
       .def(
-          "interpolateNearest",
-          [](const MapBase& self, const Point3D& position) {
-            return interpolate::nearestNeighbor(self, position);
+          "interpolate",
+          [](const MapBase& self, const Point3D& position,
+             InterpolationMode mode) {
+            switch (mode) {
+              case InterpolationMode::kNearest:
+                return interpolate::nearestNeighbor(self, position);
+              case InterpolationMode::kTrilinear:
+                return interpolate::trilinear(self, position);
+              default:
+                throw nb::type_error("Unknown interpolation mode.");
+            }
           },
-          "position"_a,
-          "Query the map's value at a point using nearest neighbor "
-          "interpolation.")
-      .def(
-          "interpolateTrilinear",
-          [](const MapBase& self, const Point3D& position) {
-            return interpolate::trilinear(self, position);
-          },
-          "position"_a,
-          "Query the map's value at a point using trilinear interpolation.");
+          "position"_a, "mode"_a = InterpolationMode::kTrilinear,
+          "Query the map's value at a point, using the specified interpolation "
+          "mode.");
 }
 }  // namespace wavemap
