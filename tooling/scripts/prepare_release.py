@@ -59,10 +59,17 @@ def bump_version(version, level='patch'):
 class PkgType(Enum):
 
     def __str__(self):
-        return {PkgType.CPP: "C++", PkgType.ROS1: "ROS1"}[self]
+        return {
+            PkgType.CPP: "C++",
+            PkgType.PYTHON_BINDINGS: "Python",
+            PkgType.ROS1: "ROS1",
+            PkgType.PYTHON: "Python"
+        }[self]
 
     CPP = 1
-    ROS1 = 2
+    PYTHON_BINDINGS = 2
+    ROS1 = 3
+    PYTHON = 4
 
 
 # Class used to specify a package in our repository
@@ -85,9 +92,9 @@ def draft_release_notes():
     out += "\n"
 
     out += "### Libraries\n"
-    pkg = pkgs["libraries"][0]
-    out += f"* [{pkg.type}](https://github.com/ethz-asl/wavemap/blob/"
-    out += f"v{new_version_str}/{pkg.current_path}/CHANGELOG.rst)\n"
+    for pkg in pkgs["libraries"]:
+        out += f"* [{pkg.type}](https://github.com/ethz-asl/wavemap/blob/"
+        out += f"v{new_version_str}/{pkg.current_path}/CHANGELOG.rst)\n"
     out += "\n"
 
     out += "### Interfaces\n"
@@ -106,9 +113,13 @@ def draft_release_notes():
     out += "# Upgrade notes\n"
     out += "Upgrade instructions for\n"
     out += "* C++ Library\n"
-    out += "  * For instructions on setting up wavemap as a standalone CMake "
-    out += "project, please refer to [our docs]"
-    out += "(https://ethz-asl.github.io/wavemap/pages/installation/cmake)\n"
+    out += "  * To use wavemap as a standalone CMake project, please see "
+    out += "[these instructions]"
+    out += "(https://ethz-asl.github.io/wavemap/pages/installation/cpp)\n"
+    out += "* Python Library\n"
+    out += "  * To install wavemap's Python API, please see "
+    out += "[these instructions]"
+    out += "(https://ethz-asl.github.io/wavemap/pages/installation/python)\n"
     out += "* ROS1\n"
     out += "  * Catkin\n"
     out += "    * Go to your catkin workspace src directory: "
@@ -188,7 +199,7 @@ def prepare_release_files():
             print(f'Could NOT find changelog for {pkg_debug_name}')
             raise SystemExit
 
-        if pkg.type == PkgType.CPP:
+        if pkg.type in (PkgType.CPP, PkgType.PYTHON_BINDINGS):
             pkg_cmake_path = os.path.join(pkg.current_path, "CMakeLists.txt")
             if os.path.exists(pkg_cmake_path):
                 # Read the existing content of the CMakeLists.txt file
@@ -202,13 +213,41 @@ def prepare_release_files():
                 new_content, count = pattern.subn(substitution, cmake_content)
 
                 # Make the replacement was successful and unique
-                if count == 0:
-                    raise SystemExit
-                if 1 < count:
+                if count == 0 or 1 < count:
+                    print("Failed to update version number in "
+                          f"{pkg_cmake_path}")
                     raise SystemExit
 
                 # Write the updated content back to the file
                 with open(pkg_cmake_path, 'w', encoding='utf-8') as file:
+                    file.write(new_content)
+
+            else:
+                print(f'Could NOT find CMakeLists.txt for {pkg_debug_name}')
+                raise SystemExit
+
+        if pkg.type == PkgType.PYTHON_BINDINGS:
+            pyproject_toml_path = os.path.join(pkg.current_path,
+                                               "pyproject.toml")
+            if os.path.exists(pyproject_toml_path):
+                # Read the existing content of the CMakeLists.txt file
+                with open(pyproject_toml_path, 'r', encoding='utf-8') as file:
+                    cmake_content = file.read()
+
+                # Replace the old version number with the new version number
+                pattern = re.compile(
+                    r'(version\s+=\s+)(\"\d+\.\d+\.\d+\")(.*)')
+                substitution = r'\1"' + new_version_str + r'"\3'
+                new_content, count = pattern.subn(substitution, cmake_content)
+
+                # Make the replacement was successful and unique
+                if count == 0 or 1 < count:
+                    print("Failed to update version number in "
+                          f"{pyproject_toml_path}")
+                    raise SystemExit
+
+                # Write the updated content back to the file
+                with open(pyproject_toml_path, 'w', encoding='utf-8') as file:
                     file.write(new_content)
 
             else:
@@ -244,7 +283,10 @@ def prepare_release_files():
 
 # Parameters
 pkgs = {
-    "libraries": [Pkg('wavemap', PkgType.CPP, 'library/cpp', [])],
+    "libraries": [
+        Pkg('wavemap', PkgType.CPP, 'library/cpp', []),
+        Pkg('pywavemap', PkgType.PYTHON_BINDINGS, 'library/python', [])
+    ],
     "interfaces": [
         Pkg('wavemap', PkgType.ROS1, 'interfaces/ros1/wavemap', []),
         Pkg('wavemap_msgs', PkgType.ROS1, 'interfaces/ros1/wavemap_msgs', []),
@@ -260,7 +302,8 @@ pkgs = {
     ],
     "examples": [
         Pkg('wavemap_examples_cpp', PkgType.CPP, 'examples/cpp', []),
-        Pkg('wavemap_examples_ros1', PkgType.ROS1, 'examples/ros1', [])
+        Pkg('wavemap_examples_ros1', PkgType.ROS1, 'examples/ros1', []),
+        Pkg('wavemap_examples_python', PkgType.PYTHON, 'examples/python', [])
     ]
 }
 

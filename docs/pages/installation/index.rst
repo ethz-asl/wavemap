@@ -13,6 +13,6 @@ For roboticists working with ROS, we provide packages that tightly integrate wav
     :caption: Installation types
     :maxdepth: 1
 
-    cmake
+    cpp
     python
     ros1

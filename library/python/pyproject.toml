@@ -6,7 +6,7 @@ build-backend = "scikit_build_core.build"
 name = "pywavemap"
 version = "2.0.0"
 description = "A fast, efficient and accurate multi-resolution, multi-sensor 3D occupancy mapping framework."
-readme = "README.md"
+readme = "../../README.md"
 requires-python = ">=3.8"
 authors = [
     { name = "Victor Reijgwart", email = "victorr@ethz.ch" },

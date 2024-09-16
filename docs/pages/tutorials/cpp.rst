@@ -10,7 +10,7 @@ In this tutorial, we illustrate how you can use wavemap's C++ API in your own pr
 
 CMake target setup
 ******************
-Once you included wavemap's C++ library in your CMake project, for example by following our :doc:`installation instructions <../installation/cmake>`, the last remaining step to start using it is to configure your CMake target (e.g. library or executable) to use it.
+Once you included wavemap's C++ library in your CMake project, for example by following our :doc:`installation instructions <../installation/cpp>`, the last remaining step to start using it is to configure your CMake target (e.g. library or executable) to use it.
 
 Wavemap's C++ library contains three main components:
 
