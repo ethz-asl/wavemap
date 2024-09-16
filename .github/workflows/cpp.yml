@@ -10,7 +10,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+      fail-fast: false
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v4
@@ -43,7 +44,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+      fail-fast: false
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v4
@@ -171,15 +173,13 @@ jobs:
   sanitize:
     name: Sanitize ${{ matrix.sanitizer.detects }}
     needs: test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         sanitizer:
           - { name: UBSAN, detects: 'undefined behavior' }
           - { name: ASAN, detects: 'addressability and leaks' }
-          # - { name: TSAN, detects: 'data races and deadlocks' }
-          # NOTE: TSAN is disabled until the following bug is resolved:
-          #       https://bugs.launchpad.net/ubuntu/+source/gcc-10/+bug/2029910.
+          - { name: TSAN, detects: 'data races and deadlocks' }
           # NOTE: MSAN is not used for now since it also requires all deps to be
           #       instrumented (recompiled with clang and the MSan flags, LLVM's
           #       stdlib instead of GCCs,...). We therefore use Valgrind to
@@ -197,7 +197,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-${{ matrix.sanitizer.name }}
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-22.04-gcc-${{ matrix.sanitizer.name }}
           create-symlink: true
 
       - name: Setup GTest

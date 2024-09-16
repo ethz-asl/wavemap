@@ -12,13 +12,13 @@ Wavemap achieves state-of-the-art memory and computational efficiency by combini
 
 The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single multi-resolution occupancy grid map.
 
-Wavemap provides [C++](https://ethz-asl.github.io/wavemap/pages/tutorials/cpp) and [Python](https://ethz-asl.github.io/wavemap/pages/tutorials/python) APIs and an interface to [ROS1](https://ethz-asl.github.io/wavemap/pages/tutorials/ros1). The code is extensively tested on Intel, AMD and ARM CPUs. Example Docker files [are available](https://github.com/ethz-asl/wavemap/tree/main/tooling/docker) and documented in the [installation instructions](https://ethz-asl.github.io/wavemap/pages/installation/index). We [welcome contributions](https://ethz-asl.github.io/wavemap/pages/contributing).
+Wavemap provides [C++](https://ethz-asl.github.io/wavemap/pages/tutorials/cpp) and [Python](https://ethz-asl.github.io/wavemap/pages/tutorials/python) APIs and an interface to [ROS1](https://ethz-asl.github.io/wavemap/pages/tutorials/ros1). The code is extensively tested on Intel, AMD and ARM CPUs on Ubuntu 20.04, 22.04 and 24.04. Example Docker files [are available](https://github.com/ethz-asl/wavemap/tree/main/tooling/docker) and documented in the [installation instructions](https://ethz-asl.github.io/wavemap/pages/installation/index). We [welcome contributions](https://ethz-asl.github.io/wavemap/pages/contributing).
 
 ⭐ If you find wavemap useful, star it on GitHub to get notified of new releases!
 
 
 ## Documentation
-The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.github.io/wavemap/).
+The framework's documentation is available on [GitHub Pages](https://ethz-asl.github.io/wavemap/) for easy online access. A PDF version of each release’s documentation can also be found in the respective [release notes](https://github.com/ethz-asl/wavemap/releases).
 
 ### Table of contents
 * [Installation](https://ethz-asl.github.io/wavemap/pages/installation)
