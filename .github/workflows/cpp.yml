@@ -7,7 +7,10 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v4
@@ -20,7 +23,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-release
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|${{ matrix.os }}-gcc-release
           create-symlink: true
 
       - name: Configure CMake
@@ -37,7 +40,10 @@ jobs:
   test:
     name: Test
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
     steps:
       - name: Fetch the package's repository
         uses: actions/checkout@v4
@@ -50,7 +56,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ secrets.CCACHE_CACHE_VERSION }}|ubuntu-20.04-gcc-release
+          key: ${{ secrets.CCACHE_CACHE_VERSION }}|${{ matrix.os }}-gcc-release
           create-symlink: true
 
       - name: Setup GTest
