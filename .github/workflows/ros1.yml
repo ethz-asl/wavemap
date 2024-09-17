@@ -9,6 +9,7 @@ on:
     branches: [ main ]
 
 env:
+  REPOSITORY_NAME: wavemap
   DOCKER_REGISTRY: ghcr.io
   DOCKER_CI_IMAGE_NAME: ci_wavemap_ros1
   DOCKER_RELEASE_IMAGE_NAME: wavemap_ros1
@@ -33,7 +34,7 @@ jobs:
       - name: Fetch the package's repository
         uses: actions/checkout@v4
         with:
-          path: ${{ github.repository }}
+          path: ${{ env.REPOSITORY_NAME }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,11 +52,11 @@ jobs:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
-          context: ${{ github.repository }}
-          file: ${{ github.repository }}/tooling/docker/ros1/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: workspace
           build-args: |
-            REPOSITORY_NAME=${{ github.repository }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
@@ -73,11 +74,11 @@ jobs:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
-          context: ${{ github.repository }}
-          file: ${{ github.repository }}/tooling/docker/ros1/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: workspace
           build-args: |
-            REPOSITORY_NAME=${{ github.repository }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
@@ -90,7 +91,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+          images: ${{ env.DOCKER_REGISTRY }}/ethz-asl/${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
       - name: Publish the release image
         if: startsWith(github.event.ref, 'refs/tags/v')
@@ -99,11 +100,11 @@ jobs:
           DOCKER_BUILD_SUMMARY: false
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
-          context: ${{ github.repository }}
-          file: ${{ github.repository }}/tooling/docker/ros1/full.Dockerfile
+          context: ${{ env.REPOSITORY_NAME }}
+          file: ${{ env.REPOSITORY_NAME }}/tooling/docker/ros1/full.Dockerfile
           target: workspace
           build-args: |
-            REPOSITORY_NAME=${{ github.repository }}
+            REPOSITORY_NAME=${{ env.REPOSITORY_NAME }}
             USER_HOME=${{ env.USER_HOME }}
             CATKIN_WS_PATH=${{ env.CATKIN_WS_PATH }}
             CCACHE_DIR=${{ env.CCACHE_DIR }}
