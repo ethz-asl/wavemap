@@ -95,7 +95,7 @@ jobs:
 
   publish-docs:
     name: Publish to GH Pages
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.event.ref, 'refs/tags/v')
     needs: build-docs
     runs-on: ubuntu-20.04
     permissions:
