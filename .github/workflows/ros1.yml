@@ -1,7 +1,9 @@
 name: ROS1 Interface
 
 on:
-  pull_request:
+  push:
+    tags:
+      - "v*.*.*"
     branches: [ main ]
 
 env:
