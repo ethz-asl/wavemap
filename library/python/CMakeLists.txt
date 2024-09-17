@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(pywavemap VERSION 2.0.1 LANGUAGES CXX)
+project(pywavemap VERSION 2.1.0 LANGUAGES CXX)
 
 # Warn if the user invokes CMake directly
 if (NOT SKBUILD AND NOT $ENV{CLION_IDE})

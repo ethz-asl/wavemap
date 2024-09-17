@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2024-09-16)
+------------------
+
 2.0.1 (2024-08-30)
 ------------------
 * Fix outdated Livox callback code

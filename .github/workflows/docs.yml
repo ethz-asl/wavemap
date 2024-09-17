@@ -73,7 +73,7 @@ jobs:
   draft-release:
     name: Draft Release
     if: startsWith(github.event.ref, 'refs/tags/v')
-    needs: [ build-docs ]
+    needs: build-docs
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
@@ -92,7 +92,7 @@ jobs:
   publish-docs:
     name: Publish to GH Pages
     if: github.ref == 'refs/heads/main'
-    needs: [ build-docs ]
+    needs: build-docs
     runs-on: ubuntu-20.04
     permissions:
       contents: read
