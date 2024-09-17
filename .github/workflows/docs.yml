@@ -56,11 +56,11 @@ jobs:
             .
 
       - name: Upload tarball as GH Pages artifact
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4
         with:
           name: github-pages
           path: ${{github.workspace}}/docs/artifact.tar
-          retention-days: 1
+          retention-days: 3
 
       - name: Build documentation PDF
         working-directory: ${{github.workspace}}/docs
@@ -68,7 +68,7 @@ jobs:
         run: sphinx-build -M latexpdf . _build/latex
 
       - name: Upload PDF
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4
         with:
           name: documentation-pdf
           path: ${{github.workspace}}/docs/_build/latex/latex/wavemap.pdf
@@ -110,8 +110,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Deploy uploaded docs to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4
