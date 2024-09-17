@@ -22,6 +22,13 @@ void HashedChunkedWaveletOctreeBlock::prune() {
   }
 }
 
+void HashedChunkedWaveletOctreeBlock::clear() {
+  ProfilerZoneScoped;
+  root_scale_coefficient_ = Coefficients::Scale{};
+  chunked_ndtree_.clear();
+  setLastUpdatedStamp();
+}
+
 void HashedChunkedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
                                                    FloatingPoint new_value) {
   setNeedsPruning();

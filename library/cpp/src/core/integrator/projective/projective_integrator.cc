@@ -1,5 +1,6 @@
 #include "wavemap/core/integrator/projective/projective_integrator.h"
 
+#include <wavemap/core/utils/data/eigen_checks.h>
 #include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {
@@ -32,6 +33,15 @@ void ProjectiveIntegrator::integrate(const PosedPointcloud<>& pointcloud) {
 
 void ProjectiveIntegrator::integrate(const PosedImage<>& range_image) {
   ProfilerZoneScoped;
+  CHECK_NOTNULL(projection_model_);
+  if (range_image.getDimensions() != projection_model_->getDimensions()) {
+    LOG(WARNING) << "Dimensions of range image"
+                 << print::eigen::oneLine(range_image.getDimensions())
+                 << " do not match projection model"
+                 << print::eigen::oneLine(projection_model_->getDimensions())
+                 << ". Ignoring integration request.";
+    return;
+  }
   if (!isPoseValid(range_image.getPose())) {
     return;
   }
@@ -81,6 +91,9 @@ void ProjectiveIntegrator::importPointcloud(
 void ProjectiveIntegrator::importRangeImage(
     const PosedImage<>& range_image_input) {
   ProfilerZoneScoped;
+  CHECK_NOTNULL(posed_range_image_);
+  CHECK_EIGEN_EQ(range_image_input.getDimensions(),
+                 posed_range_image_->getDimensions());
   *posed_range_image_ = range_image_input;
   beam_offset_image_->resetToInitialValue();
 }

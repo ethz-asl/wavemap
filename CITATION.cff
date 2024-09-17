@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+preferred-citation:
+  title: "Efficient volumetric mapping of multi-scale environments using wavelet-based compression"
+  authors:
+    - family-names: Reijgwart
+      given-names: Victor
+    - family-names: Cadena
+      given-names: Cesar
+    - family-names: Siegwart
+      given-names: Roland
+    - family-names: Ott
+      given-names: Lionel
+  journal: "Robotics: Science and Systems"
+  year: "2023"
+  type: conference-paper
+  doi: "10.15607/RSS.2023.XIX.065"
+  url: https://www.roboticsproceedings.org/rss19/p065.pdf
+  codeurl: https://github.com/ethz-asl/wavemap

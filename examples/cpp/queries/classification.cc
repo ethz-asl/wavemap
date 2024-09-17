@@ -36,7 +36,7 @@ int main(int, char**) {
 
   // Once a threshold has been chosen, you can either classify in log space
   {
-    const bool is_occupied = kOccupancyThresholdLogOdds < occupancy_log_odds;
+    const bool is_occupied = kOccupancyThresholdLogOdds <= occupancy_log_odds;
     const bool is_free = occupancy_log_odds < kOccupancyThresholdLogOdds;
     examples::doSomething(is_occupied);
     examples::doSomething(is_free);
@@ -44,7 +44,7 @@ int main(int, char**) {
 
   // Or in probability space
   {
-    const bool is_occupied = kOccupancyThresholdProb < occupancy_probability;
+    const bool is_occupied = kOccupancyThresholdProb <= occupancy_probability;
     const bool is_free = occupancy_probability < kOccupancyThresholdProb;
     examples::doSomething(is_occupied);
     examples::doSomething(is_free);

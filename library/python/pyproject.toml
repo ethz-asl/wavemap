@@ -1,0 +1,38 @@
+[build-system]
+requires = ["scikit-build-core >=0.4.3", "nanobind >=1.3.2", "typing_extensions; python_version < '3.11'"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pywavemap"
+version = "2.1.0"
+description = "A fast, efficient and accurate multi-resolution, multi-sensor 3D occupancy mapping framework."
+readme = "../../README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Victor Reijgwart", email = "victorr@ethz.ch" },
+]
+classifiers = ["License :: BSD3"]
+
+[project.urls]
+Homepage = "https://github.com/ethz-asl/wavemap"
+
+[project.optional-dependencies]
+test = ["pytest", "numpy"]
+
+[tool.scikit-build]
+build-dir = "build/{wheel_tag}"
+minimum-version = "0.4"
+cmake.minimum-version = "3.18"
+wheel.py-api = "cp312"
+
+[tool.cibuildwheel]
+build-verbosity = 1
+archs = ["auto64"]
+skip = ["cp38-*", "pp38-*"]
+
+[tool.cibuildwheel.macos]
+environment = "MACOSX_DEPLOYMENT_TARGET=10.14"
+archs = ["auto64", "arm64"]
+
+[tool.pytest.ini_options]
+testpaths = ['test']

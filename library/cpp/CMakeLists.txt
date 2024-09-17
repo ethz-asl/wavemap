@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-project(wavemap VERSION 2.0.1 LANGUAGES CXX)
+project(wavemap VERSION 2.1.0 LANGUAGES CXX)
 
 # General options
 cmake_policy(SET CMP0077 NEW)
 cmake_policy(SET CMP0079 NEW)
 option(GENERATE_WAVEMAP_INSTALL_RULES
     "Whether to generate install rules for the wavemap library" ON)
+option(BUILD_SHARED_LIBS
+    "Whether to build wavemap as a shared library" ON)
 option(USE_SYSTEM_EIGEN "Use system pre-installed Eigen" ON)
 option(USE_SYSTEM_GLOG "Use system pre-installed glog" ON)
 option(USE_SYSTEM_BOOST "Use system pre-installed Boost" ON)
@@ -13,7 +15,9 @@ option(USE_SYSTEM_BOOST "Use system pre-installed Boost" ON)
 # CMake helpers and general wavemap tooling (e.g. to run clang-tidy CI)
 include(GNUInstallDirs)
 include(cmake/wavemap-extras.cmake)
-enable_wavemap_general_tooling()
+
+# Export compilation database for compatibility with clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
 include(cmake/find-wavemap-deps.cmake)

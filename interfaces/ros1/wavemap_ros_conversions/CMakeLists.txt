@@ -11,9 +11,6 @@ catkin_package(
     LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS roscpp eigen_conversions wavemap wavemap_msgs)
 
-# Enable general wavemap tooling (e.g. to run clang-tidy CI)
-enable_wavemap_general_tooling()
-
 # Libraries
 add_library(${PROJECT_NAME}
     src/config_conversions.cc

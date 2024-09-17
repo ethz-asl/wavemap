@@ -1,0 +1,39 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pre-commit:
+    name: Pre-commit
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install pre-commit's dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -q -y --no-install-recommends git python3-pip clang-format-11 cppcheck libxml2-utils wget
+          pip3 install pre-commit cpplint
+          sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64
+          sudo chmod +x /bin/hadolint
+
+      - name: Fetch the package's repository
+        uses: actions/checkout@v4
+        # NOTE: This has to be done after installing pre-commit, s.t. the
+        #       pre-commit hooks are automatically initialized.
+
+      - name: Get python version for pre-commit cache
+        run: echo "PRE_COMMIT_PYTHON_VERSION=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Setup pre-commit cache sharing
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ env.PRE_COMMIT_PYTHON_VERSION }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run the pre-commit hooks
+        shell: bash
+        run: |
+          echo "::add-matcher::./.github/problem-matchers/pre-commit.json"
+          PRE_COMMIT_HOME=~/.cache/pre-commit SKIP=no-commit-to-branch pre-commit run --all-files
+          echo "::remove-matcher owner=problem-matcher-pre-commit::"

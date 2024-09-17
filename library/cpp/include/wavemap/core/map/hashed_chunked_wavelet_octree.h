@@ -76,6 +76,9 @@ class HashedChunkedWaveletOctree : public MapBase {
       const HashedChunkedWaveletOctreeConfig& config)
       : MapBase(config), config_(config.checkValid()) {}
 
+  // Copy construction is not supported
+  HashedChunkedWaveletOctree(const HashedChunkedWaveletOctree&) = delete;
+
   bool empty() const override { return block_map_.empty(); }
   size_t size() const override;
   void threshold() override;

@@ -6,5 +6,5 @@ int main(int, char**) {
   wavemap::HashedWaveletOctree map(config);
 
   // Save the map
-  wavemap::io::mapToFile(map, "/some/path/to/your/map.wvmp");
+  const bool success = wavemap::io::mapToFile(map, "/path/to/your/map.wvmp");
 }

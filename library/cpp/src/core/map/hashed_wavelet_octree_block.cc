@@ -25,7 +25,7 @@ void HashedWaveletOctreeBlock::clear() {
   ProfilerZoneScoped;
   root_scale_coefficient_ = Coefficients::Scale{};
   ndtree_.clear();
-  last_updated_stamp_ = Time::now();
+  setLastUpdatedStamp();
 }
 
 void HashedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,

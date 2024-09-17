@@ -2,6 +2,7 @@
 #define WAVEMAP_CORE_DATA_STRUCTURE_POINTCLOUD_H_
 
 #include <limits>
+#include <memory>
 #include <utility>
 
 #include "wavemap/core/common.h"
@@ -13,12 +14,13 @@ template <typename PointT = Point3D>
 class Pointcloud {
  public:
   static constexpr int kDim = dim_v<PointT>;
+  using Ptr = std::shared_ptr<Pointcloud<PointT>>;
+  using ConstPtr = std::shared_ptr<const Pointcloud<PointT>>;
   using PointType = PointT;
-  using PointcloudData = Eigen::Matrix<FloatingPoint, kDim, Eigen::Dynamic>;
+  using Data = Eigen::Matrix<FloatingPoint, kDim, Eigen::Dynamic>;
 
   Pointcloud() = default;
-  explicit Pointcloud(PointcloudData pointcloud)
-      : data_(std::move(pointcloud)) {}
+  explicit Pointcloud(Data pointcloud) : data_(std::move(pointcloud)) {}
 
   template <typename PointContainer>
   explicit Pointcloud(const PointContainer& point_container) {
@@ -37,16 +39,15 @@ class Pointcloud {
   }
   void clear() { data_.resize(kDim, 0); }
 
-  typename PointcloudData::ColXpr operator[](Eigen::Index point_index) {
+  typename Data::ColXpr operator[](Eigen::Index point_index) {
     return data_.col(point_index);
   }
-  typename PointcloudData::ConstColXpr operator[](
-      Eigen::Index point_index) const {
+  typename Data::ConstColXpr operator[](Eigen::Index point_index) const {
     return data_.col(point_index);
   }
 
-  PointcloudData& data() { return data_; }
-  const PointcloudData& data() const { return data_; }
+  Data& data() { return data_; }
+  const Data& data() const { return data_; }
 
   using iterator = PointcloudIterator<Pointcloud, kDim>;
   using const_iterator = PointcloudIterator<const Pointcloud, kDim>;
@@ -58,7 +59,7 @@ class Pointcloud {
   const_iterator cend() const { return const_iterator(*this, data_.cols()); }
 
  private:
-  PointcloudData data_;
+  Data data_;
 };
 
 template <typename PointT = Point3D>

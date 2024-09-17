@@ -16,7 +16,9 @@ class QueryAccelerator {};
 
 // Template deduction guide
 template <typename T>
-QueryAccelerator(T type) -> QueryAccelerator<T>;
+QueryAccelerator(T& type) -> QueryAccelerator<T>;
+template <typename T>
+QueryAccelerator(const T& type) -> QueryAccelerator<T>;
 
 // Query accelerator for vanilla spatial hashes
 template <typename BlockDataT, int dim>
@@ -104,7 +106,16 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
   std::array<NodeType*, morton::kMaxTreeHeight<dim>> node_stack{};
 };
 
-// Query accelerator for hashed wavelet octrees
+/**
+ * A class that accelerates queries by caching block and parent node addresses
+ * to speed up data structure traversals, and intermediate wavelet decompression
+ * results to reduce redundant computation.
+ * @note This class is safe to use in a multi-threaded environment. However,
+ *       concurrent calls to a single instance from multiple threads are not.
+ *       Since the accelerator is lightweight and cheap to construct, we
+ *       recommend using a separate instance per thread for the best performance
+ *       and simplicity.
+ */
 template <>
 class QueryAccelerator<HashedWaveletOctree> {
  public:
@@ -112,13 +123,23 @@ class QueryAccelerator<HashedWaveletOctree> {
 
   explicit QueryAccelerator(const HashedWaveletOctree& map) : map_(map) {}
 
+  //! Reset the cache
+  //! @note This method must be called whenever the map changes, not only to
+  //!       guarantee correct values (after node value changes) but also to
+  //!       avoid segmentation fault after map topology changes (e.g. after
+  //!       pruning).
   void reset();
 
+  //! Query the value of the map at a given index
   FloatingPoint getCellValue(const Index3D& index) {
     return getCellValue(OctreeIndex{0, index});
   }
 
+  //! Query the value of the map at a given octree node index
   FloatingPoint getCellValue(const OctreeIndex& index);
+
+  //! Convenience function to get the map's minimum cell width
+  FloatingPoint getMinCellWidth() const { return map_.getMinCellWidth(); }
 
  private:
   using BlockIndex = HashedWaveletOctree::BlockIndex;

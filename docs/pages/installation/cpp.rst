@@ -1,5 +1,5 @@
-C++ Library (CMake)
-###################
+C++ (CMake)
+###########
 .. highlight:: bash
 .. rstcheck: ignore-directives=tab-set-code
 .. rstcheck: ignore-roles=gh_file
@@ -8,9 +8,15 @@ Wavemap's C++ library can be used as standard CMake package. In the following se
 
 Note that if you intend to use wavemap with ROS1, you can skip this guide and proceed directly to the :doc:`ROS1 installation page <ros1>`.
 
+Prerequisites
+*************
 Before you start, make sure you have the necessary tools installed to build C++ projects with CMake. On Ubuntu, we recommend installing::
 
     sudo apt install cmake build-essential git
+
+.. note::
+
+      If you are working in Docker, these dependencies are only required inside your container. Not on your host machine.
 
 FetchContent
 ************
@@ -18,14 +24,14 @@ The fastest way to include wavemap in an existing CMake project is to use FetchC
 
 .. code-block:: cmake
 
-  set(WAVEMAP_TAG develop/v2.0)
+  set(WAVEMAP_VERSION main)  # Select a git branch, tag or commit
 
   cmake_minimum_required(VERSION 3.18)
-  message(STATUS "Fetching wavemap ${WAVEMAP_TAG} from GitHub")
+  message(STATUS "Loading wavemap from GitHub (ref ${WAVEMAP_VERSION})")
   include(FetchContent)
   FetchContent_Declare(wavemap
       GIT_REPOSITORY https://github.com/ethz-asl/wavemap.git
-      GIT_TAG ${WAVEMAP_TAG}
+      GIT_TAG ${WAVEMAP_VERSION}
       GIT_SHALLOW 1
       SOURCE_SUBDIR library/cpp)
   FetchContent_MakeAvailable(wavemap)
@@ -81,7 +87,7 @@ To build wavemap's C++ Docker image, simply run:
 
       docker build --tag=wavemap_cpp --pull - <<< $(curl -s https://raw.githubusercontent.com/ethz-asl/wavemap/main/tooling/docker/cpp/debian.Dockerfile)
 
-This will create a local image on your machine containing the latest version of wavemap's C++ library. You can give the local image a different name by modifying the ``--tag=wavemap_cpp`` argument. By default, the image will be built using the latest code on wavemap's ``main`` branch. To specify a specific release or branch, such as `develop/v2.0`, add the ``--build-arg="WAVEMAP_TAG=develop/v2.0"`` argument.
+This will create a local image on your machine containing the latest version of wavemap's C++ library. You can give the local image a different name by modifying the ``--tag=wavemap_cpp`` argument. By default, the image will be built using the latest code on wavemap's ``main`` branch. To specify a specific branch, commit or release, such as `v2.1.0`, add the ``--build-arg="WAVEMAP_VERSION=v2.1.0"`` argument.
 
 Native install
 **************

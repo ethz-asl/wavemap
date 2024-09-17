@@ -12,6 +12,3 @@ Wavemap documentation
    pages/parameters/index
    pages/contributing
    pages/faq
-
-..
-   _TODO: Include the Library API again once more code is documented in Doxygen

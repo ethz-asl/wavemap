@@ -2,6 +2,13 @@
 Changelog for package wavemap_examples_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2024-09-16)
+------------------
+* Extend and improve documentation and examples
+* Minor changes to the C++ API for better consistency with the Python API
+* Extend map interpolation utils
+* Contributors: Victor Reijgwart
+
 2.0.1 (2024-08-30)
 ------------------
 

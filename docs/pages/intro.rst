@@ -5,7 +5,7 @@ Hierarchical, multi-resolution volumetric mapping
 *************************************************
 Wavemap achieves state-of-the-art memory and computational efficiency by combining Haar wavelet compression and a coarse-to-fine measurement integration scheme. Advanced measurement models allow it to attain exceptionally high recall rates on challenging obstacles like thin objects.
 
-The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single map.
+The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single multi-resolution occupancy grid map.
 
 Paper
 *****
@@ -47,7 +47,7 @@ For other citation styles, you can use the `Crosscite's citation formatter <http
 
 .. note::
 
-    Note that the code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.
+    The code has significantly improved since the paper was written. Wavemap is now up to 10x faster, thanks to new multi-threaded measurement integrators, and uses up to 50% less RAM, by virtue of new memory efficient data structures inspired by `OpenVDB <https://github.com/AcademySoftwareFoundation/openvdb>`__.
 
 .. only:: html
 
@@ -64,12 +64,9 @@ For other citation styles, you can use the `Crosscite's citation formatter <http
      pages/faq
 
     .. toctree::
-     :caption: C++ API
+     :caption: APIs
      :maxdepth: 1
      :hidden:
 
-     cpp_api/class_view_hierarchy
      cpp_api/unabridged_api
-
-..
-   _TODO: Include cpp_api/file_view_hierarchy again once the directory structure is documented in Doxygen
+     python_api/index

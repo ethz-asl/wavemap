@@ -19,9 +19,8 @@ class PointcloudTest : public FixtureBase, public GeometryGenerator {
       EXPECT_EQ(point, pointcloud[point_idx++]);
     }
   }
-  static void compare(
-      const typename Pointcloud<PointT>::PointcloudData& point_matrix,
-      const Pointcloud<PointT>& pointcloud) {
+  static void compare(const typename Pointcloud<PointT>::Data& point_matrix,
+                      const Pointcloud<PointT>& pointcloud) {
     ASSERT_EQ(point_matrix.size() == 0, pointcloud.empty());
     ASSERT_EQ(point_matrix.cols(), pointcloud.size());
     for (Eigen::Index point_idx = 0; point_idx < point_matrix.cols();
@@ -39,12 +38,11 @@ class PointcloudTest : public FixtureBase, public GeometryGenerator {
     }
   }
 
-  typename Pointcloud<PointT>::PointcloudData getRandomPointMatrix() {
+  typename Pointcloud<PointT>::Data getRandomPointMatrix() {
     constexpr FloatingPoint kMaxCoordinate = 1e3;
     const Eigen::Index random_length = getRandomPointcloudSize();
-    typename Pointcloud<PointT>::PointcloudData random_point_matrix =
-        Pointcloud<PointT>::PointcloudData::Random(dim_v<PointT>,
-                                                   random_length);
+    typename Pointcloud<PointT>::Data random_point_matrix =
+        Pointcloud<PointT>::Data::Random(dim_v<PointT>, random_length);
     random_point_matrix *= kMaxCoordinate;
     return random_point_matrix;
   }
@@ -96,13 +94,13 @@ TYPED_TEST(PointcloudTest, InitializeFromStl) {
 }
 
 TYPED_TEST(PointcloudTest, InitializeFromEigen) {
-  typename Pointcloud<TypeParam>::PointcloudData empty_point_matrix;
+  typename Pointcloud<TypeParam>::Data empty_point_matrix;
   Pointcloud<TypeParam> empty_pointcloud(empty_point_matrix);
   EXPECT_TRUE(empty_pointcloud.empty());
 
   constexpr int kNumRepetitions = 100;
   for (int i = 0; i < kNumRepetitions; ++i) {
-    typename Pointcloud<TypeParam>::PointcloudData random_point_matrix =
+    typename Pointcloud<TypeParam>::Data random_point_matrix =
         TestFixture::getRandomPointMatrix();
     Pointcloud<TypeParam> random_pointcloud(random_point_matrix);
     TestFixture::compare(random_point_matrix, random_pointcloud);

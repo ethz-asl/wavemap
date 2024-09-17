@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(wavemap_examples_cpp VERSION 2.0.1 LANGUAGES CXX)
+project(wavemap_examples_cpp VERSION 2.1.0 LANGUAGES CXX)
 
 # Load the wavemap library
 # First, try to load it from sources
@@ -15,14 +15,15 @@ else ()
   if (wavemap_FOUND)
     message(STATUS "Loading wavemap library installed on system")
   else () # Otherwise, fetch wavemap's code from GitHub
-    set(WAVEMAP_TAG develop/v2.0)
-    message(STATUS "Loading wavemap library from GitHub (tag ${WAVEMAP_TAG})")
+    set(WAVEMAP_VERSION main)  # Select a git branch, tag or commit
+    message(STATUS
+        "Loading wavemap library from GitHub (ref ${WAVEMAP_VERSION})")
     cmake_minimum_required(VERSION 3.18)
     include(FetchContent)
     FetchContent_Declare(
         ext_wavemap PREFIX wavemap
         GIT_REPOSITORY https://github.com/ethz-asl/wavemap.git
-        GIT_TAG ${WAVEMAP_TAG}
+        GIT_TAG ${WAVEMAP_VERSION}
         GIT_SHALLOW 1
         SOURCE_SUBDIR library/cpp)
     FetchContent_MakeAvailable(ext_wavemap)

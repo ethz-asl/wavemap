@@ -9,14 +9,13 @@ namespace wavemap {
 template <typename PointcloudType, int point_dimensions>
 class PointcloudIterator {
  public:
-  using PointcloudData =
-      Eigen::Matrix<FloatingPoint, point_dimensions, Eigen::Dynamic>;
+  using Data = Eigen::Matrix<FloatingPoint, point_dimensions, Eigen::Dynamic>;
   using difference_type = std::ptrdiff_t;
   using value_type = Point<point_dimensions>;
   using pointer = void;
-  using reference = std::conditional_t<std::is_const_v<PointcloudType>,
-                                       typename PointcloudData::ConstColXpr,
-                                       typename PointcloudData::ColXpr>;
+  using reference =
+      std::conditional_t<std::is_const_v<PointcloudType>,
+                         typename Data::ConstColXpr, typename Data::ColXpr>;
   using iterator_category = std::forward_iterator_tag;
   // NOTE: This iterator does not expose pointers to its values (only
   //       references) since pointers wouldn't play nice with Eigen

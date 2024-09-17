@@ -1,31 +1,24 @@
 # Wavemap
-<div>
-<a href="https://github.com/ethz-asl/wavemap/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ci.yml?label=test&logo=githubactions&logoColor=white" alt="test"/></a>
-<a href="https://github.com/ethz-asl/wavemap/actions/workflows/cd.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/cd.yml?label=deploy&logo=githubactions&logoColor=white" alt="deploy"/></a>
-<a href="https://ethz-asl.github.io/wavemap/"><img src="https://img.shields.io/badge/docs-online-brightgreen?logo=sphinx" alt="docs"/></a>
-<a href="https://github.com/ethz-asl/wavemap/releases"><img src="https://img.shields.io/github/v/tag/ethz-asl/wavemap?label=release&logo=github" alt="release"/></a>
-<a href="https://github.com/ethz-asl/wavemap/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD%203-blue?logo=bsd" alt="license"/></a>
-<a href="https://ethz-asl.github.io/wavemap/pages/contributing.html"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen" alt="contributions welcome"/></a>
-</div>
-<div>
-<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/Intel-0071C5?logo=intel" alt="Intel"/></a>
-<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/AMD-ED1C24?logo=amd" alt="AMD"/></a>
-<a href="https://ethz-asl.github.io/wavemap/pages/installation.html"><img src="https://img.shields.io/badge/Arm-0091BD?logo=arm&logoColor=white" alt="Arm"/></a>
-<a href="https://github.com/ethz-asl/wavemap/pkgs/container/wavemap"><img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=black" alt="docker"/></a>
-</div>
-
+<a href="https://github.com/ethz-asl/wavemap/actions/workflows/cpp.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/cpp.yml?label=C%2b%2b&logo=C%2b%2b&logoColor=white" alt="C++"/></a>
+<a href="https://github.com/ethz-asl/wavemap/actions/workflows/python.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/python.yml?label=Python&logo=python&logoColor=white" alt="Python"/></a>
+<a href="https://github.com/ethz-asl/wavemap/actions/workflows/ros1.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ros1.yml?label=ROS1&logo=ros&logoColor=white" alt="ROS1"/></a>
+<a href="https://github.com/ethz-asl/wavemap/actions/workflows/docs.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/docs.yml?label=Docs&logo=sphinx&logoColor=white" alt="Docs"/></a>
+<a href="https://github.com/ethz-asl/wavemap/releases"><img src="https://img.shields.io/github/v/tag/ethz-asl/wavemap?label=Version&logo=semver" alt="Version"/></a>
+<a href="https://github.com/ethz-asl/wavemap/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-BSD%203-blue?logo=bsd" alt="License"/></a>
 [![3D reconstruction of Newer College's Cloister](https://github.com/ethz-asl/wavemap/assets/6238939/e432d4ea-440d-4e9d-adf9-af3ae3b09a10)](https://www.youtube.com/live/ftQhK75Ri1E?si=9txTYyJ78wQuhyN-&t=733)
 
 ## Hierarchical, multi-resolution volumetric mapping
-
 Wavemap achieves state-of-the-art memory and computational efficiency by combining Haar wavelet compression and a coarse-to-fine measurement integration scheme. Advanced measurement models allow it to attain exceptionally high recall rates on challenging obstacles like thin objects.
 
-The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single map.
+The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single multi-resolution occupancy grid map.
+
+Wavemap provides [C++](https://ethz-asl.github.io/wavemap/pages/tutorials/cpp) and [Python](https://ethz-asl.github.io/wavemap/pages/tutorials/python) APIs and an interface to [ROS1](https://ethz-asl.github.io/wavemap/pages/tutorials/ros1). The code is extensively tested on Intel, AMD and ARM CPUs on Ubuntu 20.04, 22.04 and 24.04. Example Docker files [are available](https://github.com/ethz-asl/wavemap/tree/main/tooling/docker) and documented in the [installation instructions](https://ethz-asl.github.io/wavemap/pages/installation/index). We [welcome contributions](https://ethz-asl.github.io/wavemap/pages/contributing).
 
 ⭐ If you find wavemap useful, star it on GitHub to get notified of new releases!
 
+
 ## Documentation
-The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.github.io/wavemap/).
+The framework's documentation is available on [GitHub Pages](https://ethz-asl.github.io/wavemap/) for easy online access. A PDF version of each release’s documentation can also be found in the respective [release notes](https://github.com/ethz-asl/wavemap/releases).
 
 ### Table of contents
 * [Installation](https://ethz-asl.github.io/wavemap/pages/installation)
@@ -33,7 +26,8 @@ The framework's documentation is hosted on [GitHub Pages](https://ethz-asl.githu
 * [Tutorials](https://ethz-asl.github.io/wavemap/pages/tutorials)
 * [Parameters](https://ethz-asl.github.io/wavemap/pages/parameters)
 * [Contributing](https://ethz-asl.github.io/wavemap/pages/contributing)
-* [Library API](https://ethz-asl.github.io/wavemap/cpp_api/unabridged_api)
+* [C++ API](https://ethz-asl.github.io/wavemap/cpp_api/unabridged_api)
+* [Python API](https://ethz-asl.github.io/wavemap/python_api)
 * [FAQ](https://ethz-asl.github.io/wavemap/pages/faq)
 
 ## Paper

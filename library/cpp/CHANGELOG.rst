@@ -2,6 +2,38 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2024-09-16)
+------------------
+* Improvements
+
+  * CMake
+
+    * Add CMake options to support embedding the C++ library in a Python pip pkg
+    * Improve auto-fetching of glog, switch to version with better CMake support
+
+  * C++
+
+    * Extend map interpolation utils
+    * Improve consistency between chunked and regular octree map interfaces
+    * Improve consistency between Pointcloud and Image data structures
+    * Add method to parse TypeSelector types directly from std::strings
+
+  * Documentation
+
+    * Improve C++ library installation instructions
+    * Improve and extend C++ library usage tutorial
+    * Add doxygen annotations for more C++ API classes and methods
+
+* Bug fixes
+
+  * Warn user and ignore range images of wrong dimensions to avoid segfaults
+  * Avoid out of bounds access bug in Haar coefficients print method
+  * Remove usage of deprecated STL types (avoid warnings from new GCC versions)
+  * Explicitly forbid shallow copying of wavemap maps to avoid nanobind errors
+  * Set glog logging level directly, not with gflags lib (might be unavailable)
+
+* Contributors: Victor Reijgwart
+
 2.0.1 (2024-08-30)
 ------------------
 

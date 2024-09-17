@@ -26,11 +26,27 @@ We usually use depth measurements from depth cameras or 3D LiDARs, but any sourc
 
 To help you get started quickly, we provide example :gh_file:`config <interfaces/ros1/wavemap_ros/config>` and ROS :gh_file:`launch <interfaces/ros1/wavemap_ros/launch>` files for various sensor setups and use cases. An overview of all the available settings is provided on the :doc:`parameters page <../parameters/index>`.
 
+Publishing maps
+===============
+Wavemap's ROS server offers multiple ways to publish its maps to ROS topics, enabling visualization and usage by other ROS nodes. Please refer to the documentation on :ref:`ROS1 map operations <configuration_map_operations_ros1>` for an overview of the available options.
+
+Saving maps
+===========
+The server's map can also be written to disk by calling its ``save_map`` service as follows:
+
+.. code-block:: bash
+
+    rosservice call /wavemap/save_map "file_path: '/path/to/your/map.wvmp'"
+
+Saved maps can subsequently be used :ref:`in C++ <cpp-code-examples-read-map>` (with or without ROS) and :ref:`in Python <python-code-examples-read-map>`.
+
 Your own code
 *************
 We now briefly discuss how to set up your own ROS1 package to use wavemap, before proceeding to code examples.
 
-Note that a working example package that combines this tutorial's setup steps and code examples can be found :gh_file:`here <examples/ros1>`.
+.. tip::
+
+    An example package that combines the setup steps and code examples that follow can be found :gh_file:`here <examples/ros1>`.
 
 Build configuration
 ===================
@@ -86,12 +102,12 @@ Code examples
 =============
 Since wavemap's ROS1 interface extends its C++ API, all of the :ref:`C++ API's code examples <cpp-code-examples>` can directly be used in ROS.
 
-The only code required to receive maps over a ROS topic in your own ROS node is:
+Additionally, the following code can be used to receive maps over a ROS topic
 
 .. literalinclude:: ../../../examples/ros1/io/receive_map_over_ros.cc
     :language: c++
 
-To send a map, the following code can be used:
+and maps can be sent over ROS with
 
 .. literalinclude:: ../../../examples/ros1/io/send_map_over_ros.cc
     :language: c++

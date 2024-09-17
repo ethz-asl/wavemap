@@ -1,12 +1,9 @@
 FAQ
 ###
+For a comprehensive list of frequently asked questions, please visit the `FAQ section <https://github.com/ethz-asl/wavemap/discussions/categories/faq>`_ of our GitHub Discussions.
 
-If you have a question that is not yet answered below, feel free to open a `GitHub Issue <https://github.com/ethz-asl/wavemap/issues>`_ or contact us over email.
+Many practical questions may also be covered in our :doc:`Installation <installation/index>` and :doc:`Usage <tutorials/index>` tutorials, which include a variety of code examples.
 
-How do I query if a point in the map is occupied?
-=================================================
-Please see the :doc:`usage examples <tutorials/cpp>` on :ref:`interpolation <cpp-code-examples-interpolation>` and :ref:`classification <cpp-code-examples-classification>`.
+For a theoretical introduction to the concepts behind wavemap, you can explore our open-access RSS paper, available for download `here <https://www.roboticsproceedings.org/rss19/p065.pdf>`_, and summarized in `this 5-minute presentation <https://www.youtube.com/watch?v=ftQhK75Ri1E&t=733s>`_.
 
-Does wavemap support (Euclidean) Signed Distance Fields?
-========================================================
-Not yet, but we will add this feature in the near future.
+If your question remains unanswered, don't hesitate to ask in the `Q&A section <https://github.com/ethz-asl/wavemap/discussions/categories/q-a>`_ of our GitHub Discussions. We’d be happy to assist with any remaining theoretical or code-related questions, and help you optimize wavemap for your sensor setup.

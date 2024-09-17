@@ -21,7 +21,15 @@ struct NdtreeIndex {
   static constexpr RelativeChild kNumChildren = int_math::exp2(dim);
   using ChildArray = std::array<NdtreeIndex, kNumChildren>;
 
+  //! The node's resolution level in the octree
+  //! @note A height of 0 corresponds to the map’s maximum resolution. In a
+  //!       fully allocated tree, all leaf nodes are at height 0. Increasing
+  //!       the height by 1 doubles the node size along each dimension. The
+  //!       root node corresponds to the map's lowest resolution, and the root
+  //!       node's height matches the configured tree height.
   Element height = 0;
+  //! The node's XYZ position in the octree’s grid at the resolution level set
+  //! by *height*
   Position position = Position::Zero();
 
   bool operator==(const NdtreeIndex& other) const {
@@ -31,9 +39,12 @@ struct NdtreeIndex {
     return !(*this == other);  // NOLINT
   }
 
+  //! Compute the index of the node's direct parent
   NdtreeIndex computeParentIndex() const;
+  //! Compute the index of the node's parent (or ancestor) at *parent_height*
   NdtreeIndex computeParentIndex(Element parent_height) const;
 
+  //! Compute the index of the node's n-th child
   NdtreeIndex computeChildIndex(RelativeChild relative_child_index) const;
   ChildArray computeChildIndices() const;
 

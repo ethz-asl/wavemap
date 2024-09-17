@@ -5,5 +5,6 @@ int main(int, char**) {
   wavemap::MapBase::Ptr loaded_map;
 
   // Load the map
-  wavemap::io::fileToMap("/some/path/to/your/map.wvmp", loaded_map);
+  const bool success =
+      wavemap::io::fileToMap("/path/to/your/map.wvmp", loaded_map);
 }

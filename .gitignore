@@ -34,9 +34,11 @@ CMakeLists.txt.user
 
 srv/_*.py
 *.pcd
-*.pyc
 qtcreator-*
 *.user
+
+# Python
+*.pyc
 
 /planning/cfg
 /planning/docs

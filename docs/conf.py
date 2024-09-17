@@ -19,8 +19,8 @@ version = release
 # General configuration
 extensions = [
     'sphinx.ext.mathjax', "sphinx.ext.extlinks", 'sphinx.ext.githubpages',
-    'sphinx_design', 'sphinx_sitemap', 'notfound.extension', 'breathe',
-    'exhale'
+    'sphinx.ext.autodoc', 'sphinx_design', 'sphinx_sitemap',
+    'notfound.extension', 'breathe', 'exhale'
 ]
 templates_path = ['_templates']
 source_suffix = ['.rst', '.md']
@@ -53,7 +53,7 @@ html_context = {
     "mode": "production",
 }
 html_static_path = ["_static"]
-html_css_files = []
+html_css_files = ["custom.css"]
 html_js_files = []
 
 # Theme specific options
@@ -115,6 +115,7 @@ exhale_args = {
     "doxygenStripFromPath": "..",
     # Heavily encouraged optional argument (see docs)
     # "rootFileTitle": "API",
+    "fullApiSubSectionTitle": "C++ API",
     # Suggested optional arguments
     "createTreeView": False,
     # TIP: if using the sphinx-bootstrap-theme, you need
