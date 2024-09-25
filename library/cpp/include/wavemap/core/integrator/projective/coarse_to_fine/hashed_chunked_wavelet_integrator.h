@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+#include "wavemap/core/data_structure/chunked_ndtree/chunked_ndtree_node_address.h"
 #include "wavemap/core/integrator/projective/coarse_to_fine/range_image_intersector.h"
 #include "wavemap/core/integrator/projective/projective_integrator.h"
 #include "wavemap/core/map/hashed_chunked_wavelet_octree.h"
@@ -31,6 +32,7 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
 
  private:
   using BlockList = std::vector<HashedChunkedWaveletOctree::BlockIndex>;
+  using OctreeType = HashedChunkedWaveletOctreeBlock::ChunkedOctreeType;
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
   std::shared_ptr<ThreadPool> thread_pool_;
@@ -48,7 +50,6 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   const FloatingPoint min_log_odds_shrunk_ = min_log_odds_ + kNoiseThreshold;
   const FloatingPoint max_log_odds_padded_ = max_log_odds_ + kNoiseThreshold;
   const IndexElement tree_height_ = occupancy_map_->getTreeHeight();
-  const IndexElement chunk_height_ = occupancy_map_->getChunkHeight();
   const IndexElement termination_height_ =
       min_cell_width_ < config_.max_update_resolution
           ? static_cast<IndexElement>(std::round(
@@ -64,18 +65,14 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   void updateBlock(HashedChunkedWaveletOctree::Block& block,
                    const HashedChunkedWaveletOctree::BlockIndex& block_index);
 
-  void updateNodeRecursive(
-      HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType&
-          parent_chunk,
-      const OctreeIndex& parent_node_index, LinearIndex parent_in_chunk_index,
-      FloatingPoint& parent_value,
-      HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType::BitRef
-          parent_has_child,
-      bool& block_needs_thresholding);
-  void updateLeavesBatch(
-      const OctreeIndex& parent_index, FloatingPoint& parent_value,
-      HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType::DataType&
-          parent_details);
+  void updateNodeRecursive(OctreeType::NodeRefType parent_node_ref,
+                           const OctreeIndex& parent_node_index,
+                           FloatingPoint& parent_value,
+                           OctreeType::ChunkType::BitRef parent_has_child,
+                           bool& block_needs_thresholding);
+  void updateLeavesBatch(const OctreeIndex& parent_index,
+                         FloatingPoint& parent_value,
+                         OctreeType::NodeDataType& parent_details);
 };
 }  // namespace wavemap
 
