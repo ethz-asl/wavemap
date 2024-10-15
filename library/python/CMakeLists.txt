@@ -79,6 +79,7 @@ install(TARGETS _pywavemap_bindings LIBRARY DESTINATION pywavemap)
 nanobind_add_stub(pywavemap_stub INSTALL_TIME
     MODULE _pywavemap_bindings
     OUTPUT "pywavemap/__init__.pyi"
+    MARKER_FILE "pywavemap/py.typed"
     PYTHON_PATH "pywavemap")
 nanobind_add_stub(pywavemap_convert_stub INSTALL_TIME
     MODULE _pywavemap_bindings.convert
