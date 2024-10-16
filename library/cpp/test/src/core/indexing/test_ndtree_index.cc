@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <bitset>
 #include <queue>
+#include <vector>
 
 #include <gtest/gtest.h>
 

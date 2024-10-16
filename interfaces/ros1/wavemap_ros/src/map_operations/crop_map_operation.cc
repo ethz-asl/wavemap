@@ -1,5 +1,9 @@
 #include "wavemap_ros/map_operations/crop_map_operation.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include <wavemap/core/map/hashed_blocks.h>
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>

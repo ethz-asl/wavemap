@@ -1,5 +1,9 @@
 #include "wavemap_ros/inputs/ros_input_base.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(RosInputBaseConfig,
                       (topic_name)

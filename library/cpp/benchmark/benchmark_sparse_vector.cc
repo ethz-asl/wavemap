@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <benchmark/benchmark.h>
 
 #include "wavemap/core/common.h"

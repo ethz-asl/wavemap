@@ -1,5 +1,7 @@
 #include "wavemap_ros/utils/rosbag_processor.h"
 
+#include <string>
+
 #include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {
