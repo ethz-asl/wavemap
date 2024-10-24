@@ -1,5 +1,8 @@
 #include "wavemap_rviz_plugin/utils/listeners.h"
 
+#include <memory>
+#include <utility>
+
 #include <glog/logging.h>
 
 namespace wavemap::rviz_plugin {

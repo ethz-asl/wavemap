@@ -1,5 +1,7 @@
 #include "wavemap/core/utils/undistortion/pointcloud_undistortion.h"
 
+#include <utility>
+
 namespace wavemap {
 PosedPointcloud<> undistortion::compensate_motion(
     const StampedPoseBuffer& pose_buffer,

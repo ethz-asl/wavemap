@@ -1,5 +1,8 @@
 #include "wavemap/core/map/hashed_wavelet_octree_block.h"
 
+#include <stack>
+#include <vector>
+
 #include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {

@@ -1,5 +1,9 @@
 #include "wavemap/pipeline/pipeline.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "wavemap/core/integrator/integrator_factory.h"
 
 namespace wavemap {
