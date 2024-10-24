@@ -1,5 +1,7 @@
 #include "pywavemap/maps.h"
 
+#include <memory>
+
 #include <nanobind/eigen/dense.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/shared_ptr.h>

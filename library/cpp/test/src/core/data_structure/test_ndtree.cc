@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 #include "wavemap/core/data_structure/chunked_ndtree/chunked_ndtree.h"

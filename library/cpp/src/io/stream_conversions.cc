@@ -1,5 +1,9 @@
 #include "wavemap/io/stream_conversions.h"
 
+#include <algorithm>
+#include <memory>
+#include <stack>
+
 namespace wavemap::io {
 bool mapToStream(const MapBase& map, std::ostream& ostream) {
   // Call the appropriate mapToStream converter based on the map's derived type

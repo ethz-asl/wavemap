@@ -1,5 +1,11 @@
 #include "wavemap_ros_conversions/map_msg_conversions.h"
 
+#include <algorithm>
+#include <memory>
+#include <stack>
+#include <string>
+#include <unordered_set>
+
 #include <ros/console.h>
 #include <wavemap/core/utils/profiler_interface.h>
 

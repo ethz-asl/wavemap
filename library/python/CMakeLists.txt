@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(pywavemap VERSION 2.1.0 LANGUAGES CXX)
+project(pywavemap VERSION 2.1.1 LANGUAGES CXX)
 
 # Warn if the user invokes CMake directly
 if (NOT SKBUILD AND NOT $ENV{CLION_IDE})
@@ -63,7 +63,8 @@ nanobind_add_module(_pywavemap_bindings STABLE_ABI
     src/maps.cc
     src/measurements.cc
     src/param.cc
-    src/pipeline.cc)
+    src/pipeline.cc
+    src/raycast.cc)
 set_wavemap_target_properties(_pywavemap_bindings)
 target_include_directories(_pywavemap_bindings PRIVATE include)
 target_link_libraries(_pywavemap_bindings PRIVATE
@@ -79,6 +80,7 @@ install(TARGETS _pywavemap_bindings LIBRARY DESTINATION pywavemap)
 nanobind_add_stub(pywavemap_stub INSTALL_TIME
     MODULE _pywavemap_bindings
     OUTPUT "pywavemap/__init__.pyi"
+    MARKER_FILE "pywavemap/py.typed"
     PYTHON_PATH "pywavemap")
 nanobind_add_stub(pywavemap_convert_stub INSTALL_TIME
     MODULE _pywavemap_bindings.convert

@@ -1,5 +1,7 @@
 #include "wavemap_ros/utils/pointcloud_undistorter.h"
 
+#include <string>
+
 #include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap/core/utils/undistortion/pointcloud_undistortion.h>
 #include <wavemap_ros_conversions/time_conversions.h>

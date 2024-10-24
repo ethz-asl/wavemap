@@ -1,5 +1,7 @@
 #include "wavemap/core/utils/query/query_accelerator.h"
 
+#include <limits>
+
 namespace wavemap {
 void QueryAccelerator<HashedWaveletOctree>::reset() {
   node_stack_ = std::array<const NodeType*, morton::kMaxTreeHeight<3>>{};

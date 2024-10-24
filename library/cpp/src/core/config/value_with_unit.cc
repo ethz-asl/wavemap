@@ -1,5 +1,9 @@
 #include "wavemap/core/config/value_with_unit.h"
 
+#include <map>
+#include <string>
+#include <utility>
+
 namespace wavemap::param {
 // clang-format off
 static const std::map<std::string, std::pair<FloatingPoint, SiUnit::Id>> UnitToSi{

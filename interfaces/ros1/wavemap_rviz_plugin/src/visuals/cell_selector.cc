@@ -1,5 +1,7 @@
 #include "wavemap_rviz_plugin/visuals/cell_selector.h"
 
+#include <utility>
+
 #include <wavemap/core/utils/neighbors/grid_neighborhood.h>
 
 namespace wavemap::rviz_plugin {

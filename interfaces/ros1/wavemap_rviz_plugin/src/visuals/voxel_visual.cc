@@ -1,5 +1,11 @@
 #include "wavemap_rviz_plugin/visuals/voxel_visual.h"
 
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include <rviz/properties/parse_color.h>
 #include <rviz/render_panel.h>
 #include <wavemap/core/indexing/index_conversions.h>

@@ -1,5 +1,7 @@
 #include "wavemap/core/integrator/projection_model/pinhole_camera_projector.h"
 
+#include <algorithm>
+
 namespace wavemap {
 PinholeCameraProjector::PinholeCameraProjector(
     const PinholeCameraProjector::Config& config)

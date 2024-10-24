@@ -1,5 +1,9 @@
 #include "wavemap/core/utils/undistortion/stamped_pointcloud.h"
 
+#include <algorithm>
+#include <string>
+#include <utility>
+
 namespace wavemap::undistortion {
 std::string StampedPoint::toStr() const {
   return "[" + std::to_string(position[0]) + ", " +

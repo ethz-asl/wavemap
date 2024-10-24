@@ -1,5 +1,8 @@
 #include "wavemap/pipeline/map_operations/map_operation_factory.h"
 
+#include <memory>
+#include <utility>
+
 #include "wavemap/pipeline/map_operations/prune_map_operation.h"
 #include "wavemap/pipeline/map_operations/threshold_map_operation.h"
 

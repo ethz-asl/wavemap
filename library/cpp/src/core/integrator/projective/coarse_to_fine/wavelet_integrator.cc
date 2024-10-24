@@ -1,5 +1,7 @@
 #include "wavemap/core/integrator/projective/coarse_to_fine/wavelet_integrator.h"
 
+#include <memory>
+
 namespace wavemap {
 void WaveletIntegrator::updateMap() {
   // Update the range image intersector

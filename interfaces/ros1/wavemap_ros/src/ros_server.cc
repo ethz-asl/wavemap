@@ -1,5 +1,8 @@
 #include "wavemap_ros/ros_server.h"
 
+#include <memory>
+#include <utility>
+
 #include <std_srvs/Trigger.h>
 #include <wavemap/core/map/map_factory.h>
 #include <wavemap/io/file_conversions.h>
