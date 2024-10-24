@@ -2,6 +2,11 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.1 (2024-10-24)
+------------------
+* Address warnings from new cpplint version (v2.0)
+* Contributors: Victor Reijgwart
+
 2.1.0 (2024-09-16)
 ------------------
 
