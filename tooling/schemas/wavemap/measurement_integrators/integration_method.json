@@ -71,7 +71,7 @@
   "required": [
     "type"
   ],
-  "oneOf": [
+  "anyOf": [
     {
       "$ref": "#/$defs/ray_tracing_integrator"
     },
