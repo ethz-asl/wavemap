@@ -2,6 +2,9 @@
 Changelog for package wavemap_examples_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.1 (2024-10-24)
+------------------
+
 2.1.0 (2024-09-16)
 ------------------
 * Extend and improve documentation and examples

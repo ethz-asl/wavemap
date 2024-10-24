@@ -1,5 +1,9 @@
 #include "wavemap_ros/inputs/ros_input_factory.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "wavemap_ros/inputs/depth_image_topic_input.h"
 #include "wavemap_ros/inputs/pointcloud_topic_input.h"
 

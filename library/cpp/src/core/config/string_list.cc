@@ -1,5 +1,7 @@
 #include "wavemap/core/config/string_list.h"
 
+#include <string>
+
 #include "wavemap/core/utils/print/container.h"
 
 namespace wavemap {

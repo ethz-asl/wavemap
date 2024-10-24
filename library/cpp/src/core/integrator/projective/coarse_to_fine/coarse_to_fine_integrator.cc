@@ -1,6 +1,8 @@
 #include "wavemap/core/integrator/projective/coarse_to_fine/coarse_to_fine_integrator.h"
 
+#include <memory>
 #include <stack>
+#include <utility>
 
 #include "wavemap/core/indexing/ndtree_index.h"
 

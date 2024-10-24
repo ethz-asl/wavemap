@@ -1,3 +1,7 @@
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <gtest/gtest.h>
 #include <wavemap/core/common.h>
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>

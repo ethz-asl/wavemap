@@ -1,5 +1,7 @@
 #include "wavemap_ros/utils/rosbag_processor.h"
 
+#include <string>
+
 #include <glog/logging.h>
 #include <rosgraph_msgs/Clock.h>
 #include <tf/tfMessage.h>
