@@ -1,5 +1,8 @@
 #include "wavemap/core/utils/thread_pool.h"
 
+#include <string>
+#include <utility>
+
 #include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {

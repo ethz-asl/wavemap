@@ -1,6 +1,9 @@
 #include "wavemap_rviz_plugin/visuals/cell_layer.h"
 
+#include <algorithm>
+#include <memory>
 #include <sstream>
+#include <vector>
 
 #include <OgreCamera.h>
 #include <OgreMaterialManager.h>

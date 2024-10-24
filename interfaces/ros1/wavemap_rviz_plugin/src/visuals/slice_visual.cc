@@ -1,5 +1,9 @@
 #include "wavemap_rviz_plugin/visuals/slice_visual.h"
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include <ros/console.h>
 #include <wavemap/core/indexing/index_conversions.h>
 

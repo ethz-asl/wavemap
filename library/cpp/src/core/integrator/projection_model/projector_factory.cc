@@ -1,5 +1,7 @@
 #include "wavemap/core/integrator/projection_model/projector_factory.h"
 
+#include <memory>
+
 #include "wavemap/core/integrator/projection_model/ouster_projector.h"
 #include "wavemap/core/integrator/projection_model/pinhole_camera_projector.h"
 #include "wavemap/core/integrator/projection_model/spherical_projector.h"

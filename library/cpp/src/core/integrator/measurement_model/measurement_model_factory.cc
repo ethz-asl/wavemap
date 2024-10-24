@@ -1,5 +1,8 @@
 #include "wavemap/core/integrator/measurement_model/measurement_model_factory.h"
 
+#include <memory>
+#include <utility>
+
 #include "wavemap/core/integrator/measurement_model/continuous_beam.h"
 #include "wavemap/core/integrator/measurement_model/continuous_ray.h"
 

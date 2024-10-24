@@ -1,5 +1,10 @@
 #include "wavemap/core/utils/query/classified_map.h"
 
+#include <limits>
+#include <stack>
+#include <utility>
+#include <vector>
+
 #include <wavemap/core/utils/profiler_interface.h>
 
 namespace wavemap {

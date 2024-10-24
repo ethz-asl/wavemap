@@ -1,5 +1,7 @@
 #include "wavemap_ros_conversions/config_conversions.h"
 
+#include <string>
+
 namespace wavemap::param::convert {
 param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {
   XmlRpc::XmlRpcValue xml_rpc_value;

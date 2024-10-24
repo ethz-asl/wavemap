@@ -1,5 +1,9 @@
 #include "wavemap_ros/map_operations/map_ros_operation_factory.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "wavemap_ros/map_operations/crop_map_operation.h"
 #include "wavemap_ros/map_operations/publish_map_operation.h"
 #include "wavemap_ros/map_operations/publish_pointcloud_operation.h"

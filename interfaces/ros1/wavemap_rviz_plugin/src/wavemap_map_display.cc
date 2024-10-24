@@ -1,5 +1,8 @@
 #include "wavemap_rviz_plugin/wavemap_map_display.h"
 
+#include <memory>
+#include <string>
+
 #include <OGRE/OgreSceneNode.h>
 #include <qfiledialog.h>
 #include <rviz/visualization_manager.h>

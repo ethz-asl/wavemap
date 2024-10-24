@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <gtest/gtest.h>
 #include <wavemap/core/common.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>

@@ -1,5 +1,9 @@
 #include "wavemap_ros/inputs/pointcloud_topic_input.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core/eigen.hpp>
 #include <sensor_msgs/PointCloud.h>

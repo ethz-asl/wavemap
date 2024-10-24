@@ -1,5 +1,7 @@
 #include "wavemap/core/map/wavelet_octree.h"
 
+#include <stack>
+
 #include "wavemap/core/utils/query/occupancy_classifier.h"
 
 namespace wavemap {

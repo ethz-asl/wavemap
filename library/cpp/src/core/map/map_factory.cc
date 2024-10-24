@@ -1,5 +1,7 @@
 #include "wavemap/core/map/map_factory.h"
 
+#include <memory>
+
 #include "wavemap/core/map/hashed_blocks.h"
 #include "wavemap/core/map/hashed_chunked_wavelet_octree.h"
 #include "wavemap/core/map/hashed_wavelet_octree.h"

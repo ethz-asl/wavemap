@@ -1,5 +1,7 @@
 #include "pywavemap/logging.h"
 
+#include <string>
+
 #include <glog/logging.h>
 #include <nanobind/stl/string.h>
 #include <wavemap/core/utils/logging_level.h>
