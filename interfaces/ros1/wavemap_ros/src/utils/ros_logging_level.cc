@@ -1,5 +1,7 @@
 #include "wavemap_ros/utils/ros_logging_level.h"
 
+#include <string>
+
 namespace wavemap {
 RosLoggingLevel::operator LoggingLevel() const {
   if (id_ == Id::kDebug) {

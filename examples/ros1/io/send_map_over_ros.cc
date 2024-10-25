@@ -1,3 +1,5 @@
+#include <string>
+
 #include <ros/ros.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 

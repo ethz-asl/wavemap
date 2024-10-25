@@ -1,4 +1,6 @@
 #include <bitset>
+#include <limits>
+#include <set>
 
 #include <gtest/gtest.h>
 

@@ -1,5 +1,8 @@
 #include "wavemap_ros/map_operations/publish_pointcloud_operation.h"
 
+#include <string>
+#include <utility>
+
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>

@@ -1,3 +1,9 @@
+#include <algorithm>
+#include <iostream>
+#include <list>
+#include <utility>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 #include "wavemap/core/common.h"

@@ -1,5 +1,7 @@
 #include "pywavemap/param.h"
 
+#include <string>
+
 namespace wavemap {
 namespace convert {
 param::Map toParamMap(const nb::handle& py_value) {  // NOLINT

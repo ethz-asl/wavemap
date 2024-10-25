@@ -1,5 +1,7 @@
 #include "wavemap/core/integrator/projection_model/spherical_projector.h"
 
+#include <algorithm>
+
 #include "wavemap/core/utils/math/angle_normalization.h"
 
 namespace wavemap {

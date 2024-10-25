@@ -1,5 +1,7 @@
 #include "wavemap/core/utils/sdf/quasi_euclidean_sdf_generator.h"
 
+#include <algorithm>
+
 #include <wavemap/core/utils/profiler_interface.h>
 
 #include "wavemap/core/utils/iterate/grid_iterator.h"

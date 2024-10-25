@@ -1,5 +1,9 @@
 #include "wavemap_ros/map_operations/publish_map_operation.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include <std_srvs/Empty.h>
 #include <wavemap/core/utils/profiler_interface.h>
 #include <wavemap_msgs/Map.h>
