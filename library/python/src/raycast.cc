@@ -16,11 +16,11 @@ using namespace nb::literals;  // NOLINT
 namespace wavemap {
 FloatingPoint raycast(const HashedWaveletOctree& map,
                       const Point3D& start_point, const Point3D& end_point,
-                      FloatingPoint threshold) {
+                      FloatingPoint log_odds_threshold) {
   const FloatingPoint mcw = map.getMinCellWidth();
   const Ray ray(start_point, end_point, mcw);
   for (const Index3D& ray_voxel_index : ray) {
-    if (map.getCellValue(ray_voxel_index) > threshold) {
+    if (log_odds_threshold < map.getCellValue(ray_voxel_index)) {
       const Point3D voxel_center =
           convert::indexToCenterPoint(ray_voxel_index, mcw);
       return (voxel_center - start_point).norm();
@@ -32,10 +32,11 @@ FloatingPoint raycast(const HashedWaveletOctree& map,
 FloatingPoint raycast_fast(
     QueryAccelerator<HashedWaveletOctree>& query_accelerator,
     const Point3D& start_point, const Point3D& end_point,
-    FloatingPoint threshold, FloatingPoint min_cell_width) {
+    FloatingPoint log_odds_threshold) {
+  const FloatingPoint min_cell_width = query_accelerator.getMinCellWidth();
   const Ray ray(start_point, end_point, min_cell_width);
   for (const Index3D& ray_voxel_index : ray) {
-    if (query_accelerator.getCellValue(ray_voxel_index) > threshold) {
+    if (log_odds_threshold < query_accelerator.getCellValue(ray_voxel_index)) {
       const Point3D voxel_center =
           convert::indexToCenterPoint(ray_voxel_index, min_cell_width);
       return (voxel_center - start_point).norm();
@@ -75,44 +76,40 @@ void add_raycast_bindings(nb::module_& m) {
   m.def(
       "get_depth",
       [](const HashedWaveletOctree& map, const Transformation3D& pose,
-         const PinholeCameraProjectorConfig& cam_cfg, FloatingPoint threshold,
-         FloatingPoint max_range) {
-        // NOTE: This way of parallelizing it is not very efficient, as it
-        //       creates a very large number of jobs (1 per pixel), but already
-        //       leads to a nice speedup. The next step to improve it would
-        //       probably be to split the image into tiles and spawn 1 job per
-        //       tile. The tile size should be such that there are enough tiles
-        //       to distribute the work evenly across all cores even if some
-        //       tiles take much shorter than others, while still being few
-        //       enough to minimize the overhead of dispatching jobs and create
-        //       local QueryAccelerator instances for each job. Maybe 10x as
-        //       many tiles as there are workers?
-        ThreadPool thread_pool;  // By default, the pool will spawn as many
-                                 // workers as the system's reported
-                                 // std::thread::hardware_concurrency().
-        Image depth_image(cam_cfg.width, cam_cfg.height);
-        const FloatingPoint min_cell_width = map.getMinCellWidth();
+         const PinholeCameraProjectorConfig& cam_cfg,
+         FloatingPoint log_odds_threshold, FloatingPoint max_range) {
         const PinholeCameraProjector projection_model(cam_cfg);
-        const Point3D& start_point = pose.getPosition();
-        for (const Index2D& index :
-             Grid<2>(Index2D::Zero(),
-                     depth_image.getDimensions() - Index2D::Ones())) {
-          FloatingPoint& depth_pixel = depth_image.at(index);
-          thread_pool.add_task([&map, &projection_model, &pose, &start_point,
-                                &depth_pixel, index, max_range, threshold,
-                                min_cell_width]() {
+        Image depth_image(projection_model.getDimensions());
+        const Point3D& W_start_point = pose.getPosition();
+
+        ThreadPool thread_pool;
+        constexpr int kPatchWidth = 64;
+        const Index2D num_patches =
+            int_math::div_round_up(depth_image.getDimensions(), kPatchWidth);
+        for (const Index2D& patch_index :
+             Grid<2>(Index2D::Zero(), num_patches - Index2D::Ones())) {
+          thread_pool.add_task([&map, &projection_model, &pose, &W_start_point,
+                                &depth_image, patch_index, kPatchWidth,
+                                max_range, log_odds_threshold]() {
             QueryAccelerator query_accelerator(map);
-            const Vector2D image_xy = projection_model.indexToImage(index);
-            const Point3D C_point =
-                projection_model.sensorToCartesian({image_xy, max_range});
-            const Point3D end_point = pose * C_point;
-            FloatingPoint depth =
-                raycast_fast(query_accelerator, start_point, end_point,
-                             threshold, min_cell_width);
-            depth_pixel = depth;
+            const Index2D patch_min = patch_index * kPatchWidth;
+            const Index2D patch_max =
+                (patch_min.array() + kPatchWidth)
+                    .min(depth_image.getDimensions().array()) -
+                1;
+            for (const Index2D& index : Grid<2>(patch_min, patch_max)) {
+              FloatingPoint& depth_pixel = depth_image.at(index);
+              const Vector2D image_xy = projection_model.indexToImage(index);
+              const Point3D C_end_point =
+                  projection_model.sensorToCartesian({image_xy, max_range});
+              const Point3D W_end_point = pose * C_end_point;
+              depth_pixel = raycast_fast(query_accelerator, W_start_point,
+                                         W_end_point, log_odds_threshold);
+            }
           });
         }
         thread_pool.wait_all();
+
         return depth_image.getData().transpose().eval();
       },
       "Extract depth from octree map at using given camera pose and "
