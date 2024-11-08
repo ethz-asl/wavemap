@@ -54,7 +54,7 @@ TYPED_TEST(AabbTest, ClosestPointsAndDistances) {
       const TypeParam min_corner = TypeParam::Zero();
       TypeParam max_corner = TypeParam::Ones();
       max_corner[dim_idx] = 0.5f;
-      aabbs.template emplace_back(AABB<TypeParam>{min_corner, max_corner});
+      aabbs.emplace_back(min_corner, max_corner);
     }
     for (const auto& aabb : aabbs) {
       tests.emplace_back(aabb, TypeParam::Zero());

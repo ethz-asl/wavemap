@@ -32,6 +32,10 @@ struct NdtreeIndex {
   //! by *height*
   Position position = Position::Zero();
 
+  NdtreeIndex() = default;
+  NdtreeIndex(Element height, Position position)
+      : height(height), position(position) {}
+
   bool operator==(const NdtreeIndex& other) const {
     return height == other.height && position == other.position;
   }

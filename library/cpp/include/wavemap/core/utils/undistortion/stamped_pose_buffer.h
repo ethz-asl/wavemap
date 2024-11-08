@@ -7,9 +7,14 @@
 
 namespace wavemap::undistortion {
 struct StampedPose {
-  TimeAbsolute stamp;
-  Transformation3D pose;
+  TimeAbsolute stamp = 0u;
+  Transformation3D pose{};
+
+  StampedPose() = default;
+  StampedPose(TimeAbsolute stamp, Transformation3D pose)
+      : stamp(stamp), pose(pose) {}
 };
+
 using StampedPoseBuffer = std::vector<StampedPose>;
 }  // namespace wavemap::undistortion
 

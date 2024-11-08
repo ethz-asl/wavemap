@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_CORE_DATA_STRUCTURE_AABB_H_
 #define WAVEMAP_CORE_DATA_STRUCTURE_AABB_H_
 
+#include <algorithm>
 #include <limits>
 #include <string>
 
@@ -22,6 +23,9 @@ struct AABB {
 
   PointType min = PointType::Constant(kInitialMin);
   PointType max = PointType::Constant(kInitialMax);
+
+  AABB() = default;
+  AABB(PointT min, PointT max) : min(min), max(max) {}
 
   void includePoint(const PointType& point) {
     min = min.cwiseMin(point);
