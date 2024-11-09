@@ -161,7 +161,8 @@ template <typename ChunkType>
 template <typename... DefaultArgs>
 ChunkedNdtreeNodeRef<ChunkType>
 ChunkedNdtreeNodeRef<ChunkType>::getOrAllocateChild(
-    NdtreeIndexRelativeChild child_index, DefaultArgs&&... args) const {
+    NdtreeIndexRelativeChild child_index, DefaultArgs&&... args) {
+  hasAtLeastOneChild() = true;
   const IndexElement child_depth = relative_node_depth_ + 1;
   const LinearIndex child_level_traversal_distance =
       computeChildLevelTraversalDistance(child_index);

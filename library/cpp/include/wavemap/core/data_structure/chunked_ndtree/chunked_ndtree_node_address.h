@@ -89,7 +89,7 @@ class ChunkedNdtreeNodeRef {
   NodeConstPtr getChild(NdtreeIndexRelativeChild child_index) const;
   template <typename... DefaultArgs>
   NodeRef getOrAllocateChild(NdtreeIndexRelativeChild child_index,
-                             DefaultArgs&&... args) const;
+                             DefaultArgs&&... args);
 
  private:
   ChunkType& chunk_;

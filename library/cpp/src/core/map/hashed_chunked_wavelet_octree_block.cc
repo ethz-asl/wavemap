@@ -2,6 +2,7 @@
 
 #include <stack>
 #include <utility>
+#include <vector>
 
 #include <wavemap/core/utils/profile/profiler_interface.h>
 
@@ -37,70 +38,37 @@ void HashedChunkedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
   setNeedsPruning();
   setNeedsThresholding();
   setLastUpdatedStamp();
-
-  // Descend the tree chunk by chunk while decompressing, and caching chunk ptrs
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  std::array<ChunkedOctreeType::ChunkType*, kMaxChunkStackDepth> chunk_ptrs{};
-  chunk_ptrs[0] = &chunked_ndtree_.getRootChunk();
+  std::vector<ChunkedOctreeType::NodeRefType> ancestors;
+  const int height_difference = tree_height_ - index.height;
+  ancestors.reserve(height_difference);
+  ancestors.emplace_back(chunked_ndtree_.getRootNode());
   FloatingPoint current_value = root_scale_coefficient_;
-  for (int chunk_top_height = tree_height_; index.height < chunk_top_height;
-       chunk_top_height -= kChunkHeight) {
-    // Get the current chunk
-    const int chunk_depth = (tree_height_ - chunk_top_height) / kChunkHeight;
-    ChunkedOctreeType::ChunkType* const current_chunk = chunk_ptrs[chunk_depth];
-    // Decompress level by level
-    for (int parent_height = chunk_top_height;
-         chunk_top_height - kChunkHeight < parent_height; --parent_height) {
-      // Perform one decompression stage
-      const LinearIndex relative_node_index =
-          OctreeIndex::computeTreeTraversalDistance(
-              morton_code, chunk_top_height, parent_height);
-      const NdtreeIndexRelativeChild relative_child_index =
-          OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-      current_value = Transform::backwardSingleChild(
-          {current_value, current_chunk->nodeData(relative_node_index)},
-          relative_child_index);
-      // If we've reached the requested resolution, stop descending
-      if (parent_height == index.height + 1) {
-        break;
-      }
-    }
-    if (chunk_top_height - kChunkHeight <= index.height + 1) {
-      break;
-    }
-
-    // Descend to the next chunk
-    const LinearIndex linear_child_index =
-        OctreeIndex::computeLevelTraversalDistance(
-            morton_code, chunk_top_height, chunk_top_height - kChunkHeight);
-    if (current_chunk->hasChild(linear_child_index)) {
-      chunk_ptrs[chunk_depth + 1] = current_chunk->getChild(linear_child_index);
-    } else {
-      chunk_ptrs[chunk_depth + 1] =
-          &current_chunk->getOrAllocateChild(linear_child_index);
-    }
+  for (int parent_height = tree_height_; index.height + 1 < parent_height;
+       --parent_height) {
+    const NdtreeIndexRelativeChild child_index =
+        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
+    ChunkedOctreeType::NodeRefType current_parent = ancestors.back();
+    current_value = Transform::backwardSingleChild(
+        {current_value, current_parent.data()}, child_index);
+    ChunkedOctreeType::NodeRefType child =
+        current_parent.getOrAllocateChild(child_index);
+    ancestors.emplace_back(child);
   }
+  DCHECK_EQ(ancestors.size(), height_difference);
 
   Coefficients::Parent coefficients{new_value - current_value, {}};
   for (int parent_height = index.height + 1; parent_height <= tree_height_;
        ++parent_height) {
-    // Get the current chunk
-    const int chunk_depth = (tree_height_ - parent_height) / kChunkHeight;
-    ChunkedOctreeType::ChunkType* current_chunk = chunk_ptrs[chunk_depth];
-    // Get the index of the data w.r.t. the chunk
-    const int chunk_top_height = tree_height_ - chunk_depth * kChunkHeight;
-    const LinearIndex relative_node_index =
-        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
-                                                  parent_height);
-    // Compute and apply the transformed update
-    const NdtreeIndexRelativeChild relative_child_index =
+    const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
+    ChunkedOctreeType::NodeRefType current_node = ancestors.back();
+    ancestors.pop_back();
     coefficients =
-        Transform::forwardSingleChild(coefficients.scale, relative_child_index);
-    current_chunk->nodeData(relative_node_index) += coefficients.details;
-    // TODO(victorr): Flag should skip last level
-    current_chunk->nodeHasAtLeastOneChild(relative_node_index) = true;
+        Transform::forwardSingleChild(coefficients.scale, child_index);
+    current_node.data() += coefficients.details;
   }
+
   root_scale_coefficient_ += coefficients.scale;
 }
 
@@ -109,46 +77,33 @@ void HashedChunkedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
   setNeedsPruning();
   setNeedsThresholding();
   setLastUpdatedStamp();
-
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  std::array<ChunkedOctreeType::ChunkType*, kMaxChunkStackDepth> chunk_ptrs{};
-  chunk_ptrs[0] = &chunked_ndtree_.getRootChunk();
-  const int last_chunk_depth = (tree_height_ - index.height - 1) / kChunkHeight;
-  for (int chunk_depth = 1; chunk_depth <= last_chunk_depth; ++chunk_depth) {
-    const int parent_chunk_top_height =
-        tree_height_ - (chunk_depth - 1) * kChunkHeight;
-    const int chunk_top_height = tree_height_ - chunk_depth * kChunkHeight;
-    const LinearIndex linear_child_index =
-        OctreeIndex::computeLevelTraversalDistance(
-            morton_code, parent_chunk_top_height, chunk_top_height);
-    ChunkedOctreeType::ChunkType* current_chunk = chunk_ptrs[chunk_depth - 1];
-    if (current_chunk->hasChild(linear_child_index)) {
-      chunk_ptrs[chunk_depth] = current_chunk->getChild(linear_child_index);
-    } else {
-      chunk_ptrs[chunk_depth] =
-          &current_chunk->getOrAllocateChild(linear_child_index);
-    }
+
+  std::vector<ChunkedOctreeType::NodeRefType> ancestors;
+  const int height_difference = tree_height_ - index.height;
+  ancestors.reserve(height_difference);
+  ancestors.emplace_back(chunked_ndtree_.getRootNode());
+  for (int parent_height = tree_height_; index.height + 1 < parent_height;
+       --parent_height) {
+    const NdtreeIndexRelativeChild child_index =
+        OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
+    ChunkedOctreeType::NodeRefType current_parent = ancestors.back();
+    ChunkedOctreeType::NodeRefType child =
+        current_parent.getOrAllocateChild(child_index);
+    ancestors.emplace_back(child);
   }
+  DCHECK_EQ(ancestors.size(), height_difference);
 
   Coefficients::Parent coefficients{update, {}};
   for (int parent_height = index.height + 1; parent_height <= tree_height_;
        ++parent_height) {
-    // Get the current chunk
-    const int chunk_depth = (tree_height_ - parent_height) / kChunkHeight;
-    ChunkedOctreeType::ChunkType* current_chunk = chunk_ptrs[chunk_depth];
-    // Get the index of the data w.r.t. the chunk
-    const int chunk_top_height = tree_height_ - chunk_depth * kChunkHeight;
-    const LinearIndex relative_node_index =
-        OctreeIndex::computeTreeTraversalDistance(morton_code, chunk_top_height,
-                                                  parent_height);
-    // Compute and apply the transformed update
-    const NdtreeIndexRelativeChild relative_child_index =
+    ChunkedOctreeType::NodeRefType current_node = ancestors.back();
+    ancestors.pop_back();
+    const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     coefficients =
-        Transform::forwardSingleChild(coefficients.scale, relative_child_index);
-    current_chunk->nodeData(relative_node_index) += coefficients.details;
-    // TODO(victorr): Flag should skip last level
-    current_chunk->nodeHasAtLeastOneChild(relative_node_index) = true;
+        Transform::forwardSingleChild(coefficients.scale, child_index);
+    current_node.data() += coefficients.details;
   }
   root_scale_coefficient_ += coefficients.scale;
 }
