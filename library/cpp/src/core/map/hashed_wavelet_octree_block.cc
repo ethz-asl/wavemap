@@ -37,30 +37,30 @@ void HashedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
   setNeedsThresholding();
   setLastUpdatedStamp();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  std::vector<NodeType*> node_ptrs;
+  std::vector<NodeType*> ancestors;
   const int height_difference = tree_height_ - index.height;
-  node_ptrs.reserve(height_difference);
-  node_ptrs.emplace_back(&ndtree_.getRootNode());
+  ancestors.reserve(height_difference);
+  ancestors.emplace_back(&ndtree_.getRootNode());
   FloatingPoint current_value = root_scale_coefficient_;
   for (int parent_height = tree_height_; index.height + 1 < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    NodeType* current_parent = node_ptrs.back();
+    NodeType* current_parent = ancestors.back();
     current_value = Transform::backwardSingleChild(
         {current_value, current_parent->data()}, child_index);
     NodeType& child = current_parent->getOrAllocateChild(child_index);
-    node_ptrs.emplace_back(&child);
+    ancestors.emplace_back(&child);
   }
-  DCHECK_EQ(node_ptrs.size(), height_difference);
+  DCHECK_EQ(ancestors.size(), height_difference);
 
   Coefficients::Parent coefficients{new_value - current_value, {}};
   for (int parent_height = index.height + 1; parent_height <= tree_height_;
        ++parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    NodeType* current_node = node_ptrs.back();
-    node_ptrs.pop_back();
+    NodeType* current_node = ancestors.back();
+    ancestors.pop_back();
     coefficients =
         Transform::forwardSingleChild(coefficients.scale, child_index);
     current_node->data() += coefficients.details;
@@ -76,25 +76,25 @@ void HashedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
   setLastUpdatedStamp();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
 
-  std::vector<NodeType*> node_ptrs;
+  std::vector<NodeType*> ancestors;
   const int height_difference = tree_height_ - index.height;
-  node_ptrs.reserve(height_difference);
-  node_ptrs.emplace_back(&ndtree_.getRootNode());
+  ancestors.reserve(height_difference);
+  ancestors.emplace_back(&ndtree_.getRootNode());
   for (int parent_height = tree_height_; index.height + 1 < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    NodeType* current_parent = node_ptrs.back();
+    NodeType* current_parent = ancestors.back();
     NodeType& child = current_parent->getOrAllocateChild(child_index);
-    node_ptrs.emplace_back(&child);
+    ancestors.emplace_back(&child);
   }
-  DCHECK_EQ(node_ptrs.size(), height_difference);
+  DCHECK_EQ(ancestors.size(), height_difference);
 
   Coefficients::Parent coefficients{update, {}};
   for (int parent_height = index.height + 1; parent_height <= tree_height_;
        ++parent_height) {
-    NodeType* current_node = node_ptrs.back();
-    node_ptrs.pop_back();
+    NodeType* current_node = ancestors.back();
+    ancestors.pop_back();
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     coefficients =
