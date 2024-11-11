@@ -36,12 +36,6 @@ class ChunkedNdtree {
   HeightType getMaxHeight() const { return max_height_; }
   size_t getMemoryUsage() const;
 
-  // TODO(victorr): Add methods to directly query and operate on chunks,
-  //                once a proper index type for chunks has been defined.
-  //                The ChunkIndex type would be similar to NdtreeIndex, but has
-  //                to account for the chunks having a branching factor that
-  //                differs from 2 (probably 2^(dim * chunk_height)).
-
   bool hasNode(const IndexType& index) const { return getNode(index); }
   NodePtrType getNode(const IndexType& index);
   NodeConstPtrType getNode(const IndexType& index) const;

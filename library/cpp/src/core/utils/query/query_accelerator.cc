@@ -56,8 +56,7 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
 
   // Load the node at height_ if it was not yet loaded last time
   if (previous_height != tree_height_ && height_ == previous_height) {
-    const HashedWaveletOctree::Block::NodeType* parent_node =
-        node_stack_[height_ + 1];
+    NodePtrType parent_node = node_stack_[height_ + 1];
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code_, height_ + 1);
     if (!parent_node->hasChild(child_index)) {
@@ -68,8 +67,7 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
 
   // Walk down the tree from height_ to index.height
   while (true) {
-    const HashedWaveletOctree::Block::NodeType* parent_node =
-        node_stack_[height_];
+    NodePtrType parent_node = node_stack_[height_];
     const FloatingPoint parent_value = value_stack_[height_];
     const NdtreeIndexRelativeChild child_idx =
         OctreeIndex::computeRelativeChildIndex(morton_code_, height_);

@@ -9,7 +9,7 @@ inline bool HashedChunkedWaveletOctreeBlock::empty() const {
   // NOTE: Aside from checking whether the block contains no detail
   //       coefficients, we also need to check whether its scale coefficient
   //       (average value over the whole block) is zero.
-  return chunked_ndtree_.empty() &&
+  return ndtree_.empty() &&
          OccupancyClassifier::isUnobserved(root_scale_coefficient_);
 }
 
@@ -21,7 +21,7 @@ inline FloatingPoint HashedChunkedWaveletOctreeBlock::getTimeSinceLastUpdated()
 inline FloatingPoint HashedChunkedWaveletOctreeBlock::getCellValue(
     const OctreeIndex& index) const {
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  ChunkedOctreeType::NodeConstPtrType node = &chunked_ndtree_.getRootNode();
+  OctreeType::NodeConstPtrType node = &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
   for (int parent_height = tree_height_; index.height < parent_height;
        --parent_height) {

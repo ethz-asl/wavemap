@@ -16,7 +16,6 @@ class HashedWaveletOctreeBlock {
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
   using OctreeType = Octree<Coefficients::Details>;
-  using NodeType = OctreeType::NodeType;
 
   explicit HashedWaveletOctreeBlock(IndexElement tree_height,
                                     FloatingPoint min_log_odds,
@@ -43,8 +42,10 @@ class HashedWaveletOctreeBlock {
   const Coefficients::Scale& getRootScale() const {
     return root_scale_coefficient_;
   }
-  NodeType& getRootNode() { return ndtree_.getRootNode(); }
-  const NodeType& getRootNode() const { return ndtree_.getRootNode(); }
+  OctreeType::NodeRefType getRootNode() { return ndtree_.getRootNode(); }
+  OctreeType::NodeConstRefType getRootNode() const {
+    return ndtree_.getRootNode();
+  }
 
   void setNeedsPruning(bool value = true) { needs_pruning_ = value; }
   bool getNeedsPruning() const { return needs_pruning_; }
@@ -79,9 +80,9 @@ class HashedWaveletOctreeBlock {
   bool needs_pruning_ = false;
   Timestamp last_updated_stamp_ = Time::now();
 
-  Coefficients::Scale recursiveThreshold(NodeType& node,
+  Coefficients::Scale recursiveThreshold(OctreeType::NodeRefType node,
                                          Coefficients::Scale scale_coefficient);
-  void recursivePrune(NodeType& node);
+  void recursivePrune(OctreeType::NodeRefType node);
 };
 }  // namespace wavemap
 

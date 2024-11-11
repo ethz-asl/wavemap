@@ -334,7 +334,7 @@ void ClassifiedMap::QueryCache::reset() {
 }
 
 void ClassifiedMap::recursiveClassifier(  // NOLINT
-    const HashedWaveletOctreeBlock::NodeType& occupancy_node,
+    HashedWaveletOctreeBlock::OctreeType::NodeConstRefType occupancy_node,
     FloatingPoint average_occupancy, ClassifiedMap::Node& classified_node) {
   const auto child_occupancies =
       HaarTransform::backward({average_occupancy, occupancy_node.data()});
@@ -374,7 +374,7 @@ void ClassifiedMap::recursiveClassifier(  // NOLINT
 
 void ClassifiedMap::recursiveClassifier(  // NOLINT
     const OctreeIndex& node_index,
-    const HashedWaveletOctreeBlock::NodeType* occupancy_node,
+    HashedWaveletOctreeBlock::OctreeType::NodeConstPtrType occupancy_node,
     FloatingPoint occupancy_average,
     QueryAccelerator<HashedBlocks::DenseBlockHash>& esdf_map,
     FloatingPoint robot_radius, ClassifiedMap::Node& classified_node) {

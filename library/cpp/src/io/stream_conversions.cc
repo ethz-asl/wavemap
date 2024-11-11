@@ -275,7 +275,7 @@ bool mapToStream(const HashedWaveletOctree& map, std::ostream& ostream) {
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
-    const HashedWaveletOctreeBlock::NodeType& node;
+    HashedWaveletOctreeBlock::OctreeType::NodeConstRefType node;
   };
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
@@ -432,7 +432,7 @@ bool mapToStream(const HashedChunkedWaveletOctree& map, std::ostream& ostream) {
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
-    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::NodeConstRefType node;
+    HashedChunkedWaveletOctreeBlock::OctreeType::NodeConstRefType node;
   };
   constexpr FloatingPoint kNumericalNoise = 1e-3f;
   const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;

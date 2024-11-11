@@ -72,14 +72,15 @@ HashedWaveletIntegrator::getFovMinMaxIndices(
 void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
                                           const OctreeIndex& block_index) {
   ProfilerZoneScoped;
-  HashedWaveletOctreeBlock::NodeType& root_node = block.getRootNode();
+  HashedWaveletOctreeBlock::OctreeType::NodeRefType root_node =
+      block.getRootNode();
   HashedWaveletOctreeBlock::Coefficients::Scale& root_node_scale =
       block.getRootScale();
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
   struct StackElement {
-    HashedWaveletOctreeBlock::NodeType& parent_node;
+    HashedWaveletOctreeBlock::OctreeType::NodeRefType parent_node;
     const OctreeIndex parent_node_index;
     NdtreeIndexRelativeChild next_child_idx;
     HashedWaveletOctreeBlock::Coefficients::CoefficientsArray
@@ -116,7 +117,8 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
     DCHECK_GE(current_child_idx, 0);
     DCHECK_LT(current_child_idx, OctreeIndex::kNumChildren);
 
-    HashedWaveletOctreeBlock::NodeType& parent_node = stack.top().parent_node;
+    HashedWaveletOctreeBlock::OctreeType::NodeRefType parent_node =
+        stack.top().parent_node;
     FloatingPoint& node_value =
         stack.top().child_scale_coefficients[current_child_idx];
     const OctreeIndex node_index =
@@ -169,7 +171,7 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
         projection_model_->cartesianToSensorZ(C_node_center);
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
-    HashedWaveletOctreeBlock::NodeType* node =
+    HashedWaveletOctreeBlock::OctreeType::NodePtrType node =
         parent_node.getChild(node_index.computeRelativeChildIndex());
     if (measurement_model_->computeWorstCaseApproximationError(
             update_type, d_C_cell, bounding_sphere_radius) <

@@ -10,9 +10,9 @@ namespace wavemap {
 void HashedChunkedWaveletOctreeBlock::threshold() {
   ProfilerZoneScoped;
   if (getNeedsThresholding()) {
-    root_scale_coefficient_ = recursiveThreshold(chunked_ndtree_.getRootChunk(),
-                                                 root_scale_coefficient_)
-                                  .scale;
+    root_scale_coefficient_ =
+        recursiveThreshold(ndtree_.getRootChunk(), root_scale_coefficient_)
+            .scale;
     setNeedsThresholding(false);
   }
 }
@@ -21,7 +21,7 @@ void HashedChunkedWaveletOctreeBlock::prune() {
   ProfilerZoneScoped;
   if (getNeedsPruning()) {
     threshold();
-    recursivePrune(chunked_ndtree_.getRootChunk());
+    recursivePrune(ndtree_.getRootChunk());
     setNeedsPruning(false);
   }
 }
@@ -29,7 +29,7 @@ void HashedChunkedWaveletOctreeBlock::prune() {
 void HashedChunkedWaveletOctreeBlock::clear() {
   ProfilerZoneScoped;
   root_scale_coefficient_ = Coefficients::Scale{};
-  chunked_ndtree_.clear();
+  ndtree_.clear();
   setLastUpdatedStamp();
 }
 
@@ -39,19 +39,19 @@ void HashedChunkedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
   setNeedsThresholding();
   setLastUpdatedStamp();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  std::vector<ChunkedOctreeType::NodeRefType> ancestors;
+  std::vector<OctreeType::NodeRefType> ancestors;
   const int height_difference = tree_height_ - index.height;
   ancestors.reserve(height_difference);
-  ancestors.emplace_back(chunked_ndtree_.getRootNode());
+  ancestors.emplace_back(ndtree_.getRootNode());
   FloatingPoint current_value = root_scale_coefficient_;
   for (int parent_height = tree_height_; index.height + 1 < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    ChunkedOctreeType::NodeRefType current_parent = ancestors.back();
+    OctreeType::NodeRefType current_parent = ancestors.back();
     current_value = Transform::backwardSingleChild(
         {current_value, current_parent.data()}, child_index);
-    ChunkedOctreeType::NodeRefType child =
+    OctreeType::NodeRefType child =
         current_parent.getOrAllocateChild(child_index);
     ancestors.emplace_back(child);
   }
@@ -62,7 +62,7 @@ void HashedChunkedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
        ++parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    ChunkedOctreeType::NodeRefType current_node = ancestors.back();
+    OctreeType::NodeRefType current_node = ancestors.back();
     ancestors.pop_back();
     coefficients =
         Transform::forwardSingleChild(coefficients.scale, child_index);
@@ -79,16 +79,16 @@ void HashedChunkedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
   setLastUpdatedStamp();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
 
-  std::vector<ChunkedOctreeType::NodeRefType> ancestors;
+  std::vector<OctreeType::NodeRefType> ancestors;
   const int height_difference = tree_height_ - index.height;
   ancestors.reserve(height_difference);
-  ancestors.emplace_back(chunked_ndtree_.getRootNode());
+  ancestors.emplace_back(ndtree_.getRootNode());
   for (int parent_height = tree_height_; index.height + 1 < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    ChunkedOctreeType::NodeRefType current_parent = ancestors.back();
-    ChunkedOctreeType::NodeRefType child =
+    OctreeType::NodeRefType current_parent = ancestors.back();
+    OctreeType::NodeRefType child =
         current_parent.getOrAllocateChild(child_index);
     ancestors.emplace_back(child);
   }
@@ -97,7 +97,7 @@ void HashedChunkedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
   Coefficients::Parent coefficients{update, {}};
   for (int parent_height = index.height + 1; parent_height <= tree_height_;
        ++parent_height) {
-    ChunkedOctreeType::NodeRefType current_node = ancestors.back();
+    OctreeType::NodeRefType current_node = ancestors.back();
     ancestors.pop_back();
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
@@ -119,12 +119,12 @@ void HashedChunkedWaveletOctreeBlock::forEachLeaf(
 
   struct StackElement {
     const OctreeIndex node_index;
-    ChunkedOctreeType::NodeConstRefType node;
+    OctreeType::NodeConstRefType node;
     const Coefficients::Scale scale_coefficient{};
   };
   std::stack<StackElement> stack;
   stack.emplace(StackElement{{tree_height_, block_index},
-                             chunked_ndtree_.getRootNode(),
+                             ndtree_.getRootNode(),
                              root_scale_coefficient_});
   while (!stack.empty()) {
     const OctreeIndex index = stack.top().node_index;
@@ -152,7 +152,7 @@ void HashedChunkedWaveletOctreeBlock::forEachLeaf(
 
 HashedChunkedWaveletOctreeBlock::RecursiveThresholdReturnValue
 HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
-    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType& chunk,
+    HashedChunkedWaveletOctreeBlock::OctreeType::ChunkType& chunk,
     FloatingPoint scale_coefficient) {
   constexpr auto tree_size = [](auto tree_height) {
     return static_cast<int>(
@@ -187,10 +187,10 @@ HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
   // Threshold
   const int first_leaf_idx = tree_size(kChunkHeight);
   for (LinearIndex child_idx = 0;
-       child_idx < ChunkedOctreeType::ChunkType::kNumChildren; ++child_idx) {
+       child_idx < OctreeType::ChunkType::kNumChildren; ++child_idx) {
     const LinearIndex array_idx = first_leaf_idx + child_idx;
     if (chunk.hasChild(child_idx)) {
-      ChunkedOctreeType::ChunkType& child_chunk = *chunk.getChild(child_idx);
+      OctreeType::ChunkType& child_chunk = *chunk.getChild(child_idx);
       const auto rv =
           recursiveThreshold(child_chunk, chunk_scale_coefficients[array_idx]);
       chunk_scale_coefficients[array_idx] = rv.scale;
@@ -233,15 +233,14 @@ HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
 }
 
 void HashedChunkedWaveletOctreeBlock::recursivePrune(  // NOLINT
-    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::ChunkType& chunk) {
+    HashedChunkedWaveletOctreeBlock::OctreeType::ChunkType& chunk) {
   constexpr FloatingPoint kNonzeroCoefficientThreshold = 1e-3f;
   bool has_at_least_one_child = false;
   for (LinearIndex linear_child_idx = 0;
-       linear_child_idx < ChunkedOctreeType::ChunkType::kNumChildren;
+       linear_child_idx < OctreeType::ChunkType::kNumChildren;
        ++linear_child_idx) {
     if (chunk.hasChild(linear_child_idx)) {
-      ChunkedOctreeType::ChunkType& child_chunk =
-          *chunk.getChild(linear_child_idx);
+      OctreeType::ChunkType& child_chunk = *chunk.getChild(linear_child_idx);
       recursivePrune(child_chunk);
       if (!child_chunk.hasChildrenArray() &&
           !child_chunk.hasNonzeroData(kNonzeroCoefficientThreshold)) {

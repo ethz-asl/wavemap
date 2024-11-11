@@ -148,12 +148,12 @@ class ClassifiedMap {
   mutable QueryCache query_cache_{tree_height_};
 
   void recursiveClassifier(
-      const HashedWaveletOctreeBlock::NodeType& occupancy_node,
+      HashedWaveletOctreeBlock::OctreeType::NodeConstRefType occupancy_node,
       FloatingPoint average_occupancy, Node& classified_node);
 
   void recursiveClassifier(
       const OctreeIndex& node_index,
-      const HashedWaveletOctreeBlock::NodeType* occupancy_node,
+      HashedWaveletOctreeBlock::OctreeType::NodeConstPtrType occupancy_node,
       FloatingPoint occupancy_average,
       QueryAccelerator<HashedBlocks::DenseBlockHash>& esdf_map,
       FloatingPoint robot_radius, Node& classified_node);

@@ -32,7 +32,7 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
 
  private:
   using BlockList = std::vector<HashedChunkedWaveletOctree::BlockIndex>;
-  using OctreeType = HashedChunkedWaveletOctreeBlock::ChunkedOctreeType;
+  using OctreeType = HashedChunkedWaveletOctreeBlock::OctreeType;
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
   std::shared_ptr<ThreadPool> thread_pool_;

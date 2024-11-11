@@ -144,12 +144,12 @@ class QueryAccelerator<HashedWaveletOctree> {
 
  private:
   using BlockIndex = HashedWaveletOctree::BlockIndex;
-  using NodeType = HashedWaveletOctree::Block::NodeType;
+  using NodePtrType = HashedWaveletOctree::Block::OctreeType::NodeConstPtrType;
 
   const HashedWaveletOctree& map_;
   const IndexElement tree_height_ = map_.getTreeHeight();
 
-  std::array<const NodeType*, morton::kMaxTreeHeight<3>> node_stack_{};
+  std::array<NodePtrType, morton::kMaxTreeHeight<3>> node_stack_{};
   std::array<FloatingPoint, morton::kMaxTreeHeight<3>> value_stack_{};
 
   BlockIndex block_index_ =
@@ -197,7 +197,7 @@ class QueryAccelerator<HashedChunkedWaveletOctree> {
  private:
   using BlockIndex = HashedChunkedWaveletOctree::BlockIndex;
   using NodePtrType =
-      HashedChunkedWaveletOctree::Block::ChunkedOctreeType::NodeConstPtrType;
+      HashedChunkedWaveletOctree::Block::OctreeType::NodeConstPtrType;
 
   const HashedChunkedWaveletOctree& map_;
   const IndexElement tree_height_ = map_.getTreeHeight();

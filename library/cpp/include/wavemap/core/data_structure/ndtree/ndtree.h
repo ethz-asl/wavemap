@@ -17,6 +17,10 @@ class Ndtree {
   using IndexType = NdtreeIndex<dim>;
   using HeightType = IndexElement;
   using NodeType = NdtreeNode<NodeDataT, dim>;
+  using NodeRefType = NodeType&;
+  using NodeConstRefType = const NodeType&;
+  using NodePtrType = NodeType*;
+  using NodeConstPtrType = const NodeType*;
   using NodeDataType = NodeDataT;
   static constexpr HeightType kChunkHeight = 1;
 
