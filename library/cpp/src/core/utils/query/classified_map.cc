@@ -330,7 +330,7 @@ void ClassifiedMap::QueryCache::reset() {
   morton_code = std::numeric_limits<MortonIndex>::max();
 
   block = nullptr;
-  node_stack = std::array<const Node*, morton::kMaxTreeHeight<3>>{};
+  node_stack.fill({});
 }
 
 void ClassifiedMap::recursiveClassifier(  // NOLINT

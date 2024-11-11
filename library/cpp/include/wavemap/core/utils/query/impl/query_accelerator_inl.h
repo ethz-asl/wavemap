@@ -71,7 +71,7 @@ void QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::reset() {
   morton_code = std::numeric_limits<MortonIndex>::max();
 
   block_ = nullptr;
-  node_stack = std::array<NodeType*, morton::kMaxTreeHeight<dim>>{};
+  node_stack.fill({});
 }
 
 template <typename CellDataT, int dim>

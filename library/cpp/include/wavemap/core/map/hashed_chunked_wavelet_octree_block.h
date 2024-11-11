@@ -82,9 +82,6 @@ class HashedChunkedWaveletOctreeBlock {
   size_t getMemoryUsage() const { return chunked_ndtree_.getMemoryUsage(); }
 
  private:
-  static constexpr IndexElement kMaxChunkStackDepth =
-      kMaxSupportedTreeHeight / kChunkHeight;
-
   const IndexElement tree_height_;
   const FloatingPoint min_log_odds_;
   const FloatingPoint max_log_odds_;
