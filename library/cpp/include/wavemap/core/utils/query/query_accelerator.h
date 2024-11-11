@@ -104,7 +104,7 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
   MortonIndex morton_code = std::numeric_limits<MortonIndex>::max();
 
   BlockType* block_ = nullptr;
-  std::array<NodeType*, morton::kMaxTreeHeight<dim>> node_stack{};
+  std::array<NodeType*, morton::kMaxTreeHeight<dim>> node_stack_{};
 };
 
 /**

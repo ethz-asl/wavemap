@@ -71,7 +71,7 @@ void QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::reset() {
   morton_code = std::numeric_limits<MortonIndex>::max();
 
   block_ = nullptr;
-  node_stack.fill({});
+  node_stack_.fill({});
 }
 
 template <typename CellDataT, int dim>
@@ -83,7 +83,7 @@ QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getBlock(
     height = tree_height_;
     block_ = ndtree_block_hash_.getBlock(block_index);
     if (block_) {
-      node_stack[tree_height_] = &block_->getRootNode();
+      node_stack_[tree_height_] = &block_->getRootNode();
     }
   }
   return block_;
@@ -99,7 +99,7 @@ QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getOrAllocateBlock(
     height = tree_height_;
     block_ = &ndtree_block_hash_.getOrAllocateBlock(
         block_index, std::forward<DefaultArgs>(args)...);
-    node_stack[tree_height_] = &block_->getRootNode();
+    node_stack_[tree_height_] = &block_->getRootNode();
   }
   return *block_;
 }
@@ -127,24 +127,24 @@ QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getNode(
   DCHECK_LE(height, tree_height_);
 
   if (height == index.height) {
-    DCHECK_NOTNULL(node_stack[height]);
-    return node_stack[height];
+    DCHECK_NOTNULL(node_stack_[height]);
+    return node_stack_[height];
   }
 
   // Walk down the tree from height to index.height
   for (; index.height < height;) {
-    DCHECK_NOTNULL(node_stack[height]);
+    DCHECK_NOTNULL(node_stack_[height]);
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, height);
     // Check if the child is allocated
-    NodeType* child = node_stack[height]->getChild(child_index);
+    NodeType* child = node_stack_[height]->getChild(child_index);
     if (!child) {
-      return node_stack[height];
+      return node_stack_[height];
     }
-    node_stack[--height] = child;
+    node_stack_[--height] = child;
   }
 
-  return node_stack[height];
+  return node_stack_[height];
 }
 
 template <typename CellDataT, int dim>
@@ -169,22 +169,22 @@ QueryAccelerator<NdtreeBlockHash<CellDataT, dim>>::getOrAllocateNode(
   DCHECK_LE(height, tree_height_);
 
   if (height == index.height) {
-    DCHECK_NOTNULL(node_stack[height]);
-    return *node_stack[height];
+    DCHECK_NOTNULL(node_stack_[height]);
+    return *node_stack_[height];
   }
 
   // Walk down the tree from height to index.height
   for (; index.height < height;) {
-    DCHECK_NOTNULL(node_stack[height]);
+    DCHECK_NOTNULL(node_stack_[height]);
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, height);
     // Get or allocate the child
-    auto& child = node_stack[height]->getOrAllocateChild(
+    auto& child = node_stack_[height]->getOrAllocateChild(
         child_index, std::forward<DefaultArgs>(args)...);
-    node_stack[--height] = &child;
+    node_stack_[--height] = &child;
   }
 
-  return *node_stack[height];
+  return *node_stack_[height];
 }
 }  // namespace wavemap
 
