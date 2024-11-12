@@ -150,6 +150,9 @@ void HashedChunkedWaveletOctreeBlock::forEachLeaf(
   }
 }
 
+// TODO(victorr): Once the automatic benchmarking system is ready, see if this
+//                method can be simplified using OctreeType::NodeRefType without
+//                sacrificing too much performance
 HashedChunkedWaveletOctreeBlock::RecursiveThresholdReturnValue
 HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
     HashedChunkedWaveletOctreeBlock::OctreeType::ChunkType& chunk,

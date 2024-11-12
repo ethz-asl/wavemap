@@ -80,8 +80,8 @@ class HashedWaveletOctreeBlock {
   bool needs_pruning_ = false;
   Timestamp last_updated_stamp_ = Time::now();
 
-  Coefficients::Scale recursiveThreshold(OctreeType::NodeRefType node,
-                                         Coefficients::Scale scale_coefficient);
+  void recursiveThreshold(OctreeType::NodeRefType node,
+                          Coefficients::Scale& node_scale_coefficient);
   void recursivePrune(OctreeType::NodeRefType node);
 };
 }  // namespace wavemap

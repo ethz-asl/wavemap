@@ -9,8 +9,7 @@ namespace wavemap {
 void HashedWaveletOctreeBlock::threshold() {
   ProfilerZoneScoped;
   if (getNeedsThresholding()) {
-    root_scale_coefficient_ -=
-        recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
+    recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
     setNeedsThresholding(false);
   }
 }
@@ -149,30 +148,31 @@ void HashedWaveletOctreeBlock::forEachLeaf(
   }
 }
 
-HashedWaveletOctreeBlock::Coefficients::Scale
-HashedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
+void HashedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
     HashedWaveletOctreeBlock::OctreeType::NodeRefType node,
-    FloatingPoint scale_coefficient) {
+    FloatingPoint& node_scale_coefficient) {
+  // Decompress child values
+  auto& node_detail_coefficients = node.data();
   Coefficients::CoefficientsArray child_scale_coefficients =
-      Transform::backward({scale_coefficient, node.data()});
+      Transform::backward({node_scale_coefficient, node_detail_coefficients});
 
+  // Handle each child
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    Coefficients::Scale& child_scale = child_scale_coefficients[child_idx];
     if (node.hasChild(child_idx)) {
       OctreeType::NodeRefType child_node = *node.getChild(child_idx);
-      child_scale_coefficients[child_idx] =
-          recursiveThreshold(child_node, child_scale_coefficients[child_idx]);
+      recursiveThreshold(child_node, child_scale);
     } else {
-      child_scale_coefficients[child_idx] -= std::clamp(
-          child_scale_coefficients[child_idx], min_log_odds_, max_log_odds_);
+      child_scale = std::clamp(child_scale, min_log_odds_, max_log_odds_);
     }
   }
 
-  const auto [scale_update, detail_updates] =
+  // Compress
+  const auto [new_scale, new_details] =
       Transform::forward(child_scale_coefficients);
-  node.data() -= detail_updates;
-
-  return scale_update;
+  node_detail_coefficients = new_details;
+  node_scale_coefficient = new_scale;
 }
 
 void HashedWaveletOctreeBlock::recursivePrune(  // NOLINT

@@ -65,10 +65,10 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   void updateBlock(HashedChunkedWaveletOctree::Block& block,
                    const HashedChunkedWaveletOctree::BlockIndex& block_index);
 
-  void updateNodeRecursive(OctreeType::NodeRefType parent_node_ref,
-                           const OctreeIndex& parent_node_index,
-                           FloatingPoint& parent_value,
-                           OctreeType::ChunkType::BitRef parent_has_child,
+  void updateNodeRecursive(OctreeType::NodeRefType node,
+                           const OctreeIndex& node_index,
+                           FloatingPoint& node_value,
+                           OctreeType::ChunkType::BitRef node_has_child,
                            bool& block_needs_thresholding);
   void updateLeavesBatch(const OctreeIndex& parent_index,
                          FloatingPoint& parent_value,

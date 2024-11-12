@@ -85,21 +85,21 @@ void HashedChunkedWaveletIntegrator::updateBlock(
 }
 
 void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
-    HashedChunkedWaveletIntegrator::OctreeType::NodeRefType parent_node_ref,
-    const OctreeIndex& parent_node_index, FloatingPoint& parent_value,
+    HashedChunkedWaveletIntegrator::OctreeType::NodeRefType node,
+    const OctreeIndex& node_index, FloatingPoint& node_value,
     HashedChunkedWaveletIntegrator::OctreeType::ChunkType::BitRef
-        parent_has_child,
+        node_has_child,
     bool& block_needs_thresholding) {
-  auto& parent_details = parent_node_ref.data();
+  // Decompress child values
+  auto& node_details = node.data();
   auto child_values = HashedChunkedWaveletOctreeBlock::Transform::backward(
-      {parent_value, parent_details});
+      {node_value, node_details});
 
-  // Handle all the children
+  // Handle each child
   for (NdtreeIndexRelativeChild relative_child_idx = 0;
        relative_child_idx < OctreeIndex::kNumChildren; ++relative_child_idx) {
     const OctreeIndex child_index =
-        parent_node_index.computeChildIndex(relative_child_idx);
-    const int child_height = child_index.height;
+        node_index.computeChildIndex(relative_child_idx);
     FloatingPoint& child_value = child_values[relative_child_idx];
 
     // Test whether it is fully occupied; free or unknown; or fully unknown
@@ -144,29 +144,29 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
     }
 
     // Since the approximation error would still be too big, refine
-    auto child_node_ref =
-        parent_node_ref.getOrAllocateChild(relative_child_idx);
-    auto& child_details = child_node_ref.data();
-    auto child_has_children = child_node_ref.hasAtLeastOneChild();
+    auto child_node = node.getOrAllocateChild(relative_child_idx);
+    auto& child_details = child_node.data();
+    auto child_has_child = child_node.hasAtLeastOneChild();
 
     // If we're at the leaf level, directly compute the update
-    if (child_height <= termination_height_ + 1) {
+    if (child_index.height <= termination_height_ + 1) {
       updateLeavesBatch(child_index, child_value, child_details);
     } else {
       // Otherwise, recurse
-      DCHECK_GE(child_height, 0);
-      updateNodeRecursive(child_node_ref, child_index, child_value,
-                          child_has_children, block_needs_thresholding);
+      DCHECK_GE(child_index.height, 0);
+      updateNodeRecursive(child_node, child_index, child_value, child_has_child,
+                          block_needs_thresholding);
     }
 
-    if (child_has_children || data::is_nonzero(child_details)) {
-      parent_has_child = true;
+    if (child_has_child || data::is_nonzero(child_details)) {
+      node_has_child = true;
     }
   }
 
+  // Compress
   const auto [new_value, new_details] =
       HashedChunkedWaveletOctreeBlock::Transform::forward(child_values);
-  parent_details = new_details;
-  parent_value = new_value;
+  node_details = new_details;
+  node_value = new_value;
 }
 }  // namespace wavemap
