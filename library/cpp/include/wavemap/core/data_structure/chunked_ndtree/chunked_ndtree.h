@@ -28,7 +28,7 @@ class ChunkedNdtree {
   explicit ChunkedNdtree(HeightType max_height);
   ~ChunkedNdtree() = default;
 
-  bool empty() const { return root_chunk_.empty(); }
+  bool empty() const { return getRootNode().empty(); }
   size_t size() const;
   void clear() { root_chunk_.clear(); }
   void prune();

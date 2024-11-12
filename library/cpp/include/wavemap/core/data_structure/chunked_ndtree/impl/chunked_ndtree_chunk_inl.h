@@ -15,7 +15,8 @@ bool ChunkedNdtreeChunk<DataT, dim, height>::empty() const {
 template <typename DataT, int dim, int height>
 void ChunkedNdtreeChunk<DataT, dim, height>::clear() {
   deleteChildrenArray();
-  std::fill(node_data_.begin(), node_data_.end(), DataT{});
+  node_data_.fill({});
+  node_has_at_least_one_child_.reset();
 }
 
 template <typename DataT, int dim, int height>

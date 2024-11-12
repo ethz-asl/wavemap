@@ -37,6 +37,8 @@ class ChunkedNdtreeNodePtr {
   const NodeRef* operator->() const { return node_.operator->(); }
 
  private:
+  // TODO(victorr): Benchmark version that uses chunk_=nullptr instead of
+  //                std::optional to mark invalid states
   std::optional<NodeRef> node_;
 };
 
@@ -74,9 +76,12 @@ class ChunkedNdtreeNodeRef {
   bool hasNonzeroData(FloatingPoint threshold) const;
   auto& data() const;
 
-  typename ChunkType::BitRef hasAtLeastOneChild() const;
+  auto hasAtLeastOneChild() const;  // Returns a BitRef or bool, depending on
+                                    // whether the ChunkType is const-qualified
 
   bool hasChild(NdtreeIndexRelativeChild child_index) const;
+  // TODO(victorr): Add tests for this method
+  void eraseChild(NdtreeIndexRelativeChild child_index) const;
 
   NodePtr getChild(NdtreeIndexRelativeChild child_index) const;
   template <typename... DefaultArgs>
@@ -85,7 +90,9 @@ class ChunkedNdtreeNodeRef {
 
  private:
   ChunkType& chunk_;
+  // TODO(victorr): Benchmark with int8_t
   const IndexElement relative_node_depth_ = 0;
+  // TODO(victorr): Benchmark with uint32_t
   const LinearIndex level_traversal_distance_ = 0u;
 
   LinearIndex computeRelativeNodeIndex() const;
