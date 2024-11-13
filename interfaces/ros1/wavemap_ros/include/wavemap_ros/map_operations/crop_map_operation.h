@@ -21,7 +21,7 @@ struct CropMapOperationConfig : public ConfigBase<CropMapOperationConfig, 5> {
   Seconds<FloatingPoint> once_every = 10.f;
 
   //! Name of the TF frame to treat as the center point. Usually the robot's
-  //! body frame. When the cropper runs, all voxels that are further than
+  //! body frame. When the cropper runs, all cells that are further than
   //! `radius` from this point are deleted.
   std::string body_frame = "body";
 
