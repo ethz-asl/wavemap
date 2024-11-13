@@ -13,7 +13,7 @@ namespace wavemap {
 DECLARE_CONFIG_MEMBERS(CropMapOperationConfig,
                       (once_every)
                       (body_frame)
-                      (tf_delay)
+                      (tf_time_offset)
                       (radius)
                       (max_update_resolution));
 
@@ -22,7 +22,10 @@ bool CropMapOperationConfig::isValid(bool verbose) const {
 
   all_valid &= IS_PARAM_GT(once_every, 0.f, verbose);
   all_valid &= IS_PARAM_NE(body_frame, "", verbose);
+  all_valid &=
+      IS_PARAM_TRUE(tf_time_offset == -1.f || 0.f <= tf_time_offset, verbose);
   all_valid &= IS_PARAM_GT(radius, 0.f, verbose);
+  all_valid &= IS_PARAM_GE(max_update_resolution, 0.f, verbose);
 
   return all_valid;
 }
@@ -52,15 +55,27 @@ void CropMapOperation::run(bool force_run) {
     return;
   }
 
-  const ros::Time timestamp = current_time - ros::Duration(config_.tf_delay);
+  const bool use_most_recent_transform = config_.tf_time_offset < 0.f;
+  const ros::Time timestamp =
+      use_most_recent_transform
+          ? ros::Time::UNINITIALIZED
+          : current_time - ros::Duration(config_.tf_time_offset);
   const auto T_W_B = transformer_->lookupTransform(
       world_frame_, config_.body_frame, timestamp);
   if (!T_W_B) {
-    ROS_WARN_STREAM(
-        "Could not look up center point for map cropping. TF lookup of "
-        "body_frame \""
-        << config_.body_frame << "\" w.r.t. world_frame \"" << world_frame_
-        << "\" at time " << timestamp << " failed.");
+    if (use_most_recent_transform) {
+      ROS_WARN_STREAM(
+          "Could not look up center point for map cropping. No TF from "
+          "body_frame \""
+          << config_.body_frame << "\" to world_frame \"" << world_frame_
+          << "\".");
+    } else {
+      ROS_WARN_STREAM(
+          "Could not look up center point for map cropping. TF lookup from "
+          "body_frame \""
+          << config_.body_frame << "\" to world_frame \"" << world_frame_
+          << "\" at time " << timestamp << " failed.");
+    }
     return;
   }
 

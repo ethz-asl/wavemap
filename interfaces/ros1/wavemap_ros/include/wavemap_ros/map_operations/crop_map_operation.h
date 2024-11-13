@@ -25,15 +25,18 @@ struct CropMapOperationConfig : public ConfigBase<CropMapOperationConfig, 5> {
   //! `radius` from this point are deleted.
   std::string body_frame = "body";
 
-  // TODO(victorr): Explain
-  Seconds<FloatingPoint> tf_delay = 0.0f;
+  //! Time offset applied when retrieving the transform from body_frame to
+  //! world_frame. Set to -1 to use the most recent transform available in ROS
+  //! TF, ignoring timestamps (default). If set to a non-negative value, the
+  //! transform lookup uses a timestamp of `ros::Time::now() - tf_time_offset`.
+  Seconds<FloatingPoint> tf_time_offset = -1.f;
 
-  //! Distance beyond which to remove nodes from the map.
+  //! Distance beyond which to remove cells from the map.
   Meters<FloatingPoint> radius;
 
-  //! Maximum resolution at which to crop the map. Defaults to the maximum
-  //! resolution. Can be reduced to save computation time, at the cost of more
-  //! jagged edges.
+  //! Maximum resolution at which the crop is applied. Set to 0 to match the
+  //! map's maximum resolution (default). Setting a higher value reduces
+  //! computation but produces more jagged borders.
   Meters<FloatingPoint> max_update_resolution = 0.f;
 
   static MemberMap memberMap;
