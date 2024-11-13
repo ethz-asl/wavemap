@@ -5,6 +5,15 @@
   "minProperties": 1,
   "maxProperties": 1,
   "properties": {
+    "hours": {
+      "type": "number"
+    },
+    "h": {
+      "type": "number"
+    },
+    "minutes": {
+      "type": "number"
+    },
     "seconds": {
       "type": "number"
     },
@@ -12,6 +21,21 @@
       "type": "number"
     },
     "s": {
+      "type": "number"
+    },
+    "milliseconds": {
+      "type": "number"
+    },
+    "ms": {
+      "type": "number"
+    },
+    "microseconds": {
+      "type": "number"
+    },
+    "nanoseconds": {
+      "type": "number"
+    },
+    "ns": {
       "type": "number"
     }
   }

@@ -5,6 +5,12 @@
   "minProperties": 1,
   "maxProperties": 1,
   "properties": {
+    "kilometers": {
+      "type": "number"
+    },
+    "km": {
+      "type": "number"
+    },
     "meters": {
       "type": "number"
     },
