@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap {
 RosbagProcessor::~RosbagProcessor() {

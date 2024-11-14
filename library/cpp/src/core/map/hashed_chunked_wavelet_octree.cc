@@ -2,7 +2,7 @@
 
 #include <unordered_set>
 
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(HashedChunkedWaveletOctreeConfig,

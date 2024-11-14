@@ -7,7 +7,7 @@
 #include <unordered_set>
 
 #include <ros/console.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap::convert {
 bool mapToRosMsg(const MapBase& map, const std::string& frame_id,

@@ -10,7 +10,7 @@
 #include <rviz/render_panel.h>
 #include <wavemap/core/indexing/index_conversions.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap::rviz_plugin {
 VoxelVisual::VoxelVisual(Ogre::SceneManager* scene_manager,

@@ -12,7 +12,7 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <wavemap/core/data_structure/image.h>
 #include <wavemap/core/integrator/projective/projective_integrator.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 #include <wavemap_ros_conversions/time_conversions.h>
 
 namespace wavemap {

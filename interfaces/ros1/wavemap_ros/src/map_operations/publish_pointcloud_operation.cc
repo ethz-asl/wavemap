@@ -10,7 +10,7 @@
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/utils/iterate/grid_iterator.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 #include <wavemap_ros_conversions/geometry_msg_conversions.h>
 
 namespace wavemap {

@@ -13,7 +13,7 @@
 #include <wavemap/core/integrator/projective/projective_integrator.h>
 #include <wavemap/core/utils/iterate/grid_iterator.h>
 #include <wavemap/core/utils/print/eigen.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(DepthImageTopicInputConfig,

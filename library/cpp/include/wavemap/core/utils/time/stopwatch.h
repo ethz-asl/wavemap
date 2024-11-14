@@ -17,7 +17,7 @@ class Stopwatch {
   }
 
  private:
-  bool running = false;
+  bool running_ = false;
 
   Timestamp episode_start_time_{};
   Duration last_episode_duration_{};
