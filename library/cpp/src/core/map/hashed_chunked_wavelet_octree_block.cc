@@ -178,11 +178,11 @@ void HashedChunkedWaveletOctreeBlock::recursivePrune(  // NOLINT
   bool has_at_least_one_child = false;
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-    if (node.hasChild(child_idx)) {
-      OctreeType::NodeRefType child_node = *node.getChild(child_idx);
-      recursivePrune(child_node);
-      if (!child_node.hasAtLeastOneChild() &&
-          !child_node.hasNonzeroData(1e-3f)) {
+    if (OctreeType::NodePtrType child_node = node.getChild(child_idx);
+        child_node) {
+      recursivePrune(*child_node);
+      if (!child_node->hasAtLeastOneChild() &&
+          !child_node->hasNonzeroData(1e-3f)) {
         node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;

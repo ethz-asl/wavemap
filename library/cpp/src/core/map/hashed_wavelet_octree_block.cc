@@ -136,10 +136,9 @@ void HashedWaveletOctreeBlock::forEachLeaf(
           node_index.computeChildIndex(child_idx);
       const FloatingPoint child_scale_coefficient =
           child_scale_coefficients[child_idx];
-      if (node.hasChild(child_idx) &&
-          termination_height < child_node_index.height) {
-        OctreeType::NodeConstRefType child_node = *node.getChild(child_idx);
-        stack.emplace(StackElement{child_node_index, child_node,
+      OctreeType::NodeConstPtrType child_node = node.getChild(child_idx);
+      if (child_node && termination_height < child_node_index.height) {
+        stack.emplace(StackElement{child_node_index, *child_node,
                                    child_scale_coefficient});
       } else {
         visitor_fn(child_node_index, child_scale_coefficient);
@@ -179,10 +178,11 @@ void HashedWaveletOctreeBlock::recursivePrune(  // NOLINT
   bool has_at_least_one_child = false;
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-    if (node.hasChild(child_idx)) {
-      OctreeType::NodeRefType child_node = *node.getChild(child_idx);
-      recursivePrune(child_node);
-      if (!child_node.hasChildrenArray() && !child_node.hasNonzeroData(1e-3f)) {
+    if (OctreeType::NodePtrType child_node = node.getChild(child_idx);
+        child_node) {
+      recursivePrune(*child_node);
+      if (!child_node->hasChildrenArray() &&
+          !child_node->hasNonzeroData(1e-3f)) {
         node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;

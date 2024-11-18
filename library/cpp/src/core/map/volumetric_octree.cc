@@ -134,9 +134,9 @@ void VolumetricOctree::forEachLeaf(
            child_idx < OctreeIndex::kNumChildren; ++child_idx) {
         const OctreeIndex child_node_index =
             node_index.computeChildIndex(child_idx);
-        if (node.hasChild(child_idx)) {
-          const NodeType& child_node = *node.getChild(child_idx);
-          stack.emplace(StackElement{child_node_index, child_node, node_value});
+        if (const NodeType* child_node = node.getChild(child_idx); child_node) {
+          stack.emplace(
+              StackElement{child_node_index, *child_node, node_value});
         } else {
           const OctreeIndex external_node_index =
               toExternalNodeIndex(child_node_index);

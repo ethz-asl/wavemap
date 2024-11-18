@@ -90,9 +90,8 @@ void WaveletOctree::forEachLeaf(
           node_index.computeChildIndex(child_idx);
       const FloatingPoint child_scale_coefficient =
           child_scale_coefficients[child_idx];
-      if (node.hasChild(child_idx)) {
-        const NodeType& child_node = *node.getChild(child_idx);
-        stack.emplace(StackElement{child_node_index, child_node,
+      if (const NodeType* child_node = node.getChild(child_idx); child_node) {
+        stack.emplace(StackElement{child_node_index, *child_node,
                                    child_scale_coefficient});
       } else {
         const OctreeIndex external_node_index =
@@ -110,10 +109,9 @@ WaveletOctree::Coefficients::Scale WaveletOctree::recursiveThreshold(  // NOLINT
 
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-    if (node.hasChild(child_idx)) {
-      NodeType& child_node = *node.getChild(child_idx);
+    if (NodeType* child_node = node.getChild(child_idx); child_node) {
       child_scale_coefficients[child_idx] =
-          recursiveThreshold(child_node, child_scale_coefficients[child_idx]);
+          recursiveThreshold(*child_node, child_scale_coefficients[child_idx]);
     } else {
       child_scale_coefficients[child_idx] -=
           clamp(child_scale_coefficients[child_idx]);
@@ -135,11 +133,11 @@ WaveletOctree::Coefficients::Scale WaveletOctree::recursivePrune(  // NOLINT
   bool has_at_least_one_child = false;
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-    if (node.hasChild(child_idx)) {
-      NodeType& child_node = *node.getChild(child_idx);
+    if (NodeType* child_node = node.getChild(child_idx); child_node) {
       child_scale_coefficients[child_idx] =
-          recursivePrune(child_node, child_scale_coefficients[child_idx]);
-      if (!child_node.hasChildrenArray() && !child_node.hasNonzeroData(1e-3f)) {
+          recursivePrune(*child_node, child_scale_coefficients[child_idx]);
+      if (!child_node->hasChildrenArray() &&
+          !child_node->hasNonzeroData(1e-3f)) {
         node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;
