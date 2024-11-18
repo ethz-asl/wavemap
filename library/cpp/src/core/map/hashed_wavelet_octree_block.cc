@@ -160,9 +160,8 @@ void HashedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
     Coefficients::Scale& child_scale = child_scale_coefficients[child_idx];
-    if (node.hasChild(child_idx)) {
-      OctreeType::NodeRefType child_node = *node.getChild(child_idx);
-      recursiveThreshold(child_node, child_scale);
+    if (auto child_node = node.getChild(child_idx); child_node) {
+      recursiveThreshold(*child_node, child_scale);
     } else {
       child_scale = std::clamp(child_scale, min_log_odds_, max_log_odds_);
     }

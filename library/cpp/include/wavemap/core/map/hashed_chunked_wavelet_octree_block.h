@@ -89,13 +89,10 @@ class HashedChunkedWaveletOctreeBlock {
   bool needs_pruning_ = false;
   Timestamp last_updated_stamp_ = Time::now();
 
-  struct RecursiveThresholdReturnValue {
-    Coefficients::Scale scale;
-    bool is_nonzero_child;
-  };
-  RecursiveThresholdReturnValue recursiveThreshold(
-      OctreeType::ChunkType& chunk, Coefficients::Scale scale_coefficient);
-  void recursivePrune(OctreeType::ChunkType& chunk);
+  void recursiveThreshold(OctreeType::NodeRefType node,
+                          Coefficients::Scale& node_scale_coefficient);
+  void recursivePrune(
+      HashedChunkedWaveletOctreeBlock::OctreeType::NodeRefType chunk);
 };
 }  // namespace wavemap
 

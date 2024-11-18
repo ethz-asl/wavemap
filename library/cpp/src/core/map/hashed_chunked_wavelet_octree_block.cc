@@ -10,9 +10,7 @@ namespace wavemap {
 void HashedChunkedWaveletOctreeBlock::threshold() {
   ProfilerZoneScoped;
   if (getNeedsThresholding()) {
-    root_scale_coefficient_ =
-        recursiveThreshold(ndtree_.getRootChunk(), root_scale_coefficient_)
-            .scale;
+    recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
     setNeedsThresholding(false);
   }
 }
@@ -21,7 +19,7 @@ void HashedChunkedWaveletOctreeBlock::prune() {
   ProfilerZoneScoped;
   if (getNeedsPruning()) {
     threshold();
-    recursivePrune(ndtree_.getRootChunk());
+    recursivePrune(ndtree_.getRootNode());
     setNeedsPruning(false);
   }
 }
@@ -150,111 +148,49 @@ void HashedChunkedWaveletOctreeBlock::forEachLeaf(
   }
 }
 
-// TODO(victorr): Once the automatic benchmarking system is ready, see if this
-//                method can be simplified using OctreeType::NodeRefType without
-//                sacrificing too much performance
-HashedChunkedWaveletOctreeBlock::RecursiveThresholdReturnValue
-HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
-    HashedChunkedWaveletOctreeBlock::OctreeType::ChunkType& chunk,
-    FloatingPoint scale_coefficient) {
-  constexpr auto tree_size = [](auto tree_height) {
-    return static_cast<int>(
-        tree_math::perfect_tree::num_total_nodes_fast<kDim>(tree_height));
-  };
-  constexpr auto level_size = [](auto level_height) {
-    return static_cast<int>(
-        tree_math::perfect_tree::num_leaf_nodes<kDim>(level_height));
-  };
+void HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
+    OctreeType::NodeRefType node, Coefficients::Scale& node_scale_coefficient) {
+  // Decompress child values
+  auto& node_detail_coefficients = node.data();
+  Coefficients::CoefficientsArray child_scale_coefficients =
+      Transform::backward({node_scale_coefficient, node_detail_coefficients});
 
-  // Decompress
-  std::array<Coefficients::Scale, tree_size(kChunkHeight + 1)>
-      chunk_scale_coefficients{};
-  std::bitset<tree_size(kChunkHeight + 1)> is_nonzero_child{};
-  chunk_scale_coefficients[0] = scale_coefficient;
-  for (int level_idx = 0; level_idx < kChunkHeight; ++level_idx) {
-    const int first_idx = tree_size(level_idx);
-    const int last_idx = tree_size(level_idx + 1);
-    for (int relative_idx = 0; relative_idx < level_size(level_idx + 1);
-         ++relative_idx) {
-      const int src_idx = first_idx + relative_idx;
-      const Coefficients::CoefficientsArray child_scale_coefficients =
-          Transform::backward(
-              {chunk_scale_coefficients[src_idx], chunk.nodeData(src_idx)});
-      const int first_dest_idx = last_idx + 8 * relative_idx;
-      std::move(child_scale_coefficients.begin(),
-                child_scale_coefficients.end(),
-                chunk_scale_coefficients.begin() + first_dest_idx);
-    }
-  }
-
-  // Threshold
-  const int first_leaf_idx = tree_size(kChunkHeight);
-  for (LinearIndex child_idx = 0;
-       child_idx < OctreeType::ChunkType::kNumChildren; ++child_idx) {
-    const LinearIndex array_idx = first_leaf_idx + child_idx;
-    if (chunk.hasChild(child_idx)) {
-      OctreeType::ChunkType& child_chunk = *chunk.getChild(child_idx);
-      const auto rv =
-          recursiveThreshold(child_chunk, chunk_scale_coefficients[array_idx]);
-      chunk_scale_coefficients[array_idx] = rv.scale;
-      is_nonzero_child[array_idx] = rv.is_nonzero_child;
+  // Handle each child
+  for (NdtreeIndexRelativeChild child_idx = 0;
+       child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    Coefficients::Scale& child_scale = child_scale_coefficients[child_idx];
+    if (auto child_node = node.getChild(child_idx); child_node) {
+      recursiveThreshold(*child_node, child_scale);
     } else {
-      chunk_scale_coefficients[array_idx] = std::clamp(
-          chunk_scale_coefficients[array_idx], min_log_odds_, max_log_odds_);
+      child_scale = std::clamp(child_scale, min_log_odds_, max_log_odds_);
     }
   }
 
   // Compress
-  for (int level_idx = kChunkHeight - 1; 0 <= level_idx; --level_idx) {
-    const int first_idx = tree_size(level_idx);
-    const int last_idx = tree_size(level_idx + 1);
-    for (int relative_idx = level_size(level_idx + 1) - 1; 0 <= relative_idx;
-         --relative_idx) {
-      const int first_src_idx = last_idx + 8 * relative_idx;
-      Coefficients::CoefficientsArray scale_coefficients_subset{};
-      std::move(chunk_scale_coefficients.begin() + first_src_idx,
-                chunk_scale_coefficients.begin() + first_src_idx + 8,
-                scale_coefficients_subset.begin());
-      bool has_nonzero_child = false;
-      for (int src_idx = first_src_idx; src_idx < first_src_idx + 8;
-           ++src_idx) {
-        has_nonzero_child |= is_nonzero_child[src_idx];
-      }
-
-      const int dst_idx = first_idx + relative_idx;
-      auto [new_scale, new_details] =
-          Transform::forward(scale_coefficients_subset);
-      chunk_scale_coefficients[dst_idx] = new_scale;
-      chunk.nodeData(dst_idx) = new_details;
-      chunk.nodeHasAtLeastOneChild(dst_idx) = has_nonzero_child;
-      is_nonzero_child[dst_idx] =
-          has_nonzero_child || data::is_nonzero(new_details);
-    }
-  }
-
-  return {chunk_scale_coefficients[0], is_nonzero_child[0]};
+  const auto [new_scale, new_details] =
+      Transform::forward(child_scale_coefficients);
+  node_detail_coefficients = new_details;
+  node_scale_coefficient = new_scale;
 }
 
 void HashedChunkedWaveletOctreeBlock::recursivePrune(  // NOLINT
-    HashedChunkedWaveletOctreeBlock::OctreeType::ChunkType& chunk) {
-  constexpr FloatingPoint kNonzeroCoefficientThreshold = 1e-3f;
+    HashedChunkedWaveletOctreeBlock::OctreeType::NodeRefType node) {
   bool has_at_least_one_child = false;
-  for (LinearIndex linear_child_idx = 0;
-       linear_child_idx < OctreeType::ChunkType::kNumChildren;
-       ++linear_child_idx) {
-    if (chunk.hasChild(linear_child_idx)) {
-      OctreeType::ChunkType& child_chunk = *chunk.getChild(linear_child_idx);
-      recursivePrune(child_chunk);
-      if (!child_chunk.hasChildrenArray() &&
-          !child_chunk.hasNonzeroData(kNonzeroCoefficientThreshold)) {
-        chunk.eraseChild(linear_child_idx);
+  for (NdtreeIndexRelativeChild child_idx = 0;
+       child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    if (node.hasChild(child_idx)) {
+      OctreeType::NodeRefType child_node = *node.getChild(child_idx);
+      recursivePrune(child_node);
+      if (!child_node.hasAtLeastOneChild() &&
+          !child_node.hasNonzeroData(1e-3f)) {
+        node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;
       }
     }
   }
   if (!has_at_least_one_child) {
-    chunk.deleteChildrenArray();
+    node.hasAtLeastOneChild() = false;
   }
 }
 }  // namespace wavemap
