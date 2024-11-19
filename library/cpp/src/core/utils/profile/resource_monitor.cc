@@ -1,4 +1,4 @@
-#include "wavemap/core/utils/profile/resource_usage_monitor.h"
+#include "wavemap/core/utils/profile/resource_monitor.h"
 
 #include <string>
 

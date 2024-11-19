@@ -4,8 +4,6 @@ Thank you for opening a PR! Please summarize the changes in 1–2 sentences.
 
 ## Type of change
 
-Delete options that are not relevant:
-
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that causes existing functionality to not work as expected)

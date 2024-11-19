@@ -5,7 +5,7 @@
 #include <glog/logging.h>
 #include <rosgraph_msgs/Clock.h>
 #include <tf/tfMessage.h>
-#include <wavemap/core/utils/profile/resource_usage_monitor.h>
+#include <wavemap/core/utils/profile/resource_monitor.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
 #include "wavemap_ros/inputs/depth_image_topic_input.h"
