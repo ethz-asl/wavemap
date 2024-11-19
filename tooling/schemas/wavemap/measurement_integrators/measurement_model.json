@@ -95,7 +95,7 @@
       ]
     }
   },
-  "oneOf": [
+  "anyOf": [
     {
       "$ref": "#/$defs/constant_ray"
     },

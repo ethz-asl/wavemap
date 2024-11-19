@@ -15,7 +15,7 @@
       ]
     }
   },
-  "oneOf": [
+  "anyOf": [
     {
       "$ref": "pointcloud_input.json"
     },
