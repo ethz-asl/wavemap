@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <optional>
 #include <sstream>
 
 #include "wavemap/core/common.h"
