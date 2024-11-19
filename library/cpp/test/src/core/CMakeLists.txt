@@ -34,7 +34,7 @@ target_sources(test_wavemap_core PRIVATE
     utils/neighbors/test_grid_adjacency.cc
     utils/neighbors/test_grid_neighborhood.cc
     utils/neighbors/test_ndtree_adjacency.cc
-    utils/profile/test_usage_monitor.cc
+    utils/profile/test_resource_monitor.cc
     utils/query/test_classified_map.cc
     utils/query/test_map_interpolator.cpp
     utils/query/test_occupancy_classifier.cc

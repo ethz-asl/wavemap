@@ -91,13 +91,10 @@ int main(int argc, char** argv) {
 
   // Report the resource usage
   resource_monitor.stop();
-  LOG(INFO) << "Processing complete.\nResource usage:\n* RAM total: "
-            << ResourceMonitor::getCurrentRamUsageInKB().value_or(0u)
-            << " kB\n* Map size: "
-            << wavemap_server.getMap()->getMemoryUsage() / 1000
-            << " kB\n* CPU time: " << resource_monitor.getLastEpisodeCpuTime()
-            << " s\n* Wall time: " << resource_monitor.getLastEpisodeWallTime()
-            << " s\n";
+  LOG(INFO) << "Processing complete.\nResource usage:\n"
+            << resource_monitor.getLastEpisodeResourceUsageStats()
+            << "\n* Map size: "
+            << wavemap_server.getMap()->getMemoryUsage() / 1024 << " kB\n";
 
   if (nh_private.param("keep_alive", false)) {
     ros::spin();

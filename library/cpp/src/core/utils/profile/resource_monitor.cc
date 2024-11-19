@@ -1,6 +1,8 @@
 #include "wavemap/core/utils/profile/resource_monitor.h"
 
-#include <string>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 
 namespace wavemap {
 void ResourceMonitor::start() {
@@ -65,6 +67,32 @@ std::optional<size_t> ResourceMonitor::getCurrentRamUsageInKB() {
   }
 
   return ram_usage;
+}
+
+std::string ResourceMonitor::getLastEpisodeResourceUsageStats() const {
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(2);  // Print with two decimals
+  oss << "* CPU time: " << getLastEpisodeCpuTime() << " s\n"
+      << "* Wall time: " << getLastEpisodeWallTime() << " s\n";
+  if (const auto ram_usage = getCurrentRamUsageInKB(); ram_usage) {
+    oss << "* RAM total: " << *ram_usage << " kB";
+  } else {
+    oss << "* RAM total: Unknown";
+  }
+  return oss.str();
+}
+
+std::string ResourceMonitor::getTotalResourceUsageStats() const {
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(2);  // Print with two decimals
+  oss << "* CPU time: " << getTotalCpuTime() << " s\n"
+      << "* Wall time: " << getTotalWallTime() << " s\n";
+  if (const auto ram_usage = getCurrentRamUsageInKB(); ram_usage) {
+    oss << "* RAM total: " << *ram_usage << " kB";
+  } else {
+    oss << "* RAM total: Unknown";
+  }
+  return oss.str();
 }
 
 Duration ResourceMonitor::computeDuration(const timespec& start,

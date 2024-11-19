@@ -25,9 +25,9 @@ class Stopwatch {
   /**
    * @brief Stops the stopwatch for the current timing episode.
    *
-   * Records the end time for the current episode and updates the
-   * total accumulated duration. If the stopwatch is not running,
-   * calling `stop()` has no effect.
+   * Records the end time for the current episode and updates the total
+   * accumulated duration. If the stopwatch is not running, calling `stop()`
+   * has no effect.
    */
   void stop();
 
@@ -43,8 +43,8 @@ class Stopwatch {
    *
    * @return The duration of the last episode in seconds as a `double`.
    *
-   * The value represents the time elapsed between the most recent
-   * `start()` and `stop()` calls. If no episode has been timed,
+   * The value represents the time elapsed during the most recently completed
+   * pair of `start()` and `stop()` calls. If no episode has been completed,
    * this returns 0.
    */
   double getLastEpisodeDuration() const {
@@ -56,9 +56,9 @@ class Stopwatch {
    *
    * @return The total duration in seconds as a `double`.
    *
-   * The value represents the sum of the durations of all episodes
-   * that have been timed since the creation of the stopwatch or
-   * since it was last reset.
+   * The value represents the sum of the durations of all episodes that have
+   * been completed since the creation of the stopwatch or since it was last
+   * reset.
    */
   double getTotalDuration() const {
     return time::to_seconds<double>(total_duration_);
@@ -67,8 +67,8 @@ class Stopwatch {
   /**
    * @brief Resets the stopwatch to its initial state.
    *
-   * This method resets all member variables by reassigning
-   * the object to a default-constructed instance.
+   * This method resets all member variables by reassigning the object to a
+   * default-constructed instance.
    */
   void reset() { *this = Stopwatch{}; }
 

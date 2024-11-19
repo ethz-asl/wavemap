@@ -2,9 +2,8 @@
 #define WAVEMAP_CORE_UTILS_PROFILE_RESOURCE_MONITOR_H_
 
 #include <ctime>
-#include <fstream>
 #include <optional>
-#include <sstream>
+#include <string>
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/utils/time/time.h"
@@ -15,8 +14,8 @@ namespace wavemap {
  *        and RAM usage.
  *
  * The `ResourceMonitor` class tracks CPU and wall clock time over timed
- * episodes, much like wavemap's Stopwatch class. It also provides functionality
- * to retrieve the total RAM usage of the current process.
+ * episodes, much like wavemap's Stopwatch class. It also provides
+ * functionality to retrieve the total RAM usage of the current process.
  */
 class ResourceMonitor {
  public:
@@ -31,9 +30,9 @@ class ResourceMonitor {
   /**
    * @brief Stops timing the current episode.
    *
-   * Records the end CPU and wall clock times for the current episode,
-   * updating the last episode duration and total accumulated duration.
-   * If monitoring is not running, calling `stop()` has no effect.
+   * Records the end CPU and wall clock times for the current episode, updating
+   * the last episode duration and total accumulated duration. If no episode is
+   * in progress, calling `stop()` has no effect.
    */
   void stop();
 
@@ -45,13 +44,22 @@ class ResourceMonitor {
   bool isRunning() const { return running_; }
 
   /**
+   * @brief Gets the current RAM usage of the application.
+   *
+   * @return The current RAM usage in kilobytes, or `std::nullopt` (an empty
+   *         optional) if retrieving RAM usage is not supported on the given
+   *         platform.
+   */
+  static std::optional<size_t> getCurrentRamUsageInKB();
+
+  /**
    * @brief Gets the CPU time duration of the last episode.
    *
    * @return The CPU time duration of the last episode in seconds.
    *
-   * The value represents the CPU time elapsed between the most recent
-   * `start()` and `stop()` calls. If no episode has been monitored, this
-   * returns 0.
+   * The value represents the CPU time elapsed during the most recently
+   * completed pair of `start()` and `stop()` calls. If no episode has been
+   * completed, this returns 0.
    */
   double getLastEpisodeCpuTime() const {
     return time::to_seconds<double>(last_episode_cpu_duration_);
@@ -62,13 +70,26 @@ class ResourceMonitor {
    *
    * @return The wall clock time duration of the last episode in seconds.
    *
-   * The value represents the real-world time elapsed between the most recent
-   * `start()` and `stop()` calls. If no episode has been monitored, this
-   * returns 0.
+   * The value represents the real-world time elapsed during the most recently
+   * completed pair of `start()` and `stop()` calls. If no episode has been
+   * completed, this returns 0.
    */
   double getLastEpisodeWallTime() const {
     return time::to_seconds<double>(last_episode_wall_duration_);
   }
+
+  /**
+   * @brief Get the last episode's resource usage stats formatted as a string.
+   *
+   * @return A string with the CPU time, wall time, and RAM usage statistics.
+   *
+   * The returned string provides a human-readable summary of the resource
+   * usage for the most recently completed episode. CPU and wall times are
+   * displayed in seconds with two decimal places, while RAM usage is reported
+   * in kilobytes. If RAM usage information is unavailable, it will be labeled
+   * as "Unknown". Each statistic is printed on a new line, with a leading `*`.
+   */
+  std::string getLastEpisodeResourceUsageStats() const;
 
   /**
    * @brief Gets the total accumulated CPU time of all episodes.
@@ -97,13 +118,18 @@ class ResourceMonitor {
   }
 
   /**
-   * @brief Gets the current RAM usage of the application.
+   * @brief Get the total accumulated resource usage stats formatted as a
+   *        string.
    *
-   * @return The current RAM usage in kilobytes, or `std::nullopt` (an empty
-   *         optional) if retrieving RAM usage is not supported on the given
-   *         platform.
+   * @return A string with the CPU time, wall time, and RAM usage statistics.
+   *
+   * The returned string provides a human-readable summary of the total resource
+   * usage for all episodes. CPU and wall times are displayed in seconds with
+   * two decimal places, while RAM usage is reported in kilobytes. If RAM usage
+   * information is unavailable, it will be labeled as "Unknown". Each statistic
+   * is printed on a new line, with a leading `*`.
    */
-  static std::optional<size_t> getCurrentRamUsageInKB();
+  std::string getTotalResourceUsageStats() const;
 
   /**
    * @brief Resets the stopwatch to its initial state.
