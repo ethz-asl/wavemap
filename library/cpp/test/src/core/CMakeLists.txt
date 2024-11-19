@@ -34,12 +34,14 @@ target_sources(test_wavemap_core PRIVATE
     utils/neighbors/test_grid_adjacency.cc
     utils/neighbors/test_grid_neighborhood.cc
     utils/neighbors/test_ndtree_adjacency.cc
+    utils/profile/test_usage_monitor.cc
     utils/query/test_classified_map.cc
     utils/query/test_map_interpolator.cpp
     utils/query/test_occupancy_classifier.cc
     utils/query/test_probability_conversions.cc
     utils/query/test_query_accelerator.cc
     utils/sdf/test_sdf_generators.cc
+    utils/time/test_stopwatch.cc
     utils/test_thread_pool.cc)
 
 set_wavemap_target_properties(test_wavemap_core)
