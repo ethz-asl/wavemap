@@ -2,7 +2,17 @@
 
 #include <fstream>
 #include <iomanip>
+#include <optional>
 #include <sstream>
+#include <string>
+
+// Borrowed from BOOST_HAS_CLOCK_GETTIME
+// NOTE: This is predicated on _POSIX_TIMERS (also on _XOPEN_REALTIME
+//       but at least one platform - linux - defines that flag without
+//       defining clock_gettime):
+#if (defined(_POSIX_TIMERS) && (_POSIX_TIMERS + 0 >= 0))
+#define HAS_CLOCK_GETTIME
+#endif
 
 namespace wavemap {
 void ResourceMonitor::start() {
@@ -11,8 +21,13 @@ void ResourceMonitor::start() {
     return;
   }
 
+#ifdef HAS_CLOCK_GETTIME
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &episode_start_cpu_time_);
   clock_gettime(CLOCK_MONOTONIC, &episode_start_wall_time_);
+#else
+  LOG(WARNING) << "Measuring CPU time has not yet been implemented for the "
+                  "current platform.";
+#endif
   running_ = true;
 }
 
@@ -22,10 +37,15 @@ void ResourceMonitor::stop() {
     return;
   }
 
-  timespec episode_stop_cpu_time{};
-  timespec episode_stop_wall_time{};
+  std::timespec episode_stop_cpu_time{};
+  std::timespec episode_stop_wall_time{};
+#ifdef HAS_CLOCK_GETTIME
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &episode_stop_cpu_time);
   clock_gettime(CLOCK_MONOTONIC, &episode_stop_wall_time);
+#else
+  LOG(WARNING) << "Measuring CPU time has not yet been implemented for the "
+                  "current platform.";
+#endif
   running_ = false;
 
   last_episode_cpu_duration_ =
@@ -95,8 +115,8 @@ std::string ResourceMonitor::getTotalResourceUsageStats() const {
   return oss.str();
 }
 
-Duration ResourceMonitor::computeDuration(const timespec& start,
-                                          const timespec& stop) {
+Duration ResourceMonitor::computeDuration(const std::timespec& start,
+                                          const std::timespec& stop) {
   return std::chrono::seconds(stop.tv_sec - start.tv_sec) +
          std::chrono::nanoseconds(stop.tv_nsec - start.tv_nsec);
 }

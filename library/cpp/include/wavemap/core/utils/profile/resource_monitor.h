@@ -144,10 +144,10 @@ class ResourceMonitor {
   bool running_ = false;
 
   /// @brief Stores the CPU time at the start of the current episode.
-  timespec episode_start_cpu_time_{};
+  std::timespec episode_start_cpu_time_{};
 
   /// @brief Stores the wall clock time at the start of the current episode.
-  timespec episode_start_wall_time_{};
+  std::timespec episode_start_wall_time_{};
 
   /// @brief Stores the CPU time duration of the last completed episode.
   Duration last_episode_cpu_duration_{};
@@ -168,7 +168,8 @@ class ResourceMonitor {
    * @param stop The ending POSIX timestamp.
    * @return The computed duration as a wavemap::Duration.
    */
-  static Duration computeDuration(const timespec& start, const timespec& stop);
+  static Duration computeDuration(const std::timespec& start,
+                                  const std::timespec& stop);
 };
 
 }  // namespace wavemap
