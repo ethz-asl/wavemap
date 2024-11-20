@@ -2,6 +2,13 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.2 (2024-11-20)
+------------------
+* Adds a ResourceMonitor class for measuring CPU time, wall time, and RAM usage during macro-benchmarking
+* Document and add unit tests for the Stopwatch and ResourceMonitor classes
+* Extend ThreadPool unit tests
+* Contributors: Victor Reijgwart
+
 2.1.1 (2024-10-24)
 ------------------
 * Address warnings from new cpplint version (v2.0)

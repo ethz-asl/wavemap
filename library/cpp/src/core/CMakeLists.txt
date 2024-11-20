@@ -42,6 +42,7 @@ target_sources(wavemap_core PRIVATE
     map/wavelet_octree.cc
     map/map_base.cc
     map/map_factory.cc
+    utils/profile/resource_monitor.cc
     utils/query/classified_map.cc
     utils/query/query_accelerator.cc
     utils/query/point_sampler.cc

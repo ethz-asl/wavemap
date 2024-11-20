@@ -111,7 +111,7 @@
       ]
     }
   },
-  "oneOf": [
+  "anyOf": [
     {
       "$ref": "#/$defs/spherical_projector"
     },

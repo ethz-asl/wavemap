@@ -5,7 +5,7 @@
 #include <utility>
 
 #include <std_srvs/Empty.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 

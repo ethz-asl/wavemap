@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(wavemap_examples_cpp VERSION 2.1.1 LANGUAGES CXX)
+project(wavemap_examples_cpp VERSION 2.1.2 LANGUAGES CXX)
 
 # Load the wavemap library
 # First, try to load it from sources

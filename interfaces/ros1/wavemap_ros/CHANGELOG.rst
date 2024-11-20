@@ -2,6 +2,12 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.2 (2024-11-20)
+------------------
+* Report CPU, wall time and RAM usage when rosbag_processor completes
+* Adjust wavemap config schemas to resolve false positive validation warnings caused by CLion bug IJPL-63581
+* Contributors: Victor Reijgwart
+
 2.1.1 (2024-10-24)
 ------------------
 * Address warnings from new cpplint version (v2.0)

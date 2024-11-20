@@ -5,6 +5,7 @@
 #include <glog/logging.h>
 #include <rosgraph_msgs/Clock.h>
 #include <tf/tfMessage.h>
+#include <wavemap/core/utils/profile/resource_monitor.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
 #include "wavemap_ros/inputs/depth_image_topic_input.h"
@@ -75,13 +76,25 @@ int main(int argc, char** argv) {
     rosbag_processor.enableSimulatedClock(nh);
   }
 
+  // Start measuring resource usage
+  ResourceMonitor resource_monitor;
+  resource_monitor.start();
+
   // Process the rosbag
   if (!rosbag_processor.processAll()) {
     return -1;
   }
 
-  wavemap_server.getMap()->prune();
+  // Finish processing the map
   wavemap_server.getPipeline().runOperations(/*force_run_all*/ true);
+  wavemap_server.getMap()->prune();
+
+  // Report the resource usage
+  resource_monitor.stop();
+  LOG(INFO) << "Processing complete.\nResource usage:\n"
+            << resource_monitor.getLastEpisodeResourceUsageStats()
+            << "\n* Map size: "
+            << wavemap_server.getMap()->getMemoryUsage() / 1024 << " kB\n";
 
   if (nh_private.param("keep_alive", false)) {
     ros::spin();

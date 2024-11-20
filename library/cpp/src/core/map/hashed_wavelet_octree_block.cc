@@ -3,7 +3,7 @@
 #include <stack>
 #include <vector>
 
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap {
 void HashedWaveletOctreeBlock::threshold() {
