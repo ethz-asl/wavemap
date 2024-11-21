@@ -56,17 +56,14 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
 
   // Load the node at height_ if it was not yet loaded last time
   if (previous_height != tree_height_ && height_ == previous_height) {
-    NodePtrType parent_node = node_stack_[height_ + 1];
+    NodePtrType parent_node = CHECK_NOTNULL(node_stack_[height_ + 1]);
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code_, height_ + 1);
-    if (!parent_node->hasChild(child_index)) {
-      return value_stack_[height_];
-    }
     node_stack_[height_] = parent_node->getChild(child_index);
   }
 
   // Walk down the tree from height_ to index.height
-  while (true) {
+  while (node_stack_[height_] && height_ != index.height) {
     NodePtrType parent_node = node_stack_[height_];
     const FloatingPoint parent_value = value_stack_[height_];
     const NdtreeIndexRelativeChild child_idx =
@@ -75,9 +72,6 @@ FloatingPoint QueryAccelerator<HashedWaveletOctree>::getCellValue(
     value_stack_[height_] =
         HashedWaveletOctree::Block::Transform::backwardSingleChild(
             {parent_value, parent_node->data()}, child_idx);
-    if (height_ == index.height || !parent_node->hasChild(child_idx)) {
-      break;
-    }
     node_stack_[height_] = parent_node->getChild(child_idx);
   }
 
@@ -137,17 +131,14 @@ FloatingPoint QueryAccelerator<HashedChunkedWaveletOctree>::getCellValue(
 
   // Load the node at height_ if it was not yet loaded last time
   if (previous_height != tree_height_ && height_ == previous_height) {
-    NodePtrType parent_node = node_stack_[height_ + 1];
+    NodePtrType parent_node = CHECK_NOTNULL(node_stack_[height_ + 1]);
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code_, height_ + 1);
-    if (!parent_node->hasChild(child_index)) {
-      return value_stack_[height_];
-    }
     node_stack_[height_] = parent_node->getChild(child_index);
   }
 
   // Walk down the tree from height_ to index.height
-  while (true) {
+  while (node_stack_[height_] && height_ != index.height) {
     NodePtrType parent_node = node_stack_[height_];
     const FloatingPoint parent_value = value_stack_[height_];
     const NdtreeIndexRelativeChild child_idx =
@@ -156,9 +147,6 @@ FloatingPoint QueryAccelerator<HashedChunkedWaveletOctree>::getCellValue(
     value_stack_[height_] =
         HashedWaveletOctree::Block::Transform::backwardSingleChild(
             {parent_value, parent_node->data()}, child_idx);
-    if (height_ == index.height || !parent_node->hasChild(child_idx)) {
-      break;
-    }
     node_stack_[height_] = parent_node->getChild(child_idx);
   }
 

@@ -31,13 +31,16 @@ class ChunkedNdtreeNodePtr {
 
   // Emulate pointer semantics
   void reset() { node_.reset(); }
-  operator bool() const { return node_.has_value(); }  // NOLINT
   NodeRef operator*() const { return node_.value(); }
   NodeRef* operator->() { return node_.operator->(); }
   const NodeRef* operator->() const { return node_.operator->(); }
 
+  // Emulate null check semantics
+  operator bool() const { return node_.has_value(); }  // NOLINT
+  bool operator==(nullptr_t) noexcept { return !node_.has_value(); }
+
  private:
-  std::optional<NodeRef> node_;
+  std::optional<NodeRef> node_{};
 };
 
 template <typename ChunkType>
