@@ -25,7 +25,10 @@ class Image {
         PixelT initial_value = data::fill::zero<PixelT>())
       : initial_value_(initial_value),
         data_(Data::Constant(num_rows, num_columns, initial_value)) {}
-  explicit Image(Data data, PixelT initial_value = data::fill::zero<PixelT>())
+  explicit Image(const Data& data,
+                 PixelT initial_value = data::fill::zero<PixelT>())
+      : initial_value_(initial_value), data_(data) {}
+  explicit Image(Data&& data, PixelT initial_value = data::fill::zero<PixelT>())
       : initial_value_(initial_value), data_(std::move(data)) {}
 
   bool empty() const { return !size(); }
