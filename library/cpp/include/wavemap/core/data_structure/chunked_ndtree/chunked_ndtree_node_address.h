@@ -37,7 +37,7 @@ class ChunkedNdtreeNodePtr {
 
   // Emulate null check semantics
   operator bool() const { return node_.has_value(); }  // NOLINT
-  bool operator==(nullptr_t) noexcept { return !node_.has_value(); }
+  bool operator==(std::nullptr_t) noexcept { return !node_.has_value(); }
 
  private:
   std::optional<NodeRef> node_{};
