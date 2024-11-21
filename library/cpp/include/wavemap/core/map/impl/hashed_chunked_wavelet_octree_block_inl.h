@@ -23,16 +23,12 @@ inline FloatingPoint HashedChunkedWaveletOctreeBlock::getCellValue(
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
   OctreeType::NodeConstPtrType node = &ndtree_.getRootNode();
   FloatingPoint value = root_scale_coefficient_;
-  for (int parent_height = tree_height_; index.height < parent_height;
+  for (int parent_height = tree_height_; node && index.height < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     value = Transform::backwardSingleChild({value, node->data()}, child_index);
-    auto child = node->getChild(child_index);
-    if (!child) {
-      break;
-    }
-    node = child;
+    node = node->getChild(child_index);
   }
   return value;
 }

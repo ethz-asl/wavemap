@@ -33,13 +33,13 @@ void HashedWaveletIntegrator::updateMap() {
 
   // Make sure the to-be-updated blocks are allocated
   for (const auto& block_index : blocks_to_update) {
-    occupancy_map_->getOrAllocateBlock(block_index.position);
+    occupancy_map_->getOrAllocateBlock(block_index);
   }
 
   // Update it with the threadpool
   for (const auto& block_index : blocks_to_update) {
     thread_pool_->add_task([this, block_index]() {
-      if (auto* block = occupancy_map_->getBlock(block_index.position)) {
+      if (auto* block = occupancy_map_->getBlock(block_index); block) {
         updateBlock(*block, block_index);
       }
     });
@@ -50,10 +50,9 @@ void HashedWaveletIntegrator::updateMap() {
 std::pair<OctreeIndex, OctreeIndex>
 HashedWaveletIntegrator::getFovMinMaxIndices(
     const Point3D& sensor_origin) const {
-  const IndexElement height =
-      1 + std::max(static_cast<IndexElement>(std::ceil(
-                       std::log2(config_.max_range / min_cell_width_))),
-                   tree_height_);
+  const int height = 1 + std::max(static_cast<int>(std::ceil(std::log2(
+                                      config_.max_range / min_cell_width_))),
+                                  tree_height_);
   const OctreeIndex fov_min_idx = convert::indexAndHeightToNodeIndex<3>(
       convert::pointToFloorIndex<3>(
           sensor_origin - Vector3D::Constant(config_.max_range),
@@ -69,25 +68,28 @@ HashedWaveletIntegrator::getFovMinMaxIndices(
   return {fov_min_idx, fov_max_idx};
 }
 
-void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
-                                          const OctreeIndex& block_index) {
+void HashedWaveletIntegrator::updateBlock(
+    HashedWaveletOctree::Block& block,
+    const HashedWaveletOctree::BlockIndex& block_index) {
   ProfilerZoneScoped;
-  HashedWaveletOctreeBlock::OctreeType::NodeRefType root_node =
-      block.getRootNode();
-  HashedWaveletOctreeBlock::Coefficients::Scale& root_node_scale =
-      block.getRootScale();
   block.setNeedsPruning();
   block.setLastUpdatedStamp();
 
   struct StackElement {
-    HashedWaveletOctreeBlock::OctreeType::NodeRefType parent_node;
+    OctreeType::NodeRefType parent_node;
     const OctreeIndex parent_node_index;
     NdtreeIndexRelativeChild next_child_idx;
     HashedWaveletOctreeBlock::Coefficients::CoefficientsArray
         child_scale_coefficients;
   };
   std::stack<StackElement> stack;
-  stack.emplace(StackElement{root_node, block_index, 0,
+
+  OctreeType::NodeRefType root_node = block.getRootNode();
+  HashedWaveletOctreeBlock::Coefficients::Scale& root_node_scale =
+      block.getRootScale();
+  stack.emplace(StackElement{root_node,
+                             {tree_height_, block_index},
+                             0,
                              HashedWaveletOctreeBlock::Transform::backward(
                                  {root_node_scale, root_node.data()})});
 
@@ -117,8 +119,7 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
     DCHECK_GE(current_child_idx, 0);
     DCHECK_LT(current_child_idx, OctreeIndex::kNumChildren);
 
-    HashedWaveletOctreeBlock::OctreeType::NodeRefType parent_node =
-        stack.top().parent_node;
+    OctreeType::NodeRefType parent_node = stack.top().parent_node;
     FloatingPoint& node_value =
         stack.top().child_scale_coefficients[current_child_idx];
     const OctreeIndex node_index =
@@ -171,7 +172,7 @@ void HashedWaveletIntegrator::updateBlock(HashedWaveletOctree::Block& block,
         projection_model_->cartesianToSensorZ(C_node_center);
     const FloatingPoint bounding_sphere_radius =
         kUnitCubeHalfDiagonal * node_width;
-    HashedWaveletOctreeBlock::OctreeType::NodePtrType node =
+    OctreeType::NodePtrType node =
         parent_node.getChild(node_index.computeRelativeChildIndex());
     if (measurement_model_->computeWorstCaseApproximationError(
             update_type, d_C_cell, bounding_sphere_radius) <

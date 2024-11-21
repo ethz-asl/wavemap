@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <limits>
 #include <string>
+#include <utility>
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/utils/math/int_math.h"
@@ -25,7 +26,8 @@ struct AABB {
   PointType max = PointType::Constant(kInitialMax);
 
   AABB() = default;
-  AABB(PointT min, PointT max) : min(min), max(max) {}
+  AABB(const PointT& min, const PointT& max) : min(min), max(max) {}
+  AABB(PointT&& min, PointT&& max) : min(std::move(min)), max(std::move(max)) {}
 
   void includePoint(const PointType& point) {
     min = min.cwiseMin(point);

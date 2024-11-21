@@ -189,8 +189,6 @@ void HashedChunkedWaveletOctreeBlock::recursivePrune(  // NOLINT
       }
     }
   }
-  if (!has_at_least_one_child) {
-    node.hasAtLeastOneChild() = false;
-  }
+  node.hasAtLeastOneChild() = has_at_least_one_child;
 }
 }  // namespace wavemap

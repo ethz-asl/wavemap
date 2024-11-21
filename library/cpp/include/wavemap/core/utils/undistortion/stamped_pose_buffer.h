@@ -11,7 +11,7 @@ struct StampedPose {
   Transformation3D pose{};
 
   StampedPose() = default;
-  StampedPose(TimeAbsolute stamp, Transformation3D pose)
+  StampedPose(TimeAbsolute stamp, const Transformation3D& pose)
       : stamp(stamp), pose(pose) {}
 };
 

@@ -37,8 +37,6 @@ class ChunkedNdtreeNodePtr {
   const NodeRef* operator->() const { return node_.operator->(); }
 
  private:
-  // TODO(victorr): Benchmark version that uses chunk_=nullptr instead of
-  //                std::optional to mark invalid states
   std::optional<NodeRef> node_;
 };
 
@@ -52,6 +50,7 @@ class ChunkedNdtreeNodeRef {
   static constexpr int kNumChildren = NdtreeIndex<kDim>::kNumChildren;
   using NodeDataType = typename ChunkType::DataType;
 
+  ChunkedNdtreeNodeRef() = delete;
   ChunkedNdtreeNodeRef(ChunkType& chunk, IndexElement relative_node_depth,
                        LinearIndex level_traversal_distance);
 

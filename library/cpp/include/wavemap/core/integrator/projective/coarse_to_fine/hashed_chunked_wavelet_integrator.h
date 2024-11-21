@@ -35,7 +35,7 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   using OctreeType = HashedChunkedWaveletOctreeBlock::OctreeType;
 
   const HashedChunkedWaveletOctree::Ptr occupancy_map_;
-  std::shared_ptr<ThreadPool> thread_pool_;
+  const std::shared_ptr<ThreadPool> thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
   // Cache/pre-compute commonly used values
@@ -68,7 +68,6 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
   void updateNodeRecursive(OctreeType::NodeRefType node,
                            const OctreeIndex& node_index,
                            FloatingPoint& node_value,
-                           OctreeType::ChunkType::BitRef node_has_child,
                            bool& block_needs_thresholding);
   void updateLeavesBatch(const OctreeIndex& parent_index,
                          FloatingPoint& parent_value,

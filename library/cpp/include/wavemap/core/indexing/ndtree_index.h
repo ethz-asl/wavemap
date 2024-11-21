@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "wavemap/core/common.h"
@@ -33,8 +34,10 @@ struct NdtreeIndex {
   Position position = Position::Zero();
 
   NdtreeIndex() = default;
-  NdtreeIndex(Element height, Position position)
+  NdtreeIndex(Element height, const Position& position)
       : height(height), position(position) {}
+  NdtreeIndex(Element height, Position&& position)
+      : height(height), position(std::move(position)) {}
 
   bool operator==(const NdtreeIndex& other) const {
     return height == other.height && position == other.position;

@@ -92,7 +92,7 @@ class HashedChunkedWaveletOctreeBlock {
   void recursiveThreshold(OctreeType::NodeRefType node,
                           Coefficients::Scale& node_scale_coefficient);
   void recursivePrune(
-      HashedChunkedWaveletOctreeBlock::OctreeType::NodeRefType chunk);
+      HashedChunkedWaveletOctreeBlock::OctreeType::NodeRefType node);
 };
 }  // namespace wavemap
 

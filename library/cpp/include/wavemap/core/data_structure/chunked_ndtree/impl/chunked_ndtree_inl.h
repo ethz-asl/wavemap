@@ -81,16 +81,11 @@ ChunkedNdtree<NodeDataT, dim, chunk_height>::getNode(
     const ChunkedNdtree::IndexType& index) {
   NodePtrType node = &getRootNode();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  for (int node_height = max_height_; index.height < node_height;
+  for (int node_height = max_height_; node && index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
-    // Check if the child is allocated
-    NodePtrType child = node->getChild(child_index);
-    if (!child) {
-      return {};
-    }
-    node = child;
+    node = node->getChild(child_index);
   }
   return node;
 }
@@ -101,16 +96,11 @@ ChunkedNdtree<NodeDataT, dim, chunk_height>::getNode(
     const ChunkedNdtree::IndexType& index) const {
   NodeConstPtrType node = &getRootNode();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  for (int node_height = max_height_; index.height < node_height;
+  for (int node_height = max_height_; node && index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
-    // Check if the child is allocated
-    NodeConstPtrType child = node->getChild(child_index);
-    if (!child) {
-      return {};
-    }
-    node = child;
+    node = node->getChild(child_index);
   }
   return node;
 }

@@ -78,17 +78,13 @@ void HashedChunkedWaveletIntegrator::updateBlock(
   bool block_needs_thresholding = block.getNeedsThresholding();
   const OctreeIndex root_node_index{tree_height_, block_index};
   updateNodeRecursive(block.getRootNode(), root_node_index,
-                      block.getRootScale(),
-                      block.getRootChunk().nodeHasAtLeastOneChild(0u),
-                      block_needs_thresholding);
+                      block.getRootScale(), block_needs_thresholding);
   block.setNeedsThresholding(block_needs_thresholding);
 }
 
 void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
     HashedChunkedWaveletIntegrator::OctreeType::NodeRefType node,
     const OctreeIndex& node_index, FloatingPoint& node_value,
-    HashedChunkedWaveletIntegrator::OctreeType::ChunkType::BitRef
-        node_has_child,
     bool& block_needs_thresholding) {
   // Decompress child values
   auto& node_details = node.data();
@@ -146,7 +142,6 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
     // Since the approximation error would still be too big, refine
     auto child_node = node.getOrAllocateChild(relative_child_idx);
     auto& child_details = child_node.data();
-    auto child_has_child = child_node.hasAtLeastOneChild();
 
     // If we're at the leaf level, directly compute the update
     if (child_index.height <= termination_height_ + 1) {
@@ -154,12 +149,8 @@ void HashedChunkedWaveletIntegrator::updateNodeRecursive(  // NOLINT
     } else {
       // Otherwise, recurse
       DCHECK_GE(child_index.height, 0);
-      updateNodeRecursive(child_node, child_index, child_value, child_has_child,
+      updateNodeRecursive(child_node, child_index, child_value,
                           block_needs_thresholding);
-    }
-
-    if (child_has_child || data::is_nonzero(child_details)) {
-      node_has_child = true;
     }
   }
 
