@@ -55,4 +55,14 @@ else ()
 endif ()
 
 # Optional dependencies
-find_package(tracy QUIET)
+if (TRACY_ENABLE)
+  find_package(Tracy QUIET)
+  if (NOT Tracy_FOUND)
+    message(FATAL_ERROR
+        "Profiling is enabled (TRACY_ENABLE=ON), but Tracy is not available. "
+        "Please switch it to OFF or install Tracy as a system package with: "
+        "cmake -S . -B build -DTRACY_ENABLE=ON -DBUILD_SHARED_LIBS=true "
+        "-DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel && "
+        "sudo make install")
+  endif ()
+endif ()
