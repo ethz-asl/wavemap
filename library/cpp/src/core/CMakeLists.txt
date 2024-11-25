@@ -7,8 +7,8 @@ set_wavemap_target_properties(wavemap_core)
 add_wavemap_include_directories(wavemap_core)
 target_link_libraries(wavemap_core
     PUBLIC Eigen3::Eigen glog Boost::preprocessor)
-if (Tracy_FOUND)
-  target_link_libraries(wavemap_core PUBLIC TracyClient dl)
+if (tracy_FOUND)
+  target_link_libraries(wavemap_core PUBLIC TracyClient)
 endif ()
 
 # Set sources

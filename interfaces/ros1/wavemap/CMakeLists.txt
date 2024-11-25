@@ -27,8 +27,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp
 
 # Include the library's tests in catkin's run_tests target
 include(cmake/append_to_catkin_tests.cmake)
-append_to_catkin_tests(test_wavemap_core)
 append_to_catkin_tests(test_wavemap_io)
+append_to_catkin_tests(test_wavemap_core)
 
 # Support installs
 # Mark targets for installation
@@ -38,6 +38,6 @@ install(TARGETS wavemap_core wavemap_io wavemap_pipeline
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 # Mark headers for installation
 install(DIRECTORY
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp/include/wavemap/"
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../library/cpp/include/wavemap/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
     FILES_MATCHING PATTERN "*.h")

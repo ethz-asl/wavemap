@@ -38,11 +38,6 @@ function(set_wavemap_target_properties target)
   # General C++ defines
   target_compile_definitions(${target} PUBLIC EIGEN_INITIALIZE_MATRICES_BY_NAN)
 
-  # Profiling related C++ defines
-  if (TRACY_ENABLE)
-    target_compile_definitions(${target} PUBLIC TRACY_ENABLE)
-  endif ()
-
   # Conditional compilation options
   if (DCHECK_ALWAYS_ON)
     target_compile_definitions(${target} PUBLIC DCHECK_ALWAYS_ON)

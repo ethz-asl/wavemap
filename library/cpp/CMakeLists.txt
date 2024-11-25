@@ -11,7 +11,6 @@ option(BUILD_SHARED_LIBS
 option(USE_SYSTEM_EIGEN "Use system pre-installed Eigen" ON)
 option(USE_SYSTEM_GLOG "Use system pre-installed glog" ON)
 option(USE_SYSTEM_BOOST "Use system pre-installed Boost" ON)
-option(TRACY_ENABLE "Enable profiling with Tracy" OFF)
 
 # CMake helpers and general wavemap tooling (e.g. to run clang-tidy CI)
 include(GNUInstallDirs)
