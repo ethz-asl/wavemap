@@ -2,6 +2,9 @@
 Changelog for package wavemap_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2024-11-25)
+------------------
+
 2.1.2 (2024-11-20)
 ------------------
 * Report CPU, wall time and RAM usage when rosbag_processor completes

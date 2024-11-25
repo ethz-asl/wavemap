@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(wavemap VERSION 2.1.2 LANGUAGES CXX)
+project(wavemap VERSION 2.2.0 LANGUAGES CXX)
 
 # General options
 cmake_policy(SET CMP0077 NEW)
