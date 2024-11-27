@@ -335,7 +335,7 @@ void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
   // Convenience type for elements on the stack used to iterate over the map
   struct StackElement {
     const FloatingPoint scale;
-    const HashedWaveletOctreeBlock::NodeType& node;
+    HashedWaveletOctreeBlock::OctreeType::NodeConstRefType node;
   };
 
   // Serialize the block's metadata
@@ -534,7 +534,7 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
-    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::NodeConstRefType node;
+    HashedChunkedWaveletOctreeBlock::OctreeType::NodeConstRefType node;
   };
 
   // Serialize the block's metadata

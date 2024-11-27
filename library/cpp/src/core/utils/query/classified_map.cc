@@ -131,10 +131,9 @@ void ClassifiedMap::forEachLeaf(IndexedLeafVisitorFunction visitor_fn,
            child_idx < OctreeIndex::kNumChildren; ++child_idx) {
         const OctreeIndex child_node_index =
             node_index.computeChildIndex(child_idx);
-        if (node.hasChild(child_idx) &&
-            termination_height < child_node_index.height) {
-          const Node& child_node = *node.getChild(child_idx);
-          stack.emplace(StackElement{child_node_index, child_node});
+        const Node* child_node = node.getChild(child_idx);
+        if (child_node && termination_height < child_node_index.height) {
+          stack.emplace(StackElement{child_node_index, *child_node});
         } else {
           const Occupancy::Mask child_occupancy =
               node.data().childOccupancyMask(child_idx);
@@ -330,19 +329,19 @@ void ClassifiedMap::QueryCache::reset() {
   morton_code = std::numeric_limits<MortonIndex>::max();
 
   block = nullptr;
-  node_stack = std::array<const Node*, morton::kMaxTreeHeight<3>>{};
+  node_stack.fill({});
 }
 
 void ClassifiedMap::recursiveClassifier(  // NOLINT
-    const HashedWaveletOctreeBlock::NodeType& occupancy_node,
+    HashedWaveletOctreeBlock::OctreeType::NodeConstRefType occupancy_node,
     FloatingPoint average_occupancy, ClassifiedMap::Node& classified_node) {
   const auto child_occupancies =
       HaarTransform::backward({average_occupancy, occupancy_node.data()});
   for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
     const FloatingPoint child_occupancy = child_occupancies[child_idx];
     // If the node has children, recurse
-    if (occupancy_node.hasChild(child_idx)) {
-      const auto* occupancy_child_node = occupancy_node.getChild(child_idx);
+    if (const auto* occupancy_child_node = occupancy_node.getChild(child_idx);
+        occupancy_child_node) {
       auto& classified_child_node =
           classified_node.getOrAllocateChild(child_idx);
       recursiveClassifier(*occupancy_child_node, child_occupancy,
@@ -374,7 +373,7 @@ void ClassifiedMap::recursiveClassifier(  // NOLINT
 
 void ClassifiedMap::recursiveClassifier(  // NOLINT
     const OctreeIndex& node_index,
-    const HashedWaveletOctreeBlock::NodeType* occupancy_node,
+    HashedWaveletOctreeBlock::OctreeType::NodeConstPtrType occupancy_node,
     FloatingPoint occupancy_average,
     QueryAccelerator<HashedBlocks::DenseBlockHash>& esdf_map,
     FloatingPoint robot_radius, ClassifiedMap::Node& classified_node) {

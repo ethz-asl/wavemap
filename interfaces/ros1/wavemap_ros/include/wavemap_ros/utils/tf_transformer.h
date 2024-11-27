@@ -2,6 +2,7 @@
 #define WAVEMAP_ROS_UTILS_TF_TRANSFORMER_H_
 
 #include <map>
+#include <optional>
 #include <string>
 
 #include <tf2_ros/transform_listener.h>
@@ -26,13 +27,11 @@ class TfTransformer {
                         const ros::Time& frame_timestamp);
 
   // Lookup transforms and convert them to Kindr
-  bool lookupTransform(const std::string& to_frame_id,
-                       const std::string& from_frame_id,
-                       const ros::Time& frame_timestamp,
-                       Transformation3D& transform);
-  bool lookupLatestTransform(const std::string& to_frame_id,
-                             const std::string& from_frame_id,
-                             Transformation3D& transform);
+  std::optional<Transformation3D> lookupTransform(
+      const std::string& to_frame_id, const std::string& from_frame_id,
+      const ros::Time& frame_timestamp);
+  std::optional<Transformation3D> lookupLatestTransform(
+      const std::string& to_frame_id, const std::string& from_frame_id);
 
   // Strip leading slashes if needed to avoid TF errors
   static std::string sanitizeFrameId(const std::string& string);
@@ -50,10 +49,9 @@ class TfTransformer {
   bool waitForTransformImpl(const std::string& to_frame_id,
                             const std::string& from_frame_id,
                             const ros::Time& frame_timestamp) const;
-  bool lookupTransformImpl(const std::string& to_frame_id,
-                           const std::string& from_frame_id,
-                           const ros::Time& frame_timestamp,
-                           Transformation3D& transform);
+  std::optional<Transformation3D> lookupTransformImpl(
+      const std::string& to_frame_id, const std::string& from_frame_id,
+      const ros::Time& frame_timestamp);
 };
 }  // namespace wavemap
 

@@ -29,8 +29,11 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
                                  : std::make_shared<ThreadPool>()) {}
 
  private:
+  using BlockList = std::vector<HashedWaveletOctree::BlockIndex>;
+  using OctreeType = HashedWaveletOctreeBlock::OctreeType;
+
   const HashedWaveletOctree::Ptr occupancy_map_;
-  std::shared_ptr<ThreadPool> thread_pool_;
+  const std::shared_ptr<ThreadPool> thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
   // Cache/pre-compute commonly used values
@@ -51,13 +54,12 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
   std::pair<OctreeIndex, OctreeIndex> getFovMinMaxIndices(
       const Point3D& sensor_origin) const;
 
-  using BlockList = std::vector<OctreeIndex>;
   void recursiveTester(const OctreeIndex& node_index,
                        BlockList& update_job_list);
 
   void updateMap() override;
   void updateBlock(HashedWaveletOctree::Block& block,
-                   const OctreeIndex& block_index);
+                   const HashedWaveletOctree::BlockIndex& block_index);
 };
 }  // namespace wavemap
 

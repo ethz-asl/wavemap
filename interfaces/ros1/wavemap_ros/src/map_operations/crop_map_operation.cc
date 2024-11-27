@@ -49,9 +49,9 @@ void CropMapOperation::run(bool force_run) {
     return;
   }
 
-  Transformation3D T_W_B;
-  if (!transformer_->lookupTransform(world_frame_, config_.body_frame,
-                                     current_time, T_W_B)) {
+  const auto T_W_B = transformer_->lookupTransform(
+      world_frame_, config_.body_frame, current_time);
+  if (!T_W_B) {
     ROS_WARN_STREAM(
         "Could not look up center point for map cropping. TF lookup of "
         "body_frame \""
@@ -62,7 +62,7 @@ void CropMapOperation::run(bool force_run) {
 
   const IndexElement tree_height = occupancy_map_->getTreeHeight();
   const FloatingPoint min_cell_width = occupancy_map_->getMinCellWidth();
-  const Point3D t_W_B = T_W_B.getPosition();
+  const Point3D t_W_B = T_W_B->getPosition();
 
   auto indicator_fn = [tree_height, min_cell_width, &config = config_, &t_W_B](
                           const Index3D& block_index, const auto& /*block*/) {

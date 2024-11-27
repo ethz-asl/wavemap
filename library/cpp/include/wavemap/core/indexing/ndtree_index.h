@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "wavemap/core/common.h"
@@ -31,6 +32,12 @@ struct NdtreeIndex {
   //! The node's XYZ position in the octree’s grid at the resolution level set
   //! by *height*
   Position position = Position::Zero();
+
+  NdtreeIndex() = default;
+  NdtreeIndex(Element height, const Position& position)
+      : height(height), position(position) {}
+  NdtreeIndex(Element height, Position&& position)
+      : height(height), position(std::move(position)) {}
 
   bool operator==(const NdtreeIndex& other) const {
     return height == other.height && position == other.position;

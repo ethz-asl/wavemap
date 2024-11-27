@@ -68,18 +68,13 @@ ChunkedNdtreeNodeRef<ChunkType>::ChunkedNdtreeNodeRef(
       level_traversal_distance_(other.level_traversal_distance_) {}
 
 template <typename ChunkType>
-ChunkedNdtreeNodeRef<ChunkType>::operator NodeConstRef() {
+ChunkedNdtreeNodeRef<ChunkType>::operator ChunkedNdtreeNodeRef<
+    const ChunkType>() const {
   return {chunk_, relative_node_depth_, level_traversal_distance_};
 }
 
 template <typename ChunkType>
 typename ChunkedNdtreeNodeRef<ChunkType>::NodePtr
-ChunkedNdtreeNodeRef<ChunkType>::operator&() {  // NOLINT
-  return {&chunk_, relative_node_depth_, level_traversal_distance_};
-}
-
-template <typename ChunkType>
-typename ChunkedNdtreeNodeRef<ChunkType>::NodeConstPtr
 ChunkedNdtreeNodeRef<ChunkType>::operator&() const {  // NOLINT
   return {&chunk_, relative_node_depth_, level_traversal_distance_};
 }
@@ -101,23 +96,12 @@ bool ChunkedNdtreeNodeRef<ChunkType>::hasNonzeroData(
 }
 
 template <typename ChunkType>
-auto& ChunkedNdtreeNodeRef<ChunkType>::data() {
+auto& ChunkedNdtreeNodeRef<ChunkType>::data() const {
   return chunk_.nodeData(computeRelativeNodeIndex());
 }
 
 template <typename ChunkType>
-const auto& ChunkedNdtreeNodeRef<ChunkType>::data() const {
-  return chunk_.nodeData(computeRelativeNodeIndex());
-}
-
-template <typename ChunkType>
-typename ChunkType::BitRef
-ChunkedNdtreeNodeRef<ChunkType>::hasAtLeastOneChild() {
-  return chunk_.nodeHasAtLeastOneChild(computeRelativeNodeIndex());
-}
-
-template <typename ChunkType>
-bool ChunkedNdtreeNodeRef<ChunkType>::hasAtLeastOneChild() const {
+auto ChunkedNdtreeNodeRef<ChunkType>::hasAtLeastOneChild() const {
   return chunk_.nodeHasAtLeastOneChild(computeRelativeNodeIndex());
 }
 
@@ -128,29 +112,44 @@ bool ChunkedNdtreeNodeRef<ChunkType>::hasChild(
 }
 
 template <typename ChunkType>
-typename ChunkedNdtreeNodeRef<ChunkType>::NodePtr
-ChunkedNdtreeNodeRef<ChunkType>::getChild(
-    NdtreeIndexRelativeChild child_index) {
-  const IndexElement child_depth = relative_node_depth_ + 1;
-  const LinearIndex child_level_traversal_distance =
-      computeChildLevelTraversalDistance(child_index);
-  if (child_depth % ChunkType::kHeight == 0) {
-    auto* child_chunk = chunk_.getChild(child_level_traversal_distance);
-    return {child_chunk, 0, 0u};
-  } else {
-    return {&chunk_, child_depth, child_level_traversal_distance};
+void ChunkedNdtreeNodeRef<ChunkType>::eraseChild(
+    NdtreeIndexRelativeChild child_index) const {
+  if (!hasAtLeastOneChild()) {
+    return;
+  }
+  LinearIndex child_start_idx = computeChildLevelTraversalDistance(child_index);
+  LinearIndex child_end_idx = child_start_idx + 1;
+  for (int child_depth = relative_node_depth_ + 1;
+       child_depth <= ChunkType::kHeight; ++child_depth) {
+    for (LinearIndex level_child_idx = child_start_idx;
+         level_child_idx < child_end_idx; ++level_child_idx) {
+      if (child_depth == ChunkType::kHeight) {
+        chunk_.eraseChild(level_child_idx);
+      } else {
+        const LinearIndex level_offset =
+            tree_math::perfect_tree::num_total_nodes_fast<kDim>(child_depth);
+        const LinearIndex chunk_child_idx = level_offset + level_child_idx;
+        chunk_.nodeData(chunk_child_idx) = {};
+        chunk_.nodeHasAtLeastOneChild(chunk_child_idx) = false;
+      }
+    }
+    child_start_idx <<= kDim;
+    child_end_idx <<= kDim;
   }
 }
 
 template <typename ChunkType>
-typename ChunkedNdtreeNodeRef<ChunkType>::NodeConstPtr
+typename ChunkedNdtreeNodeRef<ChunkType>::NodePtr
 ChunkedNdtreeNodeRef<ChunkType>::getChild(
     NdtreeIndexRelativeChild child_index) const {
+  if (!hasAtLeastOneChild()) {
+    return {nullptr, 0, 0u};
+  }
   const IndexElement child_depth = relative_node_depth_ + 1;
   const LinearIndex child_level_traversal_distance =
       computeChildLevelTraversalDistance(child_index);
-  if (child_depth % ChunkType::kHeight == 0) {
-    const auto* child_chunk = chunk_.getChild(child_level_traversal_distance);
+  if (child_depth == ChunkType::kHeight) {
+    auto* child_chunk = chunk_.getChild(child_level_traversal_distance);
     return {child_chunk, 0, 0u};
   } else {
     return {&chunk_, child_depth, child_level_traversal_distance};
@@ -162,10 +161,11 @@ template <typename... DefaultArgs>
 ChunkedNdtreeNodeRef<ChunkType>
 ChunkedNdtreeNodeRef<ChunkType>::getOrAllocateChild(
     NdtreeIndexRelativeChild child_index, DefaultArgs&&... args) const {
+  hasAtLeastOneChild() = true;
   const IndexElement child_depth = relative_node_depth_ + 1;
   const LinearIndex child_level_traversal_distance =
       computeChildLevelTraversalDistance(child_index);
-  if (child_depth % ChunkType::kHeight == 0) {
+  if (child_depth == ChunkType::kHeight) {
     auto& child_chunk = chunk_.getOrAllocateChild(
         child_level_traversal_distance, std::forward<DefaultArgs>(args)...);
     return {child_chunk, 0, 0};

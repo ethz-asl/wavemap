@@ -77,16 +77,11 @@ const typename Ndtree<NodeDataT, dim>::NodeType*
 Ndtree<NodeDataT, dim>::getNode(const IndexType& index) const {
   const NodeType* node = &root_node_;
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  for (int node_height = max_height_; index.height < node_height;
+  for (int node_height = max_height_; node && index.height < node_height;
        --node_height) {
     const NdtreeIndexRelativeChild child_index =
         NdtreeIndex<dim>::computeRelativeChildIndex(morton_code, node_height);
-    // Check if the child is allocated
-    const NodeType* child = node->getChild(child_index);
-    if (!child) {
-      return nullptr;
-    }
-    node = child;
+    node = node->getChild(child_index);
   }
   return node;
 }

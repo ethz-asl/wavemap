@@ -104,10 +104,6 @@ If you need to look up multiple node values, we recommend using our batched quer
 .. literalinclude:: ../../../examples/python/queries/accelerated_queries.py
     :language: python
 
-.. note::
-
-    So far batched queries are only implemented for HashedWaveletOctree maps. We will add support for HashedChunkedWaveletOctree maps in the near future.
-
 .. _python-code-examples-interpolation:
 
 Real coordinates

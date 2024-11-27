@@ -9,8 +9,7 @@ namespace wavemap {
 void HashedWaveletOctreeBlock::threshold() {
   ProfilerZoneScoped;
   if (getNeedsThresholding()) {
-    root_scale_coefficient_ -=
-        recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
+    recursiveThreshold(ndtree_.getRootNode(), root_scale_coefficient_);
     setNeedsThresholding(false);
   }
 }
@@ -37,30 +36,31 @@ void HashedWaveletOctreeBlock::setCellValue(const OctreeIndex& index,
   setNeedsThresholding();
   setLastUpdatedStamp();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
-  std::vector<NodeType*> node_ptrs;
+  std::vector<OctreeType::NodePtrType> ancestors;
   const int height_difference = tree_height_ - index.height;
-  node_ptrs.reserve(height_difference);
-  node_ptrs.emplace_back(&ndtree_.getRootNode());
+  ancestors.reserve(height_difference);
+  ancestors.emplace_back(&ndtree_.getRootNode());
   FloatingPoint current_value = root_scale_coefficient_;
   for (int parent_height = tree_height_; index.height + 1 < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    NodeType* current_parent = node_ptrs.back();
+    OctreeType::NodePtrType current_parent = ancestors.back();
     current_value = Transform::backwardSingleChild(
         {current_value, current_parent->data()}, child_index);
-    NodeType& child = current_parent->getOrAllocateChild(child_index);
-    node_ptrs.emplace_back(&child);
+    OctreeType::NodeRefType child =
+        current_parent->getOrAllocateChild(child_index);
+    ancestors.emplace_back(&child);
   }
-  DCHECK_EQ(node_ptrs.size(), height_difference);
+  DCHECK_EQ(ancestors.size(), height_difference);
 
   Coefficients::Parent coefficients{new_value - current_value, {}};
   for (int parent_height = index.height + 1; parent_height <= tree_height_;
        ++parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    NodeType* current_node = node_ptrs.back();
-    node_ptrs.pop_back();
+    OctreeType::NodePtrType current_node = ancestors.back();
+    ancestors.pop_back();
     coefficients =
         Transform::forwardSingleChild(coefficients.scale, child_index);
     current_node->data() += coefficients.details;
@@ -76,25 +76,26 @@ void HashedWaveletOctreeBlock::addToCellValue(const OctreeIndex& index,
   setLastUpdatedStamp();
   const MortonIndex morton_code = convert::nodeIndexToMorton(index);
 
-  std::vector<NodeType*> node_ptrs;
+  std::vector<OctreeType::NodePtrType> ancestors;
   const int height_difference = tree_height_ - index.height;
-  node_ptrs.reserve(height_difference);
-  node_ptrs.emplace_back(&ndtree_.getRootNode());
+  ancestors.reserve(height_difference);
+  ancestors.emplace_back(&ndtree_.getRootNode());
   for (int parent_height = tree_height_; index.height + 1 < parent_height;
        --parent_height) {
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
-    NodeType* current_parent = node_ptrs.back();
-    NodeType& child = current_parent->getOrAllocateChild(child_index);
-    node_ptrs.emplace_back(&child);
+    OctreeType::NodePtrType current_parent = ancestors.back();
+    OctreeType::NodeRefType child =
+        current_parent->getOrAllocateChild(child_index);
+    ancestors.emplace_back(&child);
   }
-  DCHECK_EQ(node_ptrs.size(), height_difference);
+  DCHECK_EQ(ancestors.size(), height_difference);
 
   Coefficients::Parent coefficients{update, {}};
   for (int parent_height = index.height + 1; parent_height <= tree_height_;
        ++parent_height) {
-    NodeType* current_node = node_ptrs.back();
-    node_ptrs.pop_back();
+    OctreeType::NodePtrType current_node = ancestors.back();
+    ancestors.pop_back();
     const NdtreeIndexRelativeChild child_index =
         OctreeIndex::computeRelativeChildIndex(morton_code, parent_height);
     coefficients =
@@ -115,7 +116,7 @@ void HashedWaveletOctreeBlock::forEachLeaf(
 
   struct StackElement {
     const OctreeIndex node_index;
-    const NodeType& node;
+    OctreeType::NodeConstRefType node;
     const Coefficients::Scale scale_coefficient{};
   };
   std::stack<StackElement> stack;
@@ -123,7 +124,7 @@ void HashedWaveletOctreeBlock::forEachLeaf(
                              ndtree_.getRootNode(), root_scale_coefficient_});
   while (!stack.empty()) {
     const OctreeIndex node_index = stack.top().node_index;
-    const NodeType& node = stack.top().node;
+    OctreeType::NodeConstRefType node = stack.top().node;
     const FloatingPoint node_scale_coefficient = stack.top().scale_coefficient;
     stack.pop();
 
@@ -135,10 +136,9 @@ void HashedWaveletOctreeBlock::forEachLeaf(
           node_index.computeChildIndex(child_idx);
       const FloatingPoint child_scale_coefficient =
           child_scale_coefficients[child_idx];
-      if (node.hasChild(child_idx) &&
-          termination_height < child_node_index.height) {
-        const NodeType& child_node = *node.getChild(child_idx);
-        stack.emplace(StackElement{child_node_index, child_node,
+      OctreeType::NodeConstPtrType child_node = node.getChild(child_idx);
+      if (child_node && termination_height < child_node_index.height) {
+        stack.emplace(StackElement{child_node_index, *child_node,
                                    child_scale_coefficient});
       } else {
         visitor_fn(child_node_index, child_scale_coefficient);
@@ -147,40 +147,42 @@ void HashedWaveletOctreeBlock::forEachLeaf(
   }
 }
 
-HashedWaveletOctreeBlock::Coefficients::Scale
-HashedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
-    HashedWaveletOctreeBlock::NodeType& node, FloatingPoint scale_coefficient) {
+void HashedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
+    HashedWaveletOctreeBlock::OctreeType::NodeRefType node,
+    FloatingPoint& node_scale_coefficient) {
+  // Decompress child values
+  auto& node_detail_coefficients = node.data();
   Coefficients::CoefficientsArray child_scale_coefficients =
-      Transform::backward({scale_coefficient, node.data()});
+      Transform::backward({node_scale_coefficient, node_detail_coefficients});
 
+  // Handle each child
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-    if (node.hasChild(child_idx)) {
-      NodeType& child_node = *node.getChild(child_idx);
-      child_scale_coefficients[child_idx] =
-          recursiveThreshold(child_node, child_scale_coefficients[child_idx]);
+    Coefficients::Scale& child_scale = child_scale_coefficients[child_idx];
+    if (auto child_node = node.getChild(child_idx); child_node) {
+      recursiveThreshold(*child_node, child_scale);
     } else {
-      child_scale_coefficients[child_idx] -= std::clamp(
-          child_scale_coefficients[child_idx], min_log_odds_, max_log_odds_);
+      child_scale = std::clamp(child_scale, min_log_odds_, max_log_odds_);
     }
   }
 
-  const auto [scale_update, detail_updates] =
+  // Compress
+  const auto [new_scale, new_details] =
       Transform::forward(child_scale_coefficients);
-  node.data() -= detail_updates;
-
-  return scale_update;
+  node_detail_coefficients = new_details;
+  node_scale_coefficient = new_scale;
 }
 
 void HashedWaveletOctreeBlock::recursivePrune(  // NOLINT
-    HashedWaveletOctreeBlock::NodeType& node) {
+    HashedWaveletOctreeBlock::OctreeType::NodeRefType node) {
   bool has_at_least_one_child = false;
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
-    if (node.hasChild(child_idx)) {
-      NodeType& child_node = *node.getChild(child_idx);
-      recursivePrune(child_node);
-      if (!child_node.hasChildrenArray() && !child_node.hasNonzeroData(1e-3f)) {
+    if (OctreeType::NodePtrType child_node = node.getChild(child_idx);
+        child_node) {
+      recursivePrune(*child_node);
+      if (!child_node->hasChildrenArray() &&
+          !child_node->hasNonzeroData(1e-3f)) {
         node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;

@@ -61,7 +61,7 @@ class SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPreorder>
  public:
   explicit SubtreeIterator(NodeT* root_node) {
     if (root_node) {
-      upcoming_nodes_.template emplace_front(root_node);
+      upcoming_nodes_.emplace_front(root_node);
     }
   }
   SubtreeIterator& operator++() override;
@@ -109,7 +109,7 @@ class SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>
  public:
   explicit SubtreeIterator(NodeT* root_node) {
     if (root_node) {
-      upcoming_nodes_.template emplace_front(root_node);
+      upcoming_nodes_.emplace_front(root_node);
     }
   }
   SubtreeIterator& operator++() override;

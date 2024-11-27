@@ -71,11 +71,11 @@ void DepthImageTopicInput::processQueue() {
                                             : config_.sensor_frame_id;
 
     // Get the sensor pose in world frame
-    Transformation3D T_W_C;
     const ros::Time stamp =
         oldest_msg.header.stamp + ros::Duration(config_.time_offset);
-    if (!transformer_->lookupTransform(world_frame_, sensor_frame_id, stamp,
-                                       T_W_C)) {
+    const auto T_W_C =
+        transformer_->lookupTransform(world_frame_, sensor_frame_id, stamp);
+    if (!T_W_C) {
       const auto newest_msg = depth_image_queue_.back();
       if ((newest_msg.header.stamp - oldest_msg.header.stamp).toSec() <
           config_.max_wait_for_pose) {
@@ -105,7 +105,7 @@ void DepthImageTopicInput::processQueue() {
     // Create the posed depth image input
     PosedImage<> posed_depth_image(cv_image->image.rows, cv_image->image.cols);
     cv::cv2eigen<FloatingPoint>(cv_image->image, posed_depth_image.getData());
-    posed_depth_image.setPose(T_W_C);
+    posed_depth_image.setPose(*T_W_C);
 
     // Integrate the depth image
     ROS_DEBUG_STREAM("Inserting depth image with "

@@ -15,10 +15,15 @@ struct StringList {
 
   // Constructors
   StringList() = default;
-  StringList(ValueType value) : value(std::move(value)) {}  // NOLINT
+  StringList(const ValueType& value) : value(value) {}        // NOLINT
+  StringList(ValueType&& value) : value(std::move(value)) {}  // NOLINT
 
   // Assignment operator
-  StringList& operator=(ValueType rhs) {
+  StringList& operator=(const ValueType& rhs) {
+    value = rhs;
+    return *this;
+  }
+  StringList& operator=(ValueType&& rhs) {
     value = std::move(rhs);
     return *this;
   }
@@ -29,8 +34,8 @@ struct StringList {
   bool operator!=(const StringList& rhs) const { return value != rhs.value; }
 
   // Allow implicit conversions to the underlying type
-  operator ValueType&() { return value; }
-  operator const ValueType&() const { return value; }
+  operator ValueType&() { return value; }              // NOLINT
+  operator const ValueType&() const { return value; }  // NOLINT
 
   // Method to load from configs
   static std::optional<StringList> from(const param::Value& param);

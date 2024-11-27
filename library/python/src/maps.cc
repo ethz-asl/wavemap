@@ -253,6 +253,68 @@ void add_map_bindings(nb::module_& m) {
            "node_index"_a,
            "Query the value of the map at a given octree node index.")
       .def(
+          "get_cell_values",
+          [](const HashedChunkedWaveletOctree& self,
+             const nb::ndarray<IndexElement, nb::shape<-1, 3>, nb::device::cpu>&
+                 indices) {
+            // Create a query accelerator
+            QueryAccelerator<HashedChunkedWaveletOctree> query_accelerator{
+                self};
+            // Create nb::ndarray view for efficient access to the query indices
+            const auto index_view = indices.view();
+            const auto num_queries = index_view.shape(0);
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
+            auto* results = new float[num_queries];
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+            // Compute the interpolated values
+            for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
+              results[query_idx] = query_accelerator.getCellValue(
+                  {index_view(query_idx, 0), index_view(query_idx, 1),
+                   index_view(query_idx, 2)});
+            }
+            // Return results as numpy array
+            return nb::ndarray<nb::numpy, float>{
+                results, {num_queries, 1u}, owner};
+          },
+          "index_list"_a,
+          "Query the map at the given indices, provided as a matrix with one "
+          "(x, y, z) index per row.")
+      .def(
+          "get_cell_values",
+          [](const HashedChunkedWaveletOctree& self,
+             const nb::ndarray<IndexElement, nb::shape<-1, 4>, nb::device::cpu>&
+                 indices) {
+            // Create a query accelerator
+            QueryAccelerator<HashedChunkedWaveletOctree> query_accelerator{
+                self};
+            // Create nb::ndarray view for efficient access to the query indices
+            auto index_view = indices.view();
+            const auto num_queries = index_view.shape(0);
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
+            auto* results = new float[num_queries];
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+            // Compute the interpolated values
+            for (size_t query_idx = 0; query_idx < num_queries; ++query_idx) {
+              const OctreeIndex node_index{
+                  index_view(query_idx, 0),
+                  {index_view(query_idx, 1), index_view(query_idx, 2),
+                   index_view(query_idx, 3)}};
+              results[query_idx] = query_accelerator.getCellValue(node_index);
+            }
+            // Return results as numpy array
+            return nb::ndarray<nb::numpy, float>{
+                results, {num_queries, 1u}, owner};
+          },
+          "node_index_list"_a,
+          "Query the map at the given node indices, provided as a matrix with "
+          "one (height, x, y, z) node index per row.")
+      .def(
           "interpolate",
           [](const MapBase& self, const Point3D& position,
              InterpolationMode mode) {
@@ -267,6 +329,54 @@ void add_map_bindings(nb::module_& m) {
           },
           "position"_a, "mode"_a = InterpolationMode::kTrilinear,
           "Query the map's value at a point, using the specified interpolation "
-          "mode.");
+          "mode.")
+      .def(
+          "interpolate",
+          [](const HashedChunkedWaveletOctree& self,
+             const nb::ndarray<FloatingPoint, nb::shape<-1, 3>,
+                               nb::device::cpu>& positions,
+             InterpolationMode mode) {
+            // Create a query accelerator
+            QueryAccelerator<HashedChunkedWaveletOctree> query_accelerator{
+                self};
+            // Create nb::ndarray view for efficient access to the query points
+            const auto positions_view = positions.view();
+            const auto num_queries = positions_view.shape(0);
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
+            auto* results = new float[num_queries];
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+            // Compute the interpolated values
+            switch (mode) {
+              case InterpolationMode::kNearest:
+                for (size_t query_idx = 0; query_idx < num_queries;
+                     ++query_idx) {
+                  results[query_idx] = interpolate::nearestNeighbor(
+                      query_accelerator, {positions_view(query_idx, 0),
+                                          positions_view(query_idx, 1),
+                                          positions_view(query_idx, 2)});
+                }
+                break;
+              case InterpolationMode::kTrilinear:
+                for (size_t query_idx = 0; query_idx < num_queries;
+                     ++query_idx) {
+                  results[query_idx] = interpolate::trilinear(
+                      query_accelerator, {positions_view(query_idx, 0),
+                                          positions_view(query_idx, 1),
+                                          positions_view(query_idx, 2)});
+                }
+                break;
+              default:
+                throw nb::type_error("Unknown interpolation mode.");
+            }
+            // Return results as numpy array
+            return nb::ndarray<nb::numpy, float>{
+                results, {num_queries, 1u}, owner};
+          },
+          "position_list"_a, "mode"_a = InterpolationMode::kTrilinear,
+          "Query the map's value at the given points, using the specified "
+          "interpolation mode.");
 }
 }  // namespace wavemap

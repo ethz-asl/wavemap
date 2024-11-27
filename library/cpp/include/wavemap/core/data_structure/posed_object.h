@@ -16,7 +16,7 @@ class PosedObject : public ObjectT {
   using ObjectT::ObjectT;
 
   template <typename... Args>
-  explicit PosedObject(Transformation3D T_W_C, Args... args)
+  explicit PosedObject(const Transformation3D& T_W_C, Args... args)
       : ObjectT(std::forward<Args>(args)...) {
     setPose(T_W_C);
   }

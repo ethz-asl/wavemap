@@ -22,7 +22,7 @@ class NdtreeBlockHash {
   static constexpr HeightType kChunkHeight = 1;
 
   explicit NdtreeBlockHash(HeightType max_tree_height,
-                           CellDataT default_value = CellDataT{})
+                           CellDataT default_value = {})
       : max_height_(max_tree_height), default_value_(default_value) {}
 
   bool empty() const { return block_map_.empty(); }

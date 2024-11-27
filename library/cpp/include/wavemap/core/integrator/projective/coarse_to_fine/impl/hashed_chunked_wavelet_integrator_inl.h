@@ -39,7 +39,7 @@ inline void HashedChunkedWaveletIntegrator::recursiveTester(  // NOLINT
 
 inline void HashedChunkedWaveletIntegrator::updateLeavesBatch(
     const OctreeIndex& parent_index, FloatingPoint& parent_value,
-    HaarCoefficients<FloatingPoint, 3>::Details& parent_details) {
+    HashedChunkedWaveletIntegrator::OctreeType::NodeDataType& parent_details) {
   // Decompress
   auto child_values = HashedChunkedWaveletOctreeBlock::Transform::backward(
       {parent_value, parent_details});

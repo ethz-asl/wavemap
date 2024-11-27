@@ -2,6 +2,11 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2024-11-25)
+------------------
+* Refactor TfTransformer to return by value, using std::nullopt to signal failure
+* Contributors: Victor Reijgwart
+
 2.1.2 (2024-11-20)
 ------------------
 * Report CPU, wall time and RAM usage when rosbag_processor completes

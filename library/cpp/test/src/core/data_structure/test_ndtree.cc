@@ -41,18 +41,17 @@ TYPED_TEST(NdtreeTest, AllocatingAndClearing) {
         GeometryGenerator::getRandomNdtreeIndex<IndexType>(min_child_pos,
                                                            max_child_pos, 0, 0)
             .computeParentIndex(test_height);
-    const bool index_is_inside_root_chunk_node =
-        (tree_height - random_index.height) < TypeParam::kChunkHeight;
+    const bool index_is_root = tree_height == random_index.height;
 
-    EXPECT_EQ(ndtree.hasNode(random_index), index_is_inside_root_chunk_node)
+    EXPECT_EQ(ndtree.hasNode(random_index), index_is_root)
         << random_index.toString() << " and tree height " << tree_height;
     ndtree.getOrAllocateNode(random_index);
     EXPECT_TRUE(ndtree.hasNode(random_index))
         << random_index.toString() << " and tree height " << tree_height;
-    EXPECT_EQ(ndtree.empty(), index_is_inside_root_chunk_node);
+    EXPECT_EQ(ndtree.empty(), index_is_root);
 
     ndtree.clear();
-    EXPECT_EQ(ndtree.hasNode(random_index), index_is_inside_root_chunk_node)
+    EXPECT_EQ(ndtree.hasNode(random_index), index_is_root)
         << random_index.toString() << " and tree height " << tree_height;
     EXPECT_TRUE(ndtree.empty());
   }

@@ -42,15 +42,15 @@ PointcloudUndistorter::Result PointcloudUndistorter::undistortPointcloud(
   undistortion::StampedPoseBuffer pose_buffer;
   pose_buffer.reserve(num_time_steps);
   for (int step_idx = 0; step_idx < num_time_steps; ++step_idx) {
-    auto& stamped_pose = pose_buffer.emplace_back();
-    stamped_pose.stamp = start_time + step_idx * step_size;
-    if (!transformer_->lookupTransform(
-            fixed_frame, stamped_pointcloud.getSensorFrame(),
-            convert::nanoSecondsToRosTime(stamped_pose.stamp),
-            stamped_pose.pose)) {
+    const auto stamp = start_time + step_idx * step_size;
+    const auto pose = transformer_->lookupTransform(
+        fixed_frame, stamped_pointcloud.getSensorFrame(),
+        convert::nanoSecondsToRosTime(stamp));
+    if (pose) {
+      pose_buffer.emplace_back(stamp, *pose);
+    } else {
       ROS_WARN_STREAM("Failed to buffer intermediate pose at time "
-                      << convert::nanoSecondsToRosTime(stamped_pose.stamp)
-                      << ".");
+                      << convert::nanoSecondsToRosTime(stamp) << ".");
       return Result::kIntermediateTimeNotInTfBuffer;
     }
   }
