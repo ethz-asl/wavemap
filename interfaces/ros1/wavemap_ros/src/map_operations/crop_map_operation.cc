@@ -4,7 +4,6 @@
 #include <string>
 #include <utility>
 
-#include <wavemap/core/map/hashed_blocks.h>
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/utils/edit/crop.h>
@@ -55,6 +54,7 @@ void CropMapOperation::run(bool force_run) {
     return;
   }
 
+  // Get the center point of the cropping sphere (usually the robot's position)
   const bool use_most_recent_transform = config_.tf_time_offset < 0.f;
   const ros::Time timestamp =
       use_most_recent_transform
@@ -79,6 +79,7 @@ void CropMapOperation::run(bool force_run) {
     return;
   }
 
+  // Crop the map
   timer_.start();
   if (auto* hashed_wavelet_octree =
           dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
