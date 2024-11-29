@@ -31,10 +31,12 @@ bool CropMapOperationConfig::isValid(bool verbose) const {
 
 CropMapOperation::CropMapOperation(const CropMapOperationConfig& config,
                                    MapBase::Ptr occupancy_map,
+                                   std::shared_ptr<ThreadPool> thread_pool,
                                    std::shared_ptr<TfTransformer> transformer,
                                    std::string world_frame)
     : MapOperationBase(std::move(occupancy_map)),
       config_(config.checkValid()),
+      thread_pool_(std::move(thread_pool)),
       transformer_(std::move(transformer)),
       world_frame_(std::move(world_frame)) {}
 
@@ -85,13 +87,14 @@ void CropMapOperation::run(bool force_run) {
           dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
       hashed_wavelet_octree) {
     crop_to_sphere(T_W_B->getPosition(), config_.radius, *hashed_wavelet_octree,
-                   termination_height_);
+                   termination_height_, thread_pool_);
   } else if (auto* hashed_chunked_wavelet_octree =
                  dynamic_cast<HashedChunkedWaveletOctree*>(
                      occupancy_map_.get());
              hashed_chunked_wavelet_octree) {
     crop_to_sphere(T_W_B->getPosition(), config_.radius,
-                   *hashed_chunked_wavelet_octree, termination_height_);
+                   *hashed_chunked_wavelet_octree, termination_height_,
+                   thread_pool_);
   } else {
     ROS_WARN(
         "Map cropping is only supported for hash-based map data structures.");

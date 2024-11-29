@@ -3,10 +3,10 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include <wavemap/core/config/config_base.h>
 #include <wavemap/core/map/map_base.h>
+#include <wavemap/core/utils/thread_pool.h>
 #include <wavemap/core/utils/time/stopwatch.h>
 #include <wavemap/pipeline/map_operations/map_operation_base.h>
 
@@ -48,6 +48,7 @@ class CropMapOperation : public MapOperationBase {
  public:
   CropMapOperation(const CropMapOperationConfig& config,
                    MapBase::Ptr occupancy_map,
+                   std::shared_ptr<ThreadPool> thread_pool,
                    std::shared_ptr<TfTransformer> transformer,
                    std::string world_frame);
 
@@ -57,6 +58,7 @@ class CropMapOperation : public MapOperationBase {
 
  private:
   const CropMapOperationConfig config_;
+  const std::shared_ptr<ThreadPool> thread_pool_;
   const std::shared_ptr<TfTransformer> transformer_;
   const std::string world_frame_;
   ros::Time last_run_timestamp_;

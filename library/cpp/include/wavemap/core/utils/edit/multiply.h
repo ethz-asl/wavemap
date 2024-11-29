@@ -1,7 +1,10 @@
 #ifndef WAVEMAP_CORE_UTILS_EDIT_MULTIPLY_H_
 #define WAVEMAP_CORE_UTILS_EDIT_MULTIPLY_H_
 
+#include <memory>
+
 #include "wavemap/core/common.h"
+#include "wavemap/core/utils/thread_pool.h"
 
 namespace wavemap {
 
@@ -21,12 +24,31 @@ void multiplyNodeRecursive(
 }
 
 template <typename MapType>
-void multiply(MapType& map, FloatingPoint multiplier) {
-  map.forEachBlock([multiplier](const Index3D& /*block_index*/, auto& block) {
-    block.getRootScale() *= multiplier;
-    multiplyNodeRecursive<MapType>(block.getRootNode(), multiplier);
+void multiply(MapType& map, FloatingPoint multiplier,
+              const std::shared_ptr<ThreadPool>& thread_pool = nullptr) {
+  using NodePtrType = typename MapType::Block::OctreeType::NodePtrType;
+
+  // Process all blocks
+  for (auto& [block_index, block] : map.getHashMap()) {
+    // Indicate that the block has changed
     block.setLastUpdatedStamp();
-  });
+    // Multiply the block's average value (wavelet scale coefficient)
+    FloatingPoint& root_value = block.getRootScale();
+    root_value *= multiplier;
+    // Recursively multiply all node values (wavelet detail coefficients)
+    NodePtrType root_node_ptr = &block.getRootNode();
+    if (thread_pool) {
+      thread_pool->add_task([root_node_ptr, multiplier]() {
+        multiplyNodeRecursive<MapType>(*root_node_ptr, multiplier);
+      });
+    } else {
+      multiplyNodeRecursive<MapType>(*root_node_ptr, multiplier);
+    }
+  }
+  // Wait for all parallel jobs to finish
+  if (thread_pool) {
+    thread_pool->wait_all();
+  }
 }
 }  // namespace wavemap
 

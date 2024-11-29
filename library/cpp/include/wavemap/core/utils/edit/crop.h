@@ -1,7 +1,10 @@
 #ifndef WAVEMAP_CORE_UTILS_EDIT_CROP_H_
 #define WAVEMAP_CORE_UTILS_EDIT_CROP_H_
 
+#include <memory>
+
 #include "wavemap/core/common.h"
+#include "wavemap/core/utils/thread_pool.h"
 
 namespace wavemap {
 template <typename MapType>
@@ -88,10 +91,13 @@ void cropNodeRecursive(typename MapType::Block::OctreeType::NodeRefType node,
 
 template <typename MapType>
 void crop_to_sphere(const Point3D& t_W_center, FloatingPoint radius,
-                    MapType& map, IndexElement termination_height) {
+                    MapType& map, IndexElement termination_height,
+                    const std::shared_ptr<ThreadPool>& thread_pool = nullptr) {
+  using NodePtrType = typename MapType::Block::OctreeType::NodePtrType;
   const IndexElement tree_height = map.getTreeHeight();
   const FloatingPoint min_cell_width = map.getMinCellWidth();
 
+  // Check all blocks
   for (auto it = map.getHashMap().begin(); it != map.getHashMap().end();) {
     // Start by testing at the block level
     const Index3D& block_index = it->first;
@@ -112,12 +118,32 @@ void crop_to_sphere(const Point3D& t_W_center, FloatingPoint radius,
     // Since the block overlaps with the sphere's boundary, we need to process
     // it at a higher resolution by recursing over its cells
     auto& block = it->second;
-    cropNodeRecursive<MapType>(block.getRootNode(), block_node_index,
-                               block.getRootScale(), t_W_center, radius,
-                               min_cell_width, termination_height);
+    // Indicate that the block has changed
     block.setLastUpdatedStamp();
-
+    // Get pointers to the root value and node, which contain the wavelet
+    // scale and detail coefficients, respectively
+    FloatingPoint* root_value_ptr = &block.getRootScale();
+    NodePtrType root_node_ptr = &block.getRootNode();
+    // Recursively crop all nodes
+    if (thread_pool) {
+      thread_pool->add_task([root_node_ptr, root_value_ptr, block_node_index,
+                             t_W_center, radius, min_cell_width,
+                             termination_height]() {
+        cropNodeRecursive<MapType>(*root_node_ptr, block_node_index,
+                                   *root_value_ptr, t_W_center, radius,
+                                   min_cell_width, termination_height);
+      });
+    } else {
+      cropNodeRecursive<MapType>(*root_node_ptr, block_node_index,
+                                 *root_value_ptr, t_W_center, radius,
+                                 min_cell_width, termination_height);
+    }
+    // Advance to the next block
     ++it;
+  }
+  // Wait for all parallel jobs to finish
+  if (thread_pool) {
+    thread_pool->wait_all();
   }
 }
 }  // namespace wavemap

@@ -1,5 +1,8 @@
 #include "wavemap_ros/map_operations/decay_map_operation.h"
 
+#include <memory>
+#include <utility>
+
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 
@@ -19,6 +22,13 @@ bool DecayMapOperationConfig::isValid(bool verbose) const {
 
   return all_valid;
 }
+
+DecayMapOperation::DecayMapOperation(const DecayMapOperationConfig& config,
+                                     MapBase::Ptr occupancy_map,
+                                     std::shared_ptr<ThreadPool> thread_pool)
+    : MapOperationBase(std::move(occupancy_map)),
+      config_(config.checkValid()),
+      thread_pool_(std::move(thread_pool)) {}
 
 bool DecayMapOperation::shouldRun(const ros::Time& current_time) {
   return config_.once_every < (current_time - last_run_timestamp_).toSec();
@@ -41,12 +51,12 @@ void DecayMapOperation::run(bool force_run) {
   if (auto* hashed_wavelet_octree =
           dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
       hashed_wavelet_octree) {
-    multiply(*hashed_wavelet_octree, config_.decay_rate);
+    multiply(*hashed_wavelet_octree, config_.decay_rate, thread_pool_);
   } else if (auto* hashed_chunked_wavelet_octree =
                  dynamic_cast<HashedChunkedWaveletOctree*>(
                      occupancy_map_.get());
              hashed_chunked_wavelet_octree) {
-    multiply(*hashed_chunked_wavelet_octree, config_.decay_rate);
+    multiply(*hashed_chunked_wavelet_octree, config_.decay_rate, thread_pool_);
   } else {
     ROS_WARN("Map decay is only supported for hash-based map data structures.");
   }
