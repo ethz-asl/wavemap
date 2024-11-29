@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "Properties of a single map decay operation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "decay_map"
+    },
+    "once_every": {
+      "description": "Time period controlling how often the map is decayed.",
+      "$ref": "../value_with_unit/convertible_to_seconds.json"
+    },
+    "decay_rate": {
+      "description": "Decay rate in the range (0, 1), applied to each map value as `map_value *= decay_rate` at each operation run.",
+      "type": "number"
+    }
+  }
+}

@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "wavemap_ros/map_operations/crop_map_operation.h"
+#include "wavemap_ros/map_operations/decay_map_operation.h"
 #include "wavemap_ros/map_operations/publish_map_operation.h"
 #include "wavemap_ros/map_operations/publish_pointcloud_operation.h"
 
@@ -58,10 +59,18 @@ std::unique_ptr<MapOperationBase> MapRosOperationFactory::create(
     case MapRosOperationType::kCropMap:
       if (const auto config = CropMapOperationConfig::from(params); config) {
         return std::make_unique<CropMapOperation>(
-            config.value(), std::move(occupancy_map), std::move(transformer),
-            std::move(world_frame));
+            config.value(), std::move(occupancy_map), std::move(thread_pool),
+            std::move(transformer), std::move(world_frame));
       } else {
         ROS_ERROR("Crop map operation config could not be loaded.");
+        return nullptr;
+      }
+    case MapRosOperationType::kDecayMap:
+      if (const auto config = DecayMapOperationConfig::from(params); config) {
+        return std::make_unique<DecayMapOperation>(
+            config.value(), std::move(occupancy_map), std::move(thread_pool));
+      } else {
+        ROS_ERROR("Decay map operation config could not be loaded.");
         return nullptr;
       }
   }
