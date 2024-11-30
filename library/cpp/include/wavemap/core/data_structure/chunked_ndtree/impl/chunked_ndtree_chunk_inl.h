@@ -21,7 +21,7 @@ void ChunkedNdtreeChunk<DataT, dim, height>::clear() {
 
 template <typename DataT, int dim, int height>
 size_t ChunkedNdtreeChunk<DataT, dim, height>::getMemoryUsage() const {
-  size_t memory_usage = sizeof(ChunkedNdtreeChunk<DataT, dim, height>);
+  size_t memory_usage = sizeof(ChunkedNdtreeChunk);
   if (hasChildrenArray()) {
     memory_usage += sizeof(ChildChunkArray);
   }

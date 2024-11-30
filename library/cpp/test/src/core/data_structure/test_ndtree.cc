@@ -15,9 +15,9 @@ template <typename NdtreeT>
 class NdtreeTest : public FixtureBase, public GeometryGenerator {};
 
 using NdtreeTypes =
-    ::testing::Types<Ndtree<int, 1>, Ndtree<int, 2>, Ndtree<int, 3>,
-                     ChunkedNdtree<int, 1, 3>, ChunkedNdtree<int, 2, 3>,
-                     ChunkedNdtree<int, 3, 3>>;
+    ::testing::Types<BinaryTree<int>, Quadtree<int>, Octree<int>,
+                     ChunkedBinaryTree<int, 3>, ChunkedQuadtree<int, 3>,
+                     ChunkedOctree<int, 3>>;
 TYPED_TEST_SUITE(NdtreeTest, NdtreeTypes, );
 
 TYPED_TEST(NdtreeTest, AllocatingAndClearing) {

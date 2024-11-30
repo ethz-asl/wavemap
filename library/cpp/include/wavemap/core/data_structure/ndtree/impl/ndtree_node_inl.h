@@ -20,7 +20,7 @@ void NdtreeNode<DataT, dim>::clear() {
 
 template <typename DataT, int dim>
 size_t NdtreeNode<DataT, dim>::getMemoryUsage() const {
-  size_t memory_usage = sizeof(NdtreeNode<DataT, dim>);
+  size_t memory_usage = sizeof(NdtreeNode);
   if (hasChildrenArray()) {
     memory_usage += sizeof(ChildrenArray);
   }

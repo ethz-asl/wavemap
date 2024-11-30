@@ -46,12 +46,9 @@ class ChunkedNdtreeNodePtr {
 template <typename ChunkType>
 class ChunkedNdtreeNodeRef {
  public:
-  using NodeRef = ChunkedNdtreeNodeRef<ChunkType>;
+  using NodeRef = ChunkedNdtreeNodeRef;
   using NodePtr = ChunkedNdtreeNodePtr<ChunkType>;
-
   static constexpr int kDim = ChunkType::kDim;
-  static constexpr int kNumChildren = NdtreeIndex<kDim>::kNumChildren;
-  using NodeDataType = typename ChunkType::DataType;
 
   ChunkedNdtreeNodeRef() = delete;
   ChunkedNdtreeNodeRef(ChunkType& chunk, IndexElement relative_node_depth,
