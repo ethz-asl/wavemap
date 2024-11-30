@@ -37,6 +37,7 @@ class ChunkedNdtree {
   size_t getMemoryUsage() const;
 
   bool hasNode(const IndexType& index) const { return getNode(index); }
+  bool eraseNode(const IndexType& index);
   NodePtrType getNode(const IndexType& index);
   NodeConstPtrType getNode(const IndexType& index) const;
   template <typename... DefaultArgs>

@@ -76,6 +76,18 @@ size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::getMemoryUsage() const {
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
+bool ChunkedNdtree<NodeDataT, dim, chunk_height>::eraseNode(
+    const IndexType& index) {
+  IndexType parent_index = index.computeParentIndex();
+  NodePtrType parent_node = getNode(parent_index);
+  if (parent_node) {
+    parent_node->eraseChild(index.computeRelativeChildIndex());
+    return true;
+  }
+  return false;
+}
+
+template <typename NodeDataT, int dim, int chunk_height>
 typename ChunkedNdtree<NodeDataT, dim, chunk_height>::NodePtrType
 ChunkedNdtree<NodeDataT, dim, chunk_height>::getNode(
     const ChunkedNdtree::IndexType& index) {
