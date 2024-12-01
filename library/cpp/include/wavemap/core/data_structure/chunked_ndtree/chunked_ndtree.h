@@ -50,8 +50,8 @@ class ChunkedNdtree {
   ChunkType& getRootChunk() { return root_chunk_; }
   const ChunkType& getRootChunk() const { return root_chunk_; }
 
-  NodeRefType getRootNode() { return {root_chunk_, 0, 0}; }
-  NodeConstRefType getRootNode() const { return {root_chunk_, 0, 0}; }
+  NodeRefType getRootNode() { return {root_chunk_}; }
+  NodeConstRefType getRootNode() const { return {root_chunk_}; }
 
   template <TraversalOrder traversal_order>
   auto getChunkIterator();
