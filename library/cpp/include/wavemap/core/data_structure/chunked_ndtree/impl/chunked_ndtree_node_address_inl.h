@@ -9,8 +9,10 @@ ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(ChunkT* chunk)
     : node_(chunk ? std::make_optional<NodeRef>(*chunk) : std::nullopt) {}
 
 template <typename ChunkT>
-ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(ChunkT* chunk, KeyType key)
-    : node_(chunk ? std::make_optional<NodeRef>(*chunk, key) : std::nullopt) {}
+ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(ChunkT* chunk,
+                                                   OffsetType offset)
+    : node_(chunk ? std::make_optional<NodeRef>(*chunk, offset)
+                  : std::nullopt) {}
 
 template <typename ChunkT>
 ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(
@@ -49,23 +51,23 @@ ChunkedNdtreeNodePtr<ChunkT>& ChunkedNdtreeNodePtr<ChunkT>::operator=(
 template <typename ChunkT>
 ChunkedNdtreeNodeRef<ChunkT>::ChunkedNdtreeNodeRef(
     const ChunkedNdtreeNodeRef& other)
-    : ChunkedNdtreeNodeRef(other.chunk_, other.key_) {}
+    : ChunkedNdtreeNodeRef(other.chunk_, other.offset_) {}
 
 template <typename ChunkT>
 ChunkedNdtreeNodeRef<ChunkT>::ChunkedNdtreeNodeRef(
     ChunkedNdtreeNodeRef&& other) noexcept
-    : chunk_(other.chunk_), key_(other.key_) {}
+    : chunk_(other.chunk_), offset_(other.offset_) {}
 
 template <typename ChunkT>
 ChunkedNdtreeNodeRef<ChunkT>::operator ChunkedNdtreeNodeRef<const ChunkT>()
     const {
-  return {chunk_, key_};
+  return {chunk_, offset_};
 }
 
 template <typename ChunkT>
 typename ChunkedNdtreeNodeRef<ChunkT>::NodePtr
 ChunkedNdtreeNodeRef<ChunkT>::operator&() const {  // NOLINT
-  return {&chunk_, key_};
+  return {&chunk_, offset_};
 }
 
 template <typename ChunkT>
@@ -75,23 +77,23 @@ bool ChunkedNdtreeNodeRef<ChunkT>::empty() const {
 
 template <typename ChunkT>
 bool ChunkedNdtreeNodeRef<ChunkT>::hasNonzeroData() const {
-  return chunk_.nodeHasNonzeroData(computeIndexInChunk());
+  return chunk_.nodeHasNonzeroData(offset_);
 }
 
 template <typename ChunkT>
 bool ChunkedNdtreeNodeRef<ChunkT>::hasNonzeroData(
     FloatingPoint threshold) const {
-  return chunk_.nodeHasNonzeroData(computeIndexInChunk(), threshold);
+  return chunk_.nodeHasNonzeroData(offset_, threshold);
 }
 
 template <typename ChunkT>
 auto& ChunkedNdtreeNodeRef<ChunkT>::data() const {
-  return chunk_.nodeData(computeIndexInChunk());
+  return chunk_.nodeData(offset_);
 }
 
 template <typename ChunkT>
 auto ChunkedNdtreeNodeRef<ChunkT>::hasAtLeastOneChild() const {
-  return chunk_.nodeHasAtLeastOneChild(computeIndexInChunk());
+  return chunk_.nodeHasAtLeastOneChild(offset_);
 }
 
 template <typename ChunkT>
@@ -106,19 +108,21 @@ void ChunkedNdtreeNodeRef<ChunkT>::eraseChild(
   if (!hasAtLeastOneChild()) {
     return;
   }
-  const KeyType child_key = computeChildKey(child_index);
-  LinearIndex child_start_idx = computeIndexInLevel(child_key);
-  LinearIndex child_end_idx = child_start_idx + 1;
-  for (int child_depth = computeDepthIndex(child_key);
+  const OffsetType child_offset = computeChildOffset(child_index);
+  OffsetType child_start_idx =
+      convert::nodeOffsetToLevelIndex<kDim>(child_offset);
+  OffsetType child_end_idx = child_start_idx + 1;
+  for (IndexElement child_depth =
+           convert::nodeOffsetToDepth<kDim>(child_offset);
        child_depth <= ChunkT::kHeight; ++child_depth) {
-    const LinearIndex level_offset =
+    const OffsetType level_offset =
         tree_math::perfect_tree::num_total_nodes_fast<kDim>(child_depth);
-    for (LinearIndex level_child_idx = child_start_idx;
+    for (OffsetType level_child_idx = child_start_idx;
          level_child_idx < child_end_idx; ++level_child_idx) {
       if (child_depth == ChunkT::kHeight) {
         chunk_.eraseChild(level_child_idx);
       } else {
-        const LinearIndex chunk_child_idx = level_offset + level_child_idx;
+        const OffsetType chunk_child_idx = level_offset + level_child_idx;
         chunk_.nodeData(chunk_child_idx) = {};
         chunk_.nodeHasAtLeastOneChild(chunk_child_idx) = false;
       }
@@ -135,13 +139,14 @@ ChunkedNdtreeNodeRef<ChunkT>::getChild(
   if (!hasAtLeastOneChild()) {
     return {nullptr};
   }
-  const KeyType child_key = computeChildKey(child_index);
-  if (kMaxKeyInChunk < child_key) {
-    const LinearIndex level_index = computeIndexInLevel(child_key);
+  const OffsetType child_offset = computeChildOffset(child_index);
+  if (kMaxOffsetInChunk < child_offset) {
+    const OffsetType level_index =
+        convert::nodeOffsetToLevelIndex<kDim>(child_offset);
     auto* child_chunk = chunk_.getChild(level_index);
-    return {child_chunk, kRootKey};
+    return {child_chunk, kRootOffset};
   }
-  return {&chunk_, child_key};
+  return {&chunk_, child_offset};
 }
 
 template <typename ChunkT>
@@ -149,49 +154,36 @@ template <typename... DefaultArgs>
 ChunkedNdtreeNodeRef<ChunkT> ChunkedNdtreeNodeRef<ChunkT>::getOrAllocateChild(
     NdtreeIndexRelativeChild child_index, DefaultArgs&&... args) const {
   hasAtLeastOneChild() = true;
-  const KeyType child_key = computeChildKey(child_index);
-  if (kMaxKeyInChunk < child_key) {
-    const LinearIndex level_index = computeIndexInLevel(child_key);
+  const OffsetType child_offset = computeChildOffset(child_index);
+  if (kMaxOffsetInChunk < child_offset) {
+    const OffsetType level_index =
+        convert::nodeOffsetToLevelIndex<kDim>(child_offset);
     auto& child_chunk = chunk_.getOrAllocateChild(
         level_index, std::forward<DefaultArgs>(args)...);
-    return {child_chunk, kRootKey};
+    return {child_chunk, kRootOffset};
   }
-  return {chunk_, child_key};
+  return {chunk_, child_offset};
 }
 
 template <typename ChunkT>
-IndexElement ChunkedNdtreeNodeRef<ChunkT>::computeDepthIndex(KeyType key) {
-  DCHECK_GE(key, kRootKey);
-  return int_math::log2_floor(key) / kDim;
+IndexElement ChunkedNdtreeNodeRef<ChunkT>::computeDepthIndex() const {
+  DCHECK_LE(offset_, kMaxOffsetInChunk);
+  return convert::nodeOffsetToDepth<kDim>(offset_);
 }
 
 template <typename ChunkT>
-LinearIndex ChunkedNdtreeNodeRef<ChunkT>::computeIndexInLevel(KeyType key) {
-  DCHECK_GE(key, kRootKey);
-  const int depth_idx = computeDepthIndex(key);
-  const LinearIndex level_mask = (1 << (kDim * depth_idx)) - 1;
-  return key & level_mask;
+typename ChunkedNdtreeNodeRef<ChunkT>::OffsetType
+ChunkedNdtreeNodeRef<ChunkT>::computeLevelIndex() const {
+  DCHECK_LE(offset_, kMaxOffsetInChunk);
+  return convert::nodeOffsetToLevelIndex<kDim>(offset_);
 }
 
 template <typename ChunkT>
-LinearIndex ChunkedNdtreeNodeRef<ChunkT>::computeIndexInChunk(KeyType key) {
-  DCHECK_GE(key, kRootKey);
-  const int depth_idx = computeDepthIndex(key);
-  const LinearIndex prior_levels_size =
-      tree_math::perfect_tree::num_total_nodes_fast<kDim>(depth_idx);
-  const LinearIndex level_mask = (1 << (kDim * depth_idx)) - 1;
-  const LinearIndex level_index = key & level_mask;
-  return prior_levels_size + level_index;
-}
-
-template <typename ChunkT>
-typename ChunkedNdtreeNodeRef<ChunkT>::KeyType
-ChunkedNdtreeNodeRef<ChunkT>::computeChildKey(
-    KeyType key, NdtreeIndexRelativeChild child_index) {
-  DCHECK_GE(key, kRootKey);
-  DCHECK_GE(child_index, 0);
-  DCHECK_LT(child_index, 1 << kDim);
-  return (key << kDim) | child_index;
+typename ChunkedNdtreeNodeRef<ChunkT>::OffsetType
+ChunkedNdtreeNodeRef<ChunkT>::computeChildOffset(
+    NdtreeIndexRelativeChild child_index) const {
+  DCHECK_LE(offset_, kMaxOffsetInChunk);
+  return convert::nodeOffsetToChildOffset<kDim>(offset_, child_index);
 }
 }  // namespace wavemap
 

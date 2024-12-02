@@ -6,6 +6,7 @@
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/data_structure/chunked_ndtree/chunked_ndtree_chunk.h"
+#include "wavemap/core/indexing/index_conversions.h"
 
 namespace wavemap {
 template <typename ChunkT>
@@ -15,12 +16,12 @@ template <typename ChunkT>
 class ChunkedNdtreeNodePtr {
  public:
   using NodeRef = ChunkedNdtreeNodeRef<ChunkT>;
-  using KeyType = typename NodeRef::KeyType;
+  using OffsetType = typename NodeRef::OffsetType;
 
   // Constructors
   ChunkedNdtreeNodePtr() = default;
   ChunkedNdtreeNodePtr(ChunkT* chunk);  // NOLINT
-  ChunkedNdtreeNodePtr(ChunkT* chunk, KeyType key);
+  ChunkedNdtreeNodePtr(ChunkT* chunk, OffsetType offset);
 
   // Copy/move constructors
   ChunkedNdtreeNodePtr(const ChunkedNdtreeNodePtr& other);
@@ -49,21 +50,23 @@ class ChunkedNdtreeNodeRef {
  public:
   using NodeRef = ChunkedNdtreeNodeRef;
   using NodePtr = ChunkedNdtreeNodePtr<ChunkT>;
-  static constexpr int kDim = ChunkT::kDim;
+  static constexpr IndexElement kDim = ChunkT::kDim;
 
-  using KeyType = uint32_t;
-  static constexpr int kMaxHeight =
-      std::numeric_limits<KeyType>::digits / kDim - 1;
+  using OffsetType = uint32_t;
+  static constexpr IndexElement kMaxHeight =
+      convert::nodeOffsetToDepth<kDim, size_t>(
+          std::numeric_limits<OffsetType>::max());
   static_assert(
       ChunkT::kHeight <= kMaxHeight,
       "Keys for nodes within chunks of the given height and dimensionality are "
       "not guaranteed to fit within the chosen KeyType. Make the chunks "
       "smaller or change the KeyType alias to a larger unsigned integer type.");
-  static constexpr KeyType kRootKey = 1u;
+  static constexpr OffsetType kRootOffset = 0u;
 
   ChunkedNdtreeNodeRef() = delete;
-  ChunkedNdtreeNodeRef(ChunkT& chunk, KeyType key = kRootKey)  // NOLINT
-      : chunk_(chunk), key_(key) {}
+  ChunkedNdtreeNodeRef(ChunkT& chunk,  // NOLINT
+                       OffsetType offset = kRootOffset)
+      : chunk_(chunk), offset_(offset) {}
 
   // Copy/move constructor
   ChunkedNdtreeNodeRef(const ChunkedNdtreeNodeRef& other);
@@ -100,21 +103,13 @@ class ChunkedNdtreeNodeRef {
 
  private:
   ChunkT& chunk_;
-  const KeyType key_;
-  static constexpr KeyType kMaxKeyInChunk = (1 << (kDim * ChunkT::kHeight)) - 1;
+  const OffsetType offset_;
+  static constexpr OffsetType kMaxOffsetInChunk =
+      tree_math::perfect_tree::num_total_nodes<kDim>(ChunkT::kHeight) - 1;
 
-  static IndexElement computeDepthIndex(KeyType key);
-  static LinearIndex computeIndexInLevel(KeyType key);
-  static LinearIndex computeIndexInChunk(KeyType key);
-  static KeyType computeChildKey(KeyType key,
-                                 NdtreeIndexRelativeChild child_index);
-
-  IndexElement computeDepthIndex() const { return computeDepthIndex(key_); }
-  LinearIndex computeIndexInLevel() const { return computeIndexInLevel(key_); }
-  LinearIndex computeIndexInChunk() const { return computeIndexInChunk(key_); }
-  KeyType computeChildKey(NdtreeIndexRelativeChild child_index) const {
-    return computeChildKey(key_, child_index);
-  }
+  IndexElement computeDepthIndex() const;
+  OffsetType computeLevelIndex() const;
+  OffsetType computeChildOffset(NdtreeIndexRelativeChild child_index) const;
 
   template <typename T>
   friend class ChunkedNdtreeNodePtr;
