@@ -4,29 +4,28 @@
 #include <utility>
 
 namespace wavemap {
-template <typename ChunkType>
-ChunkedNdtreeNodePtr<ChunkType>::ChunkedNdtreeNodePtr(ChunkType* chunk)
+template <typename ChunkT>
+ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(ChunkT* chunk)
     : node_(chunk ? std::make_optional<NodeRef>(*chunk) : std::nullopt) {}
 
-template <typename ChunkType>
-ChunkedNdtreeNodePtr<ChunkType>::ChunkedNdtreeNodePtr(ChunkType* chunk,
-                                                      KeyType key)
+template <typename ChunkT>
+ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(ChunkT* chunk, KeyType key)
     : node_(chunk ? std::make_optional<NodeRef>(*chunk, key) : std::nullopt) {}
 
-template <typename ChunkType>
-ChunkedNdtreeNodePtr<ChunkType>::ChunkedNdtreeNodePtr(
+template <typename ChunkT>
+ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(
     const ChunkedNdtreeNodePtr& other)
     : node_(other ? std::make_optional<NodeRef>(other.node_.value())
                   : std::nullopt) {}
 
-template <typename ChunkType>
-ChunkedNdtreeNodePtr<ChunkType>::ChunkedNdtreeNodePtr(
+template <typename ChunkT>
+ChunkedNdtreeNodePtr<ChunkT>::ChunkedNdtreeNodePtr(
     ChunkedNdtreeNodePtr&& other) noexcept
     : node_(other ? std::make_optional<NodeRef>(std::move(other.node_.value()))
                   : std::nullopt) {}
 
-template <typename ChunkType>
-ChunkedNdtreeNodePtr<ChunkType>& ChunkedNdtreeNodePtr<ChunkType>::operator=(
+template <typename ChunkT>
+ChunkedNdtreeNodePtr<ChunkT>& ChunkedNdtreeNodePtr<ChunkT>::operator=(
     const ChunkedNdtreeNodePtr& other) {
   if (other) {
     node_.emplace(other.node_.value());
@@ -36,8 +35,8 @@ ChunkedNdtreeNodePtr<ChunkType>& ChunkedNdtreeNodePtr<ChunkType>::operator=(
   return *this;
 }
 
-template <typename ChunkType>
-ChunkedNdtreeNodePtr<ChunkType>& ChunkedNdtreeNodePtr<ChunkType>::operator=(
+template <typename ChunkT>
+ChunkedNdtreeNodePtr<ChunkT>& ChunkedNdtreeNodePtr<ChunkT>::operator=(
     ChunkedNdtreeNodePtr&& other) noexcept {
   if (other) {
     node_.emplace(std::move(other.node_.value()));
@@ -47,62 +46,62 @@ ChunkedNdtreeNodePtr<ChunkType>& ChunkedNdtreeNodePtr<ChunkType>::operator=(
   return *this;
 }
 
-template <typename ChunkType>
-ChunkedNdtreeNodeRef<ChunkType>::ChunkedNdtreeNodeRef(
+template <typename ChunkT>
+ChunkedNdtreeNodeRef<ChunkT>::ChunkedNdtreeNodeRef(
     const ChunkedNdtreeNodeRef& other)
     : ChunkedNdtreeNodeRef(other.chunk_, other.key_) {}
 
-template <typename ChunkType>
-ChunkedNdtreeNodeRef<ChunkType>::ChunkedNdtreeNodeRef(
+template <typename ChunkT>
+ChunkedNdtreeNodeRef<ChunkT>::ChunkedNdtreeNodeRef(
     ChunkedNdtreeNodeRef&& other) noexcept
     : chunk_(other.chunk_), key_(other.key_) {}
 
-template <typename ChunkType>
-ChunkedNdtreeNodeRef<ChunkType>::operator ChunkedNdtreeNodeRef<
-    const ChunkType>() const {
+template <typename ChunkT>
+ChunkedNdtreeNodeRef<ChunkT>::operator ChunkedNdtreeNodeRef<const ChunkT>()
+    const {
   return {chunk_, key_};
 }
 
-template <typename ChunkType>
-typename ChunkedNdtreeNodeRef<ChunkType>::NodePtr
-ChunkedNdtreeNodeRef<ChunkType>::operator&() const {  // NOLINT
+template <typename ChunkT>
+typename ChunkedNdtreeNodeRef<ChunkT>::NodePtr
+ChunkedNdtreeNodeRef<ChunkT>::operator&() const {  // NOLINT
   return {&chunk_, key_};
 }
 
-template <typename ChunkType>
-bool ChunkedNdtreeNodeRef<ChunkType>::empty() const {
+template <typename ChunkT>
+bool ChunkedNdtreeNodeRef<ChunkT>::empty() const {
   return !hasAtLeastOneChild() && !hasNonzeroData();
 }
 
-template <typename ChunkType>
-bool ChunkedNdtreeNodeRef<ChunkType>::hasNonzeroData() const {
+template <typename ChunkT>
+bool ChunkedNdtreeNodeRef<ChunkT>::hasNonzeroData() const {
   return chunk_.nodeHasNonzeroData(computeIndexInChunk());
 }
 
-template <typename ChunkType>
-bool ChunkedNdtreeNodeRef<ChunkType>::hasNonzeroData(
+template <typename ChunkT>
+bool ChunkedNdtreeNodeRef<ChunkT>::hasNonzeroData(
     FloatingPoint threshold) const {
   return chunk_.nodeHasNonzeroData(computeIndexInChunk(), threshold);
 }
 
-template <typename ChunkType>
-auto& ChunkedNdtreeNodeRef<ChunkType>::data() const {
+template <typename ChunkT>
+auto& ChunkedNdtreeNodeRef<ChunkT>::data() const {
   return chunk_.nodeData(computeIndexInChunk());
 }
 
-template <typename ChunkType>
-auto ChunkedNdtreeNodeRef<ChunkType>::hasAtLeastOneChild() const {
+template <typename ChunkT>
+auto ChunkedNdtreeNodeRef<ChunkT>::hasAtLeastOneChild() const {
   return chunk_.nodeHasAtLeastOneChild(computeIndexInChunk());
 }
 
-template <typename ChunkType>
-bool ChunkedNdtreeNodeRef<ChunkType>::hasChild(
+template <typename ChunkT>
+bool ChunkedNdtreeNodeRef<ChunkT>::hasChild(
     NdtreeIndexRelativeChild child_index) const {
   return getChild(child_index);
 }
 
-template <typename ChunkType>
-void ChunkedNdtreeNodeRef<ChunkType>::eraseChild(
+template <typename ChunkT>
+void ChunkedNdtreeNodeRef<ChunkT>::eraseChild(
     NdtreeIndexRelativeChild child_index) const {
   if (!hasAtLeastOneChild()) {
     return;
@@ -111,12 +110,12 @@ void ChunkedNdtreeNodeRef<ChunkType>::eraseChild(
   LinearIndex child_start_idx = computeIndexInLevel(child_key);
   LinearIndex child_end_idx = child_start_idx + 1;
   for (int child_depth = computeDepthIndex(child_key);
-       child_depth <= ChunkType::kHeight; ++child_depth) {
+       child_depth <= ChunkT::kHeight; ++child_depth) {
     const LinearIndex level_offset =
         tree_math::perfect_tree::num_total_nodes_fast<kDim>(child_depth);
     for (LinearIndex level_child_idx = child_start_idx;
          level_child_idx < child_end_idx; ++level_child_idx) {
-      if (child_depth == ChunkType::kHeight) {
+      if (child_depth == ChunkT::kHeight) {
         chunk_.eraseChild(level_child_idx);
       } else {
         const LinearIndex chunk_child_idx = level_offset + level_child_idx;
@@ -129,9 +128,9 @@ void ChunkedNdtreeNodeRef<ChunkType>::eraseChild(
   }
 }
 
-template <typename ChunkType>
-typename ChunkedNdtreeNodeRef<ChunkType>::NodePtr
-ChunkedNdtreeNodeRef<ChunkType>::getChild(
+template <typename ChunkT>
+typename ChunkedNdtreeNodeRef<ChunkT>::NodePtr
+ChunkedNdtreeNodeRef<ChunkT>::getChild(
     NdtreeIndexRelativeChild child_index) const {
   if (!hasAtLeastOneChild()) {
     return {nullptr};
@@ -145,10 +144,9 @@ ChunkedNdtreeNodeRef<ChunkType>::getChild(
   return {&chunk_, child_key};
 }
 
-template <typename ChunkType>
+template <typename ChunkT>
 template <typename... DefaultArgs>
-ChunkedNdtreeNodeRef<ChunkType>
-ChunkedNdtreeNodeRef<ChunkType>::getOrAllocateChild(
+ChunkedNdtreeNodeRef<ChunkT> ChunkedNdtreeNodeRef<ChunkT>::getOrAllocateChild(
     NdtreeIndexRelativeChild child_index, DefaultArgs&&... args) const {
   hasAtLeastOneChild() = true;
   const KeyType child_key = computeChildKey(child_index);
@@ -161,22 +159,22 @@ ChunkedNdtreeNodeRef<ChunkType>::getOrAllocateChild(
   return {chunk_, child_key};
 }
 
-template <typename ChunkType>
-IndexElement ChunkedNdtreeNodeRef<ChunkType>::computeDepthIndex(KeyType key) {
+template <typename ChunkT>
+IndexElement ChunkedNdtreeNodeRef<ChunkT>::computeDepthIndex(KeyType key) {
   DCHECK_GE(key, kRootKey);
   return int_math::log2_floor(key) / kDim;
 }
 
-template <typename ChunkType>
-LinearIndex ChunkedNdtreeNodeRef<ChunkType>::computeIndexInLevel(KeyType key) {
+template <typename ChunkT>
+LinearIndex ChunkedNdtreeNodeRef<ChunkT>::computeIndexInLevel(KeyType key) {
   DCHECK_GE(key, kRootKey);
   const int depth_idx = computeDepthIndex(key);
   const LinearIndex level_mask = (1 << (kDim * depth_idx)) - 1;
   return key & level_mask;
 }
 
-template <typename ChunkType>
-LinearIndex ChunkedNdtreeNodeRef<ChunkType>::computeIndexInChunk(KeyType key) {
+template <typename ChunkT>
+LinearIndex ChunkedNdtreeNodeRef<ChunkT>::computeIndexInChunk(KeyType key) {
   DCHECK_GE(key, kRootKey);
   const int depth_idx = computeDepthIndex(key);
   const LinearIndex prior_levels_size =
@@ -186,9 +184,9 @@ LinearIndex ChunkedNdtreeNodeRef<ChunkType>::computeIndexInChunk(KeyType key) {
   return prior_levels_size + level_index;
 }
 
-template <typename ChunkType>
-typename ChunkedNdtreeNodeRef<ChunkType>::KeyType
-ChunkedNdtreeNodeRef<ChunkType>::computeChildKey(
+template <typename ChunkT>
+typename ChunkedNdtreeNodeRef<ChunkT>::KeyType
+ChunkedNdtreeNodeRef<ChunkT>::computeChildKey(
     KeyType key, NdtreeIndexRelativeChild child_index) {
   DCHECK_GE(key, kRootKey);
   DCHECK_GE(child_index, 0);

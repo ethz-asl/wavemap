@@ -8,19 +8,19 @@
 #include "wavemap/core/data_structure/chunked_ndtree/chunked_ndtree_chunk.h"
 
 namespace wavemap {
-template <typename ChunkType>
+template <typename ChunkT>
 class ChunkedNdtreeNodeRef;
 
-template <typename ChunkType>
+template <typename ChunkT>
 class ChunkedNdtreeNodePtr {
  public:
-  using NodeRef = ChunkedNdtreeNodeRef<ChunkType>;
+  using NodeRef = ChunkedNdtreeNodeRef<ChunkT>;
   using KeyType = typename NodeRef::KeyType;
 
   // Constructors
   ChunkedNdtreeNodePtr() = default;
-  ChunkedNdtreeNodePtr(ChunkType* chunk);  // NOLINT
-  ChunkedNdtreeNodePtr(ChunkType* chunk, KeyType key);
+  ChunkedNdtreeNodePtr(ChunkT* chunk);  // NOLINT
+  ChunkedNdtreeNodePtr(ChunkT* chunk, KeyType key);
 
   // Copy/move constructors
   ChunkedNdtreeNodePtr(const ChunkedNdtreeNodePtr& other);
@@ -44,23 +44,25 @@ class ChunkedNdtreeNodePtr {
   std::optional<NodeRef> node_{};
 };
 
-template <typename ChunkType>
+template <typename ChunkT>
 class ChunkedNdtreeNodeRef {
  public:
   using NodeRef = ChunkedNdtreeNodeRef;
-  using NodePtr = ChunkedNdtreeNodePtr<ChunkType>;
-  static constexpr int kDim = ChunkType::kDim;
+  using NodePtr = ChunkedNdtreeNodePtr<ChunkT>;
+  static constexpr int kDim = ChunkT::kDim;
 
   using KeyType = uint32_t;
+  static constexpr int kMaxHeight =
+      std::numeric_limits<KeyType>::digits / kDim - 1;
   static_assert(
-      ChunkType::kHeight * kDim < std::numeric_limits<KeyType>::digits,
+      ChunkT::kHeight <= kMaxHeight,
       "Keys for nodes within chunks of the given height and dimensionality are "
       "not guaranteed to fit within the chosen KeyType. Make the chunks "
       "smaller or change the KeyType alias to a larger unsigned integer type.");
   static constexpr KeyType kRootKey = 1u;
 
   ChunkedNdtreeNodeRef() = delete;
-  ChunkedNdtreeNodeRef(ChunkType& chunk, KeyType key = kRootKey)  // NOLINT
+  ChunkedNdtreeNodeRef(ChunkT& chunk, KeyType key = kRootKey)  // NOLINT
       : chunk_(chunk), key_(key) {}
 
   // Copy/move constructor
@@ -72,7 +74,7 @@ class ChunkedNdtreeNodeRef {
   ChunkedNdtreeNodeRef& operator=(ChunkedNdtreeNodeRef&&) = delete;
 
   // Conversion of non-const ref to const ref
-  operator ChunkedNdtreeNodeRef<const ChunkType>() const;  // NOLINT
+  operator ChunkedNdtreeNodeRef<const ChunkT>() const;  // NOLINT
 
   // Conversion to pointer
   NodePtr operator&() const;  // NOLINT
@@ -85,7 +87,7 @@ class ChunkedNdtreeNodeRef {
   auto& data() const;
 
   auto hasAtLeastOneChild() const;  // Returns a BitRef or bool, depending on
-                                    // whether the ChunkType is const-qualified
+                                    // whether the chunk type is const-qualified
 
   bool hasChild(NdtreeIndexRelativeChild child_index) const;
   // TODO(victorr): Add tests for this method
@@ -97,11 +99,9 @@ class ChunkedNdtreeNodeRef {
                              DefaultArgs&&... args) const;
 
  private:
-  ChunkType& chunk_;
+  ChunkT& chunk_;
   const KeyType key_;
-
-  static constexpr KeyType kMaxKeyInChunk =
-      (1 << (kDim * ChunkType::kHeight)) - 1;
+  static constexpr KeyType kMaxKeyInChunk = (1 << (kDim * ChunkT::kHeight)) - 1;
 
   static IndexElement computeDepthIndex(KeyType key);
   static LinearIndex computeIndexInLevel(KeyType key);
