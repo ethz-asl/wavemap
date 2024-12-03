@@ -36,6 +36,7 @@ class ChunkedNdtree {
   HeightType getMaxHeight() const { return max_height_; }
   size_t getMemoryUsage() const;
 
+  // Methods to operate on nodes given their global index
   bool hasNode(const IndexType& index) const { return getNode(index); }
   bool eraseNode(const IndexType& index);
   NodePtrType getNode(const IndexType& index);
@@ -47,11 +48,12 @@ class ChunkedNdtree {
   std::pair<NodeConstPtrType, HeightType> getNodeOrAncestor(
       const IndexType& index) const;
 
-  ChunkType& getRootChunk() { return root_chunk_; }
-  const ChunkType& getRootChunk() const { return root_chunk_; }
-
   NodeRefType getRootNode() { return {root_chunk_}; }
   NodeConstRefType getRootNode() const { return {root_chunk_}; }
+
+  // Methods to operate directly on chunks
+  ChunkType& getRootChunk() { return root_chunk_; }
+  const ChunkType& getRootChunk() const { return root_chunk_; }
 
   template <TraversalOrder traversal_order>
   auto getChunkIterator();
@@ -59,8 +61,8 @@ class ChunkedNdtree {
   auto getChunkIterator() const;
 
  private:
-  ChunkType root_chunk_;
   const HeightType max_height_;
+  ChunkType root_chunk_;
 };
 
 template <typename NodeDataT, int chunk_height>

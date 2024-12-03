@@ -60,7 +60,7 @@ class ChunkedNdtreeChunk {
   ChunkedNdtreeChunk& getOrAllocateChild(LinearIndex relative_child_index,
                                          DefaultArgs&&... args);
 
-  // Methods to operate on individual nodes inside the chunk
+  // Methods to operate on nodes given their relative position inside the chunk
   bool nodeHasNonzeroData(NodeOffsetType relative_node_index) const;
   bool nodeHasNonzeroData(NodeOffsetType relative_node_index,
                           FloatingPoint threshold) const;
