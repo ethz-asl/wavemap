@@ -58,7 +58,6 @@ bool NdtreeNode<DataT, dim>::hasChild(
 
 template <typename DataT, int dim>
 bool NdtreeNode<DataT, dim>::eraseChild(NdtreeIndexRelativeChild child_index) {
-  CHECK_GE(child_index, 0u);
   CHECK_LT(child_index, kNumChildren);
   if (hasChildrenArray()) {
     children_->operator[](child_index).reset();
@@ -70,7 +69,6 @@ bool NdtreeNode<DataT, dim>::eraseChild(NdtreeIndexRelativeChild child_index) {
 template <typename DataT, int dim>
 NdtreeNode<DataT, dim>* NdtreeNode<DataT, dim>::getChild(
     NdtreeIndexRelativeChild child_index) {
-  CHECK_GE(child_index, 0u);
   CHECK_LT(child_index, kNumChildren);
   if (hasChildrenArray()) {
     return children_->operator[](child_index).get();
@@ -91,7 +89,6 @@ template <typename DataT, int dim>
 template <typename... DefaultArgs>
 NdtreeNode<DataT, dim>& NdtreeNode<DataT, dim>::getOrAllocateChild(
     NdtreeIndexRelativeChild child_index, DefaultArgs&&... args) {
-  CHECK_GE(child_index, 0u);
   CHECK_LT(child_index, kNumChildren);
   // Make sure the children array is allocated
   if (!hasChildrenArray()) {

@@ -74,7 +74,6 @@ template <typename DataT, int dim, int height>
 ChunkedNdtreeChunk<DataT, dim, height>*
 ChunkedNdtreeChunk<DataT, dim, height>::getChild(
     LinearIndex relative_child_index) {
-  CHECK_GE(relative_child_index, 0u);
   CHECK_LT(relative_child_index, kNumChildren);
   if (hasChildrenArray()) {
     return child_chunks_->operator[](relative_child_index).get();
@@ -86,7 +85,6 @@ template <typename DataT, int dim, int height>
 const ChunkedNdtreeChunk<DataT, dim, height>*
 ChunkedNdtreeChunk<DataT, dim, height>::getChild(
     LinearIndex relative_child_index) const {
-  CHECK_GE(relative_child_index, 0u);
   CHECK_LT(relative_child_index, kNumChildren);
   if (hasChildrenArray()) {
     return child_chunks_->operator[](relative_child_index).get();
@@ -99,7 +97,6 @@ template <typename... DefaultArgs>
 ChunkedNdtreeChunk<DataT, dim, height>&
 ChunkedNdtreeChunk<DataT, dim, height>::getOrAllocateChild(
     LinearIndex relative_child_index, DefaultArgs&&... args) {
-  CHECK_GE(relative_child_index, 0u);
   CHECK_LT(relative_child_index, kNumChildren);
   // Make sure the children array is allocated
   if (!hasChildrenArray()) {
