@@ -7,19 +7,30 @@
 #include <memory>
 
 #include "wavemap/core/common.h"
-#include "wavemap/core/indexing/ndtree_index.h"
+#include "wavemap/core/indexing/index_conversions.h"
 #include "wavemap/core/utils/math/tree_math.h"
 
 namespace wavemap {
 template <typename DataT, int dim, int height>
 class ChunkedNdtreeChunk {
  public:
+  using NodeOffsetType = uint32_t;
+
   static constexpr int kDim = dim;
   static constexpr int kHeight = height;
   static constexpr int kNumInnerNodes =
       tree_math::perfect_tree::num_total_nodes<dim>(height);
   static constexpr int kNumChildren =
       tree_math::perfect_tree::num_leaf_nodes<dim>(height + 1);
+  static constexpr NodeOffsetType kMaxNodeOffset =
+      tree_math::perfect_tree::num_total_nodes<dim>(height) - 1;
+
+  static_assert(
+      height <= convert::nodeOffsetToDepth<dim, size_t>(
+                    std::numeric_limits<NodeOffsetType>::max()),
+      "Keys for nodes within chunks of the given height and dimensionality are "
+      "not guaranteed to fit within the chosen KeyType. Make the chunks "
+      "smaller or change the KeyType alias to a larger unsigned integer type.");
 
   using DataType = DataT;
   using BitRef = typename std::bitset<kNumInnerNodes>::reference;
@@ -50,15 +61,15 @@ class ChunkedNdtreeChunk {
                                          DefaultArgs&&... args);
 
   // Methods to operate on individual nodes inside the chunk
-  bool nodeHasNonzeroData(LinearIndex relative_node_index) const;
-  bool nodeHasNonzeroData(LinearIndex relative_node_index,
+  bool nodeHasNonzeroData(NodeOffsetType relative_node_index) const;
+  bool nodeHasNonzeroData(NodeOffsetType relative_node_index,
                           FloatingPoint threshold) const;
 
-  DataT& nodeData(LinearIndex relative_node_index);
-  const DataT& nodeData(LinearIndex relative_node_index) const;
+  DataT& nodeData(NodeOffsetType relative_node_index);
+  const DataT& nodeData(NodeOffsetType relative_node_index) const;
 
-  BitRef nodeHasAtLeastOneChild(LinearIndex relative_node_index);
-  bool nodeHasAtLeastOneChild(LinearIndex relative_node_index) const;
+  BitRef nodeHasAtLeastOneChild(NodeOffsetType relative_node_index);
+  bool nodeHasAtLeastOneChild(NodeOffsetType relative_node_index) const;
 
   friend bool operator==(const ChunkedNdtreeChunk& lhs,
                          const ChunkedNdtreeChunk& rhs) {

@@ -15,13 +15,13 @@ class ChunkedNdtreeNodeRef;
 template <typename ChunkT>
 class ChunkedNdtreeNodePtr {
  public:
+  using NodeOffsetType = typename ChunkT::NodeOffsetType;
   using NodeRef = ChunkedNdtreeNodeRef<ChunkT>;
-  using OffsetType = typename NodeRef::OffsetType;
 
   // Constructors
   ChunkedNdtreeNodePtr() = default;
   ChunkedNdtreeNodePtr(ChunkT* chunk);  // NOLINT
-  ChunkedNdtreeNodePtr(ChunkT* chunk, OffsetType offset);
+  ChunkedNdtreeNodePtr(ChunkT* chunk, NodeOffsetType offset);
 
   // Copy/move constructors
   ChunkedNdtreeNodePtr(const ChunkedNdtreeNodePtr& other);
@@ -48,25 +48,15 @@ class ChunkedNdtreeNodePtr {
 template <typename ChunkT>
 class ChunkedNdtreeNodeRef {
  public:
+  using NodeOffsetType = typename ChunkT::NodeOffsetType;
   using NodeRef = ChunkedNdtreeNodeRef;
   using NodePtr = ChunkedNdtreeNodePtr<ChunkT>;
   static constexpr IndexElement kDim = ChunkT::kDim;
-
-  using OffsetType = uint32_t;
-  static constexpr IndexElement kMaxHeight =
-      convert::nodeOffsetToDepth<kDim, size_t>(
-          std::numeric_limits<OffsetType>::max());
-  static_assert(
-      ChunkT::kHeight <= kMaxHeight,
-      "Keys for nodes within chunks of the given height and dimensionality are "
-      "not guaranteed to fit within the chosen KeyType. Make the chunks "
-      "smaller or change the KeyType alias to a larger unsigned integer type.");
-  static constexpr OffsetType kRootOffset = 0u;
+  static constexpr NodeOffsetType kRootOffset = 0u;
 
   ChunkedNdtreeNodeRef() = delete;
   ChunkedNdtreeNodeRef(ChunkT& chunk,  // NOLINT
-                       OffsetType offset = kRootOffset)
-      : chunk_(chunk), offset_(offset) {}
+                       NodeOffsetType offset = kRootOffset);
 
   // Copy/move constructor
   ChunkedNdtreeNodeRef(const ChunkedNdtreeNodeRef& other);
@@ -103,13 +93,11 @@ class ChunkedNdtreeNodeRef {
 
  private:
   ChunkT& chunk_;
-  const OffsetType offset_;
-  static constexpr OffsetType kMaxOffsetInChunk =
-      tree_math::perfect_tree::num_total_nodes<kDim>(ChunkT::kHeight) - 1;
+  const NodeOffsetType offset_;
 
   IndexElement computeDepthIndex() const;
-  OffsetType computeLevelIndex() const;
-  OffsetType computeChildOffset(NdtreeIndexRelativeChild child_index) const;
+  NodeOffsetType computeLevelIndex() const;
+  NodeOffsetType computeChildOffset(NdtreeIndexRelativeChild child_index) const;
 
   template <typename T>
   friend class ChunkedNdtreeNodePtr;

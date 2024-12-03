@@ -45,22 +45,6 @@ bool ChunkedNdtreeChunk<DataT, dim, height>::hasNonzeroData(
 }
 
 template <typename DataT, int dim, int height>
-DataT& ChunkedNdtreeChunk<DataT, dim, height>::nodeData(
-    LinearIndex relative_node_index) {
-  CHECK_GE(relative_node_index, 0u);
-  CHECK_LT(relative_node_index, kNumInnerNodes);
-  return node_data_[relative_node_index];
-}
-
-template <typename DataT, int dim, int height>
-const DataT& ChunkedNdtreeChunk<DataT, dim, height>::nodeData(
-    LinearIndex relative_node_index) const {
-  CHECK_GE(relative_node_index, 0u);
-  CHECK_LT(relative_node_index, kNumInnerNodes);
-  return node_data_[relative_node_index];
-}
-
-template <typename DataT, int dim, int height>
 bool ChunkedNdtreeChunk<DataT, dim, height>::hasAtLeastOneChild() const {
   if (hasChildrenArray()) {
     return std::any_of(
@@ -133,29 +117,43 @@ ChunkedNdtreeChunk<DataT, dim, height>::getOrAllocateChild(
 
 template <typename DataT, int dim, int height>
 bool ChunkedNdtreeChunk<DataT, dim, height>::nodeHasNonzeroData(
-    LinearIndex relative_node_index) const {
+    NodeOffsetType relative_node_index) const {
   DCHECK_LT(relative_node_index, kNumInnerNodes);
   return data::is_nonzero(node_data_[relative_node_index]);
 }
 
 template <typename DataT, int dim, int height>
 bool ChunkedNdtreeChunk<DataT, dim, height>::nodeHasNonzeroData(
-    LinearIndex relative_node_index, FloatingPoint threshold) const {
+    NodeOffsetType relative_node_index, FloatingPoint threshold) const {
   DCHECK_LT(relative_node_index, kNumInnerNodes);
   return data::is_nonzero(node_data_[relative_node_index], threshold);
 }
 
 template <typename DataT, int dim, int height>
+DataT& ChunkedNdtreeChunk<DataT, dim, height>::nodeData(
+    NodeOffsetType relative_node_index) {
+  DCHECK_LT(relative_node_index, kNumInnerNodes);
+  return node_data_[relative_node_index];
+}
+
+template <typename DataT, int dim, int height>
+const DataT& ChunkedNdtreeChunk<DataT, dim, height>::nodeData(
+    NodeOffsetType relative_node_index) const {
+  DCHECK_LT(relative_node_index, kNumInnerNodes);
+  return node_data_[relative_node_index];
+}
+
+template <typename DataT, int dim, int height>
 typename ChunkedNdtreeChunk<DataT, dim, height>::BitRef
 ChunkedNdtreeChunk<DataT, dim, height>::nodeHasAtLeastOneChild(
-    LinearIndex relative_node_index) {
+    NodeOffsetType relative_node_index) {
   DCHECK_LT(relative_node_index, kNumInnerNodes);
   return node_has_at_least_one_child_[relative_node_index];
 }
 
 template <typename DataT, int dim, int height>
 bool ChunkedNdtreeChunk<DataT, dim, height>::nodeHasAtLeastOneChild(
-    LinearIndex relative_node_index) const {
+    NodeOffsetType relative_node_index) const {
   DCHECK_LT(relative_node_index, kNumInnerNodes);
   return node_has_at_least_one_child_[relative_node_index];
 }
