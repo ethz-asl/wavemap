@@ -41,8 +41,8 @@ TEST_F(SubtreeIteratorTest, DepthFirstPreorderTraversal) {
   const std::vector<int> expected_nodes{1, 2,  4,  5,  9,  10, 6, 3,
                                         7, 11, 12, 13, 14, 8,  15};
   auto subtree_iterator =
-      Subtree<const NodeType, TraversalOrder::kDepthFirstPreorder>(
-          root_node.get());
+      Subtree<const NodeType*, NodeType::kNumChildren,
+              TraversalOrder::kDepthFirstPreorder>(root_node.get());
 
   // Test iteration order and completeness
   int idx = 0;
@@ -61,8 +61,8 @@ TEST_F(SubtreeIteratorTest, DepthFirstPostorderTraversal) {
   const std::vector<int> expected_nodes{4,  9,  10, 5,  6, 2, 11, 12,
                                         13, 14, 7,  15, 8, 3, 1};
   auto subtree_iterator =
-      Subtree<const NodeType, TraversalOrder::kDepthFirstPostorder>(
-          root_node.get());
+      Subtree<const NodeType*, NodeType::kNumChildren,
+              TraversalOrder::kDepthFirstPostorder>(root_node.get());
 
   // Test iteration order and completeness
   int idx = 0;
@@ -80,7 +80,8 @@ TEST_F(SubtreeIteratorTest, BreadthFirstTraversal) {
   const std::vector<int> expected_nodes{1, 2,  3,  4,  5,  6,  7, 8,
                                         9, 10, 11, 12, 13, 14, 15};
   auto subtree_iterator =
-      Subtree<const NodeType, TraversalOrder::kBreadthFirst>(root_node.get());
+      Subtree<const NodeType*, NodeType::kNumChildren,
+              TraversalOrder::kBreadthFirst>(root_node.get());
 
   // Test iteration order and completeness
   int idx = 0;

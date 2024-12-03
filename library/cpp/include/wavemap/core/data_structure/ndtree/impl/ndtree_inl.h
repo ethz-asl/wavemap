@@ -141,13 +141,15 @@ Ndtree<NodeDataT, dim>::getNodeOrAncestor(
 template <typename NodeDataT, int dim>
 template <TraversalOrder traversal_order>
 auto Ndtree<NodeDataT, dim>::getIterator() {
-  return Subtree<NodeType, traversal_order>(&root_node_);
+  return Subtree<NodePtrType, IndexType::kNumChildren, traversal_order>(
+      &root_node_);
 }
 
 template <typename NodeDataT, int dim>
 template <TraversalOrder traversal_order>
 auto Ndtree<NodeDataT, dim>::getIterator() const {
-  return Subtree<const NodeType, traversal_order>(&root_node_);
+  return Subtree<NodeConstPtrType, IndexType::kNumChildren, traversal_order>(
+      &root_node_);
 }
 
 template <typename NodeDataT, int dim>

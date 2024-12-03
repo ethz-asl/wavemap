@@ -2,32 +2,50 @@
 #define WAVEMAP_CORE_UTILS_ITERATE_IMPL_SUBTREE_ITERATOR_INL_H_
 
 namespace wavemap {
-template <typename NodeT>
-SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPreorder>&
-SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPreorder>::operator++() {
-  NodeT* node_ptr = upcoming_nodes_.front();
+template <typename NodePtrT, int num_children>
+SubtreeIterator<NodePtrT, num_children, TraversalOrder::kDepthFirstPreorder>::
+    SubtreeIterator(NodePtrT root_node) {
+  if (root_node) {
+    upcoming_nodes_.emplace_front(root_node);
+  }
+}
+
+template <typename NodePtrT, int num_children>
+SubtreeIterator<NodePtrT, num_children, TraversalOrder::kDepthFirstPreorder>&
+SubtreeIterator<NodePtrT, num_children,
+                TraversalOrder::kDepthFirstPreorder>::operator++() {
+  NodePtrT node_ptr = upcoming_nodes_.front();
   upcoming_nodes_.pop_front();
   enqueueNodeChildren(node_ptr);
-
   return *this;
 }
 
-template <typename NodeT>
-void SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPreorder>::
-    enqueueNodeChildren(NodeT* parent_ptr) {
+template <typename NodePtrT, int num_children>
+void SubtreeIterator<NodePtrT, num_children,
+                     TraversalOrder::kDepthFirstPreorder>::
+    enqueueNodeChildren(NodePtrT parent_ptr) {
   if (parent_ptr->hasChildrenArray()) {
-    for (int child_idx = NodeT::kNumChildren - 1; 0 <= child_idx; --child_idx) {
-      NodeT* child_ptr = parent_ptr->getChild(child_idx);
+    for (int child_idx = num_children - 1; 0 <= child_idx; --child_idx) {
+      NodePtrT child_ptr = parent_ptr->getChild(child_idx);
       if (child_ptr) {
-        upcoming_nodes_.template emplace_front(child_ptr);
+        upcoming_nodes_.emplace_front(child_ptr);
       }
     }
   }
 }
 
-template <typename NodeT>
-SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>&
-SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>::operator++() {
+template <typename NodePtrT, int num_children>
+SubtreeIterator<NodePtrT, num_children, TraversalOrder::kDepthFirstPostorder>::
+    SubtreeIterator(NodePtrT root_node) {
+  if (root_node) {
+    enqueueNodeAndFirstChildren(root_node);
+  }
+}
+
+template <typename NodePtrT, int num_children>
+SubtreeIterator<NodePtrT, num_children, TraversalOrder::kDepthFirstPostorder>&
+SubtreeIterator<NodePtrT, num_children,
+                TraversalOrder::kDepthFirstPostorder>::operator++() {
   upcoming_nodes_.pop_front();
 
   // Stop here if all nodes have already been visited
@@ -38,9 +56,9 @@ SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>::operator++() {
   // Otherwise enqueue the next node and its first children
   StackElement& node_and_state = upcoming_nodes_.front();
   for (++node_and_state.last_expanded_child_idx;
-       node_and_state.last_expanded_child_idx < NodeT::kNumChildren;
+       node_and_state.last_expanded_child_idx < num_children;
        ++node_and_state.last_expanded_child_idx) {
-    NodeT* child_ptr = node_and_state.node_ptr->getChild(
+    NodePtrT child_ptr = node_and_state.node_ptr->getChild(
         node_and_state.last_expanded_child_idx);
     if (child_ptr) {
       enqueueNodeAndFirstChildren(child_ptr);
@@ -50,51 +68,84 @@ SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>::operator++() {
   return *this;
 }
 
-template <typename NodeT>
-void SubtreeIterator<NodeT, TraversalOrder::kDepthFirstPostorder>::
-    enqueueNodeAndFirstChildren(NodeT* parent_ptr) {
+template <typename NodePtrT, int num_children>
+bool SubtreeIterator<NodePtrT, num_children,
+                     TraversalOrder::kDepthFirstPostorder>::StackElement::
+operator==(const StackElement& rhs) const {
+  return node_ptr == rhs.node_ptr &&
+         last_expanded_child_idx == rhs.last_expanded_child_idx;
+}
+
+template <typename NodePtrT, int num_children>
+NodePtrT SubtreeIterator<
+    NodePtrT, num_children,
+    TraversalOrder::kDepthFirstPostorder>::getFrontValuePtr() const {
+  return upcoming_nodes_.front().node_ptr;
+}
+
+template <typename NodePtrT, int num_children>
+void SubtreeIterator<NodePtrT, num_children,
+                     TraversalOrder::kDepthFirstPostorder>::
+    enqueueNodeAndFirstChildren(NodePtrT parent_ptr) {
   if (parent_ptr->hasChildrenArray()) {
     // If the node has descendants, recursively enqueue all of its
     // descendants that have the lowest index on their respective level
-    for (NdtreeIndexRelativeChild child_idx = 0;
-         child_idx < NodeT::kNumChildren; ++child_idx) {
-      NodeT* child_ptr = parent_ptr->getChild(child_idx);
+    for (NdtreeIndexRelativeChild child_idx = 0; child_idx < num_children;
+         ++child_idx) {
+      NodePtrT child_ptr = parent_ptr->getChild(child_idx);
       if (child_ptr) {
-        upcoming_nodes_.template emplace_front(
-            StackElement{parent_ptr, child_idx});
+        upcoming_nodes_.emplace_front(StackElement{parent_ptr, child_idx});
         enqueueNodeAndFirstChildren(child_ptr);
         return;
       }
     }
   } else {
     // Otherwise, only enqueue the node itself
-    upcoming_nodes_.template emplace_front(
-        StackElement{parent_ptr, NodeT::kNumChildren});
+    upcoming_nodes_.emplace_front(StackElement{parent_ptr, num_children});
   }
 }
 
-template <typename NodeT>
-SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>&
-SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>::operator++() {
-  NodeT* node_ptr = getFrontValuePtr();
+template <typename NodePtrT, int num_children>
+SubtreeIterator<NodePtrT, num_children, TraversalOrder::kBreadthFirst>::
+    SubtreeIterator(NodePtrT root_node) {
+  if (root_node) {
+    upcoming_nodes_.emplace_front(root_node);
+  }
+}
+
+template <typename NodePtrT, int num_children>
+SubtreeIterator<NodePtrT, num_children, TraversalOrder::kBreadthFirst>&
+SubtreeIterator<NodePtrT, num_children,
+                TraversalOrder::kBreadthFirst>::operator++() {
+  NodePtrT node_ptr = getFrontValuePtr();
   upcoming_nodes_.pop_front();
   enqueueNodeChildren(node_ptr);
 
   return *this;
 }
 
-template <typename NodeT>
-void SubtreeIterator<NodeT, TraversalOrder::kBreadthFirst>::enqueueNodeChildren(
-    NodeT* parent_ptr) {
+template <typename NodePtrT, int num_children>
+void SubtreeIterator<NodePtrT, num_children, TraversalOrder::kBreadthFirst>::
+    enqueueNodeChildren(NodePtrT parent_ptr) {
   if (parent_ptr->hasChildrenArray()) {
-    for (NdtreeIndexRelativeChild child_idx = 0;
-         child_idx < NodeT::kNumChildren; ++child_idx) {
-      NodeT* child_ptr = parent_ptr->getChild(child_idx);
+    for (NdtreeIndexRelativeChild child_idx = 0; child_idx < num_children;
+         ++child_idx) {
+      NodePtrT child_ptr = parent_ptr->getChild(child_idx);
       if (child_ptr) {
-        upcoming_nodes_.template emplace_back(child_ptr);
+        upcoming_nodes_.emplace_back(child_ptr);
       }
     }
   }
+}
+
+template <typename NodePtrT, int num_children, TraversalOrder traversal_order>
+auto Subtree<NodePtrT, num_children, traversal_order>::begin() const {
+  return SubtreeIterator<NodePtrT, num_children, traversal_order>{root_node_};
+}
+
+template <typename NodePtrT, int num_children, TraversalOrder traversal_order>
+auto Subtree<NodePtrT, num_children, traversal_order>::end() const {
+  return SubtreeIterator<NodePtrT, num_children, traversal_order>{nullptr};
 }
 }  // namespace wavemap
 

@@ -188,14 +188,30 @@ ChunkedNdtree<NodeDataT, dim, chunk_height>::getNodeOrAncestor(
 
 template <typename NodeDataT, int dim, int chunk_height>
 template <TraversalOrder traversal_order>
+auto ChunkedNdtree<NodeDataT, dim, chunk_height>::getIterator() {
+  return Subtree<NodePtrType, IndexType::kNumChildren, traversal_order>(
+      &root_chunk_);
+}
+
+template <typename NodeDataT, int dim, int chunk_height>
+template <TraversalOrder traversal_order>
+auto ChunkedNdtree<NodeDataT, dim, chunk_height>::getIterator() const {
+  return Subtree<NodeConstPtrType, IndexType::kNumChildren, traversal_order>(
+      &root_chunk_);
+}
+
+template <typename NodeDataT, int dim, int chunk_height>
+template <TraversalOrder traversal_order>
 auto ChunkedNdtree<NodeDataT, dim, chunk_height>::getChunkIterator() {
-  return Subtree<ChunkType, traversal_order>(&root_chunk_);
+  return Subtree<ChunkType*, ChunkType::kNumChildren, traversal_order>(
+      &root_chunk_);
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
 template <TraversalOrder traversal_order>
 auto ChunkedNdtree<NodeDataT, dim, chunk_height>::getChunkIterator() const {
-  return Subtree<const ChunkType, traversal_order>(&root_chunk_);
+  return Subtree<const ChunkType*, ChunkType::kNumChildren, traversal_order>(
+      &root_chunk_);
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
