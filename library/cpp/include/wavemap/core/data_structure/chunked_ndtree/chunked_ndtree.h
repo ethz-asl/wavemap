@@ -28,6 +28,17 @@ class ChunkedNdtree {
   explicit ChunkedNdtree(HeightType max_height);
   ~ChunkedNdtree() = default;
 
+  // Deep copy constructor
+  template <typename OtherTreeT>
+  explicit ChunkedNdtree(const OtherTreeT& other_tree);
+
+  // Delete the copy assignment operator to avoid expensive accidental copies
+  ChunkedNdtree& operator=(const ChunkedNdtree&) = delete;
+
+  // Move constructor and assignment operator
+  ChunkedNdtree(ChunkedNdtree&&) = default;
+  ChunkedNdtree& operator=(ChunkedNdtree&&) = default;
+
   bool empty() const { return getRootNode().empty(); }
   size_t size() const;
   void clear() { root_chunk_.clear(); }
@@ -63,6 +74,9 @@ class ChunkedNdtree {
  private:
   const HeightType max_height_;
   ChunkType root_chunk_;
+
+  template <typename OtherNodeConstRefT>
+  void clone(OtherNodeConstRefT other_node, NodeRefType node);
 };
 
 template <typename NodeDataT, int chunk_height>

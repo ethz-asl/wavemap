@@ -30,6 +30,17 @@ class LinearNdtree {
   explicit LinearNdtree(HeightType max_height);
   ~LinearNdtree() = default;
 
+  // Deep copy constructor
+  template <typename OtherTreeT>
+  explicit LinearNdtree(const OtherTreeT& other_tree);
+
+  // Delete the copy assignment operator to avoid expensive accidental copies
+  LinearNdtree& operator=(const LinearNdtree&) = delete;
+
+  // Move constructor and assignment operator
+  LinearNdtree(LinearNdtree&&) = default;
+  LinearNdtree& operator=(LinearNdtree&&) = default;
+
   bool empty() const { return first_child_offset_.empty(); }
   size_t size() const { return first_child_offset_.size(); }
   void clear();

@@ -17,6 +17,14 @@ ChunkedNdtree<NodeDataT, dim, chunk_height>::ChunkedNdtree(int max_height)
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
+template <typename OtherTreeT>
+ChunkedNdtree<NodeDataT, dim, chunk_height>::ChunkedNdtree(
+    const OtherTreeT& other_tree)
+    : max_height_(other_tree.getMaxHeight()) {
+  clone(other_tree.getRootNode(), getRootNode());
+}
+
+template <typename NodeDataT, int dim, int chunk_height>
 size_t ChunkedNdtree<NodeDataT, dim, chunk_height>::size() const {
   auto subtree_iterator =
       getChunkIterator<TraversalOrder::kDepthFirstPreorder>();
@@ -188,6 +196,20 @@ template <typename NodeDataT, int dim, int chunk_height>
 template <TraversalOrder traversal_order>
 auto ChunkedNdtree<NodeDataT, dim, chunk_height>::getChunkIterator() const {
   return Subtree<const ChunkType, traversal_order>(&root_chunk_);
+}
+
+template <typename NodeDataT, int dim, int chunk_height>
+template <typename OtherNodeConstRefT>
+void ChunkedNdtree<NodeDataT, dim, chunk_height>::clone(
+    OtherNodeConstRefT other_node, NodeRefType node) {
+  node.data() = other_node->data();
+  for (NdtreeIndexRelativeChild child_idx = 0;
+       child_idx < IndexType::kNumChildren; ++child_idx) {
+    if (auto other_child = other_node->getChild(child_idx); other_child) {
+      auto& child = node.getOrAllocateChild(child_idx);
+      clone(*other_child, child);
+    }
+  }
 }
 }  // namespace wavemap
 

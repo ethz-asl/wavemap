@@ -17,6 +17,13 @@ Ndtree<NodeDataT, dim>::Ndtree(int max_height, RootNodeArgs&&... args)
 }
 
 template <typename NodeDataT, int dim>
+template <typename OtherTreeT>
+Ndtree<NodeDataT, dim>::Ndtree(const OtherTreeT& other_tree)
+    : max_height_(other_tree.getMaxHeight()) {
+  clone(other_tree.getRootNode(), root_node_);
+}
+
+template <typename NodeDataT, int dim>
 size_t Ndtree<NodeDataT, dim>::size() const {
   auto subtree_iterator = getIterator<TraversalOrder::kDepthFirstPreorder>();
   return std::distance(subtree_iterator.begin(), subtree_iterator.end());
@@ -141,6 +148,20 @@ template <typename NodeDataT, int dim>
 template <TraversalOrder traversal_order>
 auto Ndtree<NodeDataT, dim>::getIterator() const {
   return Subtree<const NodeType, traversal_order>(&root_node_);
+}
+
+template <typename NodeDataT, int dim>
+template <typename OtherNodeConstRefT>
+void Ndtree<NodeDataT, dim>::clone(OtherNodeConstRefT other_node,
+                                   NodeRefType node) {
+  node.data() = other_node->data();
+  for (NdtreeIndexRelativeChild child_idx = 0;
+       child_idx < IndexType::kNumChildren; ++child_idx) {
+    if (auto other_child = other_node->getChild(child_idx); other_child) {
+      auto& child = node.getOrAllocateChild(child_idx);
+      clone(*other_child, child);
+    }
+  }
 }
 }  // namespace wavemap
 

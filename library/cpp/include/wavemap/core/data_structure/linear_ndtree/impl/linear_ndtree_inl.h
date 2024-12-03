@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_CORE_DATA_STRUCTURE_LINEAR_NDTREE_IMPL_LINEAR_NDTREE_INL_H_
 #define WAVEMAP_CORE_DATA_STRUCTURE_LINEAR_NDTREE_IMPL_LINEAR_NDTREE_INL_H_
 
+#include <queue>
 #include <utility>
 
 namespace wavemap {
@@ -8,6 +9,37 @@ template <typename NodeDataT, int dim>
 LinearNdtree<NodeDataT, dim>::LinearNdtree(HeightType max_height)
     : max_height_(max_height) {
   CHECK_LE(max_height_, kMaxHeight);
+}
+
+template <typename NodeDataT, int dim>
+template <typename OtherTreeT>
+LinearNdtree<NodeDataT, dim>::LinearNdtree(const OtherTreeT& other_tree)
+    : max_height_(other_tree.getMaxHeight()) {
+  using NodeConstPtrT = typename OtherTreeT::NodeConstPtrT;
+  size_t current_idx = 0u;
+
+  std::queue<NodeConstPtrT> queue;
+  queue.emplace_back(other_tree.getRootNode());
+
+  while (!queue.empty()) {
+    NodeConstPtrT other_node = std::move(queue.front());
+    queue.pop();
+
+    auto& first_child_offset = first_child_offset_.emplace_back();
+    auto& node_data = node_data_.emplace_back();
+    auto& child_mask = allocated_child_mask_.emplace_back();
+
+    first_child_offset = ++current_idx;
+    node_data = other_node->data();
+    for (NdtreeIndexRelativeChild child_idx = 0;
+         child_idx < IndexType::kNumChildren; ++child_idx) {
+      if (NodeConstPtrT other_child = other_node->getChild(child_idx);
+          other_child) {
+        child_mask |= 1 << child_idx;
+        queue.emplace_back(other_child);
+      }
+    }
+  }
 }
 
 template <typename NodeDataT, int dim>
