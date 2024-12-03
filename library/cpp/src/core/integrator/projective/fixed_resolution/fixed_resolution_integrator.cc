@@ -67,7 +67,8 @@ void FixedResolutionIntegrator::importRangeImage(
   for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
     const Index2D frustum_corner_image_index =
         posed_range_image_->getDimensions().cwiseProduct(
-            Index2D{corner_idx & 1, (corner_idx >> 1) & 1});
+            Index2D{bit_ops::is_bit_set(corner_idx, 0),
+                    bit_ops::is_bit_set(corner_idx, 1)});
     const Vector2D frustum_corner_coordinate =
         projection_model_->indexToImage(frustum_corner_image_index);
     const Point3D C_frustum_corner = projection_model_->sensorToCartesian(

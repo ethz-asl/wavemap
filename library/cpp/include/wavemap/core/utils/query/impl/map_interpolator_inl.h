@@ -26,8 +26,9 @@ FloatingPoint trilinear(MapT& map, const Point3D& position) {
   // Gather the values of the 8 neighbors
   std::array<FloatingPoint, 8> cube_corners{};
   for (int neighbor_idx = 0; neighbor_idx < 8; ++neighbor_idx) {
-    const Index3D offset{(neighbor_idx >> 2) & 1, (neighbor_idx >> 1) & 1,
-                         neighbor_idx & 1};
+    const Index3D offset{bit_ops::is_bit_set(neighbor_idx, 2),
+                         bit_ops::is_bit_set(neighbor_idx, 1),
+                         bit_ops::is_bit_set(neighbor_idx, 0)};
     cube_corners[neighbor_idx] = map.getCellValue(min_corner_index + offset);
   }
 
