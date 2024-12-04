@@ -20,7 +20,10 @@ void HashedChunkedWaveletOctreeBlock::prune() {
   if (getNeedsPruning()) {
     threshold();
     recursivePrune(ndtree_.getRootNode());
-    // TODO(victorr): Also deallocate empty chunk children arrays
+    auto& root_chunk = ndtree_.getRootChunk();
+    if (!root_chunk.hasAtLeastOneChild()) {
+      root_chunk.deleteChildrenArray();
+    }
     setNeedsPruning(false);
   }
 }
