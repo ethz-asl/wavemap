@@ -13,33 +13,35 @@ LinearNdtree<NodeDataT, dim>::LinearNdtree(HeightType max_height)
 
 template <typename NodeDataT, int dim>
 template <typename OtherTreeT>
-LinearNdtree<NodeDataT, dim>::LinearNdtree(const OtherTreeT& other_tree)
-    : max_height_(other_tree.getMaxHeight()) {
-  using NodeConstPtrT = typename OtherTreeT::NodeConstPtrT;
-  size_t current_idx = 0u;
+LinearNdtree<NodeDataT, dim> LinearNdtree<NodeDataT, dim>::from(
+    const OtherTreeT& other_tree) {
+  LinearNdtree cloned_ndtree{other_tree.getMaxHeight()};
 
-  std::queue<NodeConstPtrT> queue;
-  queue.emplace_back(other_tree.getRootNode());
+  using OtherNodeConstPtr = typename OtherTreeT::NodeConstPtrType;
+  std::queue<OtherNodeConstPtr> queue;
+  queue.emplace(&other_tree.getRootNode());
 
+  size_t next_child_offset = 1u;
   while (!queue.empty()) {
-    NodeConstPtrT other_node = std::move(queue.front());
+    OtherNodeConstPtr other_node = std::move(queue.front());
     queue.pop();
 
-    auto& first_child_offset = first_child_offset_.emplace_back();
-    auto& node_data = node_data_.emplace_back();
-    auto& child_mask = allocated_child_mask_.emplace_back();
+    cloned_ndtree.node_data_.emplace_back(other_node->data());
+    cloned_ndtree.first_child_offset_.emplace_back(next_child_offset);
 
-    first_child_offset = ++current_idx;
-    node_data = other_node->data();
+    auto& child_mask = cloned_ndtree.allocated_child_mask_.emplace_back();
     for (NdtreeIndexRelativeChild child_idx = 0;
          child_idx < IndexType::kNumChildren; ++child_idx) {
-      if (NodeConstPtrT other_child = other_node->getChild(child_idx);
+      if (OtherNodeConstPtr other_child = other_node->getChild(child_idx);
           other_child) {
-        child_mask |= 1 << child_idx;
-        queue.emplace_back(other_child);
+        child_mask = bit_ops::set_bit(child_mask, child_idx);
+        queue.emplace(other_child);
+        ++next_child_offset;
       }
     }
   }
+
+  return cloned_ndtree;
 }
 
 template <typename NodeDataT, int dim>
@@ -125,6 +127,20 @@ LinearNdtree<NodeDataT, dim>::getNodeOrAncestor(const IndexType& index) const {
 }
 
 template <typename NodeDataT, int dim>
+template <TraversalOrder traversal_order>
+auto LinearNdtree<NodeDataT, dim>::getIterator() {
+  return Subtree<NodePtrType, IndexType::kNumChildren, traversal_order>(
+      &getRootNode());
+}
+
+template <typename NodeDataT, int dim>
+template <TraversalOrder traversal_order>
+auto LinearNdtree<NodeDataT, dim>::getIterator() const {
+  return Subtree<NodeConstPtrType, IndexType::kNumChildren, traversal_order>(
+      &getRootNode());
+}
+
+template <typename NodeDataT, int dim>
 bool LinearNdtree<NodeDataT, dim>::nodeHasNonzeroData(
     NodeOffsetType relative_node_index) const {
   DCHECK_LT(relative_node_index, node_data_.size());
@@ -174,13 +190,17 @@ std::optional<typename LinearNdtree<NodeDataT, dim>::NodeOffsetType>
 LinearNdtree<NodeDataT, dim>::getChildOffset(
     NodeOffsetType relative_node_index,
     NdtreeIndexRelativeChild child_index) const {
-  DCHECK_LT(relative_node_index, first_child_offset_.size());
   DCHECK_LT(relative_node_index, allocated_child_mask_.size());
-  const NodeOffsetType node_first_child_offset =
-      first_child_offset_[relative_node_index];
   const ChildAllocationMaskType node_child_mask =
       allocated_child_mask_[relative_node_index];
-  const ChildAllocationMaskType relative_child_offset =
+  if (!bit_ops::is_bit_set(node_child_mask, child_index)) {
+    return std::nullopt;
+  }
+
+  DCHECK_LT(relative_node_index, first_child_offset_.size());
+  const NodeOffsetType node_first_child_offset =
+      first_child_offset_[relative_node_index];
+  const NodeOffsetType relative_child_offset =
       bit_ops::popcount(node_child_mask & ((1 << child_index) - 1));
   return node_first_child_offset + relative_child_offset;
 }

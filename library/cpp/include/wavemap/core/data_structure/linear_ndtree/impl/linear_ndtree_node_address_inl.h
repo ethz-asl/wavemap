@@ -5,6 +5,10 @@
 
 namespace wavemap {
 template <typename LinearNdtreeT>
+LinearNdtreeNodePtr<LinearNdtreeT>::LinearNdtreeNodePtr(LinearNdtreeT* tree)
+    : node_(tree ? std::make_optional<NodeRef>(*tree) : std::nullopt) {}
+
+template <typename LinearNdtreeT>
 LinearNdtreeNodePtr<LinearNdtreeT>::LinearNdtreeNodePtr(LinearNdtreeT* tree,
                                                         NodeOffsetType offset)
     : node_(tree ? std::make_optional<NodeRef>(*tree, offset) : std::nullopt) {}
@@ -43,6 +47,28 @@ LinearNdtreeNodePtr<LinearNdtreeT>::operator=(
     reset();
   }
   return *this;
+}
+
+template <typename LinearNdtreeT>
+bool LinearNdtreeNodePtr<LinearNdtreeT>::operator==(
+    const LinearNdtreeNodePtr& other) const {
+  // If both pointers are undefined, we consider them equal
+  if (!node_.has_value() && !other.node_.has_value()) {
+    return true;
+  }
+  // If only one of the two is undefined, they're different
+  if (!node_.has_value() || !other.node_.has_value()) {
+    return false;
+  }
+  // Return whether both pointers point to the same node
+  return &node_->tree_ == &other.node_->tree_ &&
+         node_->offset_ == other.node_->offset_;
+}
+
+template <typename LinearNdtreeT>
+bool LinearNdtreeNodePtr<LinearNdtreeT>::operator!=(
+    const LinearNdtreeNodePtr& other) const {
+  return !(*this == other);  // NOLINT
 }
 
 template <typename LinearNdtreeT>
@@ -94,7 +120,7 @@ auto& LinearNdtreeNodeRef<LinearNdtreeT>::data() const {
 }
 
 template <typename LinearNdtreeT>
-auto LinearNdtreeNodeRef<LinearNdtreeT>::hasAtLeastOneChild() const {
+bool LinearNdtreeNodeRef<LinearNdtreeT>::hasAtLeastOneChild() const {
   return tree_.nodeHasAtLeastOneChild(offset_);
 }
 

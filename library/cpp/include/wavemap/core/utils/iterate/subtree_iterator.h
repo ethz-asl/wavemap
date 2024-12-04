@@ -23,30 +23,18 @@ class SubtreeIteratorBase {
 
   virtual ~SubtreeIteratorBase() = default;
 
-  reference operator*() { return *getFrontValuePtr(); }
-  pointer operator->() { return getFrontValuePtr(); }
+  reference operator*() { return *dequeFront(); }
+  pointer operator->() { return dequeFront(); }
 
-  friend bool operator==(const SubtreeIteratorBase& lhs,
-                         const SubtreeIteratorBase& rhs) {
-    return (lhs.dequeSize() == rhs.dequeSize()) &&
-           (lhs.dequeSize() == 0 ||
-            *lhs.getFrontValuePtr() == *rhs.getFrontValuePtr());
-  }
-  friend bool operator!=(const SubtreeIteratorBase& lhs,
-                         const SubtreeIteratorBase& rhs) {
-    return !(lhs == rhs);  // NOLINT
-  }
+  bool operator==(const SubtreeIteratorBase& rhs) const;
+  bool operator!=(const SubtreeIteratorBase& rhs) const;
 
   virtual DerivedT& operator++() = 0;  // prefix ++
-  DerivedT operator++(int) {           // postfix ++
-    DerivedT retval = *this;
-    ++(*this);  // call the above prefix incrementer
-    return retval;
-  }
+  DerivedT operator++(int);            // postfix ++
 
  private:
   virtual size_t dequeSize() const = 0;
-  virtual pointer getFrontValuePtr() const = 0;
+  virtual pointer dequeFront() const = 0;
 };
 
 template <typename NodePtrT, int num_children, TraversalOrder traversal_order>
@@ -65,7 +53,7 @@ class SubtreeIterator<NodePtrT, num_children,
  private:
   std::deque<NodePtrT> upcoming_nodes_;
   size_t dequeSize() const override { return upcoming_nodes_.size(); }
-  NodePtrT getFrontValuePtr() const override { return upcoming_nodes_.front(); }
+  NodePtrT dequeFront() const override { return upcoming_nodes_.front(); }
   void enqueueNodeChildren(NodePtrT parent_ptr);
 };
 
@@ -83,11 +71,10 @@ class SubtreeIterator<NodePtrT, num_children,
   struct StackElement {
     NodePtrT node_ptr;
     NdtreeIndexRelativeChild last_expanded_child_idx;
-    bool operator==(const StackElement& rhs) const;
   };
   std::deque<StackElement> upcoming_nodes_;
   size_t dequeSize() const override { return upcoming_nodes_.size(); }
-  NodePtrT getFrontValuePtr() const override;
+  NodePtrT dequeFront() const override;
   void enqueueNodeAndFirstChildren(NodePtrT parent_ptr);
 };
 
@@ -103,7 +90,7 @@ class SubtreeIterator<NodePtrT, num_children, TraversalOrder::kBreadthFirst>
  private:
   std::deque<NodePtrT> upcoming_nodes_;
   size_t dequeSize() const override { return upcoming_nodes_.size(); }
-  NodePtrT getFrontValuePtr() const override { return upcoming_nodes_.front(); }
+  NodePtrT dequeFront() const override { return upcoming_nodes_.front(); }
   void enqueueNodeChildren(NodePtrT parent_ptr);
 };
 

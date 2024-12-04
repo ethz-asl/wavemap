@@ -16,9 +16,18 @@ class NdtreeNode {
   static constexpr int kNumChildren = NdtreeIndex<dim>::kNumChildren;
 
   NdtreeNode() = default;
+  ~NdtreeNode() = default;
+
   template <typename... Args>
   explicit NdtreeNode(Args&&... args) : data_(std::forward<Args>(args)...) {}
-  ~NdtreeNode() = default;
+
+  // Delete copy constructor and assignment operator to avoid accidental copies
+  NdtreeNode(const NdtreeNode& other_tree) = delete;
+  NdtreeNode& operator=(const NdtreeNode&) = delete;
+
+  // Allow move construction and assignments
+  NdtreeNode(NdtreeNode&&) = default;
+  NdtreeNode& operator=(NdtreeNode&&) = default;
 
   bool empty() const;
   void clear();

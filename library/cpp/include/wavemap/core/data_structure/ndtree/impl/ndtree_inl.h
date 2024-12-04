@@ -18,9 +18,13 @@ Ndtree<NodeDataT, dim>::Ndtree(int max_height, RootNodeArgs&&... args)
 
 template <typename NodeDataT, int dim>
 template <typename OtherTreeT>
-Ndtree<NodeDataT, dim>::Ndtree(const OtherTreeT& other_tree)
-    : max_height_(other_tree.getMaxHeight()) {
-  clone(other_tree.getRootNode(), root_node_);
+Ndtree<NodeDataT, dim> Ndtree<NodeDataT, dim>::from(
+    const OtherTreeT& other_tree) {
+  Ndtree cloned_tree{other_tree.getMaxHeight()};
+  using OtherNodeConstRefType = typename OtherTreeT::NodeConstRefType;
+  recursiveClone<OtherNodeConstRefType>(other_tree.getRootNode(),
+                                        cloned_tree.getRootNode());
+  return cloned_tree;
 }
 
 template <typename NodeDataT, int dim>
@@ -154,14 +158,14 @@ auto Ndtree<NodeDataT, dim>::getIterator() const {
 
 template <typename NodeDataT, int dim>
 template <typename OtherNodeConstRefT>
-void Ndtree<NodeDataT, dim>::clone(OtherNodeConstRefT other_node,
-                                   NodeRefType node) {
-  node.data() = other_node->data();
+void Ndtree<NodeDataT, dim>::recursiveClone(OtherNodeConstRefT other_node,
+                                            NodeRefType node) {
+  node.data() = other_node.data();
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < IndexType::kNumChildren; ++child_idx) {
-    if (auto other_child = other_node->getChild(child_idx); other_child) {
-      auto& child = node.getOrAllocateChild(child_idx);
-      clone(*other_child, child);
+    if (auto other_child = other_node.getChild(child_idx); other_child) {
+      NodeRefType child = node.getOrAllocateChild(child_idx);
+      recursiveClone<OtherNodeConstRefT>(*other_child, child);
     }
   }
 }

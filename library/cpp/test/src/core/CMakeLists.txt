@@ -5,6 +5,7 @@ target_include_directories(test_wavemap_core PRIVATE
 target_sources(test_wavemap_core PRIVATE
     data_structure/test_aabb.cc
     data_structure/test_image.cc
+    data_structure/test_ndtree_conversions.cc
     data_structure/test_ndtree.cc
     data_structure/test_pointcloud.cc
     data_structure/test_sparse_vector.cc

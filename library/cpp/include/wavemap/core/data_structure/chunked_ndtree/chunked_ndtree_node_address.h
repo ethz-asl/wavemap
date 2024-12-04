@@ -41,6 +41,10 @@ class ChunkedNdtreeNodePtr {
   operator bool() const { return node_.has_value(); }  // NOLINT
   bool operator==(std::nullptr_t) noexcept { return !node_.has_value(); }
 
+  // Emulate comparisons
+  bool operator==(const ChunkedNdtreeNodePtr& other) const;
+  bool operator!=(const ChunkedNdtreeNodePtr& other) const;
+
  private:
   std::optional<NodeRef> node_{};
 };

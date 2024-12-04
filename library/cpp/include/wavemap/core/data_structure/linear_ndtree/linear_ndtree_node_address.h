@@ -34,6 +34,10 @@ class LinearNdtreeNodePtr {
   operator bool() const { return node_.has_value(); }  // NOLINT
   bool operator==(std::nullptr_t) noexcept { return !node_.has_value(); }
 
+  // Emulate comparisons
+  bool operator==(const LinearNdtreeNodePtr& other) const;
+  bool operator!=(const LinearNdtreeNodePtr& other) const;
+
  private:
   std::optional<NodeRef> node_{};
 };
@@ -72,9 +76,7 @@ class LinearNdtreeNodeRef {
   bool hasNonzeroData(FloatingPoint threshold) const;
   auto& data() const;
 
-  auto hasAtLeastOneChild() const;  // Returns a BitRef or bool, depending on
-                                    // whether the tree type is const-qualified
-
+  bool hasAtLeastOneChild() const;
   bool hasChild(NdtreeIndexRelativeChild child_index) const;
   NodePtr getChild(NdtreeIndexRelativeChild child_index) const;
 

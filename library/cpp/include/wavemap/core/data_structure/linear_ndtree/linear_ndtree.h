@@ -16,7 +16,7 @@ class LinearNdtree {
  public:
   using IndexType = NdtreeIndex<dim>;
   using HeightType = IndexElement;
-  using NodeOffsetType = size_t;
+  using NodeOffsetType = uint32_t;
   using NodeRefType = LinearNdtreeNodeRef<LinearNdtree>;
   using NodeConstRefType = LinearNdtreeNodeRef<const LinearNdtree>;
   using NodePtrType = LinearNdtreeNodePtr<LinearNdtree>;
@@ -30,16 +30,17 @@ class LinearNdtree {
   explicit LinearNdtree(HeightType max_height);
   ~LinearNdtree() = default;
 
-  // Deep copy constructor
-  template <typename OtherTreeT>
-  explicit LinearNdtree(const OtherTreeT& other_tree);
-
-  // Delete the copy assignment operator to avoid expensive accidental copies
+  // Delete copy constructor and assignment operator to avoid accidental copies
+  LinearNdtree(const LinearNdtree& other_tree) = delete;
   LinearNdtree& operator=(const LinearNdtree&) = delete;
 
-  // Move constructor and assignment operator
+  // Allow move construction and assignments
   LinearNdtree(LinearNdtree&&) = default;
   LinearNdtree& operator=(LinearNdtree&&) = default;
+
+  // Explicit deep copies, with support for type conversions
+  template <typename OtherTreeT>
+  static LinearNdtree from(const OtherTreeT& other_tree);
 
   bool empty() const { return first_child_offset_.empty(); }
   size_t size() const { return first_child_offset_.size(); }
@@ -59,6 +60,11 @@ class LinearNdtree {
 
   NodeRefType getRootNode() { return {*this}; }
   NodeConstRefType getRootNode() const { return {*this}; }
+
+  template <TraversalOrder traversal_order>
+  auto getIterator();
+  template <TraversalOrder traversal_order>
+  auto getIterator() const;
 
   // Methods to operate on nodes given their relative position inside the tree
   bool nodeHasNonzeroData(NodeOffsetType relative_node_index) const;

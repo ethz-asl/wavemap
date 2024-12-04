@@ -49,6 +49,28 @@ ChunkedNdtreeNodePtr<ChunkT>& ChunkedNdtreeNodePtr<ChunkT>::operator=(
 }
 
 template <typename ChunkT>
+bool ChunkedNdtreeNodePtr<ChunkT>::operator==(
+    const ChunkedNdtreeNodePtr& other) const {
+  // If both pointers are undefined, we consider them equal
+  if (!node_.has_value() && !other.node_.has_value()) {
+    return true;
+  }
+  // If only one of the two is undefined, they're different
+  if (!node_.has_value() || !other.node_.has_value()) {
+    return false;
+  }
+  // Return whether both pointers point to the same node
+  return &node_->chunk_ == &other.node_->chunk_ &&
+         node_->offset_ == other.node_->offset_;
+}
+
+template <typename ChunkT>
+bool ChunkedNdtreeNodePtr<ChunkT>::operator!=(
+    const ChunkedNdtreeNodePtr& other) const {
+  return !(*this == other);  // NOLINT
+}
+
+template <typename ChunkT>
 ChunkedNdtreeNodeRef<ChunkT>::ChunkedNdtreeNodeRef(ChunkT& chunk,
                                                    NodeOffsetType offset)
     : chunk_(chunk), offset_(offset) {}

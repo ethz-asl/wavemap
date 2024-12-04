@@ -36,6 +36,14 @@ class ChunkedNdtreeChunk {
   ChunkedNdtreeChunk() = default;
   ~ChunkedNdtreeChunk() = default;
 
+  // Delete copy constructor and assignment operator to avoid accidental copies
+  ChunkedNdtreeChunk(const ChunkedNdtreeChunk& other_tree) = delete;
+  ChunkedNdtreeChunk& operator=(const ChunkedNdtreeChunk&) = delete;
+
+  // Allow move construction and assignments
+  ChunkedNdtreeChunk(ChunkedNdtreeChunk&&) = default;
+  ChunkedNdtreeChunk& operator=(ChunkedNdtreeChunk&&) = default;
+
   bool empty() const;
   void clear();
 

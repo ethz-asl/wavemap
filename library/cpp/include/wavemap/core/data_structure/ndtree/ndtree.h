@@ -28,16 +28,17 @@ class Ndtree {
   explicit Ndtree(HeightType max_height, RootNodeArgs&&... args);
   ~Ndtree() = default;
 
-  // Deep copy constructor
-  template <typename OtherTreeT>
-  explicit Ndtree(const OtherTreeT& other_tree);
-
-  // Delete the copy assignment operator to avoid expensive accidental copies
+  // Delete copy constructor and assignment operator to avoid accidental copies
+  Ndtree(const Ndtree& other_tree) = delete;
   Ndtree& operator=(const Ndtree&) = delete;
 
-  // Move constructor and assignment operator
+  // Allow move construction and assignments
   Ndtree(Ndtree&&) = default;
   Ndtree& operator=(Ndtree&&) = default;
+
+  // Explicit deep copies, with support for type conversions
+  template <typename OtherTreeT>
+  static Ndtree from(const OtherTreeT& other_tree);
 
   bool empty() const { return root_node_.empty(); }
   size_t size() const;
@@ -71,7 +72,7 @@ class Ndtree {
   NodeType root_node_;
 
   template <typename OtherNodeConstRefT>
-  void clone(OtherNodeConstRefT other_node, NodeRefType node);
+  static void recursiveClone(OtherNodeConstRefT other_node, NodeRefType node);
 };
 
 template <typename NodeDataT>
