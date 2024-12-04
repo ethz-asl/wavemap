@@ -7,6 +7,7 @@
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/indexing/index_conversions.h"
+#include "wavemap/core/utils/iterate/grid_iterator.h"
 #include "wavemap/core/utils/print/eigen.h"
 #include "wavemap/test/eigen_utils.h"
 #include "wavemap/test/fixture_base.h"
@@ -65,11 +66,9 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
   random_indices.emplace_back(0, NdtreeIndex<kDim>::Position::Zero());
   for (IndexElement index_height = 0; index_height < TestFixture::kMaxHeight;
        ++index_height) {
-    for (IndexElement index_x = -1; index_x <= 1; ++index_x) {
-      for (IndexElement index_y = -1; index_y <= 1; ++index_y) {
-        random_indices.emplace_back(
-            NdtreeIndex<kDim>{index_height, {index_x, index_y}});
-      }
+    for (const auto& index :
+         Grid<kDim>(Index<kDim>::Constant(-1), Index<kDim>::Constant(1))) {
+      random_indices.emplace_back(NdtreeIndex<kDim>{index_height, index});
     }
   }
 

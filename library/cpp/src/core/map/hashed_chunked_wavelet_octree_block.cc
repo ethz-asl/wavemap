@@ -20,6 +20,7 @@ void HashedChunkedWaveletOctreeBlock::prune() {
   if (getNeedsPruning()) {
     threshold();
     recursivePrune(ndtree_.getRootNode());
+    // TODO(victorr): Also deallocate empty chunk children arrays
     setNeedsPruning(false);
   }
 }
@@ -175,7 +176,6 @@ void HashedChunkedWaveletOctreeBlock::recursiveThreshold(  // NOLINT
 
 void HashedChunkedWaveletOctreeBlock::recursivePrune(  // NOLINT
     HashedChunkedWaveletOctreeBlock::OctreeType::NodeRefType node) {
-  bool has_at_least_one_child = false;
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
     if (OctreeType::NodePtrType child_node = node.getChild(child_idx);
@@ -184,11 +184,8 @@ void HashedChunkedWaveletOctreeBlock::recursivePrune(  // NOLINT
       if (!child_node->hasAtLeastOneChild() &&
           !child_node->hasNonzeroData(1e-3f)) {
         node.eraseChild(child_idx);
-      } else {
-        has_at_least_one_child = true;
       }
     }
   }
-  node.hasAtLeastOneChild() = has_at_least_one_child;
 }
 }  // namespace wavemap

@@ -16,7 +16,7 @@ template <typename DataT, int dim, int height>
 void ChunkedNdtreeChunk<DataT, dim, height>::clear() {
   deleteChildrenArray();
   node_data_.fill({});
-  node_has_at_least_one_child_.reset();
+  allocated_child_mask_.fill({});
 }
 
 template <typename DataT, int dim, int height>
@@ -141,18 +141,63 @@ const DataT& ChunkedNdtreeChunk<DataT, dim, height>::nodeData(
 }
 
 template <typename DataT, int dim, int height>
-typename ChunkedNdtreeChunk<DataT, dim, height>::BitRef
-ChunkedNdtreeChunk<DataT, dim, height>::nodeHasAtLeastOneChild(
-    NodeOffsetType relative_node_index) {
-  DCHECK_LT(relative_node_index, kNumInnerNodes);
-  return node_has_at_least_one_child_[relative_node_index];
-}
-
-template <typename DataT, int dim, int height>
 bool ChunkedNdtreeChunk<DataT, dim, height>::nodeHasAtLeastOneChild(
     NodeOffsetType relative_node_index) const {
   DCHECK_LT(relative_node_index, kNumInnerNodes);
-  return node_has_at_least_one_child_[relative_node_index];
+  return allocated_child_mask_[relative_node_index];
+}
+
+template <typename DataT, int dim, int height>
+bool ChunkedNdtreeChunk<DataT, dim, height>::nodeHasChild(
+    NodeOffsetType relative_node_index,
+    NdtreeIndexRelativeChild child_index) const {
+  DCHECK_LT(relative_node_index, kNumInnerNodes);
+  const auto node_child_mask = allocated_child_mask_[relative_node_index];
+  return bit_ops::is_bit_set(node_child_mask, child_index);
+}
+
+template <typename DataT, int dim, int height>
+void ChunkedNdtreeChunk<DataT, dim, height>::nodeSetHasChild(
+    NodeOffsetType relative_node_index, NdtreeIndexRelativeChild child_index) {
+  DCHECK_LT(relative_node_index, kNumInnerNodes);
+  auto& node_child_mask = allocated_child_mask_[relative_node_index];
+  node_child_mask = bit_ops::set_bit(node_child_mask, child_index);
+}
+
+template <typename DataT, int dim, int height>
+void ChunkedNdtreeChunk<DataT, dim, height>::nodeEraseChild(
+    NodeOffsetType relative_node_index, NdtreeIndexRelativeChild child_index) {
+  if (!nodeHasChild(relative_node_index, child_index)) {
+    return;
+  }
+  {
+    auto& node_child_mask = allocated_child_mask_[relative_node_index];
+    node_child_mask = bit_ops::unset_bit(node_child_mask, child_index);
+  }
+
+  const NodeOffsetType child_offset =
+      convert::nodeOffsetToChildOffset<kDim>(relative_node_index, child_index);
+  NodeOffsetType child_start_idx =
+      convert::nodeOffsetToLevelIndex<kDim>(child_offset);
+  NodeOffsetType child_end_idx = child_start_idx + 1;
+  for (IndexElement child_depth =
+           convert::nodeOffsetToDepth<kDim>(child_offset);
+       child_depth <= kHeight; ++child_depth) {
+    const NodeOffsetType level_offset =
+        tree_math::perfect_tree::num_total_nodes_fast<kDim>(child_depth);
+    for (NodeOffsetType level_child_idx = child_start_idx;
+         level_child_idx < child_end_idx; ++level_child_idx) {
+      if (child_depth == kHeight) {
+        eraseChild(level_child_idx);
+      } else {
+        const NodeOffsetType chunk_child_idx = level_offset + level_child_idx;
+        nodeData(chunk_child_idx) = {};
+        allocated_child_mask_[chunk_child_idx] = {};
+      }
+    }
+    child_start_idx <<= kDim;
+    child_end_idx <<= kDim;
+  }
 }
 }  // namespace wavemap
 

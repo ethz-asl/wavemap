@@ -79,9 +79,7 @@ class ChunkedNdtreeNodeRef {
   bool hasNonzeroData(FloatingPoint threshold) const;
   auto& data() const;
 
-  auto hasAtLeastOneChild() const;  // Returns a BitRef or bool, depending on
-                                    // whether the chunk type is const-qualified
-
+  bool hasAtLeastOneChild() const;
   bool hasChild(NdtreeIndexRelativeChild child_index) const;
   // TODO(victorr): Add tests for this method
   void eraseChild(NdtreeIndexRelativeChild child_index) const;

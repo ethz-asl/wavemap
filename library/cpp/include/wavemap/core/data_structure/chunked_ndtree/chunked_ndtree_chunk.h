@@ -14,6 +14,7 @@ namespace wavemap {
 template <typename DataT, int dim, int height>
 class ChunkedNdtreeChunk {
  public:
+  using DataType = DataT;
   using NodeOffsetType = uint32_t;
 
   static constexpr int kDim = dim;
@@ -31,9 +32,6 @@ class ChunkedNdtreeChunk {
       "Keys for nodes within chunks of the given height and dimensionality are "
       "not guaranteed to fit within the chosen KeyType. Make the chunks "
       "smaller or change the KeyType alias to a larger unsigned integer type.");
-
-  using DataType = DataT;
-  using BitRef = typename std::bitset<kNumInnerNodes>::reference;
 
   ChunkedNdtreeChunk() = default;
   ~ChunkedNdtreeChunk() = default;
@@ -68,8 +66,13 @@ class ChunkedNdtreeChunk {
   DataT& nodeData(NodeOffsetType relative_node_index);
   const DataT& nodeData(NodeOffsetType relative_node_index) const;
 
-  BitRef nodeHasAtLeastOneChild(NodeOffsetType relative_node_index);
   bool nodeHasAtLeastOneChild(NodeOffsetType relative_node_index) const;
+  bool nodeHasChild(NodeOffsetType relative_node_index,
+                    NdtreeIndexRelativeChild child_index) const;
+  void nodeSetHasChild(NodeOffsetType relative_node_index,
+                       NdtreeIndexRelativeChild child_index);
+  void nodeEraseChild(NodeOffsetType relative_node_index,
+                      NdtreeIndexRelativeChild child_index);
 
   friend bool operator==(const ChunkedNdtreeChunk& lhs,
                          const ChunkedNdtreeChunk& rhs) {
@@ -77,13 +80,14 @@ class ChunkedNdtreeChunk {
   }
 
  private:
+  using ChildAllocationMaskType = uint8_t;
   using NodeDataArray = std::array<DataT, kNumInnerNodes>;
-  using NodeChildBitset = std::bitset<kNumInnerNodes>;
+  using NodeChildBitset = std::array<ChildAllocationMaskType, kNumInnerNodes>;
   using ChunkPtr = std::unique_ptr<ChunkedNdtreeChunk>;
   using ChildChunkArray = std::array<ChunkPtr, kNumChildren>;
 
   NodeDataArray node_data_{};
-  NodeChildBitset node_has_at_least_one_child_{};
+  NodeChildBitset allocated_child_mask_{};
   std::unique_ptr<ChildChunkArray> child_chunks_;
 };
 }  // namespace wavemap

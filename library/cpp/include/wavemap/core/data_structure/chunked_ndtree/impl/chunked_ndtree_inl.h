@@ -190,14 +190,14 @@ template <typename NodeDataT, int dim, int chunk_height>
 template <TraversalOrder traversal_order>
 auto ChunkedNdtree<NodeDataT, dim, chunk_height>::getIterator() {
   return Subtree<NodePtrType, IndexType::kNumChildren, traversal_order>(
-      &root_chunk_);
+      &getRootNode());
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
 template <TraversalOrder traversal_order>
 auto ChunkedNdtree<NodeDataT, dim, chunk_height>::getIterator() const {
   return Subtree<NodeConstPtrType, IndexType::kNumChildren, traversal_order>(
-      &root_chunk_);
+      &getRootNode());
 }
 
 template <typename NodeDataT, int dim, int chunk_height>
