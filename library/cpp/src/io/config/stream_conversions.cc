@@ -7,19 +7,18 @@
 #endif
 
 namespace wavemap::io {
-bool yamlStreamToParams(std::istream& istream, param::Value& params) {
+std::optional<param::Value> yamlStreamToParams(std::istream& istream) {
 #ifdef YAML_CPP_AVAILABLE
   try {
     YAML::Node yaml = YAML::Load(istream);
-    params = convert::yamlToParams(yaml);
-    return true;
+    return convert::yamlToParams(yaml);
   } catch (YAML::ParserException&) {
     LOG(WARNING) << "Failed to parse bytestream using yaml-cpp.";
-    return false;
+    return std::nullopt;
   }
 #endif
   LOG(ERROR) << "No YAML parser is available. Install yaml-cpp or add an "
                 "interface to your preferred parser in wavemap/io/config.";
-  return false;
+  return std::nullopt;
 }
 }  // namespace wavemap::io

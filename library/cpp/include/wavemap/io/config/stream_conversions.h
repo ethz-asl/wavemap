@@ -6,7 +6,7 @@
 #include <wavemap/core/config/param.h>
 
 namespace wavemap::io {
-bool yamlStreamToParams(std::istream& istream, param::Value& params);
+std::optional<param::Value> yamlStreamToParams(std::istream& istream);
 }
 
 #endif  // WAVEMAP_IO_CONFIG_STREAM_CONVERSIONS_H_
