@@ -2,84 +2,51 @@
 
 #include <string>
 
-namespace wavemap::param::convert {
-param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns) {
-  XmlRpc::XmlRpcValue xml_rpc_value;
-  if (nh.getParam(ns, xml_rpc_value)) {
-    return toParamMap(xml_rpc_value);
-  }
-
-  ROS_WARN_STREAM("Could not load ROS params under namespace "
-                  << nh.resolveName(ns));
-  return {};
-}
-
-param::Array toParamArray(const ros::NodeHandle& nh, const std::string& ns) {
-  XmlRpc::XmlRpcValue xml_rpc_value;
-  if (nh.getParam(ns, xml_rpc_value)) {
-    return toParamArray(xml_rpc_value);
-  }
-
-  ROS_WARN_STREAM("Could not load ROS params under namespace "
-                  << nh.resolveName(ns));
-  return {};
-}
-
-param::Value toParamValue(const ros::NodeHandle& nh, const std::string& ns) {
-  XmlRpc::XmlRpcValue xml_rpc_value;
-  if (nh.getParam(ns, xml_rpc_value)) {
-    return toParamValue(xml_rpc_value);
-  }
-
-  ROS_WARN_STREAM("Could not load ROS params under namespace "
-                  << nh.resolveName(ns));
-  return param::Value{param::Map{}};  // Return an empty map
-}
-
-param::Map toParamMap(  // NOLINT
+namespace wavemap::convert {
+param::Map xmlRpcToParamMap(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-    ROS_WARN("Expected param map.");
+    ROS_WARN("Expected ROS param map.");
     return {};
   }
 
   param::Map param_map;
   for (const auto& kv : xml_rpc_value) {
-    param_map.emplace(kv.first, toParamValue(kv.second));
+    param_map.emplace(kv.first, xmlRpcToParams(kv.second));
   }
   return param_map;
 }
 
-param::Array toParamArray(  // NOLINT
+param::Array xmlRpcToParamArray(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   if (xml_rpc_value.getType() != XmlRpc::XmlRpcValue::TypeArray) {
-    ROS_WARN("Expected param array.");
+    ROS_WARN("Expected ROS param array.");
     return {};
   }
 
   param::Array array;
   array.reserve(xml_rpc_value.size());
   for (int idx = 0; idx < xml_rpc_value.size(); ++idx) {  // NOLINT
-    array.template emplace_back(toParamValue(xml_rpc_value[idx]));
+    array.emplace_back(xmlRpcToParams(xml_rpc_value[idx]));
   }
   return array;
 }
 
-param::Value toParamValue(  // NOLINT
+param::Value xmlRpcToParams(  // NOLINT
     const XmlRpc::XmlRpcValue& xml_rpc_value) {
   switch (xml_rpc_value.getType()) {
-    case XmlRpc::XmlRpcValue::TypeBoolean:
-      return param::Value(static_cast<bool>(xml_rpc_value));
-    case XmlRpc::XmlRpcValue::TypeInt:
-      return param::Value(static_cast<int>(xml_rpc_value));
-    case XmlRpc::XmlRpcValue::TypeDouble:
-      return param::Value(static_cast<double>(xml_rpc_value));
-    case XmlRpc::XmlRpcValue::TypeString:
-      return param::Value(static_cast<std::string>(xml_rpc_value));
-    case XmlRpc::XmlRpcValue::TypeArray:
-      return param::Value(toParamArray(xml_rpc_value));
     case XmlRpc::XmlRpcValue::TypeStruct:
-      return param::Value(toParamMap(xml_rpc_value));
+      return param::Value{xmlRpcToParamMap(xml_rpc_value)};
+    case XmlRpc::XmlRpcValue::TypeArray:
+      return param::Value{xmlRpcToParamArray(xml_rpc_value)};
+    case XmlRpc::XmlRpcValue::TypeBoolean:
+      return param::Value{static_cast<bool>(xml_rpc_value)};
+    case XmlRpc::XmlRpcValue::TypeInt:
+      return param::Value{static_cast<int>(xml_rpc_value)};
+    case XmlRpc::XmlRpcValue::TypeDouble:
+      return param::Value{static_cast<double>(xml_rpc_value)};
+    case XmlRpc::XmlRpcValue::TypeString:
+      return param::Value{static_cast<std::string>(xml_rpc_value)};
     case XmlRpc::XmlRpcValue::TypeInvalid:
       ROS_ERROR("Encountered invalid type while parsing ROS params.");
       break;
@@ -99,6 +66,39 @@ param::Value toParamValue(  // NOLINT
   }
 
   // On error, return an empty array
-  return param::Value(param::Array{});
+  return param::Value{param::Array{}};
 }
-}  // namespace wavemap::param::convert
+
+param::Map rosToParamMap(const ros::NodeHandle& nh, const std::string& ns) {
+  XmlRpc::XmlRpcValue xml_rpc_value;
+  if (nh.getParam(ns, xml_rpc_value)) {
+    return xmlRpcToParamMap(xml_rpc_value);
+  }
+
+  ROS_WARN_STREAM("Could not load ROS params under namespace "
+                  << nh.resolveName(ns));
+  return {};
+}
+
+param::Array rosToParamArray(const ros::NodeHandle& nh, const std::string& ns) {
+  XmlRpc::XmlRpcValue xml_rpc_value;
+  if (nh.getParam(ns, xml_rpc_value)) {
+    return xmlRpcToParamArray(xml_rpc_value);
+  }
+
+  ROS_WARN_STREAM("Could not load ROS params under namespace "
+                  << nh.resolveName(ns));
+  return {};
+}
+
+param::Value rosToParams(const ros::NodeHandle& nh, const std::string& ns) {
+  XmlRpc::XmlRpcValue xml_rpc_value;
+  if (nh.getParam(ns, xml_rpc_value)) {
+    return xmlRpcToParams(xml_rpc_value);
+  }
+
+  ROS_WARN_STREAM("Could not load ROS params under namespace "
+                  << nh.resolveName(ns));
+  return param::Value{param::Map{}};  // Return an empty map
+}
+}  // namespace wavemap::convert

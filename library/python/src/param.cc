@@ -4,7 +4,7 @@
 
 namespace wavemap {
 namespace convert {
-param::Map toParamMap(const nb::handle& py_value) {  // NOLINT
+param::Map pyToParamMap(const nb::handle& py_value) {  // NOLINT
   nb::dict py_dict;
   if (!nb::try_cast(py_value, py_dict)) {
     LOG(WARNING) << "Expected python dict, but got "
@@ -14,9 +14,8 @@ param::Map toParamMap(const nb::handle& py_value) {  // NOLINT
 
   param::Map param_map;
   for (const auto& [py_key, py_dict_value] : py_dict) {
-    nb::str py_key_str;
-    if (nb::try_cast(py_key, py_key_str)) {
-      param_map.emplace(py_key_str.c_str(), toParamValue(py_dict_value));
+    if (nb::str py_key_str; nb::try_cast(py_key, py_key_str)) {
+      param_map.emplace(py_key_str.c_str(), pyToParams(py_dict_value));
     } else {
       LOG(WARNING) << "Ignoring dict entry. Key not convertible to string for "
                       "element with key "
@@ -27,7 +26,7 @@ param::Map toParamMap(const nb::handle& py_value) {  // NOLINT
   return param_map;
 }
 
-param::Array toParamArray(const nb::handle& py_value) {  // NOLINT
+param::Array pyToParamArray(const nb::handle& py_value) {  // NOLINT
   nb::list py_list;
   if (!nb::try_cast(py_value, py_list)) {
     LOG(WARNING) << "Expected python list, but got "
@@ -37,13 +36,19 @@ param::Array toParamArray(const nb::handle& py_value) {  // NOLINT
 
   param::Array array;
   array.reserve(nb::len(py_list));
-  for (const auto& py_element : py_list) {  // NOLINT
-    array.emplace_back(toParamValue(py_element));
+  for (const auto& py_element : py_list) {
+    array.emplace_back(pyToParams(py_element));
   }
   return array;
 }
 
-param::Value toParamValue(const nb::handle& py_value) {  // NOLINT
+param::Value pyToParams(const nb::handle& py_value) {  // NOLINT
+  if (nb::isinstance<nb::dict>(py_value)) {
+    return param::Value(pyToParamMap(py_value));
+  }
+  if (nb::isinstance<nb::list>(py_value)) {
+    return param::Value(pyToParamArray(py_value));
+  }
   if (nb::bool_ py_bool; nb::try_cast(py_value, py_bool)) {
     return param::Value{static_cast<bool>(py_bool)};
   }
@@ -55,12 +60,6 @@ param::Value toParamValue(const nb::handle& py_value) {  // NOLINT
   }
   if (nb::str py_str; nb::try_cast(py_value, py_str)) {
     return param::Value{std::string{py_str.c_str()}};
-  }
-  if (nb::isinstance<nb::list>(py_value)) {
-    return param::Value(toParamArray(py_value));
-  }
-  if (nb::isinstance<nb::dict>(py_value)) {
-    return param::Value(toParamMap(py_value));
   }
 
   // On error, return an empty array
@@ -78,7 +77,7 @@ void add_param_module(nb::module_& m_param) {
       "can therefore hold the information needed to initialize an entire "
       "config, or even a hierarchy of nested configs.")
       .def("__init__", [](param::Value* t, nb::handle py_value) {
-        new (t) param::Value{convert::toParamValue(py_value)};
+        new (t) param::Value{convert::pyToParams(py_value)};
       });
 
   nb::implicitly_convertible<nb::handle, param::Value>();

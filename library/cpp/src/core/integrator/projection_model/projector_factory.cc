@@ -10,7 +10,7 @@ namespace wavemap {
 std::unique_ptr<ProjectorBase> wavemap::ProjectorFactory::create(
     const param::Value& params,
     std::optional<ProjectorType> default_projector_type) {
-  if (const auto type = ProjectorType::from(params, "projection_model"); type) {
+  if (const auto type = ProjectorType::from(params); type) {
     return create(type.value(), params);
   }
 
@@ -28,9 +28,7 @@ std::unique_ptr<ProjectorBase> wavemap::ProjectorFactory::create(
     ProjectorType projector_type, const param::Value& params) {
   switch (projector_type) {
     case ProjectorType::kSphericalProjector: {
-      if (const auto config =
-              SphericalProjectorConfig::from(params, "projection_model");
-          config) {
+      if (const auto config = SphericalProjectorConfig::from(params); config) {
         return std::make_unique<SphericalProjector>(config.value());
       } else {
         LOG(ERROR) << "Spherical projector config could not be loaded.";
@@ -38,9 +36,7 @@ std::unique_ptr<ProjectorBase> wavemap::ProjectorFactory::create(
       }
     }
     case ProjectorType::kOusterProjector: {
-      if (const auto config =
-              OusterProjectorConfig::from(params, "projection_model");
-          config) {
+      if (const auto config = OusterProjectorConfig::from(params); config) {
         return std::make_unique<OusterProjector>(config.value());
       } else {
         LOG(ERROR) << "Ouster projector config could not be loaded.";
@@ -48,8 +44,7 @@ std::unique_ptr<ProjectorBase> wavemap::ProjectorFactory::create(
       }
     }
     case ProjectorType::kPinholeCameraProjector: {
-      if (const auto config =
-              PinholeCameraProjectorConfig::from(params, "projection_model");
+      if (const auto config = PinholeCameraProjectorConfig::from(params);
           config) {
         return std::make_unique<PinholeCameraProjector>(config.value());
       } else {

@@ -1,8 +1,10 @@
-#include "wavemap/io/stream_conversions.h"
+#include "wavemap/io/map/stream_conversions.h"
 
 #include <algorithm>
 #include <memory>
 #include <stack>
+
+#include "wavemap/io/map/streamable_types.h"
 
 namespace wavemap::io {
 bool mapToStream(const MapBase& map, std::ostream& ostream) {

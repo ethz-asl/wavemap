@@ -1,6 +1,8 @@
-#include "wavemap/io/file_conversions.h"
+#include "wavemap/io/map/file_conversions.h"
 
 #include <fstream>
+
+#include "wavemap/io/map/stream_conversions.h"
 
 namespace wavemap::io {
 bool mapToFile(const MapBase& map, const std::filesystem::path& file_path) {
