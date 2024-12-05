@@ -8,7 +8,9 @@ add_wavemap_include_directories(wavemap_io)
 target_link_libraries(wavemap_io PUBLIC Eigen3::Eigen glog wavemap_core)
 
 # Set sources
-target_sources(wavemap_io PRIVATE file_conversions.cc stream_conversions.cc)
+target_sources(wavemap_io PRIVATE
+    map/file_conversions.cc
+    map/stream_conversions.cc)
 
 # Support installs
 if (GENERATE_WAVEMAP_INSTALL_RULES)
