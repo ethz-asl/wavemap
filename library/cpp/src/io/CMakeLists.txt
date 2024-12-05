@@ -9,8 +9,18 @@ target_link_libraries(wavemap_io PUBLIC Eigen3::Eigen glog wavemap_core)
 
 # Set sources
 target_sources(wavemap_io PRIVATE
+    config/file_conversions.cc
+    config/stream_conversions.cc
     map/file_conversions.cc
     map/stream_conversions.cc)
+
+# Optional YAML support
+if (yaml-cpp_FOUND)
+  target_compile_definitions(wavemap_io PUBLIC YAML_CPP_AVAILABLE)
+  target_link_libraries(wavemap_io PUBLIC ${YAML_CPP_LIBRARIES})
+  target_sources(wavemap_io PRIVATE
+      config/yaml_cpp_conversions.cc)
+endif ()
 
 # Support installs
 if (GENERATE_WAVEMAP_INSTALL_RULES)
