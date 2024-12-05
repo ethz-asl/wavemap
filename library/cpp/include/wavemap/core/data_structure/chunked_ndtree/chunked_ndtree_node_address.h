@@ -15,7 +15,6 @@ template <typename ChunkType>
 class ChunkedNdtreeNodePtr {
  public:
   using NodeRef = ChunkedNdtreeNodeRef<ChunkType>;
-  using NodeConstRef = ChunkedNdtreeNodeRef<const ChunkType>;
 
   // Constructors
   ChunkedNdtreeNodePtr() = default;
@@ -32,28 +31,29 @@ class ChunkedNdtreeNodePtr {
 
   // Emulate pointer semantics
   void reset() { node_.reset(); }
-  operator bool() const { return node_.has_value(); }  // NOLINT
-  NodeRef operator*() { return node_.value(); }
-  NodeConstRef operator*() const { return node_.value(); }
+  NodeRef operator*() const { return node_.value(); }
   NodeRef* operator->() { return node_.operator->(); }
-  const NodeConstRef* operator->() const { return node_.operator->(); }
+  const NodeRef* operator->() const { return node_.operator->(); }
+
+  // Emulate null check semantics
+  operator bool() const { return node_.has_value(); }  // NOLINT
+  bool operator==(std::nullptr_t) noexcept { return !node_.has_value(); }
 
  private:
-  std::optional<NodeRef> node_;
+  std::optional<NodeRef> node_{};
 };
 
 template <typename ChunkType>
 class ChunkedNdtreeNodeRef {
  public:
   using NodeRef = ChunkedNdtreeNodeRef<ChunkType>;
-  using NodeConstRef = ChunkedNdtreeNodeRef<const ChunkType>;
   using NodePtr = ChunkedNdtreeNodePtr<ChunkType>;
-  using NodeConstPtr = ChunkedNdtreeNodePtr<const ChunkType>;
 
   static constexpr int kDim = ChunkType::kDim;
   static constexpr int kNumChildren = NdtreeIndex<kDim>::kNumChildren;
   using NodeDataType = typename ChunkType::DataType;
 
+  ChunkedNdtreeNodeRef() = delete;
   ChunkedNdtreeNodeRef(ChunkType& chunk, IndexElement relative_node_depth,
                        LinearIndex level_traversal_distance);
 
@@ -65,35 +65,36 @@ class ChunkedNdtreeNodeRef {
   ChunkedNdtreeNodeRef& operator=(const ChunkedNdtreeNodeRef&) = delete;
   ChunkedNdtreeNodeRef& operator=(ChunkedNdtreeNodeRef&&) = delete;
 
-  // Conversion to const ref
-  operator NodeConstRef();
+  // Conversion of non-const ref to const ref
+  operator ChunkedNdtreeNodeRef<const ChunkType>() const;  // NOLINT
 
   // Conversion to pointer
-  NodePtr operator&();             // NOLINT
-  NodeConstPtr operator&() const;  // NOLINT
+  NodePtr operator&() const;  // NOLINT
 
   // Regular node methods
   bool empty() const;
 
   bool hasNonzeroData() const;
   bool hasNonzeroData(FloatingPoint threshold) const;
-  auto& data();
-  const auto& data() const;
+  auto& data() const;
 
-  typename ChunkType::BitRef hasAtLeastOneChild();
-  bool hasAtLeastOneChild() const;
+  auto hasAtLeastOneChild() const;  // Returns a BitRef or bool, depending on
+                                    // whether the ChunkType is const-qualified
 
   bool hasChild(NdtreeIndexRelativeChild child_index) const;
+  // TODO(victorr): Add tests for this method
+  void eraseChild(NdtreeIndexRelativeChild child_index) const;
 
-  NodePtr getChild(NdtreeIndexRelativeChild child_index);
-  NodeConstPtr getChild(NdtreeIndexRelativeChild child_index) const;
+  NodePtr getChild(NdtreeIndexRelativeChild child_index) const;
   template <typename... DefaultArgs>
   NodeRef getOrAllocateChild(NdtreeIndexRelativeChild child_index,
                              DefaultArgs&&... args) const;
 
  private:
   ChunkType& chunk_;
+  // TODO(victorr): Benchmark with int8_t
   const IndexElement relative_node_depth_ = 0;
+  // TODO(victorr): Benchmark with uint32_t
   const LinearIndex level_traversal_distance_ = 0u;
 
   LinearIndex computeRelativeNodeIndex() const;

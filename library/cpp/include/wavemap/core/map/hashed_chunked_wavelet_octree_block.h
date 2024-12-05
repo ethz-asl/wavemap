@@ -17,7 +17,7 @@ class HashedChunkedWaveletOctreeBlock {
   using BlockIndex = Index3D;
   using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
   using Transform = HaarTransform<FloatingPoint, kDim>;
-  using ChunkedOctreeType = ChunkedOctree<Coefficients::Details, kChunkHeight>;
+  using OctreeType = ChunkedOctree<Coefficients::Details, kChunkHeight>;
 
   explicit HashedChunkedWaveletOctreeBlock(IndexElement tree_height,
                                            FloatingPoint min_log_odds,
@@ -27,7 +27,7 @@ class HashedChunkedWaveletOctreeBlock {
         max_log_odds_(max_log_odds) {}
 
   bool empty() const;
-  size_t size() const { return chunked_ndtree_.size(); }
+  size_t size() const { return ndtree_.size(); }
   void threshold();
   void prune();
   void clear();
@@ -44,17 +44,13 @@ class HashedChunkedWaveletOctreeBlock {
   const Coefficients::Scale& getRootScale() const {
     return root_scale_coefficient_;
   }
-  ChunkedOctreeType::NodeRefType getRootNode() {
-    return chunked_ndtree_.getRootNode();
+  OctreeType::NodeRefType getRootNode() { return ndtree_.getRootNode(); }
+  OctreeType::NodeConstRefType getRootNode() const {
+    return ndtree_.getRootNode();
   }
-  ChunkedOctreeType::NodeConstRefType getRootNode() const {
-    return chunked_ndtree_.getRootNode();
-  }
-  ChunkedOctreeType::ChunkType& getRootChunk() {
-    return chunked_ndtree_.getRootChunk();
-  }
-  const ChunkedOctreeType::ChunkType& getRootChunk() const {
-    return chunked_ndtree_.getRootChunk();
+  OctreeType::ChunkType& getRootChunk() { return ndtree_.getRootChunk(); }
+  const OctreeType::ChunkType& getRootChunk() const {
+    return ndtree_.getRootChunk();
   }
 
   void setNeedsPruning(bool value = true) { needs_pruning_ = value; }
@@ -72,38 +68,31 @@ class HashedChunkedWaveletOctreeBlock {
 
   template <TraversalOrder traversal_order>
   auto getChunkIterator() {
-    return chunked_ndtree_.getChunkIterator<traversal_order>();
+    return ndtree_.getChunkIterator<traversal_order>();
   }
   template <TraversalOrder traversal_order>
   auto getChunkIterator() const {
-    return chunked_ndtree_.getChunkIterator<traversal_order>();
+    return ndtree_.getChunkIterator<traversal_order>();
   }
 
-  size_t getMemoryUsage() const { return chunked_ndtree_.getMemoryUsage(); }
+  size_t getMemoryUsage() const { return ndtree_.getMemoryUsage(); }
 
  private:
-  static constexpr IndexElement kMaxChunkStackDepth =
-      kMaxSupportedTreeHeight / kChunkHeight;
-
   const IndexElement tree_height_;
   const FloatingPoint min_log_odds_;
   const FloatingPoint max_log_odds_;
 
-  ChunkedOctreeType chunked_ndtree_{tree_height_ - 1};
+  OctreeType ndtree_{tree_height_ - 1};
   Coefficients::Scale root_scale_coefficient_{};
 
   bool needs_thresholding_ = false;
   bool needs_pruning_ = false;
   Timestamp last_updated_stamp_ = Time::now();
 
-  struct RecursiveThresholdReturnValue {
-    Coefficients::Scale scale;
-    bool is_nonzero_child;
-  };
-  RecursiveThresholdReturnValue recursiveThreshold(
-      ChunkedOctreeType::ChunkType& chunk,
-      Coefficients::Scale scale_coefficient);
-  void recursivePrune(ChunkedOctreeType::ChunkType& chunk);
+  void recursiveThreshold(OctreeType::NodeRefType node,
+                          Coefficients::Scale& node_scale_coefficient);
+  void recursivePrune(
+      HashedChunkedWaveletOctreeBlock::OctreeType::NodeRefType node);
 };
 }  // namespace wavemap
 

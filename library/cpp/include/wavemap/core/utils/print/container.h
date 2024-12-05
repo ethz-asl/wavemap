@@ -24,8 +24,7 @@ inline std::string sequence(const SequenceT& sequence,
   return std::accumulate(std::next(sequence.cbegin()), sequence.cend(),
                          print::element(sequence[0]),
                          [separator](auto str, const auto& el) -> std::string {
-                           return std::move(str) + separator +
-                                  print::element(el);
+                           return str + separator + print::element(el);
                          });
 }
 }  // namespace wavemap::print

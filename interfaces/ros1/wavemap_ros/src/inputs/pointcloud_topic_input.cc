@@ -12,7 +12,7 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <wavemap/core/data_structure/image.h>
 #include <wavemap/core/integrator/projective/projective_integrator.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 #include <wavemap_ros_conversions/time_conversions.h>
 
 namespace wavemap {
@@ -236,16 +236,16 @@ void PointcloudTopicInput::processQueue() {
       }
     } else {
       // Get the pointcloud's pose
-      Transformation3D T_W_C;
-      if (!transformer_->lookupTransform(
-              world_frame_, oldest_msg.getSensorFrame(),
-              convert::nanoSecondsToRosTime(oldest_msg.getTimeBase()), T_W_C)) {
+      const auto T_W_C = transformer_->lookupTransform(
+          world_frame_, oldest_msg.getSensorFrame(),
+          convert::nanoSecondsToRosTime(oldest_msg.getTimeBase()));
+      if (!T_W_C) {
         // Try to get this pointcloud's pose again at the next iteration
         return;
       }
 
       // Convert to a posed pointcloud
-      posed_pointcloud = PosedPointcloud<>(T_W_C);
+      posed_pointcloud = PosedPointcloud<>(*T_W_C);
       posed_pointcloud.resize(oldest_msg.getPoints().size());
       for (unsigned point_idx = 0; point_idx < oldest_msg.getPoints().size();
            ++point_idx) {

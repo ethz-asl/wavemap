@@ -2,6 +2,16 @@
 Changelog for package wavemap_ros_conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2024-11-25)
+------------------
+* Improve consistency between code operating on standard and chunked octrees
+* Contributors: Victor Reijgwart
+
+2.1.2 (2024-11-20)
+------------------
+* Update include path for profiler_interface.h
+* Contributors: Victor Reijgwart
+
 2.1.1 (2024-10-24)
 ------------------
 * Address warnings from new cpplint version (v2.0)

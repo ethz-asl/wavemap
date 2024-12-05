@@ -20,7 +20,8 @@ class Pointcloud {
   using Data = Eigen::Matrix<FloatingPoint, kDim, Eigen::Dynamic>;
 
   Pointcloud() = default;
-  explicit Pointcloud(Data pointcloud) : data_(std::move(pointcloud)) {}
+  explicit Pointcloud(const Data& pointcloud) : data_(pointcloud) {}
+  explicit Pointcloud(Data&& pointcloud) : data_(std::move(pointcloud)) {}
 
   template <typename PointContainer>
   explicit Pointcloud(const PointContainer& point_container) {

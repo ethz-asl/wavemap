@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 #include "wavemap/core/utils/iterate/grid_iterator.h"
 #include "wavemap/core/utils/query/query_accelerator.h"

@@ -210,9 +210,8 @@ void NdtreeBlockHash<CellDataT, dim>::forEachLeaf(
            child_idx < OctreeIndex::kNumChildren; ++child_idx) {
         const OctreeIndex child_node_index =
             node_index.computeChildIndex(child_idx);
-        if (node.hasChild(child_idx)) {
-          Node& child_node = *node.getChild(child_idx);
-          stack.emplace(StackElement{child_node_index, child_node});
+        if (const Node* child_node = node.getChild(child_idx); child_node) {
+          stack.emplace(StackElement{child_node_index, *child_node});
         } else {
           visitor_fn(child_node_index, node.data());
         }

@@ -62,7 +62,7 @@ TYPED_TEST(IndexConversionsTest, NodeIndexConversions) {
       GeometryGenerator::getRandomNdtreeIndexVector<NdtreeIndex<kDim>>(
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, 1, TestFixture::kMaxHeight);
-  random_indices.emplace_back(NdtreeIndex<kDim>{0, {0, 0}});
+  random_indices.emplace_back(0, NdtreeIndex<kDim>::Position::Zero());
   for (IndexElement index_height = 0; index_height < TestFixture::kMaxHeight;
        ++index_height) {
     for (IndexElement index_x = -1; index_x <= 1; ++index_x) {

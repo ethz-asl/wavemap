@@ -40,7 +40,7 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
         TestFixture::getRandomNdtreeIndexHeight(0, TestFixture::kMaxHeight);
     index = index.computeParentIndex(new_height);
   }
-  random_indices.emplace_back(TypeParam{0, TypeParam::Position::Zero()});
+  random_indices.emplace_back(0, TypeParam::Position::Zero());
   for (typename TypeParam::Element height_idx = 0;
        height_idx < TestFixture::kMaxHeight; ++height_idx) {
     for (int relative_child_idx = 0;
@@ -49,7 +49,7 @@ TYPED_TEST(NdtreeIndexTest, ChildParentIndexing) {
       for (int dim_idx = 0; dim_idx < TypeParam::kDim; ++dim_idx) {
         position_index[dim_idx] = (relative_child_idx >> dim_idx) & 0b1;
       }
-      random_indices.emplace_back(TypeParam{height_idx, position_index});
+      random_indices.emplace_back(height_idx, position_index);
     }
   }
 
@@ -109,7 +109,7 @@ TYPED_TEST(NdtreeIndexTest, LastCommonAncestor) {
         TestFixture::getRandomNdtreeIndexHeight(index.height, 14);
     index = index.computeParentIndex(test_height);
   }
-  random_indices.emplace_back(TypeParam{0, TypeParam::Position::Zero()});
+  random_indices.emplace_back(0, TypeParam::Position::Zero());
   random_indices.emplace_back(
       TypeParam{kMaxTreeHeight, TypeParam::Position::Zero()});
 
@@ -176,7 +176,7 @@ TYPED_TEST(NdtreeIndexTest, LinearOffsets) {
       GeometryGenerator::getRandomNdtreeIndexVector<TypeParam>(
           TestFixture::kMinNdtreePositionIndex,
           TestFixture::kMaxNdtreePositionIndex, 0, 0);
-  random_indices.emplace_back(TypeParam{0, TypeParam::Position::Zero()});
+  random_indices.emplace_back(0, TypeParam::Position::Zero());
   for (auto& index : random_indices) {
     const int test_height =
         TestFixture::getRandomNdtreeIndexHeight(index.height, 14);

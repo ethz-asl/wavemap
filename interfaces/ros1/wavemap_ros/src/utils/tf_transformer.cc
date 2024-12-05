@@ -20,20 +20,17 @@ bool TfTransformer::waitForTransform(const std::string& to_frame_id,
                               sanitizeFrameId(from_frame_id), frame_timestamp);
 }
 
-bool TfTransformer::lookupLatestTransform(const std::string& to_frame_id,
-                                          const std::string& from_frame_id,
-                                          Transformation3D& transform) {
+std::optional<Transformation3D> TfTransformer::lookupLatestTransform(
+    const std::string& to_frame_id, const std::string& from_frame_id) {
   return lookupTransformImpl(sanitizeFrameId(to_frame_id),
-                             sanitizeFrameId(from_frame_id), {}, transform);
+                             sanitizeFrameId(from_frame_id), {});
 }
 
-bool TfTransformer::lookupTransform(const std::string& to_frame_id,
-                                    const std::string& from_frame_id,
-                                    const ros::Time& frame_timestamp,
-                                    Transformation3D& transform) {
+std::optional<Transformation3D> TfTransformer::lookupTransform(
+    const std::string& to_frame_id, const std::string& from_frame_id,
+    const ros::Time& frame_timestamp) {
   return lookupTransformImpl(sanitizeFrameId(to_frame_id),
-                             sanitizeFrameId(from_frame_id), frame_timestamp,
-                             transform);
+                             sanitizeFrameId(from_frame_id), frame_timestamp);
 }
 
 std::string TfTransformer::sanitizeFrameId(const std::string& string) {
@@ -64,16 +61,14 @@ bool TfTransformer::waitForTransformImpl(
   return false;
 }
 
-bool TfTransformer::lookupTransformImpl(const std::string& to_frame_id,
-                                        const std::string& from_frame_id,
-                                        const ros::Time& frame_timestamp,
-                                        Transformation3D& transform) {
+std::optional<Transformation3D> TfTransformer::lookupTransformImpl(
+    const std::string& to_frame_id, const std::string& from_frame_id,
+    const ros::Time& frame_timestamp) {
   if (!isTransformAvailable(to_frame_id, from_frame_id, frame_timestamp)) {
-    return false;
+    return std::nullopt;
   }
   geometry_msgs::TransformStamped transform_msg =
       tf_buffer_.lookupTransform(to_frame_id, from_frame_id, frame_timestamp);
-  transform = convert::transformMsgToTransformation3D(transform_msg.transform);
-  return true;
+  return convert::transformMsgToTransformation3D(transform_msg.transform);
 }
 }  // namespace wavemap

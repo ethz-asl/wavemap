@@ -7,7 +7,7 @@
 #include <unordered_set>
 
 #include <ros/console.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap::convert {
 bool mapToRosMsg(const MapBase& map, const std::string& frame_id,
@@ -335,7 +335,7 @@ void blockToRosMsg(const HashedWaveletOctree::BlockIndex& block_index,
   // Convenience type for elements on the stack used to iterate over the map
   struct StackElement {
     const FloatingPoint scale;
-    const HashedWaveletOctreeBlock::NodeType& node;
+    HashedWaveletOctreeBlock::OctreeType::NodeConstRefType node;
   };
 
   // Serialize the block's metadata
@@ -534,7 +534,7 @@ void blockToRosMsg(const HashedChunkedWaveletOctree::BlockIndex& block_index,
   // Define convenience types and constants
   struct StackElement {
     const FloatingPoint scale;
-    HashedChunkedWaveletOctreeBlock::ChunkedOctreeType::NodeConstRefType node;
+    HashedChunkedWaveletOctreeBlock::OctreeType::NodeConstRefType node;
   };
 
   // Serialize the block's metadata

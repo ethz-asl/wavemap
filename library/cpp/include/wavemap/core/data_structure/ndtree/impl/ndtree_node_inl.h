@@ -15,7 +15,7 @@ bool NdtreeNode<DataT, dim>::empty() const {
 template <typename DataT, int dim>
 void NdtreeNode<DataT, dim>::clear() {
   deleteChildrenArray();
-  data() = DataT{};
+  data() = {};
 }
 
 template <typename DataT, int dim>

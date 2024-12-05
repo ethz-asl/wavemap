@@ -2,6 +2,41 @@
 Changelog for package wavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2024-11-25)
+------------------
+* New features
+
+    * Add QueryAccelerator for HashedChunkedWaveletOctrees
+    * Add method to erase individual nodes from chunked octrees
+
+* Improvements
+
+  * Improve ChunkedNdtree NodePtr and NodeRef implementation
+
+    * Correctly emulate the distinction between const pointers and pointers-to-const
+
+  * Use the improved ChunkedNdtree NodePtrs and NodeRefs to
+
+    * Improve consistency between code operating on standard and chunked octrees
+    * Simplify HashedChunkedWaveletOctree measurement integrator code
+    * Simplify HashedChunkedWaveletOctree map thresholding and pruning code
+
+  * General refactoring and code cleanup
+
+    * Tidy up constructors, in particular in terms of argument moves vs copies
+    * Define constructors for commonly used structs explicitly, for compatibility with emplace_back
+    * Optimize child node accesses in tree data structures by avoiding redundant lookups
+    * Simplify and improve clarity of old code
+
+* Contributors: Victor Reijgwart
+
+2.1.2 (2024-11-20)
+------------------
+* Adds a ResourceMonitor class for measuring CPU time, wall time, and RAM usage during macro-benchmarking
+* Document and add unit tests for the Stopwatch and ResourceMonitor classes
+* Extend ThreadPool unit tests
+* Contributors: Victor Reijgwart
+
 2.1.1 (2024-10-24)
 ------------------
 * Address warnings from new cpplint version (v2.0)

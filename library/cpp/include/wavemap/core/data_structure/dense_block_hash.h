@@ -18,7 +18,7 @@ class DenseBlockHash {
   using BlockHashMap = SpatialHash<Block, kDim>;
   using Cell = CellDataT;
 
-  explicit DenseBlockHash(CellDataT default_value = CellDataT{})
+  explicit DenseBlockHash(CellDataT default_value = {})
       : default_value_(default_value) {}
 
   bool empty() const { return block_map_.empty(); }

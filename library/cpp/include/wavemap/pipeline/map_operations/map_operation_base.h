@@ -17,7 +17,7 @@ struct MapOperationType : public TypeSelector<MapOperationType> {
 class MapOperationBase {
  public:
   explicit MapOperationBase(MapBase::Ptr occupancy_map)
-      : occupancy_map_(std::move(occupancy_map)) {}
+      : occupancy_map_(std::move(CHECK_NOTNULL(occupancy_map))) {}
 
   virtual ~MapOperationBase() = default;
 

@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include <wavemap/core/indexing/index_hashes.h>
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 #include <wavemap_msgs/Map.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 

@@ -124,15 +124,15 @@ class HashedChunkedWaveletOctree : public MapBase {
   void forEachLeaf(
       typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;
 
+  BlockIndex indexToBlockIndex(const OctreeIndex& node_index) const;
+  CellIndex indexToCellIndex(OctreeIndex index) const;
+
  private:
   const HashedChunkedWaveletOctreeConfig config_;
   const IndexElement cells_per_block_side_ =
       int_math::exp2(config_.tree_height);
 
   BlockHashMap block_map_;
-
-  BlockIndex indexToBlockIndex(const OctreeIndex& node_index) const;
-  CellIndex indexToCellIndex(OctreeIndex index) const;
 };
 }  // namespace wavemap
 

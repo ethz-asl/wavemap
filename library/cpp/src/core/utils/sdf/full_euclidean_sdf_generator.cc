@@ -1,6 +1,6 @@
 #include "wavemap/core/utils/sdf/full_euclidean_sdf_generator.h"
 
-#include <wavemap/core/utils/profiler_interface.h>
+#include <wavemap/core/utils/profile/profiler_interface.h>
 
 #include "wavemap/core/utils/iterate/grid_iterator.h"
 #include "wavemap/core/utils/query/query_accelerator.h"
