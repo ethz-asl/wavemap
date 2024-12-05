@@ -1,9 +1,14 @@
 #include "pywavemap/measurements.h"
 
+#include <memory>
+
 #include <nanobind/eigen/dense.h>
+#include <nanobind/stl/shared_ptr.h>
 #include <wavemap/core/common.h>
 #include <wavemap/core/data_structure/image.h>
 #include <wavemap/core/data_structure/pointcloud.h>
+#include <wavemap/core/integrator/projection_model/projector_base.h>
+#include <wavemap/core/integrator/projection_model/projector_factory.h>
 
 using namespace nb::literals;  // NOLINT
 
@@ -33,9 +38,24 @@ void add_measurement_bindings(nb::module_& m) {
 
   // Images
   nb::class_<Image<>>(m, "Image", "A class to store depth images.")
-      .def(nb::init<Image<>::Data>(), "pixel_matrix"_a);
+      .def(nb::init<Image<>::Data>(), "pixel_matrix"_a)
+      .def_prop_ro("width", &Image<>::getNumRows,
+                   "The image's width in pixels.")
+      .def_prop_ro("height", &Image<>::getNumColumns,
+                   "The image's height in pixels.")
+      .def_prop_ro("data", nb::overload_cast<>(&Image<>::getData, nb::const_));
   nb::class_<PosedImage<>>(
       m, "PosedImage", "A class to store depth images with an associated pose.")
       .def(nb::init<Transformation3D, Image<>>(), "pose"_a, "image"_a);
+
+  // Projection models
+  nb::class_<ProjectorBase>(m, "Projector")
+      .def_static(
+          "create",
+          [](const param::Value& params) -> std::shared_ptr<ProjectorBase> {
+            return ProjectorFactory::create(params);
+          },
+          nb::sig("def create(parameters: dict) -> Projector"), "parameters"_a,
+          "Create a new projection model based on the given settings.");
 }
 }  // namespace wavemap

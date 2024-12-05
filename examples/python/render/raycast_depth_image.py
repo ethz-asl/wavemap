@@ -1,5 +1,5 @@
 """
-Depth map extraction from HashedWaveletOctree map at given camera pose and intrinsics
+Extract depth maps from wavemap maps at a given sensor pose and intrinsics
 """
 
 import time
@@ -31,17 +31,30 @@ if __name__ == "__main__":
     map_path = Path.home() \
                / "data/panoptic_mapping/flat_dataset/run2/your_map.wvmp"
     out_path = Path(__file__).parent / "depth.png"
-    camera_cfg = wm.PinholeCameraProjectorConfig(
-        width=1280,
-        height=720,
-        fx=526.21539307,
-        fy=526.21539307,
-        cx=642.309021,
-        cy=368.69949341,
-    )  # Note: these are intrinsics for Zed 2i
+
+    # Configure the virtual sensor's projection model
+    # NOTE: These intrinsics match the Zed 2i depth camera.
+    projection_model = wm.Projector.create({
+        "type": "pinhole_camera_projector",
+        "width": 1280,
+        "height": 720,
+        "fx": 526.21539307,
+        "fy": 526.21539307,
+        "cx": 642.309021,
+        "cy": 368.69949341
+    })
 
     # Load map from file
     your_map = wm.Map.load(map_path)
+
+    # Create the depth image renderer
+    log_odds_occupancy_threshold = 0.1
+    min_range = 0.1
+    max_range = 6.0
+    default_depth_value = -1.0
+    renderer = wm.RaycastingRenderer(your_map, projection_model,
+                                     log_odds_occupancy_threshold, min_range,
+                                     max_range, default_depth_value)
 
     # Create pose
     rotation = wm.Rotation(np.eye(3))
@@ -50,8 +63,11 @@ if __name__ == "__main__":
 
     # Extract depth
     t1 = time.perf_counter()
-    depth = wm.get_depth(your_map, pose, camera_cfg, 0.1, 10)
+    depth_image = renderer.render(pose)
     t2 = time.perf_counter()
-    print(f"Depth your_map of size {camera_cfg.width}x{camera_cfg.height} "
+    print(f"Depth image of size {depth_image.width}x{depth_image.height} "
           f"created in {t2 - t1:.02f} seconds")
-    save_depth_as_png(depth, out_path)
+    save_depth_as_png(depth_image.data, out_path)
+
+    # Avoids leak warnings on old Python versions with lazy garbage collectors
+    del renderer, depth_image

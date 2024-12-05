@@ -7,7 +7,7 @@
 #include "pywavemap/measurements.h"
 #include "pywavemap/param.h"
 #include "pywavemap/pipeline.h"
-#include "pywavemap/raycast.h"
+#include "pywavemap/render.h"
 
 using namespace wavemap;  // NOLINT
 namespace nb = nanobind;
@@ -55,6 +55,6 @@ NB_MODULE(_pywavemap_bindings, m) {
   // Bindings for measurement integration and map update pipelines
   add_pipeline_bindings(m);
 
-  // Bindings for raycasting
-  add_raycast_bindings(m);
+  // Bindings for rendering
+  add_render_bindings(m);
 }
