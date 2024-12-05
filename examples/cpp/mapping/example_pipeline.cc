@@ -63,14 +63,14 @@ int main(int, char** argv) {
   // NOTE: Alternatively, the rotation can also be loaded from a rotation
   //       matrix, or T_W_C can be initialized from a transformation matrix.
 
-  // Integrate a depth image
+  // Integrate the measurement
   pipeline.runPipeline({"your_camera"}, PosedImage<>{T_W_C, depth_image});
 
-  // See if the map was updated
+  // Measure the map's size
   const size_t map_size_KB = map->getMemoryUsage() / 1024;
   std::cout << "Created map of size: " << map_size_KB << " KB" << std::endl;
 
-  // Save map
+  // Save the map to disk
   std::cout << "Saving it to: " << output_map_path << std::endl;
   io::mapToFile(*map, output_map_path);
 }
