@@ -7,7 +7,8 @@
 #endif
 
 namespace wavemap::io {
-std::optional<param::Value> yamlStreamToParams(std::istream& istream) {
+std::optional<param::Value> yamlStreamToParams(
+    [[maybe_unused]] std::istream& istream) {
 #ifdef YAML_CPP_AVAILABLE
   try {
     YAML::Node yaml = YAML::Load(istream);
