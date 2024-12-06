@@ -7,14 +7,14 @@
 #include <wavemap/core/config/config_base.h>
 #include <xmlrpcpp/XmlRpcValue.h>
 
-namespace wavemap::param::convert {
-param::Map toParamMap(const ros::NodeHandle& nh, const std::string& ns);
-param::Array toParamArray(const ros::NodeHandle& nh, const std::string& ns);
-param::Value toParamValue(const ros::NodeHandle& nh, const std::string& ns);
+namespace wavemap::convert {
+param::Map xmlRpcToParamMap(const XmlRpc::XmlRpcValue& xml_rpc_value);
+param::Array xmlRpcToParamArray(const XmlRpc::XmlRpcValue& xml_rpc_value);
+param::Value xmlRpcToParams(const XmlRpc::XmlRpcValue& xml_rpc_value);
 
-param::Map toParamMap(const XmlRpc::XmlRpcValue& xml_rpc_value);
-param::Array toParamArray(const XmlRpc::XmlRpcValue& xml_rpc_value);
-param::Value toParamValue(const XmlRpc::XmlRpcValue& xml_rpc_value);
-}  // namespace wavemap::param::convert
+param::Map rosToParamMap(const ros::NodeHandle& nh, const std::string& ns);
+param::Array rosToParamArray(const ros::NodeHandle& nh, const std::string& ns);
+param::Value rosToParams(const ros::NodeHandle& nh, const std::string& ns);
+}  // namespace wavemap::convert
 
 #endif  // WAVEMAP_ROS_CONVERSIONS_CONFIG_CONVERSIONS_H_

@@ -111,6 +111,16 @@ constexpr T div_round_up(T numerator, T denominator) {
   return numerator / denominator + (numerator % denominator != 0);
 }
 
+template <int dim>
+Eigen::Matrix<int, dim, 1> div_round_up(Eigen::Matrix<int, dim, 1> vector,
+                                        int denominator) {
+  DCHECK_GE(denominator, 0);
+  for (int dim_idx = 0; dim_idx < dim; ++dim_idx) {
+    vector[dim_idx] = div_round_up(vector[dim_idx], denominator);
+  }
+  return vector;
+}
+
 template <typename T>
 constexpr T factorial(T x) {
   T result = 1;

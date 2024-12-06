@@ -5,7 +5,7 @@
 
 #include <std_srvs/Trigger.h>
 #include <wavemap/core/map/map_factory.h>
-#include <wavemap/io/file_conversions.h>
+#include <wavemap/io/map/file_conversions.h>
 #include <wavemap/pipeline/map_operations/map_operation_factory.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_ros_conversions/config_conversions.h>
@@ -33,10 +33,10 @@ bool RosServerConfig::isValid(bool verbose) const {
 // NOTE: If RosServerConfig::from(...) fails, accessing its value will throw
 //       an exception and end the program.
 RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
-    : RosServer(nh, nh_private,
-                RosServerConfig::from(
-                    param::convert::toParamValue(nh_private, "general"))
-                    .value()) {}
+    : RosServer(
+          nh, nh_private,
+          RosServerConfig::from(convert::rosToParams(nh_private, "general"))
+              .value()) {}
 
 RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                      const RosServerConfig& config)
@@ -47,8 +47,7 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   config_.logging_level.applyToRosConsole();
 
   // Setup data structure
-  const auto data_structure_params =
-      param::convert::toParamValue(nh_private, "map");
+  const auto data_structure_params = convert::rosToParams(nh_private, "map");
   occupancy_map_ =
       MapFactory::create(data_structure_params, MapType::kHashedBlocks);
   CHECK_NOTNULL(occupancy_map_);
@@ -65,14 +64,14 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Add map operations to pipeline
   const param::Array map_operation_param_array =
-      param::convert::toParamArray(nh_private, "map_operations");
+      convert::rosToParamArray(nh_private, "map_operations");
   for (const auto& operation_params : map_operation_param_array) {
     addOperation(operation_params, nh_private);
   }
 
   // Add measurement integrators to pipeline
   const param::Map measurement_integrator_param_map =
-      param::convert::toParamMap(nh_private, "measurement_integrators");
+      convert::rosToParamMap(nh_private, "measurement_integrators");
   for (const auto& [integrator_name, integrator_params] :
        measurement_integrator_param_map) {
     pipeline_->addIntegrator(integrator_name, integrator_params);
@@ -80,7 +79,7 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Setup measurement inputs
   const param::Array input_param_array =
-      param::convert::toParamArray(nh_private, "inputs");
+      convert::rosToParamArray(nh_private, "inputs");
   for (const auto& integrator_params : input_param_array) {
     addInput(integrator_params, nh, nh_private);
   }

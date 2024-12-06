@@ -40,6 +40,21 @@ Code examples
 *************
 In the following sections, you'll find sample code for common tasks. If you'd like to request examples for additional tasks or contribute new examples, please don't hesitate to `contact us <https://github.com/ethz-asl/wavemap/issues>`_.
 
+Mapping
+=======
+The only requirements to build wavemap maps are that you have a set of
+
+1. depth measurements,
+2. sensor pose (estimates) for each measurement.
+
+We usually use depth measurements from depth cameras or 3D LiDARs, but any source would work as long as a corresponding :ref:`projection <configuration_projection_models>` and :ref:`measurement <configuration_measurement_models>` model is available. To help you get started quickly, we provide example configs for various sensor setups :gh_file:`here <interfaces/ros1/wavemap_ros/config>`. An overview of all the available settings is provided on the :doc:`parameters page <../parameters/index>`.
+
+Example pipeline
+----------------
+
+.. literalinclude:: ../../../examples/cpp/mapping/example_pipeline.cc
+    :language: cpp
+
 Serializing maps
 ================
 In this section, we'll demonstrate how to serialize and deserialize maps using wavemap's lightweight and efficient binary format. This format is consistent across wavemap's C++, Python, and ROS interfaces. For instance, you can create maps on a robot with ROS and later load them into a rendering engine plugin that only depends on wavemap's C++ library.

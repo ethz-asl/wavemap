@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_IO_STREAMABLE_TYPES_H_
-#define WAVEMAP_IO_STREAMABLE_TYPES_H_
+#ifndef WAVEMAP_IO_MAP_STREAMABLE_TYPES_H_
+#define WAVEMAP_IO_MAP_STREAMABLE_TYPES_H_
 
 #include <istream>
 #include <ostream>
@@ -99,6 +99,6 @@ struct StorageFormat : TypeSelector<StorageFormat> {
 };
 }  // namespace wavemap::io::streamable
 
-#include "wavemap/io/impl/streamable_types_impl.h"
+#include "wavemap/io/map/impl/streamable_types_impl.h"
 
-#endif  // WAVEMAP_IO_STREAMABLE_TYPES_H_
+#endif  // WAVEMAP_IO_MAP_STREAMABLE_TYPES_H_
