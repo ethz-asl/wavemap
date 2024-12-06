@@ -11,8 +11,7 @@ std::unique_ptr<MeasurementModelBase> wavemap::MeasurementModelFactory::create(
     const param::Value& params, ProjectorBase::ConstPtr projection_model,
     Image<>::ConstPtr range_image, Image<Vector2D>::ConstPtr beam_offset_image,
     std::optional<MeasurementModelType> default_measurement_model_type) {
-  if (const auto type = MeasurementModelType::from(params, "measurement_model");
-      type) {
+  if (const auto type = MeasurementModelType::from(params); type) {
     return create(type.value(), std::move(projection_model),
                   std::move(range_image), std::move(beam_offset_image), params);
   }
@@ -36,9 +35,7 @@ std::unique_ptr<MeasurementModelBase> wavemap::MeasurementModelFactory::create(
     Image<Vector2D>::ConstPtr beam_offset_image, const param::Value& params) {
   switch (measurement_model_type) {
     case MeasurementModelType::kContinuousRay: {
-      if (const auto config =
-              ContinuousRayConfig::from(params, "measurement_model");
-          config) {
+      if (const auto config = ContinuousRayConfig::from(params); config) {
         return std::make_unique<ContinuousRay>(config.value(),
                                                std::move(projection_model),
                                                std::move(range_image));
@@ -49,9 +46,7 @@ std::unique_ptr<MeasurementModelBase> wavemap::MeasurementModelFactory::create(
       }
     }
     case MeasurementModelType::kContinuousBeam: {
-      if (const auto config =
-              ContinuousBeamConfig::from(params, "measurement_model");
-          config) {
+      if (const auto config = ContinuousBeamConfig::from(params); config) {
         return std::make_unique<ContinuousBeam>(
             config.value(), std::move(projection_model), std::move(range_image),
             std::move(beam_offset_image));

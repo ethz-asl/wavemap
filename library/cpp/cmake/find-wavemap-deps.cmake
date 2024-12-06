@@ -56,3 +56,4 @@ endif ()
 
 # Optional dependencies
 find_package(tracy QUIET)
+find_package(yaml-cpp QUIET)

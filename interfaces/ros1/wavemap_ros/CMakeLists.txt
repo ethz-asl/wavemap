@@ -10,6 +10,9 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp rosbag cv_bridge image_transport tf2_ros
     std_srvs sensor_msgs visualization_msgs)
 
+# Optional dependencies
+find_package(livox_ros_driver2 QUIET)
+
 # Register catkin package
 catkin_package(
     INCLUDE_DIRS include
@@ -18,14 +21,6 @@ catkin_package(
     wavemap wavemap_msgs wavemap_ros_conversions
     roscpp rosbag cv_bridge image_transport tf2_ros
     std_srvs sensor_msgs visualization_msgs)
-
-
-# Optional dependencies
-find_package(livox_ros_driver2 QUIET)
-if (livox_ros_driver2_FOUND)
-  include_directories(${livox_ros_driver2_INCLUDE_DIRS})
-  add_compile_definitions(LIVOX_AVAILABLE)
-endif ()
 
 # Libraries
 add_library(${PROJECT_NAME}
@@ -47,6 +42,13 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC include ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
     PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# Optional Livox support
+if (livox_ros_driver2_FOUND)
+  target_include_directories(${PROJECT_NAME} PUBLIC
+      ${livox_ros_driver2_INCLUDE_DIRS})
+  target_compile_definitions(${PROJECT_NAME} PUBLIC LIVOX_AVAILABLE)
+endif ()
 
 # Binaries
 add_executable(ros_server app/ros_server.cc)

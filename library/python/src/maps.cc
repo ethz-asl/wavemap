@@ -11,7 +11,7 @@
 #include <wavemap/core/map/map_factory.h>
 #include <wavemap/core/utils/query/map_interpolator.h>
 #include <wavemap/core/utils/query/query_accelerator.h>
-#include <wavemap/io/file_conversions.h>
+#include <wavemap/io/map/file_conversions.h>
 
 using namespace nb::literals;  // NOLINT
 

@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_IO_IMPL_STREAMABLE_TYPES_IMPL_H_
-#define WAVEMAP_IO_IMPL_STREAMABLE_TYPES_IMPL_H_
+#ifndef WAVEMAP_IO_MAP_IMPL_STREAMABLE_TYPES_IMPL_H_
+#define WAVEMAP_IO_MAP_IMPL_STREAMABLE_TYPES_IMPL_H_
 
 namespace wavemap::io::streamable {
 void Index3D::write(std::ostream& ostream) const {
@@ -157,4 +157,4 @@ StorageFormat StorageFormat::peek(std::istream& istream) {
 }
 }  // namespace wavemap::io::streamable
 
-#endif  // WAVEMAP_IO_IMPL_STREAMABLE_TYPES_IMPL_H_
+#endif  // WAVEMAP_IO_MAP_IMPL_STREAMABLE_TYPES_IMPL_H_
