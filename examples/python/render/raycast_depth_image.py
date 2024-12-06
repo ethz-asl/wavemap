@@ -33,7 +33,14 @@ if __name__ == "__main__":
     out_path = Path(__file__).parent / "depth.png"
 
     # Configure the virtual sensor's projection model
-    # NOTE: These intrinsics match the Zed 2i depth camera.
+    # NOTE: The projection model can be configured through a Python dictionary.
+    #       Diagnostics for invalid configurations are printed to the terminal.
+    #       For an overview of all the available models and their params, see:
+    #       pylint: disable=line-too-long
+    #       https://ethz-asl.github.io/wavemap/pages/parameters/measurement_integrators.html#projection-models
+    #       Examples for a broad selection of common sensors can be found in the
+    #       `interfaces/ros1/wavemap_ros/config` directory.
+    #       The intrinsics below match the Zed 2i depth camera.
     projection_model = wm.Projector.create({
         "type": "pinhole_camera_projector",
         "width": 1280,
@@ -49,12 +56,11 @@ if __name__ == "__main__":
 
     # Create the depth image renderer
     log_odds_occupancy_threshold = 0.1
-    min_range = 0.1
     max_range = 6.0
     default_depth_value = -1.0
     renderer = wm.RaycastingRenderer(your_map, projection_model,
-                                     log_odds_occupancy_threshold, min_range,
-                                     max_range, default_depth_value)
+                                     log_odds_occupancy_threshold, max_range,
+                                     default_depth_value)
 
     # Create pose
     rotation = wm.Rotation(np.eye(3))

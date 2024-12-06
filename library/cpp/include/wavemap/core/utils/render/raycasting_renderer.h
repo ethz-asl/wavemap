@@ -14,7 +14,6 @@ class RaycastingRenderer {
   RaycastingRenderer(MapBase::ConstPtr occupancy_map,
                      ProjectorBase::ConstPtr projection_model,
                      FloatingPoint log_odds_occupancy_threshold = 1e-3f,
-                     FloatingPoint min_range = 0.f,
                      FloatingPoint max_range = 10.f,
                      FloatingPoint default_depth_value = -1.f,
                      std::shared_ptr<ThreadPool> thread_pool = nullptr);
@@ -28,7 +27,6 @@ class RaycastingRenderer {
   const std::shared_ptr<ThreadPool> thread_pool_;
 
   const ProjectorBase::ConstPtr projection_model_;
-  const FloatingPoint min_range_;
   const FloatingPoint max_range_;
   const FloatingPoint log_odds_occupancy_threshold_;
 

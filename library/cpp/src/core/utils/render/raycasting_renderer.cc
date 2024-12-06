@@ -10,14 +10,12 @@
 namespace wavemap {
 RaycastingRenderer::RaycastingRenderer(
     MapBase::ConstPtr occupancy_map, ProjectorBase::ConstPtr projection_model,
-    FloatingPoint log_odds_occupancy_threshold, FloatingPoint min_range,
-    FloatingPoint max_range, FloatingPoint default_depth_value,
-    std::shared_ptr<ThreadPool> thread_pool)
+    FloatingPoint log_odds_occupancy_threshold, FloatingPoint max_range,
+    FloatingPoint default_depth_value, std::shared_ptr<ThreadPool> thread_pool)
     : map_(CHECK_NOTNULL(occupancy_map)),
       thread_pool_(thread_pool ? std::move(thread_pool)
                                : std::make_shared<ThreadPool>()),
       projection_model_(CHECK_NOTNULL(projection_model)),
-      min_range_(min_range),
       max_range_(max_range),
       log_odds_occupancy_threshold_(log_odds_occupancy_threshold),
       depth_image_(projection_model_->getDimensions(), default_depth_value) {}
@@ -36,11 +34,9 @@ void RaycastingRenderer::renderPatch(const MapT& map,
   for (const Index2D& index : Grid(patch_min, patch_max)) {
     FloatingPoint& depth_pixel = depth_image_.at(index);
     const Vector2D image_xy = projection_model_->indexToImage(index);
-    const Point3D C_start_point =
-        projection_model_->sensorToCartesian({image_xy, min_range_});
+    const Point3D& W_start_point = T_W_C.getPosition();
     const Point3D C_end_point =
         projection_model_->sensorToCartesian({image_xy, max_range_});
-    const Point3D W_start_point = T_W_C * C_start_point;
     const Point3D W_end_point = T_W_C * C_end_point;
     const auto d_start_collision = raycast::first_collision_distance(
         query_accelerator, W_start_point, W_end_point,
