@@ -1,6 +1,6 @@
 #include <strstream>
 
-#include <wavemap/io/stream_conversions.h>
+#include <wavemap/io/map/stream_conversions.h>
 
 int main(int, char**) {
   // Create a smart pointer that will own the loaded map

@@ -5,7 +5,7 @@
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/utils/sdf/quasi_euclidean_sdf_generator.h>
-#include <wavemap/io/file_conversions.h>
+#include <wavemap/io/map/file_conversions.h>
 
 using namespace wavemap;  // NOLINT
 int main(int argc, char** argv) {
