@@ -2,6 +2,7 @@
 #define WAVEMAP_CORE_UTILS_EDIT_SAMPLE_H_
 
 #include <memory>
+#include <utility>
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/utils/thread_pool.h"
@@ -11,7 +12,7 @@ namespace detail {
 template <typename MapT, typename SamplingFn>
 void sampleLeavesBatch(typename MapT::Block::OctreeType::NodeRefType node,
                        const OctreeIndex& node_index, FloatingPoint& node_value,
-                       SamplingFn sampling_function,
+                       SamplingFn&& sampling_function,
                        FloatingPoint min_cell_width) {
   // Decompress child values
   using Transform = typename MapT::Block::Transform;
@@ -24,7 +25,7 @@ void sampleLeavesBatch(typename MapT::Block::OctreeType::NodeRefType node,
     const OctreeIndex child_index = node_index.computeChildIndex(child_idx);
     const Point3D t_W_child =
         convert::nodeIndexToCenterPoint(child_index, min_cell_width);
-    child_values[child_idx] = std::invoke(sampling_function, t_W_child);
+    child_values[child_idx] = sampling_function(t_W_child);
   }
 
   // Compress
@@ -38,9 +39,9 @@ template <typename MapT, typename SamplingFn>
 void sampleNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
                          const OctreeIndex& node_index,
                          FloatingPoint& node_value,
-                         SamplingFn sampling_function,
+                         SamplingFn&& sampling_function,
                          FloatingPoint min_cell_width,
-                         IndexElement termination_height) {
+                         IndexElement termination_height = 0) {
   using NodeRefType = decltype(node);
 
   // Decompress child values
@@ -56,11 +57,12 @@ void sampleNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
     auto& child_value = child_values[child_idx];
     if (child_index.height <= termination_height + 1) {
       sampleLeavesBatch<MapT>(child_node, child_index, child_value,
-                              sampling_function, min_cell_width);
+                              std::forward<SamplingFn>(sampling_function),
+                              min_cell_width);
     } else {
       sampleNodeRecursive<MapT>(child_node, child_index, child_value,
-                                sampling_function, min_cell_width,
-                                termination_height);
+                                std::forward<SamplingFn>(sampling_function),
+                                min_cell_width, termination_height);
     }
   }
 
@@ -84,6 +86,7 @@ void sample(MapT& map, SamplingFn sampling_function,
                        const Index3D& block_index, auto& block) {
     // Indicate that the block has changed
     block.setLastUpdatedStamp();
+    block.setNeedsPruning();
 
     // Get pointers to the root value and node, which contain the wavelet
     // scale and detail coefficients, respectively
