@@ -74,7 +74,7 @@ class WaveletOctree : public MapBase {
   Index3D getMinPossibleIndex() const;
   Index3D getMaxPossibleIndex() const;
   IndexElement getTreeHeight() const override { return config_.tree_height; }
-  const WaveletOctreeConfig& getConfig() { return config_; }
+  const WaveletOctreeConfig& getConfig() const { return config_; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;

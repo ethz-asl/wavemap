@@ -42,7 +42,7 @@ class HashedBlocks : public MapBase,
   Index3D getMinBlockIndex() const { return block_map_.getMinBlockIndex(); }
   Index3D getMaxBlockIndex() const { return block_map_.getMaxBlockIndex(); }
   IndexElement getTreeHeight() const override { return 0; }
-  const MapBaseConfig& getConfig() { return config_; }
+  const MapBaseConfig& getConfig() const { return config_; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
