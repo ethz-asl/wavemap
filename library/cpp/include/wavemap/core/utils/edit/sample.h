@@ -94,16 +94,18 @@ void sample(MapT& map, SamplingFn sampling_function,
     // Recursively crop all nodes
     if (thread_pool) {
       thread_pool->add_task([root_node_ptr, root_node_index, root_value_ptr,
-                             sampling_function, min_cell_width,
-                             termination_height]() {
+                             block_ptr = &block, sampling_function,
+                             min_cell_width, termination_height]() {
         detail::sampleNodeRecursive<MapT>(*root_node_ptr, root_node_index,
                                           *root_value_ptr, sampling_function,
                                           min_cell_width, termination_height);
+        block_ptr->prune();
       });
     } else {
       detail::sampleNodeRecursive<MapT>(*root_node_ptr, root_node_index,
                                         *root_value_ptr, sampling_function,
                                         min_cell_width, termination_height);
+      block.prune();
     }
   });
 
