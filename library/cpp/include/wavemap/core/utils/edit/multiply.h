@@ -6,27 +6,27 @@
 #include "wavemap/core/common.h"
 #include "wavemap/core/utils/thread_pool.h"
 
-namespace wavemap {
-
-template <typename MapType>
-void multiplyNodeRecursive(
-    typename MapType::Block::OctreeType::NodeRefType node,
-    FloatingPoint multiplier) {
+namespace wavemap::edit {
+namespace detail {
+template <typename MapT>
+void multiplyNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
+                           FloatingPoint multiplier) {
   // Multiply
   node.data() *= multiplier;
 
   // Recursively handle all children
   for (int child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
     if (auto child_node = node.getChild(child_idx); child_node) {
-      multiplyNodeRecursive<MapType>(*child_node, multiplier);
+      multiplyNodeRecursive<MapT>(*child_node, multiplier);
     }
   }
 }
+}  // namespace detail
 
-template <typename MapType>
-void multiply(MapType& map, FloatingPoint multiplier,
+template <typename MapT>
+void multiply(MapT& map, FloatingPoint multiplier,
               const std::shared_ptr<ThreadPool>& thread_pool = nullptr) {
-  using NodePtrType = typename MapType::Block::OctreeType::NodePtrType;
+  using NodePtrType = typename MapT::Block::OctreeType::NodePtrType;
 
   // Process all blocks
   for (auto& [block_index, block] : map.getHashMap()) {
@@ -39,10 +39,10 @@ void multiply(MapType& map, FloatingPoint multiplier,
     NodePtrType root_node_ptr = &block.getRootNode();
     if (thread_pool) {
       thread_pool->add_task([root_node_ptr, multiplier]() {
-        multiplyNodeRecursive<MapType>(*root_node_ptr, multiplier);
+        detail::multiplyNodeRecursive<MapT>(*root_node_ptr, multiplier);
       });
     } else {
-      multiplyNodeRecursive<MapType>(*root_node_ptr, multiplier);
+      detail::multiplyNodeRecursive<MapT>(*root_node_ptr, multiplier);
     }
   }
   // Wait for all parallel jobs to finish
@@ -50,6 +50,6 @@ void multiply(MapType& map, FloatingPoint multiplier,
     thread_pool->wait_all();
   }
 }
-}  // namespace wavemap
+}  // namespace wavemap::edit
 
 #endif  // WAVEMAP_CORE_UTILS_EDIT_MULTIPLY_H_

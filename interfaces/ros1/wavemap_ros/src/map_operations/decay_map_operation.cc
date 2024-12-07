@@ -51,12 +51,13 @@ void DecayMapOperation::run(bool force_run) {
   if (auto* hashed_wavelet_octree =
           dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
       hashed_wavelet_octree) {
-    multiply(*hashed_wavelet_octree, config_.decay_rate, thread_pool_);
+    edit::multiply(*hashed_wavelet_octree, config_.decay_rate, thread_pool_);
   } else if (auto* hashed_chunked_wavelet_octree =
                  dynamic_cast<HashedChunkedWaveletOctree*>(
                      occupancy_map_.get());
              hashed_chunked_wavelet_octree) {
-    multiply(*hashed_chunked_wavelet_octree, config_.decay_rate, thread_pool_);
+    edit::multiply(*hashed_chunked_wavelet_octree, config_.decay_rate,
+                   thread_pool_);
   } else {
     ROS_WARN("Map decay is only supported for hash-based map data structures.");
   }

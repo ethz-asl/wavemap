@@ -86,15 +86,14 @@ void CropMapOperation::run(bool force_run) {
   if (auto* hashed_wavelet_octree =
           dynamic_cast<HashedWaveletOctree*>(occupancy_map_.get());
       hashed_wavelet_octree) {
-    crop_to_sphere(T_W_B->getPosition(), config_.radius, *hashed_wavelet_octree,
-                   termination_height_, thread_pool_);
+    edit::crop_to_sphere(*hashed_wavelet_octree, T_W_B->getPosition(),
+                         config_.radius, termination_height_, thread_pool_);
   } else if (auto* hashed_chunked_wavelet_octree =
                  dynamic_cast<HashedChunkedWaveletOctree*>(
                      occupancy_map_.get());
              hashed_chunked_wavelet_octree) {
-    crop_to_sphere(T_W_B->getPosition(), config_.radius,
-                   *hashed_chunked_wavelet_octree, termination_height_,
-                   thread_pool_);
+    edit::crop_to_sphere(*hashed_chunked_wavelet_octree, T_W_B->getPosition(),
+                         config_.radius, termination_height_, thread_pool_);
   } else {
     ROS_WARN(
         "Map cropping is only supported for hash-based map data structures.");

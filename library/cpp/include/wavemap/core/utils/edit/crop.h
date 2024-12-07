@@ -4,16 +4,19 @@
 #include <memory>
 
 #include "wavemap/core/common.h"
+#include "wavemap/core/indexing/index_conversions.h"
+#include "wavemap/core/indexing/ndtree_index.h"
 #include "wavemap/core/utils/thread_pool.h"
 
-namespace wavemap {
-template <typename MapType>
-void cropLeavesBatch(typename MapType::Block::OctreeType::NodeRefType node,
+namespace wavemap::edit {
+namespace detail {
+template <typename MapT>
+void cropLeavesBatch(typename MapT::Block::OctreeType::NodeRefType node,
                      const OctreeIndex& node_index, FloatingPoint& node_value,
                      const Point3D& t_W_center, FloatingPoint radius,
                      FloatingPoint min_cell_width) {
   // Decompress child values
-  using Transform = typename MapType::Block::Transform;
+  using Transform = typename MapT::Block::Transform;
   auto& node_details = node.data();
   auto child_values = Transform::backward({node_value, {node_details}});
 
@@ -34,13 +37,13 @@ void cropLeavesBatch(typename MapType::Block::OctreeType::NodeRefType node,
 
   // Compress
   const auto [new_value, new_details] =
-      HashedChunkedWaveletOctreeBlock::Transform::forward(child_values);
+      MapT::Block::Transform::forward(child_values);
   node_details = new_details;
   node_value = new_value;
 }
 
-template <typename MapType>
-void cropNodeRecursive(typename MapType::Block::OctreeType::NodeRefType node,
+template <typename MapT>
+void cropNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
                        const OctreeIndex& node_index, FloatingPoint& node_value,
                        const Point3D& t_W_center, FloatingPoint radius,
                        FloatingPoint min_cell_width,
@@ -48,7 +51,7 @@ void cropNodeRecursive(typename MapType::Block::OctreeType::NodeRefType node,
   using NodeRefType = decltype(node);
 
   // Decompress child values
-  using Transform = typename MapType::Block::Transform;
+  using Transform = typename MapT::Block::Transform;
   auto& node_details = node.data();
   auto child_values = Transform::backward({node_value, {node_details}});
 
@@ -74,12 +77,11 @@ void cropNodeRecursive(typename MapType::Block::OctreeType::NodeRefType node,
     NodeRefType child_node = node.getOrAllocateChild(child_idx);
     const OctreeIndex child_index = node_index.computeChildIndex(child_idx);
     if (child_index.height <= termination_height + 1) {
-      cropLeavesBatch<MapType>(child_node, child_index, child_value, t_W_center,
-                               radius, min_cell_width);
+      cropLeavesBatch<MapT>(child_node, child_index, child_value, t_W_center,
+                            radius, min_cell_width);
     } else {
-      cropNodeRecursive<MapType>(child_node, child_index, child_value,
-                                 t_W_center, radius, min_cell_width,
-                                 termination_height);
+      cropNodeRecursive<MapT>(child_node, child_index, child_value, t_W_center,
+                              radius, min_cell_width, termination_height);
     }
   }
 
@@ -88,12 +90,13 @@ void cropNodeRecursive(typename MapType::Block::OctreeType::NodeRefType node,
   node_details = new_details;
   node_value = new_value;
 }
+}  // namespace detail
 
-template <typename MapType>
-void crop_to_sphere(const Point3D& t_W_center, FloatingPoint radius,
-                    MapType& map, IndexElement termination_height,
+template <typename MapT>
+void crop_to_sphere(MapT& map, const Point3D& t_W_center, FloatingPoint radius,
+                    IndexElement termination_height,
                     const std::shared_ptr<ThreadPool>& thread_pool = nullptr) {
-  using NodePtrType = typename MapType::Block::OctreeType::NodePtrType;
+  using NodePtrType = typename MapT::Block::OctreeType::NodePtrType;
   const IndexElement tree_height = map.getTreeHeight();
   const FloatingPoint min_cell_width = map.getMinCellWidth();
 
@@ -101,7 +104,7 @@ void crop_to_sphere(const Point3D& t_W_center, FloatingPoint radius,
   for (auto it = map.getHashMap().begin(); it != map.getHashMap().end();) {
     // Start by testing at the block level
     const Index3D& block_index = it->first;
-    const auto block_node_index = OctreeIndex{tree_height, block_index};
+    const OctreeIndex block_node_index{tree_height, block_index};
     const auto block_aabb =
         convert::nodeIndexToAABB(block_node_index, min_cell_width);
     // If the block is fully inside the cropping sphere, do nothing
@@ -126,17 +129,17 @@ void crop_to_sphere(const Point3D& t_W_center, FloatingPoint radius,
     NodePtrType root_node_ptr = &block.getRootNode();
     // Recursively crop all nodes
     if (thread_pool) {
-      thread_pool->add_task([root_node_ptr, root_value_ptr, block_node_index,
+      thread_pool->add_task([root_node_ptr, block_node_index, root_value_ptr,
                              t_W_center, radius, min_cell_width,
                              termination_height]() {
-        cropNodeRecursive<MapType>(*root_node_ptr, block_node_index,
-                                   *root_value_ptr, t_W_center, radius,
-                                   min_cell_width, termination_height);
+        detail::cropNodeRecursive<MapT>(*root_node_ptr, block_node_index,
+                                        *root_value_ptr, t_W_center, radius,
+                                        min_cell_width, termination_height);
       });
     } else {
-      cropNodeRecursive<MapType>(*root_node_ptr, block_node_index,
-                                 *root_value_ptr, t_W_center, radius,
-                                 min_cell_width, termination_height);
+      detail::cropNodeRecursive<MapT>(*root_node_ptr, block_node_index,
+                                      *root_value_ptr, t_W_center, radius,
+                                      min_cell_width, termination_height);
     }
     // Advance to the next block
     ++it;
@@ -146,6 +149,6 @@ void crop_to_sphere(const Point3D& t_W_center, FloatingPoint radius,
     thread_pool->wait_all();
   }
 }
-}  // namespace wavemap
+}  // namespace wavemap::edit
 
 #endif  // WAVEMAP_CORE_UTILS_EDIT_CROP_H_
