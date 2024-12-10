@@ -60,10 +60,16 @@ std::unique_ptr<IntegratorBase> IntegratorFactory::create(
   }
 
   // Create the projection model
+  const auto projector_params = params.getChild("projection_model");
+  if (!projector_params) {
+    LOG(ERROR) << "No params with key \"projection_model\". "
+                  "Projection model could not be created.";
+    return nullptr;
+  }
   std::shared_ptr<ProjectorBase> projection_model =
-      ProjectorFactory::create(params);
+      ProjectorFactory::create(projector_params.value());
   if (!projection_model) {
-    LOG(ERROR) << "Projection model could not be created.";
+    LOG(ERROR) << "Creating projection model failed.";
     return nullptr;
   }
 
@@ -75,11 +81,18 @@ std::unique_ptr<IntegratorBase> IntegratorFactory::create(
       std::make_shared<Image<Vector2D>>(projection_model->getDimensions());
 
   // Create the measurement model
+  const auto measurement_params = params.getChild("measurement_model");
+  if (!measurement_params) {
+    LOG(ERROR) << "No params with key \"measurement_model\". "
+                  "Measurement model could not be created.";
+    return nullptr;
+  }
   std::shared_ptr<MeasurementModelBase> measurement_model =
-      MeasurementModelFactory::create(params, projection_model,
-                                      posed_range_image, beam_offset_image);
+      MeasurementModelFactory::create(measurement_params.value(),
+                                      projection_model, posed_range_image,
+                                      beam_offset_image);
   if (!measurement_model) {
-    LOG(ERROR) << "Measurement model could not be created.";
+    LOG(ERROR) << "Creating measurement model failed.";
     return nullptr;
   }
 

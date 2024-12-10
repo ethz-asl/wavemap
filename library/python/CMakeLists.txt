@@ -63,7 +63,8 @@ nanobind_add_module(_pywavemap_bindings STABLE_ABI
     src/maps.cc
     src/measurements.cc
     src/param.cc
-    src/pipeline.cc)
+    src/pipeline.cc
+    src/render.cc)
 set_wavemap_target_properties(_pywavemap_bindings)
 target_include_directories(_pywavemap_bindings PRIVATE include)
 target_link_libraries(_pywavemap_bindings PRIVATE

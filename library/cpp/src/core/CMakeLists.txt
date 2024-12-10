@@ -46,6 +46,7 @@ target_sources(wavemap_core PRIVATE
     utils/query/classified_map.cc
     utils/query/query_accelerator.cc
     utils/query/point_sampler.cc
+    utils/render/raycasting_renderer.cc
     utils/sdf/full_euclidean_sdf_generator.cc
     utils/sdf/quasi_euclidean_sdf_generator.cc
     utils/time/stopwatch.cc
