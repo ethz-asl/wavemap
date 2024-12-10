@@ -1,4 +1,4 @@
-#include <wavemap/io/file_conversions.h>
+#include <wavemap/io/map/file_conversions.h>
 
 int main(int, char**) {
   // Create a smart pointer that will own the loaded map

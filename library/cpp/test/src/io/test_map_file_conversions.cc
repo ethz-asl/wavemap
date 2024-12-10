@@ -4,11 +4,12 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/core/common.h"
+#include "wavemap/core/map/hashed_blocks.h"
 #include "wavemap/core/map/hashed_chunked_wavelet_octree.h"
 #include "wavemap/core/map/hashed_wavelet_octree.h"
 #include "wavemap/core/map/map_base.h"
 #include "wavemap/core/map/wavelet_octree.h"
-#include "wavemap/io/file_conversions.h"
+#include "wavemap/io/map/file_conversions.h"
 #include "wavemap/test/config_generator.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
