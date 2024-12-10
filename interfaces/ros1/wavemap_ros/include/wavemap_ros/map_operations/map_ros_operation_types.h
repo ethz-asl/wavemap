@@ -7,10 +7,10 @@ namespace wavemap {
 struct MapRosOperationType : public TypeSelector<MapRosOperationType> {
   using TypeSelector<MapRosOperationType>::TypeSelector;
 
-  enum Id : TypeId { kPublishMap, kPublishPointcloud, kCropMap };
+  enum Id : TypeId { kPublishMap, kPublishPointcloud, kCropMap, kDecayMap };
 
   static constexpr std::array names = {"publish_map", "publish_pointcloud",
-                                       "crop_map"};
+                                       "crop_map", "decay_map"};
 };
 }  // namespace wavemap
 

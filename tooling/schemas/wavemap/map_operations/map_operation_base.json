@@ -14,7 +14,8 @@
         "prune_map",
         "publish_map",
         "publish_pointcloud",
-        "crop_map"
+        "crop_map",
+        "decay_map"
       ]
     }
   },
@@ -33,6 +34,9 @@
     },
     {
       "$ref": "crop_map_operation.json"
+    },
+    {
+      "$ref": "decay_map_operation.json"
     }
   ]
 }
