@@ -144,17 +144,17 @@ void SliceVisual::update() {
     // Allocate the pointcloud representing this grid level if needed
     if (static_cast<int>(grid_levels_.size()) <= height) {
       const Ogre::String name = "multi_res_slice_" + std::to_string(height);
-      const FloatingPoint cell_width =
-          convert::heightToCellWidth(min_cell_width, height);
       auto& grid_level = grid_levels_.emplace_back(
           std::make_unique<CellLayer>(slice_cell_material_));
       grid_level->setName(name);
-      grid_level->setCellDimensions(cell_width, cell_width, 0.0);
       grid_level->setAlpha(alpha);
       frame_node_->attachObject(grid_level.get());
     }
     // Update the points
     auto& grid_level = grid_levels_[height];
+    const FloatingPoint cell_width =
+        convert::heightToCellWidth(min_cell_width, height);
+    grid_level->setCellDimensions(cell_width, cell_width, 0.0);
     grid_level->clear();
     const auto& cells_at_level = cells_per_level[height];
     grid_level->setCells(cells_at_level);
