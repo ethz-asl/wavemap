@@ -3,10 +3,12 @@
 #include <memory>
 
 #include <nanobind/eigen/dense.h>
+#include <nanobind/stl/unique_ptr.h>
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/utils/edit/crop.h>
 #include <wavemap/core/utils/edit/multiply.h>
+#include <wavemap/core/utils/edit/transform.h>
 
 using namespace nb::literals;  // NOLINT
 
@@ -45,5 +47,19 @@ void add_edit_module(nb::module_& m_edit) {
         edit::multiply(map, multiplier, std::make_shared<ThreadPool>());
       },
       "map"_a, "multiplier"_a);
+
+  // Map transformation methods
+  m_edit.def(
+      "transform",
+      [](HashedWaveletOctree& B_map, const Transformation3D& T_AB) {
+        return edit::transform(B_map, T_AB, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "transformation"_a);
+  m_edit.def(
+      "transform",
+      [](HashedChunkedWaveletOctree& B_map, const Transformation3D& T_AB) {
+        return edit::transform(B_map, T_AB, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "transformation"_a);
 }
 }  // namespace wavemap
