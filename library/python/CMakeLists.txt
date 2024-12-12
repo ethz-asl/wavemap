@@ -58,6 +58,7 @@ find_package(nanobind CONFIG REQUIRED)
 nanobind_add_module(_pywavemap_bindings STABLE_ABI
     src/pywavemap.cc
     src/convert.cc
+    src/edit.cc
     src/indices.cc
     src/logging.cc
     src/maps.cc
@@ -81,10 +82,6 @@ nanobind_add_stub(pywavemap_stub INSTALL_TIME
     OUTPUT "pywavemap/__init__.pyi"
     MARKER_FILE "pywavemap/py.typed"
     PYTHON_PATH "pywavemap")
-nanobind_add_stub(pywavemap_convert_stub INSTALL_TIME
-    MODULE _pywavemap_bindings.convert
-    OUTPUT "pywavemap/convert.pyi"
-    PYTHON_PATH "pywavemap")
 nanobind_add_stub(pywavemap_logging_stub INSTALL_TIME
     MODULE _pywavemap_bindings.logging
     OUTPUT "pywavemap/logging.pyi"
@@ -92,4 +89,12 @@ nanobind_add_stub(pywavemap_logging_stub INSTALL_TIME
 nanobind_add_stub(pywavemap_param_stub INSTALL_TIME
     MODULE _pywavemap_bindings.param
     OUTPUT "pywavemap/param.pyi"
+    PYTHON_PATH "pywavemap")
+nanobind_add_stub(pywavemap_convert_stub INSTALL_TIME
+    MODULE _pywavemap_bindings.convert
+    OUTPUT "pywavemap/convert.pyi"
+    PYTHON_PATH "pywavemap")
+nanobind_add_stub(pywavemap_edit_stub INSTALL_TIME
+    MODULE _pywavemap_bindings.edit
+    OUTPUT "pywavemap/edit.pyi"
     PYTHON_PATH "pywavemap")

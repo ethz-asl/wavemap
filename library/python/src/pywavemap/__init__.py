@@ -11,4 +11,4 @@ from ._pywavemap_bindings import (Map, HashedWaveletOctree,
 from ._pywavemap_bindings import Pipeline
 
 # Binding submodules
-from ._pywavemap_bindings import logging, param, convert
+from ._pywavemap_bindings import logging, param, convert, edit

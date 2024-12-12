@@ -5,16 +5,10 @@
 #include <wavemap/io/file_conversions.h>
 
 int main(int, char**) {
-  // Settings
+  // Load the map
   std::filesystem::path input_map_path =
       "/home/victor/data/wavemaps/newer_college_cloister_10cm.wvmp";
-  std::filesystem::path output_map_path =
-      "/home/victor/data/wavemaps/newer_college_cloister_10cm_tranformed.wvmp";
-
-  // Create a smart pointer that will own the loaded map
   wavemap::MapBase::Ptr map_base;
-
-  // Load the map
   bool success = wavemap::io::fileToMap(input_map_path, map_base);
   CHECK(success);
 
@@ -31,6 +25,8 @@ int main(int, char**) {
                                  std::make_shared<wavemap::ThreadPool>());
 
   // Save the map
+  std::filesystem::path output_map_path =
+      "/home/victor/data/wavemaps/newer_college_cloister_10cm_tranformed.wvmp";
   success &= wavemap::io::mapToFile(*map, output_map_path);
   CHECK(success);
 }
