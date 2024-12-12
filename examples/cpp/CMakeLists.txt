@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(wavemap_examples_cpp VERSION 2.2.0 LANGUAGES CXX)
+project(wavemap_examples_cpp VERSION 2.2.1 LANGUAGES CXX)
 
 # Load the wavemap library
 # First, try to load it from sources
@@ -32,6 +32,6 @@ endif ()
 
 # Add each set of examples
 add_subdirectory(edit)
+add_subdirectory(conversions)
 add_subdirectory(io)
 add_subdirectory(queries)
-add_subdirectory(planning)

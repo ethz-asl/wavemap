@@ -2,6 +2,9 @@
 Changelog for package wavemap_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.1 (2024-12-10)
+------------------
+
 2.2.0 (2024-11-25)
 ------------------
 * Refactor TfTransformer to return by value, using std::nullopt to signal failure

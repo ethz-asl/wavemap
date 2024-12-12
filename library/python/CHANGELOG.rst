@@ -2,6 +2,9 @@
 Changelog for package pywavemap
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.1 (2024-12-10)
+------------------
+
 2.2.0 (2024-11-25)
 ------------------
 * Add accelerated HashedChunkedWaveletOctree accessors to Python API
