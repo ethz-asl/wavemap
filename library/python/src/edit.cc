@@ -6,6 +6,7 @@
 #include <wavemap/core/map/hashed_chunked_wavelet_octree.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/utils/edit/crop.h>
+#include <wavemap/core/utils/edit/multiply.h>
 
 using namespace nb::literals;  // NOLINT
 
@@ -28,5 +29,21 @@ void add_edit_module(nb::module_& m_edit) {
                              std::make_shared<ThreadPool>());
       },
       "map"_a, "center_point"_a, "radius"_a, "termination_height"_a = 0);
+
+  // Map multiply methods
+  // NOTE: Among others, this can be used to implement exponential forgetting,
+  //       by multiplying the map with a scalar between 0 and 1.
+  m_edit.def(
+      "multiply",
+      [](HashedWaveletOctree& map, FloatingPoint multiplier) {
+        edit::multiply(map, multiplier, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "multiplier"_a);
+  m_edit.def(
+      "multiply",
+      [](HashedChunkedWaveletOctree& map, FloatingPoint multiplier) {
+        edit::multiply(map, multiplier, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "multiplier"_a);
 }
 }  // namespace wavemap
