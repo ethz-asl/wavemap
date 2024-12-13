@@ -20,11 +20,20 @@ void sumNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
                       SamplingFn&& sampling_function,
                       FloatingPoint min_cell_width,
                       IndexElement termination_height = 0);
+
+template <typename MapT>
+void sumNodeRecursive(
+    typename MapT::Block::OctreeType::NodeRefType node_A,
+    typename MapT::Block::OctreeType::NodeConstRefType node_B);
 }  // namespace detail
 
 template <typename MapT, typename SamplingFn>
 void sum(MapT& map, SamplingFn sampling_function,
          IndexElement termination_height = 0,
+         const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
+
+template <typename MapT>
+void sum(MapT& map_A, const MapT& map_B,
          const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
 }  // namespace wavemap::edit
 

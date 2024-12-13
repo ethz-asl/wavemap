@@ -67,6 +67,28 @@ void sumNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
   node_details = new_details;
   node_value = new_value;
 }
+
+template <typename MapT>
+void sumNodeRecursive(
+    typename MapT::Block::OctreeType::NodeRefType node_A,
+    typename MapT::Block::OctreeType::NodeConstRefType node_B) {
+  using NodeRefType = decltype(node_A);
+  using NodeConstPtrType = typename MapT::Block::OctreeType::NodeConstPtrType;
+
+  // Sum
+  node_A.data() += node_B.data();
+
+  // Recursively handle all child nodes
+  for (NdtreeIndexRelativeChild child_idx = 0;
+       child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+    NodeConstPtrType child_node_B = node_B.getChild(child_idx);
+    if (!child_node_B) {
+      continue;
+    }
+    NodeRefType child_node_A = node_A.getOrAllocateChild(child_idx);
+    sumNodeRecursive<MapT>(child_node_A, *child_node_B);
+  }
+}
 }  // namespace detail
 
 template <typename MapT, typename SamplingFn>
@@ -105,6 +127,47 @@ void sum(MapT& map, SamplingFn sampling_function,
                                          *root_value_ptr, sampling_function,
                                          min_cell_width, termination_height);
           block.prune();
+        }
+      });
+
+  // Wait for all parallel jobs to finish
+  if (thread_pool) {
+    thread_pool->wait_all();
+  }
+}
+
+template <typename MapT>
+void sum(MapT& map_A, const MapT& map_B,
+         const std::shared_ptr<ThreadPool>& thread_pool) {
+  CHECK_EQ(map_A.getTreeHeight(), map_B.getTreeHeight());
+  CHECK_EQ(map_A.getMinCellWidth(), map_B.getMinCellWidth());
+  using NodePtrType = typename MapT::Block::OctreeType::NodePtrType;
+  using NodeConstPtrType = typename MapT::Block::OctreeType::NodeConstPtrType;
+
+  // Process all blocks
+  map_B.forEachBlock(
+      [&map_A, &thread_pool](const Index3D& block_index, const auto& block_B) {
+        auto& block_A = map_A.getOrAllocateBlock(block_index);
+
+        // Indicate that the block has changed
+        block_A.setLastUpdatedStamp();
+        block_A.setNeedsPruning();
+
+        // Sum the blocks' average values (wavelet scale coefficient)
+        block_A.getRootScale() += block_B.getRootScale();
+
+        // Recursively sum all node values (wavelet detail coefficients)
+        NodePtrType root_node_ptr_A = &block_A.getRootNode();
+        NodeConstPtrType root_node_ptr_B = &block_B.getRootNode();
+        if (thread_pool) {
+          thread_pool->add_task([root_node_ptr_A, root_node_ptr_B,
+                                 block_ptr_A = &block_A]() {
+            detail::sumNodeRecursive<MapT>(*root_node_ptr_A, *root_node_ptr_B);
+            block_ptr_A->prune();
+          });
+        } else {
+          detail::sumNodeRecursive<MapT>(*root_node_ptr_A, *root_node_ptr_B);
+          block_A.prune();
         }
       });
 
