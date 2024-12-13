@@ -3,10 +3,12 @@
 
 #include <algorithm>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 
 #include "wavemap/core/data_structure/aabb.h"
 #include "wavemap/core/indexing/index_conversions.h"
+#include "wavemap/core/indexing/index_hashes.h"
 #include "wavemap/core/utils/edit/sum.h"
 #include "wavemap/core/utils/iterate/grid_iterator.h"
 #include "wavemap/core/utils/query/map_interpolator.h"
@@ -16,16 +18,15 @@ template <typename MapT>
 std::unique_ptr<MapT> transform(
     const MapT& B_map, const Transformation3D& T_AB,
     const std::shared_ptr<ThreadPool>& thread_pool) {
-  using NodePtrType = typename MapT::Block::OctreeType::NodePtrType;
   const IndexElement tree_height = B_map.getTreeHeight();
   const FloatingPoint min_cell_width = B_map.getMinCellWidth();
   const FloatingPoint block_width =
       convert::heightToCellWidth(min_cell_width, tree_height);
   const FloatingPoint block_width_inv = 1.f / block_width;
 
-  // Allocate blocks in the result map
-  auto A_map = std::make_unique<MapT>(B_map.getConfig());
-  B_map.forEachBlock([&A_map, &T_AB, tree_height, min_cell_width,
+  // Find all blocks that need to be updated
+  std::unordered_set<Index3D, IndexHash<3>> block_indices_A;
+  B_map.forEachBlock([&block_indices_A, &T_AB, tree_height, min_cell_width,
                       block_width_inv](const Index3D& block_index,
                                        const auto& /*block*/) {
     AABB<Point3D> A_aabb{};
@@ -42,56 +43,21 @@ std::unique_ptr<MapT> transform(
         convert::pointToCeilIndex(A_aabb.max, block_width_inv);
     for (const auto& A_block_index :
          Grid(A_block_index_min, A_block_index_max)) {
-      A_map->getOrAllocateBlock(A_block_index);
+      block_indices_A.emplace(A_block_index);
     }
   });
 
   // Populate map A by interpolating map B
+  auto A_map = std::make_unique<MapT>(B_map.getConfig());
   const Transformation3D T_BA = T_AB.inverse();
   QueryAccelerator B_accelerator{B_map};
-  A_map->forEachBlock(
-      [&B_accelerator, &T_BA, &thread_pool, tree_height, min_cell_width](
-          const Index3D& block_index, auto& block) {
-        // Indicate that the block has changed
-        block.setLastUpdatedStamp();
-        block.setNeedsPruning();
-
-        // Get pointers to the root value and node, which contain the wavelet
-        // scale and detail coefficients, respectively
-        FloatingPoint* root_value_ptr = &block.getRootScale();
-        NodePtrType root_node_ptr = &block.getRootNode();
-        const OctreeIndex root_node_index{tree_height, block_index};
-
-        // Recursively crop all nodes
-        if (thread_pool) {
-          thread_pool->add_task([B_accelerator, &T_BA, root_node_ptr,
-                                 root_node_index, root_value_ptr,
-                                 block_ptr = &block, min_cell_width]() mutable {
-            detail::sumNodeRecursive<MapT>(
-                *root_node_ptr, root_node_index, *root_value_ptr,
-                [&B_accelerator, &T_BA](const Point3D& A_point) {
-                  const auto B_point = T_BA * A_point;
-                  return interpolate::trilinear(B_accelerator, B_point);
-                },
-                min_cell_width);
-            block_ptr->prune();
-          });
-        } else {
-          detail::sumNodeRecursive<MapT>(
-              *root_node_ptr, root_node_index, *root_value_ptr,
-              [&B_accelerator, &T_BA](const Point3D& A_point) {
-                const auto B_point = T_BA * A_point;
-                return interpolate::trilinear(B_accelerator, B_point);
-              },
-              min_cell_width);
-          block.prune();
-        }
-      });
-
-  // Wait for all parallel jobs to finish
-  if (thread_pool) {
-    thread_pool->wait_all();
-  }
+  sum(
+      *A_map,
+      [&T_BA, B_accelerator](const Point3D& A_point) mutable {
+        const auto B_point = T_BA * A_point;
+        return interpolate::trilinear(B_accelerator, B_point);
+      },
+      block_indices_A, 0, thread_pool);
 
   return A_map;
 }

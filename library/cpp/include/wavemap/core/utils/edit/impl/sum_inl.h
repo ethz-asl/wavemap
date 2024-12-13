@@ -2,6 +2,7 @@
 #define WAVEMAP_CORE_UTILS_EDIT_IMPL_SUM_INL_H_
 
 #include <memory>
+#include <unordered_set>
 #include <utility>
 
 #include "wavemap/core/indexing/index_conversions.h"
@@ -95,42 +96,48 @@ void sumNodeRecursive(
 
 template <typename MapT, typename SamplingFn>
 void sum(MapT& map, SamplingFn sampling_function,
+         std::unordered_set<Index3D, IndexHash<3>> block_indices,
          IndexElement termination_height,
          const std::shared_ptr<ThreadPool>& thread_pool) {
+  // Make sure all requested blocks have been allocated
+  for (const Index3D& block_index : block_indices) {
+    map.getOrAllocateBlock(block_index);
+  }
+
+  // Evaluate the sampling function for each requested block
   using NodePtrType = typename MapT::Block::OctreeType::NodePtrType;
   const IndexElement tree_height = map.getTreeHeight();
   const FloatingPoint min_cell_width = map.getMinCellWidth();
-  // Evaluate the sampling function over the entire map
-  map.forEachBlock(
-      [&thread_pool, &sampling_function, tree_height, min_cell_width,
-       termination_height](const Index3D& block_index, auto& block) {
-        // Indicate that the block has changed
-        block.setLastUpdatedStamp();
-        block.setNeedsPruning();
+  for (const Index3D& block_index : block_indices) {
+    // Indicate that the block has changed
+    auto& block = *CHECK_NOTNULL(map.getBlock(block_index));
+    block.setLastUpdatedStamp();
+    block.setNeedsPruning();
 
-        // Get pointers to the root value and node, which contain the wavelet
-        // scale and detail coefficients, respectively
-        FloatingPoint* root_value_ptr = &block.getRootScale();
-        NodePtrType root_node_ptr = &block.getRootNode();
-        const OctreeIndex root_node_index{tree_height, block_index};
+    // Get pointers to the root value and node, which contain the wavelet
+    // scale and detail coefficients, respectively
+    FloatingPoint* root_value_ptr = &block.getRootScale();
+    NodePtrType root_node_ptr = &block.getRootNode();
+    const OctreeIndex root_node_index{tree_height, block_index};
 
-        // Recursively crop all nodes
-        if (thread_pool) {
-          thread_pool->add_task([root_node_ptr, root_node_index, root_value_ptr,
-                                 block_ptr = &block, sampling_function,
-                                 min_cell_width, termination_height]() {
-            detail::sumNodeRecursive<MapT>(*root_node_ptr, root_node_index,
-                                           *root_value_ptr, sampling_function,
-                                           min_cell_width, termination_height);
-            block_ptr->prune();
-          });
-        } else {
-          detail::sumNodeRecursive<MapT>(*root_node_ptr, root_node_index,
-                                         *root_value_ptr, sampling_function,
-                                         min_cell_width, termination_height);
-          block.prune();
-        }
+    // Recursively crop all nodes
+    if (thread_pool) {
+      thread_pool->add_task([root_node_ptr, root_node_index, root_value_ptr,
+                             block_ptr = &block,
+                             sampling_fn_copy = sampling_function,
+                             min_cell_width, termination_height]() mutable {
+        detail::sumNodeRecursive<MapT>(*root_node_ptr, root_node_index,
+                                       *root_value_ptr, sampling_fn_copy,
+                                       min_cell_width, termination_height);
+        block_ptr->prune();
       });
+    } else {
+      detail::sumNodeRecursive<MapT>(*root_node_ptr, root_node_index,
+                                     *root_value_ptr, sampling_function,
+                                     min_cell_width, termination_height);
+      block.prune();
+    }
+  }
 
   // Wait for all parallel jobs to finish
   if (thread_pool) {

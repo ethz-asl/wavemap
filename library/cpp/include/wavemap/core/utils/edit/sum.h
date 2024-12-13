@@ -2,8 +2,10 @@
 #define WAVEMAP_CORE_UTILS_EDIT_SUM_H_
 
 #include <memory>
+#include <unordered_set>
 
 #include "wavemap/core/common.h"
+#include "wavemap/core/indexing/index_hashes.h"
 #include "wavemap/core/indexing/ndtree_index.h"
 #include "wavemap/core/utils/thread_pool.h"
 
@@ -30,6 +32,7 @@ void sumNodeRecursive(
 
 template <typename MapT, typename SamplingFn>
 void sum(MapT& map, SamplingFn sampling_function,
+         std::unordered_set<Index3D, IndexHash<3>> block_indices,
          IndexElement termination_height = 0,
          const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
 
