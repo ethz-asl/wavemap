@@ -10,6 +10,7 @@
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/map/map_factory.h>
+#include <wavemap/core/utils/iterate/grid_iterator.h>
 #include <wavemap/core/utils/query/map_interpolator.h>
 #include <wavemap/core/utils/query/query_accelerator.h>
 #include <wavemap/io/file_conversions.h>

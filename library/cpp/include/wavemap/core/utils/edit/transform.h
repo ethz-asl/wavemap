@@ -8,8 +8,7 @@
 #include "wavemap/core/common.h"
 #include "wavemap/core/data_structure/aabb.h"
 #include "wavemap/core/indexing/index_conversions.h"
-#include "wavemap/core/map/hashed_wavelet_octree.h"
-#include "wavemap/core/utils/edit/sample.h"
+#include "wavemap/core/utils/edit/sum.h"
 #include "wavemap/core/utils/iterate/grid_iterator.h"
 #include "wavemap/core/utils/query/map_interpolator.h"
 #include "wavemap/core/utils/thread_pool.h"
@@ -70,7 +69,7 @@ std::unique_ptr<MapT> transform(
           thread_pool->add_task([B_accelerator, &T_BA, root_node_ptr,
                                  root_node_index, root_value_ptr,
                                  block_ptr = &block, min_cell_width]() mutable {
-            detail::sampleNodeRecursive<MapT>(
+            detail::sumNodeRecursive<MapT>(
                 *root_node_ptr, root_node_index, *root_value_ptr,
                 [&B_accelerator, &T_BA](const Point3D& A_point) {
                   const auto B_point = T_BA * A_point;
@@ -80,7 +79,7 @@ std::unique_ptr<MapT> transform(
             block_ptr->prune();
           });
         } else {
-          detail::sampleNodeRecursive<MapT>(
+          detail::sumNodeRecursive<MapT>(
               *root_node_ptr, root_node_index, *root_value_ptr,
               [&B_accelerator, &T_BA](const Point3D& A_point) {
                 const auto B_point = T_BA * A_point;
