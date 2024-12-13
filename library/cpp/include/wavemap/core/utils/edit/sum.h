@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "wavemap/core/common.h"
+#include "wavemap/core/indexing/ndtree_index.h"
 #include "wavemap/core/utils/thread_pool.h"
 
 namespace wavemap::edit {

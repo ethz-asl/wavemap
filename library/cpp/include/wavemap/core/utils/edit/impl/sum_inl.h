@@ -4,6 +4,8 @@
 #include <memory>
 #include <utility>
 
+#include "wavemap/core/indexing/index_conversions.h"
+
 namespace wavemap::edit {
 namespace detail {
 template <typename MapT, typename SamplingFn>

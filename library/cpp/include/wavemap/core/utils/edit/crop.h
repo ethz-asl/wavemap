@@ -20,12 +20,12 @@ void cropNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
                        const OctreeIndex& node_index, FloatingPoint& node_value,
                        const Point3D& t_W_center, FloatingPoint radius,
                        FloatingPoint min_cell_width,
-                       IndexElement termination_height);
+                       IndexElement termination_height = 0);
 }  // namespace detail
 
 template <typename MapT>
 void crop_to_sphere(MapT& map, const Point3D& t_W_center, FloatingPoint radius,
-                    IndexElement termination_height,
+                    IndexElement termination_height = 0,
                     const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
 }  // namespace wavemap::edit
 

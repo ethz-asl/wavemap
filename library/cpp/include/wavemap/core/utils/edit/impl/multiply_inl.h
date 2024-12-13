@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include "wavemap/core/indexing/ndtree_index.h"
+
 namespace wavemap::edit {
 namespace detail {
 template <typename MapT>
