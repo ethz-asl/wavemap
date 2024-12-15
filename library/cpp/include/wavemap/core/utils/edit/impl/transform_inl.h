@@ -6,10 +6,10 @@
 #include <unordered_set>
 #include <utility>
 
-#include "wavemap/core/data_structure/aabb.h"
 #include "wavemap/core/indexing/index_conversions.h"
 #include "wavemap/core/indexing/index_hashes.h"
 #include "wavemap/core/utils/edit/sum.h"
+#include "wavemap/core/utils/geometry/aabb.h"
 #include "wavemap/core/utils/iterate/grid_iterator.h"
 #include "wavemap/core/utils/query/map_interpolator.h"
 
@@ -35,7 +35,7 @@ std::unique_ptr<MapT> transform(
     for (int idx = 0; idx < B_block_aabb.kNumCorners; ++idx) {
       const Point3D& B_corner = B_block_aabb.corner_point(idx);
       const Point3D A_corner = T_AB * B_corner;
-      A_aabb.includePoint(A_corner);
+      A_aabb.insert(A_corner);
     }
     const Index3D A_block_index_min =
         convert::pointToFloorIndex(A_aabb.min, block_width_inv);

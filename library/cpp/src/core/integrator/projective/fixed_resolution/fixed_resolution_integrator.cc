@@ -13,7 +13,7 @@ void FixedResolutionIntegrator::importPointcloud(
   aabb_ = AABB<Point3D>{};
 
   // Import all the points while updating the AABB
-  aabb_.includePoint(pointcloud.getOrigin());  // sensor origin
+  aabb_.insert(pointcloud.getOrigin());  // sensor origin
   for (const auto& C_point : pointcloud.getPointsLocal()) {
     // Filter out noisy points and compute point's range
     if (!isMeasurementValid(C_point)) {
@@ -45,7 +45,7 @@ void FixedResolutionIntegrator::importPointcloud(
     Point3D C_point_truncated = getEndPointOrMaxRange(Point3D::Zero(), C_point,
                                                       range, config_.max_range);
     const Point3D W_point_truncated = pointcloud.getPose() * C_point_truncated;
-    aabb_.includePoint(W_point_truncated);
+    aabb_.insert(W_point_truncated);
   }
 
   // Pad the aabb to account for the beam uncertainties
@@ -63,7 +63,7 @@ void FixedResolutionIntegrator::importRangeImage(
 
   // Update the AABB to contain the camera frustum
   aabb_ = AABB<Point3D>{};
-  aabb_.includePoint(posed_range_image_->getOrigin());  // sensor
+  aabb_.insert(posed_range_image_->getOrigin());  // sensor
   for (int corner_idx = 0; corner_idx < 4; ++corner_idx) {
     const Index2D frustum_corner_image_index =
         posed_range_image_->getDimensions().cwiseProduct(
@@ -74,7 +74,7 @@ void FixedResolutionIntegrator::importRangeImage(
         frustum_corner_coordinate, config_.max_range);
     const Point3D W_frustum_corner =
         posed_range_image_->getPose() * C_frustum_corner;
-    aabb_.includePoint(W_frustum_corner);
+    aabb_.insert(W_frustum_corner);
   }
 
   // Pad the aabb to account for the beam uncertainties

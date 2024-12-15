@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_CORE_DATA_STRUCTURE_AABB_H_
-#define WAVEMAP_CORE_DATA_STRUCTURE_AABB_H_
+#ifndef WAVEMAP_CORE_UTILS_GEOMETRY_AABB_H_
+#define WAVEMAP_CORE_UTILS_GEOMETRY_AABB_H_
 
 #include <algorithm>
 #include <limits>
@@ -29,11 +29,11 @@ struct AABB {
   AABB(const PointT& min, const PointT& max) : min(min), max(max) {}
   AABB(PointT&& min, PointT&& max) : min(std::move(min)), max(std::move(max)) {}
 
-  void includePoint(const PointType& point) {
+  void insert(const PointType& point) {
     min = min.cwiseMin(point);
     max = max.cwiseMax(point);
   }
-  bool containsPoint(const PointType& point) const {
+  bool contains(const PointType& point) const {
     return (min.array() <= point.array() && point.array() <= max.array()).all();
   }
 
@@ -55,16 +55,16 @@ struct AABB {
     return point - furthestPointFrom(point);
   }
   // TODO(victorr): Check correctness with unit tests
-  PointType minOffsetTo(const AABB& aabb) const {
-    const PointType greatest_min = min.cwiseMax(aabb.min);
-    const PointType smallest_max = max.cwiseMin(aabb.max);
+  PointType minOffsetTo(const AABB& other) const {
+    const PointType greatest_min = min.cwiseMax(other.min);
+    const PointType smallest_max = max.cwiseMin(other.max);
     return (greatest_min - smallest_max).cwiseMax(0);
   }
   // TODO(victorr): Check correctness with unit tests. Pay particular
   //                attention to whether the offset signs are correct.
-  PointType maxOffsetTo(const AABB& aabb) const {
-    const PointType diff_1 = min - aabb.max;
-    const PointType diff_2 = max - aabb.min;
+  PointType maxOffsetTo(const AABB& other) const {
+    const PointType diff_1 = min - other.max;
+    const PointType diff_2 = max - other.min;
     PointType offset =
         (diff_2.array().abs() < diff_1.array().abs()).select(diff_1, diff_2);
     return offset;
@@ -129,4 +129,4 @@ struct AABB {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_CORE_DATA_STRUCTURE_AABB_H_
+#endif  // WAVEMAP_CORE_UTILS_GEOMETRY_AABB_H_

@@ -4,9 +4,9 @@
 #include <memory>
 #include <utility>
 
-#include "wavemap/core/data_structure/aabb.h"
 #include "wavemap/core/data_structure/image.h"
 #include "wavemap/core/integrator/projective/projective_integrator.h"
+#include "wavemap/core/utils/geometry/aabb.h"
 
 namespace wavemap {
 class FixedResolutionIntegrator : public ProjectiveIntegrator {

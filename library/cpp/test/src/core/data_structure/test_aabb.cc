@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/core/common.h"
-#include "wavemap/core/data_structure/aabb.h"
+#include "wavemap/core/utils/geometry/aabb.h"
 #include "wavemap/core/utils/print/eigen.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
@@ -22,10 +22,10 @@ TYPED_TEST(AabbTest, InitializationAndInclusion) {
   for (const auto& random_point :
        GeometryGenerator::getRandomPointVector<dim_v<TypeParam>>()) {
     AABB<TypeParam> aabb;
-    EXPECT_FALSE(aabb.containsPoint(random_point))
+    EXPECT_FALSE(aabb.contains(random_point))
         << "The uninitialized AABB should be empty.";
-    aabb.includePoint(random_point);
-    EXPECT_TRUE(aabb.containsPoint(random_point))
+    aabb.insert(random_point);
+    EXPECT_TRUE(aabb.contains(random_point))
         << "The AABB should contain points after they have been included.";
   }
 }
@@ -113,7 +113,7 @@ TYPED_TEST(AabbTest, ClosestPointsAndDistances) {
 
     // Check closest and furthest point queries and distances
     if (min_distance <= 0) {
-      EXPECT_TRUE(test.aabb.containsPoint(test.query_point))
+      EXPECT_TRUE(test.aabb.contains(test.query_point))
           << test.getDescription();
     }
 

@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "wavemap/core/common.h"
-#include "wavemap/core/data_structure/aabb.h"
+#include "wavemap/core/utils/geometry/aabb.h"
 #include "wavemap/core/utils/query/classified_map.h"
 #include "wavemap/core/utils/query/occupancy.h"
 #include "wavemap/core/utils/random_number_generator.h"
