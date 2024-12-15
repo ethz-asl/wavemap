@@ -96,7 +96,7 @@ void sumNodeRecursive(
 
 template <typename MapT, typename SamplingFn>
 void sum(MapT& map, SamplingFn sampling_function,
-         std::unordered_set<Index3D, IndexHash<3>> block_indices,
+         const std::unordered_set<Index3D, IndexHash<3>>& block_indices,
          IndexElement termination_height,
          const std::shared_ptr<ThreadPool>& thread_pool) {
   // Make sure all requested blocks have been allocated

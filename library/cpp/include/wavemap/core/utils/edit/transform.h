@@ -9,7 +9,7 @@
 namespace wavemap::edit {
 template <typename MapT>
 std::unique_ptr<MapT> transform(
-    const MapT& B_map, const Transformation3D& T_AB,
+    const MapT& map_B, const Transformation3D& T_AB,
     const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
 }  // namespace wavemap::edit
 

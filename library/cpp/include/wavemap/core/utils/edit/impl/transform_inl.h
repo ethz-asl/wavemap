@@ -16,17 +16,17 @@
 namespace wavemap::edit {
 template <typename MapT>
 std::unique_ptr<MapT> transform(
-    const MapT& B_map, const Transformation3D& T_AB,
+    const MapT& map_B, const Transformation3D& T_AB,
     const std::shared_ptr<ThreadPool>& thread_pool) {
-  const IndexElement tree_height = B_map.getTreeHeight();
-  const FloatingPoint min_cell_width = B_map.getMinCellWidth();
+  const IndexElement tree_height = map_B.getTreeHeight();
+  const FloatingPoint min_cell_width = map_B.getMinCellWidth();
   const FloatingPoint block_width =
       convert::heightToCellWidth(min_cell_width, tree_height);
   const FloatingPoint block_width_inv = 1.f / block_width;
 
   // Find all blocks that need to be updated
   std::unordered_set<Index3D, IndexHash<3>> block_indices_A;
-  B_map.forEachBlock([&block_indices_A, &T_AB, tree_height, min_cell_width,
+  map_B.forEachBlock([&block_indices_A, &T_AB, tree_height, min_cell_width,
                       block_width_inv](const Index3D& block_index,
                                        const auto& /*block*/) {
     AABB<Point3D> A_aabb{};
@@ -48,18 +48,16 @@ std::unique_ptr<MapT> transform(
   });
 
   // Populate map A by interpolating map B
-  auto A_map = std::make_unique<MapT>(B_map.getConfig());
+  auto map_A = std::make_unique<MapT>(map_B.getConfig());
   const Transformation3D T_BA = T_AB.inverse();
-  QueryAccelerator B_accelerator{B_map};
-  sum(
-      *A_map,
-      [&T_BA, B_accelerator](const Point3D& A_point) mutable {
-        const auto B_point = T_BA * A_point;
-        return interpolate::trilinear(B_accelerator, B_point);
-      },
-      block_indices_A, 0, thread_pool);
+  QueryAccelerator accelerator_B{map_B};
+  auto interpolator_B = [&T_BA, accelerator_B](const Point3D& A_point) mutable {
+    const auto B_point = T_BA * A_point;
+    return interpolate::trilinear(accelerator_B, B_point);
+  };
+  sum(*map_A, interpolator_B, block_indices_A, 0, thread_pool);
 
-  return A_map;
+  return map_A;
 }
 }  // namespace wavemap::edit
 
