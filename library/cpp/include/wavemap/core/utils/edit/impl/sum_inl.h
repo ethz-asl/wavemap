@@ -6,6 +6,8 @@
 #include <utility>
 
 #include "wavemap/core/indexing/index_conversions.h"
+#include "wavemap/core/utils/geometry/aabb.h"
+#include "wavemap/core/utils/iterate/grid_iterator.h"
 
 namespace wavemap::edit {
 namespace detail {
@@ -184,6 +186,33 @@ void sum(MapT& map_A, const MapT& map_B,
   if (thread_pool) {
     thread_pool->wait_all();
   }
+}
+
+template <typename MapT, typename IndicatorFn>
+void sum(MapT& map, IndicatorFn shape, FloatingPoint update,
+         const std::shared_ptr<ThreadPool>& thread_pool) {
+  // Find the blocks that overlap with the shape
+  const FloatingPoint block_width =
+      convert::heightToCellWidth(map.getMinCellWidth(), map.getTreeHeight());
+  const FloatingPoint block_width_inv = 1.f / block_width;
+  const auto aabb = static_cast<AABB<Point3D>>(shape);
+  const Index3D block_index_min =
+      convert::pointToFloorIndex(aabb.min, block_width_inv);
+  const Index3D block_index_max =
+      convert::pointToCeilIndex(aabb.max, block_width_inv);
+  std::unordered_set<Index3D, IndexHash<3>> block_indices;
+  for (const Index3D& block_index : Grid(block_index_min, block_index_max)) {
+    block_indices.emplace(block_index);
+  }
+
+  // Add the update to all cells whose centers lie inside the shape
+  auto sampling_function = [&shape, update](const Point3D& t_A_p) {
+    if (shape.contains(t_A_p)) {
+      return update;
+    }
+    return 0.f;
+  };
+  sum(map, sampling_function, block_indices, 0, thread_pool);
 }
 }  // namespace wavemap::edit
 

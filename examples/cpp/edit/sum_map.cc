@@ -4,6 +4,8 @@
 #include <wavemap/core/utils/edit/crop.h>
 #include <wavemap/core/utils/edit/sum.h>
 #include <wavemap/core/utils/edit/transform.h>
+#include <wavemap/core/utils/geometry/aabb.h>
+#include <wavemap/core/utils/geometry/sphere.h>
 #include <wavemap/io/file_conversions.h>
 
 using namespace wavemap;  // NOLINT
@@ -32,6 +34,14 @@ int main(int, char**) {
 
   // Merge them together
   edit::sum(*map, *map_translated);
+
+  // Set a box in the map to free
+  AABB<Point3D> box{{6.f, 6.f, -2.f}, {10.f, 10.f, 2.f}};
+  edit::sum(*map, box, -1.f, thread_pool);
+
+  // Set a sphere in the map to occupied
+  Sphere<Point3D> sphere{{8.f, 8.f, 0.f}, 1.5f};
+  edit::sum(*map, sphere, 2.f, thread_pool);
 
   // Save the map
   const std::filesystem::path output_map_path =

@@ -39,6 +39,10 @@ void sum(MapT& map, SamplingFn sampling_function,
 template <typename MapT>
 void sum(MapT& map_A, const MapT& map_B,
          const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
+
+template <typename MapT, typename IndicatorFn>
+void sum(MapT& map, IndicatorFn shape, FloatingPoint update,
+         const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
 }  // namespace wavemap::edit
 
 #include "wavemap/core/utils/edit/impl/sum_inl.h"
