@@ -13,10 +13,10 @@ template <typename PointT>
 struct Sphere {
   static constexpr int kDim = dim_v<PointT>;
   using PointType = PointT;
-  using ScalarType = typename PointType::Scalar;
+  using ScalarType = typename PointT::Scalar;
 
-  PointType center;
-  ScalarType radius;
+  PointT center = PointT::Constant(kNaN);
+  ScalarType radius = static_cast<ScalarType>(0);
 
   Sphere() = default;
   Sphere(const PointT& center, ScalarType radius)
@@ -25,10 +25,14 @@ struct Sphere {
       : center(std::move(center)), radius(radius) {}
 
   operator AABB<PointT>() const {
-    return AABB<PointT>(center.array() - radius, center.array() + radius);
+    if (std::isnan(center[0])) {
+      return {};
+    }
+    return {center.array() - radius, center.array() + radius};
   }
 
-  bool contains(const PointType& point) const {
+  // TODO(victorr): Add tests, incl. behavior after default construction
+  bool contains(const PointT& point) const {
     return (point - center).squaredNorm() <= radius * radius;
   }
 

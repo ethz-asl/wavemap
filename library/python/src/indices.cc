@@ -9,7 +9,7 @@ namespace wavemap {
 void add_index_bindings(nb::module_& m) {
   nb::class_<OctreeIndex>(m, "OctreeIndex",
                           "A class representing indices of octree nodes.")
-      .def(nb::init<>())
+      .def(nb::init())
       .def(nb::init<OctreeIndex::Element, OctreeIndex::Position>(), "height"_a,
            "position"_a)
       .def_rw("height", &OctreeIndex::height, "height"_a = 0,

@@ -59,6 +59,7 @@ nanobind_add_module(_pywavemap_bindings STABLE_ABI
     src/pywavemap.cc
     src/convert.cc
     src/edit.cc
+    src/geometry.cc
     src/indices.cc
     src/logging.cc
     src/maps.cc

@@ -2,6 +2,7 @@
 
 #include "pywavemap/convert.h"
 #include "pywavemap/edit.h"
+#include "pywavemap/geometry.h"
 #include "pywavemap/indices.h"
 #include "pywavemap/logging.h"
 #include "pywavemap/maps.h"
@@ -56,6 +57,9 @@ NB_MODULE(_pywavemap_bindings, m) {
 
   // Bindings for measurement types
   add_measurement_bindings(m);
+
+  // Bindings for geometric types
+  add_geometry_bindings(m);
 
   // Bindings for map types
   add_map_bindings(m);

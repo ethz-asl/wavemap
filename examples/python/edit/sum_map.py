@@ -21,6 +21,15 @@ your_map_translated = wave.edit.transform(your_map, transformation)
 # Merge them together
 wave.edit.sum(your_map, your_map_translated)
 
+# Set a box in the map to free
+box = wave.AABB(min=np.array([6.0, 6.0, -2.0]),
+                max=np.array([10.0, 10.0, 2.0]))
+wave.edit.sum(your_map, box, -1.0)
+
+# Set a sphere in the map to occupied
+sphere = wave.Sphere(center=np.array([8.0, 8.0, 0.0]), radius=1.5)
+wave.edit.sum(your_map, sphere, 2.0)
+
 # Save the map
 output_map_path = os.path.join(user_home, "your_map_merged.wvmp")
 your_map.store(output_map_path)

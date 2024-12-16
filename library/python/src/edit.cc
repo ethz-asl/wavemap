@@ -9,12 +9,14 @@
 #include <wavemap/core/utils/edit/crop.h>
 #include <wavemap/core/utils/edit/multiply.h>
 #include <wavemap/core/utils/edit/transform.h>
+#include <wavemap/core/utils/geometry/aabb.h>
+#include <wavemap/core/utils/geometry/sphere.h>
 
 using namespace nb::literals;  // NOLINT
 
 namespace wavemap {
 void add_edit_module(nb::module_& m_edit) {
-  // Map multiply methods
+  // Multiply a map with a scalar
   // NOTE: Among others, this can be used to implement exponential forgetting,
   //       by multiplying the map with a scalar between 0 and 1.
   m_edit.def(
@@ -30,7 +32,7 @@ void add_edit_module(nb::module_& m_edit) {
       },
       "map"_a, "multiplier"_a);
 
-  // Map sum methods
+  // Sum two maps together
   m_edit.def(
       "sum",
       [](HashedWaveletOctree& map_A, const HashedWaveletOctree& map_B) {
@@ -45,7 +47,39 @@ void add_edit_module(nb::module_& m_edit) {
       },
       "map_A"_a, "map_B"_a);
 
-  // Map transformation methods
+  // Add a scalar value to all cells within an axis aligned bounding box
+  m_edit.def(
+      "sum",
+      [](HashedWaveletOctree& map, const AABB<Point3D>& aabb,
+         FloatingPoint update) {
+        edit::sum(map, aabb, update, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "aabb"_a, "update"_a);
+  m_edit.def(
+      "sum",
+      [](HashedChunkedWaveletOctree& map, const AABB<Point3D>& aabb,
+         FloatingPoint update) {
+        edit::sum(map, aabb, update, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "aabb"_a, "update"_a);
+
+  // Add a scalar value to all cells within a sphere
+  m_edit.def(
+      "sum",
+      [](HashedWaveletOctree& map, const Sphere<Point3D>& sphere,
+         FloatingPoint update) {
+        edit::sum(map, sphere, update, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "sphere"_a, "update"_a);
+  m_edit.def(
+      "sum",
+      [](HashedChunkedWaveletOctree& map, const Sphere<Point3D>& sphere,
+         FloatingPoint update) {
+        edit::sum(map, sphere, update, std::make_shared<ThreadPool>());
+      },
+      "map"_a, "sphere"_a, "update"_a);
+
+  // Transform a map into a different coordinate frame
   m_edit.def(
       "transform",
       [](HashedWaveletOctree& B_map, const Transformation3D& T_AB) {
@@ -59,7 +93,7 @@ void add_edit_module(nb::module_& m_edit) {
       },
       "map"_a, "transformation"_a);
 
-  // Map cropping methods
+  // Crop a map
   m_edit.def(
       "crop_to_sphere",
       [](HashedWaveletOctree& map, const Point3D& t_W_center,
