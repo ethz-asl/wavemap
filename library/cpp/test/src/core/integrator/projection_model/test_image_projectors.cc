@@ -247,7 +247,7 @@ TYPED_TEST(Image2DProjectorTypedTest, SensorCoordinateAABBs) {
     for (const auto& test : tests) {
       // The Projector::cartesianToSensorAABB(...) method is only valid if the
       // AABB does not contain the sensor's origin
-      if (test.W_aabb.containsPoint(test.T_W_C.getPosition())) {
+      if (test.W_aabb.contains(test.T_W_C.getPosition())) {
         continue;
       }
 

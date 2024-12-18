@@ -383,18 +383,18 @@ void VoxelVisual::drawMultiResolutionVoxels(IndexElement tree_height,
     // Allocate the pointcloud representing this voxel grid level if needed
     if (voxel_layer_visuals.size() <= depth) {
       const Ogre::String name = prefix + std::to_string(depth);
-      const IndexElement height = tree_height - static_cast<int>(depth);
-      const FloatingPoint cell_width =
-          convert::heightToCellWidth(min_cell_width, height);
       auto& voxel_layer = voxel_layer_visuals.emplace_back(
           std::make_unique<CellLayer>(voxel_material_));
       voxel_layer->setName(name);
-      voxel_layer->setCellDimensions(cell_width, cell_width, cell_width);
       voxel_layer->setAlpha(alpha);
       frame_node_->attachObject(voxel_layer.get());
     }
     // Update the cells
     auto& voxel_layer = voxel_layer_visuals[depth];
+    const IndexElement height = tree_height - static_cast<int>(depth);
+    const FloatingPoint cell_width =
+        convert::heightToCellWidth(min_cell_width, height);
+    voxel_layer->setCellDimensions(cell_width, cell_width, cell_width);
     const auto& cells_at_level = voxels_per_level[depth];
     voxel_layer->setCells(cells_at_level);
   }

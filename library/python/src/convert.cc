@@ -43,5 +43,12 @@ void add_convert_module(nb::module_& m_convert) {
                 "(max map resolution).\n"
                 "    :param height: The desired height (resolution level) of "
                 "the node index.");
+
+  m_convert.def("node_index_to_center_point",
+                &convert::nodeIndexToCenterPoint<3>, "node_index"_a,
+                "min_cell_width"_a,
+                "Compute the center point of a node given its node index.\n\n"
+                "    :param min_cell_width: The grid resolution at height 0 "
+                "(max map resolution).");
 }
 }  // namespace wavemap

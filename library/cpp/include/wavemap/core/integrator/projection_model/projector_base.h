@@ -7,7 +7,7 @@
 #include "wavemap/core/common.h"
 #include "wavemap/core/config/type_selector.h"
 #include "wavemap/core/config/value_with_unit.h"
-#include "wavemap/core/data_structure/aabb.h"
+#include "wavemap/core/utils/shape/aabb.h"
 
 namespace wavemap {
 struct ProjectorType : TypeSelector<ProjectorType> {

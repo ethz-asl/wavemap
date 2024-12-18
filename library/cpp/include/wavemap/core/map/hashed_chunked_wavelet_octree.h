@@ -97,7 +97,7 @@ class HashedChunkedWaveletOctree : public MapBase {
   Index3D getBlockSize() const {
     return Index3D::Constant(cells_per_block_side_);
   }
-  const HashedChunkedWaveletOctreeConfig& getConfig() { return config_; }
+  const HashedChunkedWaveletOctreeConfig& getConfig() const { return config_; }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;

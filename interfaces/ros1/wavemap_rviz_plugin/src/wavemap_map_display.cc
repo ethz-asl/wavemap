@@ -275,7 +275,12 @@ void WavemapMapDisplay::requestWholeMapCallback() {
 void WavemapMapDisplay::loadMapFromDiskCallback() {
   ProfilerZoneScoped;
   // Open file selection dialog
-  const auto filepath_qt = QFileDialog::getOpenFileName();
+  const bool has_last_path =
+      std::filesystem::exists(load_map_from_disk_property_.getAtRestValue());
+  const std::string last_path =
+      has_last_path ? load_map_from_disk_property_.getAtRestValue() : "";
+  const auto filepath_qt = QFileDialog::getOpenFileName(
+      nullptr, "Choose a wavemap map file", last_path.c_str());
 
   // Check if the chosen filepath is not empty
   if (filepath_qt.isEmpty()) {

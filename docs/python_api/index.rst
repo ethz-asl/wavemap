@@ -44,6 +44,7 @@ Python API
 .. automethod:: pywavemap.convert.height_to_cell_width
 .. automethod:: pywavemap.convert.point_to_nearest_index
 .. automethod:: pywavemap.convert.point_to_node_index
+.. automethod:: pywavemap.convert.node_index_to_center_point
 
 .. automodule:: pywavemap.logging
 .. automethod:: pywavemap.logging.set_level
