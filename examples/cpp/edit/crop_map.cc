@@ -20,8 +20,9 @@ int main(int, char**) {
   // Crop the map
   const Point3D t_W_center{-2.2, -1.4, 0.0};
   const FloatingPoint radius = 3.0;
+  const Sphere cropping_sphere{t_W_center, radius};
   auto thread_pool = std::make_shared<ThreadPool>();  // Optional
-  edit::crop_to_sphere(*map, t_W_center, radius, 0, thread_pool);
+  edit::crop(*map, cropping_sphere, 0, thread_pool);
 
   // Save the map
   const std::filesystem::path output_map_path =
