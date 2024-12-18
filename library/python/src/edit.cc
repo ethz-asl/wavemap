@@ -93,22 +93,40 @@ void add_edit_module(nb::module_& m_edit) {
       },
       "map"_a, "transformation"_a);
 
-  // Crop a map
+  // Crop a map to a box
   m_edit.def(
-      "crop_to_sphere",
-      [](HashedWaveletOctree& map, const Point3D& t_W_center,
-         FloatingPoint radius, IndexElement termination_height) {
-        edit::crop_to_sphere(map, t_W_center, radius, termination_height,
-                             std::make_shared<ThreadPool>());
+      "crop",
+      [](HashedWaveletOctree& map, const AABB<Point3D>& aabb,
+         IndexElement termination_height) {
+        edit::crop(map, aabb, termination_height,
+                   std::make_shared<ThreadPool>());
       },
-      "map"_a, "center_point"_a, "radius"_a, "termination_height"_a = 0);
+      "map"_a, "aabb"_a, "termination_height"_a = 0);
   m_edit.def(
-      "crop_to_sphere",
-      [](HashedChunkedWaveletOctree& map, const Point3D& t_W_center,
-         FloatingPoint radius, IndexElement termination_height) {
-        edit::crop_to_sphere(map, t_W_center, radius, termination_height,
-                             std::make_shared<ThreadPool>());
+      "crop",
+      [](HashedChunkedWaveletOctree& map, const AABB<Point3D>& aabb,
+         IndexElement termination_height) {
+        edit::crop(map, aabb, termination_height,
+                   std::make_shared<ThreadPool>());
       },
-      "map"_a, "center_point"_a, "radius"_a, "termination_height"_a = 0);
+      "map"_a, "aabb"_a, "termination_height"_a = 0);
+
+  // Crop a map to a sphere
+  m_edit.def(
+      "crop",
+      [](HashedWaveletOctree& map, const Sphere<Point3D>& sphere,
+         IndexElement termination_height) {
+        edit::crop(map, sphere, termination_height,
+                   std::make_shared<ThreadPool>());
+      },
+      "map"_a, "sphere"_a, "termination_height"_a = 0);
+  m_edit.def(
+      "crop",
+      [](HashedChunkedWaveletOctree& map, const Sphere<Point3D>& sphere,
+         IndexElement termination_height) {
+        edit::crop(map, sphere, termination_height,
+                   std::make_shared<ThreadPool>());
+      },
+      "map"_a, "sphere"_a, "termination_height"_a = 0);
 }
 }  // namespace wavemap
