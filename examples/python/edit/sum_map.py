@@ -8,14 +8,12 @@ input_map_path = os.path.join(user_home, "your_map.wvmp")
 your_map = wave.Map.load(input_map_path)
 
 # Crop the map
-center = np.array([-2.2, -1.4, 0.0])
-radius = 3.0
-wave.edit.crop_to_sphere(your_map, center, radius)
+cropping_sphere = wave.Sphere(center=np.array([-2.2, -1.4, 0.0]), radius=3.0)
+wave.edit.crop(your_map, cropping_sphere)
 
 # Create a translated copy
-translation = np.array([5.0, 5.0, 0.0])
-rotation = wave.Rotation(w=1.0, x=0.0, y=0.0, z=0.0)
-transformation = wave.Pose(rotation, translation)
+transformation = wave.Pose(rotation=wave.Rotation(w=1.0, x=0.0, y=0.0, z=0.0),
+                           translation=np.array([5.0, 5.0, 0.0]))
 your_map_translated = wave.edit.transform(your_map, transformation)
 
 # Merge them together
