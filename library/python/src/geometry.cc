@@ -2,8 +2,8 @@
 
 #include <nanobind/eigen/dense.h>
 #include <wavemap/core/common.h>
-#include <wavemap/core/utils/geometry/aabb.h>
-#include <wavemap/core/utils/geometry/sphere.h>
+#include <wavemap/core/utils/shape/aabb.h>
+#include <wavemap/core/utils/shape/sphere.h>
 
 using namespace nb::literals;  // NOLINT
 

@@ -6,8 +6,8 @@
 #include <utility>
 
 #include "wavemap/core/indexing/index_conversions.h"
-#include "wavemap/core/utils/geometry/aabb.h"
 #include "wavemap/core/utils/iterate/grid_iterator.h"
+#include "wavemap/core/utils/shape/aabb.h"
 
 namespace wavemap::edit {
 namespace detail {
@@ -188,8 +188,8 @@ void sum(MapT& map_A, const MapT& map_B,
   }
 }
 
-template <typename MapT, typename IndicatorFn>
-void sum(MapT& map, IndicatorFn shape, FloatingPoint update,
+template <typename MapT, typename ShapeT>
+void sum(MapT& map, ShapeT shape, FloatingPoint update,
          const std::shared_ptr<ThreadPool>& thread_pool) {
   // Find the blocks that overlap with the shape
   const FloatingPoint block_width =

@@ -5,8 +5,8 @@
 #include <gtest/gtest.h>
 
 #include "wavemap/core/common.h"
-#include "wavemap/core/utils/geometry/aabb.h"
 #include "wavemap/core/utils/print/eigen.h"
+#include "wavemap/core/utils/shape/aabb.h"
 #include "wavemap/test/fixture_base.h"
 #include "wavemap/test/geometry_generator.h"
 

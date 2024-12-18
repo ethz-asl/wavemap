@@ -11,7 +11,7 @@
 #include "wavemap/core/integrator/projection_model/projector_base.h"
 #include "wavemap/core/integrator/projective/coarse_to_fine/hierarchical_range_bounds.h"
 #include "wavemap/core/integrator/projective/update_type.h"
-#include "wavemap/core/utils/geometry/aabb.h"
+#include "wavemap/core/utils/shape/aabb.h"
 
 namespace wavemap {
 class RangeImageIntersector {

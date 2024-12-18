@@ -9,9 +9,9 @@
 #include "wavemap/core/indexing/index_conversions.h"
 #include "wavemap/core/indexing/index_hashes.h"
 #include "wavemap/core/utils/edit/sum.h"
-#include "wavemap/core/utils/geometry/aabb.h"
 #include "wavemap/core/utils/iterate/grid_iterator.h"
 #include "wavemap/core/utils/query/map_interpolator.h"
+#include "wavemap/core/utils/shape/aabb.h"
 
 namespace wavemap::edit {
 template <typename MapT>

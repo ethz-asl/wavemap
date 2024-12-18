@@ -4,8 +4,8 @@
 #include <wavemap/core/utils/edit/crop.h>
 #include <wavemap/core/utils/edit/sum.h>
 #include <wavemap/core/utils/edit/transform.h>
-#include <wavemap/core/utils/geometry/aabb.h>
-#include <wavemap/core/utils/geometry/sphere.h>
+#include <wavemap/core/utils/shape/aabb.h>
+#include <wavemap/core/utils/shape/sphere.h>
 #include <wavemap/io/file_conversions.h>
 
 using namespace wavemap;  // NOLINT

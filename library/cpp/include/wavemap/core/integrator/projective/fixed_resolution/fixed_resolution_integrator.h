@@ -6,7 +6,7 @@
 
 #include "wavemap/core/data_structure/image.h"
 #include "wavemap/core/integrator/projective/projective_integrator.h"
-#include "wavemap/core/utils/geometry/aabb.h"
+#include "wavemap/core/utils/shape/aabb.h"
 
 namespace wavemap {
 class FixedResolutionIntegrator : public ProjectiveIntegrator {

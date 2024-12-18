@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_CORE_UTILS_GEOMETRY_AABB_H_
-#define WAVEMAP_CORE_UTILS_GEOMETRY_AABB_H_
+#ifndef WAVEMAP_CORE_UTILS_SHAPE_AABB_H_
+#define WAVEMAP_CORE_UTILS_SHAPE_AABB_H_
 
 #include <algorithm>
 #include <limits>
@@ -129,4 +129,4 @@ struct AABB {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_CORE_UTILS_GEOMETRY_AABB_H_
+#endif  // WAVEMAP_CORE_UTILS_SHAPE_AABB_H_

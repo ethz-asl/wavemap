@@ -1,5 +1,5 @@
-#ifndef WAVEMAP_CORE_UTILS_GEOMETRY_SPHERE_H_
-#define WAVEMAP_CORE_UTILS_GEOMETRY_SPHERE_H_
+#ifndef WAVEMAP_CORE_UTILS_SHAPE_SPHERE_H_
+#define WAVEMAP_CORE_UTILS_SHAPE_SPHERE_H_
 
 #include <algorithm>
 #include <string>
@@ -45,4 +45,4 @@ struct Sphere {
 };
 }  // namespace wavemap
 
-#endif  // WAVEMAP_CORE_UTILS_GEOMETRY_SPHERE_H_
+#endif  // WAVEMAP_CORE_UTILS_SHAPE_SPHERE_H_

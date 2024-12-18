@@ -9,24 +9,21 @@
 
 namespace wavemap::edit {
 namespace detail {
-template <typename MapT>
+template <typename MapT, typename ShapeT>
 void cropLeavesBatch(typename MapT::Block::OctreeType::NodeRefType node,
                      const OctreeIndex& node_index, FloatingPoint& node_value,
-                     const Point3D& t_W_center, FloatingPoint radius,
-                     FloatingPoint min_cell_width);
+                     ShapeT&& shape, FloatingPoint min_cell_width);
 
-template <typename MapT>
+template <typename MapT, typename ShapeT>
 void cropNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
                        const OctreeIndex& node_index, FloatingPoint& node_value,
-                       const Point3D& t_W_center, FloatingPoint radius,
-                       FloatingPoint min_cell_width,
+                       ShapeT&& shape, FloatingPoint min_cell_width,
                        IndexElement termination_height = 0);
 }  // namespace detail
 
-template <typename MapT>
-void crop_to_sphere(MapT& map, const Point3D& t_W_center, FloatingPoint radius,
-                    IndexElement termination_height = 0,
-                    const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
+template <typename MapT, typename ShapeT>
+void crop(MapT& map, ShapeT shape, IndexElement termination_height = 0,
+          const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
 }  // namespace wavemap::edit
 
 #include "wavemap/core/utils/edit/impl/crop_inl.h"
