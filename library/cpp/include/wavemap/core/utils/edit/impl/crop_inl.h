@@ -24,7 +24,7 @@ void cropLeavesBatch(typename MapT::Block::OctreeType::NodeRefType node,
     const Point3D t_W_child =
         convert::nodeIndexToCenterPoint(child_index, min_cell_width);
     if (!shape::is_inside(t_W_child, shape)) {
-      child_values[child_idx] = 0;
+      child_values[child_idx] = 0.f;
       if (0 < child_index.height) {
         node.eraseChild(child_idx);
       }
@@ -54,8 +54,9 @@ void cropNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
   for (NdtreeIndexRelativeChild child_idx = 0;
        child_idx < OctreeIndex::kNumChildren; ++child_idx) {
     // If the node is fully inside the cropping shape, do nothing
-    const auto child_aabb =
-        convert::nodeIndexToAABB(node_index, min_cell_width);
+    const OctreeIndex child_index = node_index.computeChildIndex(child_idx);
+    const AABB<Point3D> child_aabb =
+        convert::nodeIndexToAABB(child_index, min_cell_width);
     if (shape::is_inside(child_aabb, shape)) {
       continue;
     }
@@ -63,14 +64,13 @@ void cropNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
     // If the node is fully outside the cropping shape, set it to zero
     auto& child_value = child_values[child_idx];
     if (!shape::overlaps(child_aabb, shape)) {
-      child_value = 0;
+      child_value = 0.f;
       node.eraseChild(child_idx);
       continue;
     }
 
     // Otherwise, continue at a higher resolution
     NodeRefType child_node = node.getOrAllocateChild(child_idx);
-    const OctreeIndex child_index = node_index.computeChildIndex(child_idx);
     if (child_index.height <= termination_height + 1) {
       cropLeavesBatch<MapT>(child_node, child_index, child_value, shape,
                             min_cell_width);
