@@ -12,17 +12,17 @@ namespace detail {
 template <typename MapT, typename ShapeT>
 void cropLeavesBatch(typename MapT::Block::OctreeType::NodeRefType node,
                      const OctreeIndex& node_index, FloatingPoint& node_value,
-                     ShapeT&& shape, FloatingPoint min_cell_width);
+                     ShapeT&& mask, FloatingPoint min_cell_width);
 
 template <typename MapT, typename ShapeT>
 void cropNodeRecursive(typename MapT::Block::OctreeType::NodeRefType node,
                        const OctreeIndex& node_index, FloatingPoint& node_value,
-                       ShapeT&& shape, FloatingPoint min_cell_width,
+                       ShapeT&& mask, FloatingPoint min_cell_width,
                        IndexElement termination_height = 0);
 }  // namespace detail
 
 template <typename MapT, typename ShapeT>
-void crop(MapT& map, ShapeT shape, IndexElement termination_height = 0,
+void crop(MapT& map, ShapeT mask, IndexElement termination_height = 0,
           const std::shared_ptr<ThreadPool>& thread_pool = nullptr);
 }  // namespace wavemap::edit
 
