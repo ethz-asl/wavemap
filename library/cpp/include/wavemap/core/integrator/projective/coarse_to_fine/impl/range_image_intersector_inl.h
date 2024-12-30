@@ -11,7 +11,7 @@ namespace wavemap {
 inline UpdateType RangeImageIntersector::determineUpdateType(
     const AABB<Point3D>& W_cell_aabb,
     const Transformation3D::RotationMatrix& R_C_W, const Point3D& t_W_C) const {
-  if (W_cell_aabb.containsPoint(t_W_C)) {
+  if (W_cell_aabb.contains(t_W_C)) {
     return UpdateType::kPossiblyOccupied;
   }
 

@@ -6,11 +6,11 @@
 #include <numeric>
 
 #include "wavemap/core/common.h"
-#include "wavemap/core/data_structure/aabb.h"
 #include "wavemap/core/indexing/ndtree_index.h"
 #include "wavemap/core/utils/bits/morton_encoding.h"
 #include "wavemap/core/utils/data/eigen_checks.h"
 #include "wavemap/core/utils/math/int_math.h"
+#include "wavemap/core/utils/shape/aabb.h"
 
 namespace wavemap::convert {
 template <int dim>

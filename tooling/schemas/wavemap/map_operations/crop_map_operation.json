@@ -12,14 +12,22 @@
       "$ref": "../value_with_unit/convertible_to_seconds.json"
     },
     "body_frame": {
-      "description": "Name of the TF frame to treat as the center point. Usually the robot's body frame. When the cropper runs, all blocks that are further than remove_blocks_beyond_distance from this point are deleted.",
+      "description": "Name of the TF frame to treat as the center point. Usually the robot's body frame. When the cropper runs, all cells that are further than `radius` from this point are deleted.",
       "type": "string",
       "examples": [
         "body"
       ]
     },
-    "remove_blocks_beyond_distance": {
-      "description": "Distance beyond which blocks are deleted when the cropper is executed.",
+    "tf_time_offset": {
+      "description": "Time offset applied when retrieving the transform from body_frame to world_frame. Set to -1 to use the most recent transform available in ROS TF, ignoring timestamps (default). If set to a non-negative value, the transform lookup uses a timestamp of `ros::Time::now() - tf_time_offset`.",
+      "$ref": "../value_with_unit/convertible_to_seconds.json"
+    },
+    "radius": {
+      "description": "Distance beyond which to remove cells from the map.",
+      "$ref": "../value_with_unit/convertible_to_meters.json"
+    },
+    "max_update_resolution": {
+      "description": "Maximum resolution at which the crop is applied. Set to 0 to match the map's maximum resolution (default). Setting a higher value reduces computation but produces more jagged borders.",
       "$ref": "../value_with_unit/convertible_to_meters.json"
     }
   }

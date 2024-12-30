@@ -1,6 +1,7 @@
 #include "pywavemap/maps.h"
 
 #include <memory>
+#include <vector>
 
 #include <nanobind/eigen/dense.h>
 #include <nanobind/stl/filesystem.h>
@@ -9,6 +10,7 @@
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/map/map_factory.h>
+#include <wavemap/core/utils/iterate/grid_iterator.h>
 #include <wavemap/core/utils/query/map_interpolator.h>
 #include <wavemap/core/utils/query/query_accelerator.h>
 #include <wavemap/io/file_conversions.h>
@@ -96,7 +98,7 @@ void add_map_bindings(nb::module_& m) {
           [](const std::filesystem::path& file_path)
               -> std::shared_ptr<MapBase> {
             std::shared_ptr<MapBase> map;
-            if (wavemap::io::fileToMap(file_path, map)) {
+            if (io::fileToMap(file_path, map)) {
               return map;
             }
             return nullptr;
@@ -105,8 +107,104 @@ void add_map_bindings(nb::module_& m) {
       .def(
           "store",
           [](const MapBase& self, const std::filesystem::path& file_path)
-              -> bool { return wavemap::io::mapToFile(self, file_path); },
-          "file_path"_a, "Store a wavemap map as a .wvmp file.");
+              -> bool { return io::mapToFile(self, file_path); },
+          "file_path"_a, "Store a wavemap map as a .wvmp file.")
+      .def(
+          "get_occupied_node_indices",
+          [](const MapBase& self, FloatingPoint log_odds_occupancy_threshold) {
+            // Get the node indices
+            std::vector<OctreeIndex> node_indices;
+            self.forEachLeaf(
+                [&node_indices, log_odds_occupancy_threshold](
+                    const OctreeIndex& node_index, FloatingPoint node_value) {
+                  if (log_odds_occupancy_threshold < node_value) {
+                    node_indices.emplace_back(node_index);
+                  }
+                });
+
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
+            auto* results = new IndexElement[4 * node_indices.size()];
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+
+            // Populate the results
+            size_t idx = 0;
+            for (const auto& node_index : node_indices) {
+              results[idx + 0] = node_index.height;
+              results[idx + 1] = node_index.position.x();
+              results[idx + 2] = node_index.position.y();
+              results[idx + 3] = node_index.position.z();
+              idx += 4;
+            }
+
+            // Return results as numpy array
+            return nb::ndarray<nb::numpy, IndexElement>{
+                results, {node_indices.size(), 4u}, owner};
+          },
+          "threshold"_a = 1e-3f,
+          "Retrieve the indices of all occupied leaf nodes.\n\n"
+          "    :param threshold: The log-odds threshold above which a node is "
+          "considered occupied.\n"
+          "    :returns: An (N, 4) numpy array where each row contains the "
+          "height, x, y, and z indices (int32) of an occupied leaf node.")
+      .def(
+          "get_occupied_pointcloud",
+          [](const MapBase& self, FloatingPoint log_odds_occupancy_threshold) {
+            // Get the center points of all occupied high resolution cells
+            std::vector<Point3D> pointcloud;
+            const FloatingPoint min_cell_width = self.getMinCellWidth();
+            self.forEachLeaf(
+                [&pointcloud, log_odds_occupancy_threshold, min_cell_width](
+                    const OctreeIndex& node_index, FloatingPoint node_value) {
+                  if (log_odds_occupancy_threshold < node_value) {
+                    if (node_index.height == 0) {
+                      const Point3D center = convert::indexToCenterPoint(
+                          node_index.position, min_cell_width);
+                      pointcloud.emplace_back(center);
+                    } else {
+                      const Index3D node_min_corner =
+                          convert::nodeIndexToMinCornerIndex(node_index);
+                      const Index3D node_max_corner =
+                          convert::nodeIndexToMaxCornerIndex(node_index);
+                      for (const Index3D& index :
+                           Grid(node_min_corner, node_max_corner)) {
+                        const Point3D center =
+                            convert::indexToCenterPoint(index, min_cell_width);
+                        pointcloud.emplace_back(center);
+                      }
+                    }
+                  }
+                });
+
+            // Create the raw results array and wrap it in a Python capsule that
+            // deallocates it when all references to it expire
+            auto* results = new float[3 * pointcloud.size()];
+            nb::capsule owner(results, [](void* p) noexcept {
+              delete[] reinterpret_cast<float*>(p);
+            });
+
+            // Populate the results
+            size_t idx = 0;
+            for (const auto& point : pointcloud) {
+              results[idx + 0] = point.x();
+              results[idx + 1] = point.y();
+              results[idx + 2] = point.z();
+              idx += 3;
+            }
+
+            // Return results as numpy array
+            return nb::ndarray<nb::numpy, FloatingPoint>{
+                results, {pointcloud.size(), 3u}, owner};
+          },
+          "threshold"_a = 1e-3f,
+          "Retrieve the center points of all occupied cells at the highest "
+          "resolution.\n\n"
+          "    :param threshold: The log-odds threshold above which a cell is "
+          "considered occupied.\n"
+          "    :returns: An (N, 3) numpy array where each row contains the "
+          "x, y, and z coordinates (float32) of an occupied cell center.");
 
   nb::class_<HashedWaveletOctree, MapBase>(
       m, "HashedWaveletOctree",

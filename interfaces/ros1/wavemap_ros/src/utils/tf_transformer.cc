@@ -23,7 +23,8 @@ bool TfTransformer::waitForTransform(const std::string& to_frame_id,
 std::optional<Transformation3D> TfTransformer::lookupLatestTransform(
     const std::string& to_frame_id, const std::string& from_frame_id) {
   return lookupTransformImpl(sanitizeFrameId(to_frame_id),
-                             sanitizeFrameId(from_frame_id), {});
+                             sanitizeFrameId(from_frame_id),
+                             ros::Time::UNINITIALIZED);
 }
 
 std::optional<Transformation3D> TfTransformer::lookupTransform(

@@ -71,14 +71,26 @@ void CellSelector::setMap(const MapBase::ConstPtr& map) {
 bool CellSelector::shouldBeDrawn(const OctreeIndex& cell_index,
                                  FloatingPoint cell_log_odds) const {
   switch (cell_selection_mode_) {
+    default:
     case CellSelectionMode::kSurface:
       // Skip free cells
       if (cell_log_odds < surface_occupancy_threshold_ ||
           isUnknown(cell_log_odds)) {
         return false;
       }
-      // Skip cells that are occluded by neighbors on all sides
+      // Skip cells that would not be visible in real life
       if (!hasFreeNeighbor(cell_index)) {
+        return false;
+      }
+      break;
+    case CellSelectionMode::kBoundary:
+      // Skip free cells
+      if (cell_log_odds < surface_occupancy_threshold_ ||
+          isUnknown(cell_log_odds)) {
+        return false;
+      }
+      // Skip cells that are occluded by neighbors on all sides in Rviz
+      if (!hasFreeOrUnknownNeighbor(cell_index)) {
         return false;
       }
       break;
@@ -103,6 +115,21 @@ bool CellSelector::hasFreeNeighbor(const OctreeIndex& cell_index) const {
     // Check if the neighbor is free and observed
     if (neighbor_log_odds < surface_occupancy_threshold_ &&
         !isUnknown(neighbor_log_odds)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CellSelector::hasFreeOrUnknownNeighbor(
+    const OctreeIndex& cell_index) const {
+  for (const auto& offset : kNeighborOffsets) {  // NOLINT
+    const OctreeIndex neighbor_index = {cell_index.height,
+                                        cell_index.position + offset};
+    const FloatingPoint neighbor_log_odds =
+        query_accelerator_->getCellValue(neighbor_index);
+    // Check if the neighbor is free and observed
+    if (neighbor_log_odds < surface_occupancy_threshold_) {
       return true;
     }
   }

@@ -14,9 +14,9 @@ namespace wavemap::rviz_plugin {
 struct CellSelectionMode : public TypeSelector<CellSelectionMode> {
   using TypeSelector<CellSelectionMode>::TypeSelector;
 
-  enum Id : TypeId { kSurface, kBand };
+  enum Id : TypeId { kSurface, kBoundary, kBand };
 
-  static constexpr std::array names = {"Surface", "Band"};
+  static constexpr std::array names = {"Surface", "Boundary", "Band"};
 };
 
 class CellSelector : public QObject {
@@ -35,6 +35,7 @@ class CellSelector : public QObject {
     return std::abs(log_odds) < unknown_occupancy_threshold_;
   }
   bool hasFreeNeighbor(const OctreeIndex& cell_index) const;
+  bool hasFreeOrUnknownNeighbor(const OctreeIndex& cell_index) const;
 
  private Q_SLOTS:  // NOLINT
   // These Qt slots get connected to signals indicating changes in the

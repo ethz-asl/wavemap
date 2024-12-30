@@ -30,6 +30,10 @@ class QueryAccelerator<SpatialHash<BlockDataT, dim>> {
   explicit QueryAccelerator(SpatialHash<BlockDataT, dim>& spatial_hash)
       : spatial_hash_(spatial_hash) {}
 
+  //! Copy and move constructors
+  QueryAccelerator(const QueryAccelerator& other) = default;
+  QueryAccelerator(QueryAccelerator&& other) = default;
+
   void reset();
 
   BlockDataT* getBlock(const Index<dim>& block_index);
@@ -59,6 +63,10 @@ class QueryAccelerator<DenseBlockHash<CellDataT, dim, cells_per_side>> {
       const DenseBlockHash<CellDataT, dim, cells_per_side>& dense_block_hash)
       : dense_block_hash_(dense_block_hash) {}
 
+  //! Copy and move constructors
+  QueryAccelerator(const QueryAccelerator& other) = default;
+  QueryAccelerator(QueryAccelerator&& other) = default;
+
   void reset();
 
   const BlockType* getBlock(const Index<dim>& block_index);
@@ -82,6 +90,10 @@ class QueryAccelerator<NdtreeBlockHash<CellDataT, dim>> {
 
   explicit QueryAccelerator(NdtreeBlockHash<CellDataT, dim>& ndtree_block_hash)
       : ndtree_block_hash_(ndtree_block_hash) {}
+
+  //! Copy and move constructors
+  QueryAccelerator(const QueryAccelerator& other) = default;
+  QueryAccelerator(QueryAccelerator&& other) = default;
 
   void reset();
 
@@ -123,6 +135,10 @@ class QueryAccelerator<HashedWaveletOctree> {
   static constexpr int kDim = HashedWaveletOctree::kDim;
 
   explicit QueryAccelerator(const HashedWaveletOctree& map) : map_(map) {}
+
+  //! Copy and move constructors
+  QueryAccelerator(const QueryAccelerator& other) = default;
+  QueryAccelerator(QueryAccelerator&& other) = default;
 
   //! Reset the cache
   //! @note This method must be called whenever the map changes, not only to
@@ -175,6 +191,10 @@ class QueryAccelerator<HashedChunkedWaveletOctree> {
 
   explicit QueryAccelerator(const HashedChunkedWaveletOctree& map)
       : map_(map) {}
+
+  //! Copy and move constructors
+  QueryAccelerator(const QueryAccelerator& other) = default;
+  QueryAccelerator(QueryAccelerator&& other) = default;
 
   //! Reset the cache
   //! @note This method must be called whenever the map changes, not only to

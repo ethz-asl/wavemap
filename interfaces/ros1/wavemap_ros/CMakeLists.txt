@@ -34,6 +34,7 @@ add_library(${PROJECT_NAME}
     src/inputs/ros_input_base.cc
     src/inputs/ros_input_factory.cc
     src/map_operations/crop_map_operation.cc
+    src/map_operations/decay_map_operation.cc
     src/map_operations/map_ros_operation_factory.cc
     src/map_operations/publish_map_operation.cc
     src/map_operations/publish_pointcloud_operation.cc
