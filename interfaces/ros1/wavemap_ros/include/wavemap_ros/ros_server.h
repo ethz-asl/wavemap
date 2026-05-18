@@ -82,6 +82,9 @@ class RosServer {
 
   // Map management pipeline
   std::shared_ptr<Pipeline> pipeline_;
+  param::Array map_operation_param_array_;// dt_architecture_changes
+  param::Map measurement_integrator_param_map_;// dt_architecture_changes
+  param::Array input_param_array_;// dt_architecture_changes
 
   // Measurement and pose inputs
   std::vector<std::unique_ptr<RosInputBase>> inputs_;

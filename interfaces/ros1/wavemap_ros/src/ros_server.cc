@@ -64,24 +64,45 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   CHECK_NOTNULL(pipeline_);
 
   // Add map operations to pipeline
+  /* dt_architecture_changes
   const param::Array map_operation_param_array =
       param::convert::toParamArray(nh_private, "map_operations");
   for (const auto& operation_params : map_operation_param_array) {
     addOperation(operation_params, nh_private);
+  }*/
+  // dt_architecture_changes
+  map_operation_param_array_ =
+      param::convert::toParamArray(nh_private, "map_operations");
+  for (const auto& operation_params : map_operation_param_array_) {
+    addOperation(operation_params, nh_private);
   }
 
   // Add measurement integrators to pipeline
+  /* dt_architecture_changes
   const param::Map measurement_integrator_param_map =
       param::convert::toParamMap(nh_private, "measurement_integrators");
   for (const auto& [integrator_name, integrator_params] :
        measurement_integrator_param_map) {
     pipeline_->addIntegrator(integrator_name, integrator_params);
+  }*/
+  measurement_integrator_param_map_ =
+    param::convert::toParamMap(nh_private, "measurement_integrators");
+  for (const auto& [integrator_name, integrator_params] :
+      measurement_integrator_param_map_) {
+    pipeline_->addIntegrator(integrator_name, integrator_params);
   }
 
+
   // Setup measurement inputs
+  /* dt_architecture_changes
   const param::Array input_param_array =
       param::convert::toParamArray(nh_private, "inputs");
   for (const auto& integrator_params : input_param_array) {
+    addInput(integrator_params, nh, nh_private);
+  }*/
+  input_param_array_ =
+      param::convert::toParamArray(nh_private, "inputs");
+  for (const auto& integrator_params : input_param_array_) {
     addInput(integrator_params, nh, nh_private);
   }
 
@@ -164,8 +185,41 @@ bool RosServer::saveMap(const std::filesystem::path& file_path) const {
   return false;
 }
 
+/*dt_architecture_changes
 bool RosServer::loadMap(const std::filesystem::path& file_path) {
   return io::fileToMap(file_path, occupancy_map_);
+}
+*/
+//dt_architecture_changes
+bool RosServer::loadMap(const std::filesystem::path& file_path) {
+  MapBase::Ptr loaded_map;
+  if (!io::fileToMap(file_path, loaded_map)) {
+    return false;
+  }
+
+  occupancy_map_ = loaded_map;
+
+  clearInputs();
+  pipeline_.reset();
+  pipeline_ = std::make_shared<Pipeline>(occupancy_map_, thread_pool_);
+
+  ros::NodeHandle nh;
+  ros::NodeHandle nh_private("~");
+
+  for (const auto& operation_params : map_operation_param_array_) {
+    addOperation(operation_params, nh_private);
+  }
+
+  for (const auto& [integrator_name, integrator_params] :
+       measurement_integrator_param_map_) {
+    pipeline_->addIntegrator(integrator_name, integrator_params);
+  }
+
+  for (const auto& input_params : input_param_array_) {
+    addInput(input_params, nh, nh_private);
+  }
+
+  return true;
 }
 
 void RosServer::advertiseServices(ros::NodeHandle& nh_private) {
