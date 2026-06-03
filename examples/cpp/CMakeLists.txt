@@ -35,10 +35,4 @@ add_subdirectory(io)
 add_subdirectory(queries)
 add_subdirectory(planning)
 
-find_package(catkin QUIET
-    COMPONENTS roscpp wavemap wavemap_msgs wavemap_ros_conversions)
-if (catkin_FOUND)
-  add_subdirectory(digital_twin)
-else ()
-  message(STATUS "Skipping digital_twin examples because ROS1/catkin dependencies were not found.")
-endif ()
+add_subdirectory(digital_twin)
