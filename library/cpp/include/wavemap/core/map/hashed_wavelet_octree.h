@@ -2,6 +2,7 @@
 #define WAVEMAP_CORE_MAP_HASHED_WAVELET_OCTREE_H_
 
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 
 #include "wavemap/core/common.h"
@@ -56,23 +57,33 @@ struct HashedWaveletOctreeConfig : ConfigBase<HashedWaveletOctreeConfig, 5> {
   bool isValid(bool verbose) const override;
 };
 
-class HashedWaveletOctree : public MapBase {
+template <typename CellDataT = FloatingPoint>
+class HashedWaveletOctreeT : public MapBase {
  public:
-  using Ptr = std::shared_ptr<HashedWaveletOctree>;
-  using ConstPtr = std::shared_ptr<const HashedWaveletOctree>;
+  using Ptr = std::shared_ptr<HashedWaveletOctreeT<CellDataT>>;
+  using ConstPtr = std::shared_ptr<const HashedWaveletOctreeT<CellDataT>>;
   using Config = HashedWaveletOctreeConfig;
+  using CellDataType = CellDataT;
   static constexpr bool kRequiresExplicitThresholding = true;
 
   using BlockIndex = Index3D;
   using CellIndex = OctreeIndex;
-  using Block = HashedWaveletOctreeBlock;
+  using Block = HashedWaveletOctreeBlockT<CellDataT>;
   using BlockHashMap = SpatialHash<Block, kDim>;
 
-  explicit HashedWaveletOctree(const HashedWaveletOctreeConfig& config)
+  explicit HashedWaveletOctreeT(const HashedWaveletOctreeConfig& config)
       : MapBase(config), config_(config.checkValid()) {}
 
   // Copy construction is not supported
-  HashedWaveletOctree(const HashedWaveletOctree&) = delete;
+  HashedWaveletOctreeT(const HashedWaveletOctreeT&) = delete;
+
+  MapType getMapType() const override {
+    if constexpr (std::is_same_v<CellDataT, FloatingPoint>) {
+      return MapType::kHashedWaveletOctree;
+    } else {
+      return MapType::kLayeredHashedWaveletOctree;
+    }
+  }
 
   bool empty() const override { return block_map_.empty(); }
   size_t size() const override;
@@ -95,8 +106,12 @@ class HashedWaveletOctree : public MapBase {
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;
+  CellDataT getVoxelValue(const Index3D& index) const;
+  CellDataT getVoxelValue(const OctreeIndex& index) const;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
+  void setVoxelValue(const Index3D& index, const CellDataT& new_value);
   void addToCellValue(const Index3D& index, FloatingPoint update) override;
+  void addToVoxelValue(const Index3D& index, const CellDataT& update);
 
   bool hasBlock(const Index3D& block_index) const;
   bool eraseBlock(const BlockIndex& block_index);
@@ -118,6 +133,9 @@ class HashedWaveletOctree : public MapBase {
   void forEachLeaf(
       typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;
 
+  template <typename IndexedVoxelLeafVisitorFunction>
+  void forEachVoxelLeaf(IndexedVoxelLeafVisitorFunction visitor_fn) const;
+
   BlockIndex indexToBlockIndex(const OctreeIndex& node_index) const;
   CellIndex indexToCellIndex(OctreeIndex index) const;
 
@@ -128,6 +146,8 @@ class HashedWaveletOctree : public MapBase {
 
   BlockHashMap block_map_;
 };
+
+using HashedWaveletOctree = HashedWaveletOctreeT<FloatingPoint>;
 }  // namespace wavemap
 
 #include "wavemap/core/map/impl/hashed_wavelet_octree_inl.h"

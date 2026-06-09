@@ -55,6 +55,8 @@ class VolumetricOctree : public MapBase {
   explicit VolumetricOctree(const VolumetricOctreeConfig& config)
       : MapBase(config), config_(config.checkValid()) {}
 
+  MapType getMapType() const override { return MapType::kOctree; }
+
   bool empty() const override { return ndtree_.empty(); }
   size_t size() const override { return ndtree_.size(); }
   void threshold() override;

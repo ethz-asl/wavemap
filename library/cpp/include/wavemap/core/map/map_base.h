@@ -19,12 +19,13 @@ struct MapType : TypeSelector<MapType> {
     kOctree,
     kWaveletOctree,
     kHashedWaveletOctree,
-    kHashedChunkedWaveletOctree
+    kHashedChunkedWaveletOctree,
+    kLayeredHashedWaveletOctree
   };
 
   static constexpr std::array names = {
       "hashed_blocks", "octree", "wavelet_octree", "hashed_wavelet_octree",
-      "hashed_chunked_wavelet_octree"};
+      "hashed_chunked_wavelet_octree", "layered_hashed_wavelet_octree"};
 };
 
 /**
@@ -65,6 +66,8 @@ class MapBase {
   explicit MapBase(const MapBaseConfig& config)
       : config_(config.checkValid()) {}
   virtual ~MapBase() = default;
+
+  virtual MapType getMapType() const = 0;
 
   //! Whether the map is empty
   virtual bool empty() const = 0;

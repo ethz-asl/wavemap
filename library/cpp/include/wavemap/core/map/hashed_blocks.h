@@ -25,6 +25,8 @@ class HashedBlocks : public MapBase,
                         FloatingPoint default_value = 0.f)
       : MapBase(config.checkValid()), DenseBlockHash(default_value) {}
 
+  MapType getMapType() const override { return MapType::kHashedBlocks; }
+
   bool empty() const override { return DenseBlockHash::empty(); }
   size_t size() const override { return DenseBlockHash::size(); }
   void threshold() override {

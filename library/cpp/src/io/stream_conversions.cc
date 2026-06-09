@@ -6,29 +6,28 @@
 
 namespace wavemap::io {
 bool mapToStream(const MapBase& map, std::ostream& ostream) {
-  // Call the appropriate mapToStream converter based on the map's derived type
-  if (const auto* hashed_blocks = dynamic_cast<const HashedBlocks*>(&map);
-      hashed_blocks) {
-    return io::mapToStream(*hashed_blocks, ostream);
+  // Call the appropriate mapToStream converter based on the map's type.
+  switch (map.getMapType()) {
+    case MapType::kHashedBlocks:
+      return io::mapToStream(static_cast<const HashedBlocks&>(map), ostream);
+    case MapType::kWaveletOctree:
+      return io::mapToStream(static_cast<const WaveletOctree&>(map), ostream);
+    case MapType::kHashedWaveletOctree:
+      return io::mapToStream(static_cast<const HashedWaveletOctree&>(map),
+                             ostream);
+    case MapType::kHashedChunkedWaveletOctree:
+      return io::mapToStream(
+          static_cast<const HashedChunkedWaveletOctree&>(map), ostream);
+    case MapType::kLayeredHashedWaveletOctree:
+      LOG(WARNING) << "Layered hashed wavelet octree maps require typed IO "
+                      "with an explicit cell data serializer.";
+      return false;
+    case MapType::kOctree:
+    default:
+      LOG(WARNING) << "Could not serialize requested map to stream. "
+                      "Map type not yet supported.";
+      return false;
   }
-  if (const auto* wavelet_octree = dynamic_cast<const WaveletOctree*>(&map);
-      wavelet_octree) {
-    return io::mapToStream(*wavelet_octree, ostream);
-  }
-  if (const auto* hashed_wavelet_octree =
-          dynamic_cast<const HashedWaveletOctree*>(&map);
-      hashed_wavelet_octree) {
-    return io::mapToStream(*hashed_wavelet_octree, ostream);
-  }
-  if (const auto* hashed_chunked_wavelet_octree =
-          dynamic_cast<const HashedChunkedWaveletOctree*>(&map);
-      hashed_chunked_wavelet_octree) {
-    return io::mapToStream(*hashed_chunked_wavelet_octree, ostream);
-  }
-
-  LOG(WARNING) << "Could not serialize requested map to stream. "
-                  "Map type not yet supported.";
-  return false;
 }
 
 bool streamToMap(std::istream& istream, MapBase::Ptr& map) {

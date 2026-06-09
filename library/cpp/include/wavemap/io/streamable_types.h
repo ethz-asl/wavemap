@@ -88,10 +88,16 @@ struct HashedWaveletOctreeHeader {
 struct StorageFormat : TypeSelector<StorageFormat> {
   using TypeSelector<StorageFormat>::TypeSelector;
 
-  enum Id : TypeId { kWaveletOctree, kHashedWaveletOctree, kHashedBlocks };
+  enum Id : TypeId {
+    kWaveletOctree,
+    kHashedWaveletOctree,
+    kHashedBlocks,
+    kLayeredHashedWaveletOctree
+  };
 
   static constexpr std::array names = {
-      "wavelet_octree", "hashed_wavelet_octree", "hashed_blocks"};
+      "wavelet_octree", "hashed_wavelet_octree", "hashed_blocks",
+      "layered_hashed_wavelet_octree"};
 
   inline void write(std::ostream& ostream) const;
   inline static StorageFormat read(std::istream& istream);

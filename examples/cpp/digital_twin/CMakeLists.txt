@@ -21,6 +21,15 @@ set_wavemap_target_properties(legacy_hashed_wavelet_octree_experiment)
 target_link_libraries(legacy_hashed_wavelet_octree_experiment
     PUBLIC wavemap::wavemap_core)
 
+add_executable(legacy_file_io_experiment legacy_file_io_experiment.cc)
+set_wavemap_target_properties(legacy_file_io_experiment)
+target_link_libraries(legacy_file_io_experiment
+    PUBLIC wavemap::wavemap_core wavemap::wavemap_io)
+
+add_executable(layered_map_io_experiment layered_map_io_experiment.cc)
+set_wavemap_target_properties(layered_map_io_experiment)
+target_link_libraries(layered_map_io_experiment PUBLIC wavemap::wavemap_core)
+
 if ("$ENV{ROS_VERSION}" STREQUAL "1")
   find_package(catkin REQUIRED
       COMPONENTS roscpp wavemap wavemap_msgs wavemap_ros_conversions)

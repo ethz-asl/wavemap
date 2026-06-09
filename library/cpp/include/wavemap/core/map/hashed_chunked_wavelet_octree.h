@@ -79,6 +79,10 @@ class HashedChunkedWaveletOctree : public MapBase {
   // Copy construction is not supported
   HashedChunkedWaveletOctree(const HashedChunkedWaveletOctree&) = delete;
 
+  MapType getMapType() const override {
+    return MapType::kHashedChunkedWaveletOctree;
+  }
+
   bool empty() const override { return block_map_.empty(); }
   size_t size() const override;
   void threshold() override;

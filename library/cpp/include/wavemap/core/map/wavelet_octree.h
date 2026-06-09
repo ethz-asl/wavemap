@@ -61,6 +61,8 @@ class WaveletOctree : public MapBase {
   explicit WaveletOctree(const WaveletOctreeConfig& config)
       : MapBase(config), config_(config.checkValid()) {}
 
+  MapType getMapType() const override { return MapType::kWaveletOctree; }
+
   bool empty() const override;
   size_t size() const override { return ndtree_.size(); }
   void threshold() override;
