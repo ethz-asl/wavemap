@@ -3,6 +3,24 @@ add_executable(new_voxel new_voxel.cc)
 set_wavemap_target_properties(new_voxel)
 target_link_libraries(new_voxel PUBLIC wavemap::wavemap_core)
 
+add_executable(voxel_haar_transform voxel_haar_transform.cc)
+set_wavemap_target_properties(voxel_haar_transform)
+target_link_libraries(voxel_haar_transform PUBLIC wavemap::wavemap_core)
+
+add_executable(voxel_block_experiment voxel_block_experiment.cc)
+set_wavemap_target_properties(voxel_block_experiment)
+target_link_libraries(voxel_block_experiment PUBLIC wavemap::wavemap_core)
+
+add_executable(voxel_map_experiment voxel_map_experiment.cc)
+set_wavemap_target_properties(voxel_map_experiment)
+target_link_libraries(voxel_map_experiment PUBLIC wavemap::wavemap_core)
+
+add_executable(legacy_hashed_wavelet_octree_experiment
+    legacy_hashed_wavelet_octree_experiment.cc)
+set_wavemap_target_properties(legacy_hashed_wavelet_octree_experiment)
+target_link_libraries(legacy_hashed_wavelet_octree_experiment
+    PUBLIC wavemap::wavemap_core)
+
 if ("$ENV{ROS_VERSION}" STREQUAL "1")
   find_package(catkin REQUIRED
       COMPONENTS roscpp wavemap wavemap_msgs wavemap_ros_conversions)
