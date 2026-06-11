@@ -11,6 +11,10 @@ add_message_files(FILES
   HashedWaveletOctree.msg
   HashedWaveletOctreeBlock.msg
   Index3D.msg
+  LayeredHashedWaveletOctree.msg
+  LayeredHashedWaveletOctreeBlock.msg
+  LayeredWaveletOctreeNode.msg
+  Layer.msg
   Map.msg
   OctreeNode.msg
   WaveletOctree.msg

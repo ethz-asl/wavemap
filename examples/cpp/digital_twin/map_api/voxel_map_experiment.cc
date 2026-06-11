@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "layered_voxel_config.h"
+#include "../common/layered_voxel_config.h"
 
 int main() {
   wavemap::HashedWaveletOctreeConfig config;

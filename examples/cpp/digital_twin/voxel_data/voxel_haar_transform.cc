@@ -3,7 +3,7 @@
 #include <wavemap/core/map/cell_types/haar_coefficients.h>
 #include <wavemap/core/map/cell_types/haar_transform.h>
 
-#include "layered_voxel_config.h"
+#include "../common/layered_voxel_config.h"
 
 namespace {
 using Coefficients = wavemap::HaarCoefficients<LayeredVoxel, 3>;

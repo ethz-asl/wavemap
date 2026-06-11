@@ -2,7 +2,7 @@
 
 #include <wavemap/core/map/cell_types/voxel_data.h>
 
-#include "layered_voxel_config.h"
+#include "../common/layered_voxel_config.h"
 
 int main() {
   wavemap::VoxelData<> occupancy_only;
