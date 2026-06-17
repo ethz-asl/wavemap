@@ -5,6 +5,8 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <wavemap_msgs/LayeredHashedWaveletOctree.h>
+#include <wavemap_msgs/LayeredHashedWaveletOctreeBlock.h>
 
 #include <OGRE/Ogre.h>
 #include <OGRE/OgreQuaternion.h>
@@ -128,12 +130,26 @@ class VoxelVisual : public QObject {
                                 const OctreeIndex& cell_index,
                                 FloatingPoint cell_log_odds,
                                 VoxelsPerLevel& voxels_per_level);
+  void appendLayeredLeafCenterAndColor(const LayeredMapInterface& layered_map,
+                                       const std::string& selected_layer_name,
+                                       int tree_height,
+                                       FloatingPoint min_cell_width,
+                                       const OctreeIndex& cell_index,
+                                       FloatingPoint cell_log_odds,
+                                       VoxelsPerLevel& voxels_per_level);
   void drawMultiResolutionVoxels(IndexElement tree_height,
                                  FloatingPoint min_cell_width,
                                  const Index3D& block_index,
                                  FloatingPoint alpha,
                                  VoxelsPerLevel& voxels_per_level,
                                  VoxelLayers& voxel_layer_visuals);
+  void drawLayeredMapOccupancy(const LayeredMapInterface& layered_map);
+  void drawLayeredMapOccupancy(
+      const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg);
+  void appendLayeredBlockOccupancy(
+      const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg,
+      const wavemap_msgs::LayeredHashedWaveletOctreeBlock& block_msg,
+      IndexElement termination_height, VoxelsPerLevel& voxels_per_level);
 
   // Block update queue
   // NOTE: Instead of performing all the block updates at once whenever the map

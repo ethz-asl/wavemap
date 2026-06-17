@@ -2,14 +2,17 @@
 
 #include <algorithm>
 #include <memory>
+#include <stack>
 #include <string>
 #include <utility>
+#include <unordered_set>
 #include <vector>
 
 #include <rviz/properties/parse_color.h>
 #include <rviz/render_panel.h>
 #include <wavemap/core/indexing/index_conversions.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
+#include <wavemap/core/utils/bits/bit_operations.h>
 #include <wavemap/core/utils/profile/profiler_interface.h>
 
 namespace wavemap::rviz_plugin {
@@ -109,6 +112,12 @@ void VoxelVisual::updateMap(bool redraw_all) {
     std::scoped_lock lock(map_and_mutex_->mutex);
     MapBase::ConstPtr map = map_and_mutex_->map;
     if (!map) {
+      if (map_and_mutex_->layered_map) {
+        cell_selector_.setOccupancyQuery(map_and_mutex_->layered_map);
+        drawLayeredMapOccupancy(*map_and_mutex_->layered_map);
+      } else if (map_and_mutex_->layered_map_msg) {
+        drawLayeredMapOccupancy(map_and_mutex_->layered_map_msg.value());
+      }
       return;
     }
     cell_selector_.setMap(map);
@@ -369,6 +378,42 @@ void VoxelVisual::appendLeafCenterAndColor(int tree_height,
   }
 }
 
+void VoxelVisual::appendLayeredLeafCenterAndColor(
+    const LayeredMapInterface& layered_map,
+    const std::string& selected_layer_name, int tree_height,
+    FloatingPoint min_cell_width, const OctreeIndex& cell_index,
+    FloatingPoint cell_log_odds, VoxelsPerLevel& voxels_per_level) {
+  if (selected_layer_name == "occupancy") {
+    appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
+                             cell_log_odds, voxels_per_level);
+    return;
+  }
+
+  if (!cell_selector_.shouldBeDrawn(cell_index, cell_log_odds)) {
+    return;
+  }
+
+  Ogre::ColourValue layer_color;
+  if (!layered_map.getLayerColor(selected_layer_name, cell_index, cell_log_odds,
+                                 layer_color)) {
+    appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
+                             cell_log_odds, voxels_per_level);
+    return;
+  }
+
+  const IndexElement depth = tree_height - cell_index.height;
+  CHECK_GE(depth, 0);
+  CHECK_LT(depth, voxels_per_level.size());
+  const Point3D cell_center =
+      convert::nodeIndexToCenterPoint(cell_index, min_cell_width);
+
+  auto& point = voxels_per_level[depth].emplace_back();
+  point.center.x = cell_center[0];
+  point.center.y = cell_center[1];
+  point.center.z = cell_center[2];
+  point.color = layer_color;
+}
+
 void VoxelVisual::drawMultiResolutionVoxels(IndexElement tree_height,
                                             FloatingPoint min_cell_width,
                                             const Index3D& block_index,
@@ -403,6 +448,151 @@ void VoxelVisual::drawMultiResolutionVoxels(IndexElement tree_height,
        voxels_per_level.size() <= depth; --depth) {
     frame_node_->detachObject(voxel_layer_visuals[depth].get());
     voxel_layer_visuals.pop_back();
+  }
+}
+
+
+void VoxelVisual::drawLayeredMapOccupancy(const LayeredMapInterface& layered_map) {
+  ProfilerZoneScoped;
+  const IndexElement tree_height = layered_map.getTreeHeight();
+  const FloatingPoint min_cell_width = layered_map.getMinCellWidth();
+  const FloatingPoint alpha = opacity_property_.getFloat();
+  const std::string selected_layer_name = map_and_mutex_->selected_layer_name;
+  const IndexElement termination_height =
+      std::min<IndexElement>(termination_height_property_.getInt(), tree_height);
+
+  termination_height_property_.setMax(tree_height);
+  block_update_queue_.clear();
+
+  // Remove visuals for blocks that no longer exist in the layered map.
+  const std::vector<Index3D> block_indices = layered_map.getBlockIndices();
+  std::unordered_set<Index3D, Index3DHash> allocated_blocks(
+      block_indices.begin(), block_indices.end());
+  for (auto it = block_voxel_layers_map_.begin();
+       it != block_voxel_layers_map_.end();) {
+    if (!allocated_blocks.count(it->first)) {
+      it = block_voxel_layers_map_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  // Draw occupancy through the runtime layered map interface. Layer-specific
+  // color mapping will be added on top of this path.
+  for (const auto& block_index : block_indices) {
+    const int num_levels = tree_height + 1 - termination_height;
+    VoxelsPerLevel voxels_per_level(num_levels);
+    layered_map.forEachBlockLeaf(
+        block_index,
+        [this, &layered_map, &selected_layer_name, tree_height, min_cell_width,
+         &voxels_per_level](const OctreeIndex& cell_index,
+                            FloatingPoint cell_log_odds) {
+          appendLayeredLeafCenterAndColor(layered_map, selected_layer_name,
+                                           tree_height, min_cell_width,
+                                           cell_index, cell_log_odds,
+                                           voxels_per_level);
+        },
+        termination_height);
+    drawMultiResolutionVoxels(tree_height, min_cell_width, block_index, alpha,
+                              voxels_per_level,
+                              block_voxel_layers_map_[block_index]);
+  }
+
+  num_queued_blocks_indicator_.setInt(0);
+}
+
+
+void VoxelVisual::drawLayeredMapOccupancy(const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg) {
+  ProfilerZoneScoped;
+  const IndexElement tree_height = layered_map_msg.tree_height;
+  const FloatingPoint min_cell_width = layered_map_msg.min_cell_width;
+  const FloatingPoint alpha = opacity_property_.getFloat();
+  const IndexElement termination_height = termination_height_property_.getInt();
+
+  termination_height_property_.setMax(tree_height);
+  block_update_queue_.clear();
+
+  // Remove visuals for blocks that no longer exist in the layered map message.
+  std::unordered_set<Index3D, Index3DHash> allocated_blocks;
+  for (const auto& block_index_msg : layered_map_msg.allocated_block_indices) {
+    allocated_blocks.emplace(block_index_msg.x, block_index_msg.y, block_index_msg.z);
+  }
+  for (auto it = block_voxel_layers_map_.begin(); it != block_voxel_layers_map_.end();) {
+    if (!allocated_blocks.count(it->first)) {
+      it = block_voxel_layers_map_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  // Draw the layered map using only the occupancy coefficients. Layer-specific color mapping is added in the next phase.
+  for (const auto& block_msg : layered_map_msg.blocks) {
+    const Index3D block_index{block_msg.root_node_offset.x, block_msg.root_node_offset.y, block_msg.root_node_offset.z};
+    const int num_levels = tree_height + 1 - termination_height;
+    VoxelsPerLevel voxels_per_level(num_levels);
+    appendLayeredBlockOccupancy(layered_map_msg, block_msg, termination_height, voxels_per_level);
+    drawMultiResolutionVoxels(tree_height, min_cell_width, block_index, alpha, voxels_per_level, block_voxel_layers_map_[block_index]);
+  }
+
+  num_queued_blocks_indicator_.setInt(0);
+}
+
+void VoxelVisual::appendLayeredBlockOccupancy(const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg, const wavemap_msgs::LayeredHashedWaveletOctreeBlock& block_msg, IndexElement termination_height, VoxelsPerLevel& voxels_per_level) {
+  ProfilerZoneScoped;
+  if (block_msg.nodes.empty()) {
+    return;
+  }
+
+  using Coefficients = HashedWaveletOctreeBlock::Coefficients;
+  using Transform = HashedWaveletOctreeBlock::Transform;
+
+  struct StackElement {
+    OctreeIndex node_index;
+    FloatingPoint scale;
+    size_t node_msg_index;
+  };
+
+  size_t next_node_msg_index = 0u;
+  std::stack<StackElement> stack;
+  stack.emplace(StackElement{OctreeIndex{layered_map_msg.tree_height, Index3D{block_msg.root_node_offset.x, block_msg.root_node_offset.y, block_msg.root_node_offset.z}}, block_msg.root_node_occupancy_scale_coefficient, next_node_msg_index++});
+
+  while (!stack.empty()) {
+    const StackElement stack_element = stack.top();
+    stack.pop();
+
+    if (block_msg.nodes.size() <= stack_element.node_msg_index) {
+      ROS_WARN("Layered map block ended before all queued nodes were read.");
+      return;
+    }
+
+    const auto& node_msg = block_msg.nodes[stack_element.node_msg_index];
+    Coefficients::Details details;
+    std::copy_n(node_msg.occupancy_detail_coefficients.begin(), details.size(), details.begin());
+    const auto child_scales = Transform::backward({stack_element.scale, details});
+
+    struct ChildToVisit {
+      OctreeIndex node_index;
+      FloatingPoint scale;
+      size_t node_msg_index;
+    };
+    std::vector<ChildToVisit> children_to_visit;
+
+    for (NdtreeIndexRelativeChild child_idx = 0; child_idx < OctreeIndex::kNumChildren; ++child_idx) {
+      const OctreeIndex child_node_index = stack_element.node_index.computeChildIndex(child_idx);
+      const FloatingPoint child_scale = child_scales[child_idx];
+      const bool child_exists = bit_ops::is_bit_set(node_msg.allocated_children_bitset, child_idx);
+
+      if (child_exists && termination_height < child_node_index.height) {
+        children_to_visit.push_back({child_node_index, child_scale, next_node_msg_index++});
+      } else {
+        appendLeafCenterAndColor(layered_map_msg.tree_height, layered_map_msg.min_cell_width, child_node_index, child_scale, voxels_per_level);
+      }
+    }
+
+    // The serialized node array follows the same DFS order as the stack traversal. Push in reverse so the next serialized node is popped first.
+    for (auto child_it = children_to_visit.rbegin(); child_it != children_to_visit.rend(); ++child_it) {
+      stack.emplace(StackElement{child_it->node_index, child_it->scale, child_it->node_msg_index});
+    }
   }
 }
 

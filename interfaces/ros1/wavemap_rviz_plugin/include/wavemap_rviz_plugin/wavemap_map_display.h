@@ -5,12 +5,14 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <rviz/message_filter_display.h>
 #include <rviz/properties/property.h>
 #include <wavemap_msgs/Map.h>
 
 #include "wavemap_rviz_plugin/common.h"
+#include "wavemap_rviz_plugin/layered_map_factory.h"
 #include "wavemap_rviz_plugin/utils/button_property.h"
 #include "wavemap_rviz_plugin/visuals/slice_visual.h"
 #include "wavemap_rviz_plugin/visuals/voxel_visual.h"
@@ -51,9 +53,13 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   void requestWavemapServerResetCallback();
   void requestWholeMapCallback();
   void loadMapFromDiskCallback();
+  void updateLayerSelectionCallback();
 
  private:
   SourceMode source_mode_ = SourceMode::kFromTopic;
+  std::vector<LayerMetadata> available_layers_;
+  std::string selected_layer_name_ = "occupancy";
+  std::vector<std::shared_ptr<LayeredMapFactory>> layered_map_factories_;
 
   bool hasMap();
   void clearMap();
@@ -67,6 +73,9 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   const std::shared_ptr<MapAndMutex> map_and_mutex_ =
       std::make_shared<MapAndMutex>();
   void updateMapFromRosMsg(const wavemap_msgs::Map& map_msg);
+  std::shared_ptr<LayeredMapInterface> createLayeredMapFromRosMsg(
+      const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg) const;
+  void updateLayerMetadataFromRosMsg(const wavemap_msgs::Map& map_msg);
 
   // Submenus for each visual's properties
   rviz::EnumProperty source_mode_property_{"Source", "",
@@ -90,6 +99,10 @@ class WavemapMapDisplay : public rviz::MessageFilterDisplay<wavemap_msgs::Map> {
   rviz::Property voxel_visual_properties_{
       "Render voxels", QVariant(),
       "Properties for the voxel-based visualization.", this};
+  rviz::EnumProperty layer_property_{
+      "Layer", "occupancy",
+      "Layer to use for voxel coloring when a layered map is received.",
+      &voxel_visual_properties_, SLOT(updateLayerSelectionCallback()), this};
   rviz::Property slice_visual_properties_{
       "Render slice", QVariant(), "Properties for the slice visualization.",
       this};

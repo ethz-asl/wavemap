@@ -56,15 +56,26 @@ void CellSelector::setMap(const MapBase::ConstPtr& map) {
   const auto hashed_map =
       std::dynamic_pointer_cast<const HashedWaveletOctree>(map);
   if (hashed_map) {
-    query_accelerator_.emplace(*hashed_map);
+    setOccupancyQuery(
+        std::make_shared<HashedWaveletOctreeOccupancyQuery>(hashed_map));
   } else {
-    if (cell_selection_mode_ == CellSelectionMode::kSurface) {
-      ROS_WARN(
-          "Cell selection mode 'Surface' only supports HashedWaveletOctree "
-          "maps. Falling back to mode 'Band'.");
-      cell_selection_mode_ = CellSelectionMode::kBand;
-      initializePropertyMenu();
-    }
+    clearOccupancyQuery();
+  }
+}
+
+void CellSelector::setOccupancyQuery(
+    std::shared_ptr<OccupancyQuery> occupancy_query) {
+  occupancy_query_ = std::move(occupancy_query);
+}
+
+void CellSelector::clearOccupancyQuery() {
+  occupancy_query_.reset();
+  if (cell_selection_mode_ == CellSelectionMode::kSurface) {
+    ROS_WARN(
+        "Cell selection mode 'Surface' requires an occupancy query. Falling "
+        "back to mode 'Band'.");
+    cell_selection_mode_ = CellSelectionMode::kBand;
+    initializePropertyMenu();
   }
 }
 
@@ -95,11 +106,15 @@ bool CellSelector::shouldBeDrawn(const OctreeIndex& cell_index,
 }
 
 bool CellSelector::hasFreeNeighbor(const OctreeIndex& cell_index) const {
+  if (!occupancy_query_) {
+    return true;
+  }
+
   for (const auto& offset : kNeighborOffsets) {  // NOLINT
     const OctreeIndex neighbor_index = {cell_index.height,
                                         cell_index.position + offset};
     const FloatingPoint neighbor_log_odds =
-        query_accelerator_->getCellValue(neighbor_index);
+        occupancy_query_->getCellValue(neighbor_index);
     // Check if the neighbor is free and observed
     if (neighbor_log_odds < surface_occupancy_threshold_ &&
         !isUnknown(neighbor_log_odds)) {

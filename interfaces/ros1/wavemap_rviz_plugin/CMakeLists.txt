@@ -14,7 +14,10 @@ catkin_package(CATKIN_DEPENDS
     wavemap wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
-include_directories(include SYSTEM ${catkin_INCLUDE_DIRS})
+include_directories(
+    include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
+    SYSTEM ${catkin_INCLUDE_DIRS})
 
 # This setting causes Qt's "MOC" generation to happen automatically
 set(CMAKE_AUTOMOC ON)

@@ -7,7 +7,8 @@
 #include <rviz/properties/float_property.h>
 #include <wavemap/core/config/type_selector.h>
 #include <wavemap/core/map/hashed_wavelet_octree.h>
-#include <wavemap/core/utils/query/query_accelerator.h>
+
+#include "wavemap_rviz_plugin/occupancy_query.h"
 #endif
 
 namespace wavemap::rviz_plugin {
@@ -28,6 +29,8 @@ class CellSelector : public QObject {
   void initializePropertyMenu();
 
   void setMap(const MapBase::ConstPtr& map);
+  void setOccupancyQuery(std::shared_ptr<OccupancyQuery> occupancy_query);
+  void clearOccupancyQuery();
 
   bool shouldBeDrawn(const OctreeIndex& cell_index,
                      FloatingPoint cell_log_odds) const;
@@ -44,8 +47,7 @@ class CellSelector : public QObject {
 
  private:
   std::function<void()> redraw_map_;
-  mutable std::optional<QueryAccelerator<HashedWaveletOctree>>
-      query_accelerator_;
+  std::shared_ptr<OccupancyQuery> occupancy_query_;
 
   // Selection mode and thresholds
   CellSelectionMode cell_selection_mode_ = CellSelectionMode::kSurface;

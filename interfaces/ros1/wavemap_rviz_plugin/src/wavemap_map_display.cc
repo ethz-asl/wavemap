@@ -1,10 +1,12 @@
 #include "wavemap_rviz_plugin/wavemap_map_display.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
 #include <OGRE/OgreSceneNode.h>
 #include <qfiledialog.h>
+#include <QString>
 #include <rviz/visualization_manager.h>
 #include <std_srvs/Empty.h>
 #include <std_srvs/Trigger.h>
@@ -13,7 +15,36 @@
 #include <wavemap/io/file_conversions.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
+#include "layered_ros_converter.h"
+#include "layered_voxel_config.h"
 #include "wavemap_rviz_plugin/utils/alert_dialog.h"
+
+
+namespace {
+struct LayeredVoxelColorProvider {
+  static bool getLayerColor(const std::string& layer_name,
+                            const LayeredVoxel& voxel,
+                            wavemap::FloatingPoint /*occupancy*/,
+                            Ogre::ColourValue& color) {
+    if (layer_name == "color") {
+      color = Ogre::ColourValue(voxel.data.r, voxel.data.g, voxel.data.b, 1.f);
+      return true;
+    }
+
+    if (layer_name == "traversability") {
+      const float value = std::clamp(voxel.data.traversability, 0.f, 1.f);
+      if (value < 0.5f) {
+        color = Ogre::ColourValue(1.f, 2.f * value, 0.f, 1.f);
+      } else {
+        color = Ogre::ColourValue(2.f * (1.f - value), 1.f, 0.f, 1.f);
+      }
+      return true;
+    }
+
+    return false;
+  }
+};
+}  // namespace
 
 namespace wavemap::rviz_plugin {
 WavemapMapDisplay::WavemapMapDisplay() {
@@ -23,6 +54,18 @@ WavemapMapDisplay::WavemapMapDisplay() {
     source_mode_property_.addOption(name);
   }
   source_mode_property_.setStringStd(source_mode_.toStr());
+
+  // Temporary prototype wiring: this RViz plugin knows the current layered voxel type.
+  // Later this can move back to pluginlib-based factory registration.
+  layered_map_factories_.push_back(
+      std::make_shared<
+          TypedLayeredMapFactory<LayeredMap, LayeredVoxelRosConverter, LayeredVoxelColorProvider>>());
+
+  // The layered map selector is only useful after receiving a layered map message.
+  layer_property_.clearOptions();
+  layer_property_.addOption(QString::fromStdString(selected_layer_name_));
+  layer_property_.setStringStd(selected_layer_name_);
+  layer_property_.setHidden(true);
 }
 
 // After the top-level rviz::Display::initialize() does its own setup,
@@ -51,7 +94,7 @@ void WavemapMapDisplay::reset() {
 bool WavemapMapDisplay::hasMap() {
   ProfilerZoneScoped;
   std::scoped_lock lock(map_and_mutex_->mutex);
-  return static_cast<bool>(map_and_mutex_->map);
+  return static_cast<bool>(map_and_mutex_->map) || static_cast<bool>(map_and_mutex_->layered_map) || map_and_mutex_->layered_map_msg.has_value();
 }
 
 void WavemapMapDisplay::clearMap() {
@@ -60,11 +103,15 @@ void WavemapMapDisplay::clearMap() {
   if (map_and_mutex_->map) {
     map_and_mutex_->map->clear();
   }
+  map_and_mutex_->layered_map.reset();
+  map_and_mutex_->layered_map_msg.reset();
 }
 
 bool WavemapMapDisplay::loadMapFromDisk(const std::filesystem::path& filepath) {
   ProfilerZoneScoped;
   std::scoped_lock lock(map_and_mutex_->mutex);
+  map_and_mutex_->layered_map.reset();
+  map_and_mutex_->layered_map_msg.reset();
   return io::fileToMap(filepath, map_and_mutex_->map);
 }
 
@@ -117,10 +164,93 @@ void WavemapMapDisplay::processMessage(
 
 void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
   ProfilerZoneScoped;
+  updateLayerMetadataFromRosMsg(map_msg);
+
+  const bool has_layered_map = map_msg.layered_hashed_wavelet_octree.size() == 1u;
+  const bool has_legacy_map = !map_msg.hashed_blocks.empty() || !map_msg.wavelet_octree.empty() || !map_msg.hashed_wavelet_octree.empty();
+
   std::scoped_lock lock(map_and_mutex_->mutex);
+  map_and_mutex_->selected_layer_name = selected_layer_name_;
+  if (has_layered_map && !has_legacy_map) {
+    const auto& layered_map_msg = map_msg.layered_hashed_wavelet_octree.front();
+    map_and_mutex_->map.reset();
+    map_and_mutex_->layered_map = createLayeredMapFromRosMsg(layered_map_msg);
+    if (map_and_mutex_->layered_map) {
+      map_and_mutex_->layered_map_msg.reset();
+    } else {
+      // Keep the message fallback until users can register typed factories for their custom voxel data.
+      map_and_mutex_->layered_map_msg = layered_map_msg;
+    }
+    return;
+  }
+
+  map_and_mutex_->layered_map.reset();
+  map_and_mutex_->layered_map_msg.reset();
   if (!convert::rosMsgToMap(map_msg, map_and_mutex_->map)) {
     ROS_WARN("Failed to parse map message.");
   }
+}
+
+std::shared_ptr<LayeredMapInterface> WavemapMapDisplay::createLayeredMapFromRosMsg(
+    const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg) const {
+  ProfilerZoneScoped;
+  for (const auto& factory : layered_map_factories_) {
+    if (!factory) {
+      continue;
+    }
+
+    if (auto layered_map = factory->tryCreate(layered_map_msg)) {
+      return layered_map;
+    }
+  }
+
+  return nullptr;
+}
+
+void WavemapMapDisplay::updateLayerMetadataFromRosMsg(const wavemap_msgs::Map& map_msg) {
+  ProfilerZoneScoped;
+  available_layers_.clear();
+  layer_property_.clearOptions();
+  layer_property_.addOption("occupancy");
+
+  if (map_msg.layered_hashed_wavelet_octree.empty()) {
+    selected_layer_name_ = "occupancy";
+    layer_property_.setStringStd(selected_layer_name_);
+    layer_property_.setHidden(true);
+    return;
+  }
+
+  const auto& layered_map_msg = map_msg.layered_hashed_wavelet_octree.front();
+  const size_t num_layers = std::min(layered_map_msg.layer_names.size(), layered_map_msg.layer_types.size());
+  for (size_t layer_idx = 0u; layer_idx < num_layers; ++layer_idx) {
+    available_layers_.push_back({layered_map_msg.layer_names[layer_idx], layered_map_msg.layer_types[layer_idx]});
+    layer_property_.addOption(QString::fromStdString(layered_map_msg.layer_names[layer_idx]));
+  }
+
+  const bool selected_layer_still_exists =
+      selected_layer_name_ == "occupancy" ||
+      std::any_of(available_layers_.begin(), available_layers_.end(),
+                  [this](const LayerMetadata& layer) {
+                    return layer.name == selected_layer_name_;
+                  });
+  if (!selected_layer_still_exists) {
+    selected_layer_name_ = "occupancy";
+  }
+
+  layer_property_.setStringStd(selected_layer_name_);
+  layer_property_.setHidden(false);
+
+  ROS_DEBUG_STREAM("Received layered map metadata with " << available_layers_.size() << " custom layers.");
+}
+
+void WavemapMapDisplay::updateLayerSelectionCallback() {
+  ProfilerZoneScoped;
+  selected_layer_name_ = layer_property_.getStdString();
+  {
+    std::scoped_lock lock(map_and_mutex_->mutex);
+    map_and_mutex_->selected_layer_name = selected_layer_name_;
+  }
+  updateVisuals(true);
 }
 
 void WavemapMapDisplay::updateSourceModeCallback() {

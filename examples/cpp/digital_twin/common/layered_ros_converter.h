@@ -65,7 +65,7 @@ inline void populateLayeredCube(LayeredMap& map, std::vector<wavemap::Index3D>& 
         const wavemap::Index3D voxel_index = cube_origin + wavemap::Index3D(dx, dy, dz);
         const wavemap::FloatingPoint layer_value = static_cast<wavemap::FloatingPoint>(populated_voxels);
         const LayeredVoxel original_voxel(0.5f + 0.02f * layer_value, LayeredData{0.1f * dx, 0.1f * dy, 0.05f * dz, 0.9f - 0.03f * layer_value});
-        const LayeredVoxel voxel_update(0.1f, LayeredData{0.01f, 0.02f, 0.03f, -0.01f});
+        const LayeredVoxel voxel_update(0.1f, LayeredData{-0.01f, -0.01f, -0.01f, -0.01f});
 
         map.setVoxelValue(voxel_index, original_voxel);
         map.addToVoxelValue(voxel_index, voxel_update);
