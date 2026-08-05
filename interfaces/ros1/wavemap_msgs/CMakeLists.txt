@@ -6,6 +6,8 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs)
 
 # Declare message files to be built
 add_message_files(FILES
+  DiscreteLayer.msg
+  DiscreteLayerCell.msg
   HashedBlock.msg
   HashedBlocks.msg
   HashedWaveletOctree.msg
@@ -13,6 +15,7 @@ add_message_files(FILES
   Index3D.msg
   LayeredHashedWaveletOctree.msg
   LayeredHashedWaveletOctreeBlock.msg
+  LayeredMap.msg
   LayeredWaveletOctreeNode.msg
   Layer.msg
   Map.msg

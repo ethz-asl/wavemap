@@ -7,13 +7,165 @@ add_executable(voxel_haar_transform voxel_data/voxel_haar_transform.cc)
 set_wavemap_target_properties(voxel_haar_transform)
 target_link_libraries(voxel_haar_transform PUBLIC wavemap::wavemap_core)
 
-add_executable(voxel_block_experiment map_api/voxel_block_experiment.cc)
+add_executable(voxel_block_experiment map_api/baseline/voxel_block_experiment.cc)
 set_wavemap_target_properties(voxel_block_experiment)
 target_link_libraries(voxel_block_experiment PUBLIC wavemap::wavemap_core)
 
-add_executable(voxel_map_experiment map_api/voxel_map_experiment.cc)
+add_executable(voxel_map_experiment map_api/baseline/voxel_map_experiment.cc)
 set_wavemap_target_properties(voxel_map_experiment)
 target_link_libraries(voxel_map_experiment PUBLIC wavemap::wavemap_core)
+
+add_executable(int_map_experiment map_api/baseline/int_map_experiment.cc)
+set_wavemap_target_properties(int_map_experiment)
+target_link_libraries(int_map_experiment PUBLIC wavemap::wavemap_core)
+
+add_executable(float_map_experiment map_api/baseline/float_map_experiment.cc)
+set_wavemap_target_properties(float_map_experiment)
+target_link_libraries(float_map_experiment PUBLIC wavemap::wavemap_core)
+
+add_executable(continuous_voxel_map_experiment
+    map_api/continuous/continuous_voxel_map_experiment.cc)
+set_wavemap_target_properties(continuous_voxel_map_experiment)
+target_link_libraries(continuous_voxel_map_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_occupancy_update_path_experiment
+    map_api/continuous/layered_occupancy_update_path_experiment.cc)
+set_wavemap_target_properties(layered_occupancy_update_path_experiment)
+target_link_libraries(layered_occupancy_update_path_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_hashed_wavelet_integrator_experiment
+    map_api/continuous/layered_hashed_wavelet_integrator_experiment.cc)
+set_wavemap_target_properties(layered_hashed_wavelet_integrator_experiment)
+target_link_libraries(layered_hashed_wavelet_integrator_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_per_voxel_update_experiment
+    map_api/continuous/layered_per_voxel_update_experiment.cc)
+set_wavemap_target_properties(layered_per_voxel_update_experiment)
+target_link_libraries(layered_per_voxel_update_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_full_update_pruning_experiment
+    map_api/continuous/layered_full_update_pruning_experiment.cc)
+set_wavemap_target_properties(layered_full_update_pruning_experiment)
+target_link_libraries(layered_full_update_pruning_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_pruning_config_example
+    map_api/continuous/layered_pruning_config_example.cc)
+set_wavemap_target_properties(layered_pruning_config_example)
+target_link_libraries(layered_pruning_config_example
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(mixed_voxel_map_experiment
+    map_api/continuous/mixed_voxel_map_experiment.cc)
+set_wavemap_target_properties(mixed_voxel_map_experiment)
+target_link_libraries(mixed_voxel_map_experiment PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_label_storage_experiment
+    map_api/discrete/layered_label_storage_experiment.cc)
+set_wavemap_target_properties(layered_label_storage_experiment)
+target_link_libraries(layered_label_storage_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_map_experiment
+    map_api/discrete/layered_map_experiment.cc)
+set_wavemap_target_properties(layered_map_experiment)
+target_link_libraries(layered_map_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(custom_layered_map_example
+    map_api/user_facing/custom_layered_map_example.cc)
+set_wavemap_target_properties(custom_layered_map_example)
+target_link_libraries(custom_layered_map_example
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(discrete_layer_compression_experiment
+    map_api/discrete/discrete_layer_compression_experiment.cc)
+set_wavemap_target_properties(discrete_layer_compression_experiment)
+target_link_libraries(discrete_layer_compression_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(discrete_layer_update_behavior_experiment
+    map_api/discrete/discrete_layer_update_behavior_experiment.cc)
+set_wavemap_target_properties(discrete_layer_update_behavior_experiment)
+target_link_libraries(discrete_layer_update_behavior_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_map_update_behavior_experiment
+    map_api/discrete/layered_map_update_behavior_experiment.cc)
+set_wavemap_target_properties(layered_map_update_behavior_experiment)
+target_link_libraries(layered_map_update_behavior_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(heterogeneous_voxel_map_experiment
+    map_api/continuous/heterogeneous_voxel_map_experiment.cc)
+set_wavemap_target_properties(heterogeneous_voxel_map_experiment)
+target_link_libraries(heterogeneous_voxel_map_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(raw_discrete_voxel_storage_experiment
+    map_api/discrete/raw_discrete_voxel_storage_experiment.cc)
+set_wavemap_target_properties(raw_discrete_voxel_storage_experiment)
+target_link_libraries(raw_discrete_voxel_storage_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(raw_inside_map_experiment
+    map_api/discrete/raw_inside_map_experiment.cc)
+set_wavemap_target_properties(raw_inside_map_experiment)
+target_link_libraries(raw_inside_map_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(float_cast_discrete_experiment
+    map_api/discrete/float_cast_discrete_experiment.cc)
+set_wavemap_target_properties(float_cast_discrete_experiment)
+target_link_libraries(float_cast_discrete_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(float_cast_discrete_many_voxels_experiment
+    map_api/benchmarks/float_cast_discrete_many_voxels_experiment.cc)
+set_wavemap_target_properties(float_cast_discrete_many_voxels_experiment)
+target_link_libraries(float_cast_discrete_many_voxels_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(raw_discrete_many_voxels_experiment
+    map_api/benchmarks/raw_discrete_many_voxels_experiment.cc)
+set_wavemap_target_properties(raw_discrete_many_voxels_experiment)
+target_link_libraries(raw_discrete_many_voxels_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(raw_inside_map_many_voxels_experiment
+    map_api/benchmarks/raw_inside_map_many_voxels_experiment.cc)
+set_wavemap_target_properties(raw_inside_map_many_voxels_experiment)
+target_link_libraries(raw_inside_map_many_voxels_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(occupancy_many_voxels_benchmark
+    map_api/benchmarks/occupancy_many_voxels_benchmark.cc)
+set_wavemap_target_properties(occupancy_many_voxels_benchmark)
+target_link_libraries(occupancy_many_voxels_benchmark
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(continuous_voxel_many_voxels_benchmark
+    map_api/benchmarks/continuous_voxel_many_voxels_benchmark.cc)
+set_wavemap_target_properties(continuous_voxel_many_voxels_benchmark)
+target_link_libraries(continuous_voxel_many_voxels_benchmark
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_pruning_policy_experiment
+    map_api/benchmarks/layered_pruning_policy_experiment.cc)
+set_wavemap_target_properties(layered_pruning_policy_experiment)
+target_link_libraries(layered_pruning_policy_experiment
+    PUBLIC wavemap::wavemap_core)
+
+
+add_executable(semantic_majority_exceptions_experiment
+    map_api/discrete/semantic_majority_exceptions_experiment.cc)
+set_wavemap_target_properties(semantic_majority_exceptions_experiment)
+target_link_libraries(semantic_majority_exceptions_experiment
+    PUBLIC wavemap::wavemap_core)
 
 add_executable(legacy_hashed_wavelet_octree_experiment
     io/legacy_hashed_wavelet_octree_experiment.cc)
@@ -30,9 +182,25 @@ add_executable(layered_map_io_experiment io/layered_map_io_experiment.cc)
 set_wavemap_target_properties(layered_map_io_experiment)
 target_link_libraries(layered_map_io_experiment PUBLIC wavemap::wavemap_core)
 
+add_executable(layered_map_save_load_experiment io/layered_map_save_load_experiment.cc)
+set_wavemap_target_properties(layered_map_save_load_experiment)
+target_link_libraries(layered_map_save_load_experiment PUBLIC wavemap::wavemap_core)
+
+add_executable(layered_map_save_load_failure_experiment
+    io/layered_map_save_load_failure_experiment.cc)
+set_wavemap_target_properties(layered_map_save_load_failure_experiment)
+target_link_libraries(layered_map_save_load_failure_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(custom_layered_map_save_load_example
+    io/custom_layered_map_save_load_example.cc)
+set_wavemap_target_properties(custom_layered_map_save_load_example)
+target_link_libraries(custom_layered_map_save_load_example
+    PUBLIC wavemap::wavemap_core)
+
 if ("$ENV{ROS_VERSION}" STREQUAL "1")
   find_package(catkin REQUIRED
-      COMPONENTS roscpp wavemap wavemap_msgs wavemap_ros_conversions)
+      COMPONENTS roscpp visualization_msgs wavemap wavemap_msgs wavemap_ros_conversions)
 
   add_executable(experiment old_experiments/experiment.cc)
   set_wavemap_target_properties(experiment)
@@ -62,6 +230,27 @@ if ("$ENV{ROS_VERSION}" STREQUAL "1")
   set_wavemap_target_properties(layered_ros_msg_experiment)
   target_include_directories(layered_ros_msg_experiment PUBLIC ${catkin_INCLUDE_DIRS})
   target_link_libraries(layered_ros_msg_experiment PUBLIC
+      wavemap::wavemap_core ${catkin_LIBRARIES})
+
+  add_executable(layered_map_structured_ros_msg_experiment
+      ros/layered_map_structured_ros_msg_experiment.cc)
+  set_wavemap_target_properties(layered_map_structured_ros_msg_experiment)
+  target_include_directories(layered_map_structured_ros_msg_experiment PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(layered_map_structured_ros_msg_experiment PUBLIC
+      wavemap::wavemap_core ${catkin_LIBRARIES})
+
+  add_executable(publish_structured_layered_map_experiment
+      ros/publish_structured_layered_map_experiment.cc)
+  set_wavemap_target_properties(publish_structured_layered_map_experiment)
+  target_include_directories(publish_structured_layered_map_experiment PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(publish_structured_layered_map_experiment PUBLIC
+      wavemap::wavemap_core ${catkin_LIBRARIES})
+
+  add_executable(subscribe_structured_layered_map_experiment
+      ros/subscribe_structured_layered_map_experiment.cc)
+  set_wavemap_target_properties(subscribe_structured_layered_map_experiment)
+  target_include_directories(subscribe_structured_layered_map_experiment PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(subscribe_structured_layered_map_experiment PUBLIC
       wavemap::wavemap_core ${catkin_LIBRARIES})
 
   add_executable(publish_layered_map_experiment ros/publish_layered_map_experiment.cc)

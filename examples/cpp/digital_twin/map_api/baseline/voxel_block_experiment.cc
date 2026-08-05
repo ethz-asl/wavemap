@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../common/layered_voxel_config.h"
+#include "../../common/layered_voxel_config.h"
 
 int main() {
   constexpr wavemap::IndexElement tree_height = 3;
@@ -11,7 +11,7 @@ int main() {
 
   const wavemap::OctreeIndex voxel_index{0, wavemap::Index3D{1, 2, 3}};
   const LayeredVoxel initial_voxel(
-      0.8f, LayeredData{1.f, 0.f, 0.f, 0.75f});
+      0.8f, ContinuousLayers{rgb(1.f, 0.f, 0.f), 0.75f});
 
   block.setVoxelValue(voxel_index, initial_voxel);
   printVoxel("Stored voxel", block.getVoxelValue(voxel_index));
@@ -20,7 +20,7 @@ int main() {
   printVoxel("After occupancy update", block.getVoxelValue(voxel_index));
 
   const LayeredVoxel voxel_update(
-      0.1f, LayeredData{0.f, 0.5f, 0.f, -0.25f});
+      0.1f, ContinuousLayers{rgb(0.f, 0.5f, 0.f), -0.25f});
   block.addToVoxelValue(voxel_index, voxel_update);
   printVoxel("After full voxel update", block.getVoxelValue(voxel_index));
 

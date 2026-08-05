@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <stack>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "wavemap/core/utils/profile/profiler_interface.h"
@@ -19,6 +21,50 @@ template <typename CellDataT>
 void setOccupancy(CellDataT& value, FloatingPoint occupancy) {
   value = occupancy;
 }
+
+template <typename T, typename = void>
+struct HasVoxelDataFields : std::false_type {};
+
+template <typename T>
+struct HasVoxelDataFields<
+    T, std::void_t<decltype(std::declval<T&>().occupancy),
+                   decltype(std::declval<T&>().data)>> : std::true_type {};
+
+template <typename T, typename = void>
+struct HasOccupancyField : std::false_type {};
+
+template <typename T>
+struct HasOccupancyField<T, std::void_t<decltype(std::declval<T&>().occupancy)>>
+    : std::true_type {};
+
+template <typename CellDataT>
+void thresholdCellData(CellDataT& value, FloatingPoint min_log_odds,
+                       FloatingPoint max_log_odds,
+                       const typename CellDataTraits<CellDataT>::ThresholdConfig&
+                           threshold_config) {
+  if constexpr (std::is_arithmetic_v<CellDataT>) {
+    value = std::clamp(value, min_log_odds, max_log_odds);
+  } else {
+    if constexpr (HasVoxelDataFields<CellDataT>::value) {
+      value.occupancy = std::clamp(value.occupancy, min_log_odds, max_log_odds);
+    } else if constexpr (HasOccupancyField<CellDataT>::value) {
+      value.occupancy = std::clamp(value.occupancy, min_log_odds, max_log_odds);
+    }
+    CellDataTraits<CellDataT>::threshold(value, threshold_config);
+  }
+}
+
+template <typename CellDataT>
+bool detailsHaveNonzeroData(
+    const typename HaarCoefficients<CellDataT, 3>::Details& details,
+    const typename CellDataTraits<CellDataT>::PruningConfig& pruning_config) {
+  return std::any_of(details.cbegin(), details.cend(),
+                     [&pruning_config](const CellDataT& value) {
+                       return CellDataTraits<CellDataT>::isNonzero(
+                           value, pruning_config);
+                     });
+}
+
 }  // namespace detail
 
 template <typename CellDataT>
@@ -245,9 +291,8 @@ void HashedWaveletOctreeBlockT<CellDataT>::recursiveThreshold(
     if (auto child_node = node.getChild(child_idx); child_node) {
       recursiveThreshold(*child_node, child_scale);
     } else {
-      detail::setOccupancy(
-          child_scale, std::clamp(detail::getOccupancy(child_scale),
-                                  min_log_odds_, max_log_odds_));
+      detail::thresholdCellData(child_scale, min_log_odds_, max_log_odds_,
+                                threshold_config_);
     }
   }
 
@@ -267,7 +312,8 @@ void HashedWaveletOctreeBlockT<CellDataT>::recursivePrune(
         child_node) {
       recursivePrune(*child_node);
       if (!child_node->hasChildrenArray() &&
-          !child_node->hasNonzeroData(1e-3f)) {
+          !detail::detailsHaveNonzeroData<CellDataT>(child_node->data(),
+                                                     pruning_config_)) {
         node.eraseChild(child_idx);
       } else {
         has_at_least_one_child = true;

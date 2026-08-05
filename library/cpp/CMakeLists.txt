@@ -54,6 +54,10 @@ if (GENERATE_WAVEMAP_INSTALL_RULES)
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/3rd_party/
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/3rd_party
       FILES_MATCHING PATTERN "*.h")
+  # Mark layered map headers for installation
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/wavemap/layered/
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/wavemap/layered
+      FILES_MATCHING PATTERN "*.h")
   # Install the CMake exports file
   install(EXPORT wavemap-targets
       FILE wavemap-targets.cmake

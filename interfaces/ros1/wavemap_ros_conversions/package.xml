@@ -17,4 +17,5 @@
 
   <depend>roscpp</depend>
   <depend>eigen_conversions</depend>
+  <depend>visualization_msgs</depend>
 </package>

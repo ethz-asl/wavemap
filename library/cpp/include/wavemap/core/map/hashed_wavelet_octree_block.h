@@ -3,6 +3,7 @@
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/data_structure/ndtree/ndtree.h"
+#include "wavemap/core/map/cell_types/cell_data_traits.h"
 #include "wavemap/core/map/cell_types/haar_coefficients.h"
 #include "wavemap/core/map/cell_types/haar_transform.h"
 #include "wavemap/core/map/cell_types/voxel_data.h"
@@ -19,13 +20,20 @@ class HashedWaveletOctreeBlockT {
   using Coefficients = HaarCoefficients<CellDataT, kDim>;
   using Transform = HaarTransform<CellDataT, kDim>;
   using OctreeType = Octree<typename Coefficients::Details>;
+  using Traits = CellDataTraits<CellDataT>;
+  using ThresholdConfig = typename Traits::ThresholdConfig;
+  using PruningConfig = typename Traits::PruningConfig;
 
-  explicit HashedWaveletOctreeBlockT(IndexElement tree_height,
-                                     FloatingPoint min_log_odds,
-                                     FloatingPoint max_log_odds)
+  explicit HashedWaveletOctreeBlockT(
+      IndexElement tree_height, FloatingPoint min_log_odds,
+      FloatingPoint max_log_odds,
+      ThresholdConfig threshold_config = ThresholdConfig{},
+      PruningConfig pruning_config = PruningConfig{})
       : tree_height_(tree_height),
         min_log_odds_(min_log_odds),
-        max_log_odds_(max_log_odds) {}
+        max_log_odds_(max_log_odds),
+        threshold_config_(threshold_config),
+        pruning_config_(pruning_config) {}
 
   bool empty() const;
   size_t size() const { return ndtree_.size(); }
@@ -87,6 +95,8 @@ class HashedWaveletOctreeBlockT {
   const IndexElement tree_height_;
   const FloatingPoint min_log_odds_;
   const FloatingPoint max_log_odds_;
+  const ThresholdConfig threshold_config_;
+  const PruningConfig pruning_config_;
 
   OctreeType ndtree_{tree_height_ - 1};
   typename Coefficients::Scale root_scale_coefficient_{};

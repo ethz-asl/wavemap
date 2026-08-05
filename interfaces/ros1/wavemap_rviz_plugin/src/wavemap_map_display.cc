@@ -27,7 +27,7 @@ struct LayeredVoxelColorProvider {
                             wavemap::FloatingPoint /*occupancy*/,
                             Ogre::ColourValue& color) {
     if (layer_name == "color") {
-      color = Ogre::ColourValue(voxel.data.r, voxel.data.g, voxel.data.b, 1.f);
+      color = Ogre::ColourValue(voxel.data.rgb.r, voxel.data.rgb.g, voxel.data.rgb.b, 1.f);
       return true;
     }
 

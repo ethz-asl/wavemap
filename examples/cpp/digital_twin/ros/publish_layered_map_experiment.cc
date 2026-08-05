@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
   config.max_log_odds = 4.f;
   config.tree_height = 3;
 
-  LayeredMap map(config);
+  ContinuousWaveletMap map(config);
   std::vector<wavemap::Index3D> populated_indices;
   populateLayeredCube(map, populated_indices);
 

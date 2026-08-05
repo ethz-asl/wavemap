@@ -194,9 +194,9 @@ template <typename CellDataT>
 typename HashedWaveletOctreeT<CellDataT>::Block&
 HashedWaveletOctreeT<CellDataT>::getOrAllocateBlock(
     const Index3D& block_index) {
-  return block_map_.getOrAllocateBlock(block_index, config_.tree_height,
-                                       config_.min_log_odds,
-                                       config_.max_log_odds);
+  return block_map_.getOrAllocateBlock(
+      block_index, config_.tree_height, config_.min_log_odds,
+      config_.max_log_odds, threshold_config_, pruning_config_);
 }
 
 template <typename CellDataT>

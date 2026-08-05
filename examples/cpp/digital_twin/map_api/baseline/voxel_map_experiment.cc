@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../common/layered_voxel_config.h"
+#include "../../common/layered_voxel_config.h"
 
 int main() {
   wavemap::HashedWaveletOctreeConfig config;
@@ -9,11 +9,11 @@ int main() {
   config.max_log_odds = 4.f;
   config.tree_height = 3;
 
-  LayeredMap map(config);
+  ContinuousWaveletMap map(config);
 
   const wavemap::Index3D voxel_index(9, 2, 3);
   const LayeredVoxel initial_voxel(
-      0.8f, LayeredData{1.f, 0.f, 0.f, 0.75f});
+      0.8f, ContinuousLayers{rgb(1.f, 0.f, 0.f), 0.75f});
 
   map.setVoxelValue(voxel_index, initial_voxel);
   printVoxel("Stored voxel", map.getVoxelValue(voxel_index));
@@ -22,7 +22,7 @@ int main() {
   printVoxel("After occupancy update", map.getVoxelValue(voxel_index));
 
   const LayeredVoxel voxel_update(
-      0.1f, LayeredData{0.f, 0.5f, 0.f, -0.25f});
+      0.1f, ContinuousLayers{rgb(0.f, 0.5f, 0.f), -0.25f});
   map.addToVoxelValue(voxel_index, voxel_update);
   printVoxel("After full voxel update", map.getVoxelValue(voxel_index));
 

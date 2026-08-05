@@ -11,15 +11,15 @@ int main() {
 
   std::cout << "Occupancy only: " << occupancy_only.occupancy << "\n";
 
-  LayeredVoxel layered_voxel(0.8f, LayeredData{1.f, 0.f, 0.f, 0.75f});
+  LayeredVoxel layered_voxel(0.8f, ContinuousLayers{rgb(1.f, 0.f, 0.f), 0.75f});
   layered_voxel += 0.2f;
   printVoxel("Layered voxel", layered_voxel);
 
   wavemap::FloatingPoint occupancy_value = layered_voxel;
   std::cout << "Implicit occupancy value: " << occupancy_value << "\n";
 
-  const LayeredVoxel voxel_a(0.4f, LayeredData{1.f, 0.2f, 0.f, 0.3f});
-  const LayeredVoxel voxel_b(0.6f, LayeredData{0.f, 0.3f, 1.f, 0.5f});
+  const LayeredVoxel voxel_a(0.4f, ContinuousLayers{rgb(1.f, 0.2f, 0.f), 0.3f});
+  const LayeredVoxel voxel_b(0.6f, ContinuousLayers{rgb(0.f, 0.3f, 1.f), 0.5f});
 
   printVoxel("Sum", voxel_a + voxel_b);
   printVoxel("Difference", voxel_b - voxel_a);

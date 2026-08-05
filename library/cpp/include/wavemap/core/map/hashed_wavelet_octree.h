@@ -70,9 +70,18 @@ class HashedWaveletOctreeT : public MapBase {
   using CellIndex = OctreeIndex;
   using Block = HashedWaveletOctreeBlockT<CellDataT>;
   using BlockHashMap = SpatialHash<Block, kDim>;
+  using Traits = CellDataTraits<CellDataT>;
+  using ThresholdConfig = typename Traits::ThresholdConfig;
+  using PruningConfig = typename Traits::PruningConfig;
 
-  explicit HashedWaveletOctreeT(const HashedWaveletOctreeConfig& config)
-      : MapBase(config), config_(config.checkValid()) {}
+  explicit HashedWaveletOctreeT(
+      const HashedWaveletOctreeConfig& config,
+      ThresholdConfig threshold_config = ThresholdConfig{},
+      PruningConfig pruning_config = PruningConfig{})
+      : MapBase(config),
+        config_(config.checkValid()),
+        threshold_config_(threshold_config),
+        pruning_config_(pruning_config) {}
 
   // Copy construction is not supported
   HashedWaveletOctreeT(const HashedWaveletOctreeT&) = delete;
@@ -143,6 +152,8 @@ class HashedWaveletOctreeT : public MapBase {
   const HashedWaveletOctreeConfig config_;
   const IndexElement cells_per_block_side_ =
       int_math::exp2(config_.tree_height);
+  const ThresholdConfig threshold_config_;
+  const PruningConfig pruning_config_;
 
   BlockHashMap block_map_;
 };

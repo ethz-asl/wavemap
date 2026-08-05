@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_CORE_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HASHED_WAVELET_INTEGRATOR_H_
 #define WAVEMAP_CORE_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HASHED_WAVELET_INTEGRATOR_H_
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -12,15 +13,20 @@
 #include "wavemap/core/utils/thread_pool.h"
 
 namespace wavemap {
-class HashedWaveletIntegrator : public ProjectiveIntegrator {
+template <typename CellDataT = FloatingPoint>
+class HashedWaveletIntegratorT : public ProjectiveIntegrator {
  public:
-  HashedWaveletIntegrator(const ProjectiveIntegratorConfig& config,
-                          ProjectorBase::ConstPtr projection_model,
-                          PosedImage<>::Ptr posed_range_image,
-                          Image<Vector2D>::Ptr beam_offset_image,
-                          MeasurementModelBase::ConstPtr measurement_model,
-                          HashedWaveletOctree::Ptr occupancy_map,
-                          std::shared_ptr<ThreadPool> thread_pool = nullptr)
+  using MapType = HashedWaveletOctreeT<CellDataT>;
+  using MapPtr = typename MapType::Ptr;
+
+  HashedWaveletIntegratorT(
+      const ProjectiveIntegratorConfig& config,
+      ProjectorBase::ConstPtr projection_model,
+      PosedImage<>::Ptr posed_range_image,
+      Image<Vector2D>::Ptr beam_offset_image,
+      MeasurementModelBase::ConstPtr measurement_model,
+      MapPtr occupancy_map,
+      std::shared_ptr<ThreadPool> thread_pool = nullptr)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
             std::move(beam_offset_image), std::move(measurement_model)),
@@ -29,10 +35,13 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
                                  : std::make_shared<ThreadPool>()) {}
 
  private:
-  using BlockList = std::vector<HashedWaveletOctree::BlockIndex>;
-  using OctreeType = HashedWaveletOctreeBlock::OctreeType;
+  using BlockList = std::vector<typename MapType::BlockIndex>;
+  using Block = typename MapType::Block;
+  using BlockIndex = typename MapType::BlockIndex;
+  using OctreeType = typename Block::OctreeType;
+  using Coefficients = typename Block::Coefficients;
 
-  const HashedWaveletOctree::Ptr occupancy_map_;
+  const MapPtr occupancy_map_;
   const std::shared_ptr<ThreadPool> thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
@@ -51,6 +60,18 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
   static constexpr auto kUnitCubeHalfDiagonal =
       constants<FloatingPoint>::kSqrt3 / 2.f;
 
+  static FloatingPoint occupancyOf(const CellDataT& value) {
+    return static_cast<FloatingPoint>(value);
+  }
+
+  static void addClampedOccupancyUpdate(CellDataT& value,
+                                        FloatingPoint update,
+                                        FloatingPoint min_log_odds,
+                                        FloatingPoint max_log_odds) {
+    value += update;
+    value = std::clamp(occupancyOf(value), min_log_odds, max_log_odds);
+  }
+
   std::pair<OctreeIndex, OctreeIndex> getFovMinMaxIndices(
       const Point3D& sensor_origin) const;
 
@@ -58,9 +79,10 @@ class HashedWaveletIntegrator : public ProjectiveIntegrator {
                        BlockList& update_job_list);
 
   void updateMap() override;
-  void updateBlock(HashedWaveletOctree::Block& block,
-                   const HashedWaveletOctree::BlockIndex& block_index);
+  void updateBlock(Block& block, const BlockIndex& block_index);
 };
+
+using HashedWaveletIntegrator = HashedWaveletIntegratorT<FloatingPoint>;
 }  // namespace wavemap
 
 #include "wavemap/core/integrator/projective/coarse_to_fine/impl/hashed_wavelet_integrator_inl.h"

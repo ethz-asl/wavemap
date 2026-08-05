@@ -8,7 +8,7 @@
 namespace {
 void layeredMapCallback(const wavemap_msgs::Map::ConstPtr& msg) {
   // Convert the standard wavemap ROS wrapper back into the custom layered C++ map type.
-  LayeredMap::Ptr map;
+  ContinuousWaveletMap::Ptr map;
   if (!wavemap::convert::rosMsgToMap<LayeredVoxel, LayeredVoxelRosConverter>(*msg, map)) {
     std::cerr << "Failed to convert wavemap_msgs::Map back to a layered map.\n";
     return;

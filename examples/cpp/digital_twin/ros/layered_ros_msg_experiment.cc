@@ -12,7 +12,7 @@ bool almostEqual(float lhs, float rhs) {
 }
 
 bool almostEqual(const LayeredVoxel& lhs, const LayeredVoxel& rhs) {
-  return almostEqual(lhs.occupancy, rhs.occupancy) && almostEqual(lhs.data.r, rhs.data.r) && almostEqual(lhs.data.g, rhs.data.g) && almostEqual(lhs.data.b, rhs.data.b) && almostEqual(lhs.data.traversability, rhs.data.traversability);
+  return almostEqual(lhs.occupancy, rhs.occupancy) && almostEqual(lhs.data.rgb.r, rhs.data.rgb.r) && almostEqual(lhs.data.rgb.g, rhs.data.rgb.g) && almostEqual(lhs.data.rgb.b, rhs.data.rgb.b) && almostEqual(lhs.data.traversability, rhs.data.traversability);
 }
 }  // namespace
 
@@ -23,7 +23,7 @@ int main() {
   config.max_log_odds = 4.f;
   config.tree_height = 3;
 
-  LayeredMap map(config);
+  ContinuousWaveletMap map(config);
   std::vector<wavemap::Index3D> populated_indices;
   populateLayeredCube(map, populated_indices);
 
@@ -35,7 +35,7 @@ int main() {
   }
 
   // Convert the wrapped ROS message back into a fresh C++ map to validate the full wrapper round-trip.
-  LayeredMap::Ptr loaded_map;
+  ContinuousWaveletMap::Ptr loaded_map;
   if (!wavemap::convert::rosMsgToMap<LayeredVoxel, LayeredVoxelRosConverter>(msg, loaded_map)) {
     std::cerr << "Failed to convert wavemap_msgs::Map back to a layered map.\n";
     return 1;

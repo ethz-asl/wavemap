@@ -13,7 +13,7 @@ int main() {
   config.max_log_odds = 4.f;
   config.tree_height = 3;
 
-  LayeredMap map(config);
+  ContinuousWaveletMap map(config);
 
   const wavemap::Index3D cube_origin(8, 2, 2);
   constexpr int cube_size_x = 2;
@@ -29,8 +29,8 @@ int main() {
       for (int dz = 0; dz < cube_size_z; ++dz) {
         const wavemap::Index3D voxel_index = cube_origin + wavemap::Index3D(dx, dy, dz);
         const wavemap::FloatingPoint layer_value = static_cast<wavemap::FloatingPoint>(populated_voxels);
-        const LayeredVoxel original_voxel(0.5f + 0.02f * layer_value, LayeredData{0.1f * dx, 0.1f * dy, 0.05f * dz, 0.9f - 0.03f * layer_value});
-        const LayeredVoxel voxel_update(0.1f, LayeredData{0.01f, 0.02f, 0.03f, -0.01f});
+        const LayeredVoxel original_voxel(0.5f + 0.02f * layer_value, ContinuousLayers{rgb(0.1f * dx, 0.1f * dy, 0.05f * dz), 0.9f - 0.03f * layer_value});
+        const LayeredVoxel voxel_update(0.1f, ContinuousLayers{rgb(0.01f, 0.02f, 0.03f), -0.01f});
 
         map.setVoxelValue(voxel_index, original_voxel);
         map.addToVoxelValue(voxel_index, voxel_update);
@@ -48,7 +48,7 @@ int main() {
     return 1;
   }
 
-  LayeredMap::Ptr loaded_map;
+  ContinuousWaveletMap::Ptr loaded_map;
   if (!wavemap::io::fileToMap<LayeredVoxel, LayeredVoxelSerializer>(output_path, loaded_map)) {
     std::cerr << "Failed to load layered map from: " << output_path << "\n";
     return 1;
