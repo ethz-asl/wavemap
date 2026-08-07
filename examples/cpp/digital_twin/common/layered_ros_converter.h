@@ -10,28 +10,35 @@
 
 struct LayeredVoxelRosConverter {
   static std::vector<std::string> layerNames() {
-    // These names describe the custom data carried inside each LayeredVoxel.
-    return {"color", "traversability"};
+    std::vector<std::string> names;
+    for (const auto& layer :
+         wavemap::layered::ContinuousLayerSchemaTraits<ContinuousLayers>::layers()) {
+      names.emplace_back(layer.name);
+    }
+    return names;
   }
 
   static std::vector<std::string> layerTypes() {
-    // The type strings tell consumers how to interpret each layer's arrays.
-    return {"float32_rgb", "float32"};
+    std::vector<std::string> types;
+    for (const auto& layer :
+         wavemap::layered::ContinuousLayerSchemaTraits<ContinuousLayers>::layers()) {
+      types.emplace_back(layer.type);
+    }
+    return types;
   }
 
   static std::vector<wavemap_msgs::Layer> makeLayers() {
     // The message stores custom values layer-major: all color values go into
     // the color layer, and all traversability values go into the traversability
     // layer.
-    wavemap_msgs::Layer color_layer;
-    color_layer.name = "color";
-    color_layer.type = "float32_rgb";
-
-    wavemap_msgs::Layer traversability_layer;
-    traversability_layer.name = "traversability";
-    traversability_layer.type = "float32";
-
-    return {color_layer, traversability_layer};
+    std::vector<wavemap_msgs::Layer> layers;
+    for (const auto& layer_schema :
+         wavemap::layered::ContinuousLayerSchemaTraits<ContinuousLayers>::layers()) {
+      auto& layer = layers.emplace_back();
+      layer.name = layer_schema.name;
+      layer.type = layer_schema.type;
+    }
+    return layers;
   }
 
   static void appendLayerValues(const LayeredVoxel& voxel,
@@ -79,13 +86,16 @@ inline void populateLayeredCube(
             cube_origin + wavemap::Index3D(dx, dy, dz);
         const wavemap::FloatingPoint layer_value =
             static_cast<wavemap::FloatingPoint>(populated_voxels);
+        const Rgb visible_color = rgb(
+            dx == 0 ? 0.15f : 1.0f,
+            dy == 0 ? 0.15f : 1.0f,
+            0.25f + 0.25f * static_cast<float>(dz));
         const LayeredVoxel original_voxel(
             0.5f + 0.02f * layer_value,
-            ContinuousLayers{rgb(0.1f * dx, 0.1f * dy, 0.05f * dz),
-                        0.9f - 0.03f * layer_value});
+            ContinuousLayers{visible_color, 0.9f - 0.03f * layer_value});
         const LayeredVoxel voxel_update(
             0.1f,
-            ContinuousLayers{rgb(-0.01f, -0.01f, -0.01f), -0.01f});
+            ContinuousLayers{rgb(0.f, 0.f, 0.f), -0.01f});
 
         map.setVoxelValue(voxel_index, original_voxel);
         map.addToVoxelValue(voxel_index, voxel_update);

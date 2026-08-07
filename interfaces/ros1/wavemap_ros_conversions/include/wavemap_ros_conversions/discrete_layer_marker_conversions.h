@@ -67,7 +67,7 @@ NamedDiscreteMarkerLayer<LayerT, ColorPolicyT> namedDiscreteMarkerLayer(
     std::string name, const LayerT& layer, ColorPolicyT color_policy,
     LayerMarkerConfig marker_config = {}) {
   if (marker_config.topic.empty()) {
-    marker_config.topic = "/wavemap/discrete/" + name;
+    marker_config.topic = "/wavemap/layered_map/discrete/" + name;
   }
   if (marker_config.ns.empty()) {
     marker_config.ns = name;

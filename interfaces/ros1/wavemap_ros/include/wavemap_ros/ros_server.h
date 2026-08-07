@@ -18,6 +18,7 @@
 #include <wavemap/pipeline/pipeline.h>
 
 #include "wavemap_ros/inputs/ros_input_base.h"
+#include "wavemap_ros/layered_ros_server_extension.h"
 #include "wavemap_ros/utils/ros_logging_level.h"
 #include "wavemap_ros/utils/tf_transformer.h"
 
@@ -76,6 +77,7 @@ class RosServer {
 
   // Map data structure
   MapBase::Ptr occupancy_map_;
+  std::unique_ptr<LayeredRosServerExtensionBase> layered_extension_;
 
   // Threadpool shared among all input handlers and operations
   std::shared_ptr<ThreadPool> thread_pool_;

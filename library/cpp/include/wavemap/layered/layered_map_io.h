@@ -16,6 +16,7 @@
 
 #include <wavemap/layered/discrete_layer.h>
 #include <wavemap/layered/layered_map.h>
+#include <wavemap/layered/layered_map_schema.h>
 
 namespace wavemap::layered::io {
 namespace detail {
@@ -24,6 +25,7 @@ inline constexpr bool kAlwaysFalse = false;
 
 constexpr char kMagic[] = "LWVMP";
 constexpr uint32_t kVersion = 1u;
+constexpr char kSchemaSection[] = "schema";
 constexpr char kContinuousMapSection[] = "continuous_map";
 constexpr char kDiscreteLayersSection[] = "discrete_layers";
 
@@ -79,13 +81,74 @@ inline bool writeFileHeader(std::ostream& ostream) {
   return writeString(ostream, kMagic) && writePod(ostream, kVersion);
 }
 
-inline bool readFileHeader(std::istream& istream) {
+inline bool readFileHeader(std::istream& istream, uint32_t& version) {
   std::string magic;
-  uint32_t version = 0u;
+  version = 0u;
   return readString(istream, magic) && magic == kMagic &&
          readPod(istream, version) && version == kVersion;
 }
 }  // namespace detail
+
+inline bool writeLayerSchemaEntries(
+    std::ostream& ostream, const std::vector<LayerSchemaEntry>& entries) {
+  const uint64_t entry_count = entries.size();
+  if (!detail::writePod(ostream, entry_count)) {
+    return false;
+  }
+  for (const auto& entry : entries) {
+    if (!detail::writeString(ostream, entry.name) ||
+        !detail::writeString(ostream, entry.type)) {
+      return false;
+    }
+  }
+  return static_cast<bool>(ostream);
+}
+
+inline bool readLayerSchemaEntries(
+    std::istream& istream, std::vector<LayerSchemaEntry>& entries) {
+  uint64_t entry_count = 0u;
+  if (!detail::readPod(istream, entry_count)) {
+    return false;
+  }
+  entries.clear();
+  entries.reserve(entry_count);
+  for (uint64_t entry_i = 0u; entry_i < entry_count; ++entry_i) {
+    auto& entry = entries.emplace_back();
+    if (!detail::readString(istream, entry.name) ||
+        !detail::readString(istream, entry.type)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline bool writeLayeredMapSchema(std::ostream& ostream,
+                                  const LayeredMapSchema& schema) {
+  return writeLayerSchemaEntries(ostream, schema.continuous_layers) &&
+         writeLayerSchemaEntries(ostream, schema.discrete_layers);
+}
+
+inline bool readLayeredMapSchema(std::istream& istream,
+                                 LayeredMapSchema& schema) {
+  return readLayerSchemaEntries(istream, schema.continuous_layers) &&
+         readLayerSchemaEntries(istream, schema.discrete_layers);
+}
+
+inline bool readLayeredMapSchema(const std::filesystem::path& file_path,
+                                 LayeredMapSchema& schema) {
+  std::ifstream istream(file_path, std::ios::binary);
+  if (!istream.is_open()) {
+    return false;
+  }
+
+  uint32_t version = 0u;
+  if (!detail::readFileHeader(istream, version)) {
+    return false;
+  }
+
+  return detail::readSectionMarker(istream, detail::kSchemaSection) &&
+         readLayeredMapSchema(istream, schema);
+}
 
 template <typename ValueT>
 struct DiscreteValueSerializer {
@@ -316,6 +379,39 @@ bool forEachTupleElement(TupleT&& tuple, FuncT&& func) {
                                  std::make_index_sequence<tuple_size>{});
 }
 
+template <typename ValueT>
+LayerSchemaEntry discreteLayerSchemaEntry(
+    const ConstNamedDiscreteLayer<ValueT>& named_layer) {
+  return {named_layer.name, DiscreteValueSerializer<ValueT>::typeName()};
+}
+
+template <typename ValueT>
+LayerSchemaEntry discreteLayerSchemaEntry(
+    const NamedDiscreteLayer<ValueT>& named_layer) {
+  return {named_layer.name, DiscreteValueSerializer<ValueT>::typeName()};
+}
+
+template <typename DiscreteLayersT>
+std::vector<LayerSchemaEntry> discreteLayerBundleSchema(
+    const DiscreteLayersT& layers) {
+  std::vector<LayerSchemaEntry> schema;
+  const auto named_layers =
+      DiscreteLayerBundleTraits<DiscreteLayersT>::layers(layers);
+  schema.reserve(
+      std::tuple_size_v<std::remove_reference_t<decltype(named_layers)>>);
+  forEachTupleElement(named_layers, [&](const auto& named_layer) {
+    schema.emplace_back(discreteLayerSchemaEntry(named_layer));
+    return true;
+  });
+  return schema;
+}
+
+template <typename LayeredMapT>
+LayeredMapSchema layeredMapSchema(const LayeredMapT& map) {
+  return {continuousLayerSchema<typename LayeredMapT::ContinuousLayers>(),
+          discreteLayerBundleSchema(map.discreteLayers())};
+}
+
 template <typename DiscreteLayersT>
 bool writeDiscreteLayerBundle(std::ostream& ostream,
                               const DiscreteLayersT& layers) {
@@ -368,7 +464,10 @@ bool saveLayeredMap(const std::filesystem::path& file_path,
     return false;
   }
 
+  const LayeredMapSchema schema = layeredMapSchema(map);
   if (!detail::writeFileHeader(ostream) ||
+      !detail::writeSectionMarker(ostream, detail::kSchemaSection) ||
+      !writeLayeredMapSchema(ostream, schema) ||
       !detail::writeSectionMarker(ostream, detail::kContinuousMapSection)) {
     return false;
   }
@@ -384,14 +483,43 @@ bool saveLayeredMap(const std::filesystem::path& file_path,
 }
 
 template <typename LayeredMapT, typename ContinuousCellSerializerT>
-bool loadLayeredMap(const std::filesystem::path& file_path, LayeredMapT& map) {
+bool loadLayeredMap(const std::filesystem::path& file_path, LayeredMapT& map,
+                    std::string* error_message = nullptr) {
   std::ifstream istream(file_path, std::ios::binary);
   if (!istream.is_open()) {
+    if (error_message) {
+      *error_message = "Could not open LayeredMap file: " + file_path.string();
+    }
     return false;
   }
 
-  if (!detail::readFileHeader(istream) ||
-      !detail::readSectionMarker(istream, detail::kContinuousMapSection)) {
+  uint32_t version = 0u;
+  if (!detail::readFileHeader(istream, version)) {
+    if (error_message) {
+      *error_message = "Invalid LayeredMap file header or unsupported version.";
+    }
+    return false;
+  }
+
+  LayeredMapSchema schema;
+  if (!detail::readSectionMarker(istream, detail::kSchemaSection) ||
+      !readLayeredMapSchema(istream, schema)) {
+    if (error_message) {
+      *error_message = "Failed to read LayeredMap schema section.";
+    }
+    return false;
+  }
+
+  const LayeredMapSchema expected_schema = layeredMapSchema(map);
+  if (!checkLayeredMapSchemaCompatibility(schema, expected_schema,
+                                          error_message)) {
+    return false;
+  }
+
+  if (!detail::readSectionMarker(istream, detail::kContinuousMapSection)) {
+    if (error_message) {
+      *error_message = "Failed to find LayeredMap continuous map section.";
+    }
     return false;
   }
 
@@ -400,12 +528,18 @@ bool loadLayeredMap(const std::filesystem::path& file_path, LayeredMapT& map) {
                                 ContinuousCellSerializerT>(istream,
                                                            continuous_map) ||
       !continuous_map) {
+    if (error_message) {
+      *error_message = "Failed to deserialize LayeredMap continuous map data.";
+    }
     return false;
   }
 
   typename LayeredMapT::DiscreteLayers discrete_layers;
   if (!detail::readSectionMarker(istream, detail::kDiscreteLayersSection) ||
       !readDiscreteLayerBundle(istream, discrete_layers)) {
+    if (error_message) {
+      *error_message = "Failed to deserialize LayeredMap discrete layer data.";
+    }
     return false;
   }
 
@@ -422,9 +556,10 @@ struct LayeredMapIo {
                                                                   map);
   }
 
-  static bool load(const std::filesystem::path& file_path, LayeredMapT& map) {
-    return loadLayeredMap<LayeredMapT, ContinuousCellSerializerT>(file_path,
-                                                                  map);
+  static bool load(const std::filesystem::path& file_path, LayeredMapT& map,
+                   std::string* error_message = nullptr) {
+    return loadLayeredMap<LayeredMapT, ContinuousCellSerializerT>(
+        file_path, map, error_message);
   }
 };
 

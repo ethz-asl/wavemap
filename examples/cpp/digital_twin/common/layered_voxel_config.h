@@ -13,6 +13,7 @@
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/map/hashed_wavelet_octree_block.h>
 #include <wavemap/io/stream_conversions.h>
+#include <wavemap/layered/layered_map_schema.h>
 
 struct Rgb {
   float r = 0.f;
@@ -82,6 +83,15 @@ struct ContinuousLayersPolicy {
     return ContinuousLayers{factor * data.rgb, factor * data.traversability};
   }
 };
+
+namespace wavemap::layered {
+template <>
+struct ContinuousLayerSchemaTraits<::ContinuousLayers> {
+  static std::vector<LayerSchemaEntry> layers() {
+    return {{"color", "float32_rgb"}, {"traversability", "float32"}};
+  }
+};
+}  // namespace wavemap::layered
 
 namespace wavemap {
 template <>

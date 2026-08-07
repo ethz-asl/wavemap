@@ -198,6 +198,18 @@ set_wavemap_target_properties(custom_layered_map_save_load_example)
 target_link_libraries(custom_layered_map_save_load_example
     PUBLIC wavemap::wavemap_core)
 
+add_executable(load_existing_maps_experiment
+    io/load_existing_maps_experiment.cc)
+set_wavemap_target_properties(load_existing_maps_experiment)
+target_link_libraries(load_existing_maps_experiment
+    PUBLIC wavemap::wavemap_core wavemap::wavemap_io)
+
+add_executable(create_large_layered_map_experiment
+    io/create_large_layered_map_experiment.cc)
+set_wavemap_target_properties(create_large_layered_map_experiment)
+target_link_libraries(create_large_layered_map_experiment
+    PUBLIC wavemap::wavemap_core)
+
 if ("$ENV{ROS_VERSION}" STREQUAL "1")
   find_package(catkin REQUIRED
       COMPONENTS roscpp visualization_msgs wavemap wavemap_msgs wavemap_ros_conversions)

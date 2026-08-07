@@ -44,7 +44,8 @@ add_library(${PROJECT_NAME}
     src/ros_server.cc)
 set_wavemap_target_properties(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
-    PUBLIC include ${catkin_INCLUDE_DIRS})
+    PUBLIC include ${catkin_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common)
 target_link_libraries(${PROJECT_NAME}
     PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 

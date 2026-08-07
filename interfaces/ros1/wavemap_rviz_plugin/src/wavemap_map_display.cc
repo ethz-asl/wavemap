@@ -15,36 +15,8 @@
 #include <wavemap/io/file_conversions.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
-#include "layered_ros_converter.h"
-#include "layered_voxel_config.h"
 #include "wavemap_rviz_plugin/utils/alert_dialog.h"
 
-
-namespace {
-struct LayeredVoxelColorProvider {
-  static bool getLayerColor(const std::string& layer_name,
-                            const LayeredVoxel& voxel,
-                            wavemap::FloatingPoint /*occupancy*/,
-                            Ogre::ColourValue& color) {
-    if (layer_name == "color") {
-      color = Ogre::ColourValue(voxel.data.rgb.r, voxel.data.rgb.g, voxel.data.rgb.b, 1.f);
-      return true;
-    }
-
-    if (layer_name == "traversability") {
-      const float value = std::clamp(voxel.data.traversability, 0.f, 1.f);
-      if (value < 0.5f) {
-        color = Ogre::ColourValue(1.f, 2.f * value, 0.f, 1.f);
-      } else {
-        color = Ogre::ColourValue(2.f * (1.f - value), 1.f, 0.f, 1.f);
-      }
-      return true;
-    }
-
-    return false;
-  }
-};
-}  // namespace
 
 namespace wavemap::rviz_plugin {
 WavemapMapDisplay::WavemapMapDisplay() {
@@ -54,12 +26,6 @@ WavemapMapDisplay::WavemapMapDisplay() {
     source_mode_property_.addOption(name);
   }
   source_mode_property_.setStringStd(source_mode_.toStr());
-
-  // Temporary prototype wiring: this RViz plugin knows the current layered voxel type.
-  // Later this can move back to pluginlib-based factory registration.
-  layered_map_factories_.push_back(
-      std::make_shared<
-          TypedLayeredMapFactory<LayeredMap, LayeredVoxelRosConverter, LayeredVoxelColorProvider>>());
 
   // The layered map selector is only useful after receiving a layered map message.
   layer_property_.clearOptions();
@@ -172,15 +138,9 @@ void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
   std::scoped_lock lock(map_and_mutex_->mutex);
   map_and_mutex_->selected_layer_name = selected_layer_name_;
   if (has_layered_map && !has_legacy_map) {
-    const auto& layered_map_msg = map_msg.layered_hashed_wavelet_octree.front();
     map_and_mutex_->map.reset();
-    map_and_mutex_->layered_map = createLayeredMapFromRosMsg(layered_map_msg);
-    if (map_and_mutex_->layered_map) {
-      map_and_mutex_->layered_map_msg.reset();
-    } else {
-      // Keep the message fallback until users can register typed factories for their custom voxel data.
-      map_and_mutex_->layered_map_msg = layered_map_msg;
-    }
+    map_and_mutex_->layered_map.reset();
+    map_and_mutex_->layered_map_msg = map_msg.layered_hashed_wavelet_octree.front();
     return;
   }
 
@@ -191,21 +151,6 @@ void WavemapMapDisplay::updateMapFromRosMsg(const wavemap_msgs::Map& map_msg) {
   }
 }
 
-std::shared_ptr<LayeredMapInterface> WavemapMapDisplay::createLayeredMapFromRosMsg(
-    const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg) const {
-  ProfilerZoneScoped;
-  for (const auto& factory : layered_map_factories_) {
-    if (!factory) {
-      continue;
-    }
-
-    if (auto layered_map = factory->tryCreate(layered_map_msg)) {
-      return layered_map;
-    }
-  }
-
-  return nullptr;
-}
 
 void WavemapMapDisplay::updateLayerMetadataFromRosMsg(const wavemap_msgs::Map& map_msg) {
   ProfilerZoneScoped;

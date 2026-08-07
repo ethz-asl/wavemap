@@ -7,6 +7,7 @@
 #include <string>
 
 #include <wavemap/core/map/map_base.h>
+#include <wavemap_msgs/DiscreteLayer.h>
 #include <wavemap_msgs/LayeredHashedWaveletOctree.h>
 
 #include "wavemap_rviz_plugin/layered_map_interface.h"
@@ -16,6 +17,8 @@ struct MapAndMutex {
   MapBase::Ptr map;
   std::shared_ptr<LayeredMapInterface> layered_map;
   std::optional<wavemap_msgs::LayeredHashedWaveletOctree> layered_map_msg;
+  std::optional<wavemap_msgs::DiscreteLayer> discrete_layer_msg;
+  FloatingPoint discrete_layer_min_cell_width = 0.1f;
   std::string selected_layer_name = "occupancy";
   std::mutex mutex;
 };

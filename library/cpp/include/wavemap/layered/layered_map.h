@@ -32,6 +32,8 @@ template <typename ContinuousLayersT, typename ContinuousPolicyT,
           typename DiscreteLayersT>
 class LayeredMap {
  public:
+  using ContinuousLayers = ContinuousLayersT;
+  using ContinuousPolicy = ContinuousPolicyT;
   using ContinuousVoxel = LayeredMapVoxel<ContinuousLayersT, ContinuousPolicyT>;
   using ContinuousMap = ContinuousWaveletMapT<ContinuousLayersT,
                                              ContinuousPolicyT>;

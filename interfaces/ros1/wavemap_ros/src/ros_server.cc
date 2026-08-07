@@ -10,6 +10,8 @@
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
+#include "example_layered_map_ros_config.h"
+#include "layered_ros_converter.h"
 #include "wavemap_ros/inputs/ros_input_factory.h"
 #include "wavemap_ros/map_operations/map_ros_operation_factory.h"
 
@@ -108,6 +110,20 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
 
   // Connect to ROS
   advertiseServices(nh_private);
+
+  bool enable_layered_map = false;
+  nh_private.param("layered_map/enabled", enable_layered_map, false);
+  if (enable_layered_map) {
+    ExampleLayeredMapConfig layered_config =
+        layered_map_config::loadExampleLayeredMapConfigFromRosParams(nh_private);
+    layered_extension_ = std::make_unique<
+        LayeredRosServerExtension<ExampleLayeredMap, ExampleLayeredMapIo,
+                                  LayeredVoxelRosConverter>>(
+        nh_private, config_.world_frame, ExampleLayeredMap(layered_config));
+    ROS_INFO(
+        "Layered map extension enabled. Advertising layered map topic and "
+        "services.");
+  }
 }
 
 void RosServer::clear() {

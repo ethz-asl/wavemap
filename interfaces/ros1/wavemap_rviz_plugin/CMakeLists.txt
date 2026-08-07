@@ -25,6 +25,7 @@ set(CMAKE_AUTOMOC ON)
 # This plugin includes Qt widgets, so we must include Qt.
 # We'll use the version that rviz used so they are compatible.
 set(HEADERS_TO_MOC
+    include/wavemap_rviz_plugin/layered_map_display.h
     include/wavemap_rviz_plugin/wavemap_map_display.h
     include/wavemap_rviz_plugin/visuals/voxel_visual.h
     include/wavemap_rviz_plugin/visuals/slice_visual.h
@@ -55,6 +56,7 @@ add_library(${PROJECT_NAME}
     src/visuals/voxel_visual.cc
     src/visuals/cell_layer.cc
     src/visuals/cell_selector.cc
+    src/layered_map_display.cc
     src/wavemap_map_display.cc
     ${QT_MOC})
 set_wavemap_target_properties(${PROJECT_NAME})

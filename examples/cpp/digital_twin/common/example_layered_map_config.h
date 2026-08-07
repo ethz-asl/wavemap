@@ -9,6 +9,9 @@ using wavemap::layered::DiscreteCompressionConfig;
 using wavemap::layered::DiscreteLayer;
 using wavemap::layered::LayeredMap;
 
+inline constexpr char kSemanticLayerName[] = "semantic";
+inline constexpr char kChangedLayerName[] = "changed";
+
 struct ExampleDiscreteLayers {
   explicit ExampleDiscreteLayers(
       DiscreteCompressionConfig config = DiscreteCompressionConfig())
@@ -25,17 +28,22 @@ using ExampleLayeredMapConfig = ExampleLayeredMap::Config;
 using ExampleLayeredMapIo =
     wavemap::layered::io::LayeredMapIo<ExampleLayeredMap, LayeredVoxelSerializer>;
 
+inline wavemap::layered::LayeredMapSchema exampleLayeredMapSchema(
+    const ExampleLayeredMap& map) {
+  return wavemap::layered::io::layeredMapSchema(map);
+}
+
 namespace wavemap::layered::io {
 template <>
 struct DiscreteLayerBundleTraits<::ExampleDiscreteLayers> {
   static auto layers(ExampleDiscreteLayers& layers) {
-    return std::make_tuple(namedDiscreteLayer("semantic", layers.semantic),
-                           namedDiscreteLayer("changed", layers.changed));
+    return std::make_tuple(namedDiscreteLayer(kSemanticLayerName, layers.semantic),
+                           namedDiscreteLayer(kChangedLayerName, layers.changed));
   }
 
   static auto layers(const ExampleDiscreteLayers& layers) {
-    return std::make_tuple(namedDiscreteLayer("semantic", layers.semantic),
-                           namedDiscreteLayer("changed", layers.changed));
+    return std::make_tuple(namedDiscreteLayer(kSemanticLayerName, layers.semantic),
+                           namedDiscreteLayer(kChangedLayerName, layers.changed));
   }
 };
 }  // namespace wavemap::layered::io

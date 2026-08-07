@@ -57,7 +57,7 @@ class VoxelVisual : public QObject {
 
   void updateMap(bool redraw_all = false);
 
-  void clear() { block_voxel_layers_map_.clear(); }
+  void clear();
 
   // Set the pose of the coordinate frame the message refers to
   void setFramePosition(const Ogre::Vector3& position);
@@ -71,10 +71,14 @@ class VoxelVisual : public QObject {
   void opacityUpdateCallback();
   void colorModeUpdateCallback();
   void flatColorUpdateCallback();
+  void layerColorUpdateCallback();
 
  private:
   VoxelColorMode voxel_color_mode_ = VoxelColorMode::kHeight;
   Ogre::ColourValue voxel_flat_color_ = Ogre::ColourValue::Blue;
+  Ogre::ColourValue scalar_low_color_ = Ogre::ColourValue(0.f, 0.f, 1.f);
+  Ogre::ColourValue scalar_high_color_ = Ogre::ColourValue(1.f, 1.f, 0.f);
+  Ogre::ColourValue bool_true_color_ = Ogre::ColourValue(1.f, 0.05f, 0.05f);
 
   // Shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<MapAndMutex> map_and_mutex_;
@@ -97,6 +101,13 @@ class VoxelVisual : public QObject {
   rviz::FloatProperty opacity_property_;
   rviz::EnumProperty color_mode_property_;
   rviz::ColorProperty flat_color_property_;
+  rviz::Property layer_color_properties_;
+  rviz::FloatProperty scalar_min_property_;
+  rviz::FloatProperty scalar_max_property_;
+  rviz::ColorProperty scalar_low_color_property_;
+  rviz::ColorProperty scalar_high_color_property_;
+  rviz::ColorProperty bool_true_color_property_;
+  rviz::BoolProperty show_bool_false_property_;
   // Frame-rate stats
   rviz::Property frame_rate_properties_;
   rviz::IntProperty num_queued_blocks_indicator_;
@@ -146,6 +157,16 @@ class VoxelVisual : public QObject {
   void drawLayeredMapOccupancy(const LayeredMapInterface& layered_map);
   void drawLayeredMapOccupancy(
       const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg);
+  bool getGenericContinuousLayerColor(
+      const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg,
+      const std::vector<std::vector<FloatingPoint>>& layer_values,
+      Ogre::ColourValue& color) const;
+  void drawDiscreteLayer(const wavemap_msgs::DiscreteLayer& discrete_layer_msg,
+                         FloatingPoint min_cell_width);
+  bool getDiscreteCellColor(const wavemap_msgs::DiscreteLayer& layer_msg,
+                            const wavemap_msgs::DiscreteLayerCell& cell_msg,
+                            int exception_index, bool is_exception,
+                            Ogre::ColourValue& color) const;
   void appendLayeredBlockOccupancy(
       const wavemap_msgs::LayeredHashedWaveletOctree& layered_map_msg,
       const wavemap_msgs::LayeredHashedWaveletOctreeBlock& block_msg,

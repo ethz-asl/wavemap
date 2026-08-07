@@ -8,10 +8,21 @@
 #include <wavemap/layered/layered_map_io.h>
 
 namespace {
-bool expectFailure(const std::string& name, bool load_result) {
+bool expectFailure(const std::string& name, bool load_result,
+                   const std::string& error_message) {
   const bool failed = !load_result;
-  std::cout << "  " << name << ": " << (failed ? "pass" : "FAIL") << "\n";
+  std::cout << "  " << name << ": " << (failed ? "pass" : "FAIL");
+  if (failed && !error_message.empty()) {
+    std::cout << " (" << error_message << ")";
+  }
+  std::cout << "\n";
   return failed;
+}
+
+bool loadWithError(const std::filesystem::path& path, ExampleLayeredMap& map,
+                   std::string& error_message) {
+  error_message.clear();
+  return ExampleLayeredMapIo::load(path, map, &error_message);
 }
 
 bool replaceBytes(const std::filesystem::path& path, const std::string& from,
@@ -26,11 +37,17 @@ bool replaceBytes(const std::filesystem::path& path, const std::string& from,
   }
   std::string data((std::istreambuf_iterator<char>(input)),
                    std::istreambuf_iterator<char>());
-  const size_t pos = data.find(from);
-  if (pos == std::string::npos) {
+
+  size_t replacements = 0u;
+  size_t pos = data.find(from);
+  while (pos != std::string::npos) {
+    data.replace(pos, from.size(), to);
+    ++replacements;
+    pos = data.find(from, pos + to.size());
+  }
+  if (replacements == 0u) {
     return false;
   }
-  data.replace(pos, from.size(), to);
 
   std::ofstream output(path, std::ios::binary | std::ios::trunc);
   if (!output.is_open()) {
@@ -80,9 +97,11 @@ int main() {
 
   {
     ExampleLayeredMap loaded(config);
+    std::string error_message;
     ok &= expectFailure(
         "missing file fails",
-        ExampleLayeredMapIo::load(output_dir / "missing_file.lwvmp", loaded));
+        loadWithError(output_dir / "missing_file.lwvmp", loaded, error_message),
+        error_message);
   }
 
   {
@@ -92,8 +111,10 @@ int main() {
       return 1;
     }
     ExampleLayeredMap loaded(config);
+    std::string error_message;
     ok &= expectFailure("wrong magic fails",
-                        ExampleLayeredMapIo::load(path, loaded));
+                        loadWithError(path, loaded, error_message),
+                        error_message);
   }
 
   {
@@ -104,8 +125,10 @@ int main() {
       return 1;
     }
     ExampleLayeredMap loaded(config);
+    std::string error_message;
     ok &= expectFailure("unsupported version fails",
-                        ExampleLayeredMapIo::load(path, loaded));
+                        loadWithError(path, loaded, error_message),
+                        error_message);
   }
 
   ExampleLayeredMap map(config);
@@ -119,8 +142,10 @@ int main() {
       return 1;
     }
     ExampleLayeredMap loaded(config);
+    std::string error_message;
     ok &= expectFailure("wrong discrete layer name fails",
-                        ExampleLayeredMapIo::load(path, loaded));
+                        loadWithError(path, loaded, error_message),
+                        error_message);
   }
 
   {
@@ -131,8 +156,10 @@ int main() {
       return 1;
     }
     ExampleLayeredMap loaded(config);
+    std::string error_message;
     ok &= expectFailure("wrong discrete layer type fails",
-                        ExampleLayeredMapIo::load(path, loaded));
+                        loadWithError(path, loaded, error_message),
+                        error_message);
   }
 
   if (!ok) {
