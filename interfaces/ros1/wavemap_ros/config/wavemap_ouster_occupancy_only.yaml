@@ -1,0 +1,57 @@
+general:
+  world_frame: "map"
+  logging_level: debug
+  allow_reset_map_service: true
+
+# Original occupancy-only Wavemap data structure. No layered map is enabled.
+map:
+  type: hashed_wavelet_octree
+  min_cell_width: { meters: 0.25 }
+  min_log_odds: -2.0
+  max_log_odds: 4.0
+  tree_height: 7
+  only_prune_blocks_if_unused_for: { seconds: 5.0 }
+
+map_operations:
+  - type: threshold_map
+    once_every: { seconds: 2.0 }
+  - type: prune_map
+    once_every: { seconds: 10.0 }
+  - type: publish_map
+    once_every: { seconds: 0.5 }
+    max_num_blocks_per_msg: 50
+    topic: "map"
+
+measurement_integrators:
+  ouster_os1:
+    projection_model:
+      type: ouster_projector
+      lidar_origin_to_beam_origin: { millimeters: 16.721 }
+      lidar_origin_to_sensor_origin_z_offset: { millimeters: 38.195 }
+      elevation:
+        num_cells: 128
+        min_angle: { degrees: -21.39 }
+        max_angle: { degrees: 21.25 }
+      azimuth:
+        num_cells: 1024
+        min_angle: { degrees: -180.0 }
+        max_angle: { degrees: 180.0 }
+    measurement_model:
+      type: continuous_beam
+      angle_sigma: { degrees: 0.1 }
+      range_sigma: { meters: 0.05 }
+      scaling_free: 0.2
+      scaling_occupied: 0.4
+    integration_method:
+      type: hashed_wavelet_integrator
+      min_range: { meters: 0.5 }
+      max_range: { meters: 25.0 }
+
+inputs:
+  - type: pointcloud_topic
+    topic_name: "/ouster/points"
+    topic_type: ouster
+    measurement_integrator_names: ouster_os1
+    undistort_motion: false
+    topic_queue_length: 10
+    max_wait_for_pose: { seconds: 1.0 }

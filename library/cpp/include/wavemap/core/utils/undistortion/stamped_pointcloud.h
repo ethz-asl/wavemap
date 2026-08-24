@@ -13,10 +13,13 @@ namespace wavemap::undistortion {
 struct StampedPoint {
   Point3D position;
   TimeOffset time_offset;
+  size_t source_index;
 
   StampedPoint(FloatingPoint x, FloatingPoint y, FloatingPoint z,
-               TimeOffset time_offset)
-      : position(x, y, z), time_offset(time_offset) {}
+               TimeOffset time_offset, size_t source_index = 0u)
+      : position(x, y, z),
+        time_offset(time_offset),
+        source_index(source_index) {}
 
   std::string toStr() const;
 };

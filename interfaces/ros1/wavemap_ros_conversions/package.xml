@@ -16,6 +16,7 @@
   <depend>wavemap_msgs</depend>
 
   <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
   <depend>eigen_conversions</depend>
   <depend>visualization_msgs</depend>
 </package>

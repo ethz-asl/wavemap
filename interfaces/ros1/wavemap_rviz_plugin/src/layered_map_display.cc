@@ -4,6 +4,7 @@
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
@@ -21,6 +22,7 @@
 #include <OGRE/Overlay/OgreTextAreaOverlayElement.h>
 #include <pluginlib/class_list_macros.h>
 #include <qfiledialog.h>
+#include <QSignalBlocker>
 #include <QString>
 #include <ros/console.h>
 #include <rviz/visualization_manager.h>
@@ -30,37 +32,121 @@
 
 #include "example_layered_map_ros_config.h"
 #include "layered_ros_converter.h"
-#include "wavemap_rviz_plugin/layered_map_factory.h"
 #include "wavemap_rviz_plugin/utils/alert_dialog.h"
 
 namespace wavemap::rviz_plugin {
 namespace {
-struct ExampleContinuousLayerColorProvider {
-  static bool getLayerColor(const std::string& layer_name,
-                            const LayeredVoxel& voxel,
-                            FloatingPoint /*occupancy*/,
-                            Ogre::ColourValue& color) {
-    if (layer_name == "color") {
-      color = Ogre::ColourValue(std::clamp(voxel.data.rgb.r, 0.f, 1.f),
-                                std::clamp(voxel.data.rgb.g, 0.f, 1.f),
-                                std::clamp(voxel.data.rgb.b, 0.f, 1.f), 1.f);
-      return true;
-    }
+using IndexTuple = std::tuple<int, int, int>;
 
-    if (layer_name == "traversability") {
-      const FloatingPoint t =
-          std::clamp(voxel.data.traversability, 0.f, 1.f);
-      color = Ogre::ColourValue(1.f - t, t, 0.15f, 1.f);
-      return true;
-    }
+template <typename IndexMsgT>
+IndexTuple indexTuple(const IndexMsgT& index) {
+  return {index.x, index.y, index.z};
+}
 
-    return false;
+void mergeContinuousPatch(const wavemap_msgs::Map& patch,
+                          wavemap_msgs::Map& stored) {
+  if (patch.layered_hashed_wavelet_octree.size() != 1u) {
+    return;
   }
-};
+  if (stored.layered_hashed_wavelet_octree.size() != 1u) {
+    stored = patch;
+    return;
+  }
+  const auto& patch_map = patch.layered_hashed_wavelet_octree.front();
+  auto& stored_map = stored.layered_hashed_wavelet_octree.front();
+  std::set<IndexTuple> allocated;
+  for (const auto& block_index : patch_map.allocated_block_indices) {
+    allocated.emplace(indexTuple(block_index));
+  }
+  stored_map.allocated_block_indices = patch_map.allocated_block_indices;
+  stored_map.min_cell_width = patch_map.min_cell_width;
+  stored_map.min_log_odds = patch_map.min_log_odds;
+  stored_map.max_log_odds = patch_map.max_log_odds;
+  stored_map.tree_height = patch_map.tree_height;
+  stored_map.layer_names = patch_map.layer_names;
+  stored_map.layer_types = patch_map.layer_types;
+  stored_map.layer_min_values = patch_map.layer_min_values;
+  stored_map.layer_max_values = patch_map.layer_max_values;
+  stored_map.layer_visualizations = patch_map.layer_visualizations;
 
-using ExampleContinuousMapFactory =
-    TypedLayeredMapFactory<ContinuousWaveletMap, LayeredVoxelRosConverter,
-                           ExampleContinuousLayerColorProvider>;
+  stored_map.blocks.erase(
+      std::remove_if(stored_map.blocks.begin(), stored_map.blocks.end(),
+                     [&](const auto& block) {
+                       return allocated.find(indexTuple(block.root_node_offset)) ==
+                              allocated.end();
+                     }),
+      stored_map.blocks.end());
+  for (const auto& patch_block : patch_map.blocks) {
+    const auto patch_index = indexTuple(patch_block.root_node_offset);
+    const auto stored_it = std::find_if(
+        stored_map.blocks.begin(), stored_map.blocks.end(),
+        [&](const auto& block) {
+          return indexTuple(block.root_node_offset) == patch_index;
+        });
+    if (stored_it == stored_map.blocks.end()) {
+      stored_map.blocks.emplace_back(patch_block);
+    } else {
+      *stored_it = patch_block;
+    }
+  }
+  stored.header = patch.header;
+}
+
+void mergeDiscretePatch(const wavemap_msgs::DiscreteLayer& patch,
+                        wavemap_msgs::DiscreteLayer& stored) {
+  stored.name = patch.name;
+  stored.value_type = patch.value_type;
+  stored.block_height = patch.block_height;
+  stored.categories = patch.categories;
+
+  std::set<IndexTuple> deleted_keys;
+  for (const auto& deleted_index : patch.deleted_parent_indices) {
+    deleted_keys.insert(indexTuple(deleted_index));
+  }
+  if (!deleted_keys.empty()) {
+    stored.cells.erase(
+        std::remove_if(stored.cells.begin(), stored.cells.end(),
+                       [&](const auto& cell) {
+                         return deleted_keys.count(
+                                    indexTuple(cell.parent_index)) != 0u;
+                       }),
+        stored.cells.end());
+  }
+
+  std::map<IndexTuple, size_t> stored_positions;
+  for (size_t index = 0u; index < stored.cells.size(); ++index) {
+    stored_positions[indexTuple(stored.cells[index].parent_index)] = index;
+  }
+  for (const auto& patch_cell : patch.cells) {
+    const auto key = indexTuple(patch_cell.parent_index);
+    const auto position_it = stored_positions.find(key);
+    if (position_it == stored_positions.end()) {
+      stored_positions[key] = stored.cells.size();
+      stored.cells.emplace_back(patch_cell);
+    } else {
+      stored.cells[position_it->second] = patch_cell;
+    }
+  }
+  stored.deleted_parent_indices.clear();
+}
+
+void mergeLayeredPatch(const wavemap_msgs::LayeredMap& patch,
+                       wavemap_msgs::LayeredMap& stored) {
+  stored.header = patch.header;
+  mergeContinuousPatch(patch.continuous_map, stored.continuous_map);
+  for (const auto& layer_patch : patch.discrete_layers) {
+    const auto stored_it = std::find_if(
+        stored.discrete_layers.begin(), stored.discrete_layers.end(),
+        [&](const auto& layer) { return layer.name == layer_patch.name; });
+    if (stored_it == stored.discrete_layers.end()) {
+      stored.discrete_layers.emplace_back(layer_patch);
+      stored.discrete_layers.back().deleted_parent_indices.clear();
+    } else {
+      mergeDiscretePatch(layer_patch, *stored_it);
+    }
+  }
+  stored.is_full_update = true;
+}
 
 Ogre::ColourValue stableIntColor(int value) {
   const uint32_t hash = static_cast<uint32_t>(value) * 2654435761u;
@@ -128,8 +214,33 @@ void LayeredMapDisplay::onInitialize() {
   }
   voxel_visual_ = std::make_unique<VoxelVisual>(
       scene_manager_, context_->getViewManager(), scene_node_,
-      &voxel_visual_properties_, map_and_mutex_);
+      &voxel_visual_properties_, map_and_mutex_, [this]() {
+        updateLegendOverlay(latest_msg_ ? &latest_msg_.value() : nullptr);
+      });
+  loadLayeredMapFactories();
   initializeLegendOverlay();
+}
+
+void LayeredMapDisplay::loadLayeredMapFactories() {
+  layered_map_factories_.clear();
+  try {
+    layered_map_factory_loader_ = std::make_unique<
+        pluginlib::ClassLoader<LayeredMapFactory>>(
+        "wavemap_rviz_plugin", "wavemap::rviz_plugin::LayeredMapFactory");
+    for (const std::string& class_name :
+         layered_map_factory_loader_->getDeclaredClasses()) {
+      try {
+        layered_map_factories_.emplace_back(
+            layered_map_factory_loader_->createInstance(class_name));
+      } catch (const pluginlib::PluginlibException& exception) {
+        ROS_WARN_STREAM("Could not load layered map schema handler '"
+                        << class_name << "': " << exception.what());
+      }
+    }
+  } catch (const pluginlib::PluginlibException& exception) {
+    ROS_ERROR_STREAM("Could not initialize layered map schema handlers: "
+                     << exception.what());
+  }
 }
 
 void LayeredMapDisplay::reset() {
@@ -143,6 +254,7 @@ void LayeredMapDisplay::reset() {
   updateLegendOverlay(nullptr);
 }
 
+
 void LayeredMapDisplay::processMessage(
     const wavemap_msgs::LayeredMap::ConstPtr& msg) {
   ProfilerZoneScoped;
@@ -154,11 +266,25 @@ void LayeredMapDisplay::processMessage(
   displayMessage(*msg);
 }
 
-void LayeredMapDisplay::displayMessage(const wavemap_msgs::LayeredMap& msg) {
-  latest_msg_ = msg;
+void LayeredMapDisplay::displayMessage(
+    const wavemap_msgs::LayeredMap& incoming_msg) {
+  const bool replace_all = incoming_msg.is_full_update || !latest_msg_;
+  if (replace_all) {
+    latest_msg_ = incoming_msg;
+  } else {
+    mergeLayeredPatch(incoming_msg, *latest_msg_);
+  }
+  const wavemap_msgs::LayeredMap& msg = *latest_msg_;
   updateAvailableLayers(msg);
+  configureSelectedLayerAppearance(msg);
   updateLegendOverlay(&msg);
-  updateStoredMapForSelectedLayer(msg);
+  const DisplayLayer* selected_layer = selectedLayer();
+  const bool selected_is_discrete =
+      selected_layer &&
+      selected_layer->source == DisplayLayer::Source::kDiscrete;
+  if (!selected_is_discrete || replace_all) {
+    updateStoredMapForSelectedLayer(msg);
+  }
 
   if (!voxel_visual_) {
     ROS_WARN("Voxel visual not initialized yet, skipping layered map message.");
@@ -176,25 +302,114 @@ void LayeredMapDisplay::displayMessage(const wavemap_msgs::LayeredMap& msg) {
   }
   voxel_visual_->setFramePosition(position);
   voxel_visual_->setFrameOrientation(orientation);
+
+  if (selected_is_discrete && !replace_all) {
+    const auto patch_it = std::find_if(
+        incoming_msg.discrete_layers.begin(),
+        incoming_msg.discrete_layers.end(),
+        [this](const wavemap_msgs::DiscreteLayer& layer) {
+          return layer.name == selected_layer_name_;
+        });
+    if (patch_it != incoming_msg.discrete_layers.end()) {
+      FloatingPoint min_cell_width = 0.1f;
+      if (msg.continuous_map.layered_hashed_wavelet_octree.size() == 1u) {
+        min_cell_width = msg.continuous_map.layered_hashed_wavelet_octree
+                             .front()
+                             .min_cell_width;
+      }
+      voxel_visual_->applyDiscreteLayerPatch(*patch_it, min_cell_width);
+    }
+    return;
+  }
   voxel_visual_->updateMap(true);
 }
 
+void LayeredMapDisplay::configureSelectedLayerAppearance(
+    const wavemap_msgs::LayeredMap& msg) {
+  if (!voxel_visual_) {
+    return;
+  }
+  const DisplayLayer* layer = selectedLayer();
+  if (!layer) {
+    return;
+  }
+
+  bool has_low_color = false;
+  bool has_high_color = false;
+  Ogre::ColourValue low_color;
+  FloatingPoint scalar_min = voxel_visual_->scalarDisplayMin();
+  FloatingPoint scalar_max = voxel_visual_->scalarDisplayMax();
+  Ogre::ColourValue high_color;
+  std::vector<wavemap_msgs::DiscreteLayerCategory> categories;
+
+  if (layer->source == DisplayLayer::Source::kContinuous &&
+      !msg.continuous_map.layered_hashed_wavelet_octree.empty()) {
+    const auto& continuous =
+        msg.continuous_map.layered_hashed_wavelet_octree.front();
+    const auto layer_name_it =
+        std::find(continuous.layer_names.begin(), continuous.layer_names.end(),
+                  selected_layer_name_);
+    if (layer_name_it != continuous.layer_names.end()) {
+      const size_t layer_index = static_cast<size_t>(
+          std::distance(continuous.layer_names.begin(), layer_name_it));
+      if (layer_index < continuous.layer_min_values.size() &&
+          layer_index < continuous.layer_max_values.size() &&
+          !continuous.layer_min_values[layer_index].float32_values.empty() &&
+          !continuous.layer_max_values[layer_index].float32_values.empty()) {
+        scalar_min = continuous.layer_min_values[layer_index].float32_values[0];
+        scalar_max = continuous.layer_max_values[layer_index].float32_values[0];
+      }
+    }
+    const auto visualization_it = std::find_if(
+        continuous.layer_visualizations.begin(),
+        continuous.layer_visualizations.end(), [&](const auto& visualization) {
+          return visualization.name == selected_layer_name_;
+        });
+    if (visualization_it != continuous.layer_visualizations.end()) {
+      has_low_color = visualization_it->has_low_color;
+      has_high_color = visualization_it->has_high_color;
+      low_color = Ogre::ColourValue(visualization_it->low_r,
+                                    visualization_it->low_g,
+                                    visualization_it->low_b, 1.f);
+      high_color = Ogre::ColourValue(visualization_it->high_r,
+                                     visualization_it->high_g,
+                                     visualization_it->high_b, 1.f);
+    }
+  } else if (layer->source == DisplayLayer::Source::kDiscrete) {
+    const auto layer_it = std::find_if(
+        msg.discrete_layers.begin(), msg.discrete_layers.end(),
+        [this](const auto& discrete_layer) {
+          return discrete_layer.name == selected_layer_name_;
+        });
+    if (layer_it != msg.discrete_layers.end()) {
+      categories = layer_it->categories;
+    }
+  }
+
+  voxel_visual_->configureLayerAppearance(
+      layer->name, layer->type,
+      layer->source == DisplayLayer::Source::kDiscrete,
+      scalar_min, scalar_max, has_low_color, low_color,
+      has_high_color, high_color, categories);
+}
+
+
 bool LayeredMapDisplay::loadMapFromDisk(
     const std::filesystem::path& filepath, std::string* error_message) {
-  ExampleLayeredMap map(ExampleLayeredMapConfig{});
-  if (!ExampleLayeredMapIo::load(filepath, map, error_message)) {
-    return false;
+  const std::string frame_id =
+      fixed_frame_.isEmpty() ? "map" : fixed_frame_.toStdString();
+  for (const auto& factory : layered_map_factories_) {
+    wavemap_msgs::LayeredMap msg;
+    std::string factory_error;
+    if (factory->tryLoad(filepath, frame_id, msg, &factory_error)) {
+      displayMessage(msg);
+      return true;
+    }
+    if (error_message && !factory_error.empty()) {
+      *error_message = std::move(factory_error);
+    }
   }
-
-  wavemap_msgs::LayeredMap msg;
-  const std::string frame_id = fixed_frame_.isEmpty() ? "map" : fixed_frame_.toStdString();
-  if (!convert::layeredMapToRosMsg<ExampleLayeredMap, LayeredVoxelRosConverter>(
-          map, frame_id, ros::Time(0), msg)) {
-    return false;
-  }
-
-  displayMessage(msg);
-  return true;
+  return false;
 }
 
 void LayeredMapDisplay::clearStoredMap() {
@@ -208,9 +423,9 @@ void LayeredMapDisplay::clearStoredMap() {
 
 void LayeredMapDisplay::updateAvailableLayers(
     const wavemap_msgs::LayeredMap& msg) {
-  available_layers_.clear();
-  available_layers_.push_back(
-      {"occupancy", "float32", DisplayLayer::Source::kContinuous});
+  std::vector<DisplayLayer> new_layers;
+  new_layers.push_back(
+      {"occupancy", "float32", DisplayLayer::Source::kContinuous, {}, {}});
 
   if (msg.continuous_map.layered_hashed_wavelet_octree.size() == 1u) {
     const auto& continuous_msg =
@@ -218,27 +433,53 @@ void LayeredMapDisplay::updateAvailableLayers(
     const size_t num_layers = std::min(continuous_msg.layer_names.size(),
                                        continuous_msg.layer_types.size());
     for (size_t layer_i = 0u; layer_i < num_layers; ++layer_i) {
-      available_layers_.push_back({continuous_msg.layer_names[layer_i],
-                                   continuous_msg.layer_types[layer_i],
-                                   DisplayLayer::Source::kContinuous});
+      DisplayLayer layer{continuous_msg.layer_names[layer_i],
+                         continuous_msg.layer_types[layer_i],
+                         DisplayLayer::Source::kContinuous, {}, {}};
+      if (layer_i < continuous_msg.layer_min_values.size()) {
+        layer.min_values =
+            continuous_msg.layer_min_values[layer_i].float32_values;
+      }
+      if (layer_i < continuous_msg.layer_max_values.size()) {
+        layer.max_values =
+            continuous_msg.layer_max_values[layer_i].float32_values;
+      }
+      new_layers.emplace_back(std::move(layer));
     }
   }
 
   for (const auto& discrete_layer : msg.discrete_layers) {
-    available_layers_.push_back({discrete_layer.name, discrete_layer.value_type,
-                                 DisplayLayer::Source::kDiscrete});
+    new_layers.push_back({discrete_layer.name, discrete_layer.value_type,
+                          DisplayLayer::Source::kDiscrete, {}, {}});
   }
 
   const bool selected_still_exists =
-      std::any_of(available_layers_.begin(), available_layers_.end(),
+      std::any_of(new_layers.begin(), new_layers.end(),
                   [this](const DisplayLayer& layer) {
                     return layer.name == selected_layer_name_;
                   });
   if (!selected_still_exists) {
-    selected_layer_name_ = available_layers_.empty() ? "occupancy"
-                                                     : available_layers_.front().name;
+    selected_layer_name_ =
+        new_layers.empty() ? "occupancy" : new_layers.front().name;
   }
 
+  const auto sameLayer = [](const DisplayLayer& lhs, const DisplayLayer& rhs) {
+    return lhs.name == rhs.name && lhs.type == rhs.type &&
+           lhs.source == rhs.source && lhs.min_values == rhs.min_values &&
+           lhs.max_values == rhs.max_values;
+  };
+  const bool schema_unchanged =
+      available_layers_.size() == new_layers.size() &&
+      std::equal(available_layers_.begin(), available_layers_.end(),
+                 new_layers.begin(), sameLayer);
+  available_layers_ = std::move(new_layers);
+  if (schema_unchanged) {
+    return;
+  }
+
+  // Rebuilding an EnumProperty emits selection-change signals. Block them
+  // here because displayMessage() performs exactly one map update below.
+  const QSignalBlocker signal_blocker(&layer_property_);
   layer_property_.clearOptions();
   for (const DisplayLayer& layer : available_layers_) {
     layer_property_.addOption(QString::fromStdString(layer.name));
@@ -286,9 +527,11 @@ void LayeredMapDisplay::updateStoredMapForSelectedLayer(
   if (msg.continuous_map.layered_hashed_wavelet_octree.size() == 1u) {
     const auto& continuous_msg =
         msg.continuous_map.layered_hashed_wavelet_octree.front();
-    if (auto typed_map = ExampleContinuousMapFactory{}.tryCreate(continuous_msg)) {
-      map_and_mutex_->layered_map = std::move(typed_map);
-      return;
+    for (const auto& factory : layered_map_factories_) {
+      if (auto typed_map = factory->tryCreate(continuous_msg)) {
+        map_and_mutex_->layered_map = std::move(typed_map);
+        return;
+      }
     }
 
     map_and_mutex_->layered_map_msg = continuous_msg;
@@ -518,9 +761,23 @@ void LayeredMapDisplay::updateLegendOverlay(const wavemap_msgs::LayeredMap* msg)
       rows.push_back({Ogre::ColourValue(0.f, 1.f, 0.f, 1.f), "green channel"});
       rows.push_back({Ogre::ColourValue(0.f, 0.f, 1.f, 1.f), "blue channel"});
     } else if (layer->type == "float32") {
-      subtitle = "scalar value";
-      rows.push_back({Ogre::ColourValue(1.f, 0.f, 0.15f, 1.f), "0.0"});
-      rows.push_back({Ogre::ColourValue(0.f, 1.f, 0.15f, 1.f), "1.0"});
+      subtitle = "scalar value / RViz display range";
+      const FloatingPoint min_value =
+          voxel_visual_ ? voxel_visual_->scalarDisplayMin() : 0.f;
+      const FloatingPoint max_value =
+          voxel_visual_ ? voxel_visual_->scalarDisplayMax() : 1.f;
+      std::ostringstream min_label;
+      std::ostringstream max_label;
+      min_label << min_value;
+      max_label << max_value;
+      rows.push_back(
+          {voxel_visual_ ? voxel_visual_->scalarLowColor()
+                         : Ogre::ColourValue(0.f, 0.f, 1.f, 1.f),
+           min_label.str()});
+      rows.push_back(
+          {voxel_visual_ ? voxel_visual_->scalarHighColor()
+                         : Ogre::ColourValue(1.f, 1.f, 0.f, 1.f),
+           max_label.str()});
     } else {
       subtitle = "No legend rule for type " + layer->type;
     }
@@ -538,11 +795,14 @@ void LayeredMapDisplay::updateLegendOverlay(const wavemap_msgs::LayeredMap* msg)
       subtitle = "boolean values";
       const std::set<bool> values = collectBoolValues(*layer_it);
       if (values.count(true)) {
-        rows.push_back({Ogre::ColourValue(1.f, 0.05f, 0.05f, 1.f), "true"});
+        rows.push_back({voxel_visual_ ? voxel_visual_->boolColor(true)
+                                     : Ogre::ColourValue(1.f, 0.05f, 0.05f),
+                        "true"});
       }
       if (values.count(false)) {
-        rows.push_back({Ogre::ColourValue(0.45f, 0.45f, 0.45f, 1.f),
-                        "false hidden by default"});
+        rows.push_back({voxel_visual_ ? voxel_visual_->boolColor(false)
+                                     : Ogre::ColourValue(0.35f, 0.35f, 0.35f),
+                        "false"});
       }
       if (values.empty()) {
         subtitle = "No observed values";
@@ -550,16 +810,31 @@ void LayeredMapDisplay::updateLegendOverlay(const wavemap_msgs::LayeredMap* msg)
     } else if (layer_it->value_type == "int") {
       subtitle = "integer values";
       const std::set<int> values = collectIntValues(*layer_it);
+      std::map<int, std::string> labels;
+      for (const auto& category : layer_it->categories) {
+        labels[category.value] = category.label;
+      }
       constexpr size_t kMaxLegendEntries = 10u;
+      const size_t category_limit = values.size() > kMaxLegendEntries
+                                        ? kMaxLegendEntries - 1u
+                                        : kMaxLegendEntries;
       size_t entry_count = 0u;
       for (const int value : values) {
-        if (kMaxLegendEntries <= entry_count) {
+        if (category_limit <= entry_count) {
           rows.push_back({Ogre::ColourValue(0.70f, 0.70f, 0.70f, 1.f),
                           "+" + std::to_string(values.size() - entry_count) +
                               " more"});
           break;
         }
-        rows.push_back({stableIntColor(value), std::to_string(value)});
+        const auto label_it = labels.find(value);
+        const std::string label =
+            label_it == labels.end() || label_it->second.empty()
+                ? "Value " + std::to_string(value)
+                : label_it->second + " (" + std::to_string(value) + ")";
+        rows.push_back(
+            {voxel_visual_ ? voxel_visual_->categoryColor(value)
+                           : stableIntColor(value),
+             label});
         ++entry_count;
       }
       if (values.empty()) {
@@ -655,14 +930,46 @@ void LayeredMapDisplay::loadMapFromDiskCallback() {
 
 void LayeredMapDisplay::updateLayerSelectionCallback() {
   ProfilerZoneScoped;
+  const DisplayLayer* previous_layer = selectedLayer();
+  if (voxel_visual_ && previous_layer) {
+    if (previous_layer->source == DisplayLayer::Source::kDiscrete) {
+      discrete_termination_height_ = voxel_visual_->terminationHeight();
+    } else {
+      continuous_termination_height_ = voxel_visual_->terminationHeight();
+    }
+  }
   selected_layer_name_ = layer_property_.getStdString();
   if (latest_msg_) {
+    configureSelectedLayerAppearance(latest_msg_.value());
     updateLegendOverlay(&latest_msg_.value());
     updateStoredMapForSelectedLayer(latest_msg_.value());
   } else {
     updateLegendOverlay(nullptr);
   }
   if (voxel_visual_) {
+    const DisplayLayer* current_layer = selectedLayer();
+    if (current_layer && latest_msg_) {
+      if (current_layer->source == DisplayLayer::Source::kDiscrete) {
+        const auto layer_it = std::find_if(
+            latest_msg_->discrete_layers.begin(),
+            latest_msg_->discrete_layers.end(),
+            [this](const auto& layer) {
+              return layer.name == selected_layer_name_;
+            });
+        const int max_height =
+            layer_it == latest_msg_->discrete_layers.end()
+                ? 1
+                : layer_it->block_height;
+        voxel_visual_->setTerminationHeight(max_height,
+                                             discrete_termination_height_);
+      } else if (latest_msg_->continuous_map.layered_hashed_wavelet_octree.size() ==
+                 1u) {
+        voxel_visual_->setTerminationHeight(
+            latest_msg_->continuous_map.layered_hashed_wavelet_octree.front()
+                .tree_height,
+            continuous_termination_height_);
+      }
+    }
     voxel_visual_->clear();
     voxel_visual_->updateMap(true);
   }

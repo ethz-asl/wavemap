@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <wavemap/core/indexing/index_conversions.h>
+#include <wavemap/layered/continuous_layer_updater.h>
 
 #include "layered_voxel_config.h"
 
@@ -15,10 +16,7 @@ struct ContinuousLayerObservation {
 inline void setContinuousLayersAtVoxel(
     ContinuousWaveletMap& map, const wavemap::Index3D& index,
     const ContinuousLayers& observed_data) {
-  const LayeredVoxel current_voxel = map.getVoxelValue(index);
-  const ContinuousLayers data_update =
-      ContinuousLayersPolicy::subtract(observed_data, current_voxel.data);
-  map.addToVoxelValue(index, LayeredVoxel(0.f, data_update));
+  wavemap::layered::setContinuousLayersAtVoxel(map, index, observed_data);
 }
 
 inline void setContinuousLayers(

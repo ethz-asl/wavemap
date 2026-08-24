@@ -14,6 +14,7 @@
 #include <wavemap/core/integrator/projective/projective_integrator.h>
 #include <wavemap/core/utils/profile/profiler_interface.h>
 #include <wavemap_ros_conversions/time_conversions.h>
+#include <wavemap_ros_conversions/pointcloud_layer_observation_conversions.h>
 
 namespace wavemap {
 DECLARE_CONFIG_MEMBERS(PointcloudTopicInputConfig,
@@ -110,6 +111,37 @@ void PointcloudTopicInput::callback(
                                     : config_.sensor_frame_id;
   undistortion::StampedPointcloud stamped_pointcloud{
       stamp_nsec, std::move(sensor_frame_id), num_points};
+  std::vector<std::unique_ptr<PointcloudEndpointDecoder>> endpoint_decoders;
+  endpoint_decoders.reserve(endpoint_adapters_.size());
+  for (const auto& adapter : endpoint_adapters_) {
+    if (auto decoder = adapter->prepare(pointcloud_msg, num_points)) {
+      endpoint_decoders.emplace_back(std::move(decoder));
+    }
+  }
+
+  // Decode all configured endpoint fields in one shared traversal. The XYZ
+  // conversion below remains unchanged to preserve Wavemap's input behavior.
+  bool endpoint_decoding_valid = true;
+  for (size_t row = 0u; row < pointcloud_msg.height; ++row) {
+    for (size_t column = 0u; column < pointcloud_msg.width; ++column) {
+      const size_t point_offset =
+          row * pointcloud_msg.row_step + column * pointcloud_msg.point_step;
+      for (auto& decoder : endpoint_decoders) {
+        endpoint_decoding_valid &=
+            decoder->decodePoint(pointcloud_msg, point_offset);
+      }
+    }
+  }
+  std::vector<std::unique_ptr<DecodedPointcloudEndpointChannel>>
+      endpoint_channels;
+  if (endpoint_decoding_valid) {
+    endpoint_channels.reserve(endpoint_decoders.size());
+    for (auto& decoder : endpoint_decoders) {
+      endpoint_channels.emplace_back(decoder->finish());
+    }
+  } else {
+    ROS_WARN("Skipping malformed pointcloud endpoint channels.");
+  }
 
   // Load the points with time information if undistortion is enabled
   bool loaded = false;
@@ -121,8 +153,10 @@ void PointcloudTopicInput::callback(
         if (hasField(pointcloud_msg, "t")) {
           sensor_msgs::PointCloud2ConstIterator<uint32_t> t_it(pointcloud_msg,
                                                                "t");
-          for (; pos_it != pos_it.end(); ++pos_it, ++t_it) {
-            stamped_pointcloud.emplace(pos_it[0], pos_it[1], pos_it[2], *t_it);
+          size_t source_index = 0u;
+          for (; pos_it != pos_it.end(); ++pos_it, ++t_it, ++source_index) {
+            stamped_pointcloud.emplace(pos_it[0], pos_it[1], pos_it[2], *t_it,
+                                       source_index);
           }
           loaded = true;
         } else {
@@ -142,13 +176,16 @@ void PointcloudTopicInput::callback(
 
   // If undistortion is disabled or loading failed, only load positions
   if (!loaded) {
-    for (; pos_it != pos_it.end(); ++pos_it) {
-      stamped_pointcloud.emplace(pos_it[0], pos_it[1], pos_it[2], 0);
+    size_t source_index = 0u;
+    for (; pos_it != pos_it.end(); ++pos_it, ++source_index) {
+      stamped_pointcloud.emplace(pos_it[0], pos_it[1], pos_it[2], 0,
+                                 source_index);
     }
   }
 
   // Add it to the integration queue
-  pointcloud_queue_.emplace(std::move(stamped_pointcloud));
+  pointcloud_queue_.push(
+      {std::move(stamped_pointcloud), std::move(endpoint_channels)});
 }
 
 #ifdef LIVOX_AVAILABLE
@@ -176,18 +213,20 @@ void PointcloudTopicInput::callback(
   }
 
   // Add it to the integration queue
-  pointcloud_queue_.emplace(std::move(stamped_pointcloud));
+  pointcloud_queue_.push({std::move(stamped_pointcloud), {}});
 }
 #endif
 
 void PointcloudTopicInput::processQueue() {
   ProfilerZoneScoped;
   while (!pointcloud_queue_.empty()) {
-    auto& oldest_msg = pointcloud_queue_.front();
+    auto& queued_cloud = pointcloud_queue_.front();
+    auto& oldest_msg = queued_cloud.pointcloud;
 
     // Drop messages if they're older than max_wait_for_pose
     if (config_.max_wait_for_pose <
-        convert::nanoSecondsToSeconds(pointcloud_queue_.back().getEndTime() -
+        convert::nanoSecondsToSeconds(
+            pointcloud_queue_.back().pointcloud.getEndTime() -
                                       oldest_msg.getStartTime())) {
       ROS_WARN_STREAM(
           "Max waiting time of "
@@ -196,7 +235,8 @@ void PointcloudTopicInput::processQueue() {
           << oldest_msg.getSensorFrame() << "\" and time interval ["
           << oldest_msg.getStartTime() << ", " << oldest_msg.getEndTime()
           << "] vs newest cloud end time "
-          << pointcloud_queue_.back().getEndTime() << ". Dropping cloud.");
+          << pointcloud_queue_.back().pointcloud.getEndTime()
+          << ". Dropping cloud.");
       pointcloud_queue_.pop();
       continue;
     }
@@ -260,8 +300,22 @@ void PointcloudTopicInput::processQueue() {
                      << " points. Remaining pointclouds in queue: "
                      << pointcloud_queue_.size() - 1 << ".");
     integration_timer_.start();
-    pipeline_->runPipeline(config_.measurement_integrator_names,
-                           posed_pointcloud);
+    pipeline_->runIntegrators(config_.measurement_integrator_names,
+                              posed_pointcloud);
+    for (const auto& endpoint_channel : queued_cloud.endpoint_channels) {
+      if (!endpoint_channel->integrate(posed_pointcloud,
+                                       oldest_msg.getPoints())) {
+        ROS_WARN("Skipping malformed pointcloud endpoint channel.");
+      }
+    }
+    for (const auto& callback : posed_cloud_callbacks_) {
+      if (!callback(posed_pointcloud)) {
+        ROS_WARN("A derived endpoint layer rejected the posed pointcloud.");
+      }
+    }
+    // Publish/prune only after occupancy and endpoint fields from this
+    // measurement have both been committed.
+    pipeline_->runOperations();
     integration_timer_.stop();
     ROS_DEBUG_STREAM("Integrated new pointcloud in "
                      << integration_timer_.getLastEpisodeDuration()

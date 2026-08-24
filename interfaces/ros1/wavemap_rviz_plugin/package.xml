@@ -17,11 +17,13 @@
   <depend>wavemap</depend>
   <depend>wavemap_msgs</depend>
   <depend>wavemap_ros_conversions</depend>
+  <depend>pluginlib</depend>
 
   <depend>rviz</depend>
   <depend>qtbase5-dev</depend>
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml" />
+    <wavemap_rviz_plugin plugin="${prefix}/plugin_description.xml" />
   </export>
 </package>

@@ -168,7 +168,9 @@ void WavemapMapDisplay::updateLayerMetadataFromRosMsg(const wavemap_msgs::Map& m
   const auto& layered_map_msg = map_msg.layered_hashed_wavelet_octree.front();
   const size_t num_layers = std::min(layered_map_msg.layer_names.size(), layered_map_msg.layer_types.size());
   for (size_t layer_idx = 0u; layer_idx < num_layers; ++layer_idx) {
-    available_layers_.push_back({layered_map_msg.layer_names[layer_idx], layered_map_msg.layer_types[layer_idx]});
+    available_layers_.push_back({layered_map_msg.layer_names[layer_idx],
+                                 layered_map_msg.layer_types[layer_idx],
+                                 {}, {}});
     layer_property_.addOption(QString::fromStdString(layered_map_msg.layer_names[layer_idx]));
   }
 

@@ -64,6 +64,10 @@ class LayeredMap {
 
   ContinuousMap& continuousMap() { return *continuous_map_; }
   const ContinuousMap& continuousMap() const { return *continuous_map_; }
+  typename ContinuousMap::Ptr continuousMapPtr() { return continuous_map_; }
+  typename ContinuousMap::ConstPtr continuousMapPtr() const {
+    return continuous_map_;
+  }
 
   DiscreteLayersT& discreteLayers() { return discrete_layers_; }
   const DiscreteLayersT& discreteLayers() const { return discrete_layers_; }

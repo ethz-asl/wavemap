@@ -3,13 +3,13 @@ project(wavemap_ros_conversions)
 
 # Find dependencies
 find_package(catkin REQUIRED
-    COMPONENTS roscpp eigen_conversions visualization_msgs wavemap wavemap_msgs)
+    COMPONENTS roscpp eigen_conversions sensor_msgs visualization_msgs wavemap wavemap_msgs)
 
 # Register catkin package
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS roscpp eigen_conversions visualization_msgs wavemap wavemap_msgs)
+    CATKIN_DEPENDS roscpp eigen_conversions sensor_msgs visualization_msgs wavemap wavemap_msgs)
 
 # Libraries
 add_library(${PROJECT_NAME}

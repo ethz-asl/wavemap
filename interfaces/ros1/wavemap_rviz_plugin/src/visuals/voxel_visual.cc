@@ -18,14 +18,18 @@
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/utils/bits/bit_operations.h>
 #include <wavemap/core/utils/profile/profiler_interface.h>
+#include <QSignalBlocker>
 
 namespace wavemap::rviz_plugin {
 VoxelVisual::VoxelVisual(Ogre::SceneManager* scene_manager,
                          rviz::ViewManager* view_manager,
                          Ogre::SceneNode* parent_node,
                          rviz::Property* submenu_root_property,
-                         std::shared_ptr<MapAndMutex> map_and_mutex)
+                         std::shared_ptr<MapAndMutex> map_and_mutex,
+                         std::function<void()> layer_color_changed_callback)
     : map_and_mutex_(std::move(map_and_mutex)),
+      layer_color_changed_callback_(
+          std::move(layer_color_changed_callback)),
       scene_manager_(CHECK_NOTNULL(scene_manager)),
       frame_node_(CHECK_NOTNULL(parent_node)->createChildSceneNode()),
       visibility_property_(
@@ -50,33 +54,14 @@ VoxelVisual::VoxelVisual(Ogre::SceneManager* scene_manager,
           "Flat color", rviz::ogreToQt(voxel_flat_color_),
           R"(Solid color to use when "Color Mode" is set to "Flat")",
           submenu_root_property, SLOT(flatColorUpdateCallback()), this),
-      layer_color_properties_("Layer color", QVariant(),
-                              "Generic color settings for layered map fields.",
-                              submenu_root_property),
       scalar_min_property_("Scalar min", 0.0,
                            "Lower value used when coloring scalar continuous layers.",
-                           &layer_color_properties_,
+                           submenu_root_property,
                            SLOT(layerColorUpdateCallback()), this),
       scalar_max_property_("Scalar max", 1.0,
                            "Upper value used when coloring scalar continuous layers.",
-                           &layer_color_properties_,
+                           submenu_root_property,
                            SLOT(layerColorUpdateCallback()), this),
-      scalar_low_color_property_(
-          "Scalar low color", rviz::ogreToQt(scalar_low_color_),
-          "Color used for the scalar minimum.", &layer_color_properties_,
-          SLOT(layerColorUpdateCallback()), this),
-      scalar_high_color_property_(
-          "Scalar high color", rviz::ogreToQt(scalar_high_color_),
-          "Color used for the scalar maximum.", &layer_color_properties_,
-          SLOT(layerColorUpdateCallback()), this),
-      bool_true_color_property_(
-          "Bool true color", rviz::ogreToQt(bool_true_color_),
-          "Color used for true values in boolean discrete layers.",
-          &layer_color_properties_, SLOT(layerColorUpdateCallback()), this),
-      show_bool_false_property_(
-          "Show bool false", false,
-          "Whether to draw false values in boolean discrete layers.",
-          &layer_color_properties_, SLOT(layerColorUpdateCallback()), this),
       frame_rate_properties_("Frame rate", QVariant(),
                              "Properties to control the frame rate.",
                              submenu_root_property),
@@ -137,17 +122,24 @@ void VoxelVisual::clear() {
   block_update_queue_.clear();
   for (auto& [block_index, voxel_layers] : block_voxel_layers_map_) {
     (void)block_index;
-    for (auto& voxel_layer : voxel_layers) {
-      if (!voxel_layer) {
-        continue;
-      }
-      voxel_layer->clear();
-      if (voxel_layer->getParentSceneNode()) {
-        voxel_layer->getParentSceneNode()->detachObject(voxel_layer.get());
-      }
-    }
+    detachVoxelLayers(voxel_layers);
   }
   block_voxel_layers_map_.clear();
+  discrete_layer_metadata_.reset();
+  discrete_parent_cells_.clear();
+  discrete_batch_parents_.clear();
+}
+
+void VoxelVisual::detachVoxelLayers(VoxelLayers& voxel_layers) {
+  for (auto& voxel_layer : voxel_layers) {
+    if (!voxel_layer) {
+      continue;
+    }
+    voxel_layer->clear();
+    if (voxel_layer->getParentSceneNode()) {
+      voxel_layer->getParentSceneNode()->detachObject(voxel_layer.get());
+    }
+  }
 }
 
 void VoxelVisual::updateMap(bool redraw_all) {
@@ -197,6 +189,7 @@ void VoxelVisual::updateMap(bool redraw_all) {
              it != block_voxel_layers_map_.end();) {
           const auto block_idx = it->first;
           if (!hashed_map->hasBlock(block_idx)) {
+            detachVoxelLayers(it->second);
             it = block_voxel_layers_map_.erase(it);
           } else {
             ++it;
@@ -394,11 +387,80 @@ void VoxelVisual::flatColorUpdateCallback() {
 
 void VoxelVisual::layerColorUpdateCallback() {
   ProfilerZoneScoped;
-  scalar_low_color_ = scalar_low_color_property_.getOgreColor();
-  scalar_high_color_ = scalar_high_color_property_.getOgreColor();
-  bool_true_color_ = bool_true_color_property_.getOgreColor();
   updateMap(true);
+  if (layer_color_changed_callback_) {
+    layer_color_changed_callback_();
+  }
 }
+
+Ogre::ColourValue VoxelVisual::defaultCategoryColor(int value) {
+  const uint32_t hash = static_cast<uint32_t>(value) * 2654435761u;
+  const float r = 0.25f +
+                  0.75f * static_cast<float>((hash >> 16u) & 0xffu) / 255.f;
+  const float g = 0.25f +
+                  0.75f * static_cast<float>((hash >> 8u) & 0xffu) / 255.f;
+  const float b =
+      0.25f + 0.75f * static_cast<float>(hash & 0xffu) / 255.f;
+  return Ogre::ColourValue(r, g, b, 1.f);
+}
+
+void VoxelVisual::configureLayerAppearance(
+    const std::string& layer_name, const std::string& layer_type,
+    bool is_discrete, FloatingPoint scalar_min, FloatingPoint scalar_max,
+    bool has_low_color, const Ogre::ColourValue& low_color,
+    bool has_high_color, const Ogre::ColourValue& high_color,
+    const std::vector<wavemap_msgs::DiscreteLayerCategory>& categories) {
+  const bool layer_changed = selected_color_layer_ != layer_name;
+  selected_color_layer_ = layer_name;
+  const bool is_occupancy = layer_name == "occupancy";
+  const bool is_scalar =
+      !is_discrete && !is_occupancy && layer_type == "float32";
+
+  color_mode_property_.setHidden(!is_occupancy);
+  flat_color_property_.setHidden(!is_occupancy ||
+                                 voxel_color_mode_ != VoxelColorMode::kFlat);
+  scalar_min_property_.setHidden(!is_scalar);
+  scalar_max_property_.setHidden(!is_scalar);
+
+  if (is_scalar && layer_changed) {
+    const QSignalBlocker min_blocker(&scalar_min_property_);
+    const QSignalBlocker max_blocker(&scalar_max_property_);
+    scalar_min_property_.setFloat(scalar_min);
+    scalar_max_property_.setFloat(scalar_max);
+    const int layer_hash =
+        static_cast<int>(std::hash<std::string>{}(layer_name));
+    scalar_low_color_ =
+        has_low_color ? low_color : defaultCategoryColor(layer_hash);
+    scalar_high_color_ = has_high_color
+                             ? high_color
+                             : defaultCategoryColor(layer_hash ^ 0x5bd1e995);
+  }
+
+  bool_false_color_ = defaultCategoryColor(0);
+  bool_true_color_ = defaultCategoryColor(1);
+  category_colors_.clear();
+  for (const auto& category : categories) {
+    category_colors_[category.value] =
+        category.has_color
+            ? Ogre::ColourValue(category.r, category.g, category.b, 1.f)
+            : defaultCategoryColor(category.value);
+  }
+}
+
+Ogre::ColourValue VoxelVisual::categoryColor(int value) const {
+  const auto it = category_colors_.find(value);
+  return it == category_colors_.end() ? defaultCategoryColor(value)
+                                      : it->second;
+}
+
+bool VoxelVisual::categoryVisible(int /*value*/) const { return true; }
+
+Ogre::ColourValue VoxelVisual::boolColor(bool value) const {
+  return value ? bool_true_color_ : bool_false_color_;
+}
+
+bool VoxelVisual::boolVisible(bool /*value*/) const { return true; }
+
 
 void VoxelVisual::appendLeafCenterAndColor(int tree_height,
                                            FloatingPoint min_cell_width,
@@ -454,8 +516,11 @@ void VoxelVisual::appendLayeredLeafCenterAndColor(
   }
 
   Ogre::ColourValue layer_color;
-  if (!layered_map.getLayerColor(selected_layer_name, cell_index, cell_log_odds,
-                                 layer_color)) {
+  if (!layered_map.getLayerColor(
+          selected_layer_name, cell_index, cell_log_odds,
+          scalar_min_property_.getFloat(), scalar_max_property_.getFloat(),
+          scalar_low_color_, scalar_high_color_,
+          layer_color)) {
     appendLeafCenterAndColor(tree_height, min_cell_width, cell_index,
                              cell_log_odds, voxels_per_level);
     return;
@@ -531,6 +596,7 @@ void VoxelVisual::drawLayeredMapOccupancy(const LayeredMapInterface& layered_map
   for (auto it = block_voxel_layers_map_.begin();
        it != block_voxel_layers_map_.end();) {
     if (!allocated_blocks.count(it->first)) {
+      detachVoxelLayers(it->second);
       it = block_voxel_layers_map_.erase(it);
     } else {
       ++it;
@@ -580,6 +646,7 @@ void VoxelVisual::drawLayeredMapOccupancy(const wavemap_msgs::LayeredHashedWavel
   }
   for (auto it = block_voxel_layers_map_.begin(); it != block_voxel_layers_map_.end();) {
     if (!allocated_blocks.count(it->first)) {
+      detachVoxelLayers(it->second);
       it = block_voxel_layers_map_.erase(it);
     } else {
       ++it;
@@ -598,14 +665,6 @@ void VoxelVisual::drawLayeredMapOccupancy(const wavemap_msgs::LayeredHashedWavel
 }
 
 namespace {
-Ogre::ColourValue stableIntColor(int value) {
-  uint32_t hash = static_cast<uint32_t>(value) * 2654435761u;
-  const float r = 0.25f + 0.75f * static_cast<float>((hash >> 16u) & 0xffu) / 255.f;
-  const float g = 0.25f + 0.75f * static_cast<float>((hash >> 8u) & 0xffu) / 255.f;
-  const float b = 0.25f + 0.75f * static_cast<float>(hash & 0xffu) / 255.f;
-  return Ogre::ColourValue(r, g, b, 1.f);
-}
-
 int continuousLayerComponentCount(const std::string& type) {
   if (type == "float32_rgb" || type == "float32_vec3") {
     return 3;
@@ -680,117 +739,162 @@ bool VoxelVisual::getGenericContinuousLayerColor(
   return false;
 }
 
+Index3D VoxelVisual::discreteRenderBatchIndex(const Index3D& parent_index) {
+  constexpr int kParentsPerRenderBatchSide = 16;
+  const auto floor_divide = [](int value, int divisor) {
+    const int quotient = value / divisor;
+    const int remainder = value % divisor;
+    return quotient - (remainder < 0 ? 1 : 0);
+  };
+  return {floor_divide(parent_index.x(), kParentsPerRenderBatchSide),
+          floor_divide(parent_index.y(), kParentsPerRenderBatchSide),
+          floor_divide(parent_index.z(), kParentsPerRenderBatchSide)};
+}
+
 void VoxelVisual::drawDiscreteLayer(
     const wavemap_msgs::DiscreteLayer& discrete_layer_msg,
     FloatingPoint min_cell_width) {
   ProfilerZoneScoped;
-  const FloatingPoint alpha = opacity_property_.getFloat();
-  const int side_length = 1 << discrete_layer_msg.block_height;
-  const IndexElement termination_height = std::min<IndexElement>(
-      termination_height_property_.getInt(), discrete_layer_msg.block_height);
-  const bool draw_parent_cells =
-      discrete_layer_msg.block_height <= termination_height;
-
-  termination_height_property_.setMax(discrete_layer_msg.block_height);
+  termination_height_property_.setMax(0);
   block_update_queue_.clear();
 
-  std::unordered_map<Index3D, std::vector<Cell>, Index3DHash> cells_by_parent;
-  std::unordered_set<Index3D, Index3DHash> allocated_parents;
-  for (const auto& cell_msg : discrete_layer_msg.cells) {
-    const Index3D parent_index{cell_msg.parent_index.x, cell_msg.parent_index.y,
-                               cell_msg.parent_index.z};
-    allocated_parents.insert(parent_index);
-    auto& cells = cells_by_parent[parent_index];
-
-    if (draw_parent_cells) {
-      Ogre::ColourValue color;
-      if (!getDiscreteCellColor(discrete_layer_msg, cell_msg,
-                                /*exception_index=*/-1,
-                                /*is_exception=*/false, color)) {
-        continue;
-      }
-
-      auto& cell = cells.emplace_back();
-      const FloatingPoint parent_width =
-          static_cast<FloatingPoint>(side_length) * min_cell_width;
-      cell.center = Ogre::Vector3(
-          (static_cast<FloatingPoint>(parent_index.x()) + 0.5f) * parent_width,
-          (static_cast<FloatingPoint>(parent_index.y()) + 0.5f) * parent_width,
-          (static_cast<FloatingPoint>(parent_index.z()) + 0.5f) * parent_width);
-      cell.color = color;
-      continue;
-    }
-
-    std::unordered_map<int, int> exception_indices;
-    for (size_t exception_i = 0u;
-         exception_i < cell_msg.exception_offsets.size(); ++exception_i) {
-      exception_indices[cell_msg.exception_offsets[exception_i]] =
-          static_cast<int>(exception_i);
-    }
-
-    for (const int offset : cell_msg.observed_offsets) {
-      const auto exception_it = exception_indices.find(offset);
-      const bool is_exception = exception_it != exception_indices.end();
-      const int exception_index = is_exception ? exception_it->second : -1;
-
-      Ogre::ColourValue color;
-      if (!getDiscreteCellColor(discrete_layer_msg, cell_msg, exception_index,
-                                is_exception, color)) {
-        continue;
-      }
-
-      const int local_x = offset % side_length;
-      const int local_y = (offset / side_length) % side_length;
-      const int local_z = offset / (side_length * side_length);
-      const FloatingPoint x =
-          (cell_msg.parent_index.x * side_length + local_x + 0.5f) *
-          min_cell_width;
-      const FloatingPoint y =
-          (cell_msg.parent_index.y * side_length + local_y + 0.5f) *
-          min_cell_width;
-      const FloatingPoint z =
-          (cell_msg.parent_index.z * side_length + local_z + 0.5f) *
-          min_cell_width;
-
-      auto& cell = cells.emplace_back();
-      cell.center = Ogre::Vector3(x, y, z);
-      cell.color = color;
-    }
+  for (auto& [batch_index, voxel_layers] : block_voxel_layers_map_) {
+    (void)batch_index;
+    detachVoxelLayers(voxel_layers);
   }
+  block_voxel_layers_map_.clear();
+  discrete_parent_cells_.clear();
+  discrete_batch_parents_.clear();
+  discrete_layer_metadata_ = discrete_layer_msg;
+  discrete_layer_metadata_->cells.clear();
+  discrete_layer_metadata_->deleted_parent_indices.clear();
 
-  for (auto it = block_voxel_layers_map_.begin();
-       it != block_voxel_layers_map_.end();) {
-    if (!allocated_parents.count(it->first)) {
-      it = block_voxel_layers_map_.erase(it);
-    } else {
-      ++it;
-    }
+  std::unordered_set<Index3D, Index3DHash> affected_batches;
+  for (const auto& cell : discrete_layer_msg.cells) {
+    const Index3D parent_index{cell.parent_index.x, cell.parent_index.y,
+                               cell.parent_index.z};
+    const Index3D batch_index = discreteRenderBatchIndex(parent_index);
+    discrete_parent_cells_[parent_index] = cell;
+    discrete_batch_parents_[batch_index].insert(parent_index);
+    affected_batches.insert(batch_index);
   }
+  rebuildDiscreteBatches(affected_batches, min_cell_width);
+}
 
-  const FloatingPoint cell_width =
-      draw_parent_cells ? static_cast<FloatingPoint>(side_length) * min_cell_width
-                        : min_cell_width;
-  for (auto& [parent_index, cells] : cells_by_parent) {
+void VoxelVisual::applyDiscreteLayerPatch(
+    const wavemap_msgs::DiscreteLayer& patch, FloatingPoint min_cell_width) {
+  ProfilerZoneScoped;
+  if (!discrete_layer_metadata_ ||
+      discrete_layer_metadata_->name != patch.name) {
+    return;
+  }
+  discrete_layer_metadata_->value_type = patch.value_type;
+  discrete_layer_metadata_->block_height = patch.block_height;
+  discrete_layer_metadata_->categories = patch.categories;
+
+  std::unordered_set<Index3D, Index3DHash> affected_batches;
+  const auto erase_parent = [&](const Index3D& parent_index) {
+    const Index3D batch_index = discreteRenderBatchIndex(parent_index);
+    affected_batches.insert(batch_index);
+    discrete_parent_cells_.erase(parent_index);
+    const auto batch_it = discrete_batch_parents_.find(batch_index);
+    if (batch_it != discrete_batch_parents_.end()) {
+      batch_it->second.erase(parent_index);
+      if (batch_it->second.empty()) {
+        discrete_batch_parents_.erase(batch_it);
+      }
+    }
+  };
+
+  for (const auto& deleted : patch.deleted_parent_indices) {
+    erase_parent(Index3D{deleted.x, deleted.y, deleted.z});
+  }
+  for (const auto& cell : patch.cells) {
+    const Index3D parent_index{cell.parent_index.x, cell.parent_index.y,
+                               cell.parent_index.z};
+    const Index3D batch_index = discreteRenderBatchIndex(parent_index);
+    affected_batches.insert(batch_index);
+    discrete_parent_cells_[parent_index] = cell;
+    discrete_batch_parents_[batch_index].insert(parent_index);
+  }
+  rebuildDiscreteBatches(affected_batches, min_cell_width);
+}
+
+void VoxelVisual::rebuildDiscreteBatches(
+    const std::unordered_set<Index3D, Index3DHash>& batch_indices,
+    FloatingPoint min_cell_width) {
+  if (!discrete_layer_metadata_) {
+    return;
+  }
+  const auto& layer_msg = *discrete_layer_metadata_;
+  const FloatingPoint alpha = opacity_property_.getFloat();
+  const int side_length = 1 << layer_msg.block_height;
+
+  for (const Index3D& batch_index : batch_indices) {
+    std::vector<Cell> cells;
+    const auto batch_it = discrete_batch_parents_.find(batch_index);
+    if (batch_it != discrete_batch_parents_.end()) {
+      for (const Index3D& parent_index : batch_it->second) {
+        const auto parent_it = discrete_parent_cells_.find(parent_index);
+        if (parent_it == discrete_parent_cells_.end()) {
+          continue;
+        }
+        const auto& cell_msg = parent_it->second;
+        std::unordered_map<int, int> exception_indices;
+        for (size_t exception_i = 0u;
+             exception_i < cell_msg.exception_offsets.size(); ++exception_i) {
+          exception_indices[cell_msg.exception_offsets[exception_i]] =
+              static_cast<int>(exception_i);
+        }
+        for (const int offset : cell_msg.observed_offsets) {
+          const auto exception_it = exception_indices.find(offset);
+          const bool is_exception = exception_it != exception_indices.end();
+          const int exception_index =
+              is_exception ? exception_it->second : -1;
+          Ogre::ColourValue color;
+          if (!getDiscreteCellColor(layer_msg, cell_msg, exception_index,
+                                    is_exception, color)) {
+            continue;
+          }
+          const int local_x = offset % side_length;
+          const int local_y = (offset / side_length) % side_length;
+          const int local_z = offset / (side_length * side_length);
+          auto& cell = cells.emplace_back();
+          cell.center = Ogre::Vector3(
+              (parent_index.x() * side_length + local_x + 0.5f) *
+                  min_cell_width,
+              (parent_index.y() * side_length + local_y + 0.5f) *
+                  min_cell_width,
+              (parent_index.z() * side_length + local_z + 0.5f) *
+                  min_cell_width);
+          cell.color = color;
+        }
+      }
+    }
+
     if (cells.empty()) {
-      block_voxel_layers_map_.erase(parent_index);
+      const auto visual_it = block_voxel_layers_map_.find(batch_index);
+      if (visual_it != block_voxel_layers_map_.end()) {
+        detachVoxelLayers(visual_it->second);
+        block_voxel_layers_map_.erase(visual_it);
+      }
       continue;
     }
 
-    auto& voxel_layers = block_voxel_layers_map_[parent_index];
+    auto& voxel_layers = block_voxel_layers_map_[batch_index];
     if (voxel_layers.empty()) {
       auto& voxel_layer = voxel_layers.emplace_back(
           std::make_unique<CellLayer>(voxel_material_));
-      voxel_layer->setName("discrete_layer_" + discrete_layer_msg.name + "_" +
-                           std::to_string(Index3DHash()(parent_index)));
+      voxel_layer->setName("discrete_layer_" + layer_msg.name + "_" +
+                           std::to_string(Index3DHash()(batch_index)));
       frame_node_->attachObject(voxel_layer.get());
     }
-
     auto& voxel_layer = voxel_layers.front();
-    voxel_layer->setCellDimensions(cell_width, cell_width, cell_width);
+    voxel_layer->setCellDimensions(min_cell_width, min_cell_width,
+                                   min_cell_width);
     voxel_layer->setAlpha(alpha);
     voxel_layer->setCells(cells);
   }
-
   num_queued_blocks_indicator_.setInt(0);
 }
 
@@ -802,17 +906,20 @@ bool VoxelVisual::getDiscreteCellColor(
     const bool value = is_exception
                            ? cell_msg.exception_uint8_values[exception_index] != 0u
                            : cell_msg.dominant_uint8 != 0u;
-    if (!value && !show_bool_false_property_.getBool()) {
+    if (!boolVisible(value)) {
       return false;
     }
-    color = value ? bool_true_color_ : Ogre::ColourValue(0.35f, 0.35f, 0.35f, 1.f);
+    color = boolColor(value);
     return true;
   }
 
   if (layer_msg.value_type == "int") {
     const int value = is_exception ? cell_msg.exception_int32_values[exception_index]
                                    : cell_msg.dominant_int32;
-    color = stableIntColor(value);
+    if (!categoryVisible(value)) {
+      return false;
+    }
+    color = categoryColor(value);
     return true;
   }
 

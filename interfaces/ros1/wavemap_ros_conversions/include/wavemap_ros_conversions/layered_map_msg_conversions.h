@@ -9,9 +9,11 @@
 #include <vector>
 
 #include <ros/time.h>
+#include <wavemap/layered/layer_traits.h>
 #include <wavemap/core/common.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 #include <wavemap_msgs/DiscreteLayer.h>
+#include <wavemap_msgs/DiscreteLayerCategory.h>
 #include <wavemap_msgs/DiscreteLayerCell.h>
 #include <wavemap_msgs/Index3D.h>
 #include <wavemap_msgs/LayeredMap.h>
@@ -40,12 +42,32 @@ template <typename LayerT>
 struct NamedDiscreteLayerForRos {
   std::string name;
   LayerT& layer;
+  std::vector<layered::IntegerCategoryMetadata> categories;
 };
 
 template <typename LayerT>
 NamedDiscreteLayerForRos<LayerT> namedDiscreteLayerForRos(
-    std::string name, LayerT& layer) {
-  return {std::move(name), layer};
+    std::string name, LayerT& layer,
+    std::vector<layered::IntegerCategoryMetadata> categories = {}) {
+  return {std::move(name), layer, std::move(categories)};
+}
+
+inline void setDiscreteCategoryLabels(
+    const std::vector<layered::IntegerCategoryMetadata>& categories,
+    wavemap_msgs::DiscreteLayer& msg) {
+  msg.categories.clear();
+  msg.categories.reserve(categories.size());
+  for (const auto& metadata : categories) {
+    auto& category = msg.categories.emplace_back();
+    category.value = metadata.value;
+    category.label = metadata.label;
+    category.has_color = metadata.color.has_value();
+    if (metadata.color) {
+      category.r = metadata.color->r;
+      category.g = metadata.color->g;
+      category.b = metadata.color->b;
+    }
+  }
 }
 
 template <typename DiscreteLayersT>
@@ -137,36 +159,70 @@ struct DiscreteRosValueConverter<bool> {
   }
 };
 
+template <typename DiscreteLayerT, typename IndexKeyT>
+void discreteCellToRosMsg(
+    const typename DiscreteLayerT::Cell& cell,
+    const IndexKeyT& parent_key,
+    wavemap_msgs::DiscreteLayerCell& cell_msg) {
+  using ValueT = typename DiscreteLayerT::Value;
+  cell_msg.parent_index = detail::indexKeyToRosMsg(parent_key);
+  DiscreteRosValueConverter<ValueT>::setDominantValue(
+      cell_msg, cell.dominant_value);
+
+  cell_msg.observed_offsets.reserve(cell.observed_offsets.size());
+  for (const int offset : cell.observed_offsets) {
+    cell_msg.observed_offsets.emplace_back(offset);
+  }
+  cell_msg.exception_offsets.reserve(cell.exceptions.size());
+  for (const auto& [offset, value] : cell.exceptions) {
+    cell_msg.exception_offsets.emplace_back(offset);
+    DiscreteRosValueConverter<ValueT>::appendExceptionValue(cell_msg, value);
+  }
+}
+
 template <typename DiscreteLayerT>
 void discreteLayerToRosMsg(const std::string& name,
                            const DiscreteLayerT& layer,
-                           wavemap_msgs::DiscreteLayer& msg) {
+                           wavemap_msgs::DiscreteLayer& msg,
+                           const std::vector<layered::IntegerCategoryMetadata>&
+                               categories = {}) {
   using ValueT = typename DiscreteLayerT::Value;
 
   msg.name = name;
   msg.value_type = DiscreteRosValueConverter<ValueT>::typeName();
   msg.block_height = layer.config().block_height;
+  setDiscreteCategoryLabels(categories, msg);
   msg.cells.clear();
   msg.cells.reserve(layer.cells().size());
 
   for (const auto& [parent_key, cell] : layer.cells()) {
     wavemap_msgs::DiscreteLayerCell cell_msg;
-    cell_msg.parent_index = detail::indexKeyToRosMsg(parent_key);
-    DiscreteRosValueConverter<ValueT>::setDominantValue(
-        cell_msg, cell.dominant_value);
-
-    cell_msg.observed_offsets.reserve(cell.observed_offsets.size());
-    for (const int offset : cell.observed_offsets) {
-      cell_msg.observed_offsets.emplace_back(offset);
-    }
-
-    cell_msg.exception_offsets.reserve(cell.exceptions.size());
-    for (const auto& [offset, value] : cell.exceptions) {
-      cell_msg.exception_offsets.emplace_back(offset);
-      DiscreteRosValueConverter<ValueT>::appendExceptionValue(cell_msg, value);
-    }
-
+    discreteCellToRosMsg<DiscreteLayerT>(cell, parent_key, cell_msg);
     msg.cells.emplace_back(std::move(cell_msg));
+  }
+}
+
+template <typename DiscreteLayerT>
+void discreteLayerPatchToRosMsg(const std::string& name,
+                                const DiscreteLayerT& layer,
+                                wavemap_msgs::DiscreteLayer& msg,
+                                const std::vector<layered::IntegerCategoryMetadata>&
+                                    categories = {}) {
+  using ValueT = typename DiscreteLayerT::Value;
+  msg.name = name;
+  msg.value_type = DiscreteRosValueConverter<ValueT>::typeName();
+  msg.block_height = layer.config().block_height;
+  setDiscreteCategoryLabels(categories, msg);
+  for (const auto& parent_key : layer.dirtyParentKeys()) {
+    const auto cell_it = layer.cells().find(parent_key);
+    if (cell_it == layer.cells().end()) {
+      msg.deleted_parent_indices.emplace_back(
+          detail::indexKeyToRosMsg(parent_key));
+    } else {
+      auto& cell_msg = msg.cells.emplace_back();
+      discreteCellToRosMsg<DiscreteLayerT>(cell_it->second, parent_key,
+                                           cell_msg);
+    }
   }
 }
 
@@ -245,10 +301,52 @@ bool discreteLayerBundleToRosMsg(const DiscreteLayersT& layers,
 
   return forEachRosTupleElement(named_layers, [&](const auto& named_layer) {
     wavemap_msgs::DiscreteLayer layer_msg;
-    discreteLayerToRosMsg(named_layer.name, named_layer.layer, layer_msg);
+    discreteLayerToRosMsg(named_layer.name, named_layer.layer, layer_msg,
+                          named_layer.categories);
     msg.emplace_back(std::move(layer_msg));
     return true;
   });
+}
+
+template <typename DiscreteLayersT>
+bool discreteLayerBundlePatchToRosMsg(
+    const DiscreteLayersT& layers,
+    std::vector<wavemap_msgs::DiscreteLayer>& msg) {
+  const auto named_layers =
+      DiscreteLayerBundleRosTraits<DiscreteLayersT>::layers(layers);
+  msg.clear();
+  return forEachRosTupleElement(named_layers, [&](const auto& named_layer) {
+    if (named_layer.layer.dirtyParentKeys().empty()) {
+      return true;
+    }
+    auto& layer_msg = msg.emplace_back();
+    discreteLayerPatchToRosMsg(named_layer.name, named_layer.layer, layer_msg,
+                               named_layer.categories);
+    return true;
+  });
+}
+
+template <typename DiscreteLayersT>
+void clearDiscreteLayerBundleDirtyState(DiscreteLayersT& layers) {
+  const auto named_layers =
+      DiscreteLayerBundleRosTraits<DiscreteLayersT>::layers(layers);
+  forEachRosTupleElement(named_layers, [](auto named_layer) {
+    named_layer.layer.clearDirtyParentKeys();
+    return true;
+  });
+}
+
+template <typename DiscreteLayersT>
+bool discreteLayerBundleHasDirtyState(const DiscreteLayersT& layers) {
+  const auto named_layers =
+      DiscreteLayerBundleRosTraits<DiscreteLayersT>::layers(layers);
+  bool has_dirty_state = false;
+  forEachRosTupleElement(named_layers, [&](const auto& named_layer) {
+    has_dirty_state = has_dirty_state ||
+                      !named_layer.layer.dirtyParentKeys().empty();
+    return true;
+  });
+  return has_dirty_state;
 }
 
 template <typename DiscreteLayersT>
@@ -276,6 +374,7 @@ bool layeredMapToRosMsg(const LayeredMapT& map, const std::string& frame_id,
                         wavemap_msgs::LayeredMap& msg) {
   msg.header.frame_id = frame_id;
   msg.header.stamp = stamp;
+  msg.is_full_update = true;
   if (!mapToRosMsg<typename LayeredMapT::ContinuousVoxel,
                    ContinuousRosConverterT>(map.continuousMap(), frame_id,
                                             stamp, msg.continuous_map)) {
@@ -283,6 +382,25 @@ bool layeredMapToRosMsg(const LayeredMapT& map, const std::string& frame_id,
   }
   return discreteLayerBundleToRosMsg(map.discreteLayers(),
                                      msg.discrete_layers);
+}
+
+template <typename LayeredMapT, typename ContinuousRosConverterT>
+bool layeredMapPatchToRosMsg(
+    const LayeredMapT& map, const std::string& frame_id,
+    const ros::Time& stamp, wavemap_msgs::LayeredMap& msg,
+    std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks,
+    std::shared_ptr<ThreadPool> thread_pool = nullptr) {
+  msg.header.frame_id = frame_id;
+  msg.header.stamp = stamp;
+  msg.is_full_update = false;
+  if (!mapToRosMsg<typename LayeredMapT::ContinuousVoxel,
+                   ContinuousRosConverterT>(
+          map.continuousMap(), frame_id, stamp, msg.continuous_map,
+          std::move(include_blocks), std::move(thread_pool))) {
+    return false;
+  }
+  return discreteLayerBundlePatchToRosMsg(map.discreteLayers(),
+                                          msg.discrete_layers);
 }
 
 template <typename LayeredMapT, typename ContinuousRosConverterT>

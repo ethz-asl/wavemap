@@ -543,7 +543,25 @@ bool loadLayeredMap(const std::filesystem::path& file_path, LayeredMapT& map,
     return false;
   }
 
-  map = LayeredMapT(std::move(continuous_map), std::move(discrete_layers));
+  // Keep the destination map object and its continuous-map allocation alive.
+  // The ROS server's occupancy pipeline and layered integrators may retain a
+  // shared pointer to this exact octree. Replacing LayeredMap here would leave
+  // those components writing into the old allocation and would also discard
+  // the destination's runtime threshold and pruning policies, which are not
+  // part of the serialized map payload.
+  auto& destination_continuous_map = map.continuousMap();
+  if (continuous_map->getConfig() != destination_continuous_map.getConfig()) {
+    if (error_message) {
+      *error_message =
+          "Loaded LayeredMap geometry is incompatible with the configured "
+          "destination map.";
+    }
+    return false;
+  }
+
+  destination_continuous_map.getHashMap() =
+      std::move(continuous_map->getHashMap());
+  map.discreteLayers() = std::move(discrete_layers);
   return true;
 }
 

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <wavemap_msgs/Layer.h>
+#include <wavemap_msgs/LayerVisualization.h>
 
 #include "layered_voxel_config.h"
 
@@ -27,6 +28,10 @@ struct LayeredVoxelRosConverter {
     return types;
   }
 
+  static std::vector<wavemap_msgs::LayerVisualization> layerVisualizations() {
+    return {};
+  }
+
   static std::vector<wavemap_msgs::Layer> makeLayers() {
     // The message stores custom values layer-major: all color values go into
     // the color layer, and all traversability values go into the traversability
@@ -38,6 +43,24 @@ struct LayeredVoxelRosConverter {
       layer.name = layer_schema.name;
       layer.type = layer_schema.type;
     }
+    return layers;
+  }
+
+  static std::vector<wavemap_msgs::Layer> makeLayerMinimums(
+      const ContinuousWaveletMap::ThresholdConfig& config) {
+    auto layers = makeLayers();
+    layers[0].float32_values = {config.data.rgb_min.r, config.data.rgb_min.g,
+                                config.data.rgb_min.b};
+    layers[1].float32_values = {config.data.traversability_min};
+    return layers;
+  }
+
+  static std::vector<wavemap_msgs::Layer> makeLayerMaximums(
+      const ContinuousWaveletMap::ThresholdConfig& config) {
+    auto layers = makeLayers();
+    layers[0].float32_values = {config.data.rgb_max.r, config.data.rgb_max.g,
+                                config.data.rgb_max.b};
+    layers[1].float32_values = {config.data.traversability_max};
     return layers;
   }
 

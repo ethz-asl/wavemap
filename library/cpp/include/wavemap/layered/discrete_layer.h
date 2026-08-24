@@ -6,6 +6,7 @@
 #include <set>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 #include <wavemap/core/common.h>
 
@@ -144,10 +145,70 @@ class DiscreteLayer {
   }
 
   void setValue(const wavemap::Index3D& index, const ValueT& value) {
-    Cell& cell = cells_[parentKey(index, config_)];
-    std::map<int, ValueT> values = expandCell(cell);
-    values[childOffset(index, config_)] = value;
-    rebuildCell(values, cell);
+    const IndexKey parent_key = parentKey(index, config_);
+    const int offset = childOffset(index, config_);
+    const auto cell_it = cells_.find(parent_key);
+    std::map<int, ValueT> values =
+        cell_it == cells_.end() ? std::map<int, ValueT>{}
+                                : expandCell(cell_it->second);
+    const auto value_it = values.find(offset);
+    if (value_it != values.end() && value_it->second == value) {
+      return;
+    }
+    values[offset] = value;
+    rebuildCell(values, cells_[parent_key]);
+    dirty_parent_keys_.insert(parent_key);
+  }
+
+  void setValues(
+      const std::vector<std::pair<wavemap::Index3D, ValueT>>& updates) {
+    std::map<IndexKey, std::map<int, ValueT>> grouped_updates;
+    for (const auto& [index, value] : updates) {
+      grouped_updates[parentKey(index, config_)][childOffset(index, config_)] =
+          value;
+    }
+
+    for (const auto& [parent_key, parent_updates] : grouped_updates) {
+      const auto cell_it = cells_.find(parent_key);
+      std::map<int, ValueT> values =
+          cell_it == cells_.end() ? std::map<int, ValueT>{}
+                                  : expandCell(cell_it->second);
+      bool changed = false;
+      for (const auto& [offset, value] : parent_updates) {
+        const auto value_it = values.find(offset);
+        if (value_it != values.end() && value_it->second == value) {
+          continue;
+        }
+        values[offset] = value;
+        changed = true;
+      }
+      if (!changed) {
+        continue;
+      }
+      rebuildCell(values, cells_[parent_key]);
+      dirty_parent_keys_.insert(parent_key);
+    }
+  }
+
+  bool eraseValue(const wavemap::Index3D& index) {
+    const IndexKey parent_key = parentKey(index, config_);
+    const auto cell_it = cells_.find(parent_key);
+    if (cell_it == cells_.end()) {
+      return false;
+    }
+
+    std::map<int, ValueT> values = expandCell(cell_it->second);
+    if (values.erase(childOffset(index, config_)) == 0u) {
+      return false;
+    }
+
+    if (values.empty()) {
+      cells_.erase(cell_it);
+    } else {
+      rebuildCell(values, cell_it->second);
+    }
+    dirty_parent_keys_.insert(parent_key);
+    return true;
   }
 
   std::optional<ValueT> getValue(const wavemap::Index3D& index) const {
@@ -187,6 +248,14 @@ class DiscreteLayer {
     return count;
   }
 
+  void clear() {
+    for (const auto& [parent_key, cell] : cells_) {
+      (void)cell;
+      dirty_parent_keys_.insert(parent_key);
+    }
+    cells_.clear();
+  }
+
   std::optional<ValueT> dominantValue(const wavemap::Index3D& index) const {
     const auto cell_it = cells_.find(parentKey(index, config_));
     if (cell_it == cells_.end()) {
@@ -199,10 +268,17 @@ class DiscreteLayer {
 
   const std::map<IndexKey, Cell>& cells() const { return cells_; }
 
+  const std::set<IndexKey>& dirtyParentKeys() const {
+    return dirty_parent_keys_;
+  }
+
+  void clearDirtyParentKeys() { dirty_parent_keys_.clear(); }
+
   void replaceCellsForLoad(DiscreteCompressionConfig config,
                            std::map<IndexKey, Cell> cells) {
     config_ = config;
     cells_ = std::move(cells);
+    dirty_parent_keys_.clear();
   }
 
  private:
@@ -243,6 +319,7 @@ class DiscreteLayer {
 
   DiscreteCompressionConfig config_;
   std::map<IndexKey, Cell> cells_;
+  std::set<IndexKey> dirty_parent_keys_;
 };
 
 }  // namespace wavemap::layered

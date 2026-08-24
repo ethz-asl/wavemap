@@ -10,9 +10,9 @@
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_ros_conversions/config_conversions.h>
 
-#include "example_layered_map_ros_config.h"
-#include "layered_ros_converter.h"
 #include "wavemap_ros/inputs/ros_input_factory.h"
+#include "wavemap_ros/inputs/pointcloud_topic_input.h"
+#include "wavemap_ros/layered_server_builder.h"
 #include "wavemap_ros/map_operations/map_ros_operation_factory.h"
 
 namespace wavemap {
@@ -38,21 +38,41 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private)
     : RosServer(nh, nh_private,
                 RosServerConfig::from(
                     param::convert::toParamValue(nh_private, "general"))
-                    .value()) {}
+                    .value(),
+                {}) {}
+
+RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
+                     MapInstaller map_installer)
+    : RosServer(nh, nh_private,
+                RosServerConfig::from(
+                    param::convert::toParamValue(nh_private, "general"))
+                    .value(),
+                std::move(map_installer)) {}
 
 RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
                      const RosServerConfig& config)
+    : RosServer(nh, nh_private, config, {}) {}
+
+RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
+                     const RosServerConfig& config,
+                     MapInstaller map_installer)
     : config_(config.checkValid()),
       transformer_(std::make_shared<TfTransformer>()) {
   // Set the logging level for wavemap's C++ library (uses glog) and ROS
   config_.logging_level.applyToGlog();
   config_.logging_level.applyToRosConsole();
 
-  // Setup data structure
-  const auto data_structure_params =
-      param::convert::toParamValue(nh_private, "map");
-  occupancy_map_ =
-      MapFactory::create(data_structure_params, MapType::kHashedBlocks);
+  // A typed application may install one layered map before the original
+  // pipeline is created. Without an installer this is the unchanged original
+  // occupancy-only server construction path.
+  if (map_installer) {
+    map_installer(*this, nh_private);
+  } else {
+    const auto data_structure_params =
+        param::convert::toParamValue(nh_private, "map");
+    occupancy_map_ =
+        MapFactory::create(data_structure_params, MapType::kHashedBlocks);
+  }
   CHECK_NOTNULL(occupancy_map_);
 
   // Setup thread pool
@@ -91,7 +111,13 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
     param::convert::toParamMap(nh_private, "measurement_integrators");
   for (const auto& [integrator_name, integrator_params] :
       measurement_integrator_param_map_) {
-    pipeline_->addIntegrator(integrator_name, integrator_params);
+    if (layered_integrator_factory_) {
+      pipeline_->addIntegrator(
+          integrator_name,
+          layered_integrator_factory_(integrator_params, thread_pool_));
+    } else {
+      pipeline_->addIntegrator(integrator_name, integrator_params);
+    }
   }
 
 
@@ -111,19 +137,6 @@ RosServer::RosServer(ros::NodeHandle nh, ros::NodeHandle nh_private,
   // Connect to ROS
   advertiseServices(nh_private);
 
-  bool enable_layered_map = false;
-  nh_private.param("layered_map/enabled", enable_layered_map, false);
-  if (enable_layered_map) {
-    ExampleLayeredMapConfig layered_config =
-        layered_map_config::loadExampleLayeredMapConfigFromRosParams(nh_private);
-    layered_extension_ = std::make_unique<
-        LayeredRosServerExtension<ExampleLayeredMap, ExampleLayeredMapIo,
-                                  LayeredVoxelRosConverter>>(
-        nh_private, config_.world_frame, ExampleLayeredMap(layered_config));
-    ROS_INFO(
-        "Layered map extension enabled. Advertising layered map topic and "
-        "services.");
-  }
 }
 
 void RosServer::clear() {
@@ -142,7 +155,24 @@ RosInputBase* RosServer::addInput(const param::Value& integrator_params,
   auto input =
       RosInputFactory::create(integrator_params, pipeline_, transformer_,
                               config_.world_frame, nh, nh_private);
+  if (auto* pointcloud_input =
+          dynamic_cast<PointcloudTopicInput*>(input.get())) {
+    for (const auto& registrar : pointcloud_endpoint_adapter_registrars_) {
+      registrar(*pointcloud_input);
+    }
+  }
   return addInput(std::move(input));
+}
+
+void RosServer::addPointcloudEndpointAdapterRegistrar(
+    PointcloudEndpointAdapterRegistrar registrar) {
+  for (const auto& input : inputs_) {
+    if (auto* pointcloud_input =
+            dynamic_cast<PointcloudTopicInput*>(input.get())) {
+      registrar(*pointcloud_input);
+    }
+  }
+  pointcloud_endpoint_adapter_registrars_.emplace_back(std::move(registrar));
 }
 
 RosInputBase* RosServer::addInput(std::unique_ptr<RosInputBase> input) {
@@ -170,6 +200,17 @@ MapOperationBase* RosServer::addOperation(const param::Value& operation_params,
 
   if (const auto type = MapRosOperationType{type_name.value()};
       type.isValid()) {
+    if (type == MapRosOperationType::kPublishMap &&
+        layered_publish_operation_factory_) {
+      const auto publish_config =
+          PublishMapOperationConfig::from(operation_params);
+      if (!publish_config) {
+        ROS_ERROR("Could not load layered publish_map configuration.");
+        return nullptr;
+      }
+      return pipeline_->addOperation(layered_publish_operation_factory_(
+          publish_config.value(), std::move(nh_private)));
+    }
     auto operation = MapRosOperationFactory::create(
         type, operation_params, occupancy_map_, thread_pool_, transformer_,
         config_.world_frame, nh_private);
@@ -244,7 +285,9 @@ void RosServer::advertiseServices(ros::NodeHandle& nh_private) {
       "reset_map", [this](auto& /*request*/, auto& response) {
         response.success = false;
         if (config_.allow_reset_map_service) {
-          if (occupancy_map_) {
+          if (layered_extension_) {
+            layered_extension_->clearLayeredMap();
+          } else if (occupancy_map_) {
             occupancy_map_->clear();
           }
           ROS_INFO("Map reset request was successfully executed.");

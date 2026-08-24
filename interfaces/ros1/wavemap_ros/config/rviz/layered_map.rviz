@@ -73,7 +73,7 @@ Visualization Manager:
           Bool true color: 255; 12; 12
           Scalar high color: 255; 255; 0
           Scalar low color: 0; 0; 255
-          Scalar max: 1
+          Scalar max: 0.2
           Scalar min: 0
           Show bool false: false
         Log odds threshold: 0.0010000000474974513

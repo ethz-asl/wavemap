@@ -82,6 +82,42 @@ set_wavemap_target_properties(custom_layered_map_example)
 target_link_libraries(custom_layered_map_example
     PUBLIC wavemap::wavemap_core)
 
+add_executable(field_layered_map_experiment
+    map_api/user_facing/field_layered_map_experiment.cc)
+set_wavemap_target_properties(field_layered_map_experiment)
+target_link_libraries(field_layered_map_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(field_layered_pipeline_experiment
+    map_api/user_facing/field_layered_pipeline_experiment.cc)
+set_wavemap_target_properties(field_layered_pipeline_experiment)
+target_link_libraries(field_layered_pipeline_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(field_endpoint_integration_experiment
+    map_api/user_facing/field_endpoint_integration_experiment.cc)
+set_wavemap_target_properties(field_endpoint_integration_experiment)
+target_link_libraries(field_endpoint_integration_experiment
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(inspect_field_layered_map
+    io/inspect_field_layered_map.cc)
+set_wavemap_target_properties(inspect_field_layered_map)
+target_link_libraries(inspect_field_layered_map
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(inspect_reflectivity_layered_map
+    io/inspect_reflectivity_layered_map.cc)
+set_wavemap_target_properties(inspect_reflectivity_layered_map)
+target_link_libraries(inspect_reflectivity_layered_map
+    PUBLIC wavemap::wavemap_core)
+
+add_executable(inspect_ouster_benchmark_maps
+    io/inspect_ouster_benchmark_maps.cc)
+set_wavemap_target_properties(inspect_ouster_benchmark_maps)
+target_link_libraries(inspect_ouster_benchmark_maps
+    PUBLIC wavemap::wavemap_core wavemap::wavemap_io)
+
 add_executable(discrete_layer_compression_experiment
     map_api/discrete/discrete_layer_compression_experiment.cc)
 set_wavemap_target_properties(discrete_layer_compression_experiment)
@@ -275,6 +311,30 @@ if ("$ENV{ROS_VERSION}" STREQUAL "1")
   set_wavemap_target_properties(subscribe_layered_map_experiment)
   target_include_directories(subscribe_layered_map_experiment PUBLIC ${catkin_INCLUDE_DIRS})
   target_link_libraries(subscribe_layered_map_experiment PUBLIC
+      wavemap::wavemap_core ${catkin_LIBRARIES})
+
+  add_executable(field_layered_map_ros_experiment
+      ros/field_layered_map_ros_experiment.cc)
+  set_wavemap_target_properties(field_layered_map_ros_experiment)
+  target_include_directories(field_layered_map_ros_experiment
+      PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(field_layered_map_ros_experiment PUBLIC
+      wavemap::wavemap_core ${catkin_LIBRARIES})
+
+  add_executable(field_layer_update_ros_experiment
+      ros/field_layer_update_ros_experiment.cc)
+  set_wavemap_target_properties(field_layer_update_ros_experiment)
+  target_include_directories(field_layer_update_ros_experiment
+      PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(field_layer_update_ros_experiment PUBLIC
+      wavemap::wavemap_core ${catkin_LIBRARIES})
+
+  add_executable(native_sensor_layer_adapters_experiment
+      ros/native_sensor_layer_adapters_experiment.cc)
+  set_wavemap_target_properties(native_sensor_layer_adapters_experiment)
+  target_include_directories(native_sensor_layer_adapters_experiment
+      PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(native_sensor_layer_adapters_experiment PUBLIC
       wavemap::wavemap_core ${catkin_LIBRARIES})
 else ()
   message(STATUS "Skipping ROS digital_twin examples because ROS1 is not active.")

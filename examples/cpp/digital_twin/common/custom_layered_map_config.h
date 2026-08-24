@@ -117,6 +117,15 @@ struct MyVoxelSerializer {
   }
 };
 
+namespace wavemap::layered {
+template <>
+struct ContinuousLayerSchemaTraits<::MyContinuousLayers> {
+  static std::vector<LayerSchemaEntry> layers() {
+    return {{"temperature", "float32"}, {"intensity", "float32"}};
+  }
+};
+}  // namespace wavemap::layered
+
 namespace wavemap::layered::io {
 template <>
 struct DiscreteLayerBundleTraits<::MyDiscreteLayers> {

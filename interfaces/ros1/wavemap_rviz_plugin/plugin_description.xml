@@ -15,4 +15,29 @@
     </description>
     <message_type>wavemap_msgs/LayeredMap</message_type>
   </class>
+  <class name="wavemap_rviz_plugin/ExampleLayeredMapFactory"
+         type="wavemap::rviz_plugin::ExampleLayeredMapFactory"
+         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
+    <description>Schema handler for the legacy color/traversability example.</description>
+  </class>
+  <class name="wavemap_rviz_plugin/FieldLayeredMapFactory"
+         type="wavemap::rviz_plugin::FieldLayeredMapFactory"
+         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
+    <description>Schema handler for the reflectivity field map.</description>
+  </class>
+  <class name="wavemap_rviz_plugin/OccupancyLayeredMapFactory"
+         type="wavemap::rviz_plugin::OccupancyLayeredMapFactory"
+         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
+    <description>Schema handler for layered occupancy-only maps.</description>
+  </class>
+  <class name="wavemap_rviz_plugin/ReflectivityLayeredMapFactory"
+         type="wavemap::rviz_plugin::ReflectivityLayeredMapFactory"
+         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
+    <description>Schema handler for occupancy and reflectivity maps.</description>
+  </class>
+  <class name="wavemap_rviz_plugin/ReflectivityClassLayeredMapFactory"
+         type="wavemap::rviz_plugin::ReflectivityClassLayeredMapFactory"
+         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
+    <description>Schema handler for occupancy, reflectivity, and class maps.</description>
+  </class>
 </library>

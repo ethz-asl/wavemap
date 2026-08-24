@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_RVIZ_PLUGIN_LAYERED_MAP_INTERFACE_H_
 #define WAVEMAP_RVIZ_PLUGIN_LAYERED_MAP_INTERFACE_H_
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -17,6 +18,8 @@ namespace wavemap::rviz_plugin {
 struct LayerMetadata {
   std::string name;
   std::string type;
+  std::vector<FloatingPoint> min_values;
+  std::vector<FloatingPoint> max_values;
 };
 
 // Runtime interface used by the RViz plugin for layered maps. Concrete user
@@ -42,6 +45,10 @@ class LayeredMapInterface : public OccupancyQuery {
   virtual bool getLayerColor(const std::string& layer_name,
                              const OctreeIndex& index,
                              FloatingPoint occupancy,
+                             FloatingPoint scalar_display_min,
+                             FloatingPoint scalar_display_max,
+                             const Ogre::ColourValue& scalar_low_color,
+                             const Ogre::ColourValue& scalar_high_color,
                              Ogre::ColourValue& color) const = 0;
 };
 
@@ -50,6 +57,11 @@ struct NoLayerColorProvider {
   static bool getLayerColor(const std::string& /*layer_name*/,
                             const CellDataT& /*voxel*/,
                             FloatingPoint /*occupancy*/,
+                            FloatingPoint /*scalar_display_min*/,
+                            FloatingPoint /*scalar_display_max*/,
+                            const Ogre::ColourValue& /*scalar_low_color*/,
+                            const Ogre::ColourValue& /*scalar_high_color*/,
+                            const LayerMetadata& /*metadata*/,
                             Ogre::ColourValue& /*color*/) {
     return false;
   }
@@ -109,10 +121,23 @@ class HashedWaveletOctreeLayeredMapAdapter : public LayeredMapInterface {
 
   bool getLayerColor(const std::string& layer_name, const OctreeIndex& index,
                      FloatingPoint occupancy,
+                     FloatingPoint scalar_display_min,
+                     FloatingPoint scalar_display_max,
+                     const Ogre::ColourValue& scalar_low_color,
+                     const Ogre::ColourValue& scalar_high_color,
                      Ogre::ColourValue& color) const override {
     const auto voxel = map_->getVoxelValue(index);
-    return LayerColorProviderT::getLayerColor(layer_name, voxel, occupancy,
-                                              color);
+    const auto metadata_it =
+        std::find_if(layers_.begin(), layers_.end(),
+                     [&](const LayerMetadata& layer) {
+                       return layer.name == layer_name;
+                     });
+    if (metadata_it == layers_.end()) {
+      return false;
+    }
+    return LayerColorProviderT::getLayerColor(
+        layer_name, voxel, occupancy, scalar_display_min, scalar_display_max,
+        scalar_low_color, scalar_high_color, *metadata_it, color);
   }
 
  private:

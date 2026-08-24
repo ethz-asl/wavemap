@@ -20,6 +20,7 @@
   <depend>rosbag</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
+  <depend>message_filters</depend>
   <depend>tf2_ros</depend>
 
   <depend>std_srvs</depend>

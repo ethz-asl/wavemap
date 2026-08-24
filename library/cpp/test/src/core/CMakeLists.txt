@@ -19,6 +19,7 @@ target_sources(test_wavemap_core PRIVATE
     integrator/test_range_image_intersector.cc
     map/test_haar_cell.cc
     map/test_hashed_blocks.cc
+    map/test_layered_map_definition.cc
     map/test_map.cc
     map/test_volumetric_octree.cc
     utils/bits/test_bit_operations.cc
@@ -36,6 +37,7 @@ target_sources(test_wavemap_core PRIVATE
     utils/neighbors/test_ndtree_adjacency.cc
     utils/profile/test_resource_monitor.cc
     utils/query/test_classified_map.cc
+    utils/query/test_local_elevation_classifier.cc
     utils/query/test_map_interpolator.cpp
     utils/query/test_occupancy_classifier.cc
     utils/query/test_probability_conversions.cc

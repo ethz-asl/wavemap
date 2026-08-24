@@ -37,6 +37,12 @@ void mapToRosMsg(const HashedWaveletOctreeT<CellDataT>& map, wavemap_msgs::Layer
   msg.tree_height = map.getTreeHeight();
   msg.layer_names = CellDataRosConverterT::layerNames();
   msg.layer_types = CellDataRosConverterT::layerTypes();
+  msg.layer_min_values =
+      CellDataRosConverterT::makeLayerMinimums(map.getThresholdConfig());
+  msg.layer_max_values =
+      CellDataRosConverterT::makeLayerMaximums(map.getThresholdConfig());
+  msg.layer_visualizations =
+      CellDataRosConverterT::layerVisualizations();
 
   // Always publish the full list of allocated block indices
   msg.allocated_block_indices.reserve(map.getHashMap().size());

@@ -9,12 +9,17 @@
 
 #include <OGRE/Overlay/OgreOverlayPrerequisites.h>
 
+#include <boost/shared_ptr.hpp>
+
 #include <rviz/message_filter_display.h>
+#include <rviz/config.h>
 #include <rviz/properties/enum_property.h>
 #include <rviz/properties/property.h>
 #include <wavemap_msgs/LayeredMap.h>
+#include <pluginlib/class_loader.h>
 
 #include "wavemap_rviz_plugin/common.h"
+#include "wavemap_rviz_plugin/layered_map_factory.h"
 #include "wavemap_rviz_plugin/utils/button_property.h"
 #include "wavemap_rviz_plugin/visuals/voxel_visual.h"
 #endif
@@ -56,12 +61,19 @@ class LayeredMapDisplay
     std::string name;
     std::string type;
     Source source = Source::kContinuous;
+    std::vector<FloatingPoint> min_values;
+    std::vector<FloatingPoint> max_values;
   };
 
   std::vector<DisplayLayer> available_layers_;
   LayeredMapSourceMode source_mode_ = LayeredMapSourceMode::kFromTopic;
   std::string selected_layer_name_ = "occupancy";
+  int continuous_termination_height_ = 0;
+  int discrete_termination_height_ = 1;
   std::optional<wavemap_msgs::LayeredMap> latest_msg_;
+  std::unique_ptr<pluginlib::ClassLoader<LayeredMapFactory>>
+      layered_map_factory_loader_;
+  std::vector<boost::shared_ptr<LayeredMapFactory>> layered_map_factories_;
 
   const std::shared_ptr<MapAndMutex> map_and_mutex_ =
       std::make_shared<MapAndMutex>();
@@ -92,6 +104,9 @@ class LayeredMapDisplay
   void clearStoredMap();
   void updateAvailableLayers(const wavemap_msgs::LayeredMap& msg);
   void updateStoredMapForSelectedLayer(const wavemap_msgs::LayeredMap& msg);
+  void configureSelectedLayerAppearance(
+      const wavemap_msgs::LayeredMap& msg);
+  void loadLayeredMapFactories();
   void updateLegendOverlay(const wavemap_msgs::LayeredMap* msg = nullptr);
   void initializeLegendOverlay();
   void destroyLegendOverlay();

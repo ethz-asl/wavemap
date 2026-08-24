@@ -2,6 +2,7 @@
 #define WAVEMAP_ROS_INPUTS_POINTCLOUD_TOPIC_INPUT_H_
 
 #include <memory>
+#include <functional>
 #include <queue>
 #include <string>
 #include <vector>
@@ -12,6 +13,7 @@
 #include <wavemap/core/utils/time/stopwatch.h>
 
 #include "wavemap_ros/inputs/ros_input_base.h"
+#include "wavemap_ros/inputs/pointcloud_endpoint_adapter.h"
 #include "wavemap_ros/utils/pointcloud_undistorter.h"
 
 #ifdef LIVOX_AVAILABLE
@@ -100,6 +102,14 @@ class PointcloudTopicInput : public RosInputBase {
     return RosInputType::kPointcloudTopic;
   }
   PointcloudTopicType getTopicType() const { return config_.topic_type; }
+  void addEndpointAdapter(std::shared_ptr<PointcloudEndpointAdapter> adapter) {
+    endpoint_adapters_.emplace_back(std::move(adapter));
+  }
+  using PosedCloudCallback =
+      std::function<bool(const PosedPointcloud<>& pointcloud)>;
+  void addPosedCloudCallback(PosedCloudCallback callback) {
+    posed_cloud_callbacks_.emplace_back(std::move(callback));
+  }
 
   void callback(const sensor_msgs::PointCloud2& pointcloud_msg);
 #ifdef LIVOX_AVAILABLE
@@ -117,7 +127,14 @@ class PointcloudTopicInput : public RosInputBase {
   PointcloudUndistorter pointcloud_undistorter_;
 
   ros::Subscriber pointcloud_sub_;
-  std::queue<undistortion::StampedPointcloud> pointcloud_queue_;
+  struct QueuedPointcloud {
+    undistortion::StampedPointcloud pointcloud;
+    std::vector<std::unique_ptr<DecodedPointcloudEndpointChannel>>
+        endpoint_channels;
+  };
+  std::queue<QueuedPointcloud> pointcloud_queue_;
+  std::vector<std::shared_ptr<PointcloudEndpointAdapter>> endpoint_adapters_;
+  std::vector<PosedCloudCallback> posed_cloud_callbacks_;
   void processQueue() override;
 
   static bool hasField(const sensor_msgs::PointCloud2& msg,

@@ -6,6 +6,9 @@ int32 tree_height
 
 string[] layer_names
 string[] layer_types
+Layer[] layer_min_values
+Layer[] layer_max_values
+LayerVisualization[] layer_visualizations
 
 Index3D[] allocated_block_indices
 

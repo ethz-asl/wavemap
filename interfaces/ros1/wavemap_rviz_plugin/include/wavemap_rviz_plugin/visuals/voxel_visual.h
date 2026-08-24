@@ -2,9 +2,16 @@
 #define WAVEMAP_RVIZ_PLUGIN_VISUALS_VOXEL_VISUAL_H_
 
 #ifndef Q_MOC_RUN
+#include <algorithm>
+#include <functional>
+#include <map>
 #include <memory>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
+#include <wavemap_msgs/DiscreteLayerCategory.h>
+#include <wavemap_msgs/DiscreteLayerCell.h>
 #include <wavemap_msgs/LayeredHashedWaveletOctree.h>
 #include <wavemap_msgs/LayeredHashedWaveletOctreeBlock.h>
 
@@ -13,6 +20,7 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 #include <rviz/properties/bool_property.h>
+#include <rviz/config.h>
 #include <rviz/properties/color_property.h>
 #include <rviz/properties/enum_property.h>
 #include <rviz/properties/float_property.h>
@@ -50,14 +58,45 @@ class VoxelVisual : public QObject {
   VoxelVisual(Ogre::SceneManager* scene_manager,
               rviz::ViewManager* view_manager, Ogre::SceneNode* parent_node,
               rviz::Property* submenu_root_property,
-              std::shared_ptr<MapAndMutex> map_and_mutex);
+              std::shared_ptr<MapAndMutex> map_and_mutex,
+              std::function<void()> layer_color_changed_callback = {});
 
   // Destructor. Removes the visual elements from the scene.
   ~VoxelVisual() override;
 
+  void applyDiscreteLayerPatch(
+      const wavemap_msgs::DiscreteLayer& patch,
+      FloatingPoint min_cell_width);
+
   void updateMap(bool redraw_all = false);
 
   void clear();
+
+  int terminationHeight() const {
+    return termination_height_property_.getInt();
+  }
+  void setTerminationHeight(int max_height, int height) {
+    termination_height_property_.setMax(max_height);
+    termination_height_property_.setInt(std::clamp(height, 0, max_height));
+  }
+  FloatingPoint scalarDisplayMin() const {
+    return scalar_min_property_.getFloat();
+  }
+  FloatingPoint scalarDisplayMax() const {
+    return scalar_max_property_.getFloat();
+  }
+  Ogre::ColourValue scalarLowColor() const { return scalar_low_color_; }
+  Ogre::ColourValue scalarHighColor() const { return scalar_high_color_; }
+  void configureLayerAppearance(
+      const std::string& layer_name, const std::string& layer_type,
+      bool is_discrete, FloatingPoint scalar_min, FloatingPoint scalar_max,
+      bool has_low_color, const Ogre::ColourValue& low_color,
+      bool has_high_color, const Ogre::ColourValue& high_color,
+      const std::vector<wavemap_msgs::DiscreteLayerCategory>& categories = {});
+  Ogre::ColourValue categoryColor(int value) const;
+  bool categoryVisible(int value) const;
+  Ogre::ColourValue boolColor(bool value) const;
+  bool boolVisible(bool value) const;
 
   // Set the pose of the coordinate frame the message refers to
   void setFramePosition(const Ogre::Vector3& position);
@@ -79,9 +118,16 @@ class VoxelVisual : public QObject {
   Ogre::ColourValue scalar_low_color_ = Ogre::ColourValue(0.f, 0.f, 1.f);
   Ogre::ColourValue scalar_high_color_ = Ogre::ColourValue(1.f, 1.f, 0.f);
   Ogre::ColourValue bool_true_color_ = Ogre::ColourValue(1.f, 0.05f, 0.05f);
+  Ogre::ColourValue bool_false_color_ =
+      Ogre::ColourValue(0.35f, 0.35f, 0.35f);
+
+  std::string selected_color_layer_;
+  std::unordered_map<int, Ogre::ColourValue> category_colors_;
+  static Ogre::ColourValue defaultCategoryColor(int value);
 
   // Shared pointer to the map, owned by WavemapMapDisplay
   const std::shared_ptr<MapAndMutex> map_and_mutex_;
+  const std::function<void()> layer_color_changed_callback_;
 
   // The SceneManager, kept here only so the destructor can ask it to
   // destroy the `frame_node_`.
@@ -101,13 +147,8 @@ class VoxelVisual : public QObject {
   rviz::FloatProperty opacity_property_;
   rviz::EnumProperty color_mode_property_;
   rviz::ColorProperty flat_color_property_;
-  rviz::Property layer_color_properties_;
   rviz::FloatProperty scalar_min_property_;
   rviz::FloatProperty scalar_max_property_;
-  rviz::ColorProperty scalar_low_color_property_;
-  rviz::ColorProperty scalar_high_color_property_;
-  rviz::ColorProperty bool_true_color_property_;
-  rviz::BoolProperty show_bool_false_property_;
   // Frame-rate stats
   rviz::Property frame_rate_properties_;
   rviz::IntProperty num_queued_blocks_indicator_;
@@ -116,6 +157,7 @@ class VoxelVisual : public QObject {
   // The objects implementing the voxel visuals
   using VoxelLayers = std::vector<std::unique_ptr<CellLayer>>;
   std::unordered_map<Index3D, VoxelLayers, Index3DHash> block_voxel_layers_map_;
+  void detachVoxelLayers(VoxelLayers& voxel_layers);
 
   // Material handling
   Ogre::MaterialPtr voxel_material_;
@@ -163,6 +205,17 @@ class VoxelVisual : public QObject {
       Ogre::ColourValue& color) const;
   void drawDiscreteLayer(const wavemap_msgs::DiscreteLayer& discrete_layer_msg,
                          FloatingPoint min_cell_width);
+  void rebuildDiscreteBatches(
+      const std::unordered_set<Index3D, Index3DHash>& batch_indices,
+      FloatingPoint min_cell_width);
+  static Index3D discreteRenderBatchIndex(const Index3D& parent_index);
+
+  std::optional<wavemap_msgs::DiscreteLayer> discrete_layer_metadata_;
+  std::unordered_map<Index3D, wavemap_msgs::DiscreteLayerCell, Index3DHash>
+      discrete_parent_cells_;
+  std::unordered_map<Index3D,
+                     std::unordered_set<Index3D, Index3DHash>, Index3DHash>
+      discrete_batch_parents_;
   bool getDiscreteCellColor(const wavemap_msgs::DiscreteLayer& layer_msg,
                             const wavemap_msgs::DiscreteLayerCell& cell_msg,
                             int exception_index, bool is_exception,

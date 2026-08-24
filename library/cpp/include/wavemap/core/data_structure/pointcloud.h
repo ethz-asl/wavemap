@@ -38,6 +38,10 @@ class Pointcloud {
     CHECK_LT(n_points, std::numeric_limits<Eigen::Index>::max());
     data_.resize(kDim, n_points);
   }
+  void conservativeResize(size_t n_points) {
+    CHECK_LT(n_points, std::numeric_limits<Eigen::Index>::max());
+    data_.conservativeResize(Eigen::NoChange, n_points);
+  }
   void clear() { data_.resize(kDim, 0); }
 
   typename Data::ColXpr operator[](Eigen::Index point_index) {

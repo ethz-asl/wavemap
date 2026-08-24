@@ -7,7 +7,7 @@ project(wavemap_ros)
 find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
     wavemap wavemap_msgs wavemap_ros_conversions
-    roscpp rosbag cv_bridge image_transport tf2_ros
+    roscpp rosbag message_filters cv_bridge image_transport tf2_ros
     std_srvs sensor_msgs visualization_msgs)
 
 # Register catkin package
@@ -16,7 +16,7 @@ catkin_package(
     LIBRARIES ${PROJECT_NAME}
     CATKIN_DEPENDS
     wavemap wavemap_msgs wavemap_ros_conversions
-    roscpp rosbag cv_bridge image_transport tf2_ros
+    roscpp rosbag message_filters cv_bridge image_transport tf2_ros
     std_srvs sensor_msgs visualization_msgs)
 
 
@@ -45,7 +45,9 @@ add_library(${PROJECT_NAME}
 set_wavemap_target_properties(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
     PUBLIC include ${catkin_INCLUDE_DIRS}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common)
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
 target_link_libraries(${PROJECT_NAME}
     PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -54,9 +56,55 @@ add_executable(ros_server app/ros_server.cc)
 set_wavemap_target_properties(ros_server)
 target_link_libraries(ros_server ${PROJECT_NAME})
 
+add_executable(occupancy_layered_server
+    ../../../examples/cpp/digital_twin/ouster_mapping/occupancy_sensor_inputs.cc)
+set_wavemap_target_properties(occupancy_layered_server)
+target_include_directories(occupancy_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
+target_link_libraries(occupancy_layered_server ${PROJECT_NAME})
+
+add_executable(reflectivity_layered_server
+    ../../../examples/cpp/digital_twin/ouster_mapping/reflectivity_only_sensor_inputs.cc)
+set_wavemap_target_properties(reflectivity_layered_server)
+target_include_directories(reflectivity_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
+target_link_libraries(reflectivity_layered_server ${PROJECT_NAME})
+
+add_executable(reflectivity_class_layered_server
+    ../../../examples/cpp/digital_twin/ouster_mapping/ouster_sensor_inputs.cc)
+set_wavemap_target_properties(reflectivity_class_layered_server)
+target_include_directories(reflectivity_class_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
+target_link_libraries(reflectivity_class_layered_server ${PROJECT_NAME})
+
 add_executable(rosbag_processor app/rosbag_processor.cc)
 set_wavemap_target_properties(rosbag_processor)
 target_link_libraries(rosbag_processor ${PROJECT_NAME})
+
+add_executable(publish_field_layer_updates_experiment
+    app/publish_field_layer_updates_experiment.cc)
+set_wavemap_target_properties(publish_field_layer_updates_experiment)
+target_link_libraries(publish_field_layer_updates_experiment ${PROJECT_NAME})
+
+add_executable(field_layer_sensor_bridge
+    app/field_layer_sensor_bridge.cc)
+set_wavemap_target_properties(field_layer_sensor_bridge)
+target_link_libraries(field_layer_sensor_bridge ${PROJECT_NAME})
+
+add_executable(layered_incremental_publish_experiment
+    app/layered_incremental_publish_experiment.cc)
+set_wavemap_target_properties(layered_incremental_publish_experiment)
+target_include_directories(layered_incremental_publish_experiment PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common)
+target_link_libraries(layered_incremental_publish_experiment ${PROJECT_NAME})
+
+add_executable(computed_point_field_binding_experiment
+    app/computed_point_field_binding_experiment.cc)
+set_wavemap_target_properties(computed_point_field_binding_experiment)
+target_link_libraries(computed_point_field_binding_experiment ${PROJECT_NAME})
 
 # Support installs
 # Mark targets for installation

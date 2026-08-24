@@ -11,6 +11,8 @@
        doc="Automatically launch Rviz."/>
   <arg name="rviz_config"
        default="$(find wavemap_ros)/config/rviz/default.rviz"/>
+  <arg name="server_type" default="ros_server"
+       doc="Server executable. Typed layered applications provide their own."/>
 
   <!-- Dataset params -->
   <arg name="rosbag_path"
@@ -35,7 +37,7 @@
     <arg unless="$(arg debug_mode)" name="launch_prefix" value=""/>
 
     <node name="wavemap" pkg="wavemap_ros"
-          type="ros_server"
+          type="$(arg server_type)"
           output="screen"
           launch-prefix="$(arg launch_prefix)">
       <rosparam file="$(arg param_file)"/>

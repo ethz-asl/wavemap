@@ -7,16 +7,17 @@ project(wavemap_rviz_plugin)
 
 # Dependencies
 find_package(catkin REQUIRED
-    COMPONENTS rviz wavemap wavemap_msgs wavemap_ros_conversions)
+    COMPONENTS pluginlib rviz wavemap wavemap_msgs wavemap_ros_conversions)
 
 # Setup catkin package
 catkin_package(CATKIN_DEPENDS
-    wavemap wavemap_msgs wavemap_ros_conversions)
+    pluginlib wavemap wavemap_msgs wavemap_ros_conversions)
 
 # For all targets
 include_directories(
     include
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping
     SYSTEM ${catkin_INCLUDE_DIRS})
 
 # This setting causes Qt's "MOC" generation to happen automatically
@@ -57,6 +58,7 @@ add_library(${PROJECT_NAME}
     src/visuals/cell_layer.cc
     src/visuals/cell_selector.cc
     src/layered_map_display.cc
+    src/layered_map_factories.cc
     src/wavemap_map_display.cc
     ${QT_MOC})
 set_wavemap_target_properties(${PROJECT_NAME})
