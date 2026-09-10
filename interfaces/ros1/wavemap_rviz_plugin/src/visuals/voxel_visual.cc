@@ -370,6 +370,9 @@ void VoxelVisual::colorModeUpdateCallback() {
   // Update the map if the color mode changed
   if (voxel_color_mode_ != old_color_mode) {
     updateMap(true);
+    if (layer_color_changed_callback_) {
+      layer_color_changed_callback_();
+    }
   }
 }
 
@@ -382,6 +385,9 @@ void VoxelVisual::flatColorUpdateCallback() {
   // Update the map if the color changed
   if (voxel_flat_color_ != old_flat_color) {
     updateMap(true);
+    if (layer_color_changed_callback_) {
+      layer_color_changed_callback_();
+    }
   }
 }
 
@@ -941,7 +947,7 @@ void VoxelVisual::appendLayeredBlockOccupancy(const wavemap_msgs::LayeredHashedW
     OctreeIndex node_index;
     FloatingPoint occupancy_scale;
     LayerValues layer_scales;
-    size_t node_msg_index;
+    bool render_descendants;
   };
 
   LayerValues root_layer_scales;
@@ -997,18 +1003,28 @@ void VoxelVisual::appendLayeredBlockOccupancy(const wavemap_msgs::LayeredHashedW
 
   size_t next_node_msg_index = 0u;
   std::stack<StackElement> stack;
-  stack.emplace(StackElement{OctreeIndex{layered_map_msg.tree_height, Index3D{block_msg.root_node_offset.x, block_msg.root_node_offset.y, block_msg.root_node_offset.z}}, block_msg.root_node_occupancy_scale_coefficient, std::move(root_layer_scales), next_node_msg_index++});
+  stack.emplace(StackElement{
+      OctreeIndex{layered_map_msg.tree_height,
+                  Index3D{block_msg.root_node_offset.x,
+                          block_msg.root_node_offset.y,
+                          block_msg.root_node_offset.z}},
+      block_msg.root_node_occupancy_scale_coefficient,
+      std::move(root_layer_scales), true});
 
   while (!stack.empty()) {
     StackElement stack_element = stack.top();
     stack.pop();
 
-    if (block_msg.nodes.size() <= stack_element.node_msg_index) {
+    if (block_msg.nodes.size() <= next_node_msg_index) {
       ROS_WARN("Layered map block ended before all queued nodes were read.");
       return;
     }
 
-    const auto& node_msg = block_msg.nodes[stack_element.node_msg_index];
+    // Nodes are serialized in depth-first preorder. Consume the next message
+    // when its corresponding stack entry is popped instead of assigning
+    // indices while siblings are discovered. A sibling's message only follows
+    // after the complete subtree of its preceding sibling.
+    const auto& node_msg = block_msg.nodes[next_node_msg_index++];
     Coefficients::Details occupancy_details;
     std::copy_n(node_msg.occupancy_detail_coefficients.begin(),
                 occupancy_details.size(), occupancy_details.begin());
@@ -1047,7 +1063,7 @@ void VoxelVisual::appendLayeredBlockOccupancy(const wavemap_msgs::LayeredHashedW
       OctreeIndex node_index;
       FloatingPoint occupancy_scale;
       LayerValues layer_scales;
-      size_t node_msg_index;
+      bool render_descendants;
     };
     std::vector<ChildToVisit> children_to_visit;
 
@@ -1056,11 +1072,20 @@ void VoxelVisual::appendLayeredBlockOccupancy(const wavemap_msgs::LayeredHashedW
       const FloatingPoint child_occupancy_scale = child_occupancy_scales[child_idx];
       const bool child_exists = bit_ops::is_bit_set(node_msg.allocated_children_bitset, child_idx);
 
-      if (child_exists && termination_height < child_node_index.height) {
-        children_to_visit.push_back({child_node_index, child_occupancy_scale,
-                                     std::move(child_layer_scales[child_idx]),
-                                     next_node_msg_index++});
-      } else {
+      if (child_exists) {
+        const bool render_child_descendants =
+            stack_element.render_descendants &&
+            termination_height < child_node_index.height;
+        children_to_visit.push_back(
+            {child_node_index, child_occupancy_scale,
+             std::move(child_layer_scales[child_idx]),
+             render_child_descendants});
+        if (stack_element.render_descendants &&
+            !render_child_descendants) {
+          append_leaf(child_node_index, child_occupancy_scale,
+                      children_to_visit.back().layer_scales);
+        }
+      } else if (stack_element.render_descendants) {
         append_leaf(child_node_index, child_occupancy_scale,
                     child_layer_scales[child_idx]);
       }
@@ -1072,8 +1097,12 @@ void VoxelVisual::appendLayeredBlockOccupancy(const wavemap_msgs::LayeredHashedW
       stack.emplace(StackElement{child_it->node_index,
                                  child_it->occupancy_scale,
                                  std::move(child_it->layer_scales),
-                                 child_it->node_msg_index});
+                                 child_it->render_descendants});
     }
+  }
+
+  if (next_node_msg_index != block_msg.nodes.size()) {
+    ROS_WARN("Layered map block contains unread serialized nodes.");
   }
 }
 

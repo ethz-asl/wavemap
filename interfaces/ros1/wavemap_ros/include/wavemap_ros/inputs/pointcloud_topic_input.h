@@ -3,12 +3,14 @@
 
 #include <memory>
 #include <functional>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <vector>
 
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <std_srvs/Trigger.h>
 #include <wavemap/core/config/string_list.h>
 #include <wavemap/core/utils/time/stopwatch.h>
 
@@ -33,7 +35,7 @@ struct PointcloudTopicType : public TypeSelector<PointcloudTopicType> {
  * Config struct for the pointcloud input handler.
  */
 struct PointcloudTopicInputConfig
-    : public ConfigBase<PointcloudTopicInputConfig, 12, PointcloudTopicType,
+    : public ConfigBase<PointcloudTopicInputConfig, 13, PointcloudTopicType,
                         StringList> {
   //! Name of the ROS topic to subscribe to.
   std::string topic_name;
@@ -77,6 +79,9 @@ struct PointcloudTopicInputConfig
   //! Name of the topic on which to republish the motion-undistorted
   //! pointclouds. Useful to share the undistorted pointclouds with other ROS
   //! nodes and for debugging. Disabled if not set.
+  //! Collect aggregate integration statistics and expose them through the
+  //! private benchmark_stats service. Disabled during normal operation.
+  bool enable_benchmark_metrics = false;
   std::string undistorted_pointcloud_topic_name;
 
   static MemberMap memberMap;
@@ -135,6 +140,25 @@ class PointcloudTopicInput : public RosInputBase {
   std::queue<QueuedPointcloud> pointcloud_queue_;
   std::vector<std::shared_ptr<PointcloudEndpointAdapter>> endpoint_adapters_;
   std::vector<PosedCloudCallback> posed_cloud_callbacks_;
+
+  struct BenchmarkMetrics {
+    size_t received_scans = 0u;
+    size_t integrated_scans = 0u;
+    size_t dropped_scans = 0u;
+    size_t pending_scans = 0u;
+    size_t received_points = 0u;
+    size_t integrated_points = 0u;
+    size_t maximum_queue_size = 0u;
+    std::vector<double> integration_durations;
+  } benchmark_metrics_;
+  std::mutex benchmark_metrics_mutex_;
+  ros::ServiceServer benchmark_stats_srv_;
+
+  void recordReceivedScan(size_t num_points);
+  void recordDroppedScan();
+  void recordIntegratedScan(size_t num_points, double duration_seconds);
+  bool benchmarkStatsCallback(std_srvs::Trigger::Request& request,
+                              std_srvs::Trigger::Response& response);
   void processQueue() override;
 
   static bool hasField(const sensor_msgs::PointCloud2& msg,

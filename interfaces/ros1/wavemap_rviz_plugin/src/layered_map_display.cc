@@ -30,8 +30,6 @@
 #include <wavemap/core/utils/profile/profiler_interface.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
-#include "example_layered_map_ros_config.h"
-#include "layered_ros_converter.h"
 #include "wavemap_rviz_plugin/utils/alert_dialog.h"
 
 namespace wavemap::rviz_plugin {
@@ -727,6 +725,11 @@ void LayeredMapDisplay::updateLegendOverlay(const wavemap_msgs::LayeredMap* msg)
     return;
   }
 
+  if (!show_legend_property_.getBool()) {
+    legend_overlay_->hide();
+    return;
+  }
+
   clearLegendOverlayElements();
 
   struct LegendRow {
@@ -750,11 +753,28 @@ void LayeredMapDisplay::updateLegendOverlay(const wavemap_msgs::LayeredMap* msg)
 
   if (layer->source == DisplayLayer::Source::kContinuous) {
     if (layer->name == "occupancy") {
-      subtitle = "occupancy / log-odds";
-      rows.push_back({Ogre::ColourValue(0.12f, 0.32f, 0.95f, 1.f),
-                      "lower probability"});
-      rows.push_back({Ogre::ColourValue(0.95f, 0.18f, 0.10f, 1.f),
-                      "higher probability"});
+      const VoxelColorMode color_mode =
+          voxel_visual_ ? voxel_visual_->colorMode()
+                        : VoxelColorMode{VoxelColorMode::kHeight};
+      switch (color_mode.toTypeId()) {
+        case VoxelColorMode::kProbability:
+          subtitle = "occupancy / probability";
+          rows.push_back({logOddsToColor(-20.f), "0% probability"});
+          rows.push_back({logOddsToColor(0.f), "50% probability"});
+          rows.push_back({logOddsToColor(20.f), "100% probability"});
+          break;
+        case VoxelColorMode::kFlat:
+          subtitle = "occupancy / flat color";
+          rows.push_back(
+              {voxel_visual_ ? voxel_visual_->flatColor()
+                             : Ogre::ColourValue::Blue,
+               "all displayed voxels"});
+          break;
+        case VoxelColorMode::kHeight:
+        default:
+          subtitle = "Color based on height";
+          break;
+      }
     } else if (layer->type == "float32_rgb" || layer->type == "float32_vec3") {
       subtitle = "direct RGB color";
       rows.push_back({Ogre::ColourValue(1.f, 0.f, 0.f, 1.f), "red channel"});
@@ -872,6 +892,10 @@ void LayeredMapDisplay::updateLegendOverlay(const wavemap_msgs::LayeredMap* msg)
   legend_overlay_->show();
 }
 
+void LayeredMapDisplay::updateLegendVisibilityCallback() {
+  updateLegendOverlay(latest_msg_ ? &latest_msg_.value() : nullptr);
+}
+
 void LayeredMapDisplay::updateSourceModeCallback() {
   ProfilerZoneScoped;
   const LayeredMapSourceMode old_source_mode = source_mode_;
@@ -914,7 +938,7 @@ void LayeredMapDisplay::loadMapFromDiskCallback() {
   if (!loadMapFromDisk(filepath, &load_error)) {
     if (load_error.empty()) {
       load_error = "This display currently supports layered map files that "
-                   "match the registered ExampleLayeredMap schema.";
+                   "match a registered layered-map schema.";
     }
     AlertDialog alert{
         "Could not load layered map",

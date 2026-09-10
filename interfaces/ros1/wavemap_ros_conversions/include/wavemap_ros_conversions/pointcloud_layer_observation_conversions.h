@@ -11,7 +11,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/PointField.h>
 
-#include <wavemap/layered/endpoint_attribute_pointcloud.h>
+#include <wavemap/layered/integration/endpoint_attribute_pointcloud.h>
 #include <wavemap_ros_conversions/layer_observation_msg_conversions.h>
 
 namespace wavemap::convert {

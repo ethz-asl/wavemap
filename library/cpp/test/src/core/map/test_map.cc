@@ -205,6 +205,33 @@ TYPED_TEST(MapTest, InsertionAndLeafVisitor) {
   }
 }
 
+TEST(HashedChunkedWaveletOctreeTest, StoresTypedVoxelData) {
+  using Voxel = VoxelData<FloatingPoint>;
+  HashedChunkedWaveletOctreeConfig config;
+  config.tree_height = 6;
+  HashedChunkedWaveletOctreeT<Voxel> map(config);
+
+  const Index3D index(3, -2, 7);
+  map.setVoxelValue(index, Voxel{/*occupancy=*/1.25f, /*data=*/0.4f});
+
+  Voxel voxel = map.getVoxelValue(index);
+  EXPECT_FLOAT_EQ(voxel.occupancy, 1.25f);
+  EXPECT_FLOAT_EQ(voxel.data, 0.4f);
+  EXPECT_FLOAT_EQ(map.getCellValue(index), voxel.occupancy);
+
+  map.addToVoxelValue(index,
+                      Voxel{/*occupancy=*/0.5f, /*data=*/0.1f});
+  voxel = map.getVoxelValue(index);
+  EXPECT_NEAR(voxel.occupancy, 1.75f, 1e-5f);
+  EXPECT_NEAR(voxel.data, 0.5f, 1e-5f);
+
+  map.threshold();
+  map.prune();
+  voxel = map.getVoxelValue(index);
+  EXPECT_NEAR(voxel.occupancy, 1.75f, 1e-5f);
+  EXPECT_NEAR(voxel.data, 0.5f, 1e-5f);
+}
+
 // TODO(victorr): For classes derived from VolumetricOctreeInterface, test
 //                NodeIndex based setters and getters (incl. whether values of
 //                all children are updated but nothing spills to the

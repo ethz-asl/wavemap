@@ -61,3 +61,13 @@ docs/cpp_api
 docs/_doxygen_cpp
 docs/_doxygen_ros1
 docs/_build
+
+# Local benchmark launch and monitoring utilities
+/interfaces/ros1/wavemap_ros/launch/benchmark_*.launch
+/interfaces/ros1/wavemap_ros/launch/benchmarks/
+/interfaces/ros1/wavemap_ros/scripts/monitor_wavemap_benchmark.py
+/interfaces/ros1/wavemap_ros/scripts/run_ouster_benchmark.py
+/interfaces/ros1/wavemap_ros/scripts/summarize_wavemap_benchmark.py
+
+# Local backup files
+*.orig

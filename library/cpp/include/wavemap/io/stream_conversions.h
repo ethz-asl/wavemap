@@ -46,6 +46,15 @@ template <typename CellDataT, typename CellDataSerializerT>
 bool streamToMap(std::istream& istream,
                  typename HashedWaveletOctreeT<CellDataT>::Ptr& map);
 
+template <typename CellDataT, typename CellDataSerializerT>
+bool mapToStream(const HashedChunkedWaveletOctreeT<CellDataT>& map,
+                 std::ostream& ostream);
+
+template <typename CellDataT, typename CellDataSerializerT>
+bool streamToMap(
+    std::istream& istream,
+    typename HashedChunkedWaveletOctreeT<CellDataT>::Ptr& map);
+
 bool mapToStream(const HashedBlocks& map, std::ostream& ostream);
 bool streamToMap(std::istream& istream, HashedBlocks::Ptr& map);
 

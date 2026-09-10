@@ -13,6 +13,7 @@
 
 #include <rviz/message_filter_display.h>
 #include <rviz/config.h>
+#include <rviz/properties/bool_property.h>
 #include <rviz/properties/enum_property.h>
 #include <rviz/properties/property.h>
 #include <wavemap_msgs/LayeredMap.h>
@@ -53,6 +54,7 @@ class LayeredMapDisplay
   void updateSourceModeCallback();
   void loadMapFromDiskCallback();
   void updateLayerSelectionCallback();
+  void updateLegendVisibilityCallback();
 
  private:
   struct DisplayLayer {
@@ -97,6 +99,9 @@ class LayeredMapDisplay
       "Layer", "occupancy",
       "Layer to display. Populated from the received LayeredMap message.",
       &voxel_visual_properties_, SLOT(updateLayerSelectionCallback()), this};
+  rviz::BoolProperty show_legend_property_{
+      "Show Legend", true, "Whether to show the selected layer legend.",
+      this, SLOT(updateLegendVisibilityCallback()), this};
   void processMessage(const wavemap_msgs::LayeredMap::ConstPtr& msg) override;
   bool loadMapFromDisk(const std::filesystem::path& filepath,
                        std::string* error_message = nullptr);

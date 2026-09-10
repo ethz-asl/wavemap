@@ -1,6 +1,7 @@
 #ifndef WAVEMAP_CORE_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HASHED_CHUNKED_WAVELET_INTEGRATOR_H_
 #define WAVEMAP_CORE_INTEGRATOR_PROJECTIVE_COARSE_TO_FINE_HASHED_CHUNKED_WAVELET_INTEGRATOR_H_
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -13,15 +14,20 @@
 #include "wavemap/core/utils/thread_pool.h"
 
 namespace wavemap {
-class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
+template <typename CellDataT = FloatingPoint>
+class HashedChunkedWaveletIntegratorT : public ProjectiveIntegrator {
  public:
-  HashedChunkedWaveletIntegrator(
+  using MapType = HashedChunkedWaveletOctreeT<CellDataT>;
+  using MapPtr = typename MapType::Ptr;
+  using Block = typename MapType::Block;
+  using BlockIndex = typename MapType::BlockIndex;
+  HashedChunkedWaveletIntegratorT(
       const ProjectiveIntegratorConfig& config,
       ProjectorBase::ConstPtr projection_model,
       PosedImage<>::Ptr posed_range_image,
       Image<Vector2D>::Ptr beam_offset_image,
       MeasurementModelBase::ConstPtr measurement_model,
-      HashedChunkedWaveletOctree::Ptr occupancy_map,
+      MapPtr occupancy_map,
       std::shared_ptr<ThreadPool> thread_pool = nullptr)
       : ProjectiveIntegrator(
             config, std::move(projection_model), std::move(posed_range_image),
@@ -31,10 +37,10 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
                                  : std::make_shared<ThreadPool>()) {}
 
  private:
-  using BlockList = std::vector<HashedChunkedWaveletOctree::BlockIndex>;
-  using OctreeType = HashedChunkedWaveletOctreeBlock::OctreeType;
+  using BlockList = std::vector<typename MapType::BlockIndex>;
+  using OctreeType = typename Block::OctreeType;
 
-  const HashedChunkedWaveletOctree::Ptr occupancy_map_;
+  const MapPtr occupancy_map_;
   const std::shared_ptr<ThreadPool> thread_pool_;
   std::shared_ptr<RangeImageIntersector> range_image_intersector_;
 
@@ -56,23 +62,38 @@ class HashedChunkedWaveletIntegrator : public ProjectiveIntegrator {
                 std::log2(config_.max_update_resolution / min_cell_width_)))
           : 0;
 
+  static FloatingPoint occupancyOf(const CellDataT& value) {
+    return static_cast<FloatingPoint>(value);
+  }
+
+  static void addClampedOccupancyUpdate(CellDataT& value,
+                                        FloatingPoint update,
+                                        FloatingPoint min_value,
+                                        FloatingPoint max_value) {
+    value += update;
+    value = std::clamp(occupancyOf(value), min_value, max_value);
+  }
+
   std::pair<OctreeIndex, OctreeIndex> getFovMinMaxIndices(
       const Point3D& sensor_origin) const;
   void recursiveTester(const OctreeIndex& node_index,
                        BlockList& update_job_list);
 
   void updateMap() override;
-  void updateBlock(HashedChunkedWaveletOctree::Block& block,
-                   const HashedChunkedWaveletOctree::BlockIndex& block_index);
+  void updateBlock(Block& block,
+                   const BlockIndex& block_index);
 
-  void updateNodeRecursive(OctreeType::NodeRefType node,
+  void updateNodeRecursive(typename OctreeType::NodeRefType node,
                            const OctreeIndex& node_index,
-                           FloatingPoint& node_value,
+                           CellDataT& node_value,
                            bool& block_needs_thresholding);
   void updateLeavesBatch(const OctreeIndex& parent_index,
-                         FloatingPoint& parent_value,
-                         OctreeType::NodeDataType& parent_details);
+                         CellDataT& parent_value,
+                         typename OctreeType::NodeDataType& parent_details);
 };
+
+using HashedChunkedWaveletIntegrator =
+    HashedChunkedWaveletIntegratorT<FloatingPoint>;
 }  // namespace wavemap
 
 #include "wavemap/core/integrator/projective/coarse_to_fine/impl/hashed_chunked_wavelet_integrator_inl.h"

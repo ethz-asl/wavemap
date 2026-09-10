@@ -65,12 +65,17 @@ struct IntegratorDataStructurePair {
   using DataStructureType = DataStructureT;
 };
 
+using LayeredChunkedTestVoxel = VoxelData<FloatingPoint>;
+
 using IntegratorTypes = ::testing::Types<
     IntegratorDataStructurePair<CoarseToFineIntegrator, VolumetricOctree>,
     IntegratorDataStructurePair<WaveletIntegrator, WaveletOctree>,
     IntegratorDataStructurePair<HashedWaveletIntegrator, HashedWaveletOctree>,
     IntegratorDataStructurePair<HashedChunkedWaveletIntegrator,
-                                HashedChunkedWaveletOctree>>;
+                                HashedChunkedWaveletOctree>,
+    IntegratorDataStructurePair<
+        HashedChunkedWaveletIntegratorT<LayeredChunkedTestVoxel>,
+        HashedChunkedWaveletOctreeT<LayeredChunkedTestVoxel>>>;
 TYPED_TEST_SUITE(PointcloudIntegratorTypedTest, IntegratorTypes, );
 
 TYPED_TEST(PointcloudIntegratorTypedTest,

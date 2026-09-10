@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <ros/time.h>
-#include <wavemap/layered/layer_traits.h>
+#include <wavemap/layered/schema/layer_traits.h>
 #include <wavemap/core/common.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 #include <wavemap_msgs/DiscreteLayer.h>

@@ -76,7 +76,7 @@ void mapToRosMsg(const HashedWaveletOctreeT<CellDataT>& map, wavemap_msgs::Layer
   for (const auto& block_index : include_blocks.value()) {
     if (const auto* block = map.getBlock(block_index); block) {
       auto& block_msg = msg.blocks[block_idx++];
-      // Block conversion is independent per block, 
+      // Block conversion is independent per block,
       // so it can safely run in the optional thread pool when the caller has one available.
       if (thread_pool) {
         thread_pool->add_task([block_index, block, min_log_odds, max_log_odds,
@@ -132,7 +132,7 @@ void blockToRosMsg(
     auto& node_msg = msg.nodes.emplace_back();
     node_msg.detail_layers = CellDataRosConverterT::makeLayers();
     size_t coefficient_idx = 0u;
-    // Each wavelet node stores eight detail coefficients. 
+    // Each wavelet node stores eight detail coefficients.
     // Occupancy is copied into the fixed array; all custom layer values are appended layer-major into detail_layers by CellDataRosConverterT
     for (const CellDataT& coefficient : node.data()) {
       node_msg.occupancy_detail_coefficients[coefficient_idx++] =
@@ -154,6 +154,160 @@ void blockToRosMsg(
       }
 
       if (const auto* child = node.getChild(relative_child_idx); child) {
+        stack.emplace(StackElement{child_scale, *child});
+        // The bitset records which children have serialized node data.
+        node_msg.allocated_children_bitset += (1 << relative_child_idx);
+      }
+    }
+  }
+}
+
+template <typename CellDataT, typename CellDataRosConverterT>
+bool mapToRosMsg(const HashedChunkedWaveletOctreeT<CellDataT>& map, const std::string& frame_id, const ros::Time& stamp, wavemap_msgs::Map& msg, std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks, std::shared_ptr<ThreadPool> thread_pool) {
+  ProfilerZoneScoped;
+  // Layered equivalent of the existing MapBase wrapper
+  // Fills the common ROS header and stores the typed map inside wavemap_msgs::Map.
+  msg.header.stamp = stamp;
+  msg.header.frame_id = frame_id;
+
+  // The custom voxel type needs the user-provided converter
+  auto& layered_map_msg = msg.layered_hashed_wavelet_octree.emplace_back();
+  convert::mapToRosMsg<CellDataT, CellDataRosConverterT>(map, layered_map_msg, std::move(include_blocks), std::move(thread_pool));
+  return true;
+}
+
+template <typename CellDataT, typename CellDataRosConverterT>
+void mapToRosMsg(const HashedChunkedWaveletOctreeT<CellDataT>& map, wavemap_msgs::LayeredHashedWaveletOctree& msg, std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks, std::shared_ptr<ThreadPool> thread_pool) {
+  ProfilerZoneScoped;
+  // Use a small margin when deciding whether child nodes are saturated
+  constexpr FloatingPoint kNumericalNoise = 1e-3f;
+  const auto min_log_odds = map.getMinLogOdds() + kNumericalNoise;
+  const auto max_log_odds = map.getMaxLogOdds() - kNumericalNoise;
+
+  // Copy the map metadata first
+  msg.min_cell_width = map.getMinCellWidth();
+  msg.min_log_odds = map.getMinLogOdds();
+  msg.max_log_odds = map.getMaxLogOdds();
+  msg.tree_height = map.getTreeHeight();
+  msg.layer_names = CellDataRosConverterT::layerNames();
+  msg.layer_types = CellDataRosConverterT::layerTypes();
+  msg.layer_min_values =
+      CellDataRosConverterT::makeLayerMinimums(map.getThresholdConfig());
+  msg.layer_max_values =
+      CellDataRosConverterT::makeLayerMaximums(map.getThresholdConfig());
+  msg.layer_visualizations =
+      CellDataRosConverterT::layerVisualizations();
+
+  // Always publish the full list of allocated block indices
+  msg.allocated_block_indices.reserve(map.getHashMap().size());
+  map.forEachBlock([&msg](const Index3D& block_index, const auto& /*block*/) {
+    auto& block_index_msg = msg.allocated_block_indices.emplace_back();
+    block_index_msg.x = block_index.x();
+    block_index_msg.y = block_index.y();
+    block_index_msg.z = block_index.z();
+  });
+
+  // If the caller requested a subset of blocks, discard indices that are not currently allocated
+  if (include_blocks) {
+    for (auto include_block_it = include_blocks->begin();
+         include_block_it != include_blocks->end();) {
+      if (map.hasBlock(*include_block_it)) {
+        ++include_block_it;
+      } else {
+        include_block_it = include_blocks->erase(include_block_it);
+      }
+    }
+  } else {
+    include_blocks.emplace();
+    map.forEachBlock(
+        [&include_blocks](const Index3D& block_index, const auto& /*block*/) {
+          include_blocks->emplace(block_index);
+        });
+  }
+
+  int block_idx = 0;
+  msg.blocks.resize(include_blocks->size());
+  for (const auto& block_index : include_blocks.value()) {
+    if (const auto* block = map.getBlock(block_index); block) {
+      auto& block_msg = msg.blocks[block_idx++];
+      // Block conversion is independent per block,
+      // so it can safely run in the optional thread pool when the caller has one available.
+      if (thread_pool) {
+        thread_pool->add_task([block_index, block, min_log_odds, max_log_odds,
+                               &block_msg]() {
+          blockToRosMsg<CellDataT, CellDataRosConverterT>(
+              block_index, *block, min_log_odds, max_log_odds, block_msg);
+        });
+      } else {
+        blockToRosMsg<CellDataT, CellDataRosConverterT>(
+            block_index, *block, min_log_odds, max_log_odds, block_msg);
+      }
+    } else {
+      ROS_ERROR("Block index not found. This should never happen.");
+    }
+  }
+  if (thread_pool) {
+    thread_pool->wait_all();
+  }
+}
+
+template <typename CellDataT, typename CellDataRosConverterT>
+void blockToRosMsg(
+    const typename HashedChunkedWaveletOctreeT<CellDataT>::BlockIndex& block_index,
+    const typename HashedChunkedWaveletOctreeT<CellDataT>::Block& block,
+    FloatingPoint min_log_odds, FloatingPoint max_log_odds,
+    wavemap_msgs::LayeredHashedWaveletOctreeBlock& msg) {
+  using Block = typename HashedChunkedWaveletOctreeT<CellDataT>::Block;
+  using NodeConstRefType = typename Block::OctreeType::NodeConstRefType;
+
+  struct StackElement {
+    const CellDataT scale;
+    NodeConstRefType node;
+  };
+
+  // Store the block position and root scale separately from the internal wavelet nodes
+  // Occupancy is kept in the explicit occupancy field, while extra layers are encoded through the user-provided converter
+  msg.root_node_offset.x = block_index.x();
+  msg.root_node_offset.y = block_index.y();
+  msg.root_node_offset.z = block_index.z();
+  msg.root_node_occupancy_scale_coefficient = static_cast<FloatingPoint>(block.getRootScale());
+  msg.root_node_layers = CellDataRosConverterT::makeLayers();
+  CellDataRosConverterT::appendLayerValues(block.getRootScale(), msg.root_node_layers);
+
+  // Traverse the block's wavelet tree without recursion
+  // Each stack entry carries the node and its reconstructed scale coefficient, to decide whether the children are saturated and should be serialized
+  std::stack<StackElement> stack;
+  stack.emplace(StackElement{block.getRootScale(), block.getRootNode()});
+  while (!stack.empty()) {
+    const CellDataT scale = stack.top().scale;
+    const auto node = stack.top().node;
+    stack.pop();
+
+    auto& node_msg = msg.nodes.emplace_back();
+    node_msg.detail_layers = CellDataRosConverterT::makeLayers();
+    size_t coefficient_idx = 0u;
+    // Each wavelet node stores eight detail coefficients.
+    // Occupancy is copied into the fixed array; all custom layer values are appended layer-major into detail_layers by CellDataRosConverterT
+    for (const CellDataT& coefficient : node.data()) {
+      node_msg.occupancy_detail_coefficients[coefficient_idx++] =
+          static_cast<FloatingPoint>(coefficient);
+      CellDataRosConverterT::appendLayerValues(coefficient,
+                                               node_msg.detail_layers);
+    }
+
+    // Reconstruct child scales from the parent scale and detail coefficients
+    // Only children whose occupancy is not saturated need to be sent further
+    const auto child_scales = Block::Transform::backward({scale, node.data()});
+    for (int relative_child_idx = OctreeIndex::kNumChildren - 1;
+         0 <= relative_child_idx; --relative_child_idx) {
+      const auto child_scale = child_scales[relative_child_idx];
+      const FloatingPoint child_occupancy =
+          static_cast<FloatingPoint>(child_scale);
+      if (child_occupancy < min_log_odds || max_log_odds < child_occupancy) {
+        continue;
+      }
+
+      if (auto child = node.getChild(relative_child_idx); child) {
         stack.emplace(StackElement{child_scale, *child});
         // The bitset records which children have serialized node data.
         node_msg.allocated_children_bitset += (1 << relative_child_idx);

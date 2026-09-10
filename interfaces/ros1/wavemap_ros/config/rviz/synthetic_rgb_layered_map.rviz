@@ -1,0 +1,106 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /RGB Layered Wavemap1
+        - /RGB Layered Wavemap1/Render voxels1
+      Splitter Ratio: 0.5
+    Tree Height: 650
+  - Class: rviz/Views
+    Name: Views
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 40
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: wavemap_rviz_plugin/LayeredMap
+      Enabled: true
+      Name: Layered Wavemap
+      Queue Size: 10
+      Source: Topic
+      Render voxels:
+        Alpha: 1
+        Cell selector: Band
+        Color mode: Flat
+        Enable: true
+        Flat color: 255; 255; 255
+        Frame rate:
+          Max update time: 20
+        Layer: rgb
+        Layer color:
+          Bool true color: 255; 12; 12
+          Scalar high color: 255; 255; 0
+          Scalar low color: 0; 0; 255
+          Scalar max: 1
+          Scalar min: 0
+          Show bool false: false
+        Max log odds: 1000000
+        Min log odds: 0.001
+        Termination height: 0
+        Unknown log odds: 0.0001
+      Topic: /synthetic_rgb_layered_map/layered_map
+      Unreliable: false
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 20
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Field of View: 0.785398
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 1
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.65
+      Target Frame: <Fixed Frame>
+      Yaw: 0.75
+    Saved: ~
+Window Geometry:
+  Height: 900
+  Width: 1440

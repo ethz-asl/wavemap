@@ -3,28 +3,39 @@
 
 #include "wavemap/core/common.h"
 #include "wavemap/core/data_structure/chunked_ndtree/chunked_ndtree.h"
+#include "wavemap/core/map/cell_types/cell_data_traits.h"
 #include "wavemap/core/map/cell_types/haar_coefficients.h"
 #include "wavemap/core/map/cell_types/haar_transform.h"
+#include "wavemap/core/map/cell_types/voxel_data.h"
 #include "wavemap/core/map/map_base.h"
 #include "wavemap/core/utils/time/time.h"
 
 namespace wavemap {
-class HashedChunkedWaveletOctreeBlock {
+template <typename CellDataT = FloatingPoint>
+class HashedChunkedWaveletOctreeBlockT {
  public:
   static constexpr int kDim = 3;
   static constexpr int kChunkHeight = 3;
   static constexpr int kMaxSupportedTreeHeight = 9;
+  using CellDataType = CellDataT;
   using BlockIndex = Index3D;
-  using Coefficients = HaarCoefficients<FloatingPoint, kDim>;
-  using Transform = HaarTransform<FloatingPoint, kDim>;
-  using OctreeType = ChunkedOctree<Coefficients::Details, kChunkHeight>;
+  using Coefficients = HaarCoefficients<CellDataT, kDim>;
+  using Transform = HaarTransform<CellDataT, kDim>;
+  using OctreeType = ChunkedOctree<typename Coefficients::Details, kChunkHeight>;
+  using Traits = CellDataTraits<CellDataT>;
+  using ThresholdConfig = typename Traits::ThresholdConfig;
+  using PruningConfig = typename Traits::PruningConfig;
 
-  explicit HashedChunkedWaveletOctreeBlock(IndexElement tree_height,
-                                           FloatingPoint min_log_odds,
-                                           FloatingPoint max_log_odds)
+  explicit HashedChunkedWaveletOctreeBlockT(
+      IndexElement tree_height, FloatingPoint min_log_odds,
+      FloatingPoint max_log_odds,
+      ThresholdConfig threshold_config = ThresholdConfig{},
+      PruningConfig pruning_config = PruningConfig{})
       : tree_height_(tree_height),
         min_log_odds_(min_log_odds),
-        max_log_odds_(max_log_odds) {}
+        max_log_odds_(max_log_odds),
+        threshold_config_(threshold_config),
+        pruning_config_(pruning_config) {}
 
   bool empty() const;
   size_t size() const { return ndtree_.size(); }
@@ -33,33 +44,42 @@ class HashedChunkedWaveletOctreeBlock {
   void clear();
 
   FloatingPoint getCellValue(const OctreeIndex& index) const;
+  CellDataT getVoxelValue(const OctreeIndex& index) const;
   void setCellValue(const OctreeIndex& index, FloatingPoint new_value);
+  void setVoxelValue(const OctreeIndex& index, const CellDataT& new_value);
   void addToCellValue(const OctreeIndex& index, FloatingPoint update);
+  void addToVoxelValue(const OctreeIndex& index, const CellDataT& update);
 
   void forEachLeaf(const BlockIndex& block_index,
                    typename MapBase::IndexedLeafVisitorFunction visitor_fn,
                    IndexElement termination_height = 0) const;
 
-  Coefficients::Scale& getRootScale() { return root_scale_coefficient_; }
-  const Coefficients::Scale& getRootScale() const {
+  template <typename IndexedVoxelLeafVisitorFunction>
+  void forEachVoxelLeaf(const BlockIndex& block_index,
+                        IndexedVoxelLeafVisitorFunction visitor_fn,
+                        IndexElement termination_height = 0) const;
+
+  typename Coefficients::Scale& getRootScale() {
     return root_scale_coefficient_;
   }
-  OctreeType::NodeRefType getRootNode() { return ndtree_.getRootNode(); }
-  OctreeType::NodeConstRefType getRootNode() const {
+  const typename Coefficients::Scale& getRootScale() const {
+    return root_scale_coefficient_;
+  }
+  typename OctreeType::NodeRefType getRootNode() {
     return ndtree_.getRootNode();
   }
-  OctreeType::ChunkType& getRootChunk() { return ndtree_.getRootChunk(); }
-  const OctreeType::ChunkType& getRootChunk() const {
+  typename OctreeType::NodeConstRefType getRootNode() const {
+    return ndtree_.getRootNode();
+  }
+  typename OctreeType::ChunkType& getRootChunk() { return ndtree_.getRootChunk(); }
+  const typename OctreeType::ChunkType& getRootChunk() const {
     return ndtree_.getRootChunk();
   }
 
   void setNeedsPruning(bool value = true) { needs_pruning_ = value; }
   bool getNeedsPruning() const { return needs_pruning_; }
-  bool& getNeedsPruning() { return needs_pruning_; }
-
   void setNeedsThresholding(bool value = true) { needs_thresholding_ = value; }
   bool getNeedsThresholding() const { return needs_thresholding_; }
-
   void setLastUpdatedStamp(Timestamp stamp = Time::now()) {
     last_updated_stamp_ = stamp;
   }
@@ -68,11 +88,11 @@ class HashedChunkedWaveletOctreeBlock {
 
   template <TraversalOrder traversal_order>
   auto getChunkIterator() {
-    return ndtree_.getChunkIterator<traversal_order>();
+    return ndtree_.template getChunkIterator<traversal_order>();
   }
   template <TraversalOrder traversal_order>
   auto getChunkIterator() const {
-    return ndtree_.getChunkIterator<traversal_order>();
+    return ndtree_.template getChunkIterator<traversal_order>();
   }
 
   size_t getMemoryUsage() const { return ndtree_.getMemoryUsage(); }
@@ -81,19 +101,22 @@ class HashedChunkedWaveletOctreeBlock {
   const IndexElement tree_height_;
   const FloatingPoint min_log_odds_;
   const FloatingPoint max_log_odds_;
+  const ThresholdConfig threshold_config_;
+  const PruningConfig pruning_config_;
 
   OctreeType ndtree_{tree_height_ - 1};
-  Coefficients::Scale root_scale_coefficient_{};
+  typename Coefficients::Scale root_scale_coefficient_{};
 
   bool needs_thresholding_ = false;
   bool needs_pruning_ = false;
   Timestamp last_updated_stamp_ = Time::now();
 
-  void recursiveThreshold(OctreeType::NodeRefType node,
-                          Coefficients::Scale& node_scale_coefficient);
-  void recursivePrune(
-      HashedChunkedWaveletOctreeBlock::OctreeType::NodeRefType node);
+  void recursiveThreshold(typename OctreeType::NodeRefType node,
+                          typename Coefficients::Scale& node_scale_coefficient);
+  void recursivePrune(typename OctreeType::NodeRefType node);
 };
+
+using HashedChunkedWaveletOctreeBlock = HashedChunkedWaveletOctreeBlockT<FloatingPoint>;
 }  // namespace wavemap
 
 #include "wavemap/core/map/impl/hashed_chunked_wavelet_octree_block_inl.h"

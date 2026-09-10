@@ -8,14 +8,34 @@
 #include <wavemap/core/map/hashed_wavelet_octree.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/map/wavelet_octree.h>
+#include <wavemap/layered/integration/layer_update_policy.h>
+#include <wavemap/layered/map/layered_map_definition.h>
+#include <wavemap/layered/schema/layer_schema.h>
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
 #include <wavemap/test/geometry_generator.h>
 #include <wavemap_msgs/Map.h>
 
 #include "wavemap_ros_conversions/map_msg_conversions.h"
+#include "wavemap_ros_conversions/descriptor_layered_map_conversions.h"
 
 namespace wavemap {
+namespace {
+struct TestReflectivityLayer
+    : layered::schema::ContinuousLayer<
+          FloatingPoint,
+          layered::ReplaceLayerUpdatePolicy<FloatingPoint>> {
+  static constexpr std::string_view name = "reflectivity";
+};
+
+using TestSchema = layered::schema::LayerSchema<TestReflectivityLayer>;
+using ChunkedLayeredDefinition = layered::LayeredMapDefinition<
+    TestSchema, layered::HashedChunkedWaveletOctreeBackend>;
+using RegularLayeredDefinition = layered::LayeredMapDefinition<TestSchema>;
+using TestLayerRosConverter = convert::DescriptorContinuousRosConverter<
+    ChunkedLayeredDefinition::Voxel>;
+}  // namespace
+
 template <typename MapType>
 class MapMsgConversionsTest : public FixtureBase,
                               public GeometryGenerator,
@@ -165,5 +185,45 @@ TYPED_TEST(MapMsgConversionsTest, InsertionAndLeafVisitor) {
       });
     }
   }
+}
+
+TEST(LayeredMapMsgConversionsTest,
+     ChunkedMapUsesLogicalHashedWaveletRepresentation) {
+  ros::Time::init();
+
+  ChunkedLayeredDefinition::ContinuousMap::Config config;
+  config.min_cell_width = 0.2f;
+  config.min_log_odds = -2.f;
+  config.max_log_odds = 4.f;
+  config.tree_height = 4;
+
+  ChunkedLayeredDefinition::ContinuousMap chunked_map(config);
+  const Index3D cell_index{3, -2, 5};
+  ChunkedLayeredDefinition::Voxel voxel;
+  voxel.occupancy = 0.7f;
+  voxel.data.get<TestReflectivityLayer>() = 0.35f;
+  chunked_map.setVoxelValue(cell_index, voxel);
+
+  wavemap_msgs::Map map_msg;
+  ASSERT_TRUE((convert::mapToRosMsg<ChunkedLayeredDefinition::Voxel,
+                                    TestLayerRosConverter>(
+      chunked_map, "odom", ros::Time(42), map_msg)));
+  ASSERT_EQ(map_msg.layered_hashed_wavelet_octree.size(), 1u);
+  const auto& layered_msg = map_msg.layered_hashed_wavelet_octree.front();
+  EXPECT_EQ(layered_msg.layer_names,
+            std::vector<std::string>({"reflectivity"}));
+  EXPECT_EQ(layered_msg.layer_types,
+            std::vector<std::string>({"float32"}));
+  EXPECT_FALSE(layered_msg.blocks.empty());
+
+  RegularLayeredDefinition::ContinuousMap::Ptr regular_map;
+  ASSERT_TRUE((convert::rosMsgToMap<RegularLayeredDefinition::Voxel,
+                                    TestLayerRosConverter>(map_msg,
+                                                           regular_map)));
+  ASSERT_TRUE(regular_map);
+  const auto reconstructed = regular_map->getVoxelValue(cell_index);
+  EXPECT_NEAR(reconstructed.occupancy, voxel.occupancy, 1e-5f);
+  EXPECT_NEAR(reconstructed.data.get<TestReflectivityLayer>(),
+              voxel.data.get<TestReflectivityLayer>(), 1e-5f);
 }
 }  // namespace wavemap

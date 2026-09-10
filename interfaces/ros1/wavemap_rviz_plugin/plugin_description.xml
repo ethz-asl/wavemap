@@ -15,16 +15,6 @@
     </description>
     <message_type>wavemap_msgs/LayeredMap</message_type>
   </class>
-  <class name="wavemap_rviz_plugin/ExampleLayeredMapFactory"
-         type="wavemap::rviz_plugin::ExampleLayeredMapFactory"
-         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
-    <description>Schema handler for the legacy color/traversability example.</description>
-  </class>
-  <class name="wavemap_rviz_plugin/FieldLayeredMapFactory"
-         type="wavemap::rviz_plugin::FieldLayeredMapFactory"
-         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
-    <description>Schema handler for the reflectivity field map.</description>
-  </class>
   <class name="wavemap_rviz_plugin/OccupancyLayeredMapFactory"
          type="wavemap::rviz_plugin::OccupancyLayeredMapFactory"
          base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
@@ -39,5 +29,15 @@
          type="wavemap::rviz_plugin::ReflectivityClassLayeredMapFactory"
          base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
     <description>Schema handler for occupancy, reflectivity, and class maps.</description>
+  </class>
+  <class name="wavemap_rviz_plugin/SignalNearIrClassLayeredMapFactory"
+         type="wavemap::rviz_plugin::SignalNearIrClassLayeredMapFactory"
+         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
+    <description>Schema handler for occupancy, reflectivity, signal, near-IR, and class maps with discrete block height 2.</description>
+  </class>
+  <class name="wavemap_rviz_plugin/RgbLayeredMapFactory"
+         type="wavemap::rviz_plugin::RgbLayeredMapFactory"
+         base_class_type="wavemap::rviz_plugin::LayeredMapFactory">
+    <description>Schema handler for occupancy and direct RGB color maps.</description>
   </class>
 </library>

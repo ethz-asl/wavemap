@@ -44,10 +44,7 @@ add_library(${PROJECT_NAME}
     src/ros_server.cc)
 set_wavemap_target_properties(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
-    PUBLIC include ${catkin_INCLUDE_DIRS}
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
+    PUBLIC include ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}
     PUBLIC ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -57,54 +54,92 @@ set_wavemap_target_properties(ros_server)
 target_link_libraries(ros_server ${PROJECT_NAME})
 
 add_executable(occupancy_layered_server
-    ../../../examples/cpp/digital_twin/ouster_mapping/occupancy_sensor_inputs.cc)
+    app/ouster_layered/occupancy_sensor_inputs.cc)
 set_wavemap_target_properties(occupancy_layered_server)
 target_include_directories(occupancy_layered_server PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
 target_link_libraries(occupancy_layered_server ${PROJECT_NAME})
 
+add_executable(occupancy_chunked_layered_server
+    app/ouster_layered/occupancy_chunked_sensor_inputs.cc)
+set_wavemap_target_properties(occupancy_chunked_layered_server)
+target_include_directories(occupancy_chunked_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(occupancy_chunked_layered_server ${PROJECT_NAME})
+
 add_executable(reflectivity_layered_server
-    ../../../examples/cpp/digital_twin/ouster_mapping/reflectivity_only_sensor_inputs.cc)
+    app/ouster_layered/reflectivity_only_sensor_inputs.cc)
 set_wavemap_target_properties(reflectivity_layered_server)
 target_include_directories(reflectivity_layered_server PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
 target_link_libraries(reflectivity_layered_server ${PROJECT_NAME})
 
+add_executable(signal_layered_server
+    app/ouster_layered/signal_sensor_inputs.cc)
+set_wavemap_target_properties(signal_layered_server)
+target_include_directories(signal_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(signal_layered_server ${PROJECT_NAME})
+
+add_executable(signal_near_ir_layered_server
+    app/ouster_layered/signal_near_ir_sensor_inputs.cc)
+set_wavemap_target_properties(signal_near_ir_layered_server)
+target_include_directories(signal_near_ir_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(signal_near_ir_layered_server ${PROJECT_NAME})
+
+add_executable(signal_class_layered_server
+    app/ouster_layered/signal_class_sensor_inputs.cc)
+set_wavemap_target_properties(signal_class_layered_server)
+target_include_directories(signal_class_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(signal_class_layered_server ${PROJECT_NAME})
+
+add_executable(signal_near_ir_class_layered_server
+    app/ouster_layered/signal_near_ir_class_sensor_inputs.cc)
+set_wavemap_target_properties(signal_near_ir_class_layered_server)
+target_include_directories(signal_near_ir_class_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(signal_near_ir_class_layered_server ${PROJECT_NAME})
+
+add_executable(reflectivity_chunked_layered_server
+    app/ouster_layered/reflectivity_chunked_sensor_inputs.cc)
+set_wavemap_target_properties(reflectivity_chunked_layered_server)
+target_include_directories(reflectivity_chunked_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(reflectivity_chunked_layered_server ${PROJECT_NAME})
+
 add_executable(reflectivity_class_layered_server
-    ../../../examples/cpp/digital_twin/ouster_mapping/ouster_sensor_inputs.cc)
+    app/ouster_layered/ouster_sensor_inputs.cc)
 set_wavemap_target_properties(reflectivity_class_layered_server)
 target_include_directories(reflectivity_class_layered_server PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping)
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
 target_link_libraries(reflectivity_class_layered_server ${PROJECT_NAME})
+
+add_executable(reflectivity_class_chunked_layered_server
+    app/ouster_layered/reflectivity_class_chunked_sensor_inputs.cc)
+set_wavemap_target_properties(reflectivity_class_chunked_layered_server)
+target_include_directories(reflectivity_class_chunked_layered_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(reflectivity_class_chunked_layered_server ${PROJECT_NAME})
+
+add_executable(inspect_ouster_benchmark_maps
+    app/ouster_layered/inspect_ouster_benchmark_maps.cc)
+set_wavemap_target_properties(inspect_ouster_benchmark_maps)
+target_include_directories(inspect_ouster_benchmark_maps PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/ouster_layered)
+target_link_libraries(inspect_ouster_benchmark_maps ${PROJECT_NAME})
+
+add_executable(synthetic_rgb_layered_map_demo
+    app/synthetic_rgb_layered_map_demo.cc)
+set_wavemap_target_properties(synthetic_rgb_layered_map_demo)
+target_include_directories(synthetic_rgb_layered_map_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/app)
+target_link_libraries(synthetic_rgb_layered_map_demo ${PROJECT_NAME})
 
 add_executable(rosbag_processor app/rosbag_processor.cc)
 set_wavemap_target_properties(rosbag_processor)
 target_link_libraries(rosbag_processor ${PROJECT_NAME})
-
-add_executable(publish_field_layer_updates_experiment
-    app/publish_field_layer_updates_experiment.cc)
-set_wavemap_target_properties(publish_field_layer_updates_experiment)
-target_link_libraries(publish_field_layer_updates_experiment ${PROJECT_NAME})
-
-add_executable(field_layer_sensor_bridge
-    app/field_layer_sensor_bridge.cc)
-set_wavemap_target_properties(field_layer_sensor_bridge)
-target_link_libraries(field_layer_sensor_bridge ${PROJECT_NAME})
-
-add_executable(layered_incremental_publish_experiment
-    app/layered_incremental_publish_experiment.cc)
-set_wavemap_target_properties(layered_incremental_publish_experiment)
-target_include_directories(layered_incremental_publish_experiment PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common)
-target_link_libraries(layered_incremental_publish_experiment ${PROJECT_NAME})
-
-add_executable(computed_point_field_binding_experiment
-    app/computed_point_field_binding_experiment.cc)
-set_wavemap_target_properties(computed_point_field_binding_experiment)
-target_link_libraries(computed_point_field_binding_experiment ${PROJECT_NAME})
 
 # Support installs
 # Mark targets for installation

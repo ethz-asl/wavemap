@@ -1,0 +1,78 @@
+#ifndef WAVEMAP_LAYERED_LAYERED_MAP_H_
+#define WAVEMAP_LAYERED_LAYERED_MAP_H_
+
+#include <memory>
+#include <utility>
+
+#include <wavemap/core/map/cell_types/voxel_data.h>
+#include <wavemap/layered/map/continuous_map_backend.h>
+#include <wavemap/layered/map/discrete_layer.h>
+
+namespace wavemap::layered {
+
+template <typename ContinuousLayersT, typename ContinuousPolicyT>
+using LayeredMapVoxel =
+    wavemap::VoxelData<ContinuousLayersT, ContinuousPolicyT>;
+
+template <typename ContinuousMapT>
+struct LayeredMapConfig {
+  typename ContinuousMapT::Config continuous_map;
+  typename ContinuousMapT::ThresholdConfig continuous_threshold;
+  typename ContinuousMapT::PruningConfig continuous_pruning;
+  DiscreteCompressionConfig discrete_compression;
+};
+
+template <typename ContinuousLayersT, typename ContinuousPolicyT,
+          typename DiscreteLayersT,
+          typename ContinuousMapBackendT = HashedWaveletOctreeBackend>
+class LayeredMap {
+ public:
+  using ContinuousLayers = ContinuousLayersT;
+  using ContinuousPolicy = ContinuousPolicyT;
+  using ContinuousVoxel = LayeredMapVoxel<ContinuousLayersT, ContinuousPolicyT>;
+  using ContinuousMapBackend = ContinuousMapBackendT;
+  using ContinuousMap = typename ContinuousMapBackend::template Map<
+      ContinuousVoxel>;
+  using Config = LayeredMapConfig<ContinuousMap>;
+  using DiscreteLayers = DiscreteLayersT;
+
+  explicit LayeredMap(const Config& config)
+      : continuous_map_(std::make_shared<ContinuousMap>(
+            config.continuous_map, config.continuous_threshold,
+            config.continuous_pruning)),
+        discrete_layers_(config.discrete_compression) {}
+
+  explicit LayeredMap(const typename ContinuousMap::Config& config)
+      : continuous_map_(std::make_shared<ContinuousMap>(config)),
+        discrete_layers_() {}
+
+  LayeredMap(const typename ContinuousMap::Config& config,
+             const typename ContinuousMap::ThresholdConfig& threshold_config,
+             const typename ContinuousMap::PruningConfig& pruning_config)
+      : continuous_map_(std::make_shared<ContinuousMap>(
+            config, threshold_config, pruning_config)),
+        discrete_layers_() {}
+
+  LayeredMap(typename ContinuousMap::Ptr continuous_map,
+             DiscreteLayersT discrete_layers)
+      : continuous_map_(std::move(continuous_map)),
+        discrete_layers_(std::move(discrete_layers)) {}
+
+  ContinuousMap& continuousMap() { return *continuous_map_; }
+  const ContinuousMap& continuousMap() const { return *continuous_map_; }
+  typename ContinuousMap::Ptr continuousMapPtr() { return continuous_map_; }
+  typename ContinuousMap::ConstPtr continuousMapPtr() const {
+    return continuous_map_;
+  }
+
+  DiscreteLayersT& discreteLayers() { return discrete_layers_; }
+  const DiscreteLayersT& discreteLayers() const { return discrete_layers_; }
+
+ private:
+  typename ContinuousMap::Ptr continuous_map_;
+  DiscreteLayersT discrete_layers_;
+};
+
+}  // namespace wavemap::layered
+
+#endif  // WAVEMAP_LAYERED_LAYERED_MAP_H_

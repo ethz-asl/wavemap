@@ -16,8 +16,7 @@ catkin_package(CATKIN_DEPENDS
 # For all targets
 include_directories(
     include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/cpp/digital_twin/ouster_mapping
+    ${CMAKE_CURRENT_SOURCE_DIR}/../wavemap_ros/app/ouster_layered
     SYSTEM ${catkin_INCLUDE_DIRS})
 
 # This setting causes Qt's "MOC" generation to happen automatically

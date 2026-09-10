@@ -1,0 +1,27 @@
+<launch>
+  <arg name="rviz" default="true"/>
+  <arg name="voxels_per_update" default="120"/>
+  <arg name="update_period" default="0.08"/>
+  <arg name="save_path" default=""/>
+
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="synthetic_map_frame"
+        args="0 0 0 0 0 0 world map"/>
+
+  <node pkg="wavemap_ros"
+        type="synthetic_rgb_layered_map_demo"
+        name="synthetic_rgb_layered_map"
+        output="screen">
+    <param name="voxels_per_update" value="$(arg voxels_per_update)"/>
+    <param name="update_period" value="$(arg update_period)"/>
+    <param name="save_path" value="$(arg save_path)"/>
+  </node>
+
+  <node if="$(arg rviz)"
+        pkg="rviz"
+        type="rviz"
+        name="rviz"
+        args="-d $(find wavemap_ros)/config/rviz/synthetic_rgb_layered_map.rviz"
+        output="screen"/>
+</launch>

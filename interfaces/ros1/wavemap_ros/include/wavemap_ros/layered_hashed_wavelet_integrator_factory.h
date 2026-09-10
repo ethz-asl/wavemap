@@ -7,6 +7,7 @@
 #include <glog/logging.h>
 #include <wavemap/core/integrator/integrator_base.h>
 #include <wavemap/core/integrator/measurement_model/measurement_model_factory.h>
+#include <wavemap/core/integrator/projective/coarse_to_fine/hashed_chunked_wavelet_integrator.h>
 #include <wavemap/core/integrator/projective/coarse_to_fine/hashed_wavelet_integrator.h>
 #include <wavemap/core/integrator/projective/projective_integrator.h>
 #include <wavemap/core/integrator/projection_model/projector_factory.h>
@@ -18,15 +19,18 @@ namespace wavemap {
 // Typed counterpart of the original runtime IntegratorFactory boundary. The
 // original factory remains unchanged for occupancy-only maps; layered servers
 // use this path because their voxel type is known at compile time.
-template <typename CellDataT>
-std::unique_ptr<IntegratorBase> createLayeredHashedWaveletIntegrator(
+namespace detail {
+template <typename IntegratorT, typename MapT>
+std::unique_ptr<IntegratorBase> createLayeredWaveletIntegratorImpl(
     const param::Value& params,
-    typename HashedWaveletOctreeT<CellDataT>::Ptr occupancy_map,
+    typename MapT::Ptr occupancy_map, IntegratorType expected_type,
+    const char* expected_type_name,
     std::shared_ptr<ThreadPool> thread_pool) {
   const auto type = IntegratorType::from(params, "integration_method");
-  if (!type || type.value() != IntegratorType::kHashedWaveletIntegrator) {
-    LOG(ERROR) << "A layered hashed wavelet map requires integration_method "
-                  "type hashed_wavelet_integrator.";
+  if (!type || type.value() != expected_type) {
+    LOG(ERROR) << "This layered continuous-map backend requires "
+                  "integration_method type "
+               << expected_type_name << ".";
     return nullptr;
   }
 
@@ -55,11 +59,38 @@ std::unique_ptr<IntegratorBase> createLayeredHashedWaveletIntegrator(
     return nullptr;
   }
 
-  return std::make_unique<HashedWaveletIntegratorT<CellDataT>>(
+  return std::make_unique<IntegratorT>(
       integrator_config.value(), std::move(projection_model),
       std::move(posed_range_image), std::move(beam_offset_image),
       std::move(measurement_model), std::move(occupancy_map),
       std::move(thread_pool));
+}
+}  // namespace detail
+
+template <typename CellDataT>
+std::unique_ptr<IntegratorBase> createLayeredWaveletIntegrator(
+    const param::Value& params,
+    typename HashedWaveletOctreeT<CellDataT>::Ptr occupancy_map,
+    std::shared_ptr<ThreadPool> thread_pool) {
+  return detail::createLayeredWaveletIntegratorImpl<
+      HashedWaveletIntegratorT<CellDataT>,
+      HashedWaveletOctreeT<CellDataT>>(
+      params, std::move(occupancy_map),
+      IntegratorType::kHashedWaveletIntegrator,
+      "hashed_wavelet_integrator", std::move(thread_pool));
+}
+
+template <typename CellDataT>
+std::unique_ptr<IntegratorBase> createLayeredWaveletIntegrator(
+    const param::Value& params,
+    typename HashedChunkedWaveletOctreeT<CellDataT>::Ptr occupancy_map,
+    std::shared_ptr<ThreadPool> thread_pool) {
+  return detail::createLayeredWaveletIntegratorImpl<
+      HashedChunkedWaveletIntegratorT<CellDataT>,
+      HashedChunkedWaveletOctreeT<CellDataT>>(
+      params, std::move(occupancy_map),
+      IntegratorType::kHashedChunkedWaveletIntegrator,
+      "hashed_chunked_wavelet_integrator", std::move(thread_pool));
 }
 
 }  // namespace wavemap

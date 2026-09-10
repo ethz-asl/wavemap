@@ -9,12 +9,12 @@
 
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
-#include <wavemap/layered/layered_pipeline.h>
-#include <wavemap/layered/continuous_layer_updater.h>
-#include <wavemap/layered/layer_integrator.h>
-#include <wavemap/layered/layer_observation_batch.h>
-#include <wavemap/layered/endpoint_range.h>
-#include <wavemap/layered/pointcloud_layer_integration_mode.h>
+#include <wavemap/layered/integration/layered_pipeline.h>
+#include <wavemap/layered/integration/continuous_layer_updater.h>
+#include <wavemap/layered/integration/layer_integrator.h>
+#include <wavemap/layered/integration/layer_observation_batch.h>
+#include <wavemap/layered/integration/endpoint_range.h>
+#include <wavemap/layered/integration/pointcloud_layer_integration_mode.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap_msgs/FilePath.h>
 #include <wavemap_msgs/LayeredMap.h>

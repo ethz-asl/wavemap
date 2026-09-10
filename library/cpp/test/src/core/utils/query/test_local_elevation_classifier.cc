@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <wavemap/layered/local_elevation_classifier.h>
+#include <wavemap/layered/classification/local_elevation_classifier.h>
 
 namespace wavemap::layered {
 namespace {

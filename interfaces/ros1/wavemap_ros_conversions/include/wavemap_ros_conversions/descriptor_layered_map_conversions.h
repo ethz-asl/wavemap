@@ -5,8 +5,8 @@
 #include <type_traits>
 #include <vector>
 
-#include <wavemap/layered/layer_descriptor.h>
-#include <wavemap/layered/schema_layer_storage.h>
+#include <wavemap/layered/schema/layer_descriptor.h>
+#include <wavemap/layered/schema/schema_layer_storage.h>
 #include <wavemap/layered/types/rgb.h>
 #include <wavemap_msgs/Layer.h>
 #include <wavemap_ros_conversions/layered_map_msg_conversions.h>

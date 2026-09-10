@@ -34,5 +34,3 @@ endif ()
 add_subdirectory(io)
 add_subdirectory(queries)
 add_subdirectory(planning)
-
-add_subdirectory(digital_twin)

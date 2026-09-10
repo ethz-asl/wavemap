@@ -2,6 +2,7 @@
 #define WAVEMAP_ROS_ROS_SERVER_H_
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -17,7 +18,7 @@
 #include <wavemap/core/integrator/integrator_base.h>
 #include <wavemap/core/map/map_base.h>
 #include <wavemap/core/utils/thread_pool.h>
-#include <wavemap/layered/local_elevation_classifier.h>
+#include <wavemap/layered/classification/local_elevation_classifier.h>
 #include <wavemap/pipeline/pipeline.h>
 
 #include "wavemap_ros/inputs/ros_input_base.h"
@@ -187,20 +188,33 @@ class RosServer {
   void bindGeometricClass(
       LayeredExtensionT& extension,
       layered::LocalElevationClassifierConfig classifier_config = {},
-      layered::EndpointRange endpoint_range = {}) {
+      layered::EndpointRange endpoint_range = {},
+      Radians<FloatingPoint> min_azimuth = -kPi,
+      Radians<FloatingPoint> max_azimuth = kPi) {
     using Value = layered::LayerValueT<LayerTagT>;
     static_assert(std::is_integral_v<Value>,
                   "Geometric class layers require an integral value type.");
     addPointcloudEndpointAdapterRegistrar(
         [&extension, classifier = layered::LocalElevationClassifier(
-                         classifier_config), endpoint_range](
+                         classifier_config), endpoint_range, min_azimuth,
+         max_azimuth](
             PointcloudTopicInput& input) {
           input.addPosedCloudCallback(
-              [&extension, classifier, endpoint_range](
-                  const PosedPointcloud<>& pointcloud) {
+              [&extension, classifier, endpoint_range, min_azimuth,
+               max_azimuth](const PosedPointcloud<>& pointcloud) {
+                std::vector<Point3D> class_points;
+                class_points.reserve(pointcloud.size());
+                for (const Point3D& point : pointcloud) {
+                  const FloatingPoint azimuth = std::atan2(point.y(), point.x());
+                  if (min_azimuth <= azimuth && azimuth <= max_azimuth) {
+                    class_points.emplace_back(point);
+                  }
+                }
+                const PosedPointcloud<> class_pointcloud(pointcloud.getPose(),
+                                                          class_points);
                 const auto observations =
                     layered::makeGeometricClassObservations<Value>(
-                        pointcloud, classifier, endpoint_range);
+                        class_pointcloud, classifier, endpoint_range);
                 const auto result =
                     extension.template integrateObservations<
                         LayerTagT>(observations);

@@ -64,6 +64,15 @@ template <typename CellDataT, typename CellDataRosConverterT>
 void blockToRosMsg(const typename HashedWaveletOctreeT<CellDataT>::BlockIndex& block_index, const typename HashedWaveletOctreeT<CellDataT>::Block& block, FloatingPoint min_log_odds, FloatingPoint max_log_odds, wavemap_msgs::LayeredHashedWaveletOctreeBlock& msg);
 
 template <typename CellDataT, typename CellDataRosConverterT>
+bool mapToRosMsg(const HashedChunkedWaveletOctreeT<CellDataT>& map, const std::string& frame_id, const ros::Time& stamp, wavemap_msgs::Map& msg, std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks = std::nullopt, std::shared_ptr<ThreadPool> thread_pool = nullptr);
+
+template <typename CellDataT, typename CellDataRosConverterT>
+void mapToRosMsg(const HashedChunkedWaveletOctreeT<CellDataT>& map, wavemap_msgs::LayeredHashedWaveletOctree& msg, std::optional<std::unordered_set<Index3D, Index3DHash>> include_blocks = std::nullopt, std::shared_ptr<ThreadPool> thread_pool = nullptr);
+
+template <typename CellDataT, typename CellDataRosConverterT>
+void blockToRosMsg(const typename HashedChunkedWaveletOctreeT<CellDataT>::BlockIndex& block_index, const typename HashedChunkedWaveletOctreeT<CellDataT>::Block& block, FloatingPoint min_log_odds, FloatingPoint max_log_odds, wavemap_msgs::LayeredHashedWaveletOctreeBlock& msg);
+
+template <typename CellDataT, typename CellDataRosConverterT>
 void rosMsgToMap(const wavemap_msgs::LayeredHashedWaveletOctree& msg, typename HashedWaveletOctreeT<CellDataT>::Ptr& map);
 
 template <typename CellDataT, typename CellDataRosConverterT>

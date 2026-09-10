@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <std_msgs/Header.h>
-#include <wavemap/layered/layer_observation.h>
+#include <wavemap/layered/integration/layer_observation.h>
 
 namespace wavemap::convert {
 

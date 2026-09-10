@@ -1,15 +1,16 @@
+#include <filesystem>
 #include <sstream>
 #include <string_view>
 #include <type_traits>
 
 #include <gtest/gtest.h>
 
-#include <wavemap/layered/layer_schema.h>
-#include <wavemap/layered/layer_observation_batch.h>
-#include <wavemap/layered/layer_update_policy.h>
-#include <wavemap/layered/layered_pipeline.h>
-#include <wavemap/layered/layered_map_config_builder.h>
-#include <wavemap/layered/layered_map_definition.h>
+#include <wavemap/layered/schema/layer_schema.h>
+#include <wavemap/layered/integration/layer_observation_batch.h>
+#include <wavemap/layered/integration/layer_update_policy.h>
+#include <wavemap/layered/integration/layered_pipeline.h>
+#include <wavemap/layered/map/layered_map_config_builder.h>
+#include <wavemap/layered/map/layered_map_definition.h>
 
 namespace wavemap::layered {
 namespace {
@@ -65,6 +66,9 @@ using DiscreteDefinition =
 using EmptyDefinition = LayeredMapDefinition<schema::LayerSchema<>>;
 using WeightedDefinition =
     LayeredMapDefinition<schema::LayerSchema<AveragedLayer>>;
+using ChunkedMixedDefinition = LayeredMapDefinition<
+    schema::LayerSchema<ReflectivityLayer, ClassLayer>,
+    HashedChunkedWaveletOctreeBackend>;
 
 static_assert(std::is_same_v<typename ContinuousDefinition::Map::ContinuousLayers,
                              ContinuousDefinition::ContinuousLayers>);
@@ -81,6 +85,9 @@ static_assert(
     std::is_same_v<LayerStateT<AveragedLayer>, WeightedMeanState>);
 static_assert(schema::kHasContinuousValueTraits<WeightedMeanState>);
 static_assert(kHasLayerStreamCodec<WeightedMeanState>);
+static_assert(std::is_same_v<
+              ChunkedMixedDefinition::ContinuousMap,
+              HashedChunkedWaveletOctreeT<ChunkedMixedDefinition::Voxel>>);
 
 template <typename DefinitionT>
 typename DefinitionT::Config makeConfig() {
@@ -124,6 +131,55 @@ TEST(LayeredMapDefinition, GeneratesMixedContinuousAndDiscreteStorage) {
                   0.8f);
   ASSERT_TRUE(map.discreteLayers().get<ClassLayer>().getValue(index));
   EXPECT_EQ(*map.discreteLayers().get<ClassLayer>().getValue(index), 3);
+}
+
+TEST(LayeredMapDefinition, SupportsChunkedContinuousBackend) {
+  ChunkedMixedDefinition::Map map(makeConfig<ChunkedMixedDefinition>());
+  const Index3D index{-3, 5, 9};
+
+  ChunkedMixedDefinition::Voxel voxel;
+  voxel.occupancy = 0.6f;
+  voxel.data.get<ReflectivityLayer>() = 0.35f;
+  map.continuousMap().setVoxelValue(index, voxel);
+  map.discreteLayers().get<ClassLayer>().setValue(index, 2);
+  map.continuousMap().threshold();
+  map.continuousMap().prune();
+
+  const auto stored = map.continuousMap().getVoxelValue(index);
+  EXPECT_FLOAT_EQ(stored.occupancy, 0.6f);
+  EXPECT_FLOAT_EQ(stored.data.get<ReflectivityLayer>(), 0.35f);
+  ASSERT_TRUE(map.discreteLayers().get<ClassLayer>().getValue(index));
+  EXPECT_EQ(*map.discreteLayers().get<ClassLayer>().getValue(index), 2);
+}
+
+TEST(LayeredMapDefinition, ChunkedBackendPersistenceRoundTrip) {
+  const auto config = makeConfig<ChunkedMixedDefinition>();
+  ChunkedMixedDefinition::Map source(config);
+  ChunkedMixedDefinition::Map restored(config);
+  const Index3D index{-3, 5, 9};
+
+  ChunkedMixedDefinition::Voxel voxel;
+  voxel.occupancy = 0.6f;
+  voxel.data.get<ReflectivityLayer>() = 0.35f;
+  source.continuousMap().setVoxelValue(index, voxel);
+  source.discreteLayers().get<ClassLayer>().setValue(index, 2);
+
+  const auto file_path =
+      std::filesystem::temp_directory_path() /
+      "wavemap_chunked_layered_round_trip.wvmp";
+  ASSERT_TRUE(ChunkedMixedDefinition::MapIo::save(file_path, source));
+  std::string error_message;
+  ASSERT_TRUE(ChunkedMixedDefinition::MapIo::load(
+      file_path, restored, &error_message))
+      << error_message;
+  std::filesystem::remove(file_path);
+
+  const auto stored = restored.continuousMap().getVoxelValue(index);
+  EXPECT_NEAR(stored.occupancy, voxel.occupancy, 1e-5f);
+  EXPECT_NEAR(stored.data.get<ReflectivityLayer>(),
+              voxel.data.get<ReflectivityLayer>(), 1e-5f);
+  ASSERT_TRUE(restored.discreteLayers().get<ClassLayer>().getValue(index));
+  EXPECT_EQ(*restored.discreteLayers().get<ClassLayer>().getValue(index), 2);
 }
 
 TEST(LayeredMapDefinition, IntegratesHeterogeneousObservationBatch) {

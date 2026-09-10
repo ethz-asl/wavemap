@@ -86,6 +86,8 @@ class VoxelVisual : public QObject {
     return scalar_max_property_.getFloat();
   }
   Ogre::ColourValue scalarLowColor() const { return scalar_low_color_; }
+  VoxelColorMode colorMode() const { return voxel_color_mode_; }
+  Ogre::ColourValue flatColor() const { return voxel_flat_color_; }
   Ogre::ColourValue scalarHighColor() const { return scalar_high_color_; }
   void configureLayerAppearance(
       const std::string& layer_name, const std::string& layer_type,

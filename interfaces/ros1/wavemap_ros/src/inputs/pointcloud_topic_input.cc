@@ -1,6 +1,9 @@
 #include "wavemap_ros/inputs/pointcloud_topic_input.h"
 
+#include <algorithm>
 #include <memory>
+#include <numeric>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -29,7 +32,8 @@ DECLARE_CONFIG_MEMBERS(PointcloudTopicInputConfig,
                       (undistort_motion)
                       (num_undistortion_interpolation_intervals_per_cloud)
                       (projected_range_image_topic_name)
-                      (undistorted_pointcloud_topic_name));
+                      (undistorted_pointcloud_topic_name)
+                      (enable_benchmark_metrics));
 
 bool PointcloudTopicInputConfig::isValid(bool verbose) const {
   bool all_valid = true;
@@ -74,6 +78,12 @@ PointcloudTopicInput::PointcloudTopicInput(
         nh_private.advertise<sensor_msgs::PointCloud2>(
             config_.undistorted_pointcloud_topic_name,
             config_.topic_queue_length);
+  }
+  if (config_.enable_benchmark_metrics) {
+    benchmark_stats_srv_ = nh_private.advertiseService(
+        "benchmark_stats", &PointcloudTopicInput::benchmarkStatsCallback,
+        this);
+    benchmark_metrics_.integration_durations.reserve(10000u);
   }
 }
 
@@ -186,6 +196,7 @@ void PointcloudTopicInput::callback(
   // Add it to the integration queue
   pointcloud_queue_.push(
       {std::move(stamped_pointcloud), std::move(endpoint_channels)});
+  recordReceivedScan(num_points);
 }
 
 #ifdef LIVOX_AVAILABLE
@@ -214,8 +225,99 @@ void PointcloudTopicInput::callback(
 
   // Add it to the integration queue
   pointcloud_queue_.push({std::move(stamped_pointcloud), {}});
+  recordReceivedScan(pointcloud_msg.points.size());
 }
 #endif
+
+void PointcloudTopicInput::recordReceivedScan(size_t num_points) {
+  if (!config_.enable_benchmark_metrics) {
+    return;
+  }
+  const std::lock_guard<std::mutex> lock(benchmark_metrics_mutex_);
+  ++benchmark_metrics_.received_scans;
+  ++benchmark_metrics_.pending_scans;
+  benchmark_metrics_.received_points += num_points;
+  benchmark_metrics_.maximum_queue_size =
+      std::max(benchmark_metrics_.maximum_queue_size,
+               benchmark_metrics_.pending_scans);
+}
+
+void PointcloudTopicInput::recordDroppedScan() {
+  if (config_.enable_benchmark_metrics) {
+    const std::lock_guard<std::mutex> lock(benchmark_metrics_mutex_);
+    ++benchmark_metrics_.dropped_scans;
+    --benchmark_metrics_.pending_scans;
+  }
+}
+
+void PointcloudTopicInput::recordIntegratedScan(
+    size_t num_points, double duration_seconds) {
+  if (!config_.enable_benchmark_metrics) {
+    return;
+  }
+  const std::lock_guard<std::mutex> lock(benchmark_metrics_mutex_);
+  ++benchmark_metrics_.integrated_scans;
+  --benchmark_metrics_.pending_scans;
+  benchmark_metrics_.integrated_points += num_points;
+  benchmark_metrics_.integration_durations.emplace_back(duration_seconds);
+}
+
+bool PointcloudTopicInput::benchmarkStatsCallback(
+    std_srvs::Trigger::Request& /*request*/,
+    std_srvs::Trigger::Response& response) {
+  if (!config_.enable_benchmark_metrics) {
+    response.success = false;
+    response.message = "Benchmark metrics are disabled.";
+    return true;
+  }
+
+  BenchmarkMetrics metrics;
+  {
+    const std::lock_guard<std::mutex> lock(benchmark_metrics_mutex_);
+    metrics = benchmark_metrics_;
+  }
+  std::vector<double> sorted = metrics.integration_durations;
+  std::sort(sorted.begin(), sorted.end());
+  const auto percentile = [&sorted](double fraction) {
+    if (sorted.empty()) {
+      return 0.0;
+    }
+    const double position = fraction * static_cast<double>(sorted.size() - 1u);
+    const size_t lower = static_cast<size_t>(position);
+    const size_t upper = std::min(lower + 1u, sorted.size() - 1u);
+    const double weight = position - static_cast<double>(lower);
+    return sorted[lower] * (1.0 - weight) + sorted[upper] * weight;
+  };
+  const double total =
+      std::accumulate(sorted.begin(), sorted.end(), 0.0);
+  const double mean = sorted.empty() ? 0.0 : total / sorted.size();
+
+  std::ostringstream json;
+  json.precision(10);
+  json << "{"
+       << "\"received_scans\":" << metrics.received_scans << ","
+       << "\"integrated_scans\":" << metrics.integrated_scans
+       << ","
+       << "\"dropped_scans\":" << metrics.dropped_scans << ","
+       << "\"pending_scans\":" << metrics.pending_scans << ","
+       << "\"received_points\":" << metrics.received_points << ","
+       << "\"integrated_points\":" << metrics.integrated_points
+       << ","
+       << "\"maximum_queue_size\":"
+       << metrics.maximum_queue_size << ","
+       << "\"integration_time_s\":{"
+       << "\"total\":" << total << ","
+       << "\"min\":" << (sorted.empty() ? 0.0 : sorted.front()) << ","
+       << "\"mean\":" << mean << ","
+       << "\"median\":" << percentile(0.5) << ","
+       << "\"p95\":" << percentile(0.95) << ","
+       << "\"max\":" << (sorted.empty() ? 0.0 : sorted.back())
+       << "}}";
+
+  response.success = true;
+  response.message = json.str();
+  return true;
+}
 
 void PointcloudTopicInput::processQueue() {
   ProfilerZoneScoped;
@@ -238,6 +340,7 @@ void PointcloudTopicInput::processQueue() {
           << pointcloud_queue_.back().pointcloud.getEndTime()
           << ". Dropping cloud.");
       pointcloud_queue_.pop();
+      recordDroppedScan();
       continue;
     }
 
@@ -272,6 +375,7 @@ void PointcloudTopicInput::processQueue() {
         }
 
         pointcloud_queue_.pop();
+        recordDroppedScan();
         continue;
       }
     } else {
@@ -317,6 +421,8 @@ void PointcloudTopicInput::processQueue() {
     // measurement have both been committed.
     pipeline_->runOperations();
     integration_timer_.stop();
+    recordIntegratedScan(posed_pointcloud.size(),
+                         integration_timer_.getLastEpisodeDuration());
     ROS_DEBUG_STREAM("Integrated new pointcloud in "
                      << integration_timer_.getLastEpisodeDuration()
                      << "s. Total integration time: "

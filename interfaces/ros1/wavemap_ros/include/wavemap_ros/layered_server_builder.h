@@ -47,7 +47,7 @@ class LayeredRosServerBuilder {
     server.layered_integrator_factory_ =
         [continuous_map](const param::Value& params,
                          std::shared_ptr<ThreadPool> thread_pool) {
-          return createLayeredHashedWaveletIntegrator<Voxel>(
+          return createLayeredWaveletIntegrator<Voxel>(
               params, continuous_map, std::move(thread_pool));
         };
 

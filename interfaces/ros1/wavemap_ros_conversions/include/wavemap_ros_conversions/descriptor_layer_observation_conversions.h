@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <wavemap/layered/layered_pipeline.h>
+#include <wavemap/layered/integration/layered_pipeline.h>
 #include <wavemap_msgs/LayeredMapUpdate.h>
 #include <wavemap_ros_conversions/descriptor_layered_map_conversions.h>
 #include <wavemap_ros_conversions/geometry_msg_conversions.h>

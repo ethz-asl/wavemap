@@ -14,7 +14,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <wavemap/core/common.h>
 
-#include <wavemap/layered/discrete_layer.h>
+#include <wavemap/layered/map/discrete_layer.h>
 
 namespace layered_map_viz {
 namespace detail {

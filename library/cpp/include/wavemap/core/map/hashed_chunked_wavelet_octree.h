@@ -2,6 +2,7 @@
 #define WAVEMAP_CORE_MAP_HASHED_CHUNKED_WAVELET_OCTREE_H_
 
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 
 #include "wavemap/core/common.h"
@@ -14,14 +15,11 @@
 
 namespace wavemap {
 /**
- * Config struct for the hashed chunked wavelet octree volumetric data
- * structure.
+ * Config struct for the hashed wavelet octree volumetric data structure.
  */
-struct HashedChunkedWaveletOctreeConfig
-    : ConfigBase<HashedChunkedWaveletOctreeConfig, 5> {
+struct HashedChunkedWaveletOctreeConfig : ConfigBase<HashedChunkedWaveletOctreeConfig, 5> {
   static constexpr IndexElement kMaxSupportedTreeHeight =
       HashedChunkedWaveletOctreeBlock::kMaxSupportedTreeHeight;
-
   //! Maximum resolution of the map, set as the width of the smallest cell that
   //! it can represent.
   Meters<FloatingPoint> min_cell_width = 0.1f;
@@ -42,10 +40,11 @@ struct HashedChunkedWaveletOctreeConfig
 
   // Constructors
   HashedChunkedWaveletOctreeConfig() = default;
-  HashedChunkedWaveletOctreeConfig(
-      FloatingPoint min_cell_width, FloatingPoint min_log_odds,
-      FloatingPoint max_log_odds, IndexElement tree_height,
-      FloatingPoint only_prune_blocks_if_unused_for)
+  HashedChunkedWaveletOctreeConfig(FloatingPoint min_cell_width,
+                            FloatingPoint min_log_odds,
+                            FloatingPoint max_log_odds,
+                            IndexElement tree_height,
+                            FloatingPoint only_prune_blocks_if_unused_for)
       : min_cell_width(min_cell_width),
         min_log_odds(min_log_odds),
         max_log_odds(max_log_odds),
@@ -60,27 +59,41 @@ struct HashedChunkedWaveletOctreeConfig
   bool isValid(bool verbose) const override;
 };
 
-class HashedChunkedWaveletOctree : public MapBase {
+template <typename CellDataT = FloatingPoint>
+class HashedChunkedWaveletOctreeT : public MapBase {
  public:
-  using Ptr = std::shared_ptr<HashedChunkedWaveletOctree>;
-  using ConstPtr = std::shared_ptr<const HashedChunkedWaveletOctree>;
+  using Ptr = std::shared_ptr<HashedChunkedWaveletOctreeT<CellDataT>>;
+  using ConstPtr = std::shared_ptr<const HashedChunkedWaveletOctreeT<CellDataT>>;
   using Config = HashedChunkedWaveletOctreeConfig;
+  using CellDataType = CellDataT;
   static constexpr bool kRequiresExplicitThresholding = true;
 
   using BlockIndex = Index3D;
   using CellIndex = OctreeIndex;
-  using Block = HashedChunkedWaveletOctreeBlock;
+  using Block = HashedChunkedWaveletOctreeBlockT<CellDataT>;
   using BlockHashMap = SpatialHash<Block, kDim>;
+  using Traits = CellDataTraits<CellDataT>;
+  using ThresholdConfig = typename Traits::ThresholdConfig;
+  using PruningConfig = typename Traits::PruningConfig;
 
-  explicit HashedChunkedWaveletOctree(
-      const HashedChunkedWaveletOctreeConfig& config)
-      : MapBase(config), config_(config.checkValid()) {}
+  explicit HashedChunkedWaveletOctreeT(
+      const HashedChunkedWaveletOctreeConfig& config,
+      ThresholdConfig threshold_config = ThresholdConfig{},
+      PruningConfig pruning_config = PruningConfig{})
+      : MapBase(config),
+        config_(config.checkValid()),
+        threshold_config_(threshold_config),
+        pruning_config_(pruning_config) {}
 
   // Copy construction is not supported
-  HashedChunkedWaveletOctree(const HashedChunkedWaveletOctree&) = delete;
+  HashedChunkedWaveletOctreeT(const HashedChunkedWaveletOctreeT&) = delete;
 
   MapType getMapType() const override {
-    return MapType::kHashedChunkedWaveletOctree;
+    if constexpr (std::is_same_v<CellDataT, FloatingPoint>) {
+      return MapType::kHashedChunkedWaveletOctree;
+    } else {
+      return MapType::kLayeredHashedWaveletOctree;
+    }
   }
 
   bool empty() const override { return block_map_.empty(); }
@@ -101,12 +114,19 @@ class HashedChunkedWaveletOctree : public MapBase {
   Index3D getBlockSize() const {
     return Index3D::Constant(cells_per_block_side_);
   }
-  const HashedChunkedWaveletOctreeConfig& getConfig() { return config_; }
+  const HashedChunkedWaveletOctreeConfig& getConfig() const { return config_; }
+  const ThresholdConfig& getThresholdConfig() const {
+    return threshold_config_;
+  }
 
   FloatingPoint getCellValue(const Index3D& index) const override;
   FloatingPoint getCellValue(const OctreeIndex& index) const;
+  CellDataT getVoxelValue(const Index3D& index) const;
+  CellDataT getVoxelValue(const OctreeIndex& index) const;
   void setCellValue(const Index3D& index, FloatingPoint new_value) override;
+  void setVoxelValue(const Index3D& index, const CellDataT& new_value);
   void addToCellValue(const Index3D& index, FloatingPoint update) override;
+  void addToVoxelValue(const Index3D& index, const CellDataT& update);
 
   bool hasBlock(const Index3D& block_index) const;
   bool eraseBlock(const BlockIndex& block_index);
@@ -128,6 +148,9 @@ class HashedChunkedWaveletOctree : public MapBase {
   void forEachLeaf(
       typename MapBase::IndexedLeafVisitorFunction visitor_fn) const override;
 
+  template <typename IndexedVoxelLeafVisitorFunction>
+  void forEachVoxelLeaf(IndexedVoxelLeafVisitorFunction visitor_fn) const;
+
   BlockIndex indexToBlockIndex(const OctreeIndex& node_index) const;
   CellIndex indexToCellIndex(OctreeIndex index) const;
 
@@ -135,9 +158,13 @@ class HashedChunkedWaveletOctree : public MapBase {
   const HashedChunkedWaveletOctreeConfig config_;
   const IndexElement cells_per_block_side_ =
       int_math::exp2(config_.tree_height);
+  const ThresholdConfig threshold_config_;
+  const PruningConfig pruning_config_;
 
   BlockHashMap block_map_;
 };
+
+using HashedChunkedWaveletOctree = HashedChunkedWaveletOctreeT<FloatingPoint>;
 }  // namespace wavemap
 
 #include "wavemap/core/map/impl/hashed_chunked_wavelet_octree_inl.h"
