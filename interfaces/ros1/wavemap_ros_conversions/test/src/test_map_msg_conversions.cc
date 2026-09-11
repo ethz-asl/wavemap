@@ -1,5 +1,7 @@
+#include <filesystem>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -11,13 +13,15 @@
 #include <wavemap/layered/integration/layer_update_policy.h>
 #include <wavemap/layered/map/layered_map_definition.h>
 #include <wavemap/layered/schema/layer_schema.h>
+#include <wavemap/layered/types/rgb.h>
 #include <wavemap/test/config_generator.h>
 #include <wavemap/test/fixture_base.h>
 #include <wavemap/test/geometry_generator.h>
 #include <wavemap_msgs/Map.h>
 
-#include "wavemap_ros_conversions/map_msg_conversions.h"
 #include "wavemap_ros_conversions/descriptor_layered_map_conversions.h"
+#include "wavemap_ros_conversions/layered_map_file_conversions.h"
+#include "wavemap_ros_conversions/map_msg_conversions.h"
 
 namespace wavemap {
 namespace {
@@ -34,6 +38,39 @@ using ChunkedLayeredDefinition = layered::LayeredMapDefinition<
 using RegularLayeredDefinition = layered::LayeredMapDefinition<TestSchema>;
 using TestLayerRosConverter = convert::DescriptorContinuousRosConverter<
     ChunkedLayeredDefinition::Voxel>;
+
+struct GenericRgbLayer
+    : layered::schema::ContinuousLayer<
+          layered::Rgb,
+          layered::ReplaceLayerUpdatePolicy<layered::Rgb>> {
+  static constexpr std::string_view name = "generic_rgb";
+};
+
+struct GenericAverageLayer
+    : layered::schema::StatefulContinuousLayer<
+          FloatingPoint, layered::WeightedMeanState,
+          layered::WeightedMeanLayerUpdatePolicy> {
+  static constexpr std::string_view name = "generic_average";
+};
+
+struct GenericClassLayer
+    : layered::schema::DiscreteLayer<
+          int, layered::ReplaceLayerUpdatePolicy<int>> {
+  static constexpr std::string_view name = "generic_class";
+};
+
+struct GenericMaskLayer
+    : layered::schema::DiscreteLayer<
+          bool, layered::ReplaceLayerUpdatePolicy<bool>> {
+  static constexpr std::string_view name = "generic_mask";
+};
+
+using GenericFileDefinition = layered::LayeredMapDefinition<
+    layered::schema::LayerSchema<TestReflectivityLayer, GenericRgbLayer,
+                                 GenericAverageLayer, GenericClassLayer,
+                                 GenericMaskLayer>>;
+using GenericFileRosConverter = convert::DescriptorContinuousRosConverter<
+    GenericFileDefinition::Voxel>;
 }  // namespace
 
 template <typename MapType>
@@ -225,5 +262,69 @@ TEST(LayeredMapMsgConversionsTest,
   EXPECT_NEAR(reconstructed.occupancy, voxel.occupancy, 1e-5f);
   EXPECT_NEAR(reconstructed.data.get<TestReflectivityLayer>(),
               voxel.data.get<TestReflectivityLayer>(), 1e-5f);
+}
+
+TEST(LayeredMapFileConversionsTest,
+     LoadsBuiltInCodecsWithoutARegisteredRuntimeSchema) {
+  ros::Time::init();
+
+  GenericFileDefinition::Config config;
+  config.continuous_map.min_cell_width = 0.125f;
+  config.continuous_map.min_log_odds = -3.f;
+  config.continuous_map.max_log_odds = 5.f;
+  config.continuous_map.tree_height = 3;
+  config.discrete_compression.block_height = 2;
+  GenericFileDefinition::Map map(config);
+
+  const Index3D first_index{1, 2, 3};
+  const Index3D second_index{2, 2, 3};
+  GenericFileDefinition::Voxel voxel;
+  voxel.occupancy = 0.8f;
+  voxel.data.get<TestReflectivityLayer>() = 0.35f;
+  voxel.data.get<GenericRgbLayer>() = {0.2f, 0.4f, 0.6f};
+  voxel.data.get<GenericAverageLayer>() = {2.4f, 3.f};
+  map.continuousMap().setVoxelValue(first_index, voxel);
+  map.discreteLayers().get<GenericClassLayer>().setValue(first_index, 4);
+  map.discreteLayers().get<GenericClassLayer>().setValue(second_index, 7);
+  map.discreteLayers().get<GenericMaskLayer>().setValue(first_index, true);
+  map.discreteLayers().get<GenericMaskLayer>().setValue(second_index, false);
+
+  const auto file_path = std::filesystem::temp_directory_path() /
+                         "wavemap_runtime_schema_conversion_test.lwvmp";
+  ASSERT_TRUE(GenericFileDefinition::MapIo::save(file_path, map));
+
+  const ros::Time stamp(42);
+  wavemap_msgs::LayeredMap expected;
+  ASSERT_TRUE((convert::layeredMapToRosMsg<GenericFileDefinition::Map,
+                                           GenericFileRosConverter>(
+      map, "test_frame", stamp, expected)));
+  wavemap_msgs::LayeredMap actual;
+  std::string error_message;
+  const bool loaded = convert::layeredMapFileToRosMsg(
+      file_path, "test_frame", stamp, actual, &error_message);
+  std::filesystem::remove(file_path);
+  ASSERT_TRUE(loaded) << error_message;
+
+  ASSERT_EQ(actual.continuous_map.layered_hashed_wavelet_octree.size(), 1u);
+  ASSERT_EQ(expected.continuous_map.layered_hashed_wavelet_octree.size(), 1u);
+  const auto& actual_continuous =
+      actual.continuous_map.layered_hashed_wavelet_octree.front();
+  const auto& expected_continuous =
+      expected.continuous_map.layered_hashed_wavelet_octree.front();
+  EXPECT_EQ(actual.header, expected.header);
+  EXPECT_TRUE(actual.is_full_update);
+  EXPECT_FLOAT_EQ(actual_continuous.min_cell_width,
+                  expected_continuous.min_cell_width);
+  EXPECT_FLOAT_EQ(actual_continuous.min_log_odds,
+                  expected_continuous.min_log_odds);
+  EXPECT_FLOAT_EQ(actual_continuous.max_log_odds,
+                  expected_continuous.max_log_odds);
+  EXPECT_EQ(actual_continuous.tree_height, expected_continuous.tree_height);
+  EXPECT_EQ(actual_continuous.layer_names, expected_continuous.layer_names);
+  EXPECT_EQ(actual_continuous.layer_types, expected_continuous.layer_types);
+  EXPECT_EQ(actual_continuous.allocated_block_indices,
+            expected_continuous.allocated_block_indices);
+  EXPECT_EQ(actual_continuous.blocks, expected_continuous.blocks);
+  EXPECT_EQ(actual.discrete_layers, expected.discrete_layers);
 }
 }  // namespace wavemap

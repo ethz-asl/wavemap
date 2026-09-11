@@ -28,6 +28,7 @@
 #include <rviz/visualization_manager.h>
 #include <tf/transform_listener.h>
 #include <wavemap/core/utils/profile/profiler_interface.h>
+#include <wavemap_ros_conversions/layered_map_file_conversions.h>
 #include <wavemap_ros_conversions/map_msg_conversions.h>
 
 #include "wavemap_rviz_plugin/utils/alert_dialog.h"
@@ -406,6 +407,17 @@ bool LayeredMapDisplay::loadMapFromDisk(
     if (error_message && !factory_error.empty()) {
       *error_message = std::move(factory_error);
     }
+  }
+
+  wavemap_msgs::LayeredMap msg;
+  std::string generic_error;
+  if (convert::layeredMapFileToRosMsg(filepath, frame_id, ros::Time(0), msg,
+                                      &generic_error)) {
+    displayMessage(msg);
+    return true;
+  }
+  if (error_message) {
+    *error_message = std::move(generic_error);
   }
   return false;
 }
@@ -937,8 +949,7 @@ void LayeredMapDisplay::loadMapFromDiskCallback() {
   std::string load_error;
   if (!loadMapFromDisk(filepath, &load_error)) {
     if (load_error.empty()) {
-      load_error = "This display currently supports layered map files that "
-                   "match a registered layered-map schema.";
+      load_error = "The file could not be decoded as a layered map.";
     }
     AlertDialog alert{
         "Could not load layered map",

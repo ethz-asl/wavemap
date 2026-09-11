@@ -14,6 +14,7 @@ catkin_package(
 # Libraries
 add_library(${PROJECT_NAME}
     src/config_conversions.cc
+    src/layered_map_file_conversions.cc
     src/map_msg_conversions.cc
     src/time_conversions.cc)
 set_wavemap_target_properties(${PROJECT_NAME})
