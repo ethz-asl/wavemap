@@ -20,9 +20,21 @@ Every layered map owns two related forms of storage:
   dominant value per block, observed offsets, and exact exceptions.
 
 Occupancy always remains part of the continuous voxel and is not listed in a
-user schema. Continuous and discrete describe the mathematical operations that
-are valid for a value. An integer class ID is discrete because averaging class
-IDs has no useful meaning.
+user schema. Here, continuous and discrete classify the algebra of the stored
+state; all layers are still spatially voxelized.
+
+A layer is continuous when adding, subtracting, and scaling its stored state
+have a meaningful interpretation. It must also be possible to bound the state
+and measure the magnitude of a wavelet detail coefficient. Scalar sensor
+measurements, RGB vectors, and additive weighted-mean statistics satisfy these
+requirements and can share the Haar wavelet hierarchy with occupancy.
+
+A layer is discrete when interpolation or arithmetic would change its meaning.
+Semantic class IDs, object IDs, and Boolean flags are examples: averaging class
+1 and class 2 does not define a valid class. Their C++ representation does not
+determine the choice; an integer or floating-point value still belongs in a
+discrete layer when arithmetic on that value is semantically invalid. Such
+values use aligned side storage and do not participate in wavelet pruning.
 
 .. code-block:: text
 
@@ -145,18 +157,26 @@ later, add a ``LayeredMap`` display in RViz, change ``Source`` from ``Topic`` to
 ``File``, and select ``Load map from disk``. The built-in RGB schema handler
 recognizes the saved file.
 
-Run a layered server with Ouster data
-*************************************
+Use the Ouster integration as a reference
+******************************************
 
-The included Ouster applications expect:
+The repository includes Ouster-specific applications as worked examples of a
+real layered sensor integration. No Ouster bag or live sensor stream is bundled
+with the repository, and the commands below do not start localization. They
+show how to launch the mapping side once a compatible point cloud and TF source
+are available. For another sensor or dataset, use the same structure and adapt
+the topic, field names, normalization ranges, projection model, and transforms.
+
+The example applications expect:
 
 * Point clouds on ``/ouster/points``.
 * A valid TF transform from each cloud frame to the configured map frame.
 * ``reflectivity`` values between 0 and 255.
 * ``intensity`` and ``ambient`` values between 0 and 65535 when selected.
 
-The all-layer application stores occupancy, reflectivity, signal, near
-infrared, and a geometrically derived ground/obstacle class:
+The all-layer reference application stores occupancy, reflectivity, signal,
+near infrared, and a geometrically derived ground/obstacle class. With a
+compatible live stream or bag already available, start it as follows:
 
 .. code-block:: bash
 
@@ -300,7 +320,36 @@ Choose an update policy
 Reusable policies live in
 ``library/cpp/include/wavemap/layered/integration/layer_update_policy.h``. They
 include replacement, minimum, maximum, accumulation, exponential smoothing,
-confidence blending, logical operations, and a stateful weighted mean.
+confidence blending, logical operations, and a stateful weighted mean. These are
+provided defaults rather than a closed set. A user can define a custom policy
+without changing the map or integration pipeline.
+
+A stateless policy is a default-constructible callable that receives the current
+value and a ``LayerObservation<Value>`` and returns the next value. A stateful
+continuous policy follows the same pattern but receives and returns State:
+
+.. code-block:: c++
+
+    struct RateLimitedUpdate {
+      float operator()(
+          float current,
+          const wavemap::layered::LayerObservation<float>& observation) const {
+        const float change = std::clamp(
+            observation.value - current, -0.1f, 0.1f);
+        return current + change;
+      }
+    };
+
+    struct HeightLayer
+        : wavemap::layered::schema::ContinuousLayer<
+              float, RateLimitedUpdate> {
+      static constexpr std::string_view name = "height";
+    };
+
+A discrete policy may instead accept ``std::optional<Value>`` as its current
+value so it can distinguish an unobserved voxel from an observed value. The
+compile-time schema checks the selected policy signature and reports an error if
+it is incompatible with the layer.
 
 For ordinary layers, Value and State are identical. Use
 ``StatefulContinuousLayer`` when observations need a richer stored state. A
