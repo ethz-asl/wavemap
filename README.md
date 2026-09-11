@@ -1,13 +1,33 @@
-# Wavemap
-<a href="https://github.com/ethz-asl/wavemap/actions/workflows/cpp.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/cpp.yml?label=C%2b%2b&logo=C%2b%2b&logoColor=white" alt="C++"/></a>
-<a href="https://github.com/ethz-asl/wavemap/actions/workflows/python.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/python.yml?label=Python&logo=python&logoColor=white" alt="Python"/></a>
-<a href="https://github.com/ethz-asl/wavemap/actions/workflows/ros1.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ros1.yml?label=ROS1&logo=ros&logoColor=white" alt="ROS1"/></a>
-<a href="https://github.com/ethz-asl/wavemap/actions/workflows/docs.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/docs.yml?label=Docs&logo=sphinx&logoColor=white" alt="Docs"/></a>
+# Layered Wavemap
+<a href="https://github.com/GuilhermeCabaco/wavemap-digital-twin/actions/workflows/cpp.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/cpp.yml?label=C%2b%2b&logo=C%2b%2b&logoColor=white" alt="C++"/></a>
+<a href="https://github.com/GuilhermeCabaco/wavemap-digital-twin/actions/workflows/python.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/python.yml?label=Python&logo=python&logoColor=white" alt="Python"/></a>
+<a href="https://github.com/GuilhermeCabaco/wavemap-digital-twin/actions/workflows/ros1.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/ros1.yml?label=ROS1&logo=ros&logoColor=white" alt="ROS1"/></a>
+<a href="https://github.com/GuilhermeCabaco/wavemap-digital-twin/actions/workflows/docs.yml"><img src="https://img.shields.io/github/actions/workflow/status/ethz-asl/wavemap/docs.yml?label=Docs&logo=sphinx&logoColor=white" alt="Docs"/></a>
 <a href="https://github.com/ethz-asl/wavemap/releases"><img src="https://img.shields.io/github/v/tag/ethz-asl/wavemap?label=Version&logo=semver" alt="Version"/></a>
-<a href="https://github.com/ethz-asl/wavemap/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-BSD%203-blue?logo=bsd" alt="License"/></a>
-[![3D reconstruction of Newer College's Cloister](https://github.com/ethz-asl/wavemap/assets/6238939/e432d4ea-440d-4e9d-adf9-af3ae3b09a10)](https://www.youtube.com/live/ftQhK75Ri1E?si=9txTYyJ78wQuhyN-&t=733)
+<a href="https://github.com/GuilhermeCabaco/wavemap-digital-twin/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-BSD%203-blue?logo=bsd" alt="License"/></a>
 
-## Hierarchical, multi-resolution volumetric mapping
+Layered Wavemap extends Wavemap's compressed multi-resolution occupancy map with typed environmental attributes. Continuous fields such as reflectivity, signal, near-infrared intensity, and RGB share the wavelet hierarchy with occupancy. Categorical fields such as semantic classes use aligned sparse side layers with lossless majority-with-exceptions compression.
+
+[Get started](docs/pages/tutorials/layered_wavemap.rst) · [Run the RGB demo](#try-the-layered-rgb-demo) · [Original Wavemap documentation](https://ethz-asl.github.io/wavemap/)
+
+[![Layered Wavemap demo](https://i.ytimg.com/vi/l24QWAxm7Zw/hqdefault.jpg)](https://youtu.be/l24QWAxm7Zw)
+
+*Watch the Layered Wavemap demo on YouTube.*
+
+## Try the layered RGB demo
+
+The synthetic forest demo needs no sensor data. On Ubuntu 20.04 with ROS Noetic:
+
+```bash
+cd ~/catkin_ws
+catkin build wavemap_all
+source devel/setup.bash
+roslaunch wavemap_ros synthetic_rgb_layered_map.launch
+```
+
+The launch file opens RViz and progressively builds a colored layered map. Docker setup, native installation, real Ouster usage, map persistence, and a layer-extension walkthrough are in the [Layered Wavemap guide](docs/pages/tutorials/layered_wavemap.rst).
+
+## Wavemap foundation
 Wavemap achieves state-of-the-art memory and computational efficiency by combining Haar wavelet compression and a coarse-to-fine measurement integration scheme. Advanced measurement models allow it to attain exceptionally high recall rates on challenging obstacles like thin objects.
 
 The framework is very flexible and supports several data structures, measurement integration methods, and sensor models out of the box. The ROS interface can, for example, easily be configured to fuse multiple sensor inputs, such as a LiDAR configured with a range of 20m and several depth cameras up to a resolution of 1cm, into a single multi-resolution occupancy grid map.
@@ -21,6 +41,7 @@ Wavemap provides [C++](https://ethz-asl.github.io/wavemap/pages/tutorials/cpp) a
 The framework's documentation is available on [GitHub Pages](https://ethz-asl.github.io/wavemap/) for easy online access. A PDF version of each release’s documentation can also be found in the respective [release notes](https://github.com/ethz-asl/wavemap/releases).
 
 ### Table of contents
+* [Layered Wavemap: setup, use, and extension](docs/pages/tutorials/layered_wavemap.rst)
 * [Installation](https://ethz-asl.github.io/wavemap/pages/installation)
 * [Demos](https://ethz-asl.github.io/wavemap/pages/demos)
 * [Tutorials](https://ethz-asl.github.io/wavemap/pages/tutorials)

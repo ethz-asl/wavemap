@@ -6,6 +6,7 @@ This section provides hands-on examples of how to use wavemap's C++ and Python A
     :caption: Interfaces
     :maxdepth: 1
 
+    layered_wavemap
     cpp
     python
     ros1
